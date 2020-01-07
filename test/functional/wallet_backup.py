@@ -48,7 +48,13 @@ class WalletBackupTest(BitcoinTestFramework):
         self.num_nodes = 4
         self.setup_clean_chain = True
         # nodes 1, 2,3 are spenders, let's give them a keypool=100
-        self.extra_args = [["-keypool=100"], ["-keypool=100"], ["-keypool=100"], []]
+        # whitelist all peers to speed up tx relay / mempool sync
+        self.extra_args = [
+            ["-keypool=100", "-whitelist=127.0.0.1"],
+            ["-keypool=100", "-whitelist=127.0.0.1"],
+            ["-keypool=100", "-whitelist=127.0.0.1"],
+            ["-whitelist=127.0.0.1"]
+        ]
         self.rpc_timeout = 120
 
     def skip_test_if_missing_module(self):

@@ -5,8 +5,6 @@
 
 #include <rpc/server.h>
 
-#include <fs.h>
-#include <key_io.h>
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>

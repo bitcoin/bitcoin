@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The NdovuCoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,12 +15,12 @@
 
 #include <consensus/consensus.h>
 #include <interfaces/node.h>
+#include <interfaces/wallet.h>
 #include <key_io.h>
-#include <validation.h>
-#include <script/script.h>
-#include <timedata.h>
-#include <util/system.h>
 #include <policy/policy.h>
+#include <script/script.h>
+#include <util/system.h>
+#include <validation.h>
 #include <wallet/ismine.h>
 
 #include <stdint.h>
@@ -49,7 +49,6 @@ QString TransactionDesc::FormatTxStatus(const interfaces::WalletTx& wtx, const i
     }
 }
 
-#ifndef ENABLE_BIP70
 // Takes an encoded PaymentRequest as a string and tries to find the Common Name of the X.509 certificate
 // used to sign the PaymentRequest.
 bool GetPaymentRequestMerchant(const std::string& pr, QString& merchant)
@@ -77,7 +76,6 @@ bool GetPaymentRequestMerchant(const std::string& pr, QString& merchant)
     }
     return false;
 }
-#endif
 
 QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord *rec, int unit)
 {
@@ -295,19 +293,11 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
         if (r.first == "PaymentRequest")
         {
             QString merchant;
-#ifdef ENABLE_BIP70
-            PaymentRequestPlus req;
-            req.parse(QByteArray::fromRawData(r.second.data(), r.second.size()));
-            if (!req.getMerchant(PaymentServer::getCertStore(), merchant)) {
-                merchant.clear();
-            }
-#else
             if (!GetPaymentRequestMerchant(r.second, merchant)) {
                 merchant.clear();
             } else {
                 merchant += tr(" (Certificate was not verified)");
             }
-#endif
             if (!merchant.isNull()) {
                 strHTML += "<b>" + tr("Merchant") + ":</b> " + GUIUtil::HtmlEscape(merchant) + "<br>";
             }

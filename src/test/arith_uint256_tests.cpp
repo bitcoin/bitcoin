@@ -11,7 +11,7 @@
 #include <uint256.h>
 #include <arith_uint256.h>
 #include <string>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 BOOST_FIXTURE_TEST_SUITE(arith_uint256_tests, BasicTestingSetup)
 

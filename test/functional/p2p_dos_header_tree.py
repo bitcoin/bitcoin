@@ -57,7 +57,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         } in self.nodes[0].getchaintips()
 
         self.log.info("Feed all fork headers (fails due to checkpoint)")
-        with self.nodes[0].assert_debug_log(['bad-fork-prior-to-checkpoint (code 67)']):
+        with self.nodes[0].assert_debug_log(['bad-fork-prior-to-checkpoint']):
             self.nodes[0].p2p.send_message(msg_headers(self.headers_fork))
             self.nodes[0].p2p.wait_for_disconnect()
 

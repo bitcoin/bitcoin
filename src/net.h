@@ -484,8 +484,6 @@ private:
 
     friend struct CConnmanTest;
 };
-extern std::unique_ptr<CConnman> g_connman;
-extern std::unique_ptr<BanMan> g_banman;
 void Discover();
 void StartMapPort();
 void InterruptMapPort();
@@ -613,56 +611,105 @@ public:
 
 
 
-
+/** Transport protocol agnostic message container.
+ * Ideally it should only contain receive time, payload,
+ * command and size.
+ */
 class CNetMessage {
+public:
+    CDataStream m_recv;                  // received message data
+    int64_t m_time = 0;                  // time (in microseconds) of message receipt.
+    bool m_valid_netmagic = false;
+    bool m_valid_header = false;
+    bool m_valid_checksum = false;
+    uint32_t m_message_size = 0;         // size of the payload
+    uint32_t m_raw_message_size = 0;     // used wire size of the message (including header/checksum)
+    std::string m_command;
+
+    CNetMessage(CDataStream&& recv_in) : m_recv(std::move(recv_in)) {}
+
+    void SetVersion(int nVersionIn)
+    {
+        m_recv.SetVersion(nVersionIn);
+    }
+};
+
+/** The TransportDeserializer takes care of holding and deserializing the
+ * network receive buffer. It can deserialize the network buffer into a
+ * transport protocol agnostic CNetMessage (command & payload)
+ */
+class TransportDeserializer {
+public:
+    // returns true if the current deserialization is complete
+    virtual bool Complete() const = 0;
+    // set the serialization context version
+    virtual void SetVersion(int version) = 0;
+    // read and deserialize data
+    virtual int Read(const char *data, unsigned int bytes) = 0;
+    // decomposes a message from the context
+    virtual CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) = 0;
+    virtual ~TransportDeserializer() {}
+};
+
+class V1TransportDeserializer final : public TransportDeserializer
+{
 private:
     mutable CHash256 hasher;
     mutable uint256 data_hash;
-public:
     bool in_data;                   // parsing header (false) or data (true)
-
     CDataStream hdrbuf;             // partially received header
     CMessageHeader hdr;             // complete header
-    unsigned int nHdrPos;
-
     CDataStream vRecv;              // received message data
+    unsigned int nHdrPos;
     unsigned int nDataPos;
 
-    int64_t nTime;                  // time (in microseconds) of message receipt.
+    const uint256& GetMessageHash() const;
+    int readHeader(const char *pch, unsigned int nBytes);
+    int readData(const char *pch, unsigned int nBytes);
 
-    CNetMessage(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn) {
+    void Reset() {
+        vRecv.clear();
+        hdrbuf.clear();
         hdrbuf.resize(24);
         in_data = false;
         nHdrPos = 0;
         nDataPos = 0;
-        nTime = 0;
+        data_hash.SetNull();
+        hasher.Reset();
     }
 
-    bool complete() const
+public:
+
+    V1TransportDeserializer(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn) {
+        Reset();
+    }
+
+    bool Complete() const override
     {
         if (!in_data)
             return false;
         return (hdr.nMessageSize == nDataPos);
     }
-
-    const uint256& GetMessageHash() const;
-
-    void SetVersion(int nVersionIn)
+    void SetVersion(int nVersionIn) override
     {
         hdrbuf.SetVersion(nVersionIn);
         vRecv.SetVersion(nVersionIn);
     }
-
-    int readHeader(const char *pch, unsigned int nBytes);
-    int readData(const char *pch, unsigned int nBytes);
+    int Read(const char *pch, unsigned int nBytes) override {
+        int ret = in_data ? readData(pch, nBytes) : readHeader(pch, nBytes);
+        if (ret < 0) Reset();
+        return ret;
+    }
+    CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) override;
 };
-
 
 /** Information about a peer */
 class CNode
 {
     friend class CConnman;
 public:
+    std::unique_ptr<TransportDeserializer> m_deserializer;
+
     // socket
     std::atomic<ServiceFlags> nServices{NODE_NONE};
     SOCKET hSocket GUARDED_BY(cs_hSocket);
@@ -733,13 +780,12 @@ public:
 
     // flood relay
     std::vector<CAddress> vAddrToSend;
-    CRollingBloomFilter addrKnown;
+    const std::unique_ptr<CRollingBloomFilter> m_addr_known;
     bool fGetAddr{false};
     int64_t nNextAddrSend GUARDED_BY(cs_sendProcessing){0};
     int64_t nNextLocalAddrSend GUARDED_BY(cs_sendProcessing){0};
 
-    const bool m_addr_relay_peer;
-    bool IsAddrRelayPeer() const { return m_addr_relay_peer; }
+    bool IsAddrRelayPeer() const { return m_addr_known != nullptr; }
 
     // List of block ids we still have announce.
     // There is no final sorting before sending, as they are always sent immediately
@@ -765,8 +811,8 @@ public:
         // Used for BIP35 mempool sending
         bool fSendMempool GUARDED_BY(cs_tx_inventory){false};
         // Last time a "MEMPOOL" request was serviced.
-        std::atomic<int64_t> timeLastMempoolReq{0};
-        int64_t nNextInvSend{0};
+        std::atomic<std::chrono::seconds> m_last_mempool_req{std::chrono::seconds{0}};
+        std::chrono::microseconds nNextInvSend{0};
 
         CCriticalSection cs_feeFilter;
         // Minimum fee rate with which to filter inv's to this node
@@ -888,7 +934,8 @@ public:
 
     void AddAddressKnown(const CAddress& _addr)
     {
-        addrKnown.insert(_addr.GetKey());
+        assert(m_addr_known);
+        m_addr_known->insert(_addr.GetKey());
     }
 
     void PushAddress(const CAddress& _addr, FastRandomContext &insecure_rand)
@@ -896,7 +943,8 @@ public:
         // Known checking here is only to save space from duplicates.
         // SendMessages will filter it again for knowns that were added
         // after addresses were pushed.
-        if (_addr.IsValid() && !addrKnown.contains(_addr.GetKey())) {
+        assert(m_addr_known);
+        if (_addr.IsValid() && !m_addr_known->contains(_addr.GetKey())) {
             if (vAddrToSend.size() >= MAX_ADDR_TO_SEND) {
                 vAddrToSend[insecure_rand.randrange(vAddrToSend.size())] = _addr;
             } else {
@@ -949,11 +997,13 @@ public:
     void MaybeSetAddrName(const std::string& addrNameIn);
 };
 
-
-
-
-
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
 int64_t PoissonNextSend(int64_t now, int average_interval_seconds);
+
+/** Wrapper to return mockable type */
+inline std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, std::chrono::seconds average_interval)
+{
+    return std::chrono::microseconds{PoissonNextSend(now.count(), average_interval.count())};
+}
 
 #endif // BITCOIN_NET_H

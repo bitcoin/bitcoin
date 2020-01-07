@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The NdovuCoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,9 +11,6 @@
 #include <qt/forms/ui_helpmessagedialog.h>
 
 #include <qt/bitcoingui.h>
-#ifdef ENABLE_BIP70
-#include <qt/paymentrequestplus.h>
-#endif
 
 #include <clientversion.h>
 #include <init.h>
@@ -37,14 +34,6 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bo
     ui->setupUi(this);
 
     QString version = QString{PACKAGE_NAME} + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
-    /* On x86 add a bit specifier to the version so that users can distinguish between
-     * 32 and 64 bit builds. On other architectures, 32/64 bit may be more ambiguous.
-     */
-#if defined(__x86_64__)
-    version += " " + tr("(%1-bit)").arg(64);
-#elif defined(__i386__ )
-    version += " " + tr("(%1-bit)").arg(32);
-#endif
 
     if (about)
     {

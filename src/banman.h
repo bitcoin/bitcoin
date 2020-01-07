@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_BANMAN_H
@@ -10,6 +10,7 @@
 
 #include <addrdb.h>
 #include <fs.h>
+#include <net_types.h> // For banmap_t
 #include <sync.h>
 
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
@@ -66,5 +67,4 @@ private:
     const int64_t m_default_ban_time;
 };
 
-extern std::unique_ptr<BanMan> g_banman;
 #endif

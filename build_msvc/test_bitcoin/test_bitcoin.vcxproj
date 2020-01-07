@@ -9,13 +9,13 @@
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\test\*_tests.cpp" />
     <ClCompile Include="..\..\src\test\*_properties.cpp" />
+    <ClCompile Include="..\..\src\test\*_tests.cpp" />
     <ClCompile Include="..\..\src\test\gen\*_gen.cpp" />
-    <ClCompile Include="..\..\src\wallet\test\*_tests.cpp" />
-    <ClCompile Include="..\..\src\test\setup_common.cpp" />
     <ClCompile Include="..\..\src\test\main.cpp" />
+    <ClCompile Include="..\..\src\test\util\*.cpp" />
     <ClCompile Include="..\..\src\wallet\test\*_fixture.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\*_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
@@ -41,6 +41,9 @@
     </ProjectReference>
     <ProjectReference Include="..\libbitcoin_zmq\libbitcoin_zmq.vcxproj">
       <Project>{792d487f-f14c-49fc-a9de-3fc150f31c3f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libtest_util\libtest_util.vcxproj">
+      <Project>{1e065f03-3566-47d0-8fa9-daa72b084e7d}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libunivalue\libunivalue.vcxproj">
       <Project>{5724ba7d-a09a-4ba8-800b-c4c1561b3d69}</Project>

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The NdovuCoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,6 @@
 
 #include <boost/variant.hpp>
 
-#include <stdint.h>
 
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 
@@ -48,7 +47,7 @@ extern unsigned nMaxDatacarrierBytes;
  * but in the future other flags may be added, such as a soft-fork to enforce
  * strict DER encoding.
  *
- * Failing one of these tests may trigger a DoS ban - see CheckInputs() for
+ * Failing one of these tests may trigger a DoS ban - see CheckInputScripts() for
  * details.
  */
 static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;

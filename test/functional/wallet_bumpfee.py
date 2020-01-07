@@ -38,6 +38,7 @@ class BumpFeeTest(BitcoinTestFramework):
             "-walletrbf={}".format(i),
             "-mintxfee=0.00002",
             "-deprecatedrpc=totalFee",
+            "-addresstype=bech32",
         ] for i in range(self.num_nodes)]
 
     def skip_test_if_missing_module(self):
@@ -100,7 +101,8 @@ def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     else:
         bumped_tx = rbf_node.bumpfee(rbfid)
     assert_equal(bumped_tx["errors"], [])
-    assert bumped_tx["fee"] - abs(rbftx["fee"]) > 0
+    assert bumped_tx["fee"] > -rbftx["fee"]
+    assert_equal(bumped_tx["origfee"], -rbftx["fee"])
     # check that bumped_tx propagates, original tx was evicted and has a wallet conflict
     self.sync_mempools((rbf_node, peer_node))
     assert bumped_tx["txid"] in rbf_node.getrawmempool()
@@ -210,15 +212,15 @@ def test_small_output_with_feerate_succeeds(rbf_node, dest_address):
     # Make sure additional inputs exist
     rbf_node.generatetoaddress(101, rbf_node.getnewaddress())
     rbfid = spend_one_input(rbf_node, dest_address)
-    original_input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
-    assert_equal(len(original_input_list), 1)
-    original_txin = original_input_list[0]
+    input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
+    assert_equal(len(input_list), 1)
+    original_txin = input_list[0]
     # Keep bumping until we out-spend change output
     tx_fee = 0
     while tx_fee < Decimal("0.0005"):
-        new_input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
-        new_item = list(new_input_list)[0]
-        assert_equal(len(original_input_list), 1)
+        input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
+        new_item = list(input_list)[0]
+        assert_equal(len(input_list), 1)
         assert_equal(original_txin["txid"], new_item["txid"])
         assert_equal(original_txin["vout"], new_item["vout"])
         rbfid_new_details = rbf_node.bumpfee(rbfid)
@@ -245,10 +247,8 @@ def test_dust_to_fee(rbf_node, dest_address):
     # the bumped tx sets fee=49,900, but it converts to 50,000
     rbfid = spend_one_input(rbf_node, dest_address)
     fulltx = rbf_node.getrawtransaction(rbfid, 1)
-    # (32-byte p2sh-pwpkh output size + 148 p2pkh spend estimate) * 10k(discard_rate) / 1000 = 1800
-    # P2SH outputs are slightly "over-discarding" due to the IsDust calculation assuming it will
-    # be spent as a P2PKH.
-    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 50000 - 1800})
+    # (31-vbyte p2wpkh output size + 67-vbyte p2wpkh spend estimate) * 10k(discard_rate) / 1000 = 980
+    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 50000 - 980})
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
     assert_equal(bumped_tx["fee"], Decimal("0.00050000"))
     assert_equal(len(fulltx["vout"]), 2)
@@ -271,7 +271,9 @@ def test_settxfee(rbf_node, dest_address):
 
 
 def test_maxtxfee_fails(test, rbf_node, dest_address):
-    test.restart_node(1, ['-maxtxfee=0.00003'] + test.extra_args[1])
+    # size of bumped transaction (p2wpkh, 1 input, 2 outputs): 141 vbytes
+    # expected bumping feerate of 20 sats/vbyte => 141*20 sats = 0.00002820 btc
+    test.restart_node(1, ['-maxtxfee=0.000025'] + test.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     rbfid = spend_one_input(rbf_node, dest_address)
     assert_raises_rpc_error(-4, "Unable to create transaction: Fee exceeds maximum configured by -maxtxfee", rbf_node.bumpfee, rbfid)

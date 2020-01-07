@@ -13,7 +13,7 @@
 
 #include <tuple>
 
-InitInterfaces* g_rpc_interfaces = nullptr;
+const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
 
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValueType>& typesExpected,
@@ -133,18 +133,18 @@ CPubKey HexToPubKey(const std::string& hex_in)
 }
 
 // Retrieves a public key for an address from the given FillableSigningProvider
-CPubKey AddrToPubKey(FillableSigningProvider* const keystore, const std::string& addr_in)
+CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string& addr_in)
 {
     CTxDestination dest = DecodeDestination(addr_in);
     if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address: " + addr_in);
     }
-    CKeyID key = GetKeyForDestination(*keystore, dest);
+    CKeyID key = GetKeyForDestination(keystore, dest);
     if (key.IsNull()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("%s does not refer to a key", addr_in));
     }
     CPubKey vchPubKey;
-    if (!keystore->GetPubKey(key, vchPubKey)) {
+    if (!keystore.GetPubKey(key, vchPubKey)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("no full public key for address %s", addr_in));
     }
     if (!vchPubKey.IsFullyValid()) {
@@ -430,7 +430,7 @@ RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RP
     std::set<std::string> named_args;
     for (const auto& arg : m_args) {
         // Should have unique named arguments
-        assert(named_args.insert(arg.m_name).second);
+        CHECK_NONFATAL(named_args.insert(arg.m_name).second);
     }
 }
 
@@ -622,11 +622,11 @@ std::string RPCArg::ToStringObj(const bool oneline) const
     case Type::OBJ:
     case Type::OBJ_USER_KEYS:
         // Currently unused, so avoid writing dead code
-        assert(false);
+        CHECK_NONFATAL(false);
 
         // no default case, so the compiler can warn about missing cases
     }
-    assert(false);
+    CHECK_NONFATAL(false);
 }
 
 std::string RPCArg::ToString(const bool oneline) const
@@ -663,7 +663,7 @@ std::string RPCArg::ToString(const bool oneline) const
 
         // no default case, so the compiler can warn about missing cases
     }
-    assert(false);
+    CHECK_NONFATAL(false);
 }
 
 static std::pair<int64_t, int64_t> ParseRange(const UniValue& value)

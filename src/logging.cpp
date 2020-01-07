@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The NdovuCoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -67,6 +67,9 @@ bool BCLog::Logger::StartLogging()
 
         if (m_print_to_file) FileWriteStr(s, m_fileout);
         if (m_print_to_console) fwrite(s.data(), 1, s.size(), stdout);
+        for (const auto& cb : m_print_callbacks) {
+            cb(s);
+        }
 
         m_msgs_before_open.pop_front();
     }
@@ -81,6 +84,7 @@ void BCLog::Logger::DisconnectTestLogger()
     m_buffering = true;
     if (m_fileout != nullptr) fclose(m_fileout);
     m_fileout = nullptr;
+    m_print_callbacks.clear();
 }
 
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
@@ -91,7 +95,15 @@ void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 bool BCLog::Logger::EnableCategory(const std::string& str)
 {
     BCLog::LogFlags flag;
-    if (!GetLogCategory(flag, str)) return false;
+    if (!GetLogCategory(flag, str)) {
+        if (str == "db") {
+            // DEPRECATION: Added in 0.20, should start returning an error in 0.21
+            LogPrintf("Warning: logging category 'db' is deprecated, use 'walletdb' instead\n");
+            EnableCategory(BCLog::WALLETDB);
+            return true;
+        }
+        return false;
+    }
     EnableCategory(flag);
     return true;
 }
@@ -135,7 +147,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::HTTP, "http"},
     {BCLog::BENCH, "bench"},
     {BCLog::ZMQ, "zmq"},
-    {BCLog::DB, "db"},
+    {BCLog::WALLETDB, "walletdb"},
     {BCLog::RPC, "rpc"},
     {BCLog::ESTIMATEFEE, "estimatefee"},
     {BCLog::ADDRMAN, "addrman"},
@@ -269,6 +281,9 @@ void BCLog::Logger::LogPrintStr(const std::string& str)
         // print to console
         fwrite(str_prefixed.data(), 1, str_prefixed.size(), stdout);
         fflush(stdout);
+    }
+    for (const auto& cb : m_print_callbacks) {
+        cb(str_prefixed);
     }
     if (m_print_to_file) {
         assert(m_fileout != nullptr);

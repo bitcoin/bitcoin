@@ -11,7 +11,7 @@ Running
 For benchmarks purposes you only need to compile `bitcoin_bench`. Beware of configuring without `--enable-debug` as this would impact
 benchmarking by unlatching log printers and lock analysis.
 
-    make -C src bench_bitcoin
+    make -C src bitcoin_bench
 
 After compiling bitcoin-core, the benchmarks can be run with:
 

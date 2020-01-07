@@ -2,16 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <qt/walletcontroller.h>
+
 #include <qt/askpassphrasedialog.h>
 #include <qt/createwalletdialog.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
-#include <qt/walletcontroller.h>
-
-#include <wallet/wallet.h>
+#include <qt/walletmodel.h>
 
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
+#include <util/string.h>
+#include <wallet/wallet.h>
 
 #include <algorithm>
 
@@ -232,7 +234,7 @@ void CreateWalletActivity::finish()
     if (!m_error_message.empty()) {
         QMessageBox::critical(m_parent_widget, tr("Create wallet failed"), QString::fromStdString(m_error_message));
     } else if (!m_warning_message.empty()) {
-        QMessageBox::warning(m_parent_widget, tr("Create wallet warning"), QString::fromStdString(m_warning_message));
+        QMessageBox::warning(m_parent_widget, tr("Create wallet warning"), QString::fromStdString(Join(m_warning_message, "\n")));
     }
 
     if (m_wallet_model) Q_EMIT created(m_wallet_model);
@@ -273,7 +275,7 @@ void OpenWalletActivity::finish()
     if (!m_error_message.empty()) {
         QMessageBox::critical(m_parent_widget, tr("Open wallet failed"), QString::fromStdString(m_error_message));
     } else if (!m_warning_message.empty()) {
-        QMessageBox::warning(m_parent_widget, tr("Open wallet warning"), QString::fromStdString(m_warning_message));
+        QMessageBox::warning(m_parent_widget, tr("Open wallet warning"), QString::fromStdString(Join(m_warning_message, "\n")));
     }
 
     if (m_wallet_model) Q_EMIT opened(m_wallet_model);

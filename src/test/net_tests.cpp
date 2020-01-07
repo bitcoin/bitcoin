@@ -5,7 +5,7 @@
 #include <addrdb.h>
 #include <addrman.h>
 #include <clientversion.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <string>
 #include <boost/test/unit_test.hpp>
 #include <serialize.h>
@@ -128,9 +128,8 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     CDataStream ssPeers2 = AddrmanToStream(addrmanUncorrupted);
 
     CAddrMan addrman2;
-    CAddrDB adb;
     BOOST_CHECK(addrman2.size() == 0);
-    BOOST_CHECK(adb.Read(addrman2, ssPeers2));
+    BOOST_CHECK(CAddrDB::Read(addrman2, ssPeers2));
     BOOST_CHECK(addrman2.size() == 3);
 }
 
@@ -160,9 +159,8 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     CDataStream ssPeers2 = AddrmanToStream(addrmanCorrupted);
 
     CAddrMan addrman2;
-    CAddrDB adb;
     BOOST_CHECK(addrman2.size() == 0);
-    BOOST_CHECK(!adb.Read(addrman2, ssPeers2));
+    BOOST_CHECK(!CAddrDB::Read(addrman2, ssPeers2));
     BOOST_CHECK(addrman2.size() == 0);
 }
 
@@ -303,5 +301,19 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
     BOOST_CHECK_EQUAL(IsLocal(addr), false);
 }
 
+BOOST_AUTO_TEST_CASE(PoissonNextSend)
+{
+    g_mock_deterministic_tests = true;
+
+    int64_t now = 5000;
+    int average_interval_seconds = 600;
+
+    auto poisson = ::PoissonNextSend(now, average_interval_seconds);
+    std::chrono::microseconds poisson_chrono = ::PoissonNextSend(std::chrono::microseconds{now}, std::chrono::seconds{average_interval_seconds});
+
+    BOOST_CHECK_EQUAL(poisson, poisson_chrono.count());
+
+    g_mock_deterministic_tests = false;
+}
 
 BOOST_AUTO_TEST_SUITE_END()

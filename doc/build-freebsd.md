@@ -11,7 +11,7 @@ This guide does not contain instructions for building the GUI.
 You will need the following dependencies, which can be installed as root via pkg:
 
 ```shell
-pkg install autoconf automake boost-libs git gmake libevent libtool openssl pkgconf
+pkg install autoconf automake boost-libs git gmake libevent libtool pkgconf
 
 git clone https://github.com/bitcoin/bitcoin.git
 ```

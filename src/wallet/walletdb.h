@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The NdovuCoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,15 +7,12 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include <amount.h>
-#include <primitives/transaction.h>
 #include <script/sign.h>
 #include <wallet/db.h>
 #include <key.h>
 
-#include <list>
 #include <stdint.h>
 #include <string>
-#include <utility>
 #include <vector>
 
 /**
@@ -263,7 +260,7 @@ public:
     /* verifies the database environment */
     static bool VerifyEnvironment(const fs::path& wallet_path, std::string& errorStr);
     /* verifies the database file */
-    static bool VerifyDatabaseFile(const fs::path& wallet_path, std::string& warningStr, std::string& errorStr);
+    static bool VerifyDatabaseFile(const fs::path& wallet_path, std::vector<std::string>& warnings, std::string& errorStr);
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);

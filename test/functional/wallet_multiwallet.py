@@ -24,7 +24,6 @@ class MultiWalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.supports_cli = True
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -339,13 +338,9 @@ class MultiWalletTest(BitcoinTestFramework):
         self.log.info("Fail -upgradewallet that results in downgrade")
         assert_raises_rpc_error(
             -4,
-            "Wallet loading failed.",
+            'Wallet loading failed: Error loading {}: Wallet requires newer version of {}'.format(
+                wallet_dir('high_minversion', 'wallet.dat'), self.config['environment']['PACKAGE_NAME']),
             lambda: self.nodes[0].loadwallet(filename='high_minversion'),
-        )
-        self.stop_node(
-            i=0,
-            expected_stderr='Error: Error loading {}: Wallet requires newer version of Bitcoin Core'.format(
-                wallet_dir('high_minversion', 'wallet.dat')),
         )
 
 

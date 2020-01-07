@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 #include <node/psbt.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
+#include <tinyformat.h>
 
 #include <numeric>
 
@@ -37,6 +38,11 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
             input_analysis.is_final = false;
             input_analysis.next = PSBTRole::UPDATER;
             calc_fee = false;
+        }
+
+        if (!utxo.IsNull() && utxo.scriptPubKey.IsUnspendable()) {
+            result.SetInvalid(strprintf("PSBT is not valid. Input %u spends unspendable output", i));
+            return result;
         }
 
         // Check if it is final

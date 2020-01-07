@@ -2,9 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <random.h>
 #include <streams.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -339,7 +338,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
 BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
 {
     // Make this test deterministic.
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
 
     for (int rep = 0; rep < 50; ++rep) {
         FILE* file = fsbridge::fopen("streams_test_tmp", "w+b");

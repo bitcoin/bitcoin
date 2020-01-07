@@ -11,6 +11,7 @@
 #include <net.h>
 #include <net_processing.h>
 #include <node/coin.h>
+#include <node/context.h>
 #include <node/transaction.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -18,12 +19,10 @@
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <protocol.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <shutdown.h>
 #include <sync.h>
-#include <threadsafety.h>
 #include <timedata.h>
 #include <txmempool.h>
 #include <ui_interface.h>
@@ -58,12 +57,6 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
             return block->nHeight;
         }
         return nullopt;
-    }
-    int getBlockDepth(const uint256& hash) override
-    {
-        const Optional<int> tip_height = getHeight();
-        const Optional<int> height = getBlockHeight(hash);
-        return tip_height && height ? *tip_height - *height + 1 : 0;
     }
     uint256 getBlockHash(int height) override
     {
@@ -183,11 +176,11 @@ public:
         const CBlockIndex* index,
         const std::vector<CTransactionRef>& tx_conflicted) override
     {
-        m_notifications->BlockConnected(*block, tx_conflicted);
+        m_notifications->BlockConnected(*block, tx_conflicted, index->nHeight);
     }
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& block) override
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->BlockDisconnected(*block);
+        m_notifications->BlockDisconnected(*block, index->nHeight);
     }
     void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
@@ -240,6 +233,7 @@ public:
 class ChainImpl : public Chain
 {
 public:
+    explicit ChainImpl(NodeContext& node) : m_node(node) {}
     std::unique_ptr<Chain::Lock> lock(bool try_lock) override
     {
         auto result = MakeUnique<LockImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
@@ -269,7 +263,7 @@ public:
         }
         return true;
     }
-    void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(coins); }
+    void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(m_node, coins); }
     double guessVerificationProgress(const uint256& block_hash) override
     {
         LOCK(cs_main);
@@ -288,7 +282,7 @@ public:
     }
     bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) override
     {
-        const TransactionError err = BroadcastTransaction(tx, err_string, max_tx_fee, relay, /*wait_callback*/ false);
+        const TransactionError err = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, relay, /*wait_callback*/ false);
         // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
         // Note: this will need to be updated if BroadcastTransactions() is updated to return other non-mempool failures
         // that Chain clients do not need to know about.
@@ -297,6 +291,11 @@ public:
     void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override
     {
         ::mempool.GetTransactionAncestry(txid, ancestors, descendants);
+    }
+    void getPackageLimits(unsigned int& limit_ancestor_count, unsigned int& limit_descendant_count) override
+    {
+        limit_ancestor_count = gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
+        limit_descendant_count = gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
     }
     bool checkChainLimits(const CTransactionRef& tx) override
     {
@@ -348,13 +347,11 @@ public:
     {
         return MakeUnique<NotificationsHandlerImpl>(*this, notifications);
     }
-    void waitForNotificationsIfNewBlocksConnected(const uint256& old_tip) override
+    void waitForNotificationsIfTipChanged(const uint256& old_tip) override
     {
         if (!old_tip.IsNull()) {
             LOCK(::cs_main);
             if (old_tip == ::ChainActive().Tip()->GetBlockHash()) return;
-            CBlockIndex* block = LookupBlockIndex(old_tip);
-            if (block && block->GetAncestor(::ChainActive().Height()) == ::ChainActive().Tip()) return;
         }
         SyncWithValidationInterfaceQueue();
     }
@@ -375,9 +372,10 @@ public:
             notifications.TransactionAddedToMempool(entry.GetSharedTx());
         }
     }
+    NodeContext& m_node;
 };
 } // namespace
 
-std::unique_ptr<Chain> MakeChain() { return MakeUnique<ChainImpl>(); }
+std::unique_ptr<Chain> MakeChain(NodeContext& node) { return MakeUnique<ChainImpl>(node); }
 
 } // namespace interfaces

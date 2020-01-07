@@ -7,7 +7,6 @@
 
 #include <validation.h>
 #include <streams.h>
-#include <consensus/validation.h>
 #include <rpc/blockchain.h>
 
 #include <univalue.h>

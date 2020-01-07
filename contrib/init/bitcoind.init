@@ -39,7 +39,7 @@ start() {
 
 stop() {
     echo -n $"Stopping $prog: "
-    killproc $prog
+    killproc $prog -t600
     RETVAL=$?
     echo
     [ $RETVAL -eq 0 ] && rm -f $lockfile

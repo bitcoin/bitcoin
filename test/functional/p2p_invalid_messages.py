@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid network messages."""
 import asyncio
-import os
 import struct
 import sys
 
@@ -66,27 +65,21 @@ class InvalidMessagesTest(BitcoinTestFramework):
         msg_at_size = msg_unrecognized(str_data="b" * valid_data_limit)
         assert len(msg_at_size.serialize()) == msg_limit
 
-        increase_allowed = 0.5
-        if [s for s in os.environ.get("BITCOIN_CONFIG", "").split(" ") if "--with-sanitizers" in s and "address" in s]:
-            increase_allowed = 3.5
-        with node.assert_memory_usage_stable(increase_allowed=increase_allowed):
-            self.log.info(
-                "Sending a bunch of large, junk messages to test "
-                "memory exhaustion. May take a bit...")
+        self.log.info("Sending a bunch of large, junk messages to test memory exhaustion. May take a bit...")
 
-            # Run a bunch of times to test for memory exhaustion.
-            for _ in range(80):
-                node.p2p.send_message(msg_at_size)
+        # Run a bunch of times to test for memory exhaustion.
+        for _ in range(80):
+            node.p2p.send_message(msg_at_size)
 
-            # Check that, even though the node is being hammered by nonsense from one
-            # connection, it can still service other peers in a timely way.
-            for _ in range(20):
-                conn2.sync_with_ping(timeout=2)
+        # Check that, even though the node is being hammered by nonsense from one
+        # connection, it can still service other peers in a timely way.
+        for _ in range(20):
+            conn2.sync_with_ping(timeout=2)
 
-            # Peer 1, despite serving up a bunch of nonsense, should still be connected.
-            self.log.info("Waiting for node to drop junk messages.")
-            node.p2p.sync_with_ping(timeout=320)
-            assert node.p2p.is_connected
+        # Peer 1, despite serving up a bunch of nonsense, should still be connected.
+        self.log.info("Waiting for node to drop junk messages.")
+        node.p2p.sync_with_ping(timeout=320)
+        assert node.p2p.is_connected
 
         #
         # 1.
@@ -101,11 +94,10 @@ class InvalidMessagesTest(BitcoinTestFramework):
             msg_over_size = msg_unrecognized(str_data="b" * (valid_data_limit + 1))
             assert len(msg_over_size.serialize()) == (msg_limit + 1)
 
-            with node.assert_debug_log(["Oversized message from peer=4, disconnecting"]):
-                # An unknown message type (or *any* message type) over
-                # MAX_PROTOCOL_MESSAGE_LENGTH should result in a disconnect.
-                node.p2p.send_message(msg_over_size)
-                node.p2p.wait_for_disconnect(timeout=4)
+            # An unknown message type (or *any* message type) over
+            # MAX_PROTOCOL_MESSAGE_LENGTH should result in a disconnect.
+            node.p2p.send_message(msg_over_size)
+            node.p2p.wait_for_disconnect(timeout=4)
 
             node.disconnect_p2ps()
             conn = node.add_p2p_connection(P2PDataStore())
@@ -168,7 +160,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
     def test_checksum(self):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['ProcessMessages(badmsg, 2 bytes): CHECKSUM ERROR expected 78df0a04 was ffffffff']):
+        with self.nodes[0].assert_debug_log(['CHECKSUM ERROR (badmsg, 2 bytes), expected 78df0a04 was ffffffff']):
             msg = conn.build_message(msg_unrecognized(str_data="d"))
             cut_len = (
                 4 +  # magic

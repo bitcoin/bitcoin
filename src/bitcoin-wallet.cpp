@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018 The Bitcoin Core developers
+// Copyright (c) 2016-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,13 +9,11 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <logging.h>
-#include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <wallet/wallettool.h>
 
 #include <functional>
-#include <stdio.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
@@ -38,19 +36,19 @@ static bool WalletAppInit(int argc, char* argv[])
     SetupWalletToolArgs();
     std::string error_message;
     if (!gArgs.ParseParameters(argc, argv, error_message)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error_message.c_str());
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error_message);
         return false;
     }
     if (argc < 2 || HelpRequested(gArgs)) {
         std::string usage = strprintf("%s bitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
-                                      "wallet-tool is an offline tool for creating and interacting with Bitcoin Core wallet files.\n" +
-                                      "By default wallet-tool will act on wallets in the default mainnet wallet directory in the datadir.\n" +
+                                      "bitcoin-wallet is an offline tool for creating and interacting with Bitcoin Core wallet files.\n" +
+                                      "By default bitcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n" +
                                       "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n" +
                                       "Usage:\n" +
                                      "  bitcoin-wallet [options] <command>\n\n" +
                                      gArgs.GetHelpMessage();
 
-        tfm::format(std::cout, "%s", usage.c_str());
+        tfm::format(std::cout, "%s", usage);
         return false;
     }
 
@@ -58,7 +56,7 @@ static bool WalletAppInit(int argc, char* argv[])
     LogInstance().m_print_to_console = gArgs.GetBoolArg("-printtoconsole", gArgs.GetBoolArg("-debug", false));
 
     if (!CheckDataDirOption()) {
-        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""));
         return false;
     }
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
@@ -89,7 +87,7 @@ int main(int argc, char* argv[])
     for(int i = 1; i < argc; ++i) {
         if (!IsSwitchChar(argv[i][0])) {
             if (!method.empty()) {
-                tfm::format(std::cerr, "Error: two methods provided (%s and %s). Only one method should be provided.\n", method.c_str(), argv[i]);
+                tfm::format(std::cerr, "Error: two methods provided (%s and %s). Only one method should be provided.\n", method, argv[i]);
                 return EXIT_FAILURE;
             }
             method = argv[i];

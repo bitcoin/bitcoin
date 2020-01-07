@@ -1,9 +1,10 @@
-// Copyright (c) 2018 The NdovuCoin Core developers
+// Copyright (c) 2018-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <mutex>
 #include <sstream>
+#include <set>
 
 #include <blockfilter.h>
 #include <crypto/siphash.h>
@@ -221,15 +222,14 @@ bool BlockFilterTypeByName(const std::string& name, BlockFilterType& filter_type
     return false;
 }
 
-const std::vector<BlockFilterType>& AllBlockFilterTypes()
+const std::set<BlockFilterType>& AllBlockFilterTypes()
 {
-    static std::vector<BlockFilterType> types;
+    static std::set<BlockFilterType> types;
 
     static std::once_flag flag;
     std::call_once(flag, []() {
-            types.reserve(g_filter_types.size());
             for (auto entry : g_filter_types) {
-                types.push_back(entry.first);
+                types.insert(entry.first);
             }
         });
 

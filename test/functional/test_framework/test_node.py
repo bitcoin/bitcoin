@@ -30,6 +30,7 @@ from .util import (
     rpc_url,
     wait_until,
     p2p_port,
+    EncodeDecimal,
 )
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
@@ -59,7 +60,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, *, chain, rpchost, timewait, bitcoind, bitcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False):
+    def __init__(self, i, datadir, *, chain, rpchost, timewait, bitcoind, bitcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -96,6 +97,15 @@ class TestNode():
             "-debugexclude=leveldb",
             "-uacomment=testnode%d" % i,
         ]
+        if use_valgrind:
+            default_suppressions_file = os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..", "..", "..", "contrib", "valgrind.supp")
+            suppressions_file = os.getenv("VALGRIND_SUPPRESSIONS_FILE",
+                                          default_suppressions_file)
+            self.args = ["valgrind", "--suppressions={}".format(suppressions_file),
+                         "--gen-suppressions=all", "--exit-on-first-error=yes",
+                         "--error-exitcode=1", "--quiet"] + self.args
 
         self.cli = TestNodeCLI(bitcoin_cli, self.datadir)
         self.use_cli = use_cli
@@ -134,25 +144,6 @@ class TestNode():
         """Return a deterministic priv key in base58, that only depends on the node's index"""
         assert len(self.PRIV_KEYS) == MAX_NODES
         return self.PRIV_KEYS[self.index]
-
-    def get_mem_rss_kilobytes(self):
-        """Get the memory usage (RSS) per `ps`.
-
-        Returns None if `ps` is unavailable.
-        """
-        assert self.running
-
-        try:
-            return int(subprocess.check_output(
-                ["ps", "h", "-o", "rss", "{}".format(self.process.pid)],
-                stderr=subprocess.DEVNULL).split()[-1])
-
-        # Avoid failing on platforms where ps isn't installed.
-        #
-        # We could later use something like `psutils` to work across platforms.
-        except (FileNotFoundError, subprocess.SubprocessError):
-            self.log.exception("Unable to get memory usage")
-            return None
 
     def _node_msg(self, msg: str) -> str:
         """Return a modified msg that identifies this node by its index as a debugging aid."""
@@ -333,33 +324,6 @@ class TestNode():
         self._raise_assertion_error('Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(str(expected_msgs), print_log))
 
     @contextlib.contextmanager
-    def assert_memory_usage_stable(self, *, increase_allowed=0.03):
-        """Context manager that allows the user to assert that a node's memory usage (RSS)
-        hasn't increased beyond some threshold percentage.
-
-        Args:
-            increase_allowed (float): the fractional increase in memory allowed until failure;
-                e.g. `0.12` for up to 12% increase allowed.
-        """
-        before_memory_usage = self.get_mem_rss_kilobytes()
-
-        yield
-
-        after_memory_usage = self.get_mem_rss_kilobytes()
-
-        if not (before_memory_usage and after_memory_usage):
-            self.log.warning("Unable to detect memory usage (RSS) - skipping memory check.")
-            return
-
-        perc_increase_memory_usage = (after_memory_usage / before_memory_usage) - 1
-
-        if perc_increase_memory_usage > increase_allowed:
-            self._raise_assertion_error(
-                "Memory usage increased over threshold of {:.3f}% from {} to {} ({:.3f}%)".format(
-                    increase_allowed * 100, before_memory_usage, after_memory_usage,
-                    perc_increase_memory_usage * 100))
-
-    @contextlib.contextmanager
     def profile_with_perf(self, profile_name):
         """
         Context manager that allows easy profiling of node activity using `perf`.
@@ -526,7 +490,7 @@ def arg_to_cli(arg):
     if isinstance(arg, bool):
         return str(arg).lower()
     elif isinstance(arg, dict) or isinstance(arg, list):
-        return json.dumps(arg)
+        return json.dumps(arg, default=EncodeDecimal)
     else:
         return str(arg)
 

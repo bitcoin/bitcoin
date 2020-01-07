@@ -36,7 +36,7 @@ int main(int argc, char** argv)
     SetupBenchArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
         return EXIT_FAILURE;
     }
 
@@ -51,9 +51,16 @@ int main(int argc, char** argv)
     std::string scaling_str = gArgs.GetArg("-scaling", DEFAULT_BENCH_SCALING);
     bool is_list_only = gArgs.GetBoolArg("-list", false);
 
+    if (evaluations == 0) {
+        return EXIT_SUCCESS;
+    } else if (evaluations < 0) {
+        tfm::format(std::cerr, "Error parsing evaluations argument: %d\n", evaluations);
+        return EXIT_FAILURE;
+    }
+
     double scaling_factor;
     if (!ParseDouble(scaling_str, &scaling_factor)) {
-        tfm::format(std::cerr, "Error parsing scaling factor as double: %s\n", scaling_str.c_str());
+        tfm::format(std::cerr, "Error parsing scaling factor as double: %s\n", scaling_str);
         return EXIT_FAILURE;
     }
 

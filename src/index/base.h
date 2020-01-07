@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 The NdovuCoin Core developers
+// Copyright (c) 2017-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,6 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <threadinterrupt.h>
-#include <uint256.h>
 #include <validationinterface.h>
 
 class CBlockIndex;

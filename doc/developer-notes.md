@@ -12,12 +12,13 @@ Developer Notes
     - [Development tips and tricks](#development-tips-and-tricks)
         - [Compiling for debugging](#compiling-for-debugging)
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
-        - [debug.log](#debuglog)
+        - [`debug.log`](#debuglog)
         - [Testnet and Regtest modes](#testnet-and-regtest-modes)
         - [DEBUG_LOCKORDER](#debug_lockorder)
         - [Valgrind suppressions file](#valgrind-suppressions-file)
         - [Compiling for test coverage](#compiling-for-test-coverage)
         - [Performance profiling with perf](#performance-profiling-with-perf)
+        - [Sanitizers](#sanitizers)
     - [Locking/mutex usage notes](#lockingmutex-usage-notes)
     - [Threads](#threads)
     - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
@@ -35,6 +36,7 @@ Developer Notes
     - [GUI](#gui)
     - [Subtrees](#subtrees)
     - [Scripted diffs](#scripted-diffs)
+        - [Suggestions and examples](#suggestions-and-examples)
     - [Release notes](#release-notes)
     - [RPC interface guidelines](#rpc-interface-guidelines)
 
@@ -62,7 +64,7 @@ tool to clean up patches automatically before submission.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
   - No indentation for `public`/`protected`/`private` or for `namespace`.
-  - No extra spaces inside parenthesis; don't do ( this ).
+  - No extra spaces inside parenthesis; don't do `( this )`.
   - No space after function names; one space after `if`, `for` and `while`.
   - If an `if` only has a single-statement `then`-clause, it can appear
     on the same line as the `if`, without braces. In every other case,
@@ -76,7 +78,7 @@ code.
     separate words (snake_case).
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
-  - Constant names are all uppercase, and use `_` to separate words.
+  - Compile-time constant names are all uppercase, and use `_` to separate words.
   - Class names, function names, and method names are UpperCamelCase
     (PascalCase). Do not prefix class names with `C`.
   - Test suite naming convention: The Boost test suite in file
@@ -87,7 +89,6 @@ code.
   - `++i` is preferred over `i++`.
   - `nullptr` is preferred over `NULL` or `(void*)0`.
   - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
-  - `enum class` is preferred over `enum` where possible. Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to int, and name clashes due to enumerators being exported to the surrounding scope.
 
 Block style example:
 ```c++
@@ -208,15 +209,15 @@ produce better debugging builds.
 
 Run configure with the `--enable-gprof` option, then make.
 
-### debug.log
+### `debug.log`
 
-If the code is behaving strangely, take a look in the debug.log file in the data directory;
+If the code is behaving strangely, take a look in the `debug.log` file in the data directory;
 error and debugging messages are written there.
 
 The `-debug=...` command-line option controls debugging; running with just `-debug` or `-debug=1` will turn
-on all categories (and give you a very large debug.log file).
+on all categories (and give you a very large `debug.log` file).
 
-The Qt code routes `qDebug()` output to debug.log under category "qt": run with `-debug=qt`
+The Qt code routes `qDebug()` output to `debug.log` under category "qt": run with `-debug=qt`
 to see it.
 
 ### Testnet and Regtest modes
@@ -234,7 +235,7 @@ NdovuCoin Core is a multi-threaded application, and deadlocks or other
 multi-threading bugs can be very difficult to track down. The `--enable-debug`
 configure option adds `-DDEBUG_LOCKORDER` to the compiler flags. This inserts
 run-time checks to keep track of which locks are held and adds warnings to the
-debug.log file if inconsistencies are detected.
+`debug.log` file if inconsistencies are detected.
 
 ### Valgrind suppressions file
 
@@ -276,8 +277,7 @@ the functional test framework. Perf can observe a running process and sample
 (at some frequency) where its execution is.
 
 Perf installation is contingent on which kernel version you're running; see
-[this StackExchange
-thread](https://askubuntu.com/questions/50145/how-to-install-perf-monitoring-tool)
+[this thread](https://askubuntu.com/questions/50145/how-to-install-perf-monitoring-tool)
 for specific instructions.
 
 Certain kernel parameters may need to be set for perf to be able to inspect the
@@ -312,7 +312,7 @@ or using a graphical tool like [Hotspot](https://github.com/KDAB/hotspot).
 See the functional test documentation for how to invoke perf within tests.
 
 
-**Sanitizers**
+### Sanitizers
 
 NdovuCoin Core can be compiled with various "sanitizers" enabled, which add
 instrumentation for issues regarding things like memory safety, thread race
@@ -373,7 +373,7 @@ Deadlocks due to inconsistent lock ordering (thread 1 locks `cs_main` and then
 `cs_wallet`, while thread 2 locks them in the opposite order: result, deadlock
 as each waits for the other to release its lock) are a problem. Compile with
 `-DDEBUG_LOCKORDER` (or use `--enable-debug`) to get lock order inconsistencies
-reported in the debug.log file.
+reported in the `debug.log` file.
 
 Re-architecting the core code so there are better-defined interfaces
 between the various components is a goal, with any necessary locking
@@ -385,9 +385,7 @@ Threads
 
 - ThreadScriptCheck : Verifies block scripts.
 
-- ThreadImport : Loads blocks from blk*.dat files or bootstrap.dat.
-
-- StartNode : Starts other threads.
+- ThreadImport : Loads blocks from `blk*.dat` files or `-loadblock=<file>`.
 
 - ThreadDNSAddressSeed : Loads addresses of peers from the DNS.
 
@@ -401,7 +399,7 @@ Threads
 
 - ThreadMessageHandler : Higher-level message handling (sending and receiving).
 
-- DumpAddresses : Dumps IP addresses of nodes to peers.dat.
+- DumpAddresses : Dumps IP addresses of nodes to `peers.dat`.
 
 - ThreadRPCServer : Remote procedure call handler, listens on port 8332 for connections and services them.
 
@@ -466,11 +464,6 @@ Wallet
 -------
 
 - Make sure that no crashes happen with run-time option `-disablewallet`.
-
-  - *Rationale*: In RPC code that conditionally uses the wallet (such as
-    `validateaddress`), it is easy to forget that global pointer `pwalletMain`
-    can be nullptr. See `test/functional/disablewallet.py` for functional tests
-    exercising the API with `-disablewallet`.
 
 - Include `db_cxx.h` (BerkeleyDB header) only when `ENABLE_WALLET` is set.
 
@@ -546,11 +539,10 @@ class A
 }
 ```
 
-- By default, declare single-argument constructors `explicit`.
+- By default, declare constructors `explicit`.
 
-  - *Rationale*: This is a precaution to avoid unintended conversions that might
-    arise when single-argument constructors are used as implicit conversion
-    functions.
+  - *Rationale*: This is a precaution to avoid unintended
+    [conversions](https://en.cppreference.com/w/cpp/language/converting_constructor).
 
 - Use explicitly signed or unsigned `char`s, or even better `uint8_t` and
   `int8_t`. Do not use bare `char` unless it is to pass to a third-party API.
@@ -562,6 +554,34 @@ class A
 
   - *Rationale*: Easier to understand what is happening, thus easier to spot mistakes, even for those
   that are not language lawyers.
+
+- Prefer `enum class` (scoped enumerations) over `enum` (traditional enumerations) where possible.
+
+  - *Rationale*: Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to `int`, and name clashes due to enumerators being exported to the surrounding scope.
+
+- `switch` statement on an enumeration example:
+
+```cpp
+enum class Tabs {
+    INFO,
+    CONSOLE,
+    GRAPH,
+    PEERS
+};
+
+int GetInt(Tabs tab)
+{
+    switch (tab) {
+    case Tabs::INFO: return 0;
+    case Tabs::CONSOLE: return 1;
+    case Tabs::GRAPH: return 2;
+    case Tabs::PEERS: return 3;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+```
+
+*Rationale*: The comment documents skipping `default:` label, and it complies with `clang-format` rules. The assertion prevents firing of `-Wreturn-type` warning on some compilers.
 
 Strings and formatting
 ------------------------
@@ -612,6 +632,28 @@ Strings and formatting
 - For `strprintf`, `LogPrint`, `LogPrintf` formatting characters don't need size specifiers.
 
   - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion.
+
+- Use `.c_str()` sparingly. Its only valid use is to pass C++ strings to C functions that take NULL-terminated
+  strings.
+
+  - Do not use it when passing a sized array (so along with `.size()`). Use `.data()` instead to get a pointer
+    to the raw data.
+
+    - *Rationale*: Although this is guaranteed to be safe starting with C++11, `.data()` communicates the intent better.
+
+  - Do not use it when passing strings to `tfm::format`, `strprintf`, `LogPrint[f]`.
+
+    - *Rationale*: This is redundant. Tinyformat handles strings.
+
+  - Do not use it to convert to `QString`. Use `QString::fromStdString()`.
+
+    - *Rationale*: Qt has built-in functionality for converting their string
+      type from/to C++. No need to roll your own.
+
+  - In cases where do you call `.c_str()`, you might want to additionally check that the string does not contain embedded '\0' characters, because
+    it will (necessarily) truncate the string. This might be used to hide parts of the string from logging or to circumvent
+    checks. If a use of strings is sensitive to this, take care to check the string for embedded NULL characters first
+    and reject it if there are any (see `ParsePrechecks` in `strencodings.cpp` for an example).
 
 Shadowing
 --------------
@@ -778,7 +820,7 @@ Current subtrees include:
   - **Note**: Follow the instructions in [Upgrading LevelDB](#upgrading-leveldb) when
     merging upstream changes to the LevelDB subtree.
 
-- src/libsecp256k1
+- src/secp256k1
   - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintained by Core contributors.
 
 - src/crypto/ctaes
@@ -840,7 +882,7 @@ Scripted diffs
 For reformatting and refactoring commits where the changes can be easily automated using a bash script, we use
 scripted-diff commits. The bash script is included in the commit message and our Travis CI job checks that
 the result of the script is identical to the commit. This aids reviewers since they can verify that the script
-does exactly what it's supposed to do. It is also helpful for rebasing (since the same script can just be re-run
+does exactly what it is supposed to do. It is also helpful for rebasing (since the same script can just be re-run
 on the new master commit).
 
 To create a scripted-diff:
@@ -861,7 +903,35 @@ For development, it might be more convenient to verify all scripted-diffs in a r
 test/lint/commit-script-check.sh origin/master..HEAD
 ```
 
-Commit [`bb81e173`](https://github.com/bitcoin/bitcoin/commit/bb81e173) is an example of a scripted-diff.
+### Suggestions and examples
+
+If you need to replace in multiple files, prefer `git ls-files` to `find` or globbing, and `git grep` to `grep`, to
+avoid changing files that are not under version control.
+
+For efficient replacement scripts, reduce the selection to the files that potentially need to be modified, so for
+example, instead of a blanket `git ls-files src | xargs sed -i s/apple/orange/`, use
+`git grep -l apple src | xargs sed -i s/apple/orange/`.
+
+Also, it is good to keep the selection of files as specific as possible — for example, replace only in directories where
+you expect replacements — because it reduces the risk that a rebase of your commit by re-running the script will
+introduce accidental changes.
+
+Some good examples of scripted-diff:
+
+- [scripted-diff: Rename InitInterfaces to NodeContext](https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d)
+uses an elegant script to replace occurences of multiple terms in all source files.
+
+- [scripted-diff: Remove g_connman, g_banman globals](https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d)
+replaces specific terms in a list of specific source files.
+
+- [scripted-diff: Replace fprintf with tfm::format](https://github.com/bitcoin/bitcoin/commit/fac03ec43a15ad547161e37e53ea82482cc508f9)
+does a global replacement but excludes certain directories.
+
+To find all previous uses of scripted diffs in the repository, do:
+
+```
+git log --grep="-BEGIN VERIFY SCRIPT-"
+```
 
 Release notes
 -------------
@@ -944,7 +1014,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 - A RPC method must either be a wallet method or a non-wallet method. Do not
   introduce new methods that differ in behavior based on the presence of a wallet.
 
-  - *Rationale*: as well as complicating the implementation and interfering
+  - *Rationale*: As well as complicating the implementation and interfering
     with the introduction of multi-wallet, wallet and non-wallet code should be
     separated to avoid introducing circular dependencies between code units.
 
@@ -971,8 +1041,13 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 
   - *Rationale*: RPC methods registered with the same function pointer will be
     considered aliases and only the first method name will show up in the
-    `help` rpc command list.
+    `help` RPC command list.
 
   - *Exception*: Using RPC method aliases may be appropriate in cases where a
     new RPC is replacing a deprecated RPC, to avoid both RPCs confusingly
     showing up in the command list.
+
+- Use the `UNIX_EPOCH_TIME` constant when describing UNIX epoch time or
+  timestamps in the documentation.
+
+  - *Rationale*: User-facing consistency.

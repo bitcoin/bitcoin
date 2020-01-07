@@ -41,6 +41,12 @@ class TestP2PConn(P2PInterface):
 class FeeFilterTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        # We lower the various required feerates for this test
+        # to catch a corner-case where feefilter used to slightly undercut
+        # mempool and wallet feerate calculation based on GetFee
+        # rounding down 3 places, leading to stranded transactions.
+        # See issue #16499
+        self.extra_args = [["-minrelaytxfee=0.00000100", "-mintxfee=0.00000100"]]*self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -54,22 +60,25 @@ class FeeFilterTest(BitcoinTestFramework):
 
         self.nodes[0].add_p2p_connection(TestP2PConn())
 
-        # Test that invs are received for all txs at feerate of 20 sat/byte
-        node1.settxfee(Decimal("0.00020000"))
+        # Test that invs are received by test connection for all txs at
+        # feerate of .2 sat/byte
+        node1.settxfee(Decimal("0.00000200"))
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
         assert allInvsMatch(txids, self.nodes[0].p2p)
         self.nodes[0].p2p.clear_invs()
 
-        # Set a filter of 15 sat/byte
-        self.nodes[0].p2p.send_and_ping(msg_feefilter(15000))
+        # Set a filter of .15 sat/byte on test connection
+        self.nodes[0].p2p.send_and_ping(msg_feefilter(150))
 
-        # Test that txs are still being received (paying 20 sat/byte)
+        # Test that txs are still being received by test connection (paying .15 sat/byte)
+        node1.settxfee(Decimal("0.00000150"))
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
         assert allInvsMatch(txids, self.nodes[0].p2p)
         self.nodes[0].p2p.clear_invs()
 
-        # Change tx fee rate to 10 sat/byte and test they are no longer received
-        node1.settxfee(Decimal("0.00010000"))
+        # Change tx fee rate to .1 sat/byte and test they are no longer received
+        # by the test connection
+        node1.settxfee(Decimal("0.00000100"))
         [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
         self.sync_mempools() # must be sure node 0 has received all txs
 

@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/merkle.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -345,8 +345,8 @@ BOOST_AUTO_TEST_CASE(merkle_test_BlockWitness)
     hashes[0].SetNull();
     hashes[1] = block.vtx[1]->GetHash();
 
-    uint256 merkelRootofHashes = ComputeMerkleRoot(hashes);
+    uint256 merkleRootofHashes = ComputeMerkleRoot(hashes);
 
-    BOOST_CHECK_EQUAL(merkelRootofHashes, blockWitness);
+    BOOST_CHECK_EQUAL(merkleRootofHashes, blockWitness);
 }
 BOOST_AUTO_TEST_SUITE_END()
