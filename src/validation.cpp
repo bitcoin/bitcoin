@@ -835,7 +835,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         if (nConflictingCount <= maxDescendantsToVisit) {
             // If not too many to replace, then calculate the set of
             // transactions that would have to be evicted
-            m_pool.GetFreshEpoch();
+            const auto epoch = m_pool.GetFreshEpoch();
             for (CTxMemPool::txiter it : setIterConflicting) {
                 if (m_pool.already_touched(it)) continue;
                 m_pool.CalculateDescendantsVec(it, all_conflicting);

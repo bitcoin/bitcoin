@@ -642,9 +642,11 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
     }
 
-    mempool.GetFreshEpoch();
     CTxMemPool::vecEntries setDescendants;
-    mempool.CalculateDescendantsVec(it, setDescendants);
+    {
+        const auto epoch = mempool.GetFreshEpoch();
+        mempool.CalculateDescendantsVec(it, setDescendants);
+    } // release epoch guard because entryToJSON below calls IsRBFOptIn
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);
