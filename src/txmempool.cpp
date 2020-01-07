@@ -59,18 +59,38 @@ size_t CTxMemPoolEntry::GetTxSize() const
 // descendants.
 void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendants, const std::set<uint256> &setExclude)
 {
-    auto& direct_children = GetMemPoolChildren(updateIt);
     // Our children are natrually uniqueu
-    std::vector<txiter> all_descendants{direct_children.cbegin(), direct_children.cend()};
     std::vector<txiter> stack;
     uint64_t epoch = GetFreshEpoch();
 
+    int64_t modifySize = 0;
+    CAmount modifyFee = 0;
+    int64_t modifyCount = 0;
+    auto make_state_update = [&](txiter cit) {
+        if (!setExclude.count(cit->GetTx().GetHash())) {
+            modifySize += cit->GetTxSize();
+            modifyFee += cit->GetModifiedFee();
+            modifyCount++;
+            cachedDescendants[updateIt].insert(cit);
+            // Update ancestor state for each descendant
+            mapTx.modify(cit, update_ancestor_state(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost()));
+        }
+    };
+
+    // Update and add to cached descendant map
+    auto& direct_children = GetMemPoolChildren(updateIt);
     auto children_it = direct_children.begin();
     while (children_it != direct_children.end() || !stack.empty()) {
         // Either pop the stack or read from the direct_children
         bool have_direct_children = children_it != direct_children.end();
         const txiter cit =  have_direct_children ? *(children_it++) : stack.back();
+        // if on the stack already touched (but remove)
+        // touch the direct_children
         if (!have_direct_children) stack.pop_back();
+        else cit->already_touched(epoch);
+
+        // collect stats
+        make_state_update(cit);
 
         const setEntries &setChildren = GetMemPoolChildren(cit);
         for (txiter childEntry : setChildren) {
@@ -81,28 +101,12 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
                 // but don't traverse again.
                 for (txiter cacheEntry : cacheIt->second) {
                     if (cacheEntry->already_touched(epoch)) continue;
-                    all_descendants.push_back(cacheEntry);
+                    make_state_update(cacheEntry);
                 }
             } else {
                 // Schedule for later processing
                 stack.push_back(childEntry);
-                all_descendants.push_back(childEntry);
             }
-        }
-    }
-    // setAllDescendants now contains all in-mempool descendants of updateIt.
-    // Update and add to cached descendant map
-    int64_t modifySize = 0;
-    CAmount modifyFee = 0;
-    int64_t modifyCount = 0;
-    for (txiter cit : all_descendants) {
-        if (!setExclude.count(cit->GetTx().GetHash())) {
-            modifySize += cit->GetTxSize();
-            modifyFee += cit->GetModifiedFee();
-            modifyCount++;
-            cachedDescendants[updateIt].insert(cit);
-            // Update ancestor state for each descendant
-            mapTx.modify(cit, update_ancestor_state(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost()));
         }
     }
     mapTx.modify(updateIt, update_descendant_state(modifySize, modifyFee, modifyCount));
