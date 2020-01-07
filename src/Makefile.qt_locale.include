@@ -10,6 +10,7 @@ QT_TS = \
   qt/locale/syscoin_de_DE.ts \
   qt/locale/syscoin_el.ts \
   qt/locale/syscoin_el_GR.ts \
+  qt/locale/syscoin_en.ts \
   qt/locale/syscoin_en_AU.ts \
   qt/locale/syscoin_en_GB.ts \
   qt/locale/syscoin_eo.ts \

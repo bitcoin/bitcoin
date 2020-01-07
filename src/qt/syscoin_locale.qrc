@@ -11,6 +11,7 @@
         <file alias="de_DE">locale/syscoin_de_DE.qm</file>
         <file alias="el">locale/syscoin_el.qm</file>
         <file alias="el_GR">locale/syscoin_el_GR.qm</file>
+        <file alias="en">locale/syscoin_en.qm</file>
         <file alias="en_AU">locale/syscoin_en_AU.qm</file>
         <file alias="en_GB">locale/syscoin_en_GB.qm</file>
         <file alias="eo">locale/syscoin_eo.qm</file>
