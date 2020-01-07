@@ -176,17 +176,18 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     return std::move(pblocktemplate);
 }
 
-void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries& testSet)
+void BlockAssembler::onlyUnconfirmed(CTxMemPool::vecEntries& testSet)
 {
-    for (CTxMemPool::setEntries::iterator iit = testSet.begin(); iit != testSet.end(); ) {
-        // Only test txs not already in the block
-        if (inBlock.count(*iit)) {
-            testSet.erase(iit++);
-        }
-        else {
-            iit++;
-        }
+    size_t max_element = testSet.size(), i = 0;
+    while (i < max_element) {
+        bool not_in_block = !inBlock.count(testSet[i]);
+        // if !not_in_block, set testSet[i] to testSet[max_element-1]
+        max_element -= !not_in_block;
+        testSet[i] = testSet[!not_in_block*max_element + not_in_block*i];
+        i += not_in_block;
     }
+    // drop erased elements
+    testSet.resize(max_element);
 }
 
 bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost) const
@@ -203,7 +204,7 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 // - transaction finality (locktime)
 // - premature witness (in case segwit transactions are added to mempool before
 //   segwit activation)
-bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package)
+bool BlockAssembler::TestPackageTransactions(const CTxMemPool::vecEntries& package)
 {
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
@@ -233,7 +234,8 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
     }
 }
 
-int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded,
+template<typename SortedIterable>
+int BlockAssembler::UpdatePackagesForAdded(const SortedIterable& alreadyAdded,
         indexed_modified_transaction_set &mapModifiedTx)
 {
     int nDescendantsUpdated = 0;
@@ -242,7 +244,7 @@ int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& already
         m_mempool.CalculateDescendants(it, descendants);
         // Insert all descendants (not yet in block) into the modified set
         for (CTxMemPool::txiter desc : descendants) {
-            if (alreadyAdded.count(desc))
+            if (std::binary_search(alreadyAdded.cbegin(), alreadyAdded.cend(), desc, CTxMemPool::CompareIteratorByHash()))
                 continue;
             ++nDescendantsUpdated;
             modtxiter mit = mapModifiedTx.find(desc);
@@ -275,15 +277,13 @@ bool BlockAssembler::SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_tran
     return mapModifiedTx.count(it) || inBlock.count(it) || failedTx.count(it);
 }
 
-void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::vector<CTxMemPool::txiter>& sortedEntries)
+void BlockAssembler::SortForBlock(CTxMemPool::vecEntries& unsorted_entries)
 {
     // Sort package by ancestor count
     // If a transaction A depends on transaction B, then A's ancestor count
     // must be greater than B's.  So this is sufficient to validly order the
     // transactions for block inclusion.
-    sortedEntries.clear();
-    sortedEntries.insert(sortedEntries.begin(), package.begin(), package.end());
-    std::sort(sortedEntries.begin(), sortedEntries.end(), CompareTxIterByAncestorCount());
+    std::sort(unsorted_entries.begin(), unsorted_entries.end(), CompareTxIterByAncestorCount());
 }
 
 // This transaction selection algorithm orders the mempool based
@@ -388,14 +388,13 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             continue;
         }
 
-        std::vector<CTxMemPool::txiter> vec_ancestors;
+        CTxMemPool::vecEntries ancestors;
         uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
         std::string dummy;
-        m_mempool.CalculateMemPoolAncestors(*iter, vec_ancestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
-        CTxMemPool::setEntries ancestors{vec_ancestors.begin(), vec_ancestors.end()};
+        m_mempool.CalculateMemPoolAncestors(*iter, ancestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
 
         onlyUnconfirmed(ancestors);
-        ancestors.insert(iter);
+        ancestors.push_back(iter);
 
         // Test if all tx's are Final
         if (!TestPackageTransactions(ancestors)) {
@@ -410,18 +409,20 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         nConsecutiveFailed = 0;
 
         // Package can be added. Sort the entries in a valid order.
-        std::vector<CTxMemPool::txiter> sortedEntries;
-        SortForBlock(ancestors, sortedEntries);
+        SortForBlock(ancestors);
 
-        for (size_t i=0; i<sortedEntries.size(); ++i) {
-            AddToBlock(sortedEntries[i]);
+        for (CTxMemPool::txiter ancestor : ancestors) {
+            AddToBlock(ancestor);
             // Erase from the modified set, if present
-            mapModifiedTx.erase(sortedEntries[i]);
+            mapModifiedTx.erase(ancestor);
         }
 
         ++nPackagesSelected;
 
         // Update transactions that depend on each of these
+        // Sort before passing in
+        // TODO: unclear if hash order is needed or if txiter would suffice
+        std::sort(ancestors.begin(), ancestors.end(), CTxMemPool::CompareIteratorByHash());
         nDescendantsUpdated += UpdatePackagesForAdded(ancestors, mapModifiedTx);
     }
 }

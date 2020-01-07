@@ -180,23 +180,24 @@ private:
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */
-    void onlyUnconfirmed(CTxMemPool::setEntries& testSet);
+    void onlyUnconfirmed(CTxMemPool::vecEntries& testSet);
     /** Test if a new package would "fit" in the block */
     bool TestPackage(uint64_t packageSize, int64_t packageSigOpsCost) const;
     /** Perform checks on each transaction in a package:
       * locktime, premature-witness, serialized size (if necessary)
       * These checks should always succeed, and they're here
       * only as an extra check in case of suboptimal node configuration */
-    bool TestPackageTransactions(const CTxMemPool::setEntries& package);
+    bool TestPackageTransactions(const CTxMemPool::vecEntries& package);
     /** Return true if given transaction from mapTx has already been evaluated,
       * or if the transaction's cached data in mapTx is incorrect. */
     bool SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set& mapModifiedTx, CTxMemPool::setEntries& failedTx) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
     /** Sort the package in an order that is valid to appear in a block */
-    void SortForBlock(const CTxMemPool::setEntries& package, std::vector<CTxMemPool::txiter>& sortedEntries);
+    void SortForBlock(CTxMemPool::vecEntries& package);
     /** Add descendants of given transactions to mapModifiedTx with ancestor
       * state updated assuming given transactions are inBlock. Returns number
       * of updated descendants. */
-    int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set& mapModifiedTx) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
+    template<typename SortedIterable>
+    int UpdatePackagesForAdded(const SortedIterable& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
 };
 
 /** Modify the extranonce in a block */
