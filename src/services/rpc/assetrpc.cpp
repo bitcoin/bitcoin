@@ -22,9 +22,9 @@ extern UniValue ValueFromAmount(const CAmount& amount);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
 extern std::unordered_set<std::string> assetAllocationConflicts;
-extern CCriticalSection cs_assetallocationconflicts;
-extern CCriticalSection cs_assetallocationarrival;
-extern CCriticalSection cs_setethstatus;
+extern RecursiveMutex cs_assetallocationconflicts;
+extern RecursiveMutex cs_assetallocationarrival;
+extern RecursiveMutex cs_setethstatus;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);

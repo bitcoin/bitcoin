@@ -60,10 +60,10 @@ private:
     WalletModel *walletModel;
 
     // Protects tableWidgetMasternodes
-    CCriticalSection cs_mnlist;
+    RecursiveMutex cs_mnlist;
 
     // Protects tableWidgetMyMasternodes
-    CCriticalSection cs_mymnlist;
+    RecursiveMutex cs_mymnlist;
 
     QString strCurrentFilter;
 

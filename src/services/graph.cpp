@@ -4,7 +4,7 @@
 #include <services/assetallocation.h>
 using namespace std;
 extern ArrivalTimesMapImpl arrivalTimesMap;
-extern CCriticalSection cs_assetallocationarrival;
+extern RecursiveMutex cs_assetallocationarrival;
 bool OrderBasedOnArrivals(std::vector<CTransactionRef>& blockVtx) {
 	std::vector<CTransactionRef> orderedVtx;
 	AssertLockHeld(cs_main);

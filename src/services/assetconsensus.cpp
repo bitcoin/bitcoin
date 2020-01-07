@@ -18,9 +18,9 @@
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 extern std::unordered_set<std::string> assetAllocationConflicts;
-extern CCriticalSection cs_assetallocationmempoolbalance;
-extern CCriticalSection cs_assetallocationarrival;
-extern CCriticalSection cs_assetallocationconflicts;
+extern RecursiveMutex cs_assetallocationmempoolbalance;
+extern RecursiveMutex cs_assetallocationarrival;
+extern RecursiveMutex cs_assetallocationconflicts;
 std::unique_ptr<CBlockIndexDB> pblockindexdb;
 std::unique_ptr<CLockedOutpointsDB> plockedoutpointsdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
@@ -28,8 +28,8 @@ std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 AssetPrevTxMap mapSenderLockedOutPoints;
 AssetPrevTxMap mapAssetPrevTxSender;
 std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
-CCriticalSection cs_assetallocationmempoolremovetx;
-extern CCriticalSection cs_setethstatus;
+RecursiveMutex cs_assetallocationmempoolremovetx;
+extern RecursiveMutex cs_setethstatus;
 extern bool AbortNode(const std::string& strMessage, const std::string& userMessage = "", unsigned int prefix = 0);
 using namespace std;
 bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string errorMessage, bool bErrorNotInvalid, bool bConsensus){

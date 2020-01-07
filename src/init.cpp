@@ -98,10 +98,10 @@
 std::string exePath = "";
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap; 
-extern CCriticalSection cs_assetallocationmempoolbalance;
-extern CCriticalSection cs_assetallocationarrival;
+extern RecursiveMutex cs_assetallocationmempoolbalance;
+extern RecursiveMutex cs_assetallocationarrival;
 extern std::vector<std::pair<uint256, uint32_t> >  vecToRemoveFromMempool;
-extern CCriticalSection cs_assetallocationmempoolremovetx;
+extern RecursiveMutex cs_assetallocationmempoolremovetx;
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
 static bool fFeeEstimatesInitialized = false;
@@ -217,7 +217,7 @@ void Interrupt(NodeContext& node)
 void Shutdown(NodeContext& node)
 {
     LogPrintf("%s: In progress...\n", __func__);
-    static CCriticalSection cs_Shutdown;
+    static RecursiveMutex cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown)
         return;

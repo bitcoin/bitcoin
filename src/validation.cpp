@@ -63,11 +63,11 @@
 std::vector<std::pair<uint256, int64_t> >  vecTPSTestReceivedTimesMempool;
 int64_t nTPSTestingStartTime = 0;
 extern std::unordered_set<std::string> assetAllocationConflicts;
-extern CCriticalSection cs_assetallocationconflicts;
+extern RecursiveMutex cs_assetallocationconflicts;
 extern std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
-extern CCriticalSection cs_assetallocationmempoolremovetx;
-extern CCriticalSection cs_assetallocationarrival;
-extern CCriticalSection cs_setethstatus;
+extern RecursiveMutex cs_assetallocationmempoolremovetx;
+extern RecursiveMutex cs_assetallocationarrival;
+extern RecursiveMutex cs_setethstatus;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 extern void RemoveDoubleSpendFromMempool(const CTransactionRef & txRef);
 std::vector<CInv> vInvToSend;
@@ -153,7 +153,7 @@ CTxMemPool mempool(&feeEstimator);
 namespace {
     CBlockIndex* pindexBestInvalid = nullptr;
 
-    CCriticalSection cs_LastBlockFile;
+    RecursiveMutex cs_LastBlockFile;
     std::vector<CBlockFileInfo> vinfoBlockFile;
     int nLastBlockFile = 0;
     /** Global flag to indicate we should check to see if there are
