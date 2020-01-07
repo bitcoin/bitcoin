@@ -270,9 +270,7 @@ void CTxMemPool::UpdateChildrenForRemoval(txiter it)
     }
 }
 
-template <typename T>
-void CTxMemPool::UpdateForRemoveFromMempoolImpl(const T &entriesToRemove, bool updateDescendants)
-{
+void CTxMemPool::UpdateForRemoveFromMempool(const vecEntries &entriesToRemove, bool updateDescendants) {
     // For each entry, walk back all ancestors and decrement size associated with this
     // transaction
     const uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
@@ -326,13 +324,6 @@ void CTxMemPool::UpdateForRemoveFromMempoolImpl(const T &entriesToRemove, bool u
     for (txiter removeIt : entriesToRemove) {
         UpdateChildrenForRemoval(removeIt);
     }
-}
-void CTxMemPool::UpdateForRemoveFromMempool(const vecEntries &entriesToRemove, bool updateDescendants) {
-    UpdateForRemoveFromMempoolImpl(entriesToRemove, updateDescendants);
-}
-
-void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, bool updateDescendants) {
-    UpdateForRemoveFromMempoolImpl(entriesToRemove, updateDescendants);
 }
 
 void CTxMemPoolEntry::UpdateDescendantState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount)
@@ -971,20 +962,12 @@ size_t CTxMemPool::DynamicMemoryUsage() const {
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 12 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(mapLinks) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
 }
 
-template<typename T>
-void CTxMemPool::RemoveStagedImpl(T &stage, bool updateDescendants, MemPoolRemovalReason reason) {
+void CTxMemPool::RemoveStaged(vecEntries &stage, bool updateDescendants, MemPoolRemovalReason reason) {
     AssertLockHeld(cs);
     UpdateForRemoveFromMempool(stage, updateDescendants);
     for (txiter it : stage) {
         removeUnchecked(it, reason);
     }
-}
-
-void CTxMemPool::RemoveStaged(vecEntries &stage, bool updateDescendants, MemPoolRemovalReason reason) {
-    RemoveStagedImpl(stage, updateDescendants, reason);
-}
-void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason) {
-    RemoveStagedImpl(stage, updateDescendants, reason);
 }
 
 int CTxMemPool::Expire(std::chrono::seconds time)
