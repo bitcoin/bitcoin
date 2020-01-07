@@ -68,7 +68,7 @@ public:
     /// Create options model
     void createOptionsModel(bool resetSettings);
     /// Update prune value
-    void SetPrune(bool prune, bool force = false);
+    void SetPrune(bool prune);
     /// Create main window
     void createWindow(const NetworkStyle *networkStyle);
     /// Create splash screen
