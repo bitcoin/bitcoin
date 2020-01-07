@@ -656,6 +656,14 @@ public:
     void CalculateDescendants(txiter it, setEntries& setDescendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     void CalculateDescendants(txiter entryit, setEntries& setDescendants, const uint64_t cached_epoch) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    /* Assumes empty descendants vector. Useful when we are just going to iterate over them
+     *
+     * unlike CalculateDescendants, CalculateDescendantsVec does not include self*/
+    void CalculateDescendantsVec(txiter it, std::vector<txiter>& descendants, std::vector<txiter>& stack,
+            const uint64_t epoch, const uint8_t limit=25) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void CalculateDescendantsVec(txiter it, std::vector<txiter>& setDescendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void CalculateDescendantsVec(txiter entryit, std::vector<txiter>& setDescendants, const uint64_t cached_epoch) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
     /** The minimum fee to get into the mempool, which may itself not be enough
       *  for larger-sized transactions.
       *  The incrementalRelayFee policy variable is used to bound the time it

@@ -278,13 +278,12 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
         // we need to preserve until we're finished with all operations that
         // need to traverse the mempool).
         for (txiter removeIt : entriesToRemove) {
-            setEntries setDescendants;
-            CalculateDescendants(removeIt, setDescendants);
-            setDescendants.erase(removeIt); // don't update state for self
+            std::vector<txiter> descendants;
+            CalculateDescendantsVec(removeIt, descendants);
             int64_t modifySize = -((int64_t)removeIt->GetTxSize());
             CAmount modifyFee = -removeIt->GetModifiedFee();
             int modifySigOps = -removeIt->GetSigOpCost();
-            for (txiter dit : setDescendants) {
+            for (txiter dit : descendants) {
                 mapTx.modify(dit, update_ancestor_state(modifySize, modifyFee, -1, modifySigOps));
             }
         }
@@ -483,6 +482,32 @@ void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants
         CalculateDescendants(it, setDescendants, stack, cached_epoch);
     } while (!stack.empty() && (it = stack.back(), stack.pop_back(), true));
 
+}
+
+void CTxMemPool::CalculateDescendantsVec(txiter it, std::vector<txiter>& descendants, std::vector<txiter>& stack, const uint64_t epoch, const uint8_t limit) const
+{
+    for (txiter childiter : GetMemPoolChildren(it)) {
+        if (childiter->already_touched(epoch)) continue;
+        descendants.push_back(childiter);
+        if (limit > 0) CalculateDescendantsVec(childiter, descendants, stack, epoch, limit-1);
+        else stack.push_back(childiter);
+    }
+}
+
+void CTxMemPool::CalculateDescendantsVec(txiter entryit, std::vector<txiter>& descendants) const
+{
+    CalculateDescendantsVec(entryit, descendants, GetFreshEpoch());
+}
+
+void CTxMemPool::CalculateDescendantsVec(txiter entryit, std::vector<txiter>& descendants, const uint64_t cached_epoch) const
+{
+    // Traverse down the children of entry, only adding children that are not marked as visited by
+    // the epoch
+    txiter it = entryit;
+    std::vector<txiter> stack;
+    do {
+        CalculateDescendantsVec(it, descendants, stack, cached_epoch);
+    } while (!stack.empty() && (it = stack.back(), stack.pop_back(), true));
 }
 
 void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReason reason)
@@ -859,9 +884,8 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
                 mapTx.modify(ancestorIt, update_descendant_state(0, nFeeDelta, 0));
             }
             // Now update all descendants' modified fees with ancestors
-            setEntries setDescendants;
-            CalculateDescendants(it, setDescendants);
-            setDescendants.erase(it);
+            std::vector<txiter> setDescendants;
+            CalculateDescendantsVec(it, setDescendants);
             for (txiter descendantIt : setDescendants) {
                 mapTx.modify(descendantIt, update_ancestor_state(0, nFeeDelta, 0, 0));
             }
