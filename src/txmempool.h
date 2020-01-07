@@ -762,21 +762,13 @@ public:
     };
     EpochGuard GetFreshEpoch() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool already_touched(txiter it, uint64_t during) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
-        assert(has_epoch_guard);
-        bool ret = it->m_epoch >= during;
-        it->m_epoch = std::max(it->m_epoch, during);
-        return ret;
-    }
-    bool already_touched(Optional<txiter> it, uint64_t during) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
-        return !it || already_touched(*it, during);
-    }
     bool already_touched(txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
         assert(has_epoch_guard);
         bool ret = it->m_epoch >= m_epoch;
         it->m_epoch = std::max(it->m_epoch, m_epoch);
         return ret;
     }
+
     bool already_touched(Optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
         return !it || already_touched(*it);
     }
