@@ -75,3 +75,38 @@ void PrevectorResize(benchmark::State& state)
 PREVECTOR_TEST(Clear, 28300, 88600)
 PREVECTOR_TEST(Destructor, 28800, 88900)
 PREVECTOR_TEST(Resize, 28900, 90300)
+
+#include <vector>
+
+typedef prevector<28, unsigned char> prevec;
+
+static void PrevectorAssign(benchmark::State& state)
+{
+    prevec t;
+    t.resize(28);
+    std::vector<unsigned char> v;
+    while (state.KeepRunning()) {
+        for (int i = 0; i < 1000; ++i) {
+            prevec::const_iterator b = t.begin() + 5;
+            prevec::const_iterator e = b + 20;
+            v.assign(b, e);
+        }
+    }
+}
+
+static void PrevectorAssignTo(benchmark::State& state)
+{
+    prevec t;
+    t.resize(28);
+    std::vector<unsigned char> v;
+    while (state.KeepRunning()) {
+        for (int i = 0; i < 1000; ++i) {
+            prevec::const_iterator b = t.begin() + 5;
+            prevec::const_iterator e = b + 20;
+            t.assign_to(b, e, v);
+        }
+    }
+}
+
+BENCHMARK(PrevectorAssign)
+BENCHMARK(PrevectorAssignTo)

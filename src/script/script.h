@@ -563,7 +563,7 @@ public:
             if (end() - pc < 0 || (unsigned int)(end() - pc) < nSize)
                 return false;
             if (pvchRet)
-                pvchRet->assign(pc, pc + nSize);
+                assign_to(pc, pc + nSize, *pvchRet);
             pc += nSize;
         }
 
