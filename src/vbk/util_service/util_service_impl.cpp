@@ -141,34 +141,29 @@ uint256 UtilServiceImpl::makeTopLevelRoot(int height, const KeystoneArray& keyst
 
 void UtilServiceImpl::addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams)
 {
-    int halvings = (pindexPrev.nHeight + 1) / consensusParams.nSubsidyHalvingInterval;
-
-    PoPRewards rewards = getService<UtilService>().getPopRewards(pindexPrev);
+    PoPRewards rewards = getPopRewards(pindexPrev, consensusParams);
 
     for (const auto& itr : rewards) {
         CTxOut out;
         out.scriptPubKey = itr.first;
         out.nValue = itr.second;
-        out.nValue >>= halvings;
         coinbaseTx.vout.push_back(out);
     }
 }
 
 bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state)
 {
-    PoPRewards rewards = getService<UtilService>().getPopRewards(pindexPrev);
+    PoPRewards rewards = getPopRewards(pindexPrev, consensusParams);
 
     if (tx.vout.size() < rewards.size()) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
             strprintf("checkCoinbaseTxWithPopRewards(): coinbase has incorrect size of pop vouts (vouts_size=%d vs pop_vouts=%d)", tx.vout.size(), rewards.size()), "bad-pop-vouts-size");
     }
 
-    int halvings = (pindexPrev.nHeight + 1) / consensusParams.nSubsidyHalvingInterval;
-
     CAmount nTotalPopReward = 0;
     for (const auto& out : tx.vout) {
-        auto it = rewards.find(out.scriptPubKey);
-        if (it != rewards.end() && (it->second >> halvings) == out.nValue) {
+        const auto& it = rewards.find(out.scriptPubKey);
+        if (it != rewards.end() && it->second == out.nValue) {
             nTotalPopReward += it->second; // Pop reward
             rewards.erase(it);
         }
@@ -186,8 +181,10 @@ bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, cons
     return true;
 }
 
-PoPRewards UtilServiceImpl::getPopRewards(const CBlockIndex& pindexPrev)
+PoPRewards UtilServiceImpl::getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams)
 {
+    int halvings = (pindexPrev.nHeight + 1) / consensusParams.nSubsidyHalvingInterval;
+
     PoPRewards rewards;
     auto& config = getService<Config>();
     auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
@@ -200,15 +197,16 @@ PoPRewards UtilServiceImpl::getPopRewards(const CBlockIndex& pindexPrev)
         const CBlockIndex* difficultyBlockStart = pindexPrev.GetAncestor(checkHeight - config.POP_DIFFICULTY_AVERAGING_INTERVAL);
         const CBlockIndex* difficultyBlockEnd = pindexPrev.GetAncestor(checkHeight + config.POP_REWARD_SETTLEMENT_INTERVAL - 1);
 
-        if (!endorsedBlock || !contaningBlocksTip || !difficultyBlockStart || !difficultyBlockEnd) {
+        if (!endorsedBlock) {
             return rewards;
         }
 
-        pop_service.rewardsCalculateOutputs(checkHeight, *endorsedBlock, *contaningBlocksTip, *difficultyBlockStart, *difficultyBlockEnd, rewards);
+        pop_service.rewardsCalculateOutputs(checkHeight, *endorsedBlock, *contaningBlocksTip, difficultyBlockStart, difficultyBlockEnd, rewards);
     }
 
-    // erase rewards, that pay 0 satoshis
+    // erase rewards, that pay 0 satoshis and halve rewards
     for (auto it = rewards.begin(), end = rewards.end(); it != end;) {
+        it->second >>= halvings;
         if (it->second == 0) {
             rewards.erase(it++);
         } else {
