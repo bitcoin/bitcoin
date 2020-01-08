@@ -95,7 +95,8 @@ public:
     void emitCoinJoinEnabledChanged();
 
     /* Explicit setters */
-    void SetPrune(bool prune, bool force = false);
+    void SetPruneEnabled(bool prune, bool force = false);
+    void SetPruneTargetGB(int prune_target_gb, bool force = false);
 
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
