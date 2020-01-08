@@ -904,4 +904,13 @@ void LogQtInfo()
     }
 }
 
+void SetTextPreservingSelection(QLineEdit* qlineedit_widget, const QString& new_text)
+{
+    const bool has_selected_text = qlineedit_widget->hasSelectedText();
+    qlineedit_widget->setText(new_text);
+    if (has_selected_text) {
+        qlineedit_widget->selectAll();
+    }
+}
+
 } // namespace GUIUtil

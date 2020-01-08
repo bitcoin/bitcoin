@@ -270,6 +270,11 @@ namespace GUIUtil
      * Writes to debug.log short info about the used Qt and the host system.
      */
     void LogQtInfo();
+
+    /**
+     * Calls QLineEdit::setText() and preserves text selection state.
+     */
+    void SetTextPreservingSelection(QLineEdit* qlineedit_widget, const QString& new_text);
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H
