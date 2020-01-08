@@ -725,7 +725,7 @@ bool CPrivateSendClientManager::CheckAutomaticBackup()
     }
 
     if (vpwallets[0]->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_STOP) {
-        // We should never get here via mixing itself but probably smth else is still actively using keypool
+        // We should never get here via mixing itself but probably something else is still actively using keypool
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientManager::CheckAutomaticBackup -- Very low number of keys left: %d, no mixing available.\n", vpwallets[0]->nKeysLeftSinceAutoBackup);
         strAutoDenomResult = strprintf(_("Very low number of keys left: %d") + ", " + _("no mixing available."), vpwallets[0]->nKeysLeftSinceAutoBackup);
         // It's getting really dangerous, stop mixing
@@ -754,7 +754,7 @@ bool CPrivateSendClientManager::CheckAutomaticBackup()
                 }
             }
         } else {
-            // Wait for smth else (e.g. GUI action) to create automatic backup for us
+            // Wait for something else (e.g. GUI action) to create automatic backup for us
             return false;
         }
     }
@@ -1402,7 +1402,7 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(CConnman& connman)
         return true;
     }
 
-    // If we got here then smth is terribly broken actually
+    // If we got here then something is terribly broken actually
     LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::MakeCollateralAmounts -- ERROR: Can't make collaterals!\n");
     return false;
 }

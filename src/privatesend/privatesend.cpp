@@ -301,7 +301,7 @@ bool CPrivateSendBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const
     }
 
     // The same size and denom for inputs and outputs ensures their total value is also the same,
-    // no need to double check. If not, we are doing smth wrong, bail out.
+    // no need to double check. If not, we are doing something wrong, bail out.
     if (nFees != 0) {
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendBaseSession::%s -- ERROR: non-zero fees! fees: %lld\n", __func__, nFees);
         nMessageIDRet = ERR_FEES;

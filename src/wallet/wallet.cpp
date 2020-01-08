@@ -5522,14 +5522,14 @@ bool AutoBackupWallet(CWallet* wallet, const std::string& strWalletFile_, std::s
         // Always create backup folder to not confuse the operating system's file browser
         LogPrintf("Creating backup folder %s\n", backupsDir.string());
         if(!fs::create_directories(backupsDir)) {
-            // smth is wrong, we shouldn't continue until it's resolved
+            // something is wrong, we shouldn't continue until it's resolved
             strBackupErrorRet = strprintf(_("Wasn't able to create wallet backup folder %s!"), backupsDir.string());
             LogPrintf("%s\n", strBackupErrorRet);
             nWalletBackups = -1;
             return false;
         }
     } else if (!fs::is_directory(backupsDir)) {
-        // smth is wrong, we shouldn't continue until it's resolved
+        // something is wrong, we shouldn't continue until it's resolved
         strBackupErrorRet = strprintf(_("%s is not a valid backup folder!"), backupsDir.string());
         LogPrintf("%s\n", strBackupErrorRet);
         nWalletBackups = -1;

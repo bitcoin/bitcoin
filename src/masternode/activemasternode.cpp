@@ -69,7 +69,7 @@ void CActiveMasternodeManager::Init()
 
     // Check that our local network configuration is correct
     if (!fListen) {
-        // listen option is probably overwritten by smth else, no good
+        // listen option is probably overwritten by something else, no good
         state = MASTERNODE_ERROR;
         strError = "Masternode must accept connections from outside. Make sure listen configuration option is not overwritten by some another parameter.";
         LogPrintf("CActiveDeterministicMasternodeManager::Init -- ERROR: %s\n", strError);
