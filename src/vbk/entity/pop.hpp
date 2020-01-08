@@ -1,8 +1,8 @@
 #ifndef INTEGRATION_REFERENCE_BTC_POP_HPP
 #define INTEGRATION_REFERENCE_BTC_POP_HPP
 
-#include <vector>
 #include <cstdint>
+#include <vector>
 
 namespace VeriBlock {
 
@@ -16,6 +16,11 @@ struct Publications {
 struct Context {
     std::vector<ByteArray> btc;
     std::vector<ByteArray> vbk;
+
+    bool operator==(const Context& other) const
+    {
+        return btc == other.btc && vbk == other.vbk;
+    }
 };
 
 enum class PopTxType {

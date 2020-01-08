@@ -16,7 +16,7 @@ IntegrationTestFixture::IntegrationTestFixture() : TestChain100Setup()
     });
     When(Method(util_service_mock, CheckPopInputs)).AlwaysReturn(true);
     When(Method(util_service_mock, EvalScript)).AlwaysDo([&](const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, VeriBlock::Publications* pub, VeriBlock::Context* ctx, VeriBlock::PopTxType* type, bool with_checks) -> bool {
-        return VeriBlock::EvalScriptPopTx(script, stack, serror, pub, ctx, type, with_checks);
+        return VeriBlock::EvalScriptImpl(script, stack, serror, pub, ctx, type, with_checks);
     });
     When(Method(util_service_mock, validatePopTx)).AlwaysReturn(true);
     When(Method(util_service_mock, checkCoinbaseTxWithPopRewards)).AlwaysReturn(true);

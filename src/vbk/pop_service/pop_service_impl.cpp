@@ -30,20 +30,6 @@ namespace {
 template <class T>
 using DeserializeMemberFunction = Status (VeriBlock::GrpcPopService::Stub::*)(::grpc::ClientContext* context, const ::VeriBlock::BytesArrayRequest& request, T* response);
 
-template <class T>
-void grpc_deserialize(const std::shared_ptr<VeriBlock::GrpcPopService::Stub>& grpcPopService, const std::vector<unsigned char>& bytes, T& reply, DeserializeMemberFunction<T> func)
-{
-    VeriBlock::BytesArrayRequest request;
-    ClientContext context;
-
-    request.set_data(bytes.data(), bytes.size());
-
-    Status status = (*grpcPopService.*func)(&context, request, &reply);
-    if (!status.ok()) {
-        throw VeriBlock::PopServiceException(status);
-    }
-}
-
 
 void BlockToProtoAltChainBlock(const CBlockIndex& blockIndex, VeriBlock::AltChainBlock& protoBlock)
 {
@@ -151,8 +137,15 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
 
         PopTxData* popTxData = request.add_popdata();
 
+
         Publications publications;
-        parsePopTx(tx, &publications, nullptr, nullptr);
+        PopTxType type;
+        assert(parsePopTx(tx, &publications, nullptr, &type) && "scriptSig of pop tx is invalid in savePopTxToDatabase");
+
+        // skip all non-publications txes
+        if(type != PopTxType::PUBLICATIONS) {
+            continue;
+        }
 
         // Fill the proto objects with pop data
         popTxData->set_poptxhash(tx->GetHash().ToString());
@@ -441,58 +434,6 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
             continue;
         }
 
-        PublicationData popEndorsement;
-        pop.getPublicationsData(publications, popEndorsement);
-
-        CDataStream stream(std::vector<unsigned char>(popEndorsement.header().begin(), popEndorsement.header().end()), SER_NETWORK, PROTOCOL_VERSION);
-        CBlockHeader popEndorsementHeader;
-
-        try {
-            stream >> popEndorsementHeader;
-        } catch (const std::exception&) {
-            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : invalid endorsed block header \n";
-            isValid = false;
-            mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
-            continue;
-        }
-
-        if (!pop.determineATVPlausibilityWithBTCRules(AltchainId(popEndorsement.identifier()), popEndorsementHeader, params)) {
-            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : invalid alt-chain index or bad PoW of endorsed block header \n";
-            isValid = false;
-            mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
-            continue;
-        }
-
-        const CBlockIndex* popEndorsementIdnex = LookupBlockIndex(popEndorsementHeader.GetHash());
-        if (popEndorsementIdnex == nullptr || pindexPrev.GetAncestor(popEndorsementIdnex->nHeight) == nullptr) {
-            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : endorsed block not from this chain \n";
-            isValid = false;
-            mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
-            continue;
-        }
-
-        CBlock popEndorsementBlock;
-        if (!ReadBlockFromDisk(popEndorsementBlock, popEndorsementIdnex, params)) {
-            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : cant read endorsed block from disk \n";
-            isValid = false;
-            mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
-            continue;
-        }
-
-        if (!VeriBlock::VerifyTopLevelMerkleRoot(popEndorsementBlock, state, popEndorsementIdnex->pprev)) {
-            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : invalid top merkle root of the endorsed block \n";
-            isValid = false;
-            mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
-            continue;
-        }
-
-        if (pindexPrev.nHeight + 1 - popEndorsementIdnex->nHeight > config.POP_REWARD_SETTLEMENT_INTERVAL) {
-            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : endorsed block is too old for this chain \n";
-            isValid = false;
-            mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
-            continue;
-        }
-
         switch (type) {
         case PopTxType::CONTEXT: {
             try {
@@ -507,6 +448,58 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
         }
 
         case PopTxType::PUBLICATIONS: {
+            PublicationData popEndorsement;
+            pop.getPublicationsData(publications, popEndorsement);
+
+            CDataStream stream(std::vector<unsigned char>(popEndorsement.header().begin(), popEndorsement.header().end()), SER_NETWORK, PROTOCOL_VERSION);
+            CBlockHeader popEndorsementHeader;
+
+            try {
+                stream >> popEndorsementHeader;
+            } catch (const std::exception&) {
+                error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : invalid endorsed block header \n";
+                isValid = false;
+                mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
+                continue;
+            }
+
+            if (!pop.determineATVPlausibilityWithBTCRules(AltchainId(popEndorsement.identifier()), popEndorsementHeader, params)) {
+                error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : invalid alt-chain index or bad PoW of endorsed block header \n";
+                isValid = false;
+                mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
+                continue;
+            }
+
+            const CBlockIndex* popEndorsementIdnex = LookupBlockIndex(popEndorsementHeader.GetHash());
+            if (popEndorsementIdnex == nullptr || pindexPrev.GetAncestor(popEndorsementIdnex->nHeight) == nullptr) {
+                error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : endorsed block not from this chain \n";
+                isValid = false;
+                mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
+                continue;
+            }
+
+            CBlock popEndorsementBlock;
+            if (!ReadBlockFromDisk(popEndorsementBlock, popEndorsementIdnex, params)) {
+                error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : cant read endorsed block from disk \n";
+                isValid = false;
+                mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
+                continue;
+            }
+
+            if (!VeriBlock::VerifyTopLevelMerkleRoot(popEndorsementBlock, state, popEndorsementIdnex->pprev)) {
+                error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : invalid top merkle root of the endorsed block \n";
+                isValid = false;
+                mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
+                continue;
+            }
+
+            if (pindexPrev.nHeight + 1 - popEndorsementIdnex->nHeight > config.POP_REWARD_SETTLEMENT_INTERVAL) {
+                error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : endorsed block is too old for this chain \n";
+                isValid = false;
+                mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
+                continue;
+            }
+
             try {
                 pop.addPayloads(block, pindexPrev.nHeight + 1, publications);
             } catch (const PopServiceException& e) {

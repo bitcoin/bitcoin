@@ -1543,7 +1543,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
 
         // stack cannot be empty here, because if it was the
         // P2SH  HASH <> EQUAL  scriptPubKey would be evaluated with
-        // an empty stack and the EvalScriptPopTx above would return false.
+        // an empty stack and the EvalScript above would return false.
         assert(!stack.empty());
 
         const valtype& pubKeySerialized = stack.back();

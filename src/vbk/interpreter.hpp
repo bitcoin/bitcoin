@@ -29,7 +29,7 @@ inline void popstack(std::vector<valtype>& stack)
 
 } // namespace
 
-inline bool EvalScriptPopTx(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, VeriBlock::Publications* publications, VeriBlock::Context* context, PopTxType* type, bool with_checks)
+inline bool EvalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, VeriBlock::Publications* publications, VeriBlock::Context* context, PopTxType* type, bool with_checks)
 {
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
