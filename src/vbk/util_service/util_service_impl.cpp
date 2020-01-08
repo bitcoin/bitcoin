@@ -251,7 +251,7 @@ bool UtilServiceImpl::validatePopTxOutput(const CTxOut& out, TxValidationState& 
 
 bool UtilServiceImpl::EvalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, VeriBlock::Publications* publications, VeriBlock::Context* context, PopTxType* type, bool with_checks)
 {
-    return EvalScriptPopTx(script, stack, serror, publications, context, type, with_checks);
+    return EvalScriptImpl(script, stack, serror, publications, context, type, with_checks);
 }
 
 } // namespace VeriBlock

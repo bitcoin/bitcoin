@@ -207,17 +207,7 @@ UniValue RpcServiceImpl::createPopTx(const CScript& scriptSig)
 {
     LOCK(cs_main);
 
-    CMutableTransaction tx;
-
-    tx.vout.resize(1);
-    tx.vout[0].nValue = 0;
-    tx.vout[0].scriptPubKey << OP_RETURN;
-
-    tx.vin.resize(1);
-    VeriBlock::setVBKNoInput(tx.vin[0].prevout);
-    tx.vin[0].scriptSig = scriptSig;
-
-    assert(VeriBlock::isPopTx(CTransaction(tx)));
+    auto tx = VeriBlock::MakePopTx(scriptSig);
 
     const uint256& hashTx = tx.GetHash();
     if (!::mempool.exists(hashTx)) {
