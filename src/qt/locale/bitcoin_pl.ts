@@ -2905,6 +2905,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Indeks wyjściowy</translation>
     </message>
     <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(Certyfikat nie został zweryfikowany)</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Kupiec</translation>
     </message>

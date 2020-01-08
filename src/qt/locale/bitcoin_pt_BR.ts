@@ -2903,6 +2903,10 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
         <translation>Index da saída</translation>
     </message>
     <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(O certificado não foi verificado)</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Mercador</translation>
     </message>

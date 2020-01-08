@@ -2903,6 +2903,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Output index</translation>
     </message>
     <message>
+        <source> (Certificate was not verified)</source>
+        <translation> (Certificate was not verified)</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Merchant</translation>
     </message>

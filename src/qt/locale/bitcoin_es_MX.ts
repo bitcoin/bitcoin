@@ -306,6 +306,11 @@
         <translation>Actividad de red deshabilitada.</translation>
     </message>
     <message>
+        <source>Click to enable network activity again.</source>
+        <translation> 
+Haga clic para habilitar la actividad de red nuevamente.</translation>
+    </message>
+    <message>
         <source>Syncing Headers (%1%)...</source>
         <translation>Sincronizar encabezados (%1%) ...</translation>
     </message>
@@ -366,6 +371,10 @@
         <translation>Firme mensajes con sus direcciones de Bitcoin para demostrar que los posee</translation>
     </message>
     <message>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation>Verifique los mensajes para asegurarse de que se firmaron con direcciones de Bitcoin especificadas.</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation>&amp;Archivo</translation>
     </message>
@@ -380,6 +389,12 @@
     <message>
         <source>Tabs toolbar</source>
         <translation>Pestañas</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation> 
+Solicitar pagos (genera códigos QR y bitcoin: URI)
+ </translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>

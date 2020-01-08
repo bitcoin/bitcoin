@@ -173,7 +173,7 @@
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Cifrare veramente il portafoglio?</translation>
+        <translation>Sei sicuro di voler cifrare il portafoglio?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -2902,6 +2902,10 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Output index</source>
         <translation>Indice di output</translation>
+    </message>
+    <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(Il certificato non è stato verificato)</translation>
     </message>
     <message>
         <source>Merchant</source>

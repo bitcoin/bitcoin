@@ -2902,6 +2902,10 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kB" 
         <translation>Indeks izhoda</translation>
     </message>
     <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(Certifikat ni bil overjen)</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Trgovec</translation>
     </message>

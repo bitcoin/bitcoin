@@ -30,6 +30,10 @@
         <translation>Dileu'r cyfeiriad presennol wedi ei ddewis o'r rhestr</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Cyfeiriad neu label i chwilio</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Allforio'r data yn y tab presennol i ffeil</translation>
     </message>
@@ -161,7 +165,11 @@
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation>Waled Wedi Amgryptio</translation>
+        <translation>Waled wedi amgryptio</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Waled i'w amgryptio</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -458,6 +466,14 @@
         <translation>Dal i fyny...</translation>
     </message>
     <message>
+        <source>Error: %1</source>
+        <translation> Gwall: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>Rhybudd: %1</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>Dyddiad: %1
@@ -467,6 +483,12 @@
         <source>Amount: %1
 </source>
         <translation>Cyfanswm: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>Waled: %1
 </translation>
     </message>
     <message>
@@ -528,23 +550,23 @@
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Maint</translation>
+        <translation>Maint:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Cyfanswm</translation>
+        <translation>Cyfanswm:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Ffî</translation>
+        <translation>Ffî:</translation>
     </message>
     <message>
         <source>Dust:</source>
-        <translation>Llwch</translation>
+        <translation>Llwch:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Ar Ôl Ffî</translation>
+        <translation>Ar Ôl Ffî:</translation>
     </message>
     <message>
         <source>Change:</source>
@@ -584,7 +606,7 @@
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Copïo Cyfanswm</translation>
+        <translation>Copïo cyfanswm</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -719,6 +741,10 @@
     <message>
         <source>%1 and %2</source>
         <translation>%1 a %2</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation> Gwall: %1</translation>
     </message>
     </context>
 <context>

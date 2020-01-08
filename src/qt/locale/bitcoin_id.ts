@@ -1594,6 +1594,14 @@
         <translation>&amp;Salin Gambar</translation>
     </message>
     <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Pembuatan tautan terlalu lama, coba kurangi teks untuk label / pesan.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Error saat menyandikan tautan ke dalam kode QR.</translation>
+    </message>
+    <message>
         <source>Save QR Code</source>
         <translation>Simpan Kode QR</translation>
     </message>
@@ -1875,6 +1883,38 @@
         <translation>Untuk informasi lebih gunakan konsol ini dengan ketik %1.</translation>
     </message>
     <message>
+        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
+        <translation>PERHATIAN: Para penipu sedang aktif, memberi tahu pengguna untuk mengetik perintah di sini, mencuri isi dompet mereka. Mohon tidak mengunakan konsol ini tanpa sepenuhnya memahami konsekuensi dari suatu perintah.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled</source>
+        <translation>Aktivitas jaringan nonaktif</translation>
+    </message>
+    <message>
+        <source>Executing command without any wallet</source>
+        <translation>Menjalankan perintah tanpa dompet apa pun</translation>
+    </message>
+    <message>
+        <source>(node id: %1)</source>
+        <translation>(id simpul: %1)</translation>
+    </message>
+    <message>
+        <source>via %1</source>
+        <translation>via %1</translation>
+    </message>
+    <message>
+        <source>never</source>
+        <translation>tidak pernah</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <translation>masuk</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <translation>keluar</translation>
+    </message>
+    <message>
         <source>Yes</source>
         <translation>Ya</translation>
     </message>
@@ -1902,6 +1942,10 @@
         <translation>&amp;Pesan:</translation>
     </message>
     <message>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <translation>Pesan opsional untuk dilampirkan ke permintaan pembayaran, yang akan ditampilkan ketika permintaan dibuka. Catatan: Pesan tidak akan dikirim dengan pembayaran melalui jaringan Bitcoin.</translation>
+    </message>
+    <message>
         <source>An optional label to associate with the new receiving address.</source>
         <translation>Label opsional untuk mengasosiasikan dengan alamat penerima baru.</translation>
     </message>
@@ -1920,6 +1964,14 @@
     <message>
         <source>Clear</source>
         <translation>Hapus</translation>
+    </message>
+    <message>
+        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
+        <translation>Alamat segwit asli (alias Bech32 atau BIP-173) akan mengurangi biaya transaksi anda nantinya dan menawarkan perlindungan yang lebih baik terhadap kesalahan pengetikan, tetapi dompet lama tidak mendukungnya. Ketika tidak dicentang, alamat yang kompatibel dengan dompet lama akan dibuat sebagai gantinya.</translation>
+    </message>
+    <message>
+        <source>Generate native segwit (Bech32) address</source>
+        <translation>Hasilkan alamat asli segwit (Bech32)</translation>
     </message>
     <message>
         <source>Requested payments history</source>
@@ -1942,8 +1994,16 @@
         <translation>Menghapus</translation>
     </message>
     <message>
+        <source>Copy URI</source>
+        <translation>Salin tautan</translation>
+    </message>
+    <message>
         <source>Copy label</source>
         <translation>Salin label</translation>
+    </message>
+    <message>
+        <source>Copy message</source>
+        <translation>Salin pesan</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1969,6 +2029,18 @@
         <translation>&amp;Simpan Gambaran...</translation>
     </message>
     <message>
+        <source>Request payment to %1</source>
+        <translation>Minta pembayaran ke %1</translation>
+    </message>
+    <message>
+        <source>Payment information</source>
+        <translation>Informasi pembayaran</translation>
+    </message>
+    <message>
+        <source>URI</source>
+        <translation>Tautan</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Alamat</translation>
     </message>
@@ -1979,6 +2051,10 @@
     <message>
         <source>Label</source>
         <translation>Label</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Pesan</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -1996,10 +2072,26 @@
         <translation>Label</translation>
     </message>
     <message>
+        <source>Message</source>
+        <translation>Pesan</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(tidak ada label)</translation>
     </message>
-    </context>
+    <message>
+        <source>(no message)</source>
+        <translation>(tidak ada pesan)</translation>
+    </message>
+    <message>
+        <source>(no amount requested)</source>
+        <translation>(tidak ada jumlah yang diminta)</translation>
+    </message>
+    <message>
+        <source>Requested</source>
+        <translation>Diminta</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -2059,12 +2151,44 @@
         <translation>Biaya Transaksi:</translation>
     </message>
     <message>
+        <source>Choose...</source>
+        <translation>Pilih...</translation>
+    </message>
+    <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation>Menggunakan fallbackfee dapat mengakibatkan pengiriman transaksi yang akan memakan waktu beberapa jam atau hari (atau tidak pernah) untuk dikonfirmasi. Pertimbangkan untuk memilih biaya anda secara manual atau tunggu hingga anda telah megesahkan rantai yang lengkap.</translation>
+    </message>
+    <message>
+        <source>Warning: Fee estimation is currently not possible.</source>
+        <translation>Peringatan: Perkiraan biaya saat ini tidak memungkinkan.</translation>
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation>tutup pengaturan biaya</translation>
+    </message>
+    <message>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 satoshis.</source>
+        <translation>Tentukan biaya khusus per kB (1.000 byte) dari ukuran transaksi maya.
+
+Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" untuk ukuran transaksi 500 byte (setengah dari 1 kB) pada akhirnya akan menghasilkan biaya hanya 50 satoshi.</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>per kilobyte</translation>
+    </message>
+    <message>
         <source>Hide</source>
         <translation>Sembunyikan</translation>
     </message>
     <message>
         <source>Recommended:</source>
         <translation>Disarankan</translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation>Khusus</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2295,6 +2419,10 @@
     <message>
         <source>Transaction fee</source>
         <translation>Biaya Transaksi</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Pesan</translation>
     </message>
     <message>
         <source>Amount</source>

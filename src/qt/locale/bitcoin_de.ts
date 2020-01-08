@@ -2903,6 +2903,10 @@ Hinweis: Eine Gebühr von "100 Satoshis pro kB" bei einer Größe der Transaktio
         <translation>Ausgabeindex</translation>
     </message>
     <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(Zertifikat wurde nicht verifiziert)</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Händler</translation>
     </message>
