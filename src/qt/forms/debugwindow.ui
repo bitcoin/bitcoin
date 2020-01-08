@@ -67,18 +67,18 @@
         </widget>
        </item>
        <item row="1" column="1" colspan="2">
-        <widget class="QLabel" name="clientVersion">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+        <widget class="QLineEdit" name="clientVersion">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+         <property name="frame">
+          <bool>false</bool>
          </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -93,18 +93,18 @@
         </widget>
        </item>
        <item row="2" column="1" colspan="2">
-        <widget class="QLabel" name="clientUserAgent">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+        <widget class="QLineEdit" name="clientUserAgent">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+         <property name="frame">
+          <bool>false</bool>
          </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -119,18 +119,18 @@
         </widget>
        </item>
        <item row="3" column="1" colspan="2">
-        <widget class="QLabel" name="berkeleyDBVersion">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+        <widget class="QLineEdit" name="berkeleyDBVersion">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+         <property name="frame">
+          <bool>false</bool>
          </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -142,24 +142,18 @@
         </widget>
        </item>
        <item row="4" column="1" colspan="2">
-        <widget class="QLabel" name="dataDir">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
-         <property name="toolTip">
-          <string>To specify a non-default location of the data directory use the '%1' option.</string>
+        <widget class="QLineEdit" name="dataDir">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+         <property name="frame">
+          <bool>false</bool>
          </property>
-         <property name="wordWrap">
+         <property name="readOnly">
           <bool>true</bool>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -171,24 +165,18 @@
         </widget>
        </item>
        <item row="5" column="1" colspan="2">
-        <widget class="QLabel" name="blocksDir">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
-         <property name="toolTip">
-          <string>To specify a non-default location of the blocks directory use the '%1' option.</string>
+        <widget class="QLineEdit" name="blocksDir">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+         <property name="frame">
+          <bool>false</bool>
          </property>
-         <property name="wordWrap">
+         <property name="readOnly">
           <bool>true</bool>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -200,18 +188,18 @@
         </widget>
        </item>
        <item row="6" column="1" colspan="2">
-        <widget class="QLabel" name="startupTime">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+        <widget class="QLineEdit" name="startupTime">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+         <property name="frame">
+          <bool>false</bool>
          </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -236,18 +224,18 @@
         </widget>
        </item>
        <item row="8" column="1" colspan="2">
-        <widget class="QLabel" name="networkName">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+        <widget class="QLineEdit" name="networkName">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+         <property name="frame">
+          <bool>false</bool>
          </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -259,18 +247,18 @@
         </widget>
        </item>
        <item row="9" column="1" colspan="2">
-        <widget class="QLabel" name="numberOfConnections">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+        <widget class="QLineEdit" name="numberOfConnections">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+         <property name="frame">
+          <bool>false</bool>
          </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -295,18 +283,18 @@
         </widget>
        </item>
        <item row="11" column="1" colspan="2">
-        <widget class="QLabel" name="numberOfBlocks">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+        <widget class="QLineEdit" name="numberOfBlocks">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+         <property name="frame">
+          <bool>false</bool>
          </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -318,18 +306,18 @@
         </widget>
        </item>
        <item row="12" column="1" colspan="2">
-        <widget class="QLabel" name="lastBlockTime">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+        <widget class="QLineEdit" name="lastBlockTime">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+         <property name="frame">
+          <bool>false</bool>
          </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -354,18 +342,18 @@
         </widget>
        </item>
        <item row="14" column="1">
-        <widget class="QLabel" name="mempoolNumberTxs">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+        <widget class="QLineEdit" name="mempoolNumberTxs">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+         <property name="frame">
+          <bool>false</bool>
          </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -377,18 +365,18 @@
         </widget>
        </item>
        <item row="15" column="1">
-        <widget class="QLabel" name="mempoolSize">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
+        <widget class="QLineEdit" name="mempoolSize">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+         <property name="frame">
+          <bool>false</bool>
          </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

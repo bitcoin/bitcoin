@@ -11,6 +11,7 @@
 
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
+#include <qt/guiutil.h>
 #include <qt/platformstyle.h>
 #include <qt/walletmodel.h>
 #include <chainparams.h>
@@ -849,7 +850,7 @@ void RPCConsole::updateNetworkState()
         connections += " (" + tr("Network activity disabled") + ")";
     }
 
-    ui->numberOfConnections->setText(connections);
+    GUIUtil::SetTextPreservingSelection(ui->numberOfConnections, connections);
 }
 
 void RPCConsole::setNumConnections(int count)
@@ -868,19 +869,19 @@ void RPCConsole::setNetworkActive(bool networkActive)
 void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers)
 {
     if (!headers) {
-        ui->numberOfBlocks->setText(QString::number(count));
-        ui->lastBlockTime->setText(blockDate.toString());
+        GUIUtil::SetTextPreservingSelection(ui->numberOfBlocks, QString::number(count));
+        GUIUtil::SetTextPreservingSelection(ui->lastBlockTime, blockDate.toString())    ;
     }
 }
 
 void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
 {
-    ui->mempoolNumberTxs->setText(QString::number(numberOfTxs));
+    GUIUtil::SetTextPreservingSelection(ui->mempoolNumberTxs, QString::number(numberOfTxs));
 
     if (dynUsage < 1000000)
-        ui->mempoolSize->setText(QString::number(dynUsage/1000.0, 'f', 2) + " KB");
+        GUIUtil::SetTextPreservingSelection(ui->mempoolSize, QString::number(dynUsage/1000.0, 'f', 2) + " KB");
     else
-        ui->mempoolSize->setText(QString::number(dynUsage/1000000.0, 'f', 2) + " MB");
+        GUIUtil::SetTextPreservingSelection(ui->mempoolSize, QString::number(dynUsage/1000000.0, 'f', 2) + " MB");
 }
 
 void RPCConsole::on_lineEdit_returnPressed()
