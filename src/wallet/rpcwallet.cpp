@@ -2979,7 +2979,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
         CTxDestination address;
         const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
         bool fValidAddress = ExtractDestination(scriptPubKey, address);
-        bool reused = avoid_reuse && pwallet->IsUsedDestination(address);
+        bool reused = avoid_reuse && pwallet->IsUsedDestination(out.tx->GetHash(), out.i);
 
         if (destinations.size() && (!fValidAddress || !destinations.count(address)))
             continue;
@@ -3417,10 +3417,11 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{\n"
-            "  \"txid\":    \"value\",   (string)  The id of the new transaction\n"
-            "  \"origfee\":  n,         (numeric) Fee of the replaced transaction\n"
-            "  \"fee\":      n,         (numeric) Fee of the new transaction\n"
-            "  \"errors\":  [ str... ] (json array of strings) Errors encountered during processing (may be empty)\n"
+            "  \"psbt\":    \"psbt\",    (string) The base64-encoded unsigned PSBT of the new transaction. Only returned when wallet private keys are disabled.\n"
+            "  \"txid\":    \"value\",   (string) The id of the new transaction. Only returned when wallet private keys are enabled.\n"
+            "  \"origfee\":  n,        (numeric) The fee of the replaced transaction.\n"
+            "  \"fee\":      n,        (numeric) The fee of the new transaction.\n"
+            "  \"errors\":  [ str... ] (json array of strings) Errors encountered during processing (may be empty).\n"
             "}\n"
                 },
                 RPCExamples{
@@ -3432,10 +3433,12 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
     uint256 hash(ParseHashV(request.params[0], "txid"));
 
+    CCoinControl coin_control;
+    coin_control.fAllowWatchOnly = pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     // optional parameters
     CAmount totalFee = 0;
-    CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = true;
+
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
@@ -3520,17 +3523,32 @@ static UniValue bumpfee(const JSONRPCRequest& request)
         }
     }
 
-    // sign bumped transaction
-    if (!feebumper::SignTransaction(*pwallet, mtx)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
-    }
-    // commit the bumped transaction
-    uint256 txid;
-    if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
-        throw JSONRPCError(RPC_WALLET_ERROR, errors[0]);
-    }
     UniValue result(UniValue::VOBJ);
-    result.pushKV("txid", txid.GetHex());
+
+    // If wallet private keys are enabled, return the new transaction id,
+    // otherwise return the base64-encoded unsigned PSBT of the new transaction.
+    if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        if (!feebumper::SignTransaction(*pwallet, mtx)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
+        }
+
+        uint256 txid;
+        if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
+            throw JSONRPCError(RPC_WALLET_ERROR, errors[0]);
+        }
+
+        result.pushKV("txid", txid.GetHex());
+    } else {
+        PartiallySignedTransaction psbtx(mtx);
+        bool complete = false;
+        const TransactionError err = FillPSBT(pwallet, psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
+        CHECK_NONFATAL(err == TransactionError::OK);
+        CHECK_NONFATAL(!complete);
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << psbtx;
+        result.pushKV("psbt", EncodeBase64(ssTx.str()));
+    }
+
     result.pushKV("origfee", ValueFromAmount(old_fee));
     result.pushKV("fee", ValueFromAmount(new_fee));
     UniValue result_errors(UniValue::VARR);
@@ -3827,6 +3845,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
+    const std::string example_address = "\"sys1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl\"";
+
             RPCHelpMan{"getaddressinfo",
                 "\nReturn information about the given syscoin address.\n"
                 "Some of the information will only be present if the address is in the active wallet.\n",
@@ -3861,24 +3881,26 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "                                                         getaddressinfo output fields for the embedded address, excluding metadata (timestamp, hdkeypath,\n"
             "                                                         hdseedid) and relation to the wallet (ismine, iswatchonly).\n"
             "  \"iscompressed\" : true|false,        (boolean, optional) If the pubkey is compressed.\n"
-            "  \"label\" :  \"label\"                  (string) The label associated with the address. Defaults to \"\". Equivalent to the name field in the labels array.\n"
+            "  \"label\" :  \"label\"                  (string) The label associated with the address. Defaults to \"\". Equivalent to the label name in the labels array below.\n"
             "  \"timestamp\" : timestamp,            (number, optional) The creation time of the key, if available, expressed in " + UNIX_EPOCH_TIME + ".\n"
             "  \"hdkeypath\" : \"keypath\"             (string, optional) The HD keypath, if the key is HD and available.\n"
             "  \"hdseedid\" : \"<hash160>\"            (string, optional) The Hash160 of the HD seed.\n"
             "  \"hdmasterfingerprint\" : \"<hash160>\" (string, optional) The fingerprint of the master key.\n"
-            "  \"labels\"                            (object) An array of labels associated with the address. Currently limited to one label but returned\n"
+            "  \"labels\"                            (json object) An array of labels associated with the address. Currently limited to one label but returned\n"
             "                                               as an array to keep the API stable if multiple labels are enabled in the future.\n"
             "    [\n"
+            "      \"label name\" (string) The label name. Defaults to \"\". Equivalent to the label field above.\n\n"
+            "      DEPRECATED, will be removed in 0.21. To re-enable, launch syscoind with `-deprecatedrpc=labelspurpose`:\n"
             "      { (json object of label data)\n"
-            "        \"name\": \"label name\" (string) The label name. Defaults to \"\". Equivalent to the label field above.\n"
-            "        \"purpose\": \"purpose\" (string) The purpose of the associated address (send or receive).\n"
-            "      },...\n"
+            "        \"name\" : \"label name\" (string) The label name. Defaults to \"\". Equivalent to the label field above.\n"
+            "        \"purpose\" : \"purpose\" (string) The purpose of the associated address (send or receive).\n"
+            "      }\n"
             "    ]\n"
             "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("getaddressinfo", "\"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl\"") +
-                    HelpExampleRpc("getaddressinfo", "\"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl\"")
+                    HelpExampleCli("getaddressinfo", example_address) +
+                    HelpExampleRpc("getaddressinfo", example_address)
                 },
             }.Check(request);
 
@@ -3886,7 +3908,6 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VOBJ);
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
-
     // Make sure the destination is valid
     if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
@@ -3912,16 +3933,12 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
 
-    // Return DescribeWalletAddress fields.
-    // Always returned: isscript, ischange, iswitness.
-    // Optional: witness_version, witness_program, script, hex, pubkeys (array),
-    // sigsrequired, pubkey, embedded, iscompressed.
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);
 
     // Return label field if existing. Currently only one label can be
     // associated with an address, so the label should be equivalent to the
-    // value of the name key/value pair in the labels hash array below.
+    // value of the name key/value pair in the labels array below.
     if (pwallet->mapAddressBook.count(dest)) {
         ret.pushKV("label", pwallet->mapAddressBook[dest].name);
         // SYSCOIN support label as account for exchanges
@@ -3930,8 +3947,6 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
 
-    // Fetch KeyMetadata, if present, for the timestamp, hdkeypath, hdseedid,
-    // and hdmasterfingerprint fields.
     ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
     if (spk_man) {
         if (const CKeyMetadata* meta = spk_man->GetMetadata(dest)) {
@@ -3944,15 +3959,22 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         }
     }
 
-    // Return a labels array containing a hash of key/value pairs for the label
-    // name and address purpose. The name value is equivalent to the label field
-    // above. Currently only one label can be associated with an address, but we
-    // return an array so the API remains stable if we allow multiple labels to
-    // be associated with an address in the future.
+    // Return a `labels` array containing the label associated with the address,
+    // equivalent to the `label` field above. Currently only one label can be
+    // associated with an address, but we return an array so the API remains
+    // stable if we allow multiple labels to be associated with an address in
+    // the future.
+    //
+    // DEPRECATED: The previous behavior of returning an array containing a JSON
+    // object of `name` and `purpose` key/value pairs has been deprecated.
     UniValue labels(UniValue::VARR);
     std::map<CTxDestination, CAddressBookData>::iterator mi = pwallet->mapAddressBook.find(dest);
     if (mi != pwallet->mapAddressBook.end()) {
-        labels.push_back(AddressBookDataToJSON(mi->second, true));
+        if (pwallet->chain().rpcEnableDeprecated("labelspurpose")) {
+            labels.push_back(AddressBookDataToJSON(mi->second, true));
+        } else {
+            labels.push_back(mi->second.name);
+        }
     }
     ret.pushKV("labels", std::move(labels));
 

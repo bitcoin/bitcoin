@@ -16,6 +16,7 @@
 #include <regex>
 
 const RegTestingSetup* g_testing_setup = nullptr;
+const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 void benchmark::ConsolePrinter::header()
 {

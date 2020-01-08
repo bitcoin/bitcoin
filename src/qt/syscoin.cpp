@@ -282,8 +282,11 @@ void SyscoinApplication::parameterSetup()
     m_node.initParameterInteraction();
 }
 
-void SyscoinApplication::SetPrune(bool prune, bool force) {
-     optionsModel->SetPrune(prune, force);
+void SyscoinApplication::InitializePruneSetting(bool prune)
+{
+    // If prune is set, intentionally override existing prune size with
+    // the default size since this is called when choosing a new datadir.
+    optionsModel->SetPruneTargetGB(prune ? DEFAULT_PRUNE_TARGET_GB : 0, true);
 }
 
 void SyscoinApplication::requestInitialize()
@@ -566,12 +569,13 @@ int GuiMain(int argc, char* argv[])
     qInstallMessageHandler(DebugMessageHandler);
     // Allow parameter interaction before we create the options model
     app.parameterSetup();
+    GUIUtil::LogQtInfo();
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
 
     if (did_show_intro) {
         // Store intro dialog settings other than datadir (network specific)
-        app.SetPrune(prune, true);
+        app.InitializePruneSetting(prune);
     }
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))

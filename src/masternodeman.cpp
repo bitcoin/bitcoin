@@ -1455,32 +1455,33 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
                     }
                 }
             }
-            return true;
         }
+        return true;
+    }
         
-        mapSeenMasternodeBroadcast.insert(std::make_pair(hash, std::make_pair(now, mnb)));
+    mapSeenMasternodeBroadcast.insert(std::make_pair(hash, std::make_pair(now, mnb)));
 
-        LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s new\n", mnb.outpoint.ToStringShort());
+    LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s new\n", mnb.outpoint.ToStringShort());
 
-        if(!mnb.SimpleCheck(nDos)) {
-            LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- SimpleCheck() failed, masternode=%s\n", mnb.outpoint.ToStringShort());
+    if(!mnb.SimpleCheck(nDos)) {
+        LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- SimpleCheck() failed, masternode=%s\n", mnb.outpoint.ToStringShort());
+        return false;
+    }
+
+    // search Masternode list
+    CMasternode* pmn = Find(mnb.outpoint);
+    if(pmn) {
+        const CMasternodeBroadcast &mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()].second;
+        if(!mnb.Update(pmn, nDos, connman)) {
+            LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Update() failed, masternode=%s\n", mnb.outpoint.ToStringShort());
             return false;
         }
-
-        // search Masternode list
-        CMasternode* pmn = Find(mnb.outpoint);
-        if(pmn) {
-            const CMasternodeBroadcast &mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()].second;
-            if(!mnb.Update(pmn, nDos, connman)) {
-                LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Update() failed, masternode=%s\n", mnb.outpoint.ToStringShort());
-                return false;
-            }
-            if(hash != mnbOld.GetHash()) {
-                mapSeenMasternodeBroadcast.erase(mnbOld.GetHash());
-            }
-            return true;
+        if(hash != mnbOld.GetHash()) {
+            mapSeenMasternodeBroadcast.erase(mnbOld.GetHash());
         }
+        return true;
     }
+    
 
     if(mnb.CheckOutpoint(nDos)) {
         Add(mnb);
