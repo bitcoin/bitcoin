@@ -1735,8 +1735,14 @@ void static FlushBlockFile(bool fFinalize = false)
 {
     LOCK(cs_LastBlockFile);
 
+    // we want to finalize flush the previous undo file, as it will have been written to
+    // for awhile even after we've moved onto the next blk file; if we don't do this, we
+    // end up with a re-opened but unflushed rev file, resulting in pre-allocated but not
+    // returned disk space allocation
+    int previous_undo_file = fFinalize && nLastBlockFile > 0 ? nLastBlockFile - 1 : nLastBlockFile;
+
     FlatFilePos block_pos_old(nLastBlockFile, vinfoBlockFile[nLastBlockFile].nSize);
-    FlatFilePos undo_pos_old(nLastBlockFile, vinfoBlockFile[nLastBlockFile].nUndoSize);
+    FlatFilePos undo_pos_old(previous_undo_file, vinfoBlockFile[previous_undo_file].nUndoSize);
 
     bool status = true;
     status &= BlockFileSeq().Flush(block_pos_old, fFinalize);
