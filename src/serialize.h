@@ -448,11 +448,37 @@ I ReadVarInt(Stream& is)
     }
 }
 
+/** Simple wrapper class to serialize objects using a formatter; used by Using(). */
+template<typename Formatter, typename T>
+class Wrapper
+{
+    static_assert(std::is_lvalue_reference<T>::value, "Wrapper needs an lvalue reference type T");
+protected:
+    T m_object;
+public:
+    explicit Wrapper(T obj) : m_object(obj) {}
+    template<typename Stream> void Serialize(Stream &s) const { Formatter().Ser(s, m_object); }
+    template<typename Stream> void Unserialize(Stream &s) { Formatter().Unser(s, m_object); }
+};
+
+/** Cause serialization/deserialization of an object to be done using a specified formatter class.
+ *
+ * To use this, you need a class Formatter that has public functions Ser(stream, const object&) for
+ * serialization, and Unser(stream, object&) for deserialization. Serialization routines (inside
+ * READWRITE, or directly with << and >> operators), can then use Using<Formatter>(object).
+ *
+ * This works by constructing a Wrapper<Formatter, T>-wrapped version of object, where T is
+ * const during serialization, and non-const during deserialization, which maintains const
+ * correctness.
+ */
+template<typename Formatter, typename T>
+static inline Wrapper<Formatter, T&> Using(T&& t) { return Wrapper<Formatter, T&>(t); }
+
 #define FIXEDBITSET(obj, size) CFixedBitSet(REF(obj), (size))
 #define DYNBITSET(obj) CDynamicBitSet(REF(obj))
 #define FIXEDVARINTSBITSET(obj, size) CFixedVarIntsBitSet(REF(obj), (size))
 #define AUTOBITSET(obj, size) CAutoBitSet(REF(obj), (size))
-#define VARINT(obj, ...) WrapVarInt<__VA_ARGS__>(REF(obj))
+#define VARINT(obj, ...) Using<VarIntFormatter<__VA_ARGS__>>(obj)
 #define COMPACTSIZE(obj) CCompactSize(REF(obj))
 #define LIMITED_STRING(obj,n) LimitedString< n >(REF(obj))
 
@@ -612,22 +638,18 @@ public:
     }
 };
 
-template<VarIntMode Mode, typename I>
-class CVarInt
+/** Serialization wrapper class for integers in VarInt format. */
+template<VarIntMode Mode=VarIntMode::DEFAULT>
+struct VarIntFormatter
 {
-protected:
-    I &n;
-public:
-    explicit CVarInt(I& nIn) : n(nIn) { }
-
-    template<typename Stream>
-    void Serialize(Stream &s) const {
-        WriteVarInt<Stream,Mode,I>(s, n);
+    template<typename Stream, typename I> void Ser(Stream &s, I v)
+    {
+        WriteVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s, v);
     }
 
-    template<typename Stream>
-    void Unserialize(Stream& s) {
-        n = ReadVarInt<Stream,Mode,I>(s);
+    template<typename Stream, typename I> void Unser(Stream& s, I& v)
+    {
+        v = ReadVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s);
     }
 };
 
@@ -715,9 +737,6 @@ public:
             s.write((char*)string.data(), string.size());
     }
 };
-
-template<VarIntMode Mode=VarIntMode::DEFAULT, typename I>
-CVarInt<Mode, I> WrapVarInt(I& n) { return CVarInt<Mode, I>{n}; }
 
 template<typename I>
 BigEndian<I> WrapBigEndian(I& n) { return BigEndian<I>(n); }
