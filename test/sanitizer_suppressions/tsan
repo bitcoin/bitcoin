@@ -7,6 +7,14 @@ deadlock:WalletBatch
 # Intentional deadlock in tests
 deadlock:TestPotentialDeadLockDetected
 
+# Race due to unprotected calls to thread-unsafe BOOST_TEST_MESSAGE from different threads:
+# * G_TEST_LOG_FUN in the index thread
+# * boost test case invoker (entering a test case) in the main thread
+# TODO: get rid of BOOST_ macros, see also https://github.com/bitcoin/bitcoin/issues/8670
+race:blockfilter_index_initial_sync_invoker
+race:txindex_initial_sync_invoker
+race:validation_block_tests::TestSubscriber
+
 # Wildcard for all gui tests, should be replaced with non-wildcard suppressions
 race:src/qt/test/*
 deadlock:src/qt/test/*

@@ -4,9 +4,13 @@
 
 #include <test/fuzz/fuzz.h>
 
+#include <test/util/setup_common.h>
+
 #include <cstdint>
 #include <unistd.h>
 #include <vector>
+
+const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 static bool read_stdin(std::vector<uint8_t>& data)
 {
