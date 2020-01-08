@@ -22,6 +22,10 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.chain = 'testnet3'  # Use testnet chain because it has an early checkpoint
         self.num_nodes = 2
+        self.extra_args = [
+            ["-minimumchainwork=0"],
+            ["-minimumchainwork=0"]
+        ]
 
     def add_options(self, parser):
         parser.add_argument(
@@ -46,7 +50,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.headers_fork = [from_hex(CBlockHeader(), h) for h in self.headers_fork]
 
         self.log.info("Feed all non-fork headers, including and up to the first checkpoint")
-        peer_checkpoint = self.nodes[0].add_p2p_connection(P2PInterface())
+        peer_checkpoint = self.nodes[0].add_p2p_connection(P2PInterface(), node_outgoing=True)
         peer_checkpoint.send_and_ping(msg_headers(self.headers))
         assert {
             'height': 546,
@@ -62,8 +66,8 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
 
         self.log.info("Feed all fork headers (succeeds without checkpoint)")
         # On node 0 it succeeds because checkpoints are disabled
-        self.restart_node(0, extra_args=['-nocheckpoints'])
-        peer_no_checkpoint = self.nodes[0].add_p2p_connection(P2PInterface())
+        self.restart_node(0, extra_args=['-nocheckpoints', "-minimumchainwork=0"])
+        peer_no_checkpoint = self.nodes[0].add_p2p_connection(P2PInterface(), node_outgoing=True)
         peer_no_checkpoint.send_and_ping(msg_headers(self.headers_fork))
         assert {
             "height": 2,
@@ -73,7 +77,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         } in self.nodes[0].getchaintips()
 
         # On node 1 it succeeds because no checkpoint has been reached yet by a chain tip
-        peer_before_checkpoint = self.nodes[1].add_p2p_connection(P2PInterface())
+        peer_before_checkpoint = self.nodes[1].add_p2p_connection(P2PInterface(), node_outgoing=True)
         peer_before_checkpoint.send_and_ping(msg_headers(self.headers_fork))
         assert {
             "height": 2,
