@@ -6,6 +6,8 @@
 #include "server.h"
 #include "validation.h"
 
+#include "masternode/activemasternode.h"
+
 #include "llmq/quorums.h"
 #include "llmq/quorums_blockprocessor.h"
 #include "llmq/quorums_debug.h"
@@ -176,8 +178,34 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     int tipHeight = chainActive.Height();
 
     UniValue minableCommitments(UniValue::VOBJ);
+    UniValue quorumConnections(UniValue::VOBJ);
     for (const auto& p : Params().GetConsensus().llmqs) {
         auto& params = p.second;
+
+        if (fMasternodeMode) {
+            const CBlockIndex* pindexQuorum = chainActive[tipHeight - (tipHeight % params.dkgInterval)];
+            auto expectedConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash);
+            std::map<uint256, CAddress> foundConnections;
+            g_connman->ForEachNode([&](const CNode* pnode) {
+                if (!pnode->verifiedProRegTxHash.IsNull() && expectedConnections.count(pnode->verifiedProRegTxHash)) {
+                    foundConnections.emplace(pnode->verifiedProRegTxHash, pnode->addr);
+                }
+            });
+            UniValue arr(UniValue::VARR);
+            for (auto& ec : expectedConnections) {
+                UniValue obj(UniValue::VOBJ);
+                obj.push_back(Pair("proTxHash", ec.ToString()));
+                if (foundConnections.count(ec)) {
+                    obj.push_back(Pair("connected", true));
+                    obj.push_back(Pair("address", foundConnections[ec].ToString(false)));
+                } else {
+                    obj.push_back(Pair("connected", false));
+                }
+                arr.push_back(obj);
+            }
+            quorumConnections.push_back(Pair(params.name, arr));
+        }
+
         llmq::CFinalCommitment fqc;
         if (llmq::quorumBlockProcessor->GetMinableCommitment(params.type, tipHeight, fqc)) {
             UniValue obj(UniValue::VOBJ);
@@ -187,6 +215,7 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     }
 
     ret.push_back(Pair("minableCommitments", minableCommitments));
+    ret.push_back(Pair("quorumConnections", quorumConnections));
 
     return ret;
 }

@@ -756,6 +756,30 @@ class DashTestFramework(BitcoinTestFramework):
             return all(node.spork('show') == sporks for node in self.nodes[1:])
         wait_until(check_sporks_same, timeout=timeout, sleep=0.5)
 
+    def wait_for_quorum_connections(self, expected_connections=2, timeout = 30):
+        def check_quorum_connections():
+            all_ok = True
+            for node in self.nodes:
+                s = node.quorum("dkgstatus")
+                if s["session"] == {}:
+                    continue
+                if "quorumConnections" not in s:
+                    all_ok = False
+                    break
+                s = s["quorumConnections"]
+                if "llmq_test" not in s:
+                    all_ok = False
+                    break
+                cnt = 0
+                for c in s["llmq_test"]:
+                    if c["connected"]:
+                        cnt += 1
+                if cnt < expected_connections:
+                    all_ok = False
+                    break
+            return all_ok
+        wait_until(check_quorum_connections, timeout=timeout, sleep=0.1)
+
     def wait_for_quorum_phase(self, phase, expected_member_count, check_received_messages, check_received_messages_count, timeout=30):
         def check_dkg_session():
             all_ok = True
@@ -796,7 +820,7 @@ class DashTestFramework(BitcoinTestFramework):
             return all_ok
         wait_until(check_dkg_comitments, timeout=timeout, sleep=0.1)
 
-    def mine_quorum(self, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None):
+    def mine_quorum(self, expected_members=None, expected_connections=2, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None):
         if expected_members is None:
             expected_members = self.llmq_size
         if expected_contributions is None:
@@ -820,8 +844,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         self.log.info("Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(1, expected_members, None, 0)
-        # Give nodes some time to connect to neighbors
-        time.sleep(2)
+        self.wait_for_quorum_connections(expected_connections=expected_connections)
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
