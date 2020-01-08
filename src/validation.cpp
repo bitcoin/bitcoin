@@ -2179,7 +2179,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     auto& utilService = VeriBlock::getService<VeriBlock::UtilService>();
     CAmount PoPrewards = 0;
-    for (const auto& it : utilService.getPopRewards(*pindex->pprev)) {
+    for (const auto& it : utilService.getPopRewards(*pindex->pprev, chainparams.GetConsensus())) {
         PoPrewards += it.second;
     }
     assert(PoPrewards >= 0);

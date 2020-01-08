@@ -325,7 +325,7 @@ int PopServiceImpl::compareTwoBranches(const CBlockIndex* commonKeystone, const 
 }
 
 // Pop rewards
-void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBlockIndex& endorsedBlock, const CBlockIndex& contaningBlocksTip, const CBlockIndex& difficulty_start_interval, const CBlockIndex& difficulty_end_interval, std::map<CScript, int64_t>& outputs)
+void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBlockIndex& endorsedBlock, const CBlockIndex& contaningBlocksTip, const CBlockIndex* difficulty_start_interval, const CBlockIndex* difficulty_end_interval, std::map<CScript, int64_t>& outputs)
 {
     RewardsCalculateRequest request;
     RewardsCalculateReply reply;
@@ -339,9 +339,9 @@ void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBloc
         workingBlock = workingBlock->pprev;
     }
 
-    workingBlock = &difficulty_end_interval;
+    workingBlock = difficulty_end_interval;
 
-    while (workingBlock != difficulty_start_interval.pprev) // including the start_interval block
+    while (workingBlock != difficulty_start_interval->pprev) // including the start_interval block
     {
         AltChainBlock* b = request.add_difficultyblocks();
         ::BlockToProtoAltChainBlock(*workingBlock, *b);
