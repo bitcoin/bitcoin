@@ -17,15 +17,15 @@
 # error "Bitcoin cannot be compiled without assertions."
 #endif
 
-// Assumption: We assume a C++11 (ISO/IEC 14882:2011) compiler (minimum requirement).
-// Example(s): We assume the presence of C++11 features everywhere :-)
+// Assumption: We assume a C++17 compiler (minimum requirement).
+// Example(s): We assume the presence of C++17 features :-)
 // Note:       MSVC does not report the expected __cplusplus value due to legacy
 //             reasons.
 #if !defined(_MSC_VER)
-// ISO Standard C++11 [cpp.predefined]p1:
-// "The name __cplusplus is defined to the value 201103L when compiling a C++
-//  translation unit."
-static_assert(__cplusplus >= 201103L, "C++11 standard assumed");
+// ISO Standard C++17 standard §19.8/p1 Predefined macro names [cpp.predefined]:
+// "The following macro names shall be defined by the implementation:
+//  __cplusplus -- The integer literal 201703L."
+static_assert(__cplusplus >= 201703L, "C++17 standard assumed");
 #endif
 
 // Assumption: We assume the floating-point types to fulfill the requirements of
