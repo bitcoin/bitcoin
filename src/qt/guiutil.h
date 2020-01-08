@@ -265,6 +265,11 @@ namespace GUIUtil
      * In Qt 5.11 the QFontMetrics::horizontalAdvance() was introduced.
      */
     int TextWidth(const QFontMetrics& fm, const QString& text);
+
+    /**
+     * Writes to debug.log short info about the used Qt and the host system.
+     */
+    void LogQtInfo();
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H
