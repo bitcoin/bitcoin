@@ -64,6 +64,11 @@ class ZMQTest (BitcoinTestFramework):
         # Note that the publishing order is not defined in the documentation and
         # is subject to change.
         import zmq
+
+        # Invalid zmq arguments don't take down the node, see #17185.
+        self.restart_node(0, ["-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
+        self.zmq_context = zmq.Context()
+
         address = 'tcp://127.0.0.1:28332'
         socket = self.ctx.socket(zmq.SUB)
         socket.set(zmq.RCVTIMEO, 60000)
