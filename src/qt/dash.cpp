@@ -587,6 +587,7 @@ int GuiMain(int argc, char* argv[])
     qInstallMessageHandler(DebugMessageHandler);
     // Allow parameter interaction before we create the options model
     app.parameterSetup();
+    GUIUtil::LogQtInfo();
     // Load custom application fonts and setup font management
     if (!GUIUtil::loadFonts()) {
         QMessageBox::critical(0, PACKAGE_NAME,
