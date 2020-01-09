@@ -102,6 +102,7 @@ namespace Platform
             {
                 return *it;
             }
+            return NfTokenIndex();
         }
         else /// PlatformDb::Instance().OptimizeRam() is on
         {
@@ -144,7 +145,10 @@ namespace Platform
         }
 
         /// PlatformDb::Instance().OptimizeRam() is on
-        return GetNftIndexFromDb(protocolId, tokenId).NfTokenPtr()->tokenOwnerKeyId;
+        auto nftIndex = GetNftIndexFromDb(protocolId, tokenId);
+        if (!nftIndex.IsNull())
+            return nftIndex.NfTokenPtr()->tokenOwnerKeyId;
+        return CKeyID();
     }
 
     std::size_t NfTokensManager::BalanceOf(uint64_t protocolId, const CKeyID & ownerId) const
