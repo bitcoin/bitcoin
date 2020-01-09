@@ -14,9 +14,16 @@
 #include <scheduler.h>
 #include <txmempool.h>
 
+#include <vbk/pop_service.hpp>
+#include <vbk/util_service.hpp>
+#include <vbk/config.hpp>
+#include <vbk/rpc_service.hpp>
+
 #include <type_traits>
 
 #include <boost/thread.hpp>
+
+#include <fakeit.hpp>
 
 // Enable BOOST_CHECK_EQUAL for enum class types
 template <typename T>
@@ -64,14 +71,21 @@ static inline bool InsecureRandBool() { return g_insecure_rand_ctx.randbool(); }
 
 static constexpr CAmount CENT{1000000};
 
+struct BasicVbkSetup {
+    fakeit::Mock<VeriBlock::PopService> pop_service_mock;
+
+    BasicVbkSetup();
+
+    virtual ~BasicVbkSetup();
+};
+
 /** Basic testing setup.
  * This just configures logging, data dir and chain parameters.
  */
-struct BasicTestingSetup {
+struct BasicTestingSetup: public BasicVbkSetup {
     ECCVerifyHandle globalVerifyHandle;
-
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
-    ~BasicTestingSetup();
+    ~BasicTestingSetup() override;
 private:
     const fs::path m_path_root;
 };
@@ -83,9 +97,8 @@ struct TestingSetup : public BasicTestingSetup {
     NodeContext m_node;
     boost::thread_group threadGroup;
     CScheduler scheduler;
-
     explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
-    ~TestingSetup();
+    ~TestingSetup() override;
 };
 
 /** Identical to TestingSetup, but chain set to regtest */
@@ -110,7 +123,7 @@ struct TestChain100Setup : public RegTestingSetup {
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
                                  const CScript& scriptPubKey);
 
-    ~TestChain100Setup();
+    ~TestChain100Setup() override;
 
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions

@@ -1,0 +1,20 @@
+name: Prerelease Image Docker CD
+
+on:
+  push:
+    paths:
+      - prerelease.Dockerfile
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Docker Push
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: veriblock/prerelease
+          dockerfile: prerelease.Dockerfile
+          username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
+          tag_names: true

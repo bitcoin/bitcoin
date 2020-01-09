@@ -24,15 +24,16 @@ BOOST_AUTO_TEST_CASE(get_next_work)
 }
 
 /* Test the constraint on the upper bound for next work */
-BOOST_AUTO_TEST_CASE(get_next_work_pow_limit)
+BOOST_AUTO_TEST_CASE(get_next_work_pow_limit, *boost::unit_test::disabled())
 {
-    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    Consensus::Params params = CreateChainParams(CBaseChainParams::MAIN)->GetConsensus();
+    params.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
     int64_t nLastRetargetTime = 1231006505; // Block #0
     CBlockIndex pindexLast;
     pindexLast.nHeight = 2015;
     pindexLast.nTime = 1233061996;  // Block #2015
     pindexLast.nBits = 0x1d00ffff;
-    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00ffffU);
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params), 0x1d00ffffU);
 }
 
 /* Test the constraint on the lower bound for actual time taken */

@@ -9,6 +9,8 @@
 #include <random.h>
 #include <version.h>
 
+#include <vbk/util.hpp>
+
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
 std::vector<uint256> CCoinsView::GetHeadBlocks() const { return std::vector<uint256>(); }
@@ -224,7 +226,7 @@ unsigned int CCoinsViewCache::GetCacheSize() const {
 
 CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 {
-    if (tx.IsCoinBase())
+    if (tx.IsCoinBase() || VeriBlock::isPopTx(tx))
         return 0;
 
     CAmount nResult = 0;
@@ -236,7 +238,7 @@ CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 
 bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
 {
-    if (!tx.IsCoinBase()) {
+    if (!tx.IsCoinBase() && !VeriBlock::isPopTx(tx)) {
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
             if (!HaveCoin(tx.vin[i].prevout)) {
                 return false;

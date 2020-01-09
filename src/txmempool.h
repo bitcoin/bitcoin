@@ -29,6 +29,8 @@
 #include <boost/multi_index/sequenced_index.hpp>
 #include <boost/signals2/signal.hpp>
 
+#include <vbk/util.hpp>
+
 class CBlockIndex;
 extern CCriticalSection cs_main;
 
@@ -484,6 +486,22 @@ public:
                 boost::multi_index::tag<ancestor_score>,
                 boost::multi_index::identity<CTxMemPoolEntry>,
                 CompareTxMemPoolEntryByAncestorFee
+            >,
+            // sorted by pop tx priority
+			boost::multi_index::ordered_non_unique<
+                boost::multi_index::tag<VeriBlock::poptx_priority<descendant_score>>,
+                boost::multi_index::identity<CTxMemPoolEntry>,
+                VeriBlock::CompareTxMemPoolEntryByPoPtxPriority<CompareTxMemPoolEntryByDescendantScore>
+            >,
+			boost::multi_index::ordered_non_unique<
+                boost::multi_index::tag<VeriBlock::poptx_priority<entry_time>>,
+                boost::multi_index::identity<CTxMemPoolEntry>,
+                VeriBlock::CompareTxMemPoolEntryByPoPtxPriority<CompareTxMemPoolEntryByEntryTime>
+            >,
+			boost::multi_index::ordered_non_unique<
+                boost::multi_index::tag<VeriBlock::poptx_priority<ancestor_score>>,
+                boost::multi_index::identity<CTxMemPoolEntry>,
+                VeriBlock::CompareTxMemPoolEntryByPoPtxPriority<CompareTxMemPoolEntryByAncestorFee>
             >
         >
     > indexed_transaction_set;
