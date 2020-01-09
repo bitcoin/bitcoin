@@ -27,10 +27,6 @@ using grpc::Status;
 
 namespace {
 
-template <class T>
-using DeserializeMemberFunction = Status (VeriBlock::GrpcPopService::Stub::*)(::grpc::ClientContext* context, const ::VeriBlock::BytesArrayRequest& request, T* response);
-
-
 void BlockToProtoAltChainBlock(const CBlockIndex& blockIndex, VeriBlock::AltChainBlock& protoBlock)
 {
     auto* blockIndex1 = new VeriBlock::BlockIndex();
