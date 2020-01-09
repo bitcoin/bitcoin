@@ -72,6 +72,9 @@
                 <height>16777215</height>
                </size>
               </property>
+              <property name="focusPolicy">
+               <enum>Qt::ClickFocus</enum>
+              </property>
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</string>
               </property>
@@ -115,15 +118,12 @@
              <number>12</number>
             </property>
             <item row="2" column="2">
-             <widget class="QLabel" name="labelWatchPending">
+             <widget class="HighlightLabelWidget" name="labelWatchPending">
               <property name="font">
                <font>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
                <string>Unconfirmed transactions to watch-only addresses</string>
@@ -134,21 +134,15 @@
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
-              <property name="textInteractionFlags">
-               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-              </property>
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QLabel" name="labelUnconfirmed">
+             <widget class="HighlightLabelWidget" name="labelUnconfirmed">
               <property name="font">
                <font>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
                <string>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</string>
@@ -159,21 +153,15 @@
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
-              <property name="textInteractionFlags">
-               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-              </property>
              </widget>
             </item>
             <item row="3" column="2">
-             <widget class="QLabel" name="labelWatchImmature">
+             <widget class="HighlightLabelWidget" name="labelWatchImmature">
               <property name="font">
                <font>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
                <string>Mined balance in watch-only addresses that has not yet matured</string>
@@ -183,9 +171,6 @@
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="textInteractionFlags">
-               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
               </property>
              </widget>
             </item>
@@ -223,15 +208,12 @@
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QLabel" name="labelImmature">
+             <widget class="HighlightLabelWidget" name="labelImmature">
               <property name="font">
                <font>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
                <string>Mined balance that has not yet matured</string>
@@ -241,9 +223,6 @@
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="textInteractionFlags">
-               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
               </property>
              </widget>
             </item>
@@ -268,15 +247,12 @@
              </widget>
             </item>
             <item row="5" column="1">
-             <widget class="QLabel" name="labelTotal">
+             <widget class="HighlightLabelWidget" name="labelTotal">
               <property name="font">
                <font>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
                <string>Your current total balance</string>
@@ -287,21 +263,15 @@
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
-              <property name="textInteractionFlags">
-               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-              </property>
              </widget>
             </item>
             <item row="5" column="2">
-             <widget class="QLabel" name="labelWatchTotal">
+             <widget class="HighlightLabelWidget" name="labelWatchTotal">
               <property name="font">
                <font>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
                <string>Current total balance in watch-only addresses</string>
@@ -311,9 +281,6 @@
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="textInteractionFlags">
-               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
               </property>
              </widget>
             </item>
@@ -335,15 +302,12 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QLabel" name="labelBalance">
+             <widget class="HighlightLabelWidget" name="labelBalance">
               <property name="font">
                <font>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
                <string>Your current spendable balance</string>
@@ -354,21 +318,15 @@
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
-              <property name="textInteractionFlags">
-               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-              </property>
              </widget>
             </item>
             <item row="1" column="2">
-             <widget class="QLabel" name="labelWatchAvailable">
+             <widget class="HighlightLabelWidget" name="labelWatchAvailable">
               <property name="font">
                <font>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
                <string>Your current balance in watch-only addresses</string>
@@ -378,9 +336,6 @@
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="textInteractionFlags">
-               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
               </property>
              </widget>
             </item>
@@ -458,6 +413,9 @@
                 <height>16777215</height>
                </size>
               </property>
+              <property name="focusPolicy">
+               <enum>Qt::ClickFocus</enum>
+              </property>
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</string>
               </property>
@@ -497,6 +455,9 @@
           </item>
           <item>
            <widget class="QListView" name="listTransactions">
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
             <property name="styleSheet">
              <string notr="true">QListView { background: transparent; }</string>
             </property>
@@ -536,6 +497,23 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>HighlightLabelWidget</class>
+   <extends>QLabel</extends>
+   <header>qt/highlightlabelwidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>labelBalance</tabstop>
+  <tabstop>labelUnconfirmed</tabstop>
+  <tabstop>labelImmature</tabstop>
+  <tabstop>labelTotal</tabstop>
+  <tabstop>labelWatchAvailable</tabstop>
+  <tabstop>labelWatchPending</tabstop>
+  <tabstop>labelWatchImmature</tabstop>
+  <tabstop>labelWatchTotal</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
