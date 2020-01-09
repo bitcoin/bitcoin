@@ -236,7 +236,7 @@ public:
     explicit ChainImpl(NodeContext& node) : m_node(node) {}
     std::unique_ptr<Chain::Lock> lock(bool try_lock) override
     {
-        auto result = MakeUnique<LockImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
+        auto result = std::make_unique<LockImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
         if (try_lock && result && !*result) return {};
         // std::move necessary on some compilers due to conversion from
         // LockImpl to Lock pointer
@@ -344,7 +344,7 @@ public:
     }
     std::unique_ptr<Handler> handleNotifications(Notifications& notifications) override
     {
-        return MakeUnique<NotificationsHandlerImpl>(*this, notifications);
+        return std::make_unique<NotificationsHandlerImpl>(*this, notifications);
     }
     void waitForNotificationsIfTipChanged(const uint256& old_tip) override
     {
@@ -356,7 +356,7 @@ public:
     }
     std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) override
     {
-        return MakeUnique<RpcHandlerImpl>(command);
+        return std::make_unique<RpcHandlerImpl>(command);
     }
     bool rpcEnableDeprecated(const std::string& method) override { return IsDeprecatedRPCEnabled(method); }
     void rpcRunLater(const std::string& name, std::function<void()> fn, int64_t seconds) override
@@ -375,6 +375,6 @@ public:
 };
 } // namespace
 
-std::unique_ptr<Chain> MakeChain(NodeContext& node) { return MakeUnique<ChainImpl>(node); }
+std::unique_ptr<Chain> MakeChain(NodeContext& node) { return std::make_unique<ChainImpl>(node); }
 
 } // namespace interfaces

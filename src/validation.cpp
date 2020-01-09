@@ -47,6 +47,7 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
+#include <memory>
 #include <string>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -1240,7 +1241,7 @@ CoinsViews::CoinsViews(
 
 void CoinsViews::InitCache()
 {
-    m_cacheview = MakeUnique<CCoinsViewCache>(&m_catcherview);
+    m_cacheview = std::make_unique<CCoinsViewCache>(&m_catcherview);
 }
 
 // NOTE: for now m_blockman is set to a global, but this will be changed
@@ -1254,7 +1255,7 @@ void CChainState::InitCoinsDB(
     bool should_wipe,
     std::string leveldb_name)
 {
-    m_coins_views = MakeUnique<CoinsViews>(
+    m_coins_views = std::make_unique<CoinsViews>(
         leveldb_name, cache_size_bytes, in_memory, should_wipe);
 }
 

@@ -6,11 +6,12 @@
 #include <pubkey.h>
 #include <script/descriptor.h>
 #include <test/fuzz/fuzz.h>
-#include <util/memory.h>
+
+#include <memory>
 
 void initialize()
 {
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const auto verify_handle = std::make_unique<ECCVerifyHandle>();
     SelectParams(CBaseChainParams::REGTEST);
 }
 

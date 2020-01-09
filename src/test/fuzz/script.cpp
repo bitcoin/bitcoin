@@ -15,12 +15,13 @@
 #include <script/standard.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
-#include <util/memory.h>
+
+#include <memory>
 
 void initialize()
 {
     // Fuzzers using pubkey must hold an ECCVerifyHandle.
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const auto verify_handle = std::make_unique<ECCVerifyHandle>();
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

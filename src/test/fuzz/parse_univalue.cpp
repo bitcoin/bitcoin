@@ -7,14 +7,14 @@
 #include <rpc/client.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
-#include <util/memory.h>
 
 #include <limits>
+#include <memory>
 #include <string>
 
 void initialize()
 {
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const auto verify_handle = std::make_unique<ECCVerifyHandle>();
     SelectParams(CBaseChainParams::REGTEST);
 }
 

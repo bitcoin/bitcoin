@@ -4,9 +4,9 @@
 
 #include <interfaces/handler.h>
 
-#include <util/memory.h>
-
 #include <boost/signals2/connection.hpp>
+
+#include <memory>
 #include <utility>
 
 namespace interfaces {
@@ -35,12 +35,12 @@ public:
 
 std::unique_ptr<Handler> MakeHandler(boost::signals2::connection connection)
 {
-    return MakeUnique<HandlerImpl>(std::move(connection));
+    return std::make_unique<HandlerImpl>(std::move(connection));
 }
 
 std::unique_ptr<Handler> MakeHandler(std::function<void()> cleanup)
 {
-    return MakeUnique<CleanupHandler>(std::move(cleanup));
+    return std::make_unique<CleanupHandler>(std::move(cleanup));
 }
 
 } // namespace interfaces

@@ -37,6 +37,8 @@
 
 #include <univalue.h>
 
+#include <memory>
+
 class CWallet;
 fs::path GetWalletDir();
 std::vector<fs::path> ListWalletDir();
@@ -324,6 +326,6 @@ public:
 
 } // namespace
 
-std::unique_ptr<Node> MakeNode() { return MakeUnique<NodeImpl>(); }
+std::unique_ptr<Node> MakeNode() { return std::make_unique<NodeImpl>(); }
 
 } // namespace interfaces

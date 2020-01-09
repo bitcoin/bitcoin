@@ -790,7 +790,7 @@ public:
     CCriticalSection cs_inventory;
 
     struct TxRelay {
-        TxRelay() { pfilter = MakeUnique<CBloomFilter>(); }
+        TxRelay() { pfilter = std::make_unique<CBloomFilter>(); }
         mutable CCriticalSection cs_filter;
         // We use fRelayTxes for two purposes -
         // a) it allows us to not relay tx invs before receiving the peer's version message

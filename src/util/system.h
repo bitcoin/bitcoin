@@ -20,7 +20,6 @@
 #include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
-#include <util/memory.h>
 #include <util/settings.h>
 #include <util/threadnames.h>
 #include <util/time.h>

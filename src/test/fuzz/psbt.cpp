@@ -9,17 +9,17 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <streams.h>
-#include <util/memory.h>
 #include <version.h>
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 void initialize()
 {
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const auto verify_handle = std::make_unique<ECCVerifyHandle>();
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)
