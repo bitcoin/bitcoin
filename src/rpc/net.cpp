@@ -33,7 +33,7 @@ static UniValue getconnectioncount(const JSONRPCRequest& request)
                 "\nReturns the number of connections to other nodes.\n",
                 {},
                 RPCResult{
-            "n          (numeric) The connection count\n"
+                    RPCResult::Type::NUM, "", "The connection count"
                 },
                 RPCExamples{
                     HelpExampleCli("getconnectioncount", "")
@@ -77,57 +77,59 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
                 "\nReturns data about each connected network node as a json array of objects.\n",
                 {},
                 RPCResult{
-            "[\n"
-            "  {\n"
-            "    \"id\" : n,                   (numeric) Peer index\n"
-            "    \"addr\" : \"host:port\",      (string) The IP address and port of the peer\n"
-            "    \"addrbind\" : \"ip:port\",    (string) Bind address of the connection to the peer\n"
-            "    \"addrlocal\" : \"ip:port\",   (string) Local address as reported by the peer\n"
-            "    \"mapped_as\" : \"mapped_as\", (string) The AS in the BGP route to the peer used for diversifying peer selection\n"
-            "    \"services\" : \"xxxxxxxxxxxxxxxx\",   (string) The services offered\n"
-            "    \"servicesnames\" : [              (json array) the services offered, in human-readable form\n"
-            "        \"SERVICE_NAME\",         (string) the service name if it is recognised\n"
-            "         ...\n"
-            "     ],\n"
-            "    \"relaytxes\" : true|false,    (boolean) Whether peer has asked us to relay transactions to it\n"
-            "    \"lastsend\" : ttt,           (numeric) The " + UNIX_EPOCH_TIME + " of the last send\n"
-            "    \"lastrecv\" : ttt,           (numeric) The " + UNIX_EPOCH_TIME + " of the last receive\n"
-            "    \"bytessent\" : n,            (numeric) The total bytes sent\n"
-            "    \"bytesrecv\" : n,            (numeric) The total bytes received\n"
-            "    \"conntime\" : ttt,           (numeric) The " + UNIX_EPOCH_TIME + " of the connection\n"
-            "    \"timeoffset\" : ttt,         (numeric) The time offset in seconds\n"
-            "    \"pingtime\" : n,             (numeric) ping time (if available)\n"
-            "    \"minping\" : n,              (numeric) minimum observed ping time (if any at all)\n"
-            "    \"pingwait\" : n,             (numeric) ping wait (if non-zero)\n"
-            "    \"version\" : v,              (numeric) The peer version, such as 70001\n"
-            "    \"subver\" : \"/Satoshi:0.8.5/\",  (string) The string version\n"
-            "    \"inbound\" : true|false,     (boolean) Inbound (true) or Outbound (false)\n"
-            "    \"addnode\" : true|false,     (boolean) Whether connection was due to addnode/-connect or if it was an automatic/inbound connection\n"
-            "    \"startingheight\" : n,       (numeric) The starting height (block) of the peer\n"
-            "    \"banscore\" : n,             (numeric) The ban score\n"
-            "    \"synced_headers\" : n,       (numeric) The last header we have in common with this peer\n"
-            "    \"synced_blocks\" : n,        (numeric) The last block we have in common with this peer\n"
-            "    \"inflight\" : [\n"
-            "       n,                        (numeric) The heights of blocks we're currently asking from this peer\n"
-            "       ...\n"
-            "    ],\n"
-            "    \"whitelisted\" : true|false, (boolean) Whether the peer is whitelisted\n"
-            "    \"minfeefilter\" : n,         (numeric) The minimum fee rate for transactions this peer accepts\n"
-            "    \"bytessent_per_msg\" : {\n"
-            "       \"msg\" : n,               (numeric) The total bytes sent aggregated by message type\n"
-            "                               When a message type is not listed in this json object, the bytes sent are 0.\n"
-            "                               Only known message types can appear as keys in the object.\n"
-            "       ...\n"
-            "    },\n"
-            "    \"bytesrecv_per_msg\" : {\n"
-            "       \"msg\" : n,               (numeric) The total bytes received aggregated by message type\n"
-            "                               When a message type is not listed in this json object, the bytes received are 0.\n"
-            "                               Only known message types can appear as keys in the object and all bytes received of unknown message types are listed under '"+NET_MESSAGE_COMMAND_OTHER+"'.\n"
-            "       ...\n"
-            "    }\n"
-            "  }\n"
-            "  ,...\n"
-            "]\n"
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                            {
+                            {RPCResult::Type::NUM, "id", "Peer index"},
+                            {RPCResult::Type::STR, "addr", "(host:port) The IP address and port of the peer"},
+                            {RPCResult::Type::STR, "addrbind", "(ip:port) Bind address of the connection to the peer"},
+                            {RPCResult::Type::STR, "addrlocal", "(ip:port) Local address as reported by the peer"},
+                            {RPCResult::Type::STR, "mapped_as", "The AS in the BGP route to the peer used for diversifying peer selection"},
+                            {RPCResult::Type::STR_HEX, "services", "The services offered"},
+                            {RPCResult::Type::ARR, "servicesnames", "the services offered, in human-readable form",
+                            {
+                                {RPCResult::Type::STR, "SERVICE_NAME", "the service name if it is recognised"}
+                            }},
+                            {RPCResult::Type::BOOL, "relaytxes", "Whether peer has asked us to relay transactions to it"},
+                            {RPCResult::Type::NUM_TIME, "lastsend", "The " + UNIX_EPOCH_TIME + " of the last send"},
+                            {RPCResult::Type::NUM_TIME, "lastrecv", "The " + UNIX_EPOCH_TIME + " of the last receive"},
+                            {RPCResult::Type::NUM, "bytessent", "The total bytes sent"},
+                            {RPCResult::Type::NUM, "bytesrecv", "The total bytes received"},
+                            {RPCResult::Type::NUM_TIME, "conntime", "The " + UNIX_EPOCH_TIME + " of the connection"},
+                            {RPCResult::Type::NUM, "timeoffset", "The time offset in seconds"},
+                            {RPCResult::Type::NUM, "pingtime", "ping time (if available)"},
+                            {RPCResult::Type::NUM, "minping", "minimum observed ping time (if any at all)"},
+                            {RPCResult::Type::NUM, "pingwait", "ping wait (if non-zero)"},
+                            {RPCResult::Type::NUM, "version", "The peer version, such as 70001"},
+                            {RPCResult::Type::STR, "subver", "The string version"},
+                            {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
+                            {RPCResult::Type::BOOL, "addnode", "Whether connection was due to addnode/-connect or if it was an automatic/inbound connection"},
+                            {RPCResult::Type::NUM, "startingheight", "The starting height (block) of the peer"},
+                            {RPCResult::Type::NUM, "banscore", "The ban score"},
+                            {RPCResult::Type::NUM, "synced_headers", "The last header we have in common with this peer"},
+                            {RPCResult::Type::NUM, "synced_blocks", "The last block we have in common with this peer"},
+                            {RPCResult::Type::ARR, "inflight", "",
+                            {
+                                {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
+                            }},
+                            {RPCResult::Type::BOOL, "whitelisted", "Whether the peer is whitelisted"},
+                            {RPCResult::Type::NUM, "minfeefilter", "The minimum fee rate for transactions this peer accepts"},
+                            {RPCResult::Type::OBJ_DYN, "bytessent_per_msg", "",
+                            {
+                                {RPCResult::Type::NUM, "msg", "The total bytes sent aggregated by message type\n"
+                                                              "When a message type is not listed in this json object, the bytes sent are 0.\n"
+                                                              "Only known message types can appear as keys in the object."}
+                            }},
+                            {RPCResult::Type::OBJ, "bytesrecv_per_msg", "",
+                            {
+                                {RPCResult::Type::NUM, "msg", "The total bytes received aggregated by message type\n"
+                                                              "When a message type is not listed in this json object, the bytes received are 0.\n"
+                                                              "Only known message types can appear as keys in the object and all bytes received of unknown message types are listed under '"+NET_MESSAGE_COMMAND_OTHER+"'."}
+                            }},
+                        }},
+                    }},
                 },
                 RPCExamples{
                     HelpExampleCli("getpeerinfo", "")
@@ -320,19 +322,22 @@ static UniValue getaddednodeinfo(const JSONRPCRequest& request)
                     {"node", RPCArg::Type::STR, /* default */ "all nodes", "If provided, return information about this specific node, otherwise all nodes are returned."},
                 },
                 RPCResult{
-            "[\n"
-            "  {\n"
-            "    \"addednode\" : \"192.168.0.201\",   (string) The node IP address or name (as provided to addnode)\n"
-            "    \"connected\" : true|false,          (boolean) If connected\n"
-            "    \"addresses\" : [                    (list of objects) Only when connected = true\n"
-            "       {\n"
-            "         \"address\" : \"192.168.0.201:8333\",  (string) The bitcoin server IP and port we're connected to\n"
-            "         \"connected\" : \"outbound\"           (string) connection, inbound or outbound\n"
-            "       }\n"
-            "     ]\n"
-            "  }\n"
-            "  ,...\n"
-            "]\n"
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::STR, "addednode", "The node IP address or name (as provided to addnode)"},
+                            {RPCResult::Type::BOOL, "connected", "If connected"},
+                            {RPCResult::Type::ARR, "addresses", "Only when connected = true",
+                            {
+                                {RPCResult::Type::OBJ, "", "",
+                                {
+                                    {RPCResult::Type::STR, "address", "The bitcoin server IP and port we're connected to"},
+                                    {RPCResult::Type::STR, "connected", "connection, inbound or outbound"},
+                                }},
+                            }},
+                        }},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("getaddednodeinfo", "\"192.168.0.201\"")
@@ -386,20 +391,21 @@ static UniValue getnettotals(const JSONRPCRequest& request)
                 "and current time.\n",
                 {},
                 RPCResult{
-            "{\n"
-            "  \"totalbytesrecv\" : n,   (numeric) Total bytes received\n"
-            "  \"totalbytessent\" : n,   (numeric) Total bytes sent\n"
-            "  \"timemillis\" : t,       (numeric) Current UNIX time in milliseconds\n"
-            "  \"uploadtarget\" : \n"
-            "  {\n"
-            "    \"timeframe\" : n,                         (numeric) Length of the measuring timeframe in seconds\n"
-            "    \"target\" : n,                            (numeric) Target in bytes\n"
-            "    \"target_reached\" : true|false,           (boolean) True if target is reached\n"
-            "    \"serve_historical_blocks\" : true|false,  (boolean) True if serving historical blocks\n"
-            "    \"bytes_left_in_cycle\" : t,               (numeric) Bytes left in current time cycle\n"
-            "    \"time_left_in_cycle\" : t                 (numeric) Seconds left in current time cycle\n"
-            "  }\n"
-            "}\n"
+                   RPCResult::Type::OBJ, "", "",
+                   {
+                       {RPCResult::Type::NUM, "totalbytesrecv", "Total bytes received"},
+                       {RPCResult::Type::NUM, "totalbytessent", "Total bytes sent"},
+                       {RPCResult::Type::NUM_TIME, "timemillis", "Current UNIX time in milliseconds"},
+                       {RPCResult::Type::OBJ, "uploadtarget", "",
+                       {
+                           {RPCResult::Type::NUM, "timeframe", "Length of the measuring timeframe in seconds"},
+                           {RPCResult::Type::NUM, "target", "Target in bytes"},
+                           {RPCResult::Type::BOOL, "target_reached", "True if target is reached"},
+                           {RPCResult::Type::BOOL, "serve_historical_blocks", "True if serving historical blocks"},
+                           {RPCResult::Type::NUM, "bytes_left_in_cycle", "Bytes left in current time cycle"},
+                           {RPCResult::Type::NUM, "time_left_in_cycle", "Seconds left in current time cycle"},
+                        }},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("getnettotals", "")
@@ -452,41 +458,44 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
                 "Returns an object containing various state info regarding P2P networking.\n",
                 {},
                 RPCResult{
-            "{                                        (json object)\n"
-            "  \"version\" : xxxxx,                      (numeric) the server version\n"
-            "  \"subversion\" : \"str\",                  (string) the server subversion string\n"
-            "  \"protocolversion\" : xxxxx,              (numeric) the protocol version\n"
-            "  \"localservices\" : \"hex\",               (string) the services we offer to the network\n"
-            "  \"localservicesnames\" : [                (json array) the services we offer to the network, in human-readable form\n"
-            "      \"SERVICE_NAME\",                    (string) the service name\n"
-            "       ...\n"
-            "   ],\n"
-            "  \"localrelay\" : true|false,              (boolean) true if transaction relay is requested from peers\n"
-            "  \"timeoffset\" : xxxxx,                   (numeric) the time offset\n"
-            "  \"connections\" : xxxxx,                  (numeric) the number of connections\n"
-            "  \"networkactive\" : true|false,           (boolean) whether p2p networking is enabled\n"
-            "  \"networks\" : [                          (json array) information per network\n"
-            "  {                                      (json object)\n"
-            "    \"name\" : \"str\",                       (string) network (ipv4, ipv6 or onion)\n"
-            "    \"limited\" : true|false,               (boolean) is the network limited using -onlynet?\n"
-            "    \"reachable\" : true|false,             (boolean) is the network reachable?\n"
-            "    \"proxy\" : \"str\"                      (string) (\"host:port\") the proxy that is used for this network, or empty if none\n"
-            "    \"proxy_randomize_credentials\" : true|false,  (boolean) Whether randomized credentials are used\n"
-            "  },\n"
-            "  ...\n"
-            "  ],\n"
-            "  \"relayfee\" : x.xxxxxxxx,                (numeric) minimum relay fee for transactions in " + CURRENCY_UNIT + "/kB\n"
-            "  \"incrementalfee\" : x.xxxxxxxx,          (numeric) minimum fee increment for mempool limiting or BIP 125 replacement in " + CURRENCY_UNIT + "/kB\n"
-            "  \"localaddresses\" : [                    (json array) list of local addresses\n"
-            "  {                                      (json object)\n"
-            "    \"address\" : \"xxxx\",                  (string) network address\n"
-            "    \"port\" : xxx,                         (numeric) network port\n"
-            "    \"score\" : xxx                         (numeric) relative score\n"
-            "  },\n"
-            "  ...\n"
-            "  ],\n"
-            "  \"warnings\" : \"str\",                     (string) any network and blockchain warnings\n"
-            "}\n"
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::NUM, "version", "the server version"},
+                        {RPCResult::Type::STR, "subversion", "the server subversion string"},
+                        {RPCResult::Type::NUM, "protocolversion", "the protocol version"},
+                        {RPCResult::Type::STR_HEX, "localservices", "the services we offer to the network"},
+                        {RPCResult::Type::ARR, "localservicesnames", "the services we offer to the network, in human-readable form",
+                        {
+                            {RPCResult::Type::STR, "SERVICE_NAME", "the service name"},
+                        }},
+                        {RPCResult::Type::BOOL, "localrelay", "true if transaction relay is requested from peers"},
+                        {RPCResult::Type::NUM, "timeoffset", "the time offset"},
+                        {RPCResult::Type::NUM, "connections", "the number of connections"},
+                        {RPCResult::Type::BOOL, "networkactive", "whether p2p networking is enabled"},
+                        {RPCResult::Type::ARR, "networks", "information per network",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR, "name", "network (ipv4, ipv6 or onion)"},
+                                {RPCResult::Type::BOOL, "limited", "is the network limited using -onlynet?"},
+                                {RPCResult::Type::BOOL, "reachable", "is the network reachable?"},
+                                {RPCResult::Type::STR, "proxy", "(\"host:port\") the proxy that is used for this network, or empty if none"},
+                                {RPCResult::Type::BOOL, "proxy_randomize_credentials", "Whether randomized credentials are used"},
+                            }},
+                        }},
+                        {RPCResult::Type::NUM, "relayfee", "minimum relay fee for transactions in " + CURRENCY_UNIT + "/kB"},
+                        {RPCResult::Type::NUM, "incrementalfee", "minimum fee increment for mempool limiting or BIP 125 replacement in " + CURRENCY_UNIT + "/kB"},
+                        {RPCResult::Type::ARR, "localaddresses", "list of local addresses",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR, "address", "network address"},
+                                {RPCResult::Type::NUM, "port", "network port"},
+                                {RPCResult::Type::NUM, "score", "relative score"},
+                            }},
+                        }},
+                        {RPCResult::Type::STR, "warnings", "any network and blockchain warnings"},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("getnetworkinfo", "")
@@ -693,15 +702,16 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
                     {"count", RPCArg::Type::NUM, /* default */ "1", "How many addresses to return. Limited to the smaller of " + std::to_string(ADDRMAN_GETADDR_MAX) + " or " + std::to_string(ADDRMAN_GETADDR_MAX_PCT) + "% of all known addresses."},
                 },
                 RPCResult{
-            "[\n"
-            "  {\n"
-            "    \"time\" : ttt,                (numeric) The " + UNIX_EPOCH_TIME + " of when the node was last seen\n"
-            "    \"services\" : n,              (numeric) The services offered\n"
-            "    \"address\" : \"host\",          (string) The address of the node\n"
-            "    \"port\" : n                   (numeric) The port of the node\n"
-            "  }\n"
-            "  ,....\n"
-            "]\n"
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::NUM_TIME, "time", "The " + UNIX_EPOCH_TIME + " of when the node was last seen"},
+                            {RPCResult::Type::NUM, "services", "The services offered"},
+                            {RPCResult::Type::STR, "address", "The address of the node"},
+                            {RPCResult::Type::NUM, "port", "The port of the node"},
+                        }},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("getnodeaddresses", "8")
