@@ -868,7 +868,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The dash address for the private key"},
                 },
                 RPCResult{
-            "\"key\"                (string) The private key\n"
+                    RPCResult::Type::STR, "key", "The private key"
                 },
                 RPCExamples{
                     HelpExampleCli("dumpprivkey", "\"myaddress\"")

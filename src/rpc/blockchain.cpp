@@ -189,8 +189,7 @@ static UniValue getblockcount(const JSONRPCRequest& request)
                 "The genesis block has height 0.\n",
                 {},
                 RPCResult{
-            "n    (numeric) The current block count\n"
-                },
+                    RPCResult::Type::NUM, "", "The current block count"},
                 RPCExamples{
                     HelpExampleCli("getblockcount", "")
             + HelpExampleRpc("getblockcount", "")
@@ -209,8 +208,7 @@ static UniValue getbestblockhash(const JSONRPCRequest& request)
                 "\nReturns the hash of the best (tip) block in the most-work fully-validated chain.\n",
                 {},
                 RPCResult{
-            "\"hex\"      (string) the block hash, hex-encoded\n"
-                },
+                    RPCResult::Type::STR_HEX, "", "the block hash, hex-encoded"},
                 RPCExamples{
                     HelpExampleCli("getbestblockhash", "")
             + HelpExampleRpc("getbestblockhash", "")
@@ -277,11 +275,11 @@ static UniValue waitfornewblock(const JSONRPCRequest& request)
                     {"timeout", RPCArg::Type::NUM, /* default */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                 },
                 RPCResult{
-            "{                           (json object)\n"
-            "  \"hash\" : {       (string) The blockhash\n"
-            "  \"height\" : {     (numeric) Block height\n"
-            "}\n"
-                },
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "hash", "The blockhash"},
+                        {RPCResult::Type::NUM, "height", "Block height"},
+                    }},
                 RPCExamples{
                     HelpExampleCli("waitfornewblock", "1000")
             + HelpExampleRpc("waitfornewblock", "1000")
@@ -319,11 +317,11 @@ static UniValue waitforblock(const JSONRPCRequest& request)
                     {"timeout", RPCArg::Type::NUM, /* default */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                 },
                 RPCResult{
-            "{                           (json object)\n"
-            "  \"hash\" : {       (string) The blockhash\n"
-            "  \"height\" : {     (numeric) Block height\n"
-            "}\n"
-                },
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "hash", "The blockhash"},
+                        {RPCResult::Type::NUM, "height", "Block height"},
+                    }},
                 RPCExamples{
                     HelpExampleCli("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\" 1000")
             + HelpExampleRpc("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\", 1000")
@@ -365,11 +363,11 @@ static UniValue waitforblockheight(const JSONRPCRequest& request)
                     {"timeout", RPCArg::Type::NUM, /* default */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                 },
                 RPCResult{
-            "{                           (json object)\n"
-            "  \"hash\" : {       (string) The blockhash\n"
-            "  \"height\" : {     (numeric) Block height\n"
-            "}\n"
-                },
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "hash", "The blockhash"},
+                        {RPCResult::Type::NUM, "height", "Block height"},
+                    }},
                 RPCExamples{
                     HelpExampleCli("waitforblockheight", "100 1000")
             + HelpExampleRpc("waitforblockheight", "100, 1000")
@@ -424,8 +422,7 @@ static UniValue getdifficulty(const JSONRPCRequest& request)
                 "\nReturns the proof-of-work difficulty as a multiple of the minimum difficulty.\n",
                 {},
                 RPCResult{
-            "n.nnn       (numeric) the proof-of-work difficulty as a multiple of the minimum difficulty.\n"
-                },
+                    RPCResult::Type::NUM, "", "the proof-of-work difficulty as a multiple of the minimum difficulty."},
                 RPCExamples{
                     HelpExampleCli("getdifficulty", "")
             + HelpExampleRpc("getdifficulty", "")
@@ -801,8 +798,7 @@ static UniValue getblockhash(const JSONRPCRequest& request)
                     {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The height index"},
                 },
                 RPCResult{
-            "\"hash\"         (string) The block hash\n"
-                },
+                    RPCResult::Type::STR_HEX, "", "The block hash"},
                 RPCExamples{
                     HelpExampleCli("getblockhash", "1000")
             + HelpExampleRpc("getblockhash", "1000")
@@ -1096,8 +1092,7 @@ static UniValue getblock(const JSONRPCRequest& request)
                 },
                 {
                     RPCResult{"for verbosity = 0",
-            "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
-                    },
+                RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
                     RPCResult{"for verbosity = 1",
             "{\n"
             "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
@@ -1185,8 +1180,7 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
             "                  to prune blocks whose block time is at least 2 hours older than the provided timestamp."},
                 },
                 RPCResult{
-            "n    (numeric) Height of the last block pruned.\n"
-                },
+                    RPCResult::Type::NUM, "", "Height of the last block pruned"},
                 RPCExamples{
                     HelpExampleCli("pruneblockchain", "1000")
             + HelpExampleRpc("pruneblockchain", "1000")
@@ -1242,17 +1236,17 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
                 "Note this call may take some time.\n",
                 {},
                 RPCResult{
-            "{\n"
-            "  \"height\" : n,     (numeric) The current block height (index)\n"
-            "  \"bestblock\" : \"hex\",   (string) The hash of the block at the tip of the chain\n"
-            "  \"transactions\" : n,      (numeric) The number of transactions with unspent outputs\n"
-            "  \"txouts\" : n,            (numeric) The number of unspent transaction outputs\n"
-            "  \"bogosize\" : n,          (numeric) A meaningless metric for UTXO set size\n"
-            "  \"hash_serialized_2\": \"hash\", (string) The serialized hash\n"
-            "  \"disk_size\" : n,         (numeric) The estimated size of the chainstate on disk\n"
-            "  \"total_amount\" : x.xxx          (numeric) The total amount\n"
-            "}\n"
-                },
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::NUM, "height", "The current block height (index)"},
+                        {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at the tip of the chain"},
+                        {RPCResult::Type::NUM, "transactions", "The number of transactions with unspent outputs"},
+                        {RPCResult::Type::NUM, "txouts", "The number of unspent transaction outputs"},
+                        {RPCResult::Type::NUM, "bogosize", "A meaningless metric for UTXO set size"},
+                        {RPCResult::Type::STR_HEX, "hash_serialized_2", "The serialized hash"},
+                        {RPCResult::Type::NUM, "disk_size", "The estimated size of the chainstate on disk"},
+                        {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount"},
+                    }},
                 RPCExamples{
                     HelpExampleCli("gettxoutsetinfo", "")
             + HelpExampleRpc("gettxoutsetinfo", "")
@@ -1375,8 +1369,7 @@ static UniValue verifychain(const JSONRPCRequest& request)
                     {"nblocks", RPCArg::Type::NUM, /* default */ strprintf("%d, 0=all", nCheckDepth), "The number of blocks to check."},
                 },
                 RPCResult{
-            "true|false       (boolean) Verified or not\n"
-                },
+                    RPCResult::Type::BOOL, "", "Verified or not"},
                 RPCExamples{
                     HelpExampleCli("verifychain", "")
             + HelpExampleRpc("verifychain", "")
@@ -2502,24 +2495,26 @@ UniValue scantxoutset(const JSONRPCRequest& request)
                         "[scanobjects,...]"},
                 },
                 RPCResult{
-            "{\n"
-            "  \"success\" : true|false,         (boolean) Whether the scan was completed\n"
-            "  \"txouts\" : n,                   (numeric) The number of unspent transaction outputs scanned\n"
-            "  \"height\" : n,                   (numeric) The current block height (index)\n"
-            "  \"bestblock\" : \"hex\",            (string) The hash of the block at the tip of the chain\n"
-            "  \"unspents\" : [\n"
-            "   {\n"
-            "    \"txid\" : \"hash\",              (string) The transaction id\n"
-            "    \"vout\" : n,                   (numeric) The vout value\n"
-            "    \"scriptPubKey\" : \"script\",    (string) The script key\n"
-            "    \"desc\" : \"descriptor\",        (string) A specialized descriptor for the matched scriptPubKey\n"
-            "    \"amount\" : x.xxx,             (numeric) The total amount in " + CURRENCY_UNIT + " of the unspent output\n"
-            "    \"height\" : n,                 (numeric) Height of the unspent transaction output\n"
-            "   }\n"
-            "   ,...],\n"
-            "  \"total_amount\" : x.xxx,          (numeric) The total amount of all found unspent outputs in " + CURRENCY_UNIT + "\n"
-            "]\n"
-                },
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::BOOL, "success", "Whether the scan was completed"},
+                        {RPCResult::Type::NUM, "txouts", "The number of unspent transaction outputs scanned"},
+                        {RPCResult::Type::NUM, "height", "The current block height (index)"},
+                        {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at the tip of the chain"},
+                        {RPCResult::Type::ARR, "unspents", "",
+                            {
+                                {RPCResult::Type::OBJ, "", "",
+                                    {
+                                        {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+                                        {RPCResult::Type::NUM, "vout", "The vout value"},
+                                        {RPCResult::Type::STR_HEX, "scriptPubKey", "The script key"},
+                                        {RPCResult::Type::STR, "desc", "A specialized descriptor for the matched scriptPubKey"},
+                                        {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
+                                        {RPCResult::Type::NUM, "height", "Height of the unspent transaction output"},
+                                    }},
+                            }},
+                        {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of all found unspent outputs in " + CURRENCY_UNIT},
+                    }},
                 RPCExamples{""},
             }.ToString()
         );

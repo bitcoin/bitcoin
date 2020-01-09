@@ -34,7 +34,7 @@ static UniValue getconnectioncount(const JSONRPCRequest& request)
                 "\nReturns the number of connections to other nodes.\n",
                 {},
                 RPCResult{
-            "n          (numeric) The connection count\n"
+                    RPCResult::Type::NUM, "", "The connection count"
                 },
                 RPCExamples{
                     HelpExampleCli("getconnectioncount", "")
@@ -413,20 +413,21 @@ static UniValue getnettotals(const JSONRPCRequest& request)
                 "and current time.\n",
                 {},
                 RPCResult{
-            "{\n"
-            "  \"totalbytesrecv\" : n,   (numeric) Total bytes received\n"
-            "  \"totalbytessent\" : n,   (numeric) Total bytes sent\n"
-            "  \"timemillis\" : t,       (numeric) Current UNIX time in milliseconds\n"
-            "  \"uploadtarget\" : \n"
-            "  {\n"
-            "    \"timeframe\" : n,                         (numeric) Length of the measuring timeframe in seconds\n"
-            "    \"target\" : n,                            (numeric) Target in bytes\n"
-            "    \"target_reached\" : true|false,           (boolean) True if target is reached\n"
-            "    \"serve_historical_blocks\" : true|false,  (boolean) True if serving historical blocks\n"
-            "    \"bytes_left_in_cycle\" : t,               (numeric) Bytes left in current time cycle\n"
-            "    \"time_left_in_cycle\" : t                 (numeric) Seconds left in current time cycle\n"
-            "  }\n"
-            "}\n"
+                   RPCResult::Type::OBJ, "", "",
+                   {
+                       {RPCResult::Type::NUM, "totalbytesrecv", "Total bytes received"},
+                       {RPCResult::Type::NUM, "totalbytessent", "Total bytes sent"},
+                       {RPCResult::Type::NUM_TIME, "timemillis", "Current UNIX time in milliseconds"},
+                       {RPCResult::Type::OBJ, "uploadtarget", "",
+                       {
+                           {RPCResult::Type::NUM, "timeframe", "Length of the measuring timeframe in seconds"},
+                           {RPCResult::Type::NUM, "target", "Target in bytes"},
+                           {RPCResult::Type::BOOL, "target_reached", "True if target is reached"},
+                           {RPCResult::Type::BOOL, "serve_historical_blocks", "True if serving historical blocks"},
+                           {RPCResult::Type::NUM, "bytes_left_in_cycle", "Bytes left in current time cycle"},
+                           {RPCResult::Type::NUM, "time_left_in_cycle", "Seconds left in current time cycle"},
+                        }},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("getnettotals", "")

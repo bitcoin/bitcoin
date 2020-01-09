@@ -161,7 +161,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
                     {"subcommand", RPCArg::Type::STR, /* default */ "all subcommands", "The subcommand to get help on. Please note that not all subcommands support this at the moment"},
                 },
                 RPCResult{
-            "\"text\"     (string) The help text\n"
+                    RPCResult::Type::STR, "", "The help text"
                 },
                 RPCExamples{""},
             }.ToString()
@@ -208,7 +208,7 @@ static UniValue uptime(const JSONRPCRequest& jsonRequest)
                 "\nReturns the total uptime of the server.\n",
                             {},
                             RPCResult{
-                        "ttt        (numeric) The number of seconds that the server has been running\n"
+                                RPCResult::Type::NUM, "", "The number of seconds that the server has been running"
                             },
                 RPCExamples{
                     HelpExampleCli("uptime", "")

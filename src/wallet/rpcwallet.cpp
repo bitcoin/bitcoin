@@ -24,6 +24,7 @@
 #include <util/moneystr.h>
 #include <util/url.h>
 #include <util/validation.h>
+#include <util/vector.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/psbtwallet.h>
@@ -211,7 +212,7 @@ static UniValue getrawchangeaddress(const JSONRPCRequest& request)
                 "This is for use with raw transactions, NOT normal use.\n",
                 {},
                 RPCResult{
-            "\"address\"    (string) The address\n"
+                    RPCResult::Type::STR, "address", "The address"
                 },
                 RPCExamples{
                     HelpExampleCli("getrawchangeaddress", "")
@@ -361,7 +362,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
             "       \"CONSERVATIVE\""},
                 },
                 RPCResult{
-            "\"txid\"                  (string) The transaction id.\n"
+                    RPCResult::Type::STR_HEX, "txid", "The transaction id."
                 },
                 RPCExamples{
                     HelpExampleCli("sendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1")
@@ -561,7 +562,7 @@ static UniValue signmessage(const JSONRPCRequest& request)
                     {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message to create a signature of."},
                 },
                 RPCResult{
-            "\"signature\"          (string) The signature of the message encoded in base 64\n"
+                    RPCResult::Type::STR, "signature", "The signature of the message encoded in base 64"
                 },
                 RPCExamples{
             "\nUnlock the wallet for 30 seconds\n"
@@ -628,7 +629,7 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
                     {"addlocked", RPCArg::Type::BOOL, /* default */ "false", "Whether to include transactions locked via InstantSend."},
                 },
                 RPCResult{
-            "amount   (numeric) The total amount in " + CURRENCY_UNIT + " received at this address.\n"
+                    RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " received at this address."
                 },
                 RPCExamples{
             "\nThe amount from transactions with at least 1 confirmation\n"
@@ -702,7 +703,7 @@ static UniValue getreceivedbylabel(const JSONRPCRequest& request)
                     {"addlocked", RPCArg::Type::BOOL, /* default */ "false", "Whether to include transactions locked via InstantSend."},
                 },
                 RPCResult{
-            "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this label.\n"
+                    RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " received for this label."
                 },
                 RPCExamples{
             "\nAmount received by the default label with at least 1 confirmation\n"
@@ -776,7 +777,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
                     {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Also include balance in watch-only addresses (see 'importaddress')"},
                 },
                 RPCResult{
-            "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this wallet.\n"
+                    RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " received for this wallet."
                 },
                 RPCExamples{
             "\nThe total amount in the wallet with 0 or more confirmations\n"
@@ -889,8 +890,8 @@ static UniValue sendmany(const JSONRPCRequest& request)
             "       \"CONSERVATIVE\""},
                 },
                  RPCResult{
-            "\"txid\"                   (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
-            "                                    the number of addresses.\n"
+                     RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of\n"
+            "the number of addresses."
                  },
                 RPCExamples{
             "\nSend two amounts to two different addresses:\n"
@@ -2240,7 +2241,7 @@ static UniValue lockunspent(const JSONRPCRequest& request)
                     },
                 },
                 RPCResult{
-            "true|false    (boolean) Whether the command was successful or not\n"
+                    RPCResult::Type::BOOL, "", "Whether the command was successful or not"
                 },
                 RPCExamples{
             "\nList the unspent transactions\n"
@@ -2356,13 +2357,14 @@ static UniValue listlockunspent(const JSONRPCRequest& request)
                 "See the lockunspent call to lock and unlock transactions for spending.\n",
                 {},
                 RPCResult{
-            "[\n"
-            "  {\n"
-            "    \"txid\" : \"transactionid\",     (string) The transaction id locked\n"
-            "    \"vout\" : n                      (numeric) The vout value\n"
-            "  }\n"
-            "  ,...\n"
-            "]\n"
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::STR_HEX, "txid", "The transaction id locked"},
+                            {RPCResult::Type::NUM, "vout", "The vout value"},
+                        }},
+                    }
                 },
                 RPCExamples{
             "\nList the unspent transactions\n"
@@ -2414,7 +2416,7 @@ static UniValue settxfee(const JSONRPCRequest& request)
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee in " + CURRENCY_UNIT + "/kB"},
                 },
                 RPCResult{
-            "true|false        (boolean) Returns true if successful\n"
+                    RPCResult::Type::BOOL, "", "Returns true if successful"
                 },
                 RPCExamples{
                     HelpExampleCli("settxfee", "0.00001")
@@ -2625,14 +2627,16 @@ static UniValue listwalletdir(const JSONRPCRequest& request)
                 "Returns a list of wallets in the wallet directory.\n",
                 {},
                 RPCResult{
-            "{\n"
-            "  \"wallets\" : [                (json array of objects)\n"
-            "    {\n"
-            "      \"name\" : \"name\"          (string) The wallet name\n"
-            "    }\n"
-            "    ,...\n"
-            "  ]\n"
-            "}\n"
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::ARR, "wallets", "",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR, "name", "The wallet name"},
+                            }},
+                        }},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("listwalletdir", "")
@@ -2662,10 +2666,10 @@ static UniValue listwallets(const JSONRPCRequest& request)
                 "For full information on the wallet, use \"getwalletinfo\"\n",
                 {},
                 RPCResult{
-            "[                         (json array of strings)\n"
-            "  \"walletname\"            (string) the wallet name\n"
-            "   ...\n"
-            "]\n"
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::STR, "walletname", "the wallet name"},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("listwallets", "")
@@ -2852,10 +2856,11 @@ static UniValue createwallet(const JSONRPCRequest& request)
             {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Encrypt the wallet with this passphrase."},
         },
         RPCResult{
-            "{\n"
-            "  \"name\" :    <wallet_name>,        (string) The wallet name if created successfully. If the wallet was created using a full path, the wallet_name will be the full path.\n"
-            "  \"warning\" : <warning>,            (string) Warning message if wallet was not loaded cleanly.\n"
-            "}\n"
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "name", "The wallet name if created successfully. If the wallet was created using a full path, the wallet_name will be the full path."},
+                {RPCResult::Type::STR, "warning", "Warning message if wallet was not loaded cleanly."},
+            }
         },
         RPCExamples{
             HelpExampleCli("createwallet", "\"testwallet\"")
@@ -3350,11 +3355,12 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
                         "options"},
                 },
                 RPCResult{
-                            "{\n"
-                            "  \"hex\" :       \"value\", (string)  The resulting raw transaction (hex-encoded string)\n"
-                            "  \"fee\" :       n,         (numeric) Fee in " + CURRENCY_UNIT + " the resulting transaction pays\n"
-                            "  \"changepos\" : n          (numeric) The position of the added change output, or -1\n"
-                            "}\n"
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "hex", "The resulting raw transaction (hex-encoded string)"},
+                        {RPCResult::Type::STR_AMOUNT, "fee", "Fee in " + CURRENCY_UNIT + " the resulting transaction pays"},
+                        {RPCResult::Type::NUM, "changepos", "The position of the added change output, or -1"},
+                    }
                                 },
                                 RPCExamples{
                             "\nCreate a transaction with no inputs\n"
@@ -3428,20 +3434,22 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
             "       \"SINGLE|ANYONECANPAY\""},
                 },
                 RPCResult{
-            "{\n"
-            "  \"hex\" : \"value\",                  (string) The hex-encoded raw transaction with signature(s)\n"
-            "  \"complete\" : true|false,          (boolean) If the transaction has a complete set of signatures\n"
-            "  \"errors\" : [                      (json array of objects) Script verification errors (if there are any)\n"
-            "    {\n"
-            "      \"txid\" : \"hash\",              (string) The hash of the referenced, previous transaction\n"
-            "      \"vout\" : n,                   (numeric) The index of the output to spent and used as input\n"
-            "      \"scriptSig\" : \"hex\",          (string) The hex-encoded signature script\n"
-            "      \"sequence\" : n,               (numeric) Script sequence number\n"
-            "      \"error\" : \"text\"              (string) Verification or signing error related to the input\n"
-            "    }\n"
-            "    ,...\n"
-            "  ]\n"
-            "}\n"
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "hex", "The hex-encoded raw transaction with signature(s)"},
+                        {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
+                        {RPCResult::Type::ARR, "errors", "Script verification errors (if there are any)",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR_HEX, "txid", "The hash of the referenced, previous transaction"},
+                                {RPCResult::Type::NUM, "vout", "The index of the output to spent and used as input"},
+                                {RPCResult::Type::STR_HEX, "scriptSig", "The hex-encoded signature script"},
+                                {RPCResult::Type::NUM, "sequence", "Script sequence number"},
+                                {RPCResult::Type::STR, "error", "Verification or signing error related to the input"},
+                            }},
+                        }},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("signrawtransactionwithwallet", "\"myhex\"")
@@ -3547,10 +3555,11 @@ static UniValue rescanblockchain(const JSONRPCRequest& request)
                     {"stop_height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "the last block height that should be scanned. If none is provided it will rescan up to the tip at return time of this call."},
                 },
                 RPCResult{
-            "{\n"
-            "  \"start_height\"     (numeric) The block height where the rescan started (the requested height or 0)\n"
-            "  \"stop_height\"      (numeric) The height of the last rescanned block. May be null in rare cases if there was a reorg and the call didn't scan any blocks because they were already scanned in the background.\n"
-            "}\n"
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::NUM, "start_height", "The block height where the rescan started (the requested height or 0)"},
+                        {RPCResult::Type::NUM, "stop_height", "The height of the last rescanned block. May be null in rare cases if there was a reorg and the call didn't scan any blocks because they were already scanned in the background."},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("rescanblockchain", "100000 120000")
@@ -3828,11 +3837,13 @@ static UniValue getaddressesbylabel(const JSONRPCRequest& request)
                     {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The label."},
                 },
                 RPCResult{
-            "{ (json object with addresses as keys)\n"
-            "  \"address\" : { (json object with information about address)\n"
-            "    \"purpose\" : \"string\" (string)  Purpose of address (\"send\" for sending address, \"receive\" for receiving address)\n"
-            "  },...\n"
-            "}\n"
+                    RPCResult::Type::OBJ_DYN, "", "json object with addresses as keys",
+                    {
+                        {RPCResult::Type::OBJ, "address", "json object with information about address",
+                        {
+                            {RPCResult::Type::STR, "purpose", "Purpose of address (\"send\" for sending address, \"receive\" for receiving address)"},
+                        }},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("getaddressesbylabel", "\"tabby\"")
@@ -3887,10 +3898,10 @@ static UniValue listlabels(const JSONRPCRequest& request)
                     {"purpose", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Address purpose to list labels for ('send','receive'). An empty string is the same as not providing this argument."},
                 },
                 RPCResult{
-            "[               (json array of string)\n"
-            "  \"label\",      (string) Label name\n"
-            "  ...\n"
-            "]\n"
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::STR, "label", "Label name"},
+                    }
                 },
                 RPCExamples{
             "\nList all labels\n"
@@ -4082,11 +4093,12 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                     {"bip32derivs", RPCArg::Type::BOOL, /* default */ "false", "If true, includes the BIP 32 derivation paths for public keys if we know them"},
                 },
                 RPCResult{
-                            "{\n"
-                            "  \"psbt\" : \"value\",        (string)  The resulting raw transaction (base64-encoded string)\n"
-                            "  \"fee\" :       n,         (numeric) Fee in " + CURRENCY_UNIT + " the resulting transaction pays\n"
-                            "  \"changepos\" : n          (numeric) The position of the added change output, or -1\n"
-                            "}\n"
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "psbt", "The resulting raw transaction (base64-encoded string)"},
+                        {RPCResult::Type::STR_AMOUNT, "fee", "Fee in " + CURRENCY_UNIT + " the resulting transaction pays"},
+                        {RPCResult::Type::NUM, "changepos", "The position of the added change output, or -1"},
+                    }
                                 },
                                 RPCExamples{
                             "\nCreate a transaction with no inputs\n"

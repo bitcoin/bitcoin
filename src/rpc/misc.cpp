@@ -303,13 +303,14 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
                 {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor"},
             },
             RPCResult{
-            "{\n"
-            "  \"descriptor\" : \"desc\",         (string) The descriptor in canonical form, without private keys\n"
-            "  \"checksum\" : \"chksum\",         (string) The checksum for the input descriptor\n"
-            "  \"isrange\" : true|false,        (boolean) Whether the descriptor is ranged\n"
-            "  \"issolvable\" : true|false,     (boolean) Whether the descriptor is solvable\n"
-            "  \"hasprivatekeys\" : true|false, (boolean) Whether the input descriptor contained at least one private key\n"
-            "}\n"
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR, "descriptor", "The descriptor in canonical form, without private keys"},
+                    {RPCResult::Type::STR, "checksum", "The checksum for the input descriptor"},
+                    {RPCResult::Type::BOOL, "isrange", "Whether the descriptor is ranged"},
+                    {RPCResult::Type::BOOL, "issolvable", "Whether the descriptor is solvable"},
+                    {RPCResult::Type::BOOL, "hasprivatekeys", "Whether the input descriptor contained at least one private key"},
+                }
             },
             RPCExamples{
             "\nAnalyse a descriptor\n"
@@ -430,7 +431,7 @@ static UniValue verifymessage(const JSONRPCRequest& request)
                     {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message that was signed."},
                 },
                 RPCResult{
-            "true|false   (boolean) If the signature is verified or not.\n"
+                    RPCResult::Type::BOOL, "", "If the signature is verified or not."
                 },
                 RPCExamples{
             "\nUnlock the wallet for 30 seconds\n"
@@ -488,7 +489,7 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
                     {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message to create a signature of."},
                 },
                 RPCResult{
-            "\"signature\"          (string) The signature of the message encoded in base 64\n"
+                    RPCResult::Type::STR, "signature", "The signature of the message encoded in base 64"
                 },
                 RPCExamples{
             "\nCreate the signature\n"
@@ -1137,19 +1138,21 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
                 },
                 {
                     RPCResult{"mode \"stats\"",
-            "{\n"
-            "  \"locked\" : {               (json object) Information about locked memory manager\n"
-            "    \"used\" : xxxxx,          (numeric) Number of bytes used\n"
-            "    \"free\" : xxxxx,          (numeric) Number of bytes available in current arenas\n"
-            "    \"total\" : xxxxxxx,       (numeric) Total number of bytes managed\n"
-            "    \"locked\" : xxxxxx,       (numeric) Amount of bytes that succeeded locking. If this number is smaller than total, locking pages failed at some point and key data could be swapped to disk.\n"
-            "    \"chunks_used\" : xxxxx,   (numeric) Number allocated chunks\n"
-            "    \"chunks_free\" : xxxxx,   (numeric) Number unused chunks\n"
-            "  }\n"
-            "}\n"
+                        RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::OBJ, "locked", "Information about locked memory manager",
+                            {
+                                {RPCResult::Type::NUM, "used", "Number of bytes used"},
+                                {RPCResult::Type::NUM, "free", "Number of bytes available in current arenas"},
+                                {RPCResult::Type::NUM, "total", "Total number of bytes managed"},
+                                {RPCResult::Type::NUM, "locked", "Amount of bytes that succeeded locking. If this number is smaller than total, locking pages failed at some point and key data could be swapped to disk."},
+                                {RPCResult::Type::NUM, "chunks_used", "Number allocated chunks"},
+                                {RPCResult::Type::NUM, "chunks_free", "Number unused chunks"},
+                            }},
+                        }
                     },
                     RPCResult{"mode \"mallocinfo\"",
-            "\"<malloc version=\"1\">...\"\n"
+                        RPCResult::Type::STR, "", "\"<malloc version=\"1\">...\""
                     },
                 },
                 RPCExamples{
@@ -1220,10 +1223,10 @@ static UniValue logging(const JSONRPCRequest& request)
                         }},
                 },
                 RPCResult{
-            "{                   (json object where keys are the logging categories, and values indicates its status\n"
-            "  \"category\" : true|false,  (boolean) if being debug logged or not. false:inactive, true:active\n"
-            "  ...\n"
-            "}\n"
+                    RPCResult::Type::OBJ_DYN, "", "keys are the logging categories, and values indicates its status",
+                    {
+                        {RPCResult::Type::BOOL, "category", "if being debug logged or not. false:inactive, true:active"},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
