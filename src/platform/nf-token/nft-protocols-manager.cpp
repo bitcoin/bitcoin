@@ -71,7 +71,20 @@ namespace Platform
             return *it;
         }
 
-        return GetNftProtoIndexFromDb(protocolId);
+        return NftProtoIndex();
+    }
+
+    NftProtoIndex NftProtocolsManager::GetNftProtoIndex(const uint256 & regTxId)
+    {
+        LOCK(m_cs);
+        assert(!regTxId.IsNull());
+
+        const auto it = m_nftProtoIndexSet.get<Tags::RegTxHash>().find(regTxId);
+        if (it != m_nftProtoIndexSet.get<Tags::RegTxHash>().end())
+        {
+            return *it;
+        }
+        return NftProtoIndex();
     }
 
     CKeyID NftProtocolsManager::OwnerOf(uint64_t protocolId)
@@ -84,8 +97,7 @@ namespace Platform
         {
             return it->NftProtoPtr()->tokenProtocolOwnerId;;
         }
-
-        return GetNftProtoIndexFromDb(protocolId).NftProtoPtr()->tokenProtocolOwnerId;
+        return CKeyID();
     }
 
     void NftProtocolsManager::ProcessFullNftProtoIndexRange(std::function<bool(const NftProtoIndex &)> protoIndexHandler) const
@@ -159,7 +171,8 @@ namespace Platform
         }
     }
 
-    NftProtoIndex NftProtocolsManager::GetNftProtoIndexFromDb(uint64_t protocolId)
+    /// Reserved for future use
+    /* NftProtoIndex NftProtocolsManager::GetNftProtoIndexFromDb(uint64_t protocolId)
     {
         NftProtoIndex protoIndex = PlatformDb::Instance().ReadNftProtoIndex(protocolId);
         if (!protoIndex.IsNull())
@@ -173,5 +186,5 @@ namespace Platform
             LogPrintf("%s: Can't read NFT proto index %s from the database", __func__, std::to_string(protocolId));
             return protoIndex;
         }
-    }
+    }*/
 }

@@ -14,7 +14,7 @@
 
 json_spirit::Value nftproto(const json_spirit::Array& params, bool fHelp)
 {
-    std::string command = Platform::GetCommand(params, "usage: nftproto register|list|get");
+    std::string command = Platform::GetCommand(params, "usage: nftproto register|list|get|getbytxid|ownerof");
 
     if (command == "register")
         return Platform::RegisterNftProtocol(params, fHelp);
@@ -22,6 +22,10 @@ json_spirit::Value nftproto(const json_spirit::Array& params, bool fHelp)
         return Platform::ListNftProtocols(params, fHelp);
     else if (command == "get")
         return Platform::GetNftProtocol(params, fHelp);
+    else if (command == "getbytxid")
+        return Platform::GetNftProtocolByTxId(params, fHelp);
+    else if (command == "ownerof")
+        return Platform::NftProtoOwnerOf(params, fHelp);
 
     throw std::runtime_error("Invalid command: " + command);
 }
@@ -228,5 +232,65 @@ Examples:
 + HelpExampleRpc("nftproto", R"(get "cks")");
 
         throw std::runtime_error(helpMessage);
+    }
+
+    void GetNftProtocolByTxIdHelp()
+    {
+        static std::string helpMessage =
+                R"(nftproto getbytxid
+Get an NFT protocol record by a transaction ID
+Arguments:
+
+1. "registrationTxId"   (string, required) The NFT protocol registration transaction ID
+
+Examples:
+)"
++ HelpExampleCli("nftproto", R"(getbytxid "3840804e62350b6337ca0b4653547477aa46dab2677c0514a8dccf80b51a899a")")
++ HelpExampleRpc("nftproto", R"(getbytxid "3840804e62350b6337ca0b4653547477aa46dab2677c0514a8dccf80b51a899a")");
+
+        throw std::runtime_error(helpMessage);
+    }
+
+    json_spirit::Value GetNftProtocolByTxId(const json_spirit::Array& params, bool fHelp)
+    {
+        if (fHelp || params.size() != 2)
+            GetNftProtocolByTxIdHelp();
+
+        uint256 regTxHash = ParseHashV(params[1].get_str(), "registrationTxHash");
+        auto nftProtoIndex = NftProtocolsManager::Instance().GetNftProtoIndex(regTxHash);
+        if (nftProtoIndex.IsNull())
+            throw std::runtime_error("Can't find an NFT protocol record: " + params[1].get_str());
+
+        return BuildNftProtoRecord(nftProtoIndex);
+    }
+
+    void NftProtoOwnerOfHelp()
+    {
+        static std::string helpMessage = R"(nftproto ownerof
+Get address of the NFT protocol owner by using its protocol symbol
+
+1. "nfTokenProtocol"  (string, required) The non-fungible token protocol symbol of the registered protocol
+                      The protocol name must be valid and registered previously.
+
+Examples:
+)"
++ HelpExampleCli("nftproto", R"(ownerof "doc")")
++ HelpExampleRpc("nftproto", R"(ownerof "doc")");
+
+        throw std::runtime_error(helpMessage);
+    }
+
+    json_spirit::Value NftProtoOwnerOf(const json_spirit::Array& params, bool fHelp)
+    {
+        if (fHelp || params.size() != 2)
+            NftProtoOwnerOfHelp();
+
+        uint64_t tokenProtocolId = StringToProtocolName(params[1].get_str().c_str());
+
+        CKeyID ownerId = NftProtocolsManager::Instance().OwnerOf(tokenProtocolId);
+        if (ownerId.IsNull())
+            throw std::runtime_error("Can't find an NFT protocol: " + std::to_string(tokenProtocolId));
+
+        return CBitcoinAddress(ownerId).ToString();
     }
 }

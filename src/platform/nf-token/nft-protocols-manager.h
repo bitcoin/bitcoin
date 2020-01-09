@@ -26,6 +26,16 @@ namespace Platform
         }
     };
 
+    struct NftProtoRegTxHashExtractor
+    {
+        using result_type = uint256;
+
+        result_type operator()(const NftProtoIndex & nftProtoIndex) const
+        {
+            return nftProtoIndex.RegTxHash();
+        }
+    };
+
     struct NftProtoHeightExtractor
     {
         using result_type = int;
@@ -44,6 +54,12 @@ namespace Platform
                 bmx::hashed_unique<
                     bmx::tag<Tags::ProtocolId>,
                     NftProtoIdExtractor
+                >,
+                /// hash-indexed by NFT protocol registration transaction hash
+                /// gives access to the NFT protocol  registered in a specified transaction
+                bmx::hashed_unique<
+                    bmx::tag<Tags::RegTxHash>,
+                    NftProtoRegTxHashExtractor
                 >,
                 /// ordered by NFT protocol registration block height
                 /// gives access to all NFT protocols registered at a specific block height
@@ -78,7 +94,7 @@ namespace Platform
         /// Retrieve a specified nf-token proto index by a protocol ID, may be null
         NftProtoIndex GetNftProtoIndex(uint64_t protocolId);
         /// Retrieve a specified nf-token proto index by a transaction ID, may be null
-        /// NftProtoIndex GetNfTokenProtoIndex(const uint256 & regTxId);
+        NftProtoIndex GetNftProtoIndex(const uint256 & regTxId);
 
         /// Owner of a specified nf-token protocol
         CKeyID OwnerOf(uint64_t protocolId);
@@ -101,9 +117,8 @@ namespace Platform
 
     private:
         NftProtocolsManager();
-        void UpdateTotalProtocolsCount(bool increase);
-
-        NftProtoIndex GetNftProtoIndexFromDb(uint64_t protocolId);
+        /// Reserved for future use
+        /// NftProtoIndex GetNftProtoIndexFromDb(uint64_t protocolId);
 
     private:
         NftProtosIndexSet m_nftProtoIndexSet;
