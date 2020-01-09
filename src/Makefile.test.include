@@ -123,7 +123,9 @@ VBK_TESTS = \
   vbk/test/unit/updated_mempool_tests.cpp \
   vbk/test/unit/pop_reward_tests.cpp \
   vbk/test/unit/vbk_merkle_tests.cpp \
-  vbk/test/unit/vbk_net_processing_tests.cpp
+  vbk/test/unit/vbk_net_processing_tests.cpp \
+  vbk/test/unit/pop_interpreter_tests.cpp \
+  vbk/test/unit/block_validation_tests.cpp
   
 ### VeriBlock section end
 

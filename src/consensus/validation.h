@@ -44,6 +44,7 @@ enum class TxValidationResult {
      */
     TX_CONFLICT,
     TX_MEMPOOL_POLICY,        //!< violated mempool's fee/size/descendant/RBF/etc limits
+    TX_BAD_POP_DATA           //!< data that is stored inside pop tx is invalid
 };
 
 /** A "reason" why a block was invalid, suitable for determining whether the

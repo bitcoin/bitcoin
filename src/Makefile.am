@@ -116,7 +116,8 @@ VBK_H = \
   vbk/pop_service/pop_service_exception.hpp \
   vbk/merkle.hpp \
   vbk/genesis.hpp \
-  vbk/entity/publications.hpp \
+  vbk/entity/pop.hpp \
+  vbk/interpreter.hpp \
   vbk/util.hpp
 
 VBK_GRPC_OUT_ABS = $(srcdir)/vbk/pop_service

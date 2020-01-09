@@ -3,9 +3,9 @@
 
 #include <array>
 
+#include "interpreter.hpp"
 #include <vbk/entity/context_info_container.hpp>
-#include <vbk/entity/publications.hpp>
-
+#include <vbk/entity/pop.hpp>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script_error.h>
@@ -33,7 +33,6 @@ struct UtilService {
 
     virtual int compareForks(const CBlockIndex& left, const CBlockIndex& right) = 0;
 
-    // Pop rewards methods
     virtual PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) = 0;
     virtual void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) = 0;
     virtual bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state) = 0;
@@ -41,14 +40,17 @@ struct UtilService {
     virtual bool validatePopTx(const CTransaction& tx, TxValidationState& state) = 0;
 
     /**
-     * Executes script of POP transaction.
-     * @param script bitcoin script
-     * @param stack bitcoin stack
-     * @param serror if set (not nullptr), will be equal to error code on errorneous script
-     * @param pub if set (non nullptr), will be equal to parsed ATV & VTBs
-     * @return true if script is valid, false otherwise
+     * Evaluate scriptSig of POP TX.
+     * @param script[in] script to evaluate.
+     * @param stack[in] stack
+     * @param serror[out] error will be written here
+     * @param pub[out] publication data (if any) will be written here
+     * @param ctx[out] context data (if any) will be written here
+     * @param type[out] to distinguish between tx type (publication, context), this argument will contain parsed data type.
+     * @param with_checks[in] if true, atv&vtb checks will be enabled
+     * @return true, if script is valid, false otherwise.
      */
-    virtual bool EvalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, Publications* pub, bool with_checks = true) = 0;
+    virtual bool EvalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, Publications* pub, Context* ctx, PopTxType* type, bool with_checks) = 0;
 };
 
 } // namespace VeriBlock

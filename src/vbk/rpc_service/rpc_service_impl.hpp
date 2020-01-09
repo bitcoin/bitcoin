@@ -31,6 +31,10 @@ private:
     UniValue doSubmitPop(const std::vector<uint8_t>& atv,
         const std::vector<std::vector<uint8_t>>& vtbs);
 
+    UniValue createPopTx(const CScript& scriptSig);
+    UniValue doUpdateContext(const Context& ctx);
+    UniValue doSubmitPop(const Publications& pub);
+
     CConnman* connman;
 };
 
