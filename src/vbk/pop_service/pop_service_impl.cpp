@@ -341,10 +341,7 @@ void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBloc
 
     workingBlock = difficulty_end_interval;
 
-    CBlockIndex* pprev_difficulty_start_interval = nullptr;
-    if (difficulty_start_interval != nullptr) {
-        pprev_difficulty_start_interval = difficulty_start_interval->pprev;
-    }
+    CBlockIndex* pprev_difficulty_start_interval = difficulty_start_interval != nullptr ? difficulty_start_interval->pprev : nullptr;
 
     while (workingBlock != pprev_difficulty_start_interval) // including the start_interval block
     {
