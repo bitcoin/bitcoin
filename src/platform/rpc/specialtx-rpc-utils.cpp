@@ -35,7 +35,7 @@ namespace Platform
     {
 #ifdef ENABLE_WALLET
         CKey key;
-        if (!keyId.IsNull() || !pwalletMain->GetKey(keyId, key))
+        if (keyId.IsNull() || !pwalletMain->GetKey(keyId, key))
             throw std::runtime_error(strprintf("non-wallet or invalid address %s", keyId.ToString()));
         return key;
 #else//ENABLE_WALLET
