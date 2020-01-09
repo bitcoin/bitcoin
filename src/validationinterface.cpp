@@ -5,8 +5,18 @@
 
 #include <validationinterface.h>
 
+#include <chain.h>
+#include <consensus/validation.h>
+#include <logging.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <scheduler.h>
+#include <util/validation.h>
+
+#include <governance/object.h>
+#include <governance/vote.h>
+#include <llmq/clsig.h>
+#include <llmq/signing.h>
 
 #include <future>
 #include <unordered_map>
@@ -154,14 +164,35 @@ void SyncWithValidationInterfaceQueue() {
     promise.get_future().wait();
 }
 
+// Use a macro instead of a function for conditional logging to prevent
+// evaluating arguments when logging is not enabled.
+//
+// NOTE: The lambda captures all local variables by value.
+#define ENQUEUE_AND_LOG_EVENT(event, fmt, name, ...)           \
+    do {                                                       \
+        auto local_name = (name);                              \
+        LOG_EVENT("Enqueuing " fmt, local_name, __VA_ARGS__);  \
+        m_internals->m_schedulerClient.AddToProcessQueue([=] { \
+            LOG_EVENT(fmt, local_name, __VA_ARGS__);           \
+            event();                                           \
+        });                                                    \
+    } while (0)
+
+#define LOG_EVENT(fmt, ...) \
+    LogPrint(BCLog::VALIDATION, fmt "\n", __VA_ARGS__)
+
 void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
     // Dependencies exist that require UpdatedBlockTip events to be delivered in the order in which
     // the chain actually updates. One way to ensure this is for the caller to invoke this signal
     // in the same critical section where the chain is updated
 
-    m_internals->m_schedulerClient.AddToProcessQueue([pindexNew, pindexFork, fInitialDownload, this] {
+    auto event = [pindexNew, pindexFork, fInitialDownload, this] {
         m_internals->UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: new block hash=%s fork block hash=%s (in IBD=%s)", __func__,
+                          pindexNew->GetBlockHash().ToString(),
+                          pindexFork ? pindexFork->GetBlockHash().ToString() : "null",
+                          fInitialDownload);
 }
 
 void CMainSignals::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
@@ -169,87 +200,117 @@ void CMainSignals::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, cons
 }
 
 void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx, int64_t nAcceptTime) {
-    m_internals->m_schedulerClient.AddToProcessQueue([ptx, nAcceptTime, this] {
+    auto event = [ptx, nAcceptTime, this] {
         m_internals->TransactionAddedToMempool(ptx, nAcceptTime);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s", __func__,
+                          ptx->GetHash().ToString());
 }
 
 void CMainSignals::TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolRemovalReason reason) {
-    m_internals->m_schedulerClient.AddToProcessQueue([ptx, reason, this] {
+    auto event = [ptx, reason, this] {
         m_internals->TransactionRemovedFromMempool(ptx, reason);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s", __func__,
+                          ptx->GetHash().ToString());
 }
 
 void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex) {
-    m_internals->m_schedulerClient.AddToProcessQueue([pblock, pindex, this] {
+    auto event = [pblock, pindex, this] {
         m_internals->BlockConnected(pblock, pindex);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s block height=%d", __func__,
+                          pblock->GetHash().ToString(),
+                          pindex->nHeight);
 }
 
 void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex* pindex) {
-    m_internals->m_schedulerClient.AddToProcessQueue([pblock, pindex, this] {
+    auto event = [pblock, pindex, this] {
         m_internals->BlockDisconnected(pblock, pindex);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s block height=%d", __func__,
+                          pblock->GetHash().ToString(),
+                          pindex->nHeight);
 }
 
 void CMainSignals::ChainStateFlushed(const CBlockLocator &locator) {
-    m_internals->m_schedulerClient.AddToProcessQueue([locator, this] {
+    auto event = [locator, this] {
         m_internals->ChainStateFlushed(locator);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s", __func__,
+                          locator.IsNull() ? "null" : locator.vHave.front().ToString());
 }
 
 void CMainSignals::BlockChecked(const CBlock& block, const BlockValidationState& state) {
+    LOG_EVENT("%s: block hash=%s state=%s", __func__,
+              block.GetHash().ToString(), FormatStateMessage(state));
     m_internals->BlockChecked(block, state);
 }
 
 void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block) {
+    LOG_EVENT("%s: block hash=%s", __func__, block->GetHash().ToString());
     m_internals->NewPoWValidBlock(pindex, block);
 }
 
 void CMainSignals::AcceptedBlockHeader(const CBlockIndex *pindexNew) {
+    LOG_EVENT("%s: accepted block header hash=%s", __func__, pindexNew->GetBlockHash().ToString());
     m_internals->AcceptedBlockHeader(pindexNew);
 }
 
 void CMainSignals::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) {
+    LOG_EVENT("%s: accepted block header hash=%s initial=%d", __func__, pindexNew->GetBlockHash().ToString(), fInitialDownload);
     m_internals->NotifyHeaderTip(pindexNew, fInitialDownload);
 }
 
 void CMainSignals::NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) {
-    m_internals->m_schedulerClient.AddToProcessQueue([tx, islock, this] {
+    auto event = [tx, islock, this] {
         m_internals->NotifyTransactionLock(tx, islock);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: transaction lock txid=%s", __func__,
+                          tx->GetHash().ToString());
 }
 
 void CMainSignals::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig) {
-    m_internals->m_schedulerClient.AddToProcessQueue([pindex, clsig, this] {
+    auto event = [pindex, clsig, this] {
         m_internals->NotifyChainLock(pindex, clsig);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: notify chainlock at block=%s cl=%s", __func__,
+            pindex->GetBlockHash().ToString(),
+            clsig->ToString());
 }
 
 void CMainSignals::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) {
-    m_internals->m_schedulerClient.AddToProcessQueue([vote, this] {
+    auto event = [vote, this] {
         m_internals->NotifyGovernanceVote(vote);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: notify governance vote: %s", __func__, vote->GetHash().ToString());
 }
 
 void CMainSignals::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) {
-    m_internals->m_schedulerClient.AddToProcessQueue([object, this] {
+    auto event = [object, this] {
         m_internals->NotifyGovernanceObject(object);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: notify governance object: %s", __func__, object->GetHash().ToString());
 }
 
 void CMainSignals::NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx) {
-    m_internals->m_schedulerClient.AddToProcessQueue([currentTx, previousTx, this] {
+    auto event = [currentTx, previousTx, this] {
         m_internals->NotifyInstantSendDoubleSpendAttempt(currentTx, previousTx);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: notify instant doublespendattempt currenttxid=%s previoustxid=%s", __func__,
+            currentTx->GetHash().ToString(),
+            previousTx->GetHash().ToString());
 }
 
 void CMainSignals::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig) {
-    m_internals->m_schedulerClient.AddToProcessQueue([sig, this] {
+    auto event = [sig, this] {
         m_internals->NotifyRecoveredSig(sig);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: notify recoveredsig=%s", __func__,
+            sig->GetHash().ToString());
 }
 
 void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman) {
+    LOG_EVENT("%s: notify mn list changed undo=%d", __func__, undo);
     m_internals->NotifyMasternodeListChanged(undo, oldMNList, diff, connman);
 }
