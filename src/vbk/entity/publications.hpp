@@ -1,6 +1,7 @@
 #ifndef INTEGRATION_REFERENCE_BTC_PUBLICATIONS_HPP
 #define INTEGRATION_REFERENCE_BTC_PUBLICATIONS_HPP
 
+#include <stdint.h>
 #include <vector>
 
 namespace VeriBlock {
