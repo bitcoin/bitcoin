@@ -45,6 +45,7 @@ QT_MOC_CPP = \
   qt/moc_csvmodelwriter.cpp \
   qt/moc_editaddressdialog.cpp \
   qt/moc_guiutil.cpp \
+  qt/moc_highlightlabelwidget.cpp \
   qt/moc_intro.cpp \
   qt/moc_macdockiconhandler.cpp \
   qt/moc_macnotificationhandler.cpp \
@@ -113,6 +114,7 @@ BITCOIN_QT_H = \
   qt/editaddressdialog.h \
   qt/guiconstants.h \
   qt/guiutil.h \
+  qt/highlightlabelwidget.h \
   qt/intro.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
@@ -212,6 +214,7 @@ BITCOIN_QT_BASE_CPP = \
   qt/clientmodel.cpp \
   qt/csvmodelwriter.cpp \
   qt/guiutil.cpp \
+  qt/highlightlabelwidget.cpp \
   qt/intro.cpp \
   qt/modaloverlay.cpp \
   qt/networkstyle.cpp \
