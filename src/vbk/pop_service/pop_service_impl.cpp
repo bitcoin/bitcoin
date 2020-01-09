@@ -401,12 +401,12 @@ void PopServiceImpl::getPublicationsData(const CTransactionRef& tx, Publications
     getService<UtilService>().EvalScript(tx->vin[0].scriptSig, stack, nullptr, &publications, false);
 }
 
-void PopServiceImpl::getPublicationsData(const Publications& data, PublicationData& publciationData)
+void PopServiceImpl::getPublicationsData(const Publications& publications, PublicationData& publciationData)
 {
     ClientContext context;
     BytesArrayRequest request;
 
-    request.set_data(data.atv.data(), data.atv.size());
+    request.set_data(publications.atv.data(), publications.atv.size());
 
     Status status = grpcPopService->GetPublicationDataFromAltPublication(&context, request, &publciationData);
 
