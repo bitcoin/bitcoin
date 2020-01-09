@@ -14,6 +14,9 @@ float-divide-by-zero:wallet/wallet.cpp
 # contains files in which we expect unsigned integer overflows to occur. The
 # list is used to suppress -fsanitize=integer warnings when running our CI UBSan
 # job.
+
+# libstdc++ C++17 -- unsigned integer wraparound in basic_string (rfind)
+unsigned-integer-overflow:*/include/c++/*/bits/basic_string.tcc
 unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
