@@ -67,18 +67,9 @@
         </widget>
        </item>
        <item row="1" column="1" colspan="2">
-        <widget class="QLabel" name="clientVersion">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
+        <widget class="HighlightLabelWidget" name="clientVersion">
          <property name="text">
           <string>N/A</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -93,18 +84,9 @@
         </widget>
        </item>
        <item row="2" column="1" colspan="2">
-        <widget class="QLabel" name="clientUserAgent">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
+        <widget class="HighlightLabelWidget" name="clientUserAgent">
          <property name="text">
           <string>N/A</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -119,18 +101,9 @@
         </widget>
        </item>
        <item row="3" column="1" colspan="2">
-        <widget class="QLabel" name="berkeleyDBVersion">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
+        <widget class="HighlightLabelWidget" name="berkeleyDBVersion">
          <property name="text">
           <string>N/A</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -142,24 +115,15 @@
         </widget>
        </item>
        <item row="4" column="1" colspan="2">
-        <widget class="QLabel" name="dataDir">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
+        <widget class="HighlightLabelWidget" name="dataDir">
          <property name="toolTip">
           <string>To specify a non-default location of the data directory use the '%1' option.</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
          <property name="wordWrap">
           <bool>true</bool>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -171,24 +135,15 @@
         </widget>
        </item>
        <item row="5" column="1" colspan="2">
-        <widget class="QLabel" name="blocksDir">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
+        <widget class="HighlightLabelWidget" name="blocksDir">
          <property name="toolTip">
           <string>To specify a non-default location of the blocks directory use the '%1' option.</string>
          </property>
          <property name="text">
           <string>N/A</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
          <property name="wordWrap">
           <bool>true</bool>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -200,18 +155,9 @@
         </widget>
        </item>
        <item row="6" column="1" colspan="2">
-        <widget class="QLabel" name="startupTime">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
+        <widget class="HighlightLabelWidget" name="startupTime">
          <property name="text">
           <string>N/A</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -236,18 +182,9 @@
         </widget>
        </item>
        <item row="8" column="1" colspan="2">
-        <widget class="QLabel" name="networkName">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
+        <widget class="HighlightLabelWidget" name="networkName">
          <property name="text">
           <string>N/A</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -259,18 +196,9 @@
         </widget>
        </item>
        <item row="9" column="1" colspan="2">
-        <widget class="QLabel" name="numberOfConnections">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
+        <widget class="HighlightLabelWidget" name="numberOfConnections">
          <property name="text">
           <string>N/A</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -295,18 +223,9 @@
         </widget>
        </item>
        <item row="11" column="1" colspan="2">
-        <widget class="QLabel" name="numberOfBlocks">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
+        <widget class="HighlightLabelWidget" name="numberOfBlocks">
          <property name="text">
           <string>N/A</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -318,18 +237,9 @@
         </widget>
        </item>
        <item row="12" column="1" colspan="2">
-        <widget class="QLabel" name="lastBlockTime">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
+        <widget class="HighlightLabelWidget" name="lastBlockTime">
          <property name="text">
           <string>N/A</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -354,18 +264,9 @@
         </widget>
        </item>
        <item row="14" column="1">
-        <widget class="QLabel" name="mempoolNumberTxs">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
+        <widget class="HighlightLabelWidget" name="mempoolNumberTxs">
          <property name="text">
           <string>N/A</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -377,18 +278,9 @@
         </widget>
        </item>
        <item row="15" column="1">
-        <widget class="QLabel" name="mempoolSize">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
+        <widget class="HighlightLabelWidget" name="mempoolSize">
          <property name="text">
           <string>N/A</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -1564,6 +1456,11 @@
    <slots>
     <slot>clear()</slot>
    </slots>
+  </customwidget>
+  <customwidget>
+   <class>HighlightLabelWidget</class>
+   <extends>QLabel</extends>
+   <header>qt/highlightlabelwidget.h</header>
   </customwidget>
  </customwidgets>
  <resources>
