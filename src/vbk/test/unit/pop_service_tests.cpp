@@ -36,7 +36,7 @@ struct PopServiceFixture : public TestChain100Setup {
         VeriBlock::InitConfig();
         Fake(Method(pop_service_impl_mock, addPayloads));
         Fake(Method(pop_service_impl_mock, removePayloads));
-        Fake(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const CTransactionRef&, VeriBlock::Publications&)));
+        When(OverloadedMethod(pop_service_impl_mock, parsePopTx, bool(const CTransactionRef&, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType*))).AlwaysReturn(true);
         When(Method(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
     }
 };
@@ -57,8 +57,17 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test, PopServiceFixture)
 
     When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications&, VeriBlock::PublicationData&)))
         .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-        setPublicationData(publicationData, stream, config.index.unwrap());
-    });
+            setPublicationData(publicationData, stream, config.index.unwrap());
+        });
+
+    When(OverloadedMethod(pop_service_impl_mock, parsePopTx, bool(const CTransactionRef&, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType*)))
+        .Do([](const CTransactionRef&, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType* type) -> bool {
+            if (type != nullptr) {
+                *type = VeriBlock::PopTxType::PUBLICATIONS;
+            }
+            return true;
+        });
+
 
     BlockValidationState state;
     {
@@ -81,8 +90,8 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_index, PopServiceFixture)
     // make another index
     When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications&, VeriBlock::PublicationData&)))
         .Do([stream](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-        setPublicationData(publicationData, stream, -1);
-    });
+            setPublicationData(publicationData, stream, -1);
+        });
 
     When(Method(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)).Return(false);
 
@@ -121,8 +130,8 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_ancestor, PopServiceFixtur
 
     When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData)))
         .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-        setPublicationData(publicationData, stream, config.index.unwrap());
-    });
+            setPublicationData(publicationData, stream, config.index.unwrap());
+        });
 
     {
         LOCK(cs_main);
@@ -146,8 +155,8 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_merkleroot, PopServiceFixt
 
     When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData)))
         .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-        setPublicationData(publicationData, stream, config.index.unwrap());
-    });
+            setPublicationData(publicationData, stream, config.index.unwrap());
+        });
 
     When(Method(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
 
@@ -173,8 +182,8 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_settlement_interval, PopSe
 
     When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData)))
         .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-        setPublicationData(publicationData, stream, config.index.unwrap());
-    });
+            setPublicationData(publicationData, stream, config.index.unwrap());
+        });
 
     config.POP_REWARD_SETTLEMENT_INTERVAL = 0;
     VeriBlock::setService<VeriBlock::Config>(new VeriBlock::Config(config));
@@ -201,11 +210,11 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_addPayloads, PopServiceFix
 
     When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData)))
         .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-        setPublicationData(publicationData, stream, config.index.unwrap());
-    });
+            setPublicationData(publicationData, stream, config.index.unwrap());
+        });
 
     When(Method(pop_service_impl_mock, addPayloads)).AlwaysDo([](const CBlock& block, const int& nHeight, const VeriBlock::Publications& publications) -> void {
-        throw  VeriBlock::PopServiceException("fail");
+        throw VeriBlock::PopServiceException("fail");
     });
 
     BlockValidationState state;

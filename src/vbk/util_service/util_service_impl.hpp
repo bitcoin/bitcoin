@@ -5,6 +5,7 @@
 #include "vbk/util_service.hpp"
 
 #include <consensus/validation.h>
+#include <vbk/interpreter.hpp>
 #include <vector>
 
 namespace VeriBlock {
@@ -22,9 +23,6 @@ struct UtilServiceImpl : public UtilService {
 
     uint256 makeTopLevelRoot(int height, const KeystoneArray& keystones, const uint256& txRoot) override;
 
-    /// same as:
-    /// bool CForkResolution::operator()(const CBlockIndex* leftFork, const CBlockIndex* rightFork) const
-
     int compareForks(const CBlockIndex& left, const CBlockIndex& right) override;
 
     // Pop rewards methods
@@ -32,13 +30,12 @@ struct UtilServiceImpl : public UtilService {
     void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) override;
     bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state) override;
 
-    bool EvalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, Publications* pub, bool with_checks = true) override;
+    bool EvalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, Publications* publications, Context* context, PopTxType* type, bool with_checks) override;
+
     bool validatePopTx(const CTransaction& tx, TxValidationState& state) override;
     bool validatePopTxInput(const CTxIn& in, TxValidationState& state);
     bool validatePopTxOutput(const CTxOut& in, TxValidationState& state);
 
-    // statefull VeriBlock validation
-    //bool blockPopValidation(const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& params, CValidationState& state) override;
 
 protected:
     const CBlockIndex* FindCommonKeystone(const CBlockIndex* leftFork, const CBlockIndex* rightFork);

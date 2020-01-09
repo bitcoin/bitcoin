@@ -252,10 +252,7 @@
 ["0", "IF NOP10 ENDIF 1", "P2SH,STRICTENC,DISCOURAGE_UPGRADABLE_NOPS", "OK",
  "Discouraged NOPs are allowed if not executed"],
 
-["0", "IF 0xbc ELSE 1 ENDIF", "P2SH,STRICTENC", "OK", "opcodes above MAX_OPCODE invalid if executed"],
-["0", "IF 0xbd ELSE 1 ENDIF", "P2SH,STRICTENC", "OK"],
-["0", "IF 0xbe ELSE 1 ENDIF", "P2SH,STRICTENC", "OK"],
-["0", "IF 0xbf ELSE 1 ENDIF", "P2SH,STRICTENC", "OK"],
+["0", "IF 0xbf ELSE 1 ENDIF", "P2SH,STRICTENC", "OK", "opcodes above MAX_OPCODE invalid if executed"],
 ["0", "IF 0xc0 ELSE 1 ENDIF", "P2SH,STRICTENC", "OK"],
 ["0", "IF 0xc1 ELSE 1 ENDIF", "P2SH,STRICTENC", "OK"],
 ["0", "IF 0xc2 ELSE 1 ENDIF", "P2SH,STRICTENC", "OK"],

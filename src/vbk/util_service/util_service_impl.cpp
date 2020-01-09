@@ -1,7 +1,6 @@
 #include "util_service_impl.hpp"
 
 #include <chain.h>
-#include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <primitives/block.h>
@@ -12,27 +11,9 @@
 #include <vbk/pop_service.hpp>
 #include <vbk/service_locator.hpp>
 #include <vbk/util.hpp>
+#include <vbk/interpreter.hpp>
 
 namespace VeriBlock {
-
-namespace {
-inline bool set_error(ScriptError* ret, const ScriptError serror)
-{
-    if (ret)
-        *ret = serror;
-    return false;
-}
-typedef std::vector<unsigned char> valtype;
-
-#define stacktop(i) (stack.at(stack.size() + (i)))
-inline void popstack(std::vector<valtype>& stack)
-{
-    if (stack.empty())
-        throw std::runtime_error("popstack(): stack empty");
-    stack.pop_back();
-}
-
-} // namespace
 
 
 bool UtilServiceImpl::CheckPopInputs(const CTransaction& tx, TxValidationState& state, unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata)
@@ -268,119 +249,9 @@ bool UtilServiceImpl::validatePopTxOutput(const CTxOut& out, TxValidationState& 
 }
 
 
-bool UtilServiceImpl::EvalScript(const CScript& script, std::vector<std::vector<uint8_t>>& stack, ScriptError* serror, Publications* ret, bool with_checks)
+bool UtilServiceImpl::EvalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, VeriBlock::Publications* publications, VeriBlock::Context* context, PopTxType* type, bool with_checks)
 {
-    CScript::const_iterator pc = script.begin();
-    CScript::const_iterator pend = script.end();
-    static const valtype vchFalse(0);
-    static const valtype vchTrue(1, 1);
-    opcodetype opcode;
-    std::vector<unsigned char> vchPushValue;
-    auto& config = getService<Config>();
-    auto& pop = getService<PopService>();
-    Publications pub;
-
-    if (script.size() > config.max_pop_script_size) {
-        return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
-    }
-
-    size_t maxPushSize = std::max(config.max_atv_size, config.max_vtb_size);
-    size_t minPushSize = std::min(config.min_atv_size, config.min_vtb_size);
-    try {
-        while (pc < pend) {
-            if (!script.GetOp(pc, opcode, vchPushValue)) {
-                return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
-            }
-
-            if (!vchPushValue.empty()) {
-                // we don't know if it is ATV or VTB yet, so do sanity check here
-                if (vchPushValue.size() > maxPushSize || vchPushValue.size() < minPushSize) {
-                    return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
-                }
-                stack.push_back(vchPushValue);
-                continue;
-            }
-
-            // at this point, opcode is always one of these 3
-            switch (opcode) {
-            case OP_CHECKATV: {
-                // tx has one ATV
-                if (!pub.atv.empty()) {
-                    return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
-                }
-
-                // validate ATV size
-                const auto& el = stacktop(-1);
-                if (el.size() > config.max_atv_size || el.size() < config.min_atv_size) {
-                    return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
-                }
-
-                // validate ATV content
-                if (with_checks && !pop.checkATVinternally(el)) {
-                    return set_error(serror, SCRIPT_ERR_VBK_ATVFAIL);
-                }
-
-                pub.atv = el;
-                popstack(stack);
-                break;
-            }
-            case OP_CHECKVTB: {
-                // validate VTB size
-                const auto& el = stacktop(-1);
-                if (el.size() > config.max_vtb_size || el.size() < config.min_vtb_size) {
-                    return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
-                }
-
-                // validate VTB content
-                if (with_checks && !pop.checkVTBinternally(el)) {
-                    return set_error(serror, SCRIPT_ERR_VBK_VTBFAIL);
-                }
-
-                // tx has many VTBs
-                pub.vtbs.push_back(el);
-                popstack(stack);
-                break;
-            }
-            case OP_CHECKPOP: {
-                // OP_CHECKPOP should be last opcode
-                if (script.GetOp(pc, opcode, vchPushValue)) {
-                    // we could read next opcode. extra opcodes is an error
-                    return set_error(serror, SCRIPT_ERR_VBK_EXTRA_OPCODE);
-                }
-
-                // stack should be empty at this point
-                if (!stack.empty()) {
-                    return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
-                }
-
-                // we did all checks, put true on stack to signal successful execution
-                stack.push_back(vchTrue);
-                break;
-            }
-            default:
-                // forbid any other opcodes in pop transactions
-                return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
-            }
-        }
-    } catch (...) {
-        return set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
-    }
-
-    if (pub.atv.empty()) {
-        // must contain non-empty ATV
-        return set_error(serror, SCRIPT_ERR_VBK_ATVFAIL);
-    }
-
-    if (pub.vtbs.empty()) {
-        // must contain at least one VTB
-        return set_error(serror, SCRIPT_ERR_VBK_VTBFAIL);
-    }
-
-    // set return value
-    if (ret != nullptr) {
-        *ret = pub;
-    }
-
-    return true;
+    return EvalScriptImpl(script, stack, serror, publications, context, type, with_checks);
 }
+
 } // namespace VeriBlock

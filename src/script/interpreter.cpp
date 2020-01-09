@@ -303,7 +303,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 
     if (flags & SCRIPT_VERIFY_POP) {
         auto& util = VeriBlock::getService<VeriBlock::UtilService>();
-        return util.EvalScript(script, stack, serror, nullptr);
+        return util.EvalScript(script, stack, serror, nullptr, nullptr, nullptr, true);
     }
 
     if (script.size() > MAX_SCRIPT_SIZE) {

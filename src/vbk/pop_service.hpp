@@ -7,6 +7,7 @@
 #include <consensus/validation.h>
 #include <script/interpreter.h>
 #include <vbk/entity/context_info_container.hpp>
+#include <vbk/entity/pop.hpp>
 
 class CBlock;
 class CTransaction;
@@ -43,6 +44,13 @@ struct PopService {
     virtual bool blockPopValidation(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) = 0;
 
     virtual void updateContext(const std::vector<std::vector<uint8_t>>& veriBlockBlocks, const std::vector<std::vector<uint8_t>>& bitcoinBlocks) = 0;
+
+    virtual bool parsePopTx(const CTransactionRef& tx, Publications* publications, Context* ctx, PopTxType* type) = 0;
+
+    virtual bool determineATVPlausibilityWithBTCRules(AltchainId altChainIdentifier, const CBlockHeader& popEndorsementHeader, const Consensus::Params& params) = 0;
+
+    virtual void addPayloads(const CBlock& block, const int& nHeight, const Publications& publications) = 0;
+    virtual void removePayloads(const CBlock&, const int&) = 0;
 };
 } // namespace VeriBlock
 

@@ -1060,6 +1060,9 @@ static bool MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& s
  */
 static bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message = "") {
     switch (state.GetResult()) {
+    case TxValidationResult::TX_BAD_POP_DATA:
+        LogPrint(BCLog::NET, "pop tx is invalid: %s\n", message);
+        break;
     case TxValidationResult::TX_RESULT_UNSET:
         break;
     // The node is providing invalid data:
