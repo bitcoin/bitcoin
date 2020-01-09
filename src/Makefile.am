@@ -165,7 +165,6 @@ BITCOIN_CORE_H = \
   node/transaction.h \
   node/utxo_snapshot.h \
   noui.h \
-  optional.h \
   outputtype.h \
   policy/feerate.h \
   policy/fees.h \

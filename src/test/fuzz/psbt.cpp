@@ -5,7 +5,6 @@
 #include <test/fuzz/fuzz.h>
 
 #include <node/psbt.h>
-#include <optional.h>
 #include <psbt.h>
 #include <pubkey.h>
 #include <script/script.h>
@@ -14,6 +13,7 @@
 #include <version.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -41,7 +41,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)psbt.IsNull();
     (void)psbt.IsSane();
 
-    Optional<CMutableTransaction> tx = psbt.tx;
+    std::optional<CMutableTransaction> tx = psbt.tx;
     if (tx) {
         const CMutableTransaction& mtx = *tx;
         const PartiallySignedTransaction psbt_from_tx{mtx};

@@ -311,7 +311,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         key.erase(0, 1);
         std::string section;
         util::SettingsValue value = InterpretOption(section, key, val);
-        Optional<unsigned int> flags = GetArgFlags('-' + key);
+        std::optional<unsigned int> flags = GetArgFlags('-' + key);
         if (flags) {
             if (!CheckValid(key, value, *flags, error)) {
                 return false;
@@ -340,7 +340,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
     return success;
 }
 
-Optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
+std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
 {
     LOCK(cs_args);
     for (const auto& arg_map : m_available_args) {
@@ -349,7 +349,7 @@ Optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
             return search->second.m_flags;
         }
     }
-    return nullopt;
+    return std::nullopt;
 }
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
@@ -717,7 +717,7 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
         std::string section;
         std::string key = option.first;
         util::SettingsValue value = InterpretOption(section, key, option.second);
-        Optional<unsigned int> flags = GetArgFlags('-' + key);
+        std::optional<unsigned int> flags = GetArgFlags('-' + key);
         if (flags) {
             if (!CheckValid(key, value, *flags, error)) {
                 return false;
