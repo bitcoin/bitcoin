@@ -123,8 +123,12 @@ BOOST_FIXTURE_TEST_CASE(eval_pop_tx_scriptSig_vtb_size_invalid, EvalScriptFixtur
 BOOST_FIXTURE_TEST_CASE(eval_pop_tx_scriptSig_only_atv, EvalScriptFixture)
 {
     script = CScript() << "ATV" << OP_CHECKATV << OP_CHECKPOP;
-    BOOST_CHECK(!util.EvalScript(script, stack, &serror, nullptr, nullptr, nullptr, true));
-    BOOST_CHECK(serror == SCRIPT_ERR_VBK_VTBFAIL);
+    BOOST_CHECK(util.EvalScript(script, stack, &serror, &pub, &ctx, &type, true));
+    BOOST_REQUIRE(!stack.empty());
+    BOOST_CHECK(type == VeriBlock::PopTxType::PUBLICATIONS);
+    BOOST_CHECK(CastToBool(stack.back()));
+    BOOST_CHECK(pub.vtbs.empty());
+    BOOST_CHECK(pub.atv == "ATV"_v);
 }
 
 BOOST_FIXTURE_TEST_CASE(eval_pop_tx_scriptSig_only_vtbs, EvalScriptFixture)

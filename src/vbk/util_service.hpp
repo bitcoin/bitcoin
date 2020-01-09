@@ -50,7 +50,7 @@ struct UtilService {
      * @param with_checks[in] if true, atv&vtb checks will be enabled
      * @return true, if script is valid, false otherwise.
      */
-    [[nodiscard]] virtual bool EvalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, Publications* pub, Context* ctx, PopTxType* type, bool with_checks) = 0;
+    virtual bool EvalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, Publications* pub, Context* ctx, PopTxType* type, bool with_checks) = 0;
 };
 
 } // namespace VeriBlock
