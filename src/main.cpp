@@ -960,7 +960,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     {
         if (tx.nType != TRANSACTION_NORMAL &&
             tx.nType != TRANSACTION_GOVERNANCE_VOTE &&
-            tx.nType != TRANSACTION_NF_TOKEN_REGISTER)
+            tx.nType != TRANSACTION_NF_TOKEN_REGISTER &&
+            tx.nType != TRANSACTION_NF_TOKEN_PROTOCOL_REGISTER)
         {
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
         }
