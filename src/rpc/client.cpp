@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/client.h>
+#include <span.h>
 #include <util/system.h>
 
 #include <set>
@@ -189,8 +190,26 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "addpeeraddress", 1, "port"},
     { "stop", 0, "wait" },
 };
+/**
+ * Specify a (method, idx, name) here if the RPC argument is a blockhash
+ * and can meaningfully be abbreviated as a height (eg @1000)
+ *
+ * @note Parameter indexes start from 0.
+ */
+static const CRPCConvertParam rpc_params_convert_blockhash[] =
+{
+    { "getblockheader", 0, "blockhash" },
+    { "getblock", 0, "blockhash" },
+    { "preciousblock", 0, "blockhash" },
+    { "invalidateblock", 0, "blockhash" },
+    { "getchaintxstats", 1, "blockhash" },
+    { "getblockfilter", 0, "blockhash" },
+    { "getrawtransaction", 2, "blockhash" },
+    { "gettxoutproof", 1, "blockhash" },
+};
 // clang-format on
 
+namespace {
 class CRPCConvertTable
 {
 private:
@@ -198,25 +217,27 @@ private:
     std::set<std::pair<std::string, std::string>> membersByName;
 
 public:
-    CRPCConvertTable();
+    CRPCConvertTable(Span<const CRPCConvertParam> params);
 
-    bool convert(const std::string& method, int idx) {
+    bool convert(const std::string& method, int idx) const {
         return (members.count(std::make_pair(method, idx)) > 0);
     }
-    bool convert(const std::string& method, const std::string& name) {
+    bool convert(const std::string& method, const std::string& name) const {
         return (membersByName.count(std::make_pair(method, name)) > 0);
     }
 };
+}; // namespace
 
-CRPCConvertTable::CRPCConvertTable()
+CRPCConvertTable::CRPCConvertTable(Span<const CRPCConvertParam> params)
 {
-    for (const auto& cp : vRPCConvertParams) {
+    for (const auto& cp : params) {
         members.emplace(cp.methodName, cp.paramIdx);
         membersByName.emplace(cp.methodName, cp.paramName);
     }
 }
 
-static CRPCConvertTable rpcCvtTable;
+static const CRPCConvertTable rpcCvtTable(vRPCConvertParams);
+static const CRPCConvertTable rpc_convert_blockhash_table(rpc_params_convert_blockhash);
 
 /** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
  * as well as objects and arrays.
@@ -228,6 +249,16 @@ UniValue ParseNonRFCJSONValue(const std::string& strVal)
         !jVal.isArray() || jVal.size()!=1)
         throw std::runtime_error(std::string("Error parsing JSON: ") + strVal);
     return jVal[0];
+}
+
+bool RPCConvertBlockhash(const std::string& method, int pos)
+{
+    return rpc_convert_blockhash_table.convert(method, pos);
+}
+
+bool RPCConvertNamedBlockhash(const std::string& method, const std::string& param)
+{
+    return rpc_convert_blockhash_table.convert(method, param);
 }
 
 UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)

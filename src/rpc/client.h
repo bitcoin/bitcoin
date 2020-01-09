@@ -14,6 +14,12 @@ UniValue RPCConvertValues(const std::string& strMethod, const std::vector<std::s
 /** Convert named arguments to command-specific RPC representation */
 UniValue RPCConvertNamedValues(const std::string& strMethod, const std::vector<std::string>& strParams);
 
+/** Whether this is a positional blockhash parameter */
+bool RPCConvertBlockhash(const std::string& method, int pos);
+
+/** Whether this is a named blockhash parameter */
+bool RPCConvertNamedBlockhash(const std::string& method, const std::string& param);
+
 /** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
  * as well as objects and arrays.
  */
