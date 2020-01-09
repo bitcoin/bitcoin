@@ -61,7 +61,6 @@
 #include <set>
 
 #ifndef WIN32
-#include <attributes.h>
 #include <cerrno>
 #include <signal.h>
 #include <sys/stat.h>
@@ -108,7 +107,7 @@ static fs::path GetPidFile()
     return AbsPathForConfigVal(fs::path(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME)));
 }
 
-NODISCARD static bool CreatePidFile()
+[[nodiscard]] static bool CreatePidFile()
 {
     fsbridge::ofstream file{GetPidFile()};
     if (file) {

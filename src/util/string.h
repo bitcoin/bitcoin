@@ -5,13 +5,11 @@
 #ifndef BITCOIN_UTIL_STRING_H
 #define BITCOIN_UTIL_STRING_H
 
-#include <attributes.h>
-
 #include <cstring>
 #include <string>
 #include <vector>
 
-NODISCARD inline std::string TrimString(const std::string& str, const std::string& pattern = " \f\n\r\t\v")
+[[nodiscard]] inline std::string TrimString(const std::string& str, const std::string& pattern = " \f\n\r\t\v")
 {
     std::string::size_type front = str.find_first_not_of(pattern);
     if (front == std::string::npos) {
@@ -47,7 +45,7 @@ inline std::string Join(const std::vector<std::string>& list, const std::string&
 /**
  * Check if a string does not contain any embedded NUL (\0) characters
  */
-NODISCARD inline bool ValidAsCString(const std::string& str) noexcept
+[[nodiscard]] inline bool ValidAsCString(const std::string& str) noexcept
 {
     return str.size() == strlen(str.c_str());
 }

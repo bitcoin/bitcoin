@@ -22,7 +22,7 @@
  * @param[in]  bip32derivs whether to fill in bip32 derivation information if available
  * return error
  */
-NODISCARD TransactionError FillPSBT(const CWallet* pwallet,
+[[nodiscard]] TransactionError FillPSBT(const CWallet* pwallet,
               PartiallySignedTransaction& psbtx,
               bool& complete,
               int sighash_type = 1 /* SIGHASH_ALL */,
