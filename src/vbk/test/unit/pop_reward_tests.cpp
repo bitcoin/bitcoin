@@ -66,8 +66,6 @@ BOOST_FIXTURE_TEST_CASE(addPopPayoutsIntoCoinbaseTx_test, PopRewardsTestFixture)
 
     CBlock block = CreateAndProcessBlock({}, scriptPubKey);
 
-    CAmount PoWReward = GetBlockSubsidy(ChainActive().Height(), Params().GetConsensus());
-
     int n = 0;
     for (const auto& out : block.vtx[0]->vout) {
         if (rewards.find(out.scriptPubKey) != rewards.end()) {
