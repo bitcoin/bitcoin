@@ -1,5 +1,8 @@
 *.tar.gz
 
+src/vbk/grpc_integration/*.pb.cc
+src/vbk/grpc_integration/*.pb.h
+
 *.exe
 *.pdb
 src/bitcoin
@@ -137,3 +140,13 @@ db4/
 osx_volname
 dist/
 *.background.tiff
+
+*.tmp
+compile_commands.json
+.idea
+.scannerwork
+.project
+.cproject
+.settings
+configure.lineno
+*.pb.*

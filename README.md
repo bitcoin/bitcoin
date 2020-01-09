@@ -1,3 +1,8 @@
+VeriBlock
+=========
+
+Fork created at [8830cb58abc888144a1edb9b2fba427716cc45d8](https://github.com/bitcoin/bitcoin/commit/8830cb58abc888144a1edb9b2fba427716cc45d8).
+
 Bitcoin Core integration/staging tree
 =====================================
 

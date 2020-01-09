@@ -1060,6 +1060,9 @@ static bool MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& s
  */
 static bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message = "") {
     switch (state.GetResult()) {
+    case TxValidationResult::TX_BAD_POP_DATA:
+        LogPrint(BCLog::NET, "pop tx is invalid: %s\n", message);
+        break;
     case TxValidationResult::TX_RESULT_UNSET:
         break;
     // The node is providing invalid data:
@@ -3831,7 +3834,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         CInv inv(MSG_TX, hash);
                         pto->m_tx_relay->setInventoryTxToSend.erase(hash);
                         // Don't send transactions that peers will not put into their mempool
-                        if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
+                        if (!VeriBlock::isPopTx(*txinfo.tx) && txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
                             continue;
                         }
                         if (pto->m_tx_relay->pfilter) {
@@ -3886,7 +3889,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                             continue;
                         }
                         // Peer told you to not send transactions at that feerate? Don't bother sending it.
-                        if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
+                        if (!VeriBlock::isPopTx(*txinfo.tx) && txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
                             continue;
                         }
                         if (pto->m_tx_relay->pfilter && !pto->m_tx_relay->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;

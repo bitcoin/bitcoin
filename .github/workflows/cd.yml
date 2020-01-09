@@ -1,0 +1,28 @@
+name: Docker CD
+
+on:
+  push:
+    branches:
+    - master
+    - develop
+  pull_request:
+    branches:
+    - master
+    - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          submodules: true
+      - name: Docker Push
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: veriblock/vbtc
+          dockerfile: Dockerfile
+          username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
+          tag_names: true
+          snapshot: true

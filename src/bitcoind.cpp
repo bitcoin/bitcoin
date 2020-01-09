@@ -21,6 +21,8 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 
+#include <vbk/init.hpp>
+
 #include <functional>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
@@ -40,8 +42,11 @@ static void WaitForShutdown(NodeContext& node)
 //
 static bool AppInit(int argc, char* argv[])
 {
+    VeriBlock::InitConfig();
+    VeriBlock::InitUtilService();
     NodeContext node;
     node.chain = interfaces::MakeChain(node);
+
 
     bool fRet = false;
 
@@ -102,6 +107,11 @@ static bool AppInit(int argc, char* argv[])
         // Set this early so that parameter interactions go to console
         InitLogging();
         InitParameterInteraction();
+
+        VeriBlock::InitPopService(
+            gArgs.GetArg("-althost", "127.0.0.1"),
+            gArgs.GetArg("-altport", "19012"));
+
         if (!AppInitBasicSetup())
         {
             // InitError will have been called with detailed error, which ends up on console
@@ -144,6 +154,8 @@ static bool AppInit(int argc, char* argv[])
             return false;
         }
         fRet = AppInitMain(node);
+        // connman is initialized in AppInitMain
+        VeriBlock::InitRpcService(node.connman.get());
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");
