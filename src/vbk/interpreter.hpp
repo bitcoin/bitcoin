@@ -175,11 +175,6 @@ inline bool EvalScriptImpl(const CScript& script, std::vector<std::vector<unsign
         return set_error(serror, SCRIPT_ERR_VBK_ATVFAIL);
     }
 
-    if (isPublicationsTx && pub.vtbs.empty()) {
-        // must contain at least one VTB
-        return set_error(serror, SCRIPT_ERR_VBK_VTBFAIL);
-    }
-
     // set return value of publications
     if (publications != nullptr) {
         *publications = pub;
