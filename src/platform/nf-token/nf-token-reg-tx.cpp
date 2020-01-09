@@ -27,7 +27,13 @@ namespace Platform
         if (nfTokenRegTx.m_version != NfTokenRegTx::CURRENT_VERSION)
             return state.DoS(100, false, REJECT_INVALID, "bad-nf-token-reg-tx-version");
 
-        if (!NftProtocolsManager::Instance().Contains(nfToken.tokenProtocolId, pindexLast->nHeight))
+        bool containsProto;
+        if (pindexLast != nullptr)
+            containsProto = NftProtocolsManager::Instance().Contains(nfToken.tokenProtocolId, pindexLast->nHeight);
+        else
+            containsProto = NftProtocolsManager::Instance().Contains(nfToken.tokenProtocolId);
+
+        if (!containsProto)
             return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-unknown-token-protocol");
 
         auto nftProtoPtr = NftProtocolsManager::Instance().GetNftProtoIndex(nfToken.tokenProtocolId).NftProtoPtr();
@@ -121,7 +127,6 @@ namespace Platform
             << ", NFT ID=" << m_nfToken.tokenId.ToString()
             << ", NFT owner address=" << CBitcoinAddress(m_nfToken.tokenOwnerKeyId).ToString()
             << ", metadata admin address=" << CBitcoinAddress(m_nfToken.metadataAdminKeyId).ToString()
-            // TODO: if not text -> implement conversion to base64
             << ", metadata" << std::string(m_nfToken.metadata.begin(), m_nfToken.metadata.end()) << ")";
         return out.str();
     }
