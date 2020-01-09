@@ -27,7 +27,7 @@
 #include <QVBoxLayout>
 
 /** "Help message" or "About" dialog box */
-HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bool about) :
+HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bool about, bool specificHelp) :
     QDialog(parent),
     ui(new Ui::HelpMessageDialog)
 {
@@ -102,6 +102,10 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bo
         ui->helpMessage->moveCursor(QTextCursor::Start);
         ui->scrollArea->setVisible(false);
         ui->aboutLogo->setVisible(false);
+        if (specificHelp) {
+            coreOptions = QString::fromStdString(gArgs.GetSpecificHelpMessage());
+            text = version + "\n\n" + header + "\n" + coreOptions;
+        }
     }
 }
 

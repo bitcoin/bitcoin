@@ -68,7 +68,7 @@ static bool AppInit(int argc, char* argv[])
         else
         {
             strUsage += "\nUsage:  bitcoind [options]                     Start " PACKAGE_NAME "\n";
-            strUsage += "\n" + gArgs.GetHelpMessage();
+            strUsage += "\n" + gArgs.GetSpecificHelpMessage();
         }
 
         tfm::format(std::cout, "%s", strUsage);

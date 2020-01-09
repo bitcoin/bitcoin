@@ -116,7 +116,7 @@ static int AppInitRPC(int argc, char* argv[])
                 "or:     bitcoin-cli [options] -named <command> [name=value]...  Send command to " PACKAGE_NAME " (with named arguments)\n"
                 "or:     bitcoin-cli [options] help                List commands\n"
                 "or:     bitcoin-cli [options] help <command>      Get help for a command\n";
-            strUsage += "\n" + gArgs.GetHelpMessage();
+            strUsage += "\n" + gArgs.GetSpecificHelpMessage();
         }
 
         tfm::format(std::cout, "%s", strUsage);

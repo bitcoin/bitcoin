@@ -314,6 +314,11 @@ public:
     std::string GetHelpMessage() const;
 
     /**
+     * Get a filtered help string
+     */
+    std::string GetSpecificHelpMessage();
+
+    /**
      * Return Flags for known arg.
      * Return nullopt for unknown arg.
      */

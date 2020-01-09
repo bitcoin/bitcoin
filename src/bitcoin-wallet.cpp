@@ -46,7 +46,7 @@ static bool WalletAppInit(int argc, char* argv[])
                                       "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n" +
                                       "Usage:\n" +
                                      "  bitcoin-wallet [options] <command>\n\n" +
-                                     gArgs.GetHelpMessage();
+                                     gArgs.GetSpecificHelpMessage();
 
         tfm::format(std::cout, "%s", usage);
         return false;

@@ -24,7 +24,7 @@ class HelpMessageDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit HelpMessageDialog(interfaces::Node& node, QWidget *parent, bool about);
+    explicit HelpMessageDialog(interfaces::Node& node, QWidget *parent, bool about, bool specificHelp = false);
     ~HelpMessageDialog();
 
     void printToConsole();

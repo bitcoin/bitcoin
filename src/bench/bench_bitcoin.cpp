@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     }
 
     if (HelpRequested(gArgs)) {
-        std::cout << gArgs.GetHelpMessage();
+        std::cout << gArgs.GetSpecificHelpMessage();
 
         return EXIT_SUCCESS;
     }

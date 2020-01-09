@@ -478,7 +478,9 @@ int GuiMain(int argc, char* argv[])
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
     if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
-        HelpMessageDialog help(*node, nullptr, gArgs.IsArgSet("-version"));
+        std::string helpArg = gArgs.GetArg("-help", "");
+        bool specialHelp = (helpArg != "");
+        HelpMessageDialog help(*node, nullptr, gArgs.IsArgSet("-version"), specialHelp);
         help.showOrPrint();
         return EXIT_SUCCESS;
     }

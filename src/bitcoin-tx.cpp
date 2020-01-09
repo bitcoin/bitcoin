@@ -103,7 +103,7 @@ static int AppInitRawTx(int argc, char* argv[])
             "Usage:  bitcoin-tx [options] <hex-tx> [commands]  Update hex-encoded bitcoin transaction\n" +
             "or:     bitcoin-tx [options] -create [commands]   Create hex-encoded bitcoin transaction\n" +
             "\n";
-        strUsage += gArgs.GetHelpMessage();
+        strUsage += gArgs.GetSpecificHelpMessage();
 
         tfm::format(std::cout, "%s", strUsage);
 

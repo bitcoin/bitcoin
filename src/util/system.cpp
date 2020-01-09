@@ -506,6 +506,38 @@ std::string ArgsManager::GetHelpMessage() const
     return usage;
 }
 
+std::string ArgsManager::GetSpecificHelpMessage()
+{
+    const std::string helpParams[] = {"-?", "-h", "-help", "-help-debug"};
+    std::string helpName = "";
+    for (long unsigned int i = 0; i < sizeof(helpParams); ++i) {
+        if (this->IsArgSet(helpParams[i])) {
+            helpName = this->GetArg(helpParams[i], "");
+            break;
+        }
+    }
+    // Return unspecific help if no arg was given
+    if (helpName == "")
+        return this->GetHelpMessage();
+
+    std::pair<std::string, ArgsManager::Arg> command;
+    bool cmdExists = false;
+    LOCK(cs_args);
+    for (const auto& arg_map : m_available_args) {
+        for (auto const& arg : arg_map.second) {
+            if (arg.first == "-" + helpName) {
+                command = arg;
+                cmdExists = true;
+                break;
+            }
+        }
+    }
+    // Return error if the command is not existent
+    if (!cmdExists)
+        throw std::runtime_error("Unknown command");
+    return HelpMessageOpt(command.first + command.second.m_help_param, command.second.m_help_text);
+}
+
 bool HelpRequested(const ArgsManager& args)
 {
     return args.IsArgSet("-?") || args.IsArgSet("-h") || args.IsArgSet("-help") || args.IsArgSet("-help-debug");
@@ -513,7 +545,7 @@ bool HelpRequested(const ArgsManager& args)
 
 void SetupHelpOptions(ArgsManager& args)
 {
-    args.AddArg("-?", "Print this help message and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    args.AddArg("-?=<cmd>", "Print a help message with all commands or get infos about one specific command (without any dashes) and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     args.AddHiddenArgs({"-h", "-help"});
 }
 
