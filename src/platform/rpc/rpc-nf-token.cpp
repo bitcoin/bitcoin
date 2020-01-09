@@ -85,7 +85,7 @@ namespace Platform
 
         auto nftProtoIndex = NftProtocolsManager::Instance().GetNftProtoIndex(nfToken.tokenProtocolId);
         if (nftProtoIndex.IsNull())
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "The NFT protocol is not regsistered");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "The NFT protocol is not registered");
 
         CMutableTransaction tx;
         tx.nVersion = 3;
@@ -97,10 +97,10 @@ namespace Platform
         switch (nftProtoIndex.NftProtoPtr()->nftRegSign)
         {
         case SignByCreator:
-            signerKey = GetPrivKeyFromWallet(nfToken.tokenOwnerKeyId);
+            signerKey = GetPrivKeyFromWallet(nftProtoIndex.NftProtoPtr()->tokenProtocolOwnerId);
             break;
         case SelfSign:
-            signerKey = GetPrivKeyFromWallet(nftProtoIndex.NftProtoPtr()->tokenProtocolOwnerId);
+            signerKey = GetPrivKeyFromWallet(nfToken.tokenOwnerKeyId);
             break;
         case SignPayer:
         {
@@ -301,8 +301,8 @@ Arguments:
 
 Examples:
 )"
-+ HelpExampleCli("nftoken", R"(get "3840804e62350b6337ca0b4653547477aa46dab2677c0514a8dccf80b51a899a")")
-+ HelpExampleRpc("nftoken", R"(get "3840804e62350b6337ca0b4653547477aa46dab2677c0514a8dccf80b51a899a")");
++ HelpExampleCli("nftoken", R"(getbytxid "3840804e62350b6337ca0b4653547477aa46dab2677c0514a8dccf80b51a899a")")
++ HelpExampleRpc("nftoken", R"(getbytxid "3840804e62350b6337ca0b4653547477aa46dab2677c0514a8dccf80b51a899a")");
 
         throw std::runtime_error(helpMessage);
     }
