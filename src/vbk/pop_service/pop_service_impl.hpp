@@ -1,9 +1,9 @@
 #ifndef BITCOIN_SRC_VBK_POP_SERVICE_POP_SERVICE_IMPL_HPP
 #define BITCOIN_SRC_VBK_POP_SERVICE_POP_SERVICE_IMPL_HPP
 
+#include <vbk/entity/publications.hpp>
 #include <vbk/pop_service.hpp>
 #include <vbk/pop_service/pop_service_exception.hpp>
-#include <vbk/entity/publications.hpp>
 
 #include <memory>
 #include <vector>

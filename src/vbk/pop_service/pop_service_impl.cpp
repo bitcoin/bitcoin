@@ -341,7 +341,12 @@ void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBloc
 
     workingBlock = difficulty_end_interval;
 
-    while (workingBlock != difficulty_start_interval->pprev) // including the start_interval block
+    CBlockIndex* pprev_difficulty_start_interval = nullptr;
+    if (difficulty_start_interval != nullptr) {
+        pprev_difficulty_start_interval = difficulty_start_interval->pprev;
+    }
+
+    while (workingBlock != pprev_difficulty_start_interval) // including the start_interval block
     {
         AltChainBlock* b = request.add_difficultyblocks();
         ::BlockToProtoAltChainBlock(*workingBlock, *b);
