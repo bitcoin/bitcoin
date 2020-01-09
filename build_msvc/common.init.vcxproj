@@ -6,6 +6,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <VcpkgTriplet Condition="'$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
     <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
+    <UseNativeEnvironment>true</UseNativeEnvironment>
    </PropertyGroup>
 
   <PropertyGroup Condition="'$(WindowsTargetPlatformVersion)'=='' and !Exists('$(WindowsSdkDir)\DesignTime\CommonConfiguration\Neutral\Windows.props')">
