@@ -2179,14 +2179,14 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     auto& utilService = VeriBlock::getService<VeriBlock::UtilService>();
     CAmount PoPrewards = 0;
-    for (const auto& it : utilService.getPopRewards(*pindex->pprev)) {
+    for (const auto& it : utilService.getPopRewards(*pindex->pprev, chainparams.GetConsensus())) {
         PoPrewards += it.second;
     }
     assert(PoPrewards >= 0);
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus()) + PoPrewards;
     assert(pindex->pprev && "previous block ptr is nullptr");
-    if (!VeriBlock::getService<VeriBlock::UtilService>().checkCoinbaseTxWithPopRewards(*block.vtx[0], blockReward, *pindex->pprev, state)) {
+    if (!VeriBlock::getService<VeriBlock::UtilService>().checkCoinbaseTxWithPopRewards(*block.vtx[0], blockReward, *pindex->pprev, chainparams.GetConsensus(), state)) {
         return false;
     }
 

@@ -28,9 +28,9 @@ struct UtilServiceImpl : public UtilService {
     int compareForks(const CBlockIndex& left, const CBlockIndex& right) override;
 
     // Pop rewards methods
-    PoPRewards getPopRewards(const CBlockIndex& pindexPrev) override;
-    void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev) override;
-    bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, BlockValidationState& state) override;
+    PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) override;
+    void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) override;
+    bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state) override;
 
     bool EvalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, Publications* pub, bool with_checks = true) override;
     bool validatePopTx(const CTransaction& tx, TxValidationState& state) override;

@@ -141,11 +141,11 @@ IntegrationTestFixture::IntegrationTestFixture() : TestChain100Setup()
     });
     When(Method(util_service_mock, validatePopTx)).AlwaysReturn(true);
     When(Method(util_service_mock, checkCoinbaseTxWithPopRewards)).AlwaysReturn(true);
-    When(Method(util_service_mock, getPopRewards)).AlwaysDo([&](const CBlockIndex& pindexPrev) -> VeriBlock::PoPRewards {
-        return util_service_impl.getPopRewards(pindexPrev);
+    When(Method(util_service_mock, getPopRewards)).AlwaysDo([&](const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) -> VeriBlock::PoPRewards {
+        return util_service_impl.getPopRewards(pindexPrev, consensusParams);
     });
-    When(Method(util_service_mock, addPopPayoutsIntoCoinbaseTx)).AlwaysDo([&](CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev) -> void {
-        return util_service_impl.addPopPayoutsIntoCoinbaseTx(coinbaseTx, pindexPrev);
+    When(Method(util_service_mock, addPopPayoutsIntoCoinbaseTx)).AlwaysDo([&](CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) -> void {
+        return util_service_impl.addPopPayoutsIntoCoinbaseTx(coinbaseTx, pindexPrev, consensusParams);
     });
 
     When(Method(util_service_mock, makeTopLevelRoot)).AlwaysDo([&](int height, const VeriBlock::KeystoneArray& keystones, const uint256& txRoot) -> uint256 {
