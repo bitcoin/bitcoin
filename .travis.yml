@@ -106,20 +106,9 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_i686.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [CentOS 7]  [no depends, only system libs]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_centos.sh"
-
-    - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package and some depends packages] [unsigned char]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
-        TEST_RUNNER_EXTRA="--exclude feature_block"  # Not enough memory on travis machines
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
@@ -140,11 +129,6 @@ jobs:
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
-
-    - stage: test
-      name: 'macOS 10.12  [GOAL: deploy] [no functional tests]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_mac.sh"
 
     - stage: test
       name: 'macOS 10.14 native [GOAL: install] [GUI] [no depends]'
