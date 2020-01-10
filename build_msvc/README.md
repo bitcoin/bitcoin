@@ -51,9 +51,8 @@ Qt
 ---------------------
 In order to build the Syscoin Core a static build of Qt is required. The runtime library version (e.g. v141, v142) and platform type (x86 or x64) must also match.
 
-Some prebuilt x64 versions of Qt can be downloaded from [here](https://github.com/sipsorcery/qt_win_binary/releases). Please be aware these downloads are NOT officially sanctioned by Syscoin Core and are provided for developer convenience only. They should NOT be used for builds that will be used in a production environment or with real funds.
+Some prebuilt x64 versions of Qt can be downloaded from [here](https://github.com/syscoin/syscoin/releases). Please be aware these downloads are NOT officially sanctioned by Syscoin Core and are provided for developer convenience only. They should NOT be used for builds that will be used in a production environment or with real funds.
 
-To determine which Qt prebuilt version to download open the `.appveyor.yml` file and note the `QT_DOWNLOAD_URL`. When extracting the zip file the destination path must be set to `C:\`. This is due to the way that Qt includes, libraries and tools use internal paths.
 
 To build Syscoin Core without Qt unload or disable the `syscoin-qt`, `libsyscoin_qt` and `test_syscoin-qt` projects.
 
