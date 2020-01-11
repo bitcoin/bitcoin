@@ -339,6 +339,7 @@ libdash_server_a_SOURCES = \
   rpc/rpcevo.cpp \
   rpc/rpcquorums.cpp \
   rpc/server.cpp \
+  rpc/privatesend.cpp \
   script/sigcache.cpp \
   script/ismine.cpp \
   spork.cpp \

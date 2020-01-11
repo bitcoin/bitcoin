@@ -38,6 +38,17 @@ void CNetFulfilledRequestManager::RemoveFulfilledRequest(const CService& addr, c
     }
 }
 
+void CNetFulfilledRequestManager::RemoveAllFulfilledRequests(const CService& addr)
+{
+    LOCK(cs_mapFulfilledRequests);
+    CService addrSquashed = Params().AllowMultiplePorts() ? addr : CService(addr, 0);
+    fulfilledreqmap_t::iterator it = mapFulfilledRequests.find(addrSquashed);
+
+    if (it != mapFulfilledRequests.end()) {
+        mapFulfilledRequests.erase(it++);
+    }
+}
+
 void CNetFulfilledRequestManager::CheckAndRemove()
 {
     LOCK(cs_mapFulfilledRequests);

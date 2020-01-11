@@ -27,6 +27,17 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
     privateSendClient.GetMixingMasternodesInfo(vecDmns);
 #endif // ENABLE_WALLET
 
+    // Don't disconnect masternode connections when we have less then the desired amount of outbound nodes
+    int nonMasternodeCount = 0;
+    connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
+        if (!pnode->fInbound && !pnode->fFeeler && !pnode->m_manual_connection && !pnode->fMasternode) {
+            nonMasternodeCount++;
+        }
+    });
+    if (nonMasternodeCount < connman.GetMaxOutboundNodeCount()) {
+        return;
+    }
+
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
         if (pnode->fMasternode && !connman.IsMasternodeQuorumNode(pnode)) {
 #ifdef ENABLE_WALLET

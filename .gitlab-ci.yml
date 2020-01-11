@@ -38,7 +38,7 @@ stages:
           if wget --quiet -O cache-artifact.zip https://gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME/-/jobs/artifacts/develop/download?job=$CI_JOB_NAME; then
             unzip -q cache-artifact.zip
             rm cache-artifact.zip
-            mv cache-artifact/* $CACHE_DIR/
+            mv cache-artifact/* $CACHE_DIR/ || true
           else
             echo "Failed to download cache"
           fi
@@ -65,7 +65,22 @@ stages:
     - pip3 install jinja2
 
     # Setup some environment variables
-    - if [ "$CI_EXTERNAL_PULL_REQUEST_IID" != "" ]; then export PULL_REQUEST="true"; else export PULL_REQUEST="false"; fi
+    - |
+      if [ "$CI_EXTERNAL_PULL_REQUEST_IID" != "" ]; then
+        export PULL_REQUEST="true"
+      else
+        # CI_EXTERNAL_PULL_REQUEST_IID is false every time until https://gitlab.com/gitlab-org/gitlab/issues/5667 is done
+        # Until then, we're using https://github.com/brndnmtthws/labhub atm to mirror Github pull requests as branches into Gitlab,
+        # which allows us to use Gitlab CI for Github. The following check detects such mirrored branches.
+        if [[ $CI_COMMIT_REF_NAME =~ ^pr-[^/]*/[^/]*/[^/]*/[^/]*$ ]]; then
+          export PULL_REQUEST="true"
+          # CI_COMMIT_BEFORE_SHA is also invalid until #5667 is implemented, so we need to figure it out by ourself
+          git fetch origin develop
+          export CI_COMMIT_BEFORE_SHA="$(git merge-base origin/develop HEAD)"
+        else
+          export PULL_REQUEST="false"
+        fi
+      fi
     - export COMMIT_RANGE="$CI_COMMIT_BEFORE_SHA..$CI_COMMIT_SHA"
     - export JOB_NUMBER="$CI_JOB_ID"
     - export HOST_SRC_DIR=$CI_PROJECT_DIR
