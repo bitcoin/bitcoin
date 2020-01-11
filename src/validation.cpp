@@ -3357,7 +3357,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     // Size limits
     unsigned int nMaxBlockSize = MaxBlockSize(fDIP0001Active_context);
     if (block.vtx.empty() || block.vtx.size() > nMaxBlockSize || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > nMaxBlockSize)
-        return state.DoS(10, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // Check that all transactions are finalized and not over-sized
     // Also count sigops
@@ -3374,7 +3374,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 
     // Check sigops
     if (nSigOps > MaxBlockSigOps(fDIP0001Active_context))
-        return state.DoS(10, false, REJECT_INVALID, "bad-blk-sigops", false, "out-of-bounds SigOpCount");
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops", false, "out-of-bounds SigOpCount");
 
     // Enforce rule that the coinbase starts with serialized block height
     // After DIP3/DIP4 activation, we don't enforce the height in the input script anymore.
