@@ -33,7 +33,7 @@ protected:
     size_type nPruneAfterSize;
 
 public:
-    unordered_limitedmap(size_type nMaxSizeIn, size_type nPruneAfterSizeIn = 0)
+    explicit unordered_limitedmap(size_type nMaxSizeIn, size_type nPruneAfterSizeIn = 0)
     {
         assert(nMaxSizeIn > 0);
         nMaxSize = nMaxSizeIn;

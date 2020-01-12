@@ -38,9 +38,9 @@ that the bitcoin-qt.exe file inside the installer had not been tampered with.
 However, an attacker could modify the installer's code, so when the setup.exe
 was run it compromised users' systems. A volunteer to write an auditing tool
 that checks the setup.exe for tampering, and checks the files in it against
-the list of gitian signatures, is needed.
+the list of Gitian signatures, is needed.
 
 The long-term solution is something like the 'gitian downloader' system, which
 uses signatures from multiple developers to determine whether or not a binary
 should be trusted. However, that just pushes the problem to "how will
-non-technical users securely get the gitian downloader code to start?"
+non-technical users securely get the Gitian downloader code to start?"

@@ -67,7 +67,7 @@ public:
     {
         SetNull();
     }
-    CKeyMetadata(int64_t nCreateTime_)
+    explicit CKeyMetadata(int64_t nCreateTime_)
     {
         SetNull();
         nCreateTime = nCreateTime_;
@@ -117,7 +117,7 @@ private:
     }
 
 public:
-    CWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) :
+    explicit CWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) :
         batch(dbw, pszMode, _fFlushOnClose),
         m_dbw(dbw)
     {

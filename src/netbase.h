@@ -30,7 +30,7 @@ class proxyType
 {
 public:
     proxyType(): randomize_credentials(false) {}
-    proxyType(const CService &_proxy, bool _randomize_credentials=false): proxy(_proxy), randomize_credentials(_randomize_credentials) {}
+    explicit proxyType(const CService &_proxy, bool _randomize_credentials=false): proxy(_proxy), randomize_credentials(_randomize_credentials) {}
 
     bool IsValid() const { return proxy.IsValid(); }
 

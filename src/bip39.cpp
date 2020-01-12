@@ -37,7 +37,7 @@ SecureString CMnemonic::Generate(int strength)
         return SecureString();
     }
     SecureVector data(32);
-    GetStrongRandBytes(&data[0], 32);
+    GetStrongRandBytes(data.data(), 32);
     SecureString mnemonic = FromData(data, strength / 8);
     return mnemonic;
 }
@@ -50,11 +50,11 @@ SecureString CMnemonic::FromData(const SecureVector& data, int len)
     }
 
     SecureVector checksum(32);
-    CSHA256().Write(&data[0], len).Finalize(&checksum[0]);
+    CSHA256().Write(data.data(), len).Finalize(checksum.data());
 
     // data
     SecureVector bits(len);
-    memcpy(&bits[0], &data[0], len);
+    memcpy(bits.data(), data.data(), len);
     // checksum
     bits.push_back(checksum[0]);
 
@@ -132,7 +132,7 @@ bool CMnemonic::Check(SecureString mnemonic)
         return false;
     }
     bits[32] = bits[nWordCount * 4 / 3];
-    CSHA256().Write(&bits[0], nWordCount * 4 / 3).Finalize(&bits[0]);
+    CSHA256().Write(bits.data(), nWordCount * 4 / 3).Finalize(bits.data());
 
     bool fResult = 0;
     if (nWordCount == 12) {
@@ -158,5 +158,5 @@ void CMnemonic::ToSeed(SecureString mnemonic, SecureString passphrase, SecureVec
     //                    const unsigned char *salt, int saltlen, int iter,
     //                    const EVP_MD *digest,
     //                    int keylen, unsigned char *out);
-    PKCS5_PBKDF2_HMAC(mnemonic.c_str(), mnemonic.size(), &vchSalt[0], vchSalt.size(), 2048, EVP_sha512(), 64, &seedRet[0]);
+    PKCS5_PBKDF2_HMAC(mnemonic.c_str(), mnemonic.size(), vchSalt.data(), vchSalt.size(), 2048, EVP_sha512(), 64, seedRet.data());
 }

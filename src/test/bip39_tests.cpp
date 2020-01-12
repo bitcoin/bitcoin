@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(bip39_vectors)
         CExtKey key;
         CExtPubKey pubkey;
 
-        key.SetMaster(&seed[0], 64);
+        key.SetMaster(seed.data(), 64);
         pubkey = key.Neuter();
 
         CBitcoinExtKey b58key;

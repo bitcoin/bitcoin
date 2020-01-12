@@ -9,7 +9,6 @@
 #include "chain.h"
 #include "consensus/validation.h"
 #include "core_io.h"
-#include "init.h"
 #include "httpserver.h"
 #include "keepass.h"
 #include "net.h"
@@ -26,6 +25,8 @@
 #include "wallet/coincontrol.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
+
+#include <init.h>  // For StartShutdown
 
 #include "llmq/quorums_chainlocks.h"
 #include "llmq/quorums_instantsend.h"
@@ -660,7 +661,7 @@ UniValue signmessage(const JSONRPCRequest& request)
     if (!key.SignCompact(ss.GetHash(), vchSig))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
 
-    return EncodeBase64(&vchSig[0], vchSig.size());
+    return EncodeBase64(vchSig.data(), vchSig.size());
 }
 
 UniValue getreceivedbyaddress(const JSONRPCRequest& request)
@@ -2958,7 +2959,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "     \"changePosition\"         (numeric, optional, default random) The index of the change output\n"
                             "     \"includeWatching\"        (boolean, optional, default false) Also select inputs which are watch only\n"
                             "     \"lockUnspents\"           (boolean, optional, default false) Lock selected unspent outputs\n"
-                            "     \"feeRate\"                (numeric, optional, default not set: makes wallet determine the fee) Set a specific feerate (" + CURRENCY_UNIT + " per KB)\n"
+                            "     \"feeRate\"                (numeric, optional, default not set: makes wallet determine the fee) Set a specific fee rate in " + CURRENCY_UNIT + "/kB\n"
                             "     \"subtractFeeFromOutputs\" (array, optional) A json array of integers.\n"
                             "                              The fee will be equally deducted from the amount of each specified output.\n"
                             "                              The outputs are specified by their zero-based index, before any change output is added.\n"
@@ -3206,8 +3207,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "lockunspent",              &lockunspent,              {"unlock","transactions"} },
     { "wallet",             "move",                     &movecmd,                  {"fromaccount","toaccount","amount","minconf","comment"} },
     { "wallet",             "sendfrom",                 &sendfrom,                 {"fromaccount","toaddress","amount","minconf","addlocked","comment","comment_to"} },
-    { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","addlocked","comment","subtractfeefrom","use_ps","conf_target","estimate_mode"} },
-    { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","use_ps","conf_target","estimate_mode"} },
+    { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","addlocked","comment","subtractfeefrom","use_is","use_ps","conf_target","estimate_mode"} },
+    { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","use_is","use_ps","conf_target","estimate_mode"} },
     { "wallet",             "setaccount",               &setaccount,               {"address","account"} },
     { "wallet",             "settxfee",                 &settxfee,                 {"amount"} },
     { "wallet",             "setprivatesendrounds",     &setprivatesendrounds,     {"rounds"} },
@@ -3222,16 +3223,13 @@ static const CRPCCommand commands[] =
     { "generating",         "generate",                 &generate,                 {"nblocks","maxtries"} },
 #endif //ENABLE_MINER
     { "wallet",             "keepass",                  &keepass,                  {} },
-    { "hidden",             "instantsendtoaddress",     &instantsendtoaddress,     {"address","amount","comment","comment_to","subtractfeefromamount"} },
+    { "hidden",             "instantsendtoaddress",     &instantsendtoaddress,     {} },
     { "wallet",             "dumphdinfo",               &dumphdinfo,               {} },
     { "wallet",             "importelectrumwallet",     &importelectrumwallet,     {"filename", "index"} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)
 {
-    if (gArgs.GetBoolArg("-disablewallet", false))
-        return;
-
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }

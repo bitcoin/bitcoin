@@ -46,7 +46,7 @@
 #include "utilmoneystr.h"
 #include "validationinterface.h"
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
+#include "wallet/init.h"
 #endif
 
 #include "masternode/activemasternode.h"
@@ -134,12 +134,11 @@ static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 // created by AppInit() or the Qt main() function.
 //
 // A clean exit happens when StartShutdown() or the SIGTERM
-// signal handler sets fRequestShutdown, which triggers
-// the DetectShutdownThread(), which interrupts the main thread group.
-// DetectShutdownThread() then exits, which causes AppInit() to
-// continue (it .joins the shutdown thread).
-// Shutdown() is then
-// called to clean up database connections, and stop other
+// signal handler sets fRequestShutdown, which makes main thread's
+// WaitForShutdown() interrupts the thread group.
+// And then, WaitForShutdown() makes all other on-going threads
+// in the thread group join the main thread.
+// Shutdown() is then called to clean up database connections, and stop other
 // threads that should only be stopped after the main network-processing
 // threads have exited.
 //
@@ -173,7 +172,7 @@ bool ShutdownRequested()
 class CCoinsViewErrorCatcher final : public CCoinsViewBacked
 {
 public:
-    CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
+    explicit CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override {
         try {
             return CCoinsViewBacked::GetCoin(outpoint, coin);
@@ -238,9 +237,7 @@ void PrepareShutdown()
         privateSendClient.fPrivateSendRunning = false;
         privateSendClient.ResetPool();
     }
-    for (CWalletRef pwallet : vpwallets) {
-        pwallet->Flush(false);
-    }
+    FlushWallets();
 #endif
     MapPort(false);
 
@@ -314,9 +311,7 @@ void PrepareShutdown()
         evoDb = nullptr;
     }
 #ifdef ENABLE_WALLET
-    for (CWalletRef pwallet : vpwallets) {
-        pwallet->Flush(true);
-    }
+    StopWallets();
 #endif
 
 #if ENABLE_ZMQ
@@ -369,10 +364,7 @@ void Shutdown()
    // Shutdown part 2: Stop TOR thread and delete wallet instance
     StopTorControl();
 #ifdef ENABLE_WALLET
-    for (CWalletRef pwallet : vpwallets) {
-        delete pwallet;
-    }
-    vpwallets.clear();
+    CloseWallets();
 #endif
     globalVerifyHandle.reset();
     ECC_Stop();
@@ -519,7 +511,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-maxuploadtarget=<n>", strprintf(_("Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)"), DEFAULT_MAX_UPLOAD_TARGET));
 
 #ifdef ENABLE_WALLET
-    strUsage += CWallet::GetWalletHelpString(showDebug);
+    strUsage += GetWalletHelpString(showDebug);
     if (mode == HMM_BITCOIN_QT)
         strUsage += HelpMessageOpt("-windowtitle=<name>", _("Wallet window title"));
 #endif
@@ -1260,7 +1252,7 @@ bool AppInitParameterInteraction()
 
     RegisterAllCoreRPCCommands(tableRPC);
 #ifdef ENABLE_WALLET
-    RegisterWalletRPCCommands(tableRPC);
+    RegisterWalletRPC(tableRPC);
 #endif
 
     nConnectTimeout = gArgs.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
@@ -1272,7 +1264,7 @@ bool AppInitParameterInteraction()
         if (!ParseMoney(gArgs.GetArg("-minrelaytxfee", ""), n)) {
             return InitError(AmountErrMsg("minrelaytxfee", gArgs.GetArg("-minrelaytxfee", "")));
         }
-        // High fee check is done afterward in CWallet::ParameterInteraction()
+        // High fee check is done afterward in WalletParameterInteraction()
         ::minRelayTxFee = CFeeRate(n);
     } else if (incrementalRelayFee > ::minRelayTxFee) {
         // Allow only setting incrementalRelayFee to control both
@@ -1305,7 +1297,7 @@ bool AppInitParameterInteraction()
     nBytesPerSigOp = gArgs.GetArg("-bytespersigop", nBytesPerSigOp);
 
 #ifdef ENABLE_WALLET
-    if (!CWallet::ParameterInteraction())
+    if (!WalletParameterInteraction())
         return false;
 #endif // ENABLE_WALLET
 
@@ -1596,7 +1588,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (!CWallet::InitAutoBackup())
         return false;
 
-    if (!CWallet::Verify())
+    if (!VerifyWallets())
         return false;
 
     // Initialize KeePass Integration
@@ -1973,7 +1965,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET
-    if (!CWallet::InitLoadWallet())
+    if (!OpenWallets())
         return false;
 #else
     LogPrintf("No wallet support compiled in!\n");
@@ -2269,9 +2261,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     uiInterface.InitMessage(_("Done loading"));
 
 #ifdef ENABLE_WALLET
-    for (CWalletRef pwallet : vpwallets) {
-        pwallet->postInitProcess(scheduler);
-    }
+    StartWallets(scheduler);
 #endif
 
     // Final check if the user requested to kill the GUI during one of the last operations. If so, exit.

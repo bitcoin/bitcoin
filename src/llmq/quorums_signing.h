@@ -72,7 +72,7 @@ private:
     unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForHashCache;
 
 public:
-    CRecoveredSigsDb(CDBWrapper& _db);
+    explicit CRecoveredSigsDb(CDBWrapper& _db);
 
     void ConvertInvalidTimeKeys();
     void AddVoteTimeKeys();

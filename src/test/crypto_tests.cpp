@@ -60,12 +60,12 @@ void TestRIPEMD160(const std::string &in, const std::string &hexout) { TestVecto
 
 void TestHMACSHA256(const std::string &hexkey, const std::string &hexin, const std::string &hexout) {
     std::vector<unsigned char> key = ParseHex(hexkey);
-    TestVector(CHMAC_SHA256(&key[0], key.size()), ParseHex(hexin), ParseHex(hexout));
+    TestVector(CHMAC_SHA256(key.data(), key.size()), ParseHex(hexin), ParseHex(hexout));
 }
 
 void TestHMACSHA512(const std::string &hexkey, const std::string &hexin, const std::string &hexout) {
     std::vector<unsigned char> key = ParseHex(hexkey);
-    TestVector(CHMAC_SHA512(&key[0], key.size()), ParseHex(hexin), ParseHex(hexout));
+    TestVector(CHMAC_SHA512(key.data(), key.size()), ParseHex(hexin), ParseHex(hexout));
 }
 
 void TestAES128(const std::string &hexkey, const std::string &hexin, const std::string &hexout)
@@ -78,13 +78,13 @@ void TestAES128(const std::string &hexkey, const std::string &hexin, const std::
     assert(key.size() == 16);
     assert(in.size() == 16);
     assert(correctout.size() == 16);
-    AES128Encrypt enc(&key[0]);
+    AES128Encrypt enc(key.data());
     buf.resize(correctout.size());
     buf2.resize(correctout.size());
-    enc.Encrypt(&buf[0], &in[0]);
+    enc.Encrypt(buf.data(), in.data());
     BOOST_CHECK_EQUAL(HexStr(buf), HexStr(correctout));
-    AES128Decrypt dec(&key[0]);
-    dec.Decrypt(&buf2[0], &buf[0]);
+    AES128Decrypt dec(key.data());
+    dec.Decrypt(buf2.data(), buf.data());
     BOOST_CHECK_EQUAL(HexStr(buf2), HexStr(in));
 }
 
@@ -98,12 +98,12 @@ void TestAES256(const std::string &hexkey, const std::string &hexin, const std::
     assert(key.size() == 32);
     assert(in.size() == 16);
     assert(correctout.size() == 16);
-    AES256Encrypt enc(&key[0]);
+    AES256Encrypt enc(key.data());
     buf.resize(correctout.size());
-    enc.Encrypt(&buf[0], &in[0]);
+    enc.Encrypt(buf.data(), in.data());
     BOOST_CHECK(buf == correctout);
-    AES256Decrypt dec(&key[0]);
-    dec.Decrypt(&buf[0], &buf[0]);
+    AES256Decrypt dec(key.data());
+    dec.Decrypt(buf.data(), buf.data());
     BOOST_CHECK(buf == in);
 }
 
@@ -116,16 +116,16 @@ void TestAES128CBC(const std::string &hexkey, const std::string &hexiv, bool pad
     std::vector<unsigned char> realout(in.size() + AES_BLOCKSIZE);
 
     // Encrypt the plaintext and verify that it equals the cipher
-    AES128CBCEncrypt enc(&key[0], &iv[0], pad);
-    int size = enc.Encrypt(&in[0], in.size(), &realout[0]);
+    AES128CBCEncrypt enc(key.data(), iv.data(), pad);
+    int size = enc.Encrypt(in.data(), in.size(), realout.data());
     realout.resize(size);
     BOOST_CHECK(realout.size() == correctout.size());
     BOOST_CHECK_MESSAGE(realout == correctout, HexStr(realout) + std::string(" != ") + hexout);
 
     // Decrypt the cipher and verify that it equals the plaintext
     std::vector<unsigned char> decrypted(correctout.size());
-    AES128CBCDecrypt dec(&key[0], &iv[0], pad);
-    size = dec.Decrypt(&correctout[0], correctout.size(), &decrypted[0]);
+    AES128CBCDecrypt dec(key.data(), iv.data(), pad);
+    size = dec.Decrypt(correctout.data(), correctout.size(), decrypted.data());
     decrypted.resize(size);
     BOOST_CHECK(decrypted.size() == in.size());
     BOOST_CHECK_MESSAGE(decrypted == in, HexStr(decrypted) + std::string(" != ") + hexin);
@@ -135,12 +135,12 @@ void TestAES128CBC(const std::string &hexkey, const std::string &hexiv, bool pad
     {
         std::vector<unsigned char> sub(i, in.end());
         std::vector<unsigned char> subout(sub.size() + AES_BLOCKSIZE);
-        int _size = enc.Encrypt(&sub[0], sub.size(), &subout[0]);
+        int _size = enc.Encrypt(sub.data(), sub.size(), subout.data());
         if (_size != 0)
         {
             subout.resize(_size);
             std::vector<unsigned char> subdecrypted(subout.size());
-            _size = dec.Decrypt(&subout[0], subout.size(), &subdecrypted[0]);
+            _size = dec.Decrypt(subout.data(), subout.size(), subdecrypted.data());
             subdecrypted.resize(_size);
             BOOST_CHECK(decrypted.size() == in.size());
             BOOST_CHECK_MESSAGE(subdecrypted == sub, HexStr(subdecrypted) + std::string(" != ") + HexStr(sub));
@@ -157,16 +157,16 @@ void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, bool pad
     std::vector<unsigned char> realout(in.size() + AES_BLOCKSIZE);
 
     // Encrypt the plaintext and verify that it equals the cipher
-    AES256CBCEncrypt enc(&key[0], &iv[0], pad);
-    int size = enc.Encrypt(&in[0], in.size(), &realout[0]);
+    AES256CBCEncrypt enc(key.data(), iv.data(), pad);
+    int size = enc.Encrypt(in.data(), in.size(), realout.data());
     realout.resize(size);
     BOOST_CHECK(realout.size() == correctout.size());
     BOOST_CHECK_MESSAGE(realout == correctout, HexStr(realout) + std::string(" != ") + hexout);
 
     // Decrypt the cipher and verify that it equals the plaintext
     std::vector<unsigned char> decrypted(correctout.size());
-    AES256CBCDecrypt dec(&key[0], &iv[0], pad);
-    size = dec.Decrypt(&correctout[0], correctout.size(), &decrypted[0]);
+    AES256CBCDecrypt dec(key.data(), iv.data(), pad);
+    size = dec.Decrypt(correctout.data(), correctout.size(), decrypted.data());
     decrypted.resize(size);
     BOOST_CHECK(decrypted.size() == in.size());
     BOOST_CHECK_MESSAGE(decrypted == in, HexStr(decrypted) + std::string(" != ") + hexin);
@@ -176,12 +176,12 @@ void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, bool pad
     {
         std::vector<unsigned char> sub(i, in.end());
         std::vector<unsigned char> subout(sub.size() + AES_BLOCKSIZE);
-        int _size = enc.Encrypt(&sub[0], sub.size(), &subout[0]);
+        int _size = enc.Encrypt(sub.data(), sub.size(), subout.data());
         if (_size != 0)
         {
             subout.resize(_size);
             std::vector<unsigned char> subdecrypted(subout.size());
-            _size = dec.Decrypt(&subout[0], subout.size(), &subdecrypted[0]);
+            _size = dec.Decrypt(subout.data(), subout.size(), subdecrypted.data());
             subdecrypted.resize(_size);
             BOOST_CHECK(decrypted.size() == in.size());
             BOOST_CHECK_MESSAGE(subdecrypted == sub, HexStr(subdecrypted) + std::string(" != ") + HexStr(sub));

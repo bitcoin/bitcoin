@@ -70,7 +70,7 @@ class CCoinsViewDB final : public CCoinsView
 protected:
     CDBWrapper db;
 public:
-    CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    explicit CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
 
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
@@ -111,7 +111,7 @@ private:
 class CBlockTreeDB : public CDBWrapper
 {
 public:
-    CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    explicit CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 private:
     CBlockTreeDB(const CBlockTreeDB&);
     void operator=(const CBlockTreeDB&);

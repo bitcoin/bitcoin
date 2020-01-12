@@ -41,7 +41,7 @@ SecureString DecodeBase64Secure(const SecureString& sInput)
     BIO *b64, *mem;
     b64 = BIO_new(BIO_f_base64());
     BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL); //Do not use newlines to flush buffer
-    mem = BIO_new_mem_buf((void *) &sInput[0], sInput.size());
+    mem = BIO_new_mem_buf((void *) sInput.data(), sInput.size());
     BIO_push(b64, mem);
 
     // Prepare buffer to receive decoded data
@@ -53,7 +53,7 @@ SecureString DecodeBase64Secure(const SecureString& sInput)
 
     // Decode the string
     size_t nLen;
-    nLen = BIO_read(b64, (void *) &output[0], sInput.size());
+    nLen = BIO_read(b64, (void *) output.data(), sInput.size());
     output.resize(nLen);
 
     // Free memory
@@ -72,7 +72,7 @@ SecureString EncodeBase64Secure(const SecureString& sInput)
     BIO_push(b64, mem);
 
     // Decode the string
-    BIO_write(b64, &sInput[0], sInput.size());
+    BIO_write(b64, sInput.data(), sInput.size());
     (void) BIO_flush(b64);
 
     // Create output variable from buffer mem ptr
@@ -145,10 +145,10 @@ std::string CKeePassIntegrator::CKeePassRequest::getJson()
 void CKeePassIntegrator::CKeePassRequest::init()
 {
     SecureString sIVSecure = generateRandomKey(KEEPASS_CRYPTO_BLOCK_SIZE);
-    strIV = std::string(&sIVSecure[0], sIVSecure.size());
+    strIV = std::string(sIVSecure.data(), sIVSecure.size());
     // Generate Nonce, Verifier and RequestType
     SecureString sNonceBase64Secure = EncodeBase64Secure(sIVSecure);
-    addStrParameter("Nonce", std::string(&sNonceBase64Secure[0], sNonceBase64Secure.size())); // Plain
+    addStrParameter("Nonce", std::string(sNonceBase64Secure.data(), sNonceBase64Secure.size())); // Plain
     addStrParameter("Verifier", sNonceBase64Secure); // Encoded
     addStrParameter("RequestType", strType);
 }
@@ -228,7 +228,7 @@ SecureString CKeePassIntegrator::generateRandomKey(size_t nSize)
     SecureString sKey;
     sKey.resize(nSize);
 
-    GetStrongRandBytes((unsigned char *) &sKey[0], nSize);
+    GetStrongRandBytes((unsigned char *) sKey.data(), nSize);
 
     return sKey;
 }
@@ -463,7 +463,7 @@ void CKeePassIntegrator::rpcAssociate(std::string& strIdRet, SecureString& sKeyB
     CKeePassRequest request(sKey, "associate");
 
     sKeyBase64Ret = EncodeBase64Secure(sKey);
-    request.addStrParameter("Key", std::string(&sKeyBase64Ret[0], sKeyBase64Ret.size()));
+    request.addStrParameter("Key", std::string(sKeyBase64Ret.data(), sKeyBase64Ret.size()));
 
     int nStatus;
     std::string strResponse;

@@ -46,7 +46,7 @@ private:
     std::set<uint256> seenMessages;
 
 public:
-    CDKGPendingMessages(size_t _maxMessagesPerNode);
+    explicit CDKGPendingMessages(size_t _maxMessagesPerNode);
 
     void PushPendingMessage(NodeId from, CDataStream& vRecv);
     std::list<BinaryMessage> PopPendingMessages(size_t maxCount);

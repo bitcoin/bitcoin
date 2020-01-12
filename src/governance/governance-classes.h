@@ -141,7 +141,7 @@ private:
 
 public:
     CSuperblock();
-    CSuperblock(uint256& nHash);
+    explicit CSuperblock(uint256& nHash);
 
     static bool IsValidBlockHeight(int nBlockHeight);
     static void GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuperblockRet, int& nNextSuperblockRet);

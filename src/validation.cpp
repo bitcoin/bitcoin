@@ -254,7 +254,7 @@ bool CheckFinalTx(const CTransaction &tx, int flags)
     // IsFinalTx() with one more than chainActive.Height().
     const int nBlockHeight = chainActive.Height() + 1;
 
-    // BIP113 will require that time-locked transactions have nLockTime set to
+    // BIP113 requires that time-locked transactions have nLockTime set to
     // less than the median time of the previous block they're contained in.
     // When the next block is created its previous block will be the current
     // chain tip, so we use that to calculate the median time passed to
@@ -290,6 +290,8 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp, bool 
     AssertLockHeld(mempool.cs);
 
     CBlockIndex* tip = chainActive.Tip();
+    assert(tip != nullptr);
+
     CBlockIndex index;
     index.pprev = tip;
     // CheckSequenceLocks() uses chainActive.Height()+1 to evaluate
@@ -1747,7 +1749,7 @@ private:
     int bit;
 
 public:
-    WarningBitsConditionChecker(int bitIn) : bit(bitIn) {}
+    explicit WarningBitsConditionChecker(int bitIn) : bit(bitIn) {}
 
     int64_t BeginTime(const Consensus::Params& params) const override { return 0; }
     int64_t EndTime(const Consensus::Params& params) const override { return std::numeric_limits<int64_t>::max(); }
@@ -1910,6 +1912,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     // before the first had been spent.  Since those coinbases are sufficiently buried its no longer possible to create further
     // duplicate transactions descending from the known pairs either.
     // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
+    assert(pindex->pprev);
     CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(chainparams.GetConsensus().BIP34Height);
     //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
     fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
@@ -2232,6 +2235,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         if (!pblocktree->WriteTimestampIndex(CTimestampIndexKey(pindex->nTime, pindex->GetBlockHash())))
             return AbortNode(state, "Failed to write timestamp index");
 
+    assert(pindex->phashBlock);
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
 
@@ -2533,7 +2537,7 @@ private:
     CTxMemPool &pool;
 
 public:
-    ConnectTrace(CTxMemPool &_pool) : blocksConnected(1), pool(_pool) {
+    explicit ConnectTrace(CTxMemPool &_pool) : blocksConnected(1), pool(_pool) {
         pool.NotifyEntryRemoved.connect(boost::bind(&ConnectTrace::NotifyEntryRemoved, this, _1, _2));
     }
 

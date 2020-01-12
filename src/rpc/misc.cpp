@@ -211,7 +211,7 @@ class DescribeAddressVisitor : public boost::static_visitor<UniValue>
 public:
     CWallet * const pwallet;
 
-    DescribeAddressVisitor(CWallet *_pwallet) : pwallet(_pwallet) {}
+    explicit DescribeAddressVisitor(CWallet *_pwallet) : pwallet(_pwallet) {}
 
     UniValue operator()(const CNoDestination &dest) const { return UniValue(UniValue::VOBJ); }
 
@@ -623,7 +623,7 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
     if (!key.SignCompact(ss.GetHash(), vchSig))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
 
-    return EncodeBase64(&vchSig[0], vchSig.size());
+    return EncodeBase64(vchSig.data(), vchSig.size());
 }
 
 UniValue setmocktime(const JSONRPCRequest& request)
@@ -1307,7 +1307,7 @@ static const CRPCCommand commands[] =
 
     /* Dash features */
     { "dash",               "mnsync",                 &mnsync,                 {} },
-    { "dash",               "spork",                  &spork,                  {"value"} },
+    { "dash",               "spork",                  &spork,                  {"arg0","value"} },
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},

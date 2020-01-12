@@ -721,7 +721,7 @@ public:
     bool found;
     CValidationState state;
 
-    submitblock_StateCatcher(const uint256 &hashIn) : hash(hashIn), found(false), state() {}
+    explicit submitblock_StateCatcher(const uint256 &hashIn) : hash(hashIn), found(false), state() {}
 
 protected:
     void BlockChecked(const CBlock& block, const CValidationState& stateIn) override {
@@ -850,7 +850,7 @@ UniValue estimatesmartfee(const JSONRPCRequest& request)
             "       \"CONSERVATIVE\"\n"
             "\nResult:\n"
             "{\n"
-            "  \"feerate\" : x.x,     (numeric, optional) estimate fee-per-kilobyte (in " + CURRENCY_UNIT + ")\n"
+            "  \"feerate\" : x.x,     (numeric, optional) estimate fee rate in " + CURRENCY_UNIT + "/kB\n"
             "  \"errors\": [ str... ] (json array of strings, optional) Errors encountered during processing\n"
             "  \"blocks\" : n         (numeric) block number where estimate was found\n"
             "}\n"
@@ -908,7 +908,7 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
             "\nResult:\n"
             "{\n"
             "  \"short\" : {            (json object, optional) estimate for short time horizon\n"
-            "      \"feerate\" : x.x,        (numeric, optional) estimate fee-per-kilobyte (in " + CURRENCY_UNIT + ")\n"
+            "      \"feerate\" : x.x,        (numeric, optional) estimate fee rate in " + CURRENCY_UNIT + "/kB\n"
             "      \"decay\" : x.x,          (numeric) exponential decay (per block) for historical moving average of confirmation data\n"
             "      \"scale\" : x,            (numeric) The resolution of confirmation targets at this time horizon\n"
             "      \"pass\" : {              (json object, optional) information about the lowest range of feerates to succeed in meeting the threshold\n"
@@ -1004,7 +1004,7 @@ static const CRPCCommand commands[] =
 #endif // ENABLE_MINER
 
     { "util",               "estimatefee",            &estimatefee,            {"nblocks"} },
-    { "util",               "estimatesmartfee",       &estimatesmartfee,       {"nblocks", "estimate_mode"} },
+    { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
     { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
 };
