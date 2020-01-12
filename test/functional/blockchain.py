@@ -35,9 +35,18 @@ from test_framework.util import (
 class BlockchainTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-stopatheight=207', '-prune=1']]
+        self.setup_clean_chain = True
+        self.extra_args = [['-stopatheight=207', '-prune=1', '-txindex=0']]
 
     def run_test(self):
+        # Have to prepare the chain manually here.
+        # txindex=1 by default in Dash which is incompatible with pruning.
+        self.set_genesis_mocktime()
+        for i in range(200):
+            self.bump_mocktime(156)
+            self.nodes[0].setmocktime(self.mocktime)
+            self.nodes[0].generate(1)
+        # Actual tests
         self._test_getblockchaininfo()
         self._test_getchaintxstats()
         self._test_gettxoutsetinfo()
@@ -80,12 +89,12 @@ class BlockchainTest(BitcoinTestFramework):
         assert res['pruned']
         assert not res['automatic_pruning']
 
-        self.restart_node(0, ['-stopatheight=207'])
+        self.restart_node(0, ['-stopatheight=207', '-txindex=0', '-mocktime=%d' % self.mocktime])
         res = self.nodes[0].getblockchaininfo()
         # should have exact keys
         assert_equal(sorted(res.keys()), keys)
 
-        self.restart_node(0, ['-stopatheight=207', '-prune=550'])
+        self.restart_node(0, ['-stopatheight=207', '-prune=550', '-txindex=0', '-mocktime=%d' % self.mocktime])
         res = self.nodes[0].getblockchaininfo()
         # result should have these additional pruning keys if prune=550
         assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning', 'prune_target_size'] + keys))
@@ -216,7 +225,7 @@ class BlockchainTest(BitcoinTestFramework):
             pass  # The node already shut down before response
         self.log.debug('Node should stop at this height...')
         self.nodes[0].wait_until_stopped()
-        self.start_node(0)
+        self.start_node(0, ['-txindex=0', '-mocktime=%d' % self.mocktime])
         assert_equal(self.nodes[0].getblockcount(), 207)
 
 
