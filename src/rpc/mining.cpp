@@ -214,7 +214,7 @@ UniValue getmininginfo(const JSONRPCRequest& request)
             "  \"pooledtx\": n              (numeric) The size of the mempool\n"
             "  \"chain\": \"xxxx\",           (string) current network name as defined in BIP70 (main, test, regtest)\n"
             "  \"warnings\": \"...\"          (string) any network and blockchain warnings\n"
-            "  \"errors\": \"...\"            (string) DEPRECATED. Same as warnings. Only shown when bitcoind is started with -deprecatedrpc=getmininginfo\n"
+            "  \"errors\": \"...\"            (string) DEPRECATED. Same as warnings. Only shown when dashd is started with -deprecatedrpc=getmininginfo\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getmininginfo", "")
@@ -823,7 +823,7 @@ UniValue estimatefee(const JSONRPCRequest& request)
 
     if (!IsDeprecatedRPCEnabled("estimatefee")) {
         throw JSONRPCError(RPC_METHOD_DEPRECATED, "estimatefee is deprecated and will be fully removed in v0.17. "
-            "To use estimatefee in v0.16, restart bitcoind with -deprecatedrpc=estimatefee.\n"
+            "To use estimatefee in v0.16, restart dashd with -deprecatedrpc=estimatefee.\n"
             "Projects should transition to using estimatesmartfee before upgrading to v0.17");
     }
 
