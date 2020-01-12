@@ -652,8 +652,6 @@ if TARGET_WINDOWS
 syscoind_SOURCES += syscoind-res.rc
 endif
 
-# Libraries below may be listed more than once to resolve circular dependencies (see
-# https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
 syscoind_LDADD = \
   $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_WALLET) \
