@@ -73,6 +73,7 @@ public:
         Server,                 // bool
         maxuploadtarget,
         peerbloomfilters,       // bool
+        peerblockfilters,       // bool
         OptionIDRowCount,
     };
 

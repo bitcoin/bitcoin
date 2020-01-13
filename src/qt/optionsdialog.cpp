@@ -46,6 +46,12 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     ui->pruneSize->setEnabled(false);
     connect(ui->prune, &QPushButton::toggled, ui->pruneSize, &QWidget::setEnabled);
+    connect(ui->prune, &QPushButton::toggled, [this](bool nv) {
+        ui->peerblockfilters->setEnabled(!nv);
+    });
+    connect(ui->peerblockfilters, &QPushButton::toggled, [this](bool nv) {
+        ui->prune->setEnabled(!nv);
+    });
 
     ui->networkPort->setValidator(new QIntValidator(1024, 65535, this));
     connect(ui->networkPort, SIGNAL(textChanged(const QString&)), this, SLOT(checkLineEdit()));
@@ -222,6 +228,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->connectSocks, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->connectSocksTor, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->peerbloomfilters, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
+    connect(ui->peerblockfilters, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     /* Display */
     connect(ui->lang, qOverload<>(&QValueComboBox::valueChanged), [this]{ showRestartWarning(); });
     connect(ui->thirdPartyTxUrls, &QLineEdit::textChanged, [this]{ showRestartWarning(); });
@@ -307,6 +314,7 @@ void OptionsDialog::setMapper()
     }
 
     mapper->addMapping(ui->peerbloomfilters, OptionsModel::peerbloomfilters);
+    mapper->addMapping(ui->peerblockfilters, OptionsModel::peerblockfilters);
 
     /* Window */
 #ifndef Q_OS_MAC

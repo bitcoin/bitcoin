@@ -13,6 +13,7 @@
 #include <qt/guiutil.h>
 
 #include <chainparams.h>
+#include <index/blockfilterindex.h>
 #include <interfaces/node.h>
 #include <mapport.h>
 #include <net.h>
@@ -409,6 +410,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return qlonglong(node().context()->connman->GetMaxOutboundTarget() / 1024 / 1024);
         case peerbloomfilters:
             return f_peerbloomfilters;
+        case peerblockfilters:
+            return gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS);
         default:
             return QVariant();
         }
@@ -581,6 +584,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 if (llvalue > 1) {
                     settings.setValue("nPruneSize", PruneMiBtoGB(llvalue));
                 }
+                if (llvalue != 0 && gArgs.GetArg("-blockfilterindex", DEFAULT_BLOCKFILTERINDEX) != "0") {
+                    // Can't start with pruning if the index is enabled
+                    // This won't delete it, but will allow starting
+                    gArgs.ModifyRWConfigFile("blockfilterindex", "0");
+                }
                 setRestartRequired(true);
             }
             break;
@@ -625,6 +633,22 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+        case peerblockfilters:
+        {
+            bool nv = value.toBool();
+            if (gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS) != nv) {
+                gArgs.ModifyRWConfigFile("peerblockfilters", strprintf("%d", nv));
+                gArgs.ForceSetArg("peerblockfilters", nv);
+                if (nv && !GetBlockFilterIndex(BlockFilterType::BASIC)) {
+                    // TODO: When other options are possible, we need to append a list!
+                    // TODO: Some way to unset/delete this...
+                    gArgs.ModifyRWConfigFile("blockfilterindex", "basic");
+                    gArgs.ForceSetArg("blockfilterindex", "basic");
+                }
+                setRestartRequired(true);
+            }
+            break;
+        }
         default:
             break;
         }
