@@ -194,8 +194,9 @@ SYSCOIN_TESTS =\
   test/txvalidationcache_tests.cpp \
   test/uint256_tests.cpp \
   test/util_tests.cpp \
-  test/versionbits_tests.cpp \
-  test/validation_block_tests.cpp
+  test/validation_block_tests.cpp \
+  test/validation_flush_tests.cpp \
+  test/versionbits_tests.cpp
 # FIXME: Update and re-enable these tests:
 #   miner_tests validation_test key_io_tests
 
