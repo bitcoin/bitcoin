@@ -44,6 +44,9 @@ namespace Platform
         if (nftProto.tokenMetadataSchemaUri.size() > NfTokenProtocol::TOKEN_METADATA_SCHEMA_URI_MAX)
             return state.DoS(10, false, REJECT_INVALID, "bad-nft-proto-reg-tx-metadata-schema-uri");
 
+        if (nftProto.maxMetadataSize > NfTokenProtocol::TOKEN_METADATA_ABSOLUTE_MAX)
+            return state.DoS(10, false, REJECT_INVALID, "bad-nft-proto-reg-tx-metadata-max-size-too-big");
+
         if (pindexLast != nullptr)
         {
             if (NftProtocolsManager::Instance().Contains(nftProto.tokenProtocolId, pindexLast->nHeight))
@@ -91,7 +94,9 @@ namespace Platform
         result.push_back(json_spirit::Pair("isTokenTransferable", m_nfTokenProtocol.isTokenTransferable));
         result.push_back(json_spirit::Pair("isTokenImmutable", m_nfTokenProtocol.isTokenImmutable));
         result.push_back(json_spirit::Pair("isMetadataEmbedded", m_nfTokenProtocol.isMetadataEmbedded));
-        result.push_back(json_spirit::Pair("nftRegSign", m_nfTokenProtocol.nftRegSign));
+        auto nftRegSignStr = NftRegSignToString(static_cast<NftRegSign>(m_nfTokenProtocol.nftRegSign));
+        result.push_back(json_spirit::Pair("nftRegSign", nftRegSignStr));
+        result.push_back(json_spirit::Pair("maxMetadataSize", m_nfTokenProtocol.maxMetadataSize));
         result.push_back(json_spirit::Pair("tokenProtocolOwnerId", CBitcoinAddress(m_nfTokenProtocol.tokenProtocolOwnerId).ToString()));
     }
 
@@ -102,7 +107,9 @@ namespace Platform
         out << "NfTokenProtocolRegTx(nft protocol ID=" << ProtocolName{m_nfTokenProtocol.tokenProtocolId}.ToString()
         << ", nft protocol name=" << m_nfTokenProtocol.tokenProtocolName << ", nft metadata schema url=" << m_nfTokenProtocol.tokenMetadataSchemaUri
         << ", nft metadata mimetype=" << m_nfTokenProtocol.tokenMetadataMimeType << ", transferable=" << m_nfTokenProtocol.isTokenTransferable
-        << ", immutable=" << m_nfTokenProtocol.isTokenImmutable << ", nft owner ID=" << CBitcoinAddress(m_nfTokenProtocol.tokenProtocolOwnerId).ToString() << ")";
+        << ", immutable=" << m_nfTokenProtocol.isTokenImmutable << ", is metadata embedded" << m_nfTokenProtocol.isMetadataEmbedded
+        << ", max metadata size=" << m_nfTokenProtocol.maxMetadataSize
+        << ", nft Protocol owner ID=" << CBitcoinAddress(m_nfTokenProtocol.tokenProtocolOwnerId).ToString() << ")";
         return out.str();
     }
 }

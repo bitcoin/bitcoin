@@ -20,6 +20,8 @@ namespace Platform
         NftRegSignMax = SignPayer
     };
 
+    std::string NftRegSignToString(NftRegSign nftRegSign);
+
     class NfTokenProtocol
     {
     public:
@@ -51,6 +53,9 @@ namespace Platform
         /// Defines who must sign an NFT registration transaction
         uint8_t nftRegSign{static_cast<uint8_t>(SignByCreator)};
 
+        /// Defines the maximum size of the NFT metadata
+        uint8_t maxMetadataSize{TOKEN_METADATA_ABSOLUTE_MAX};
+
         /// Owner of the NF token protocol
         CKeyID tokenProtocolOwnerId;
         //TODO: add admin key to the protocol structure. add option to use setup admin key rights including tranfering ownership
@@ -59,6 +64,7 @@ namespace Platform
         static const unsigned TOKEN_PROTOCOL_NAME_MAX = 24;
         static const unsigned TOKEN_METADATA_SCHEMA_URI_MAX = 128;
         static const unsigned TOKEN_METADATA_MIMETYPE_MAX = 32;
+        static const unsigned TOKEN_METADATA_ABSOLUTE_MAX = 255;
 
     public:
         ADD_SERIALIZE_METHODS
@@ -73,6 +79,7 @@ namespace Platform
             READWRITE(isTokenImmutable);
             READWRITE(isMetadataEmbedded);
             READWRITE(nftRegSign);
+            READWRITE(maxMetadataSize);
             READWRITE(tokenProtocolOwnerId);
         }
     };

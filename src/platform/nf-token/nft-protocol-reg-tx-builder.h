@@ -85,6 +85,12 @@ namespace Platform
             return *this;
         }
 
+        NftProtocolRegTxBuilder & SetMaxMetadataSize(const json_spirit::Value & value)
+        {
+            m_nftProto.maxMetadataSize = ParseInt32V(value, "maxMetadataSize");
+            return *this;
+        }
+
         NfTokenProtocolRegTx BuildTx()
         {
             NfTokenProtocolRegTx regTx(std::move(m_nftProto));

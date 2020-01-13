@@ -270,6 +270,7 @@ libbitcoin_server_a_SOURCES = \
   platform/nf-token/nf-token-multiindex-utils.cpp \
   platform/nf-token/nf-token-protocol-reg-tx.cpp \
   platform/nf-token/nf-token-protocol-tx-mem-pool-handler.cpp \
+  platform/nf-token/nf-token-protocol.cpp \
   platform/nf-token/nf-token-reg-tx.cpp \
   platform/nf-token/nf-token-tx-mem-pool-handler.cpp \
   platform/nf-token/nf-tokens-manager.cpp \

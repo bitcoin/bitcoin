@@ -405,6 +405,7 @@ add_library(crown_platform
   platform/nf-token/nf-token-multiindex-utils.h
   platform/nf-token/nf-token-multiindex-utils.cpp
   platform/nf-token/nf-token-protocol.h
+  platform/nf-token/nf-token-protocol.cpp
   platform/nf-token/nf-token-protocol-index.h
   platform/nf-token/nf-token-protocol-reg-tx.h
   platform/nf-token/nf-token-protocol-reg-tx.cpp

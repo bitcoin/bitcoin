@@ -45,10 +45,6 @@ namespace Platform
 
         NfTokenRegTxBuilder & SetMetadata(const json_spirit::Value & metadata)
         {
-            //TODO: if binary then also convert from base64
-            // if (protocol metadata is embedded -> read directly from the value)
-            // else download metadata from uri
-            // Note: supports embedded "text/plain" only for now
             m_nfToken.metadata.assign(metadata.get_str().begin(), metadata.get_str().end());
             return *this;
         }

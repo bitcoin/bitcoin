@@ -76,6 +76,9 @@ namespace Platform
         if (nfToken.metadataAdminKeyId.IsNull())
             return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-metadata-admin-key-null");
 
+        if (nfToken.metadata.size() > nftProtoIndex.NftProtoPtr()->maxMetadataSize)
+            return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-metadata-is-too-long");
+
         if (pindexLast != nullptr)
         {
             if (NfTokensManager::Instance().Contains(nfToken.tokenProtocolId, nfToken.tokenId, pindexLast->nHeight))
