@@ -12,6 +12,7 @@
 
 #include <chainparams.h>
 #include <common/args.h>
+#include <index/blockfilterindex.h>
 #include <interfaces/node.h>
 #include <mapport.h>
 #include <net.h>
@@ -553,6 +554,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(node().context()->connman->GetMaxOutboundTarget() / 1024 / 1024);
     case peerbloomfilters:
         return f_peerbloomfilters;
+    case peerblockfilters:
+        return gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS);
     default:
         return QVariant();
     }
@@ -834,6 +837,22 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             setRestartRequired(true);
         }
         break;
+    case peerblockfilters:
+    {
+        bool nv = value.toBool();
+        if (gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS) != nv) {
+            gArgs.ModifyRWConfigFile("peerblockfilters", strprintf("%d", nv));
+            gArgs.ForceSetArg("peerblockfilters", nv);
+            if (nv && !GetBlockFilterIndex(BlockFilterType::BASIC)) {
+                // TODO: When other options are possible, we need to append a list!
+                // TODO: Some way to unset/delete this...
+                gArgs.ModifyRWConfigFile("blockfilterindex", "basic");
+                gArgs.ForceSetArg("blockfilterindex", "basic");
+            }
+            setRestartRequired(true);
+        }
+        break;
+    }
     default:
         break;
     }

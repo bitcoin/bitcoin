@@ -286,6 +286,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->connectSocks, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->connectSocksTor, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->peerbloomfilters, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
+    connect(ui->peerblockfilters, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     /* Display */
     connect(ui->lang, qOverload<>(&QValueComboBox::valueChanged), [this]{ showRestartWarning(); });
     connect(ui->thirdPartyTxUrls, &QLineEdit::textChanged, [this]{ showRestartWarning(); });
@@ -363,6 +364,7 @@ void OptionsDialog::setMapper()
     }
 
     mapper->addMapping(ui->peerbloomfilters, OptionsModel::peerbloomfilters);
+    mapper->addMapping(ui->peerblockfilters, OptionsModel::peerblockfilters);
 
     /* Window */
 #ifndef Q_OS_MACOS
