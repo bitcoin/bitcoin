@@ -554,12 +554,9 @@ if TARGET_WINDOWS
 bitcoind_SOURCES += bitcoind-res.rc
 endif
 
-# Libraries below may be listed more than once to resolve circular dependencies (see
-# https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
 bitcoind_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
-  $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
