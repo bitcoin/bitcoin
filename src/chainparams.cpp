@@ -516,7 +516,7 @@ public:
         nBlockPoSStart = 500;
         nAuxpowChainId = 20;
         nPoSChainId = 22;
-        nStakePointerValidityPeriod = 1440; // Valid for 1 day
+        nStakePointerValidityPeriod = 10080; // Valid for 7 days, to make sure they are valid after downtime
         nMaxReorgDepth = 100;
         nKernelModifierOffset = 10;
         nChainStallDuration = 60*60;
