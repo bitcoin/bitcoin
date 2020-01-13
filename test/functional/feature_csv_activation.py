@@ -35,6 +35,7 @@ bip112txs_vary_nSequence_9 - 16 txs with nSequence relative_locktimes of 9 evalu
 bip112txs_vary_OP_CSV - 16 txs with nSequence = 10 evaluated against varying {relative_locktimes of 10} OP_CSV OP_DROP
 bip112txs_vary_OP_CSV_9 - 16 txs with nSequence = 9 evaluated against varying {relative_locktimes of 10} OP_CSV OP_DROP
 bip112tx_special - test negative argument to OP_CSV
+bip112tx_emptystack - test empty stack (= no argument) OP_CSV
 """
 from decimal import Decimal
 from itertools import product
@@ -93,6 +94,13 @@ def create_bip112special(node, input, txversion, address):
     tx.nVersion = txversion
     signtx = sign_transaction(node, tx)
     signtx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+    return signtx
+
+def create_bip112emptystack(node, input, txversion, address):
+    tx = create_transaction(node, input, address, amount=Decimal("49.98"))
+    tx.nVersion = txversion
+    signtx = sign_transaction(node, tx)
+    signtx.vin[0].scriptSig = CScript([OP_CHECKSEQUENCEVERIFY] + list(CScript(signtx.vin[0].scriptSig)))
     return signtx
 
 def send_generic_input_tx(node, coinbases, address):
@@ -179,15 +187,15 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.log.info("Generate blocks in the past for coinbase outputs.")
         long_past_time = int(time.time()) - 600 * 1000  # enough to build up to 1000 blocks 10 minutes apart without worrying about getting into the future
         self.nodes[0].setmocktime(long_past_time - 100)  # enough so that the generated blocks will still all be before long_past_time
-        self.coinbase_blocks = self.nodes[0].generate(1 + 16 + 2 * 32 + 1)  # 82 blocks generated for inputs
+        self.coinbase_blocks = self.nodes[0].generate(1 + 16 + 2 * 32 + 2)  # 83 blocks generated for inputs
         self.nodes[0].setmocktime(0)  # set time back to present so yielded blocks aren't in the future as we advance last_block_time
-        self.tipheight = 82  # height of the next block to build
+        self.tipheight = 83  # height of the next block to build
         self.last_block_time = long_past_time
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
         self.nodeaddress = self.nodes[0].getnewaddress()
 
         # Activation height is hardcoded
-        test_blocks = self.generate_blocks(345)
+        test_blocks = self.generate_blocks(344)
         self.send_blocks(test_blocks)
         assert not softfork_active(self.nodes[0], 'csv')
 
@@ -218,6 +226,8 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         # 1 special input with -1 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
         bip112specialinput = send_generic_input_tx(self.nodes[0], self.coinbase_blocks, self.nodeaddress)
+        # 1 special input with (empty stack) OP_CSV (actually will be prepended to spending scriptSig)
+        bip112emptystackinput = send_generic_input_tx(self.nodes[0],self.coinbase_blocks, self.nodeaddress)
 
         # 1 normal input
         bip113input = send_generic_input_tx(self.nodes[0], self.coinbase_blocks, self.nodeaddress)
@@ -228,7 +238,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.tip = int(inputblockhash, 16)
         self.tipheight += 1
         self.last_block_time += 600
-        assert_equal(len(self.nodes[0].getblock(inputblockhash, True)["tx"]), 82 + 1)
+        assert_equal(len(self.nodes[0].getblock(inputblockhash, True)["tx"]), 83 + 1)
 
         # 2 more version 4 blocks
         test_blocks = self.generate_blocks(2)
@@ -267,6 +277,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # -1 OP_CSV OP_DROP input
         bip112tx_special_v1 = create_bip112special(self.nodes[0], bip112specialinput, 1, self.nodeaddress)
         bip112tx_special_v2 = create_bip112special(self.nodes[0], bip112specialinput, 2, self.nodeaddress)
+        # (empty stack) OP_CSV input
+        bip112tx_emptystack_v1 = create_bip112emptystack(self.nodes[0], bip112emptystackinput, 1, self.nodeaddress)
+        bip112tx_emptystack_v2 = create_bip112emptystack(self.nodes[0], bip112emptystackinput, 2, self.nodeaddress)
 
         self.log.info("TESTING")
 
@@ -274,11 +287,12 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.log.info("Test version 1 txs")
 
         success_txs = []
-        # add BIP113 tx and -1 CSV tx
+        # BIP113 tx, -1 CSV tx and empty stack CSV tx should succeed
         bip113tx_v1.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
         bip113signed1 = sign_transaction(self.nodes[0], bip113tx_v1)
         success_txs.append(bip113signed1)
         success_txs.append(bip112tx_special_v1)
+        success_txs.append(bip112tx_emptystack_v1)
         # add BIP 68 txs
         success_txs.extend(all_rlt_txs(bip68txs_v1))
         # add BIP 112 with seq=10 txs
@@ -293,11 +307,12 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.log.info("Test version 2 txs")
 
         success_txs = []
-        # add BIP113 tx and -1 CSV tx
+        # BIP113 tx, -1 CSV tx and empty stack CSV tx should succeed
         bip113tx_v2.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
         bip113signed2 = sign_transaction(self.nodes[0], bip113tx_v2)
         success_txs.append(bip113signed2)
         success_txs.append(bip112tx_special_v2)
+        success_txs.append(bip112tx_emptystack_v2)
         # add BIP 68 txs
         success_txs.extend(all_rlt_txs(bip68txs_v2))
         # add BIP 112 with seq=10 txs
@@ -385,8 +400,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.log.info("BIP 112 tests")
         self.log.info("Test version 1 txs")
 
-        # -1 OP_CSV tx should fail
+        # -1 OP_CSV tx and (empty stack) OP_CSV tx should fail
         self.send_blocks([self.create_test_block([bip112tx_special_v1])], success=False)
+        self.send_blocks([self.create_test_block([bip112tx_emptystack_v1])], success=False)
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 1 txs should still pass
 
         success_txs = [tx['tx'] for tx in bip112txs_vary_OP_CSV_v1 if tx['sdf']]
@@ -404,8 +420,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         self.log.info("Test version 2 txs")
 
-        # -1 OP_CSV tx should fail
+        # -1 OP_CSV tx and (empty stack) OP_CSV tx should fail
         self.send_blocks([self.create_test_block([bip112tx_special_v2])], success=False)
+        self.send_blocks([self.create_test_block([bip112tx_emptystack_v2])], success=False)
 
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 2 txs should pass (all sequence locks are met)
         success_txs = [tx['tx'] for tx in bip112txs_vary_OP_CSV_v2 if tx['sdf']]
@@ -448,8 +465,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         self.send_blocks([self.create_test_block(time_txs)])
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
-
-        # TODO: Test empty stack fails
 
 if __name__ == '__main__':
     BIP68_112_113Test().main()
