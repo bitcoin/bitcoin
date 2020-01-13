@@ -19,7 +19,17 @@ bool CompressScript(const CScript& script, std::vector<unsigned char> &out);
 unsigned int GetSpecialScriptSize(unsigned int nSize);
 bool DecompressScript(CScript& script, unsigned int nSize, const std::vector<unsigned char> &out);
 
+/**
+ * Compress amount.
+ *
+ * nAmount is of type uint64_t and thus cannot be negative. If you're passing in
+ * a CAmount (int64_t), make sure to properly handle the case where the amount
+ * is negative before calling CompressAmount(...).
+ *
+ * @pre Function defined only for 0 <= nAmount <= MAX_MONEY.
+ */
 uint64_t CompressAmount(uint64_t nAmount);
+
 uint64_t DecompressAmount(uint64_t nAmount);
 
 /** Compact serializer for scripts.
