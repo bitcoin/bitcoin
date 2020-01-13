@@ -774,6 +774,16 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="peerblockfilters">
+         <property name="toolTip">
+          <string>Generate compact block filters and allow peers to download them</string>
+         </property>
+         <property name="text">
+          <string>Provide compact block filters for light clients</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer_Network">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
