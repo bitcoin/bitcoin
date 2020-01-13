@@ -12,6 +12,12 @@ namespace Platform
 
     NftProtocolsManager::NftProtocolsManager()
     {
+        if (chainActive.Tip() != nullptr)
+        {
+            m_tipHeight = chainActive.Tip()->nHeight;
+            m_tipBlockHash = chainActive.Tip()->GetBlockHash();
+        }
+
         PlatformDb::Instance().ReadTotalProtocolCount(m_totalProtocolsCount);
 
         PlatformDb::Instance().ProcessNftProtoIndexGutsOnly([this](NftProtoIndex protoIndex) -> bool
