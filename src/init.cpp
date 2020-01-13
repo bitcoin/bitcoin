@@ -879,6 +879,9 @@ bool AppInitBasicSetup()
 #ifdef WIN32
     // Enable Data Execution Prevention (DEP)
     SetProcessDEPPolicy(PROCESS_DEP_ENABLE);
+
+    // Enable heap terminate-on-corruption
+    HeapSetInformation(nullptr, HeapEnableTerminationOnCorruption, nullptr, 0);
 #endif
 
     if (!SetupNetworking())
