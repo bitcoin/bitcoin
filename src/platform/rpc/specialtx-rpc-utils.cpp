@@ -96,4 +96,37 @@ namespace Platform
         return sendrawtransaction(sendRequest, false).get_str();
     }
 
+    bool GetPayerPrivKeyForNftTx(const CMutableTransaction & tx, CKey & payerKey)
+    {
+        CKeyID payerKeyId;
+        if (GetPayerPubKeyIdForNftTx(tx, payerKeyId))
+        {
+            payerKey = GetPrivKeyFromWallet(payerKeyId);
+            return true;
+        }
+        return false;
+    }
+
+    bool GetPayerPubKeyIdForNftTx(const CMutableTransaction & tx, CKeyID & payerKeyId)
+    {
+        if (tx.vin.empty())
+            return false;
+
+        uint256 hashBlockFrom;
+        CTransaction txFrom;
+        if (!GetTransaction(tx.vin[0].prevout.hash, txFrom, hashBlockFrom, true))
+            return false;
+
+        auto txFromOutIdx = tx.vin[0].prevout.n;
+        assert(txFromOutIdx < txFrom.vout.size());
+
+        CTxDestination payer;
+        if (ExtractDestination(txFrom.vout[txFromOutIdx].scriptPubKey, payer))
+        {
+            CBitcoinAddress payerAddress(payer);
+            return payerAddress.GetKeyID(payerKeyId);
+        }
+
+        return false;
+    }
 }

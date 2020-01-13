@@ -8,6 +8,7 @@
 #include "primitives/transaction.h"
 #include "platform/platform-utils.h"
 #include "platform/specialtx.h"
+#include "platform/rpc/specialtx-rpc-utils.h"
 #include "nf-tokens-manager.h"
 #include "nf-token-reg-tx.h"
 #include "nft-protocols-manager.h"
@@ -36,25 +37,28 @@ namespace Platform
         if (!containsProto)
             return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-unknown-token-protocol");
 
-        auto nftProtoPtr = NftProtocolsManager::Instance().GetNftProtoIndex(nfToken.tokenProtocolId).NftProtoPtr();
+        auto nftProtoIndex = NftProtocolsManager::Instance().GetNftProtoIndex(nfToken.tokenProtocolId);
+
+        if (pindexLast != nullptr)
+        {
+            int protoDepth = pindexLast->nHeight - nftProtoIndex.BlockIndex()->nHeight;
+            if (protoDepth < TX_CONFIRMATIONS_NUM)
+                return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-nft-proto-immature");
+        }
+
         CKeyID signerKeyId;
-        switch (nftProtoPtr->nftRegSign)
+        switch (nftProtoIndex.NftProtoPtr()->nftRegSign)
         {
         case SignByCreator:
-            signerKeyId = nftProtoPtr->tokenProtocolOwnerId;
+            signerKeyId = nftProtoIndex.NftProtoPtr()->tokenProtocolOwnerId;
             break;
         case SelfSign:
             signerKeyId = nfToken.tokenOwnerKeyId;
             break;
         case SignPayer:
         {
-            bool res = false;
-            CTxDestination payer;
-            if (!tx.vin.empty() && ExtractDestination(tx.vin[0].prevPubKey, payer)) {
-                CBitcoinAddress payerAddress(payer);
-                res = payerAddress.GetKeyID(signerKeyId);
-            }
-            if (!res) {
+            if (!GetPayerPubKeyIdForNftTx(tx, signerKeyId))
+            {
                 return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-cant-get-payer-key");
             }
             break;

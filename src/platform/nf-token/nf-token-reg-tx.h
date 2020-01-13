@@ -61,6 +61,8 @@ namespace Platform
         uint16_t m_version{CURRENT_VERSION};
         NfToken m_nfToken;
         // TODO: std::vector<unsigned char> m_signature;
+
+        static const int TX_CONFIRMATIONS_NUM = 6;
     };
 }
 

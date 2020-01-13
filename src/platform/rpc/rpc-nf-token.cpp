@@ -104,16 +104,8 @@ namespace Platform
             break;
         case SignPayer:
         {
-            bool res = false;
-            CTxDestination payer;
-            if (!tx.vin.empty() && ExtractDestination(tx.vin[0].prevPubKey, payer)) {
-                CKeyID keyId;
-                CBitcoinAddress payerAddress(payer);
-                if (payerAddress.GetKeyID(keyId)) {
-                    signerKey = GetPrivKeyFromWallet(keyId);
-                    break;
-                }
-            }
+            if (GetPayerPrivKeyForNftTx(tx, signerKey))
+                break;
         }
         default:
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Registrar address is missing or invalid");
