@@ -57,6 +57,8 @@ from test_framework.util import (
     softfork_active,
 )
 
+TESTING_TX_COUNT = 83  # Number of testing transactions: 1 BIP113 tx, 16 BIP68 txs, 66 BIP112 txs (see comments above)
+COINBASE_BLOCK_COUNT = TESTING_TX_COUNT  # Number of coinbase blocks we need to generate as inputs for our txs
 BASE_RELATIVE_LOCKTIME = 10
 CSV_ACTIVATION_HEIGHT = 432
 SEQ_DISABLE_FLAG = 1 << 31
@@ -188,15 +190,16 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.log.info("Generate blocks in the past for coinbase outputs.")
         long_past_time = int(time.time()) - 600 * 1000  # enough to build up to 1000 blocks 10 minutes apart without worrying about getting into the future
         self.nodes[0].setmocktime(long_past_time - 100)  # enough so that the generated blocks will still all be before long_past_time
-        self.coinbase_blocks = self.nodes[0].generate(1 + 16 + 2 * 32 + 2)  # 83 blocks generated for inputs
+        self.coinbase_blocks = self.nodes[0].generate(COINBASE_BLOCK_COUNT)  # blocks generated for inputs
         self.nodes[0].setmocktime(0)  # set time back to present so yielded blocks aren't in the future as we advance last_block_time
-        self.tipheight = 83  # height of the next block to build
+        self.tipheight = COINBASE_BLOCK_COUNT  # height of the next block to build
         self.last_block_time = long_past_time
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
         self.nodeaddress = self.nodes[0].getnewaddress()
 
         # Activation height is hardcoded
-        test_blocks = self.generate_blocks(344)
+        # We advance to block height five below BIP112 activation for the following tests
+        test_blocks = self.generate_blocks(CSV_ACTIVATION_HEIGHT-5 - COINBASE_BLOCK_COUNT)
         self.send_blocks(test_blocks)
         assert not softfork_active(self.nodes[0], 'csv')
 
@@ -239,7 +242,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.tip = int(inputblockhash, 16)
         self.tipheight += 1
         self.last_block_time += 600
-        assert_equal(len(self.nodes[0].getblock(inputblockhash, True)["tx"]), 83 + 1)
+        assert_equal(len(self.nodes[0].getblock(inputblockhash, True)["tx"]), TESTING_TX_COUNT + 1)
 
         # 2 more version 4 blocks
         test_blocks = self.generate_blocks(2)
