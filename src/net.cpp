@@ -2835,8 +2835,8 @@ bool CConnman::RemoveAddedNode(const std::string& strNode)
 bool CConnman::AddPendingMasternode(const CService& service)
 {
     LOCK(cs_vPendingMasternodes);
-    for(std::vector<CService>::const_iterator it = vPendingMasternodes.begin(); it != vPendingMasternodes.end(); ++it) {
-        if (service == *it)
+    for(const auto& s : vPendingMasternodes) {
+        if (service == s)
             return false;
     }
 
