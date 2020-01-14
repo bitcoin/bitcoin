@@ -527,8 +527,10 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
         const TransactionError err = wallet().fillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
-        assert(!complete);
-        assert(err == TransactionError::OK);
+        if (err != TransactionError::OK || complete) {
+            QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Can't draft transaction."));
+            return false;
+        }
         // Serialize the PSBT
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
         ssTx << psbtx;
