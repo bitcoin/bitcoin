@@ -54,10 +54,12 @@
         <file alias="network_disabled">res/icons/network_disabled.png</file>
     </qresource>
     <qresource prefix="/css">
-        <file alias="dark">res/css/dark.css</file>
-        <file alias="light">res/css/light.css</file>
         <file alias="scrollbars">res/css/scrollbars.css</file>
-        <file alias="trad">res/css/trad.css</file>
+    </qresource>
+    <qresource prefix="/themes">
+        <file alias="Dark">res/css/dark.css</file>
+        <file alias="Light">res/css/light.css</file>
+        <file alias="Traditional">res/css/trad.css</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="arrow_down">res/images/arrow_down.png</file>
