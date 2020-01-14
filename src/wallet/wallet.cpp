@@ -734,7 +734,7 @@ bool CWallet::IsUsedDestination(const uint256& hash, unsigned int n) const
             if (GetDestData(wpkh_dest, "used", nullptr)) {
                 return true;
             }
-            ScriptHash sh_wpkh_dest(wpkh_dest);
+            ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
             if (GetDestData(sh_wpkh_dest, "used", nullptr)) {
                 return true;
             }
