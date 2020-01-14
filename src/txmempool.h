@@ -136,6 +136,7 @@ public:
     // If this is a proTx, this will be the hash of the key for which this ProTx was valid
     mutable uint256 validForProTxKey;
     mutable bool isKeyChangeProTx{false};
+    mutable uint64_t m_epoch; //!< epoch when last touched, useful for graph algorithms
 };
 
 // Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.
@@ -456,6 +457,8 @@ private:
     mutable int64_t lastRollingFeeUpdate;
     mutable bool blockSinceLastRollingFeeBump;
     mutable double rollingMinimumFeeRate; //!< minimum fee to get into the pool, decreases exponentially
+    mutable uint64_t m_epoch;
+    mutable bool m_has_epoch_guard;
 
     void trackPackageRemoved(const CFeeRate& rate) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -731,6 +734,55 @@ private:
      *  removal.
      */
     void removeUnchecked(txiter entry, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN) EXCLUSIVE_LOCKS_REQUIRED(cs);
+public:
+    /** EpochGuard: RAII-style guard for using epoch-based graph traversal algorithms.
+     *     When walking ancestors or descendants, we generally want to avoid
+     * visiting the same transactions twice. Some traversal algorithms use
+     * std::set (or setEntries) to deduplicate the transaction we visit.
+     * However, use of std::set is algorithmically undesirable because it both
+     * adds an asymptotic factor of O(log n) to traverals cost and triggers O(n)
+     * more dynamic memory allocations.
+     *     In many algorithms we can replace std::set with an internal mempool
+     * counter to track the time (or, "epoch") that we began a traversal, and
+     * check + update a per-transaction epoch for each transaction we look at to
+     * determine if that transaction has not yet been visited during the current
+     * traversal's epoch.
+     *     Algorithms using std::set can be replaced on a one by one basis.
+     * Both techniques are not fundamentally incomaptible across the codebase.
+     * Generally speaking, however, the remaining use of std::set for mempool
+     * traversal should be viewed as a TODO for replacement with an epoch based
+     * traversal, rather than a preference for std::set over epochs in that
+     * algorithm.
+     */
+    class EpochGuard {
+        const CTxMemPool& pool;
+        public:
+        EpochGuard(const CTxMemPool& in);
+        ~EpochGuard();
+    };
+    // N.B. GetFreshEpoch modifies mutable state via the EpochGuard construction
+    // (and later destruction)
+    EpochGuard GetFreshEpoch() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    /** visited marks a CTxMemPoolEntry as having been traversed
+     * during the lifetime of the most recently created EpochGuard
+     * and returns false if we are the first visitor, true otherwise.
+     *
+     * An EpochGuard must be held when visited is called or an assert will be
+     * triggered.
+     *
+     */
+    bool visited(txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        assert(m_has_epoch_guard);
+        bool ret = it->m_epoch >= m_epoch;
+        it->m_epoch = std::max(it->m_epoch, m_epoch);
+        return ret;
+    }
+
+    bool visited(boost::optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        assert(m_has_epoch_guard);
+        return !it || visited(*it);
+    }
 };
 
 /**
