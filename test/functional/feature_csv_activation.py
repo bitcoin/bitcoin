@@ -150,6 +150,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
             '-whitelist=noban@127.0.0.1',
             '-blockversion=4',
             '-addresstype=legacy',
+            '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
         self.supports_cli = False
 
@@ -175,11 +176,11 @@ class BIP68_112_113Test(BitcoinTestFramework):
         block.solve()
         return block
 
-    def send_blocks(self, blocks, success=True):
+    def send_blocks(self, blocks, success=True, reject_reason=None):
         """Sends blocks to test node. Syncs and verifies that tip has advanced to most recent block.
 
         Call with success = False if the tip shouldn't advance to the most recent block."""
-        self.nodes[0].p2p.send_blocks_and_test(blocks, self.nodes[0], success=success)
+        self.nodes[0].p2p.send_blocks_and_test(blocks, self.nodes[0], success=success, reject_reason=reject_reason)
 
     def run_test(self):
         self.nodes[0].add_p2p_connection(P2PDataStore())
@@ -402,7 +403,8 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         # -1 OP_CSV tx and (empty stack) OP_CSV tx should fail
         self.send_blocks([self.create_test_block([bip112tx_special_v1])], success=False)
-        self.send_blocks([self.create_test_block([bip112tx_emptystack_v1])], success=False)
+        self.send_blocks([self.create_test_block([bip112tx_emptystack_v1])], success=False,
+                         reject_reason='non-mandatory-script-verify-flag (Operation not valid with the current stack size)')
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 1 txs should still pass
 
         success_txs = [tx['tx'] for tx in bip112txs_vary_OP_CSV_v1 if tx['sdf']]
@@ -422,7 +424,8 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         # -1 OP_CSV tx and (empty stack) OP_CSV tx should fail
         self.send_blocks([self.create_test_block([bip112tx_special_v2])], success=False)
-        self.send_blocks([self.create_test_block([bip112tx_emptystack_v2])], success=False)
+        self.send_blocks([self.create_test_block([bip112tx_emptystack_v2])], success=False,
+                         reject_reason='non-mandatory-script-verify-flag (Operation not valid with the current stack size)')
 
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 2 txs should pass (all sequence locks are met)
         success_txs = [tx['tx'] for tx in bip112txs_vary_OP_CSV_v2 if tx['sdf']]
