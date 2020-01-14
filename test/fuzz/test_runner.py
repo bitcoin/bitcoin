@@ -27,6 +27,7 @@ FUZZERS_MISSING_CORPORA = [
     "flat_file_pos_deserialize",
     "float",
     "hex",
+    "key_io",
     "integer",
     "key",
     "key_origin_info_deserialize",
