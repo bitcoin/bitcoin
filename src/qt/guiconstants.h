@@ -36,5 +36,6 @@ static const int MAX_URI_LENGTH = 255;
 #define QAPP_APP_NAME_DEFAULT "Dash-Qt"
 #define QAPP_APP_NAME_TESTNET "Dash-Qt-testnet"
 #define QAPP_APP_NAME_DEVNET "Dash-Qt-%s"
+#define QAPP_APP_NAME_REGTEST "Dash-Qt-regtest"
 
 #endif // BITCOIN_QT_GUICONSTANTS_H
