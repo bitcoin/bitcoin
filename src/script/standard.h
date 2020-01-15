@@ -18,6 +18,7 @@ static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 
 class CKeyID;
 class CScript;
+struct ScriptHash;
 
 /** A reference to a CScript: the Hash160 of its serialization (see script.h) */
 class CScriptID : public uint160
@@ -26,6 +27,7 @@ public:
     CScriptID() : uint160() {}
     explicit CScriptID(const CScript& in);
     explicit CScriptID(const uint160& in) : uint160(in) {}
+    explicit CScriptID(const ScriptHash& in);
 };
 
 /**
@@ -78,6 +80,7 @@ struct PKHash : public uint160
     PKHash() : uint160() {}
     explicit PKHash(const uint160& hash) : uint160(hash) {}
     explicit PKHash(const CPubKey& pubkey);
+    explicit PKHash(const CKeyID& pubkey_id);
 };
 CKeyID ToKeyID(const PKHash& key_hash);
 
@@ -91,6 +94,7 @@ struct ScriptHash : public uint160
     explicit ScriptHash(const PKHash& hash) = delete;
     explicit ScriptHash(const uint160& hash) : uint160(hash) {}
     explicit ScriptHash(const CScript& script);
+    explicit ScriptHash(const CScriptID& script);
 };
 
 struct WitnessV0ScriptHash : public uint256
@@ -105,6 +109,7 @@ struct WitnessV0KeyHash : public uint160
     WitnessV0KeyHash() : uint160() {}
     explicit WitnessV0KeyHash(const uint160& hash) : uint160(hash) {}
     explicit WitnessV0KeyHash(const CPubKey& pubkey);
+    explicit WitnessV0KeyHash(const PKHash& pubkey_hash);
 };
 CKeyID ToKeyID(const WitnessV0KeyHash& key_hash);
 
