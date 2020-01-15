@@ -262,6 +262,8 @@ def main():
     crownd = connect_JSON(config)
 
     if options.amount is None:
+        spendable_amount = 0
+        utxo_count = 0
         address_summary = list_available(crownd)
         if address_summary.items():
             for address,info in address_summary.items():
@@ -270,6 +272,10 @@ def main():
                     print("%s %.8f %s (%d transactions)"%(address, info['total'], info['account'], n_transactions))
                 else:
                     print("%s %.8f %s"%(address, info['total'], info['account']))
+                spendable_amount += info['total']
+                utxo_count += n_transactions
+            print('-------------------------------------------------------------------------------')
+            print('Total spendable: %.8f CRW in %d UTXOs'%(spendable_amount, utxo_count))
         else:
             print("Empty wallet!")
     else:
