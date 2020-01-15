@@ -901,7 +901,7 @@ public:
     // Whether this or any UTXO with the same CTxDestination has been spent.
     bool IsUsedDestination(const CTxDestination& dst) const;
     bool IsUsedDestination(const uint256& hash, unsigned int n) const;
-    void SetUsedDestinationState(const uint256& hash, unsigned int n, bool used);
+    void SetUsedDestinationState(const uint256& hash, unsigned int n, bool used, std::set<CTxDestination>& tx_destinations);
 
     std::vector<OutputGroup> GroupOutputs(const std::vector<COutput>& outputs, bool single_coin) const;
 
@@ -1065,6 +1065,12 @@ public:
     std::map<CTxDestination, CAmount> GetAddressBalances();
 
     std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
+
+    /**
+     * Marks all outputs in each one of the destinations dirty, so their cache is
+     * reset and does not return outdated information.
+     */
+    void MarkDestinationsDirty(const std::set<CTxDestination>& destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool GetNewDestination(const std::string label, CTxDestination& dest, std::string& error);
     bool GetNewChangeDestination(CTxDestination& dest, std::string& error);
