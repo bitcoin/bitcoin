@@ -16,17 +16,17 @@ typedef std::vector<unsigned char> valtype;
 bool fAcceptDatacarrier = DEFAULT_ACCEPT_DATACARRIER;
 unsigned nMaxDatacarrierBytes = MAX_OP_RETURN_RELAY;
 
-CScriptID::CScriptID(const CScript& in) : uint160(Hash160(in.begin(), in.end())) {}
-CScriptID::CScriptID(const ScriptHash& in) : uint160(static_cast<uint160>(in)) {}
+CScriptID::CScriptID(const CScript& in) : BaseHash(Hash160(in.begin(), in.end())) {}
+CScriptID::CScriptID(const ScriptHash& in) : BaseHash(static_cast<uint160>(in)) {}
 
-ScriptHash::ScriptHash(const CScript& in) : uint160(Hash160(in.begin(), in.end())) {}
-ScriptHash::ScriptHash(const CScriptID& in) : uint160(static_cast<uint160>(in)) {}
+ScriptHash::ScriptHash(const CScript& in) : BaseHash(Hash160(in.begin(), in.end())) {}
+ScriptHash::ScriptHash(const CScriptID& in) : BaseHash(static_cast<uint160>(in)) {}
 
-PKHash::PKHash(const CPubKey& pubkey) : uint160(pubkey.GetID()) {}
-PKHash::PKHash(const CKeyID& pubkey_id) : uint160(pubkey_id) {}
+PKHash::PKHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
+PKHash::PKHash(const CKeyID& pubkey_id) : BaseHash(pubkey_id) {}
 
-WitnessV0KeyHash::WitnessV0KeyHash(const CPubKey& pubkey) : uint160(pubkey.GetID()) {}
-WitnessV0KeyHash::WitnessV0KeyHash(const PKHash& pubkey_hash) : uint160(static_cast<uint160>(pubkey_hash)) {}
+WitnessV0KeyHash::WitnessV0KeyHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
+WitnessV0KeyHash::WitnessV0KeyHash(const PKHash& pubkey_hash) : BaseHash(static_cast<uint160>(pubkey_hash)) {}
 
 CKeyID ToKeyID(const PKHash& key_hash)
 {
