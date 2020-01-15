@@ -131,7 +131,7 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     }
     case TX_SCRIPTHASH:
         h160 = uint160(vSolutions[0]);
-        if (GetCScript(provider, sigdata, h160, scriptRet)) {
+        if (GetCScript(provider, sigdata, CScriptID{h160}, scriptRet)) {
             ret.push_back(std::vector<unsigned char>(scriptRet.begin(), scriptRet.end()));
             return true;
         }
@@ -165,7 +165,7 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
 
     case TX_WITNESS_V0_SCRIPTHASH:
         CRIPEMD160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(h160.begin());
-        if (GetCScript(provider, sigdata, h160, scriptRet)) {
+        if (GetCScript(provider, sigdata, CScriptID{h160}, scriptRet)) {
             ret.push_back(std::vector<unsigned char>(scriptRet.begin(), scriptRet.end()));
             return true;
         }
@@ -458,7 +458,7 @@ bool IsSegWitOutput(const SigningProvider& provider, const CScript& script)
     if (whichtype == TX_SCRIPTHASH) {
         auto h160 = uint160(solutions[0]);
         CScript subscript;
-        if (provider.GetCScript(h160, subscript)) {
+        if (provider.GetCScript(CScriptID{h160}, subscript)) {
             whichtype = Solver(subscript, solutions);
             if (whichtype == TX_WITNESS_V0_SCRIPTHASH || whichtype == TX_WITNESS_V0_KEYHASH || whichtype == TX_WITNESS_UNKNOWN) return true;
         }
