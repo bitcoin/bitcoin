@@ -180,7 +180,7 @@ CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& 
     // Only supports destinations which map to single public keys, i.e. P2PKH,
     // P2WPKH, and P2SH-P2WPKH.
     if (auto id = boost::get<PKHash>(&dest)) {
-        return CKeyID(*id);
+        return ToKeyID(*id);
     }
     if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
         return CKeyID(*witness_id);

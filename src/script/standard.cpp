@@ -23,6 +23,11 @@ ScriptHash::ScriptHash(const CScript& in) : uint160(Hash160(in.begin(), in.end()
 PKHash::PKHash(const CPubKey& pubkey) : uint160(pubkey.GetID()) {}
 WitnessV0KeyHash::WitnessV0KeyHash(const CPubKey& pubkey) : uint160(pubkey.GetID()) {}
 
+CKeyID ToKeyID(const PKHash& key_hash)
+{
+    return CKeyID{static_cast<uint160>(key_hash)};
+}
+
 WitnessV0ScriptHash::WitnessV0ScriptHash(const CScript& in)
 {
     CSHA256().Write(in.data(), in.size()).Finalize(begin());
