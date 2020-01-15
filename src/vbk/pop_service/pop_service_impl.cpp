@@ -15,6 +15,7 @@
 #include <shutdown.h>
 #include <streams.h>
 #include <validation.h>
+#include <util/strencodings.h>
 
 #include <vbk/merkle.hpp>
 #include <vbk/service_locator.hpp>
@@ -71,6 +72,8 @@ PopServiceImpl::PopServiceImpl()
         LogPrintf("-------------------------------------------------------------------------------------------------\n");
         StartShutdown();
     }
+
+    setConfig();
 }
 
 void PopServiceImpl::addPayloads(const CBlock& block, const int& nHeight, const Publications& publications)
@@ -424,7 +427,7 @@ void PopServiceImpl::setConfig()
     calculatorConfig->set_keystoneround(config.keystoneRound);
     
     RoundRatioConfig* roundRatioConfig = new RoundRatioConfig();
-    for (int i = 0; i < config.roundRatios.size(); ++i) {
+    for (size_t i = 0; i < config.roundRatios.size(); ++i) {
         std::string* round = roundRatioConfig->add_roundratio();
         *round = config.roundRatios[i];
     }
@@ -442,7 +445,7 @@ void PopServiceImpl::setConfig()
     calculatorConfig->set_maxrewardthresholdkeystone(config.maxRewardThresholdKeystone);
 
     RelativeScoreConfig* relativeScoreConfig = new RelativeScoreConfig();
-    for (int i = 0; i < config.relativeScoreLookupTable.size(); ++i) {
+    for (size_t i = 0; i < config.relativeScoreLookupTable.size(); ++i) {
         std::string* score = relativeScoreConfig->add_score();
         *score = config.relativeScoreLookupTable[i];
     }
@@ -463,16 +466,18 @@ void PopServiceImpl::setConfig()
 
     //VeriBlockBootstrapConfig
     VeriBlockBootstrapConfig* veriBlockBootstrapBlocks = new VeriBlockBootstrapConfig();
-    for (int i = 0; i < config.bootstrap_veriblock_blocks.size(); ++i) {
+    for (size_t i = 0; i < config.bootstrap_veriblock_blocks.size(); ++i) {
         std::string* block = veriBlockBootstrapBlocks->add_blocks();
-        *block = config.bootstrap_veriblock_blocks[i];
+        std::vector<uint8_t> bytes = ParseHex(config.bootstrap_veriblock_blocks[i]);
+        *block = std::string(bytes.begin(), bytes.end());
     }
 
     //BitcoinBootstrapConfig
     BitcoinBootstrapConfig* bitcoinBootstrapBlocks = new BitcoinBootstrapConfig();
-    for (int i = 0; i < config.bootstrap_bitcoin_blocks.size(); ++i) {
+    for (size_t i = 0; i < config.bootstrap_bitcoin_blocks.size(); ++i) {
         std::string* block = bitcoinBootstrapBlocks->add_blocks();
-        *block = config.bootstrap_bitcoin_blocks[i];
+        std::vector<uint8_t> bytes = ParseHex(config.bootstrap_bitcoin_blocks[i]);
+        *block = std::string(bytes.begin(), bytes.end());
     }
     bitcoinBootstrapBlocks->set_firstblockheight(config.bitcoin_first_block_height);
 
