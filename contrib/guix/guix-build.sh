@@ -13,6 +13,12 @@ make -C "${PWD}/depends" -j"$MAX_JOBS" download ${V:+V=1} ${SOURCES_PATH:+SOURCE
 # Determine the reference time used for determinism (overridable by environment)
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 
+time-machine() {
+    guix time-machine --url=https://github.com/dongcarl/guix.git \
+                      --commit=b3a7c72c8b2425f8ddb0fc6e3b1caeed40f86dee \
+                      -- "$@"
+}
+
 # Deterministically build Bitcoin Core for HOSTs (overriable by environment)
 for host in ${HOSTS=i686-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu}; do
 
@@ -22,18 +28,18 @@ for host in ${HOSTS=i686-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-
     # Run the build script 'contrib/guix/libexec/build.sh' in the build
     # container specified by 'contrib/guix/manifest.scm'
     # shellcheck disable=SC2086
-    guix environment --manifest="${PWD}/contrib/guix/manifest.scm" \
-                     --container \
-                     --pure \
-                     --no-cwd \
-                     --share="$PWD"=/bitcoin \
-                     ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
-                     ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
-                     -- env HOST="$host" \
-                            MAX_JOBS="$MAX_JOBS" \
-                            SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
-                            ${V:+V=1} \
-                            ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
-                          bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"
+    time-machine environment --manifest="${PWD}/contrib/guix/manifest.scm" \
+                             --container \
+                             --pure \
+                             --no-cwd \
+                             --share="$PWD"=/bitcoin \
+                             ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
+                             ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
+                             -- env HOST="$host" \
+                                    MAX_JOBS="$MAX_JOBS" \
+                                    SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
+                                    ${V:+V=1} \
+                                    ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
+                                  bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"
 
 done
