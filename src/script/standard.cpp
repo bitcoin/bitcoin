@@ -307,7 +307,7 @@ CScript GetScriptForWitness(const CScript& redeemscript)
     if (typ == TX_PUBKEY) {
         return GetScriptForDestination(WitnessV0KeyHash(Hash160(vSolutions[0].begin(), vSolutions[0].end())));
     } else if (typ == TX_PUBKEYHASH) {
-        return GetScriptForDestination(WitnessV0KeyHash(vSolutions[0]));
+        return GetScriptForDestination(WitnessV0KeyHash(uint160{vSolutions[0]}));
     }
     return GetScriptForDestination(WitnessV0ScriptHash(redeemscript));
 }
