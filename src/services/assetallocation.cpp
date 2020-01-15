@@ -874,7 +874,7 @@ void CAssetAllocation::SerializationOp(Stream& s, Operation ser_action) {
     READWRITE(assetAllocationTuple);
     READWRITE(listSendingAllocationAmounts);
     if(::ChainActive().Tip()->nHeight <= Params().GetConsensus().nBridgeStartBlock){
-        CAmount nBalance;
+        CAmount nBalance = 0;
         READWRITE(nBalance);
         READWRITE(lockedOutpoint);
     }
