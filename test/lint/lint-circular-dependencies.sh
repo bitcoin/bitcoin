@@ -16,7 +16,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "qt/bantablemodel -> qt/clientmodel -> qt/bantablemodel"
     "qt/bitcoingui -> qt/utilitydialog -> qt/bitcoingui"
     "qt/bitcoingui -> qt/walletframe -> qt/bitcoingui"
-    "qt/bitcoingui -> qt/walletview -> qt/bitcoingui"
     "qt/clientmodel -> qt/peertablemodel -> qt/clientmodel"
     "qt/recentrequeststablemodel -> qt/walletmodel -> qt/recentrequeststablemodel"
     "qt/sendcoinsdialog -> qt/walletmodel -> qt/sendcoinsdialog"
