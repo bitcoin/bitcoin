@@ -79,6 +79,7 @@ struct PKHash : public uint160
     explicit PKHash(const uint160& hash) : uint160(hash) {}
     explicit PKHash(const CPubKey& pubkey);
 };
+CKeyID ToKeyID(const PKHash& key_hash);
 
 struct WitnessV0KeyHash;
 struct ScriptHash : public uint160
