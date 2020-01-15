@@ -684,6 +684,8 @@ void SyscoinGUI::removeWallet(WalletModel* walletModel)
     rpcConsole->removeWallet(walletModel);
     walletFrame->removeWallet(walletModel);
     updateWindowTitle();
+    labelWalletHDStatusIcon->hide();
+    labelWalletEncryptionIcon->hide();
 }
 
 void SyscoinGUI::setCurrentWallet(WalletModel* wallet_model)
@@ -1298,7 +1300,7 @@ void SyscoinGUI::setHDStatus(bool privkeyDisabled, int hdEnabled)
 {
     labelWalletHDStatusIcon->setPixmap(platformStyle->SingleColorIcon(privkeyDisabled ? ":/icons/eye" : hdEnabled ? ":/icons/hd_enabled" : ":/icons/hd_disabled").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
     labelWalletHDStatusIcon->setToolTip(privkeyDisabled ? tr("Private key <b>disabled</b>") : hdEnabled ? tr("HD key generation is <b>enabled</b>") : tr("HD key generation is <b>disabled</b>"));
-
+    labelWalletHDStatusIcon->show();
     // eventually disable the QLabel to set its opacity to 50%
     labelWalletHDStatusIcon->setEnabled(hdEnabled);
 }
