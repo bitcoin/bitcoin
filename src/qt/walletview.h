@@ -115,6 +115,8 @@ public Q_SLOTS:
     void requestedSyncWarningInfo();
 
 Q_SIGNALS:
+    void transactionClicked();
+    void coinsSent();
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
     /** Encryption status of wallet changed */

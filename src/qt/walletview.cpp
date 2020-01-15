@@ -65,11 +65,13 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
 
+    connect(overviewPage, &OverviewPage::transactionClicked, this, &WalletView::transactionClicked);
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, &OverviewPage::transactionClicked, transactionView, static_cast<void (TransactionView::*)(const QModelIndex&)>(&TransactionView::focusTransaction));
 
     connect(overviewPage, &OverviewPage::outOfSyncWarningClicked, this, &WalletView::requestedSyncWarningInfo);
 
+    connect(sendCoinsPage, &SendCoinsDialog::coinsSent, this, &WalletView::coinsSent);
     // Highlight transaction after send
     connect(sendCoinsPage, &SendCoinsDialog::coinsSent, transactionView, static_cast<void (TransactionView::*)(const uint256&)>(&TransactionView::focusTransaction));
 
@@ -91,10 +93,10 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
     if (gui)
     {
         // Clicking on a transaction on the overview page simply sends you to transaction history page
-        connect(overviewPage, &OverviewPage::transactionClicked, gui, &BitcoinGUI::gotoHistoryPage);
+        connect(this, &WalletView::transactionClicked, gui, &BitcoinGUI::gotoHistoryPage);
 
         // Navigate to transaction history page after send
-        connect(sendCoinsPage, &SendCoinsDialog::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
+        connect(this, &WalletView::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
 
         // Receive and report messages
         connect(this, &WalletView::message, [gui](const QString &title, const QString &message, unsigned int style) {
