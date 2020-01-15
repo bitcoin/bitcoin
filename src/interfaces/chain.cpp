@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -38,7 +38,7 @@
 namespace interfaces {
 namespace {
 
-class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
+class LockImpl : public Chain::Lock, public UniqueLock<RecursiveMutex>
 {
     Optional<int> getHeight() override
     {
