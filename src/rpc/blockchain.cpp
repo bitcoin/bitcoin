@@ -894,6 +894,14 @@ static UniValue getblock(const JSONRPCRequest& request)
             verbosity = request.params[1].get_bool() ? 1 : 0;
     }
 
+    if (verbosity <= 0)
+    {
+        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        ssBlock << block;
+        std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
+        return strHex;
+    }
+
     CBlock block;
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
@@ -907,14 +915,6 @@ static UniValue getblock(const JSONRPCRequest& request)
         }
 
         block = GetBlockChecked(pblockindex);
-    }
-
-    if (verbosity <= 0)
-    {
-        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-        ssBlock << block;
-        std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
-        return strHex;
     }
 
     return blockToJSON(block, tip, pblockindex, verbosity >= 2);
