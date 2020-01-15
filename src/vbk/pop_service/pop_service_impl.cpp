@@ -72,8 +72,9 @@ PopServiceImpl::PopServiceImpl()
         LogPrintf("-------------------------------------------------------------------------------------------------\n");
         StartShutdown();
     }
-
-    setConfig();
+    else {
+        setConfig();
+    }
 }
 
 void PopServiceImpl::addPayloads(const CBlock& block, const int& nHeight, const Publications& publications)
