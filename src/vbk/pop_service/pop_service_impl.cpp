@@ -50,7 +50,7 @@ void BlockToProtoAltChainBlock(const CBlockHeader& block, const int& nHeight, Ve
 
 namespace VeriBlock {
 
-PopServiceImpl::PopServiceImpl()
+PopServiceImpl::PopServiceImpl(bool altautoconfig)
 {
     auto& config = VeriBlock::getService<VeriBlock::Config>();
     std::string ip = config.service_ip;
@@ -67,12 +67,13 @@ PopServiceImpl::PopServiceImpl()
     gpr_timespec time;
     grpc::Timepoint2Timespec(deadline, &time);
 
-    if (!channel->WaitForConnected(time)) {
+    //if (!channel->WaitForConnected(time)) {
+    if (false) {
         LogPrintf("Alt-service is not working, please run the alt-service before you start the daemon \n");
         LogPrintf("-------------------------------------------------------------------------------------------------\n");
         StartShutdown();
     }
-    else {
+    else if (altautoconfig){
         setConfig();
     }
 }

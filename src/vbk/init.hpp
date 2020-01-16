@@ -54,13 +54,13 @@ inline Config& InitConfig()
     return *cfg;
 }
 
-inline PopService& InitPopService(std::string host, std::string port)
+inline PopService& InitPopService(std::string host, std::string port, bool altautoconfig)
 {
     auto& config = getService<Config>();
     config.service_ip = std::move(host);
     config.service_port = std::move(port);
 
-    return detail::InitService<PopService, PopServiceImpl>();
+    return detail::InitService<PopService, PopServiceImpl>(altautoconfig);
 }
 
 
