@@ -1121,8 +1121,8 @@ bool MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs
     if (args.m_test_accept) return true;
 
     if (!Finalize(args, workspace)) return false;
-    // SYSCOIN
-    GetMainSignals().TransactionAddedToMempool(ptx, true);
+    // SYSCOIN, false for adding to mempool not block
+    GetMainSignals().TransactionAddedToMempool(ptx, false);
 
     return true;
 }
