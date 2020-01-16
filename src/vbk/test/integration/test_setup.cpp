@@ -40,6 +40,11 @@ IntegrationTestFixture::IntegrationTestFixture() : TestChain100Setup()
     auto* validationService = new VeriBlock::GrpcIntegrationService();
     VeriBlock::setService<VeriBlock::GrpcIntegrationService>(validationService);
 
+    VeriBlock::Config& config = VeriBlock::getService<VeriBlock::Config>();
+    config.bootstrap_bitcoin_blocks = {"010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010270000FFFF7F2000000000"};
+    config.bitcoin_first_block_height = 1610826;
+    config.bootstrap_veriblock_blocks = {"00000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000027100101000000000000"};
+
     VeriBlock::InitPopService();
 
     VeriBlockTest::setUpGenesisBlocks();
