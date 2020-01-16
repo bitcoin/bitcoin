@@ -494,18 +494,9 @@ uint64_t CNetAddr::GetHash() const
     return nRet;
 }
 
-// private extensions to enum Network, only returned by GetExtNetwork,
-// and only used in GetReachabilityFrom
-static const int NET_UNKNOWN = NET_MAX + 0;
-static const int NET_TEREDO  = NET_MAX + 1;
-int static GetExtNetwork(const CNetAddr *addr)
-{
-    if (addr == nullptr)
-        return NET_UNKNOWN;
-    if (addr->IsRFC4380())
-        return NET_TEREDO;
-    return addr->GetNetwork();
-}
+// private extension to enum Network, only returned by GetExtNetwork, and only
+// used in GetReachabilityFrom
+#define NET_UNKNOWN NET_MAX
 
 /** Calculates a metric for how reachable (*this) is from a given partner */
 int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
@@ -513,57 +504,36 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
     enum Reachability {
         REACH_UNREACHABLE,
         REACH_DEFAULT,
-        REACH_TEREDO,
-        REACH_IPV6_WEAK,
         REACH_IPV4,
-        REACH_IPV6_STRONG,
+        REACH_IPV6,
         REACH_PRIVATE
     };
 
     if (!IsRoutable() || IsInternal())
         return REACH_UNREACHABLE;
 
-    int ourNet = GetExtNetwork(this);
-    int theirNet = GetExtNetwork(paddrPartner);
-    bool fTunnel = IsRFC3964() || IsRFC6052() || IsRFC6145();
+    int ourNet = GetNetwork();
+    int theirNet = paddrPartner == nullptr ? NET_UNKNOWN : paddrPartner->GetNetwork();
 
-    switch(theirNet) {
+    switch(ourNet) {
     case NET_IPV4:
-        switch(ourNet) {
-        default:       return REACH_DEFAULT;
-        case NET_IPV4: return REACH_IPV4;
-        }
+        return REACH_IPV4;
     case NET_IPV6:
-        switch(ourNet) {
-        default:         return REACH_DEFAULT;
-        case NET_TEREDO: return REACH_TEREDO;
-        case NET_IPV4:   return REACH_IPV4;
-        case NET_IPV6:   return fTunnel ? REACH_IPV6_WEAK : REACH_IPV6_STRONG; // only prefer giving our IPv6 address if it's not tunnelled
+        switch(theirNet) {
+        case NET_IPV6:
+        case NET_UNKNOWN:
+        case NET_UNROUTABLE:
+            return REACH_IPV6;
         }
     case NET_ONION:
-        switch(ourNet) {
-        default:         return REACH_DEFAULT;
-        case NET_IPV4:   return REACH_IPV4; // Tor users can connect to IPv4 as well
-        case NET_ONION:    return REACH_PRIVATE;
-        }
-    case NET_TEREDO:
-        switch(ourNet) {
-        default:          return REACH_DEFAULT;
-        case NET_TEREDO:  return REACH_TEREDO;
-        case NET_IPV6:    return REACH_IPV6_WEAK;
-        case NET_IPV4:    return REACH_IPV4;
-        }
-    case NET_UNKNOWN:
-    case NET_UNROUTABLE:
-    default:
-        switch(ourNet) {
-        default:          return REACH_DEFAULT;
-        case NET_TEREDO:  return REACH_TEREDO;
-        case NET_IPV6:    return REACH_IPV6_WEAK;
-        case NET_IPV4:    return REACH_IPV4;
-        case NET_ONION:     return REACH_PRIVATE; // either from Tor, or don't care about our address
+        switch(theirNet) {
+        case NET_ONION:
+        case NET_UNKNOWN:
+        case NET_UNROUTABLE:
+            return REACH_PRIVATE;
         }
     }
+    return REACH_DEFAULT;
 }
 
 CService::CService() : port(0)
