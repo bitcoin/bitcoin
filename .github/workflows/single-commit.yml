@@ -18,11 +18,11 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git branch -D ${VBK_SQUASHED_BRANCH} || true
-          git checkout -b ${VBK_SQUASHED_BRANCH}
           git reset --soft ${VBK_FORK_COMMIT}
-          git commit -m "Auto squash commits to master" -a
+          git commit -m "Auto squash commits from master since ${VBK_FORK_COMMIT}" -a
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
+          branch: ${VBK_SQUASHED_BRANCH}
+          force: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
