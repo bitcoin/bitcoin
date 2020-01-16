@@ -35,7 +35,9 @@ Developer Notes
         - [Shebang](#shebang)
     - [Source code organization](#source-code-organization)
     - [GUI](#gui)
-    - [Subtrees](#subtrees)
+    - [Git Usage](#git-usage)
+    - [Rebasing](#rebasing)
+      - [Subtrees](#subtrees)
     - [Upgrading LevelDB](#upgrading-leveldb)
       - [File Descriptor Counts](#file-descriptor-counts)
       - [Consensus Compatibility](#consensus-compatibility)
@@ -834,8 +836,25 @@ GUI
   - *Rationale*: Blocking the GUI thread can increase latency, and lead to
     hangs and deadlocks.
 
-Subtrees
-----------
+Git Usage
+---------
+
+### Rebasing
+
+When the master development branch develops conflicts with your pull request,
+you need to rebase it. This means rebuilding your branch on top of a new base.
+Git has a built-in `rebase` command which can automate much of this.
+
+Sometimes conflicts are invisible to git: the branches will merge cleanly, but
+builds will fail, or functionality will break. These are still considered
+conflicts, and you should rebase when fixing them.
+
+Note that when there are no conflicts at all, however, rebasing should be
+avoided, as it can be disruptive to reviewers. (The `git rebase` command may
+still be useful for fixups or reorganization *within* your branch; that's
+usually ok to do.)
+
+### Subtrees
 
 Several parts of the repository are subtrees of software maintained elsewhere.
 
