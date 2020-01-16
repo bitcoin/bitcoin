@@ -5,6 +5,7 @@ on:
     branches:
     - master
     - develop
+    - feature/*
   pull_request:
     branches:
     - master
@@ -18,7 +19,7 @@ jobs:
         with:
           submodules: true
       - name: Docker Push
-        uses: elgohr/Publish-Docker-Github-Action@master
+        uses: warchant/Publish-Docker-Github-Action@3
         with:
           name: veriblock/vbtc
           dockerfile: Dockerfile
