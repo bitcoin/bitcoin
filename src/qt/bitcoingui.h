@@ -219,9 +219,8 @@ public Q_SLOTS:
        @param[in] message   the displayed text
        @param[in] style     modality and style definitions (icon and used buttons - buttons only for message boxes)
                             @see CClientUIInterface::MessageBoxFlags
-       @param[in] ret       pointer to a bool that will be modified to whether Ok was clicked (modal only)
     */
-    void message(const QString& title, QString message, unsigned int style, bool* ret = nullptr);
+    void message(const QString& title, QString message, unsigned int style);
 
 #ifdef ENABLE_WALLET
     void setCurrentWallet(WalletModel* wallet_model);
