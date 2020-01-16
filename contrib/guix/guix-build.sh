@@ -20,26 +20,32 @@ time-machine() {
 }
 
 # Deterministically build Bitcoin Core for HOSTs (overriable by environment)
-for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu}; do
+for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu x86_64-w64-mingw32}; do
 
     # Display proper warning when the user interrupts the build
     trap 'echo "** INT received while building ${host}, you may want to clean up the relevant output and distsrc-* directories before rebuilding"' INT
 
-    # Run the build script 'contrib/guix/libexec/build.sh' in the build
-    # container specified by 'contrib/guix/manifest.scm'
-    # shellcheck disable=SC2086
-    time-machine environment --manifest="${PWD}/contrib/guix/manifest.scm" \
-                             --container \
-                             --pure \
-                             --no-cwd \
-                             --share="$PWD"=/bitcoin \
-                             ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
-                             ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
-                             -- env HOST="$host" \
-                                    MAX_JOBS="$MAX_JOBS" \
-                                    SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
-                                    ${V:+V=1} \
-                                    ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
-                                  bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"
+    (
+        # Required for 'contrib/guix/manifest.scm' to output the right manifest
+        # for the particular $HOST we're building for
+        export HOST="$host"
+
+        # Run the build script 'contrib/guix/libexec/build.sh' in the build
+        # container specified by 'contrib/guix/manifest.scm'.
+        # shellcheck disable=SC2086
+        time-machine environment --manifest="${PWD}/contrib/guix/manifest.scm" \
+                                 --container \
+                                 --pure \
+                                 --no-cwd \
+                                 --share="$PWD"=/bitcoin \
+                                 ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
+                                 ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
+                                 -- env HOST="$host" \
+                                        MAX_JOBS="$MAX_JOBS" \
+                                        SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
+                                        ${V:+V=1} \
+                                        ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
+                                      bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"
+    )
 
 done

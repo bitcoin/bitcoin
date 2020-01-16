@@ -10,11 +10,14 @@
              (gnu packages file)
              (gnu packages gawk)
              (gnu packages gcc)
+             (gnu packages installers)
              (gnu packages linux)
+             (gnu packages mingw)
              (gnu packages perl)
              (gnu packages pkg-config)
              (gnu packages python)
              (gnu packages shells)
+             (guix build-system gnu)
              (guix build-system trivial)
              (guix gexp)
              (guix packages)
@@ -102,45 +105,77 @@ desirable for building Bitcoin Core release binaries."
                    base-libc
                    base-gcc))
 
+(define (make-gcc-with-pthreads gcc)
+  (package-with-extra-configure-variable gcc "--enable-threads" "posix"))
+
+(define (make-mingw-pthreads-cross-toolchain target)
+  "Create a cross-compilation toolchain package for TARGET"
+  (let* ((xbinutils (cross-binutils target))
+         (pthreads-xlibc mingw-w64-x86_64-winpthreads)
+         (pthreads-xgcc (make-gcc-with-pthreads
+                         (cross-gcc target
+                                    #:xgcc (make-ssp-fixed-gcc gcc)
+                                    #:xbinutils xbinutils
+                                    #:libc pthreads-xlibc))))
+    ;; Define a meta-package that propagates the resulting XBINUTILS, XLIBC, and
+    ;; XGCC
+    (package
+      (name (string-append target "-posix-toolchain"))
+      (version (package-version pthreads-xgcc))
+      (source #f)
+      (build-system trivial-build-system)
+      (arguments '(#:builder (begin (mkdir %output) #t)))
+      (propagated-inputs
+       `(("binutils" ,xbinutils)
+         ("libc" ,pthreads-xlibc)
+         ("gcc" ,pthreads-xgcc)))
+      (synopsis (string-append "Complete GCC tool chain for " target))
+      (description (string-append "This package provides a complete GCC tool
+chain for " target " development."))
+      (home-page (package-home-page pthreads-xgcc))
+      (license (package-license pthreads-xgcc)))))
+
+
 (packages->manifest
- (list ;; The Basics
-       bash-minimal
-       which
-       coreutils
-       util-linux
-       ;; File(system) inspection
-       file
-       grep
-       diffutils
-       findutils
-       ;; File transformation
-       patch
-       gawk
-       sed
-       ;; Compression and archiving
-       tar
-       bzip2
-       gzip
-       xz
-       zlib
-       ;; Build tools
-       gnu-make
-       libtool
-       autoconf
-       automake
-       pkg-config
-       ;; Scripting
-       perl
-       python-3.7
-       ;; Native gcc 9 toolchain targeting glibc 2.27
-       (make-gcc-toolchain gcc-9 glibc-2.27)
-       ;; Cross gcc 9 toolchains targeting glibc 2.27
-       (make-bitcoin-cross-toolchain "i686-linux-gnu")
-       (make-bitcoin-cross-toolchain "x86_64-linux-gnu")
-       (make-bitcoin-cross-toolchain "aarch64-linux-gnu")
-       (make-bitcoin-cross-toolchain "arm-linux-gnueabihf")
-       ;; The glibc 2.27 for riscv64 needs gcc 7 to successfully build (see:
-       ;; https://www.gnu.org/software/gcc/gcc-7/changes.html#riscv). The final
-       ;; toolchain is still a gcc 9 toolchain targeting glibc 2.27.
-       (make-bitcoin-cross-toolchain "riscv64-linux-gnu"
-                                     #:base-gcc-for-libc gcc-7)))
+ (append
+  (list ;; The Basics
+        bash-minimal
+        which
+        coreutils
+        util-linux
+        ;; File(system) inspection
+        file
+        grep
+        diffutils
+        findutils
+        ;; File transformation
+        patch
+        gawk
+        sed
+        ;; Compression and archiving
+        tar
+        bzip2
+        gzip
+        xz
+        zlib
+        ;; Build tools
+        gnu-make
+        libtool
+        autoconf
+        automake
+        pkg-config
+        ;; Scripting
+        perl
+        python-3.7
+        ;; Native gcc 9 toolchain targeting glibc 2.27
+        (make-gcc-toolchain gcc-9 glibc-2.27))
+  (let ((target (getenv "HOST")))
+    (cond ((string-suffix? "-mingw32" target)
+           ;; Windows
+           (list zip (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32") nsis-x86_64))
+          ((string-contains target "riscv64-linux-")
+           (list (make-bitcoin-cross-toolchain "riscv64-linux-gnu"
+                                               #:base-gcc-for-libc gcc-7)))
+          ((string-contains target "-linux-")
+           (list (make-bitcoin-cross-toolchain target)))
+          (else '())))))
