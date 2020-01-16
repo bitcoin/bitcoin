@@ -267,6 +267,14 @@ public:
         WAIT_LOCK(cs_main, lock);
         return FillBlock(LookupBlockIndex(hash), block, lock);
     }
+    bool findAncestorByHash(const uint256& block_hash, const uint256& ancestor_hash, const FoundBlock& ancestor_out) override
+    {
+        WAIT_LOCK(cs_main, lock);
+        const CBlockIndex* block = LookupBlockIndex(block_hash);
+        const CBlockIndex* ancestor = LookupBlockIndex(ancestor_hash);
+        if (block && ancestor && block->GetAncestor(ancestor->nHeight) != ancestor) ancestor = nullptr;
+        return FillBlock(ancestor, ancestor_out, lock);
+    }
     void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(m_node, coins); }
     double guessVerificationProgress(const uint256& block_hash) override
     {
