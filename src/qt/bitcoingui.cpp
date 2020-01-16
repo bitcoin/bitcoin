@@ -896,6 +896,8 @@ void BitcoinGUI::removeWallet(WalletModel* walletModel)
     rpcConsole->removeWallet(walletModel);
     walletFrame->removeWallet(walletModel);
     updateWindowTitle();
+    labelWalletHDStatusIcon->hide();
+    labelWalletEncryptionIcon->hide();
 }
 
 void BitcoinGUI::setCurrentWallet(WalletModel* wallet_model)
@@ -1770,6 +1772,7 @@ void BitcoinGUI::setHDStatus(int hdEnabled)
     if (hdEnabled) {
         labelWalletHDStatusIcon->setPixmap(GUIUtil::getIcon("hd_enabled", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
         labelWalletHDStatusIcon->setToolTip(tr("HD key generation is <b>enabled</b>"));
+        labelWalletHDStatusIcon->show();
     }
     labelWalletHDStatusIcon->setVisible(hdEnabled);
 }
