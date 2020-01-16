@@ -282,7 +282,7 @@ def main():
         if options.toaddress is None:
             print("You must specify a to address")
             sys.exit(1)
-        if options.toaddress == 'new':
+        if options.toaddress.lower() == 'new':
             options.toaddress = crownd.getnewaddress('')
             print("Sending to generated address %s"%(options.toaddress))
 
