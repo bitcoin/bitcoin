@@ -76,8 +76,8 @@ class WalletHDTest(BitcoinTestFramework):
         # otherwise node1 would auto-recover all funds in flag the keypool keys as used
         shutil.rmtree(os.path.join(tmpdir, "node1/regtest/blocks"))
         shutil.rmtree(os.path.join(tmpdir, "node1/regtest/chainstate"))
-        shutil.rmtree(tmpdir + "/node1/regtest/evodb")
-        shutil.rmtree(tmpdir + "/node1/regtest/llmq")
+        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/evodb"))
+        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/llmq"))
         shutil.copyfile(os.path.join(tmpdir, "hd.bak"), os.path.join(tmpdir, "node1/regtest/wallet.dat"))
         self.start_node(1)
 
@@ -101,6 +101,8 @@ class WalletHDTest(BitcoinTestFramework):
         self.stop_node(1)
         shutil.rmtree(os.path.join(tmpdir, "node1/regtest/blocks"))
         shutil.rmtree(os.path.join(tmpdir, "node1/regtest/chainstate"))
+        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/evodb"))
+        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/llmq"))
         shutil.copyfile(os.path.join(tmpdir, "hd.bak"), os.path.join(tmpdir, "node1/regtest/wallet.dat"))
         self.start_node(1, extra_args=self.extra_args[1])
         connect_nodes_bi(self.nodes, 0, 1)
