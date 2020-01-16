@@ -47,7 +47,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
     // SYSCOIN
-    factories["pubrawmempooltx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
+    factories["pubrawmempooltx"] = CZMQAbstractNotifier::Create<CZMQPublishRawMempoolTransactionNotifier>;
     factories["pubassetallocation"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
     factories["pubassetrecord"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
     factories["pubwalletstatus"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
