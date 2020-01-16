@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VBK_FORK_COMMIT: 8830cb58abc888144a1edb9b2fba427716cc45d8
-      VBK_SQUASHED_BRANCH: veriblock
     steps:
       - uses: actions/checkout@v1
       - name: Commit files
@@ -23,6 +22,6 @@ jobs:
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
-          branch: ${VBK_SQUASHED_BRANCH}
+          branch: veriblock
           force: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
