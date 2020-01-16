@@ -25,5 +25,13 @@ if [[ $HOST = *-mingw32 ]]; then
   DOCKER_EXEC update-alternatives --set $HOST-g++ \$\(which $HOST-g++-posix\)
 fi
 if [ -z "$NO_DEPENDS" ]; then
-  DOCKER_EXEC CONFIG_SHELL= make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
+  if [[ $DOCKER_NAME_TAG == centos* ]]; then
+    # CentOS has problems building the depends if the config shell is not explicitely set
+    # (i.e. for libevent a Makefile with an empty SHELL variable is generated, leading to
+    #  an error as the first command is executed)
+    SHELL_OPTS="CONFIG_SHELL=/bin/bash"
+  else
+    SHELL_OPTS="CONFIG_SHELL="
+  fi
+  DOCKER_EXEC $SHELL_OPTS make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
 fi
