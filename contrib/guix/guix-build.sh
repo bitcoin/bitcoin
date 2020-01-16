@@ -13,6 +13,8 @@ make -C "${PWD}/depends" -j"$MAX_JOBS" download ${V:+V=1} ${SOURCES_PATH:+SOURCE
 # Determine the reference time used for determinism (overridable by environment)
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 
+# Execute "$@" in a pinned, possibly older version of Guix, for reproducibility
+# across time.
 time-machine() {
     guix time-machine --url=https://github.com/dongcarl/guix.git \
                       --commit=b3a7c72c8b2425f8ddb0fc6e3b1caeed40f86dee \
@@ -32,6 +34,53 @@ for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv
 
         # Run the build script 'contrib/guix/libexec/build.sh' in the build
         # container specified by 'contrib/guix/manifest.scm'.
+        #
+        # Explanation of `guix environment` flags:
+        #
+        #   --container        run command within an isolated container
+        #
+        #     Running in an isolated container minimizes build-time differences
+        #     between machines and improves reproducibility
+        #
+        #   --pure             unset existing environment variables
+        #
+        #     Same rationale as --container
+        #
+        #   --no-cwd           do not share current working directory with an
+        #                      isolated container
+        #
+        #     When --container is specified, the default behavior is to share
+        #     the current working directory with the isolated container at the
+        #     same exact path (e.g. mapping '/home/satoshi/bitcoin/' to
+        #     '/home/satoshi/bitcoin/'). This means that the $PWD inside the
+        #     container becomes a source of irreproducibility. --no-cwd disables
+        #     this behaviour.
+        #
+        #   --share=SPEC       for containers, share writable host file system
+        #                      according to SPEC
+        #
+        #   --share="$PWD"=/bitcoin
+        #
+        #                     maps our current working directory to /bitcoin
+        #                     inside the isolated container, which we later cd
+        #                     into.
+        #
+        #     While we don't want to map our current working directory to the
+        #     same exact path (as this introduces irrepreducibility), we do want
+        #     it to be at a _fixed_ path _somewhere_ inside the isolated
+        #     container so that we have something to build. '/bitcoin' was
+        #     chosen arbitrarily.
+        #
+        #   ${SOURCES_PATH:+--share="$SOURCES_PATH"}
+        #
+        #                     make the downloaded depends sources path available
+        #                     inside the isolated container
+        #
+        #     The isolated container has no network access as it's in a
+        #     different network namespace from the main machine, so we have to
+        #     make the downloaded depends sources available to it. The sources
+        #     should have been downloaded prior to this invocation.
+        #
         # shellcheck disable=SC2086
         time-machine environment --manifest="${PWD}/contrib/guix/manifest.scm" \
                                  --container \
