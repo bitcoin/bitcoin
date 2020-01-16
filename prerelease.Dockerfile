@@ -81,12 +81,10 @@ RUN git clone --progress -b v3.10.0 https://github.com/protocolbuffers/protobuf 
    rm -rf protobuf
 
 # install grpc; depends on protobuf, c-ares, gflags
-RUN git clone --progress -b v1.25.0 http://github.com/grpc/grpc/
-ADD ./grpc-patch.diff /tmp/grpc-patch.diff
+RUN git clone --progress -b v1.26.x http://github.com/grpc/grpc/
 RUN ( \
       cd grpc; \
       git submodule update --init third_party/udpa; \
-      git apply /tmp/grpc-patch.diff; \
       mkdir build; \
       cd build; \
       cmake .. \

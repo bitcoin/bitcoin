@@ -107,11 +107,10 @@ RUN git clone --progress -b v3.10.0 https://github.com/protocolbuffers/protobuf 
     rm -rf protobuf
 
 # install grpc; depends on protobuf, c-ares, gflags
-RUN git clone --progress -b v1.25.0 http://github.com/grpc/grpc/ && \
+RUN git clone --progress -b v1.26.x http://github.com/grpc/grpc/ && \
     ( \
       cd grpc; \
       git submodule update --init third_party/udpa; \
-      git apply /tmp/grpc-patch.diff; \
       mkdir build; \
       cd build; \
       cmake .. \
@@ -138,6 +137,16 @@ RUN git clone --progress -b v1.25.0 http://github.com/grpc/grpc/ && \
       make -j8 install; \
     ) && \
     rm -rf grpc
+
+RUN git clone --progress -b release-1.10.0 https://github.com/google/googletest.git && \
+    ( \
+      cd googletest; \
+      mkdir build; \
+      cd build; \
+      cmake .. -DCMAKE_BUILD_TYPE=Release; \
+      make -j4 install; \
+    ) && \
+    rm -rf googletest
 
 RUN ldconfig
 
