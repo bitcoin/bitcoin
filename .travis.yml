@@ -101,14 +101,9 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
 
     - stage: test
-      name: '32-bit + dash  [GOAL: install]  [gui]'
+      name: '32-bit + dash  [GOAL: install]  [CentOS 7]  [gui]'
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_i686.sh"
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [CentOS 7]  [no depends, only system libs]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_centos.sh"
+        FILE_ENV="./ci/test/00_setup_env_i686_centos.sh"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package and some depends packages] [unsigned char]'
