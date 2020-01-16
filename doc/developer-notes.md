@@ -957,7 +957,7 @@ introduce accidental changes.
 Some good examples of scripted-diff:
 
 - [scripted-diff: Rename InitInterfaces to NodeContext](https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d)
-uses an elegant script to replace occurences of multiple terms in all source files.
+uses an elegant script to replace occurrences of multiple terms in all source files.
 
 - [scripted-diff: Remove g_connman, g_banman globals](https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d)
 replaces specific terms in a list of specific source files.
@@ -1084,6 +1084,11 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   - *Exception*: Using RPC method aliases may be appropriate in cases where a
     new RPC is replacing a deprecated RPC, to avoid both RPCs confusingly
     showing up in the command list.
+
+- Use *invalid* bech32 addresses for `RPCExamples` help documentation.
+
+  - *Rationale*: Prevent accidental transactions by users and encourage the use
+    of bech32 addresses by default.
 
 - Use the `UNIX_EPOCH_TIME` constant when describing UNIX epoch time or
   timestamps in the documentation.
