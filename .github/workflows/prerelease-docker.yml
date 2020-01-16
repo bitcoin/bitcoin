@@ -13,7 +13,7 @@ jobs:
       - name: Docker Push
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
-          name: veriblock/prerelease
+          name: veriblock/prerelease-btc
           dockerfile: prerelease.Dockerfile
           username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
           password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
