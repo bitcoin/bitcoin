@@ -84,7 +84,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Check that we're not getting any versionbit-related errors in
         # get*info()
         assert(not VB_PATTERN.match(self.nodes[0].getinfo()["errors"]))
-        assert(not VB_PATTERN.match(self.nodes[0].getmininginfo()["errors"]))
+        assert(not VB_PATTERN.match(self.nodes[0].getmininginfo()["warnings"]))
         assert(not VB_PATTERN.match(self.nodes[0].getnetworkinfo()["warnings"]))
 
         # 3. Now build one period of blocks with >= VB_THRESHOLD blocks signaling
@@ -96,7 +96,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # being of unexpected version.
         # Check that get*info() shows some kind of error.
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getinfo()["errors"])
-        assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getmininginfo()["errors"])
+        assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getmininginfo()["warnings"])
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getnetworkinfo()["warnings"])
 
         # Mine a period worth of expected blocks so the generic block-version warning
@@ -117,7 +117,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Connecting one block should be enough to generate an error.
         self.nodes[0].generate(1)
         assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getinfo()["errors"])
-        assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getmininginfo()["errors"])
+        assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getmininginfo()["warnings"])
         assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getnetworkinfo()["warnings"])
         self.stop_nodes()
         self.test_versionbits_in_alert_file()

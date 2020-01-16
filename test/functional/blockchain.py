@@ -24,6 +24,8 @@ import subprocess
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
+    assert_greater_than_or_equal,
     assert_raises,
     assert_raises_rpc_error,
     assert_is_hex_string,
@@ -33,9 +35,19 @@ from test_framework.util import (
 class BlockchainTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-stopatheight=207']]
+        self.setup_clean_chain = True
+        self.extra_args = [['-stopatheight=207', '-prune=1', '-txindex=0']]
 
     def run_test(self):
+        # Have to prepare the chain manually here.
+        # txindex=1 by default in Dash which is incompatible with pruning.
+        self.set_genesis_mocktime()
+        for i in range(200):
+            self.bump_mocktime(156)
+            self.nodes[0].setmocktime(self.mocktime)
+            self.nodes[0].generate(1)
+        # Actual tests
+        self._test_getblockchaininfo()
         self._test_getchaintxstats()
         self._test_gettxoutsetinfo()
         self._test_getblockheader()
@@ -44,6 +56,56 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_stopatheight()
         assert self.nodes[0].verifychain(4, 0)
 
+    def _test_getblockchaininfo(self):
+        self.log.info("Test getblockchaininfo")
+
+        keys = [
+            'bestblockhash',
+            'bip9_softforks',
+            'blocks',
+            'chain',
+            'chainwork',
+            'difficulty',
+            'headers',
+            'mediantime',
+            'pruned',
+            'size_on_disk',
+            'softforks',
+            'verificationprogress',
+            'warnings',
+        ]
+        res = self.nodes[0].getblockchaininfo()
+
+        # result should have these additional pruning keys if manual pruning is enabled
+        assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning'] + keys))
+
+        # size_on_disk should be > 0
+        assert_greater_than(res['size_on_disk'], 0)
+
+        # pruneheight should be greater or equal to 0
+        assert_greater_than_or_equal(res['pruneheight'], 0)
+
+        # check other pruning fields given that prune=1
+        assert res['pruned']
+        assert not res['automatic_pruning']
+
+        self.restart_node(0, ['-stopatheight=207', '-txindex=0', '-mocktime=%d' % self.mocktime])
+        res = self.nodes[0].getblockchaininfo()
+        # should have exact keys
+        assert_equal(sorted(res.keys()), keys)
+
+        self.restart_node(0, ['-stopatheight=207', '-prune=550', '-txindex=0', '-mocktime=%d' % self.mocktime])
+        res = self.nodes[0].getblockchaininfo()
+        # result should have these additional pruning keys if prune=550
+        assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning', 'prune_target_size'] + keys))
+
+        # check related fields
+        assert res['pruned']
+        assert_equal(res['pruneheight'], 0)
+        assert res['automatic_pruning']
+        assert_equal(res['prune_target_size'], 576716800)
+        assert_greater_than(res['size_on_disk'], 0)
+
     def _test_getchaintxstats(self):
         chaintxstats = self.nodes[0].getchaintxstats(1)
         # 200 txs plus genesis tx
@@ -51,6 +113,28 @@ class BlockchainTest(BitcoinTestFramework):
         # tx rate should be 1 per ~2.6 minutes (156 seconds), or 1/156
         # we have to round because of binary math
         assert_equal(round(chaintxstats['txrate'] * 156, 10), Decimal(1))
+
+        b1 = self.nodes[0].getblock(self.nodes[0].getblockhash(1))
+        b200 = self.nodes[0].getblock(self.nodes[0].getblockhash(200))
+        time_diff = b200['mediantime'] - b1['mediantime']
+
+        chaintxstats = self.nodes[0].getchaintxstats()
+        assert_equal(chaintxstats['time'], b200['time'])
+        assert_equal(chaintxstats['txcount'], 201)
+        assert_equal(chaintxstats['window_block_count'], 199)
+        assert_equal(chaintxstats['window_tx_count'], 199)
+        assert_equal(chaintxstats['window_interval'], time_diff)
+        assert_equal(round(chaintxstats['txrate'] * time_diff, 10), Decimal(199))
+
+        chaintxstats = self.nodes[0].getchaintxstats(blockhash=b1['hash'])
+        assert_equal(chaintxstats['time'], b1['time'])
+        assert_equal(chaintxstats['txcount'], 2)
+        assert_equal(chaintxstats['window_block_count'], 0)
+        assert('window_tx_count' not in chaintxstats)
+        assert('window_interval' not in chaintxstats)
+        assert('txrate' not in chaintxstats)
+
+        assert_raises_rpc_error(-8, "Invalid block count: should be between 0 and the block's height - 1", self.nodes[0].getchaintxstats, 201)
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]
@@ -141,7 +225,7 @@ class BlockchainTest(BitcoinTestFramework):
             pass  # The node already shut down before response
         self.log.debug('Node should stop at this height...')
         self.nodes[0].wait_until_stopped()
-        self.start_node(0)
+        self.start_node(0, ['-txindex=0', '-mocktime=%d' % self.mocktime])
         assert_equal(self.nodes[0].getblockcount(), 207)
 
 

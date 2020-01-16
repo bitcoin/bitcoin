@@ -102,7 +102,7 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
     assert(false);
 }
 
-static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
+static void push_lock(void* c, const CLockLocation& locklocation)
 {
     if (lockstack.get() == nullptr)
         lockstack.reset(new LockStack);
@@ -134,7 +134,7 @@ static void pop_lock()
 
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry)
 {
-    push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry), fTry);
+    push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry));
 }
 
 void LeaveCritical()

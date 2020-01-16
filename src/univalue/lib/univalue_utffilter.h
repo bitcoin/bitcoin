@@ -42,20 +42,20 @@ public:
         }
     }
     // Write codepoint directly, possibly collating surrogate pairs
-    void push_back_u(unsigned int codepoint)
+    void push_back_u(unsigned int codepoint_)
     {
         // Only accept full codepoints in open state
         if (state)
             is_valid = false;
-        if (codepoint >= 0xD800 && codepoint < 0xDC00) { // First half of surrogate pair
+        if (codepoint_ >= 0xD800 && codepoint_ < 0xDC00) { // First half of surrogate pair
             if (surpair) // Two subsequent surrogate pair openers - fail
                 is_valid = false;
             else
-                surpair = codepoint;
-        } else if (codepoint >= 0xDC00 && codepoint < 0xE000) { // Second half of surrogate pair
+                surpair = codepoint_;
+        } else if (codepoint_ >= 0xDC00 && codepoint_ < 0xE000) { // Second half of surrogate pair
             if (surpair) { // Open surrogate pair, expect second half
                 // Compute code point from UTF-16 surrogate pair
-                append_codepoint(0x10000 | ((surpair - 0xD800)<<10) | (codepoint - 0xDC00));
+                append_codepoint(0x10000 | ((surpair - 0xD800)<<10) | (codepoint_ - 0xDC00));
                 surpair = 0;
             } else // First half of surrogate pair not followed by second
                 is_valid = false;
@@ -63,7 +63,7 @@ public:
             if (surpair) // First half of surrogate pair not followed by second
                 is_valid = false;
             else
-                append_codepoint(codepoint);
+                append_codepoint(codepoint_);
         }
     }
     // Check that we're in a state where the string can be ended
@@ -91,22 +91,22 @@ private:
     //  Two subsequent \u.... may have to be replaced with one actual codepoint.
     unsigned int surpair; // First of UTF-16 surrogate pair
 
-    void append_codepoint(unsigned int codepoint)
+    void append_codepoint(unsigned int codepoint_)
     {
-        if (codepoint <= 0x7f)
-            str.push_back((char)codepoint);
-        else if (codepoint <= 0x7FF) {
-            str.push_back((char)(0xC0 | (codepoint >> 6)));
-            str.push_back((char)(0x80 | (codepoint & 0x3F)));
-        } else if (codepoint <= 0xFFFF) {
-            str.push_back((char)(0xE0 | (codepoint >> 12)));
-            str.push_back((char)(0x80 | ((codepoint >> 6) & 0x3F)));
-            str.push_back((char)(0x80 | (codepoint & 0x3F)));
-        } else if (codepoint <= 0x1FFFFF) {
-            str.push_back((char)(0xF0 | (codepoint >> 18)));
-            str.push_back((char)(0x80 | ((codepoint >> 12) & 0x3F)));
-            str.push_back((char)(0x80 | ((codepoint >> 6) & 0x3F)));
-            str.push_back((char)(0x80 | (codepoint & 0x3F)));
+        if (codepoint_ <= 0x7f)
+            str.push_back((char)codepoint_);
+        else if (codepoint_ <= 0x7FF) {
+            str.push_back((char)(0xC0 | (codepoint_ >> 6)));
+            str.push_back((char)(0x80 | (codepoint_ & 0x3F)));
+        } else if (codepoint_ <= 0xFFFF) {
+            str.push_back((char)(0xE0 | (codepoint_ >> 12)));
+            str.push_back((char)(0x80 | ((codepoint_ >> 6) & 0x3F)));
+            str.push_back((char)(0x80 | (codepoint_ & 0x3F)));
+        } else if (codepoint_ <= 0x1FFFFF) {
+            str.push_back((char)(0xF0 | (codepoint_ >> 18)));
+            str.push_back((char)(0x80 | ((codepoint_ >> 12) & 0x3F)));
+            str.push_back((char)(0x80 | ((codepoint_ >> 6) & 0x3F)));
+            str.push_back((char)(0x80 | (codepoint_ & 0x3F)));
         }
     }
 };

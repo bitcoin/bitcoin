@@ -171,6 +171,7 @@ public:
         std::vector<CService> vBinds, vWhiteBinds;
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
+        std::vector<std::string> m_added_nodes;
     };
 
     void Init(const Options& connOptions) {
@@ -187,6 +188,7 @@ public:
         nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
         nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
         vWhitelistedRange = connOptions.vWhitelistedRange;
+        vAddedNodes = connOptions.m_added_nodes;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1);
@@ -895,13 +897,11 @@ public:
 
     CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
+    CNode(const CNode&) = delete;
+    CNode& operator=(const CNode&) = delete;
 
 private:
-    CNode(const CNode&);
-    void operator=(const CNode&);
     const NodeId id;
-
-
     const uint64_t nLocalHostNonce;
     // Services offered to this peer
     const ServiceFlags nLocalServices;

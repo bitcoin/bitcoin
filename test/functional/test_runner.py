@@ -109,6 +109,7 @@ BASE_SCRIPTS= [
     'spentindex.py',
     'decodescript.py',
     'blockchain.py',
+    'deprecated_rpc.py',
     'disablewallet.py',
     'net.py',
     'keypool.py',
@@ -164,7 +165,7 @@ EXTENDED_SCRIPTS = [
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
     'txindex.py',
-    'forknotify.py',
+    'notifications.py',
     'invalidateblock.py',
 ]
 
