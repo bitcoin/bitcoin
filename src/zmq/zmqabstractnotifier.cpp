@@ -20,6 +20,10 @@ bool CZMQAbstractNotifier::NotifyTransaction(const CTransaction &/*transaction*/
 {
     return true;
 }
+bool CZMQAbstractNotifier::NotifyTransactionMempool(const CTransaction &/*transaction*/)
+{
+    return true;
+}
 // SYSCOIN
 bool CZMQAbstractNotifier::NotifySyscoinUpdate(const char *, const char *)
 {

@@ -217,7 +217,8 @@ public:
     {
     public:
         virtual ~Notifications() {}
-        virtual void TransactionAddedToMempool(const CTransactionRef& tx) {}
+        // SYSCOIN
+        virtual void TransactionAddedToMempool(const CTransactionRef& tx, bool fBlock) {}
         virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx) {}
         virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted, int height) {}
         virtual void BlockDisconnected(const CBlock& block, int height) {}

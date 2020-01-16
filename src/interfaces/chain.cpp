@@ -164,9 +164,10 @@ public:
             UnregisterValidationInterface(this);
         }
     }
-    void TransactionAddedToMempool(const CTransactionRef& tx) override
+    // SYSCOIN
+    void TransactionAddedToMempool(const CTransactionRef& tx, bool fBlock) override
     {
-        m_notifications->TransactionAddedToMempool(tx);
+        m_notifications->TransactionAddedToMempool(tx, fBlock);
     }
     void TransactionRemovedFromMempool(const CTransactionRef& tx) override
     {
@@ -367,8 +368,9 @@ public:
     void requestMempoolTransactions(Notifications& notifications) override
     {
         LOCK2(::cs_main, ::mempool.cs);
+        // SYSCOIN
         for (const CTxMemPoolEntry& entry : ::mempool.mapTx) {
-            notifications.TransactionAddedToMempool(entry.GetSharedTx());
+            notifications.TransactionAddedToMempool(entry.GetSharedTx(), true);
         }
     }
     NodeContext& m_node;

@@ -43,6 +43,7 @@ public:
     virtual bool NotifyBlock(const CBlockIndex *pindex);
     virtual bool NotifyTransaction(const CTransaction &transaction);
     // SYSCOIN
+    virtual bool NotifyTransactionMempool(const CTransaction &transaction);
     virtual bool NotifySyscoinUpdate(const char *, const char *);
 
 protected:
