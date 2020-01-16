@@ -154,4 +154,14 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 RUN pip3 install --upgrade setuptools wheel bashlex compiledb gcovr
 
+RUN git clone --progress -b release-1.10.0 https://github.com/google/googletest.git && \
+    ( \
+      cd googletest; \
+      mkdir build; \
+      cd build; \
+      cmake .. -DCMAKE_BUILD_TYPE=Release; \
+      make -j4 install; \
+    ) && \
+    rm -rf googletest
+
 WORKDIR /
