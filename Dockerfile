@@ -1,5 +1,4 @@
 FROM veriblock/prerelease-btc
-MAINTAINER Bohdan Vanieiev <bohdan_vanieiev@adoriasoft.com>
 
 ADD . /app
 WORKDIR /app
