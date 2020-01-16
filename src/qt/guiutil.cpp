@@ -78,6 +78,11 @@ extern double NSAppKitVersionNumber;
 
 namespace GUIUtil {
 
+// The theme to set by default if settings are missing or incorrect
+static const QString defaultTheme = "Light";
+// The prefix a theme name should have if we want to apply dark colors and styles to it
+static const QString darkThemePrefix = "Dark";
+
 static const std::map<ThemedColor, QColor> themedColors = {
     { ThemedColor::DEFAULT, QColor(0, 0, 0) },
     { ThemedColor::UNCONFIRMED, QColor(128, 128, 128) },
@@ -121,13 +126,13 @@ static const std::map<ThemedStyle, QString> themedDarkStyles = {
 QColor getThemedQColor(ThemedColor color)
 {
     QString theme = QSettings().value("theme", "").toString();
-    return theme.startsWith("dark") ? themedDarkColors.at(color) : themedColors.at(color);
+    return theme.startsWith(darkThemePrefix) ? themedDarkColors.at(color) : themedColors.at(color);
 }
 
 QString getThemedStyleQString(ThemedStyle style)
 {
     QString theme = QSettings().value("theme", "").toString();
-    return theme.startsWith("dark") ? themedDarkStyles.at(style) : themedStyles.at(style);
+    return theme.startsWith(darkThemePrefix) ? themedDarkStyles.at(style) : themedStyles.at(style);
 }
 
 QString dateTimeStr(const QDateTime &date)
@@ -927,9 +932,8 @@ QString loadStyleSheet()
 
     QDir themes(":themes");
     // Make sure settings are pointing to an existent theme
-    // Set "Light" theme by default if settings are missing or incorrect
     if (theme.isEmpty() || !themes.exists(theme)) {
-        theme = "Light";
+        theme = defaultTheme;
         settings.setValue("theme", theme);
     }
 
