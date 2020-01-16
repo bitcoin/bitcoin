@@ -67,8 +67,7 @@ PopServiceImpl::PopServiceImpl(bool altautoconfig)
     gpr_timespec time;
     grpc::Timepoint2Timespec(deadline, &time);
 
-    //if (!channel->WaitForConnected(time)) {
-    if (false) {
+    if (!channel->WaitForConnected(time)) {
         LogPrintf("Alt-service is not working, please run the alt-service before you start the daemon \n");
         LogPrintf("-------------------------------------------------------------------------------------------------\n");
         StartShutdown();
