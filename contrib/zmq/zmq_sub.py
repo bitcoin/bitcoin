@@ -9,6 +9,7 @@
     Syscoin should be started with the command line arguments:
         syscoind -testnet -daemon \
                 -zmqpubrawtx=tcp://127.0.0.1:28370 \
+                -zmqpubrawmempooltx=tcp://127.0.0.1:28370 \
                 -zmqpubrawblock=tcp://127.0.0.1:28370 \
                 -zmqpubhashtx=tcp://127.0.0.1:28370 \
                 -zmqpubhashblock=tcp://127.0.0.1:28370 \
