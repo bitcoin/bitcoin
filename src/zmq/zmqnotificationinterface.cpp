@@ -47,6 +47,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
     // SYSCOIN
+    factories["pubrawmempooltx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
     factories["pubassetallocation"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
     factories["pubassetrecord"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
     factories["pubwalletstatus"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
@@ -162,8 +163,8 @@ void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, co
         }
     }
 }
-
-void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx)
+// SYSCOIN
+void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, bool fBlock)
 {
     // Used by BlockConnected and BlockDisconnected as well, because they're
     // all the same external callback.
@@ -172,7 +173,8 @@ void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef&
     for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i!=notifiers.end(); )
     {
         CZMQAbstractNotifier *notifier = *i;
-        if (notifier->NotifyTransaction(tx))
+        // SYSCOIN
+        if (notifier->NotifyTransaction(tx) && (fBlock || notifier->NotifyTransactionMempool(tx)))
         {
             i++;
         }
@@ -188,7 +190,8 @@ void CZMQNotificationInterface::BlockConnected(const std::shared_ptr<const CBloc
 {
     for (const CTransactionRef& ptx : pblock->vtx) {
         // Do a normal notify for each transaction added in the block
-        TransactionAddedToMempool(ptx);
+        // SYSCOIN
+        TransactionAddedToMempool(ptx, true);
     }
 }
 
@@ -196,7 +199,8 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
 {
     for (const CTransactionRef& ptx : pblock->vtx) {
         // Do a normal notify for each transaction removed in block disconnection
-        TransactionAddedToMempool(ptx);
+        // SYSCOIN
+        TransactionAddedToMempool(ptx, true);
     }
 }
 // SYSCOIN

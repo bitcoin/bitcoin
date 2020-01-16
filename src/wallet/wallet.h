@@ -867,7 +867,8 @@ public:
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
     void LoadToWallet(CWalletTx& wtxIn) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void TransactionAddedToMempool(const CTransactionRef& tx) override;
+    // SYSCOIN
+    void TransactionAddedToMempool(const CTransactionRef& tx, bool fBlock) override;
     void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& vtxConflicted, int height) override;
     void BlockDisconnected(const CBlock& block, int height) override;
     void UpdatedBlockTip() override;

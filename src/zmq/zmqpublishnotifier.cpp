@@ -16,7 +16,8 @@ static const char *MSG_HASHBLOCK = "hashblock";
 static const char *MSG_HASHTX    = "hashtx";
 static const char *MSG_RAWBLOCK  = "rawblock";
 static const char *MSG_RAWTX     = "rawtx";
-
+// SYSCOIN
+static const char *MSG_RAWMEMPOOLTX  = "rawmempooltx";
 // Internal function to send multipart message
 static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
 {
@@ -198,7 +199,6 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 
     return SendMessage(MSG_RAWBLOCK, &(*ss.begin()), ss.size());
 }
-
 bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
 {
     uint256 hash = transaction.GetHash();
@@ -208,6 +208,14 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
     return SendMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
 }
 // SYSCOIN
+bool CZMQPublishRawTransactionNotifier::NotifyTransactionMempool(const CTransaction &transaction)
+{
+    uint256 hash = transaction.GetHash();
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawmempooltx %s\n", hash.GetHex());
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+    ss << transaction;
+    return SendMessage(MSG_RAWMEMPOOLTX, &(*ss.begin()), ss.size());
+}
 bool CZMQPublishRawSyscoinNotifier::NotifySyscoinUpdate(const char * value, const char * topic)
 {
     LogPrint(BCLog::ZMQ, "zmq: Publish raw syscoin payload for topic %s: %s\n", topic, value);

@@ -89,7 +89,8 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void TransactionAddedToMempool(const CTransactionRef &ptxn) {}
+    // SYSCOIN
+    virtual void TransactionAddedToMempool(const CTransactionRef &ptxn, bool fBlock) {}
     /**
      * Notifies listeners of a transaction leaving mempool.
      *
@@ -173,7 +174,8 @@ public:
 
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
-    void TransactionAddedToMempool(const CTransactionRef &);
+    // SYSCOIN
+    void TransactionAddedToMempool(const CTransactionRef &, bool fBlock);
     void TransactionRemovedFromMempool(const CTransactionRef &);
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>> &);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex* pindex);

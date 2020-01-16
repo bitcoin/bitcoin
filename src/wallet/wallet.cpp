@@ -1091,8 +1091,8 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, CWalletTx::Confirmatio
     // recomputed, also:
     MarkInputsDirty(ptx);
 }
-
-void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx) {
+// SYSCOIN
+void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx, bool fBlock) {
     auto locked_chain = chain().lock();
     LOCK(cs_wallet);
     CWalletTx::Confirmation confirm(CWalletTx::Status::UNCONFIRMED, /* block_height */ 0, {}, /* nIndex */ 0);
