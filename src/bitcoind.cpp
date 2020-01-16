@@ -110,7 +110,8 @@ static bool AppInit(int argc, char* argv[])
 
         VeriBlock::InitPopService(
             gArgs.GetArg("-althost", "127.0.0.1"),
-            gArgs.GetArg("-altport", "19012"));
+            gArgs.GetArg("-altport", "19012"),
+            gArgs.GetBoolArg("-altautoconfig", true));
 
         if (!AppInitBasicSetup())
         {

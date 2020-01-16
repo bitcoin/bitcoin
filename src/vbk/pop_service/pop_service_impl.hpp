@@ -22,7 +22,7 @@ private:
     std::shared_ptr<VeriBlock::GrpcPopService::Stub> grpcPopService;
 
 public:
-    PopServiceImpl();
+    PopServiceImpl(bool altautoconfig = true);
 
     ~PopServiceImpl() override = default;
 
