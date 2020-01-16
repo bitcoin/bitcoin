@@ -103,10 +103,6 @@ public:
         //! Get block time. Height must be valid or this function will abort.
         virtual int64_t getBlockTime(int height) = 0;
 
-        //! Get block median time past. Height must be valid or this function
-        //! will abort.
-        virtual int64_t getBlockMedianTimePast(int height) = 0;
-
         //! Check that the block is available on disk (i.e. has not been
         //! pruned), and contains transactions.
         virtual bool haveBlockOnDisk(int height) = 0;

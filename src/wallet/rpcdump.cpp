@@ -1379,19 +1379,12 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         EnsureWalletIsUnlocked(pwallet);
 
         // Verify all timestamps are present before importing any keys.
-        const Optional<int> tip_height = locked_chain->getHeight();
-        now = tip_height ? locked_chain->getBlockMedianTimePast(*tip_height) : 0;
+        CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetLastBlockHash(), FoundBlock().time(nLowestTimestamp).mtpTime(now)));
         for (const UniValue& data : requests.getValues()) {
             GetImportTimestamp(data, now);
         }
 
         const int64_t minimumTimestamp = 1;
-
-        if (fRescan && tip_height) {
-            nLowestTimestamp = locked_chain->getBlockTime(*tip_height);
-        } else {
-            fRescan = false;
-        }
 
         for (const UniValue& data : requests.getValues()) {
             const int64_t timestamp = std::max(GetImportTimestamp(data, now), minimumTimestamp);
