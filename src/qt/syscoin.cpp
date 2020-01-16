@@ -362,9 +362,7 @@ void SyscoinApplication::initializeResult(bool success)
         if (paymentServer) {
             connect(paymentServer, &PaymentServer::receivedPaymentRequest, window, &SyscoinGUI::handlePaymentRequest);
             connect(window, &SyscoinGUI::receivedURI, paymentServer, &PaymentServer::handleURIOrFile);
-            connect(paymentServer, &PaymentServer::message, [this](const QString& title, const QString& message, unsigned int style) {
-                window->message(title, message, style);
-            });
+            connect(paymentServer, &PaymentServer::message, window, &SyscoinGUI::message);
             QTimer::singleShot(100, paymentServer, &PaymentServer::uiReady);
         }
 #endif
