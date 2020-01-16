@@ -14,6 +14,7 @@
 #include <sync.h>
 #include <ui_interface.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/system.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
@@ -62,7 +63,7 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 WalletTxStatus MakeWalletTxStatus(interfaces::Chain::Lock& locked_chain, const CWalletTx& wtx)
 {
     WalletTxStatus result;
-    result.block_height = locked_chain.getBlockHeight(wtx.m_confirm.hashBlock).get_value_or(std::numeric_limits<int>::max());
+    result.block_height = wtx.m_confirm.block_height > 0 ? wtx.m_confirm.block_height : std::numeric_limits<int>::max();
     result.blocks_to_maturity = wtx.GetBlocksToMaturity();
     result.depth_in_main_chain = wtx.GetDepthInMainChain();
     result.time_received = wtx.nTimeReceived;
@@ -317,13 +318,9 @@ public:
         if (mi == m_wallet->mapWallet.end()) {
             return false;
         }
-        if (Optional<int> height = locked_chain->getHeight()) {
-            num_blocks = *height;
-            block_time = locked_chain->getBlockTime(*height);
-        } else {
-            num_blocks = -1;
-            block_time = -1;
-        }
+        num_blocks = m_wallet->GetLastBlockHeight();
+        block_time = -1;
+        CHECK_NONFATAL(m_wallet->chain().findBlock(m_wallet->GetLastBlockHash(), FoundBlock().time(block_time)));
         tx_status = MakeWalletTxStatus(*locked_chain, mi->second);
         return true;
     }
@@ -372,12 +369,12 @@ public:
     {
         auto locked_chain = m_wallet->chain().lock(true /* try_lock */);
         if (!locked_chain) return false;
-        num_blocks = locked_chain->getHeight().get_value_or(-1);
-        if (!force && num_blocks == cached_num_blocks) return false;
         TRY_LOCK(m_wallet->cs_wallet, locked_wallet);
         if (!locked_wallet) {
             return false;
         }
+        num_blocks = m_wallet->GetLastBlockHeight();
+        if (!force && num_blocks == cached_num_blocks) return false;
         balances = getBalances();
         return true;
     }
