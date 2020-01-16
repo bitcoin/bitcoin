@@ -85,6 +85,7 @@ CFeeRate minRelayTxFee = CFeeRate(10000);
 
 CTxMemPool mempool(::minRelayTxFee);
 Platform::NfTokenTxMemPoolHandler g_nfTokenTxMemPoolHandler;
+Platform::NftProtoTxMemPoolHandler g_nftProtoTxMemPoolHandler;
 
 struct COrphanTx {
     CTransaction tx;
@@ -959,7 +960,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     {
         if (tx.nType != TRANSACTION_NORMAL &&
             tx.nType != TRANSACTION_GOVERNANCE_VOTE &&
-            tx.nType != TRANSACTION_NF_TOKEN_REGISTER)
+            tx.nType != TRANSACTION_NF_TOKEN_REGISTER &&
+            tx.nType != TRANSACTION_NF_TOKEN_PROTOCOL_REGISTER)
         {
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
         }

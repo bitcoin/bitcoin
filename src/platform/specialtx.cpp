@@ -11,7 +11,9 @@
 #include "specialtx.h"
 #include "governance-vote.h"
 #include "nf-token/nf-token-reg-tx.h" // TODO: refactoring - handlers registration in the tx impl. Special tx itself shouldn't know about handlers
+#include "nf-token/nf-token-protocol-reg-tx.h"
 #include "nf-token/nf-tokens-manager.h"
+#include "nf-token/nft-protocols-manager.h"
 
 #include "governance.h"
 
@@ -28,7 +30,10 @@ namespace Platform
 
             case TRANSACTION_NF_TOKEN_REGISTER:
                 return Platform::NfTokenRegTx::CheckTx(tx, pindexLast, state);
-    }
+
+            case TRANSACTION_NF_TOKEN_PROTOCOL_REGISTER:
+                return Platform::NfTokenProtocolRegTx::CheckTx(tx, pindexLast, state);
+        }
 
 
         return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
@@ -49,6 +54,9 @@ namespace Platform
 
             case TRANSACTION_NF_TOKEN_REGISTER:
                 return Platform::NfTokenRegTx::ProcessTx(tx, pindex, state);
+
+            case TRANSACTION_NF_TOKEN_PROTOCOL_REGISTER:
+                return Platform::NfTokenProtocolRegTx::ProcessTx(tx, pindex, state);
         }
 
         return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
@@ -66,6 +74,9 @@ namespace Platform
 
             case TRANSACTION_NF_TOKEN_REGISTER:
                 return Platform::NfTokenRegTx::UndoTx(tx, pindex);
+
+            case TRANSACTION_NF_TOKEN_PROTOCOL_REGISTER:
+                return Platform::NfTokenProtocolRegTx::UndoTx(tx, pindex);
         }
 
         return false;
@@ -97,6 +108,7 @@ namespace Platform
     void UpdateSpecialTxsBlockTip(const CBlockIndex* pindex)
     {
         NfTokensManager::Instance().UpdateBlockTip(pindex);
+        NftProtocolsManager::Instance().UpdateBlockTip(pindex);
     }
 
     uint256 CalcTxInputsHash(const CTransaction& tx)

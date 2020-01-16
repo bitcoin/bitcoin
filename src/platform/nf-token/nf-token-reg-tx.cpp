@@ -8,8 +8,10 @@
 #include "primitives/transaction.h"
 #include "platform/platform-utils.h"
 #include "platform/specialtx.h"
+#include "platform/rpc/specialtx-rpc-utils.h"
 #include "nf-tokens-manager.h"
 #include "nf-token-reg-tx.h"
+#include "nft-protocols-manager.h"
 
 namespace Platform
 {
@@ -26,8 +28,44 @@ namespace Platform
         if (nfTokenRegTx.m_version != NfTokenRegTx::CURRENT_VERSION)
             return state.DoS(100, false, REJECT_INVALID, "bad-nf-token-reg-tx-version");
 
-        if (nfToken.tokenProtocolId == NfToken::UNKNOWN_TOKEN_PROTOCOL)
-            return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-token-protocol");
+        bool containsProto;
+        if (pindexLast != nullptr)
+            containsProto = NftProtocolsManager::Instance().Contains(nfToken.tokenProtocolId, pindexLast->nHeight);
+        else
+            containsProto = NftProtocolsManager::Instance().Contains(nfToken.tokenProtocolId);
+
+        if (!containsProto)
+            return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-unknown-token-protocol");
+
+        auto nftProtoIndex = NftProtocolsManager::Instance().GetNftProtoIndex(nfToken.tokenProtocolId);
+
+        if (pindexLast != nullptr)
+        {
+            int protoDepth = pindexLast->nHeight - nftProtoIndex.BlockIndex()->nHeight;
+            if (protoDepth < TX_CONFIRMATIONS_NUM)
+                return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-nft-proto-immature");
+        }
+
+        CKeyID signerKeyId;
+        switch (nftProtoIndex.NftProtoPtr()->nftRegSign)
+        {
+        case SignByCreator:
+            signerKeyId = nftProtoIndex.NftProtoPtr()->tokenProtocolOwnerId;
+            break;
+        case SelfSign:
+            signerKeyId = nfToken.tokenOwnerKeyId;
+            break;
+        case SignPayer:
+        {
+            if (!GetPayerPubKeyIdForNftTx(tx, signerKeyId))
+            {
+                return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-cant-get-payer-key");
+            }
+            break;
+        }
+        default:
+            return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-unknown-nft-reg-sign");
+        }
 
         if (nfToken.tokenId.IsNull())
             return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-token");
@@ -38,7 +76,8 @@ namespace Platform
         if (nfToken.metadataAdminKeyId.IsNull())
             return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-metadata-admin-key-null");
 
-        //TODO: Validate metadata
+        if (nfToken.metadata.size() > nftProtoIndex.NftProtoPtr()->maxMetadataSize)
+            return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-metadata-is-too-long");
 
         if (pindexLast != nullptr)
         {
@@ -46,7 +85,7 @@ namespace Platform
                 return state.DoS(10, false, REJECT_DUPLICATE, "bad-nf-token-reg-tx-dup-token");
         }
 
-        if (!CheckInputsHashAndSig(tx, nfTokenRegTx, nfTokenRegTx.GetNfToken().tokenOwnerKeyId, state))
+        if (!CheckInputsHashAndSig(tx, nfTokenRegTx, signerKeyId, state))
             return state.DoS(50, false, REJECT_INVALID, "bad-nf-token-reg-tx-invalid-signature");
 
         return true;
@@ -84,8 +123,6 @@ namespace Platform
         result.push_back(json_spirit::Pair("nftId", m_nfToken.tokenId.ToString()));
         result.push_back(json_spirit::Pair("nftOwnerKeyId", CBitcoinAddress(m_nfToken.tokenOwnerKeyId).ToString()));
         result.push_back(json_spirit::Pair("metadataAdminKeyId", CBitcoinAddress(m_nfToken.metadataAdminKeyId).ToString()));
-        // TODO: if not text -> implement conversion to base64
-        // If metadata is embedded text/plain -> read directly, otherwise download from the URI
         result.push_back(json_spirit::Pair("metadata", std::string(m_nfToken.metadata.begin(), m_nfToken.metadata.end())));
     }
 
@@ -97,7 +134,6 @@ namespace Platform
             << ", NFT ID=" << m_nfToken.tokenId.ToString()
             << ", NFT owner address=" << CBitcoinAddress(m_nfToken.tokenOwnerKeyId).ToString()
             << ", metadata admin address=" << CBitcoinAddress(m_nfToken.metadataAdminKeyId).ToString()
-            // TODO: if not text -> implement conversion to base64
             << ", metadata" << std::string(m_nfToken.metadata.begin(), m_nfToken.metadata.end()) << ")";
         return out.str();
     }

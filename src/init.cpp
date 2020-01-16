@@ -247,6 +247,7 @@ void Shutdown()
 
     // Unregister NFT special transaction mempool handler
     g_nfTokenTxMemPoolHandler.UnregisterSelf(mempool);
+    g_nftProtoTxMemPoolHandler.UnregisterSelf(mempool);
 
    // Shutdown part 2: delete wallet instance
 #ifdef ENABLE_WALLET
@@ -837,6 +838,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         InitWarning(_("Warning: Unsupported argument -benchmark ignored, use -debug=bench."));
 
     // Register NFT special transaction mempool handler
+    g_nftProtoTxMemPoolHandler.RegisterSelf(mempool);
     g_nfTokenTxMemPoolHandler.RegisterSelf(mempool);
     // Checkmempool and checkblockindex default to true in regtest mode
     mempool.setSanityCheck(GetBoolArg("-checkmempool", Params().DefaultConsistencyChecks()));

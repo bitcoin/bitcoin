@@ -15,6 +15,7 @@
 #include "utilstrencodings.h"
 #include "platform/rpc/rpcagents.h"
 #include "platform/rpc/rpc-nf-token.h"
+#include "platform/rpc/rpc-nft-proto.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
@@ -425,6 +426,7 @@ static const CRPCCommand vRPCCommands[] =
 #endif // ENABLE_WALLET
     { "platform",           "agents",                 &agents,                 true,      true,       false },
     { "platform",           "nftoken",                &nftoken,                true,      true,       false },
+    { "platform",           "nftproto",               &nftproto,               true,      true,       false },
 };
 
 CRPCTable::CRPCTable()

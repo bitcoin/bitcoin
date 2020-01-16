@@ -20,6 +20,12 @@ namespace Platform
 
     NfTokensManager::NfTokensManager()
     {
+        if (chainActive.Tip() != nullptr)
+        {
+            m_tipHeight = chainActive.Tip()->nHeight;
+            m_tipBlockHash = chainActive.Tip()->GetBlockHash();
+        }
+
         auto protoSupplyHandler = [this](uint64_t protocolId, std::size_t totalSupply) -> bool
         {
             m_protocolsTotalSupply[protocolId] = totalSupply;
@@ -102,6 +108,7 @@ namespace Platform
             {
                 return *it;
             }
+            return NfTokenIndex();
         }
         else /// PlatformDb::Instance().OptimizeRam() is on
         {
@@ -144,7 +151,10 @@ namespace Platform
         }
 
         /// PlatformDb::Instance().OptimizeRam() is on
-        return GetNftIndexFromDb(protocolId, tokenId).NfTokenPtr()->tokenOwnerKeyId;
+        auto nftIndex = GetNftIndexFromDb(protocolId, tokenId);
+        if (!nftIndex.IsNull())
+            return nftIndex.NfTokenPtr()->tokenOwnerKeyId;
+        return CKeyID();
     }
 
     std::size_t NfTokensManager::BalanceOf(uint64_t protocolId, const CKeyID & ownerId) const
@@ -478,7 +488,7 @@ namespace Platform
         else /// PlatformDb::Instance().OptimizeRam() is on
         {
             auto index = PlatformDb::Instance().ReadNftIndex(protocolId, tokenId);
-            if (!index.IsNull())
+            if (!index.IsNull() && index.BlockIndex()->nHeight <= height)
             {
                 PlatformDb::Instance().EraseNftDiskIndex(protocolId, tokenId);
                 this->UpdateTotalSupply(protocolId, false);

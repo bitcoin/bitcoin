@@ -23,6 +23,7 @@
 
 #include "platform/specialtx.h"
 #include "platform/nf-token/nf-token-reg-tx.h"
+#include "platform/nf-token/nf-token-protocol-reg-tx.h"
 #include "platform/governance-vote.h"
 
 #include <stdint.h>
@@ -129,6 +130,16 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
             Object voteTxObj;
             voteTx.ToJson(voteTxObj);
             entry.push_back(Pair("voteTx", voteTxObj));
+        }
+    }
+    else if (tx.nType == TRANSACTION_NF_TOKEN_PROTOCOL_REGISTER)
+    {
+        Platform::NfTokenProtocolRegTx nftProtoRegTx;
+        if (Platform::GetTxPayload(tx, nftProtoRegTx))
+        {
+            Object nftRegTxObj;
+            nftProtoRegTx.ToJson(nftRegTxObj);
+            entry.push_back(Pair("nftProtoRegTx", nftRegTxObj));
         }
     }
 

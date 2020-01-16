@@ -1,0 +1,216 @@
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS paymentrequest.proto)
+
+# Find includes in corresponding build directories
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+# Instruct CMake to run moc automatically when needed.
+set(CMAKE_AUTOMOC ON)
+
+qt5_wrap_ui(UI_HEADERS
+  forms/addressbookpage.ui
+  forms/askpassphrasedialog.ui
+  forms/coincontroldialog.ui
+  forms/editaddressdialog.ui
+  forms/helpmessagedialog.ui
+  forms/intro.ui
+  forms/openuridialog.ui
+  forms/optionsdialog.ui
+  forms/overviewpage.ui
+  forms/receivecoinsdialog.ui
+  forms/receiverequestdialog.ui
+  forms/rpcconsole.ui
+  forms/sendcoinsdialog.ui
+  forms/sendcoinsentry.ui
+  forms/signverifymessagedialog.ui
+  forms/masternodelist.ui
+  forms/systemnodelist.ui
+  forms/transactiondescdialog.ui
+  forms/multisigaddressentry.ui
+  forms/multisigdialog.ui
+  forms/multisiginputentry.ui
+  forms/createnodedialog.ui
+  forms/startmissingdialog.ui
+  forms/updatedialog.ui
+  )
+
+add_library(crownqtlib
+  bitcoinaddressvalidator.cpp
+  bitcoinamountfield.cpp
+  bitcoingui.cpp
+  bitcoinunits.cpp
+  clientmodel.cpp
+  csvmodelwriter.cpp
+  guiutil.cpp
+  intro.cpp
+  multisigaddressentry.cpp
+  multisigdialog.cpp
+  multisiginputentry.cpp
+  networkstyle.cpp
+  notificator.cpp
+  optionsdialog.cpp
+  optionsmodel.cpp
+  peertablemodel.cpp
+  qvalidatedlineedit.cpp
+  qvaluecombobox.cpp
+  rpcconsole.cpp
+  splashscreen.cpp
+  trafficgraphwidget.cpp
+  utilitydialog.cpp
+  winshutdownmonitor.cpp
+  addressbookpage.cpp
+  addresstablemodel.cpp
+  askpassphrasedialog.cpp
+  coincontroldialog.cpp
+  coincontroltreewidget.cpp
+  editaddressdialog.cpp
+  openuridialog.cpp
+  overviewpage.cpp
+  paymentrequestplus.cpp
+  paymentserver.cpp
+  receivecoinsdialog.cpp
+  receiverequestdialog.cpp
+  recentrequeststablemodel.cpp
+  sendcoinsdialog.cpp
+  sendcollateraldialog.cpp
+  sendcoinsentry.cpp
+  signverifymessagedialog.cpp
+  masternodelist.cpp
+  systemnodelist.cpp
+  datetablewidgetitem.cpp
+  privatekeywidget.cpp
+  createnodedialog.cpp
+  startmissingdialog.cpp
+  transactiondesc.cpp
+  transactiondescdialog.cpp
+  transactionfilterproxy.cpp
+  transactionrecord.cpp
+  transactiontablemodel.cpp
+  transactionview.cpp
+  walletframe.cpp
+  walletmodel.cpp
+  walletmodeltransaction.cpp
+  walletview.cpp
+  updatedialog.cpp
+  addressbookpage.h
+  addresstablemodel.h
+  askpassphrasedialog.h
+  bitcoinaddressvalidator.h
+  bitcoinamountfield.h
+  bitcoingui.h
+  bitcoinunits.h
+  clientmodel.h
+  coincontroldialog.h
+  coincontroltreewidget.h
+  csvmodelwriter.h
+  editaddressdialog.h
+  guiconstants.h
+  guiutil.h
+  intro.h
+#  macdockiconhandler.h
+#  macnotificationhandler.h
+  networkstyle.h
+  notificator.h
+  openuridialog.h
+  optionsdialog.h
+  optionsmodel.h
+  overviewpage.h
+  paymentrequestplus.h
+  paymentserver.h
+  peertablemodel.h
+  qvalidatedlineedit.h
+  qvaluecombobox.h
+  receivecoinsdialog.h
+  receiverequestdialog.h
+  recentrequeststablemodel.h
+  rpcconsole.h
+  sendcoinsdialog.h
+  sendcoinsentry.h
+  sendcollateraldialog.h
+  signverifymessagedialog.h
+  splashscreen.h
+  masternodelist.h
+  systemnodelist.h
+  datetablewidgetitem.h
+  privatekeywidget.h
+  createsystemnodedialog.h
+  createmasternodedialog.h
+  createnodedialog.h
+  startmissingdialog.h
+  trafficgraphwidget.h
+  transactiondesc.h
+  transactiondescdialog.h
+  transactionfilterproxy.h
+  transactionrecord.h
+  transactiontablemodel.h
+  transactionview.h
+  utilitydialog.h
+  walletframe.h
+  walletmodel.h
+  walletmodeltransaction.h
+  walletview.h
+  winshutdownmonitor.h
+  multisigaddressentry.h
+  multisigdialog.h
+  multisiginputentry.h
+  updatedialog.h
+  ${UI_HEADERS}
+  ${PROTO_SRCS}
+  ${PROTO_HDRS}
+  )
+target_include_directories(crownqtlib PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE qt)
+
+target_link_libraries(crownqtlib
+  crown_util
+  crown_client
+  leveldb
+  Qt5::Widgets
+  Qt5::Network
+  )
+#if TARGET_WINDOWS
+#crownd_SOURCES += crownd-res.rc
+#endif
+qt5_add_translation(QM
+  locale/crown_bg.ts
+  locale/crown_cs.ts
+  locale/crown_de.ts
+  locale/crown_en.ts
+  locale/crown_es.ts
+  locale/crown_fi.ts
+  locale/crown_fr.ts
+  locale/crown_it.ts
+  locale/crown_ja.ts
+  locale/crown_pl.ts
+  locale/crown_pt.ts
+  locale/crown_ru.ts
+  locale/crown_sk.ts
+  locale/crown_sv.ts
+  locale/crown_vi.ts
+  locale/crown_zh_CN.ts
+  locale/crown_zh_TW.ts
+  )
+
+message(${QM})
+qt5_add_resources(QRCS
+  crown.qrc
+#  crown_locale.qrc
+  )
+add_executable(crown_qt
+  ${QM}
+  ${QRCS}
+  crown.cpp)
+
+target_link_libraries(crown_qt
+  crown_core
+  crown_server
+  crown_common
+  crown_util
+  crown_crypto
+  crown_univalue
+  crown_client
+  crown_platform
+  crownqtlib
+  Qt5::Widgets
+  protobuf::libprotobuf
+  protobuf::libprotobuf-lite
+  OpenSSL::Crypto
+  OpenSSL::SSL
+  )

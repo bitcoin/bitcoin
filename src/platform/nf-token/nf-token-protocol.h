@@ -11,6 +11,17 @@
 
 namespace Platform
 {
+    enum NftRegSign : uint8_t
+    {
+        SelfSign = 1,
+        SignByCreator = 2,
+        SignPayer = 3,
+        NftRegSignMin = SelfSign,
+        NftRegSignMax = SignPayer
+    };
+
+    std::string NftRegSignToString(NftRegSign nftRegSign);
+
     class NfTokenProtocol
     {
     public:
@@ -20,28 +31,40 @@ namespace Platform
         uint64_t tokenProtocolId;
 
         /// Full name for this NF token type/protocol
-        /// Minimum length 3 symbols, maximum length 24(TODO:?) symbols
-        /// Characters TODO:
+        /// Minimum length 3 symbols, maximum length 24 symbols
         std::string tokenProtocolName;
 
         /// URI to schema (json/xml/binary) describing metadata format
         std::string tokenMetadataSchemaUri;
 
         /// MIME type describing metadata content type
-        std::string tokenMetadataMimeType;
+        std::string tokenMetadataMimeType{"text/plain"};
 
         /// Defines if this NF token type can be transferred
-        bool isTokenTransferable;
+        bool isTokenTransferable{true};
 
         /// Defines if this NF token id can be changed during token lifetime
-        bool isTokenImmutable;
+        bool isTokenImmutable{true};
 
         /// Defines if metadata is embedded or contains a URI
         /// It's recommended to use embedded metadata only if it's shorter than URI
-        bool isMetadataEmbedded;
+        bool isMetadataEmbedded{false};
+
+        /// Defines who must sign an NFT registration transaction
+        uint8_t nftRegSign{static_cast<uint8_t>(SignByCreator)};
+
+        /// Defines the maximum size of the NFT metadata
+        uint8_t maxMetadataSize{TOKEN_METADATA_ABSOLUTE_MAX};
 
         /// Owner of the NF token protocol
         CKeyID tokenProtocolOwnerId;
+        //TODO: add admin key to the protocol structure. add option to use setup admin key rights including tranfering ownership
+
+        static const unsigned TOKEN_PROTOCOL_ID_MAX = 12;
+        static const unsigned TOKEN_PROTOCOL_NAME_MAX = 24;
+        static const unsigned TOKEN_METADATA_SCHEMA_URI_MAX = 128;
+        static const unsigned TOKEN_METADATA_MIMETYPE_MAX = 32;
+        static const unsigned TOKEN_METADATA_ABSOLUTE_MAX = 255;
 
     public:
         ADD_SERIALIZE_METHODS
@@ -55,6 +78,8 @@ namespace Platform
             READWRITE(isTokenTransferable);
             READWRITE(isTokenImmutable);
             READWRITE(isMetadataEmbedded);
+            READWRITE(nftRegSign);
+            READWRITE(maxMetadataSize);
             READWRITE(tokenProtocolOwnerId);
         }
     };
@@ -67,6 +92,7 @@ namespace Platform
     isTokenImmutable = false;
     isTokenTransferable = false;
     isMetadataEmbedded = false;
+    nftRegSign = NftRegSign::SignPayer;
 
     tokenProtocolId = cks;
     tokenProtocolName = ercS21.kitts;
@@ -75,6 +101,7 @@ namespace Platform
     isTokenImmutable = false;
     isTokenTransferable = false;
     isMetadataEmbedded = false;
+    nftRegSign = NftRegSign::SignByCreator;
 
     tokenProtocolId = crd;
     tokenProtocolName = crown.id;
@@ -83,6 +110,7 @@ namespace Platform
     isTokenImmutable = false;
     isTokenTransferable = false;
     isMetadataEmbedded = false;
+    nftRegSign = NftRegSign::SelfSign;
 
     tokenProtocolSymbol = doc;
     tokenProtocolName = docproof;
@@ -90,7 +118,8 @@ namespace Platform
     tokenMetadataMimeType = text/plain;
     isTokenImmutable = true;
     isTokenTransferable = true;
-    isMetadataEmbedded = true; */
+    isMetadataEmbedded = true;
+    nftRegSign = NftRegSign::SignPayer; */
 }
 
 #endif // CROWN_PLATFORM_NF_TOKEN_PROTOCOL_H

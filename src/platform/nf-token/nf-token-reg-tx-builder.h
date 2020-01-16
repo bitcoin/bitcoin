@@ -28,10 +28,9 @@ namespace Platform
             return *this;
         }
 
-        NfTokenRegTxBuilder & SetTokenOwnerKey(const json_spirit::Value & tokenOwnerKeyOrAddress, CKey & ownerPrivKey)
+        NfTokenRegTxBuilder & SetTokenOwnerKey(const json_spirit::Value & tokenOwnerAddress)
         {
-            ownerPrivKey = ParsePrivKeyOrAddress(tokenOwnerKeyOrAddress.get_str());
-            m_nfToken.tokenOwnerKeyId = ownerPrivKey.GetPubKey().GetID();
+            m_nfToken.tokenOwnerKeyId = ParsePubKeyIDFromAddress(tokenOwnerAddress.get_str(), "nfTokenOwnerAddr");
             return *this;
         }
 
@@ -46,10 +45,6 @@ namespace Platform
 
         NfTokenRegTxBuilder & SetMetadata(const json_spirit::Value & metadata)
         {
-            //TODO: if binary then also convert from base64
-            // if (protocol metadata is embedded -> read directly from the value)
-            // else download metadata from uri
-            // Note: supports embedded "text/plain" only for now
             m_nfToken.metadata.assign(metadata.get_str().begin(), metadata.get_str().end());
             return *this;
         }
@@ -67,8 +62,6 @@ namespace Platform
 
     private:
         NfToken m_nfToken;
-        //CKey m_ownerKey;
-        //CPubKey m_ownerPubKey;
     };
 }
 
