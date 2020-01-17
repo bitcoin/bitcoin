@@ -6,6 +6,7 @@
 #define BITCOIN_QT_ASKPASSPHRASEDIALOG_H
 
 #include <QDialog>
+#include <QLineEdit>
 
 #include <support/allocators/secure.h>
 
@@ -45,6 +46,7 @@ private:
 
 private Q_SLOTS:
     void textChanged();
+    void updatePasswordStrengthIndicator(QLineEdit* lineedit);
     void secureClearPassFields();
     void toggleShowPassword(bool);
 

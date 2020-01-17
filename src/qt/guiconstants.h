@@ -18,6 +18,9 @@ static const int STATUSBAR_ICONSIZE = 16;
 
 static const bool DEFAULT_SPLASHSCREEN = true;
 
+/* Recommend length of a password */
+static const int RECOMMEND_LENGTH = 10;
+
 /* Invalid field background style */
 #define STYLE_INVALID "background:#FF8080"
 

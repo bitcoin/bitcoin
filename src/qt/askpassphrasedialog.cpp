@@ -18,6 +18,8 @@
 #include <QMessageBox>
 #include <QPushButton>
 
+#include <boost/algorithm/string.hpp>
+
 AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent, SecureString* passphrase_out) :
     QDialog(parent),
     ui(new Ui::AskPassphraseDialog),
@@ -216,6 +218,7 @@ void AskPassphraseDialog::textChanged()
     {
     case Encrypt: // New passphrase x2
         acceptable = !ui->passEdit2->text().isEmpty() && !ui->passEdit3->text().isEmpty();
+        updatePasswordStrengthIndicator(ui->passEdit2);
         break;
     case Unlock: // Old passphrase x1
     case Decrypt:
@@ -223,9 +226,47 @@ void AskPassphraseDialog::textChanged()
         break;
     case ChangePass: // Old passphrase x1, new passphrase x2
         acceptable = !ui->passEdit1->text().isEmpty() && !ui->passEdit2->text().isEmpty() && !ui->passEdit3->text().isEmpty();
+        updatePasswordStrengthIndicator(ui->passEdit2);
         break;
     }
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(acceptable);
+}
+
+void AskPassphraseDialog::updatePasswordStrengthIndicator(QLineEdit* lineedit)
+{
+    std::string pass = lineedit->text().toUtf8().constData();
+    bool mixedcase = (boost::to_upper_copy<std::string>(pass) != pass) && (boost::to_lower_copy<std::string>(pass) != pass);
+    bool specialChars = pass.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxzy123456789") != std::string::npos;
+    bool digits = pass.find_first_not_of("1234567890") != std::string::npos;
+    // Do nothing if the PW was empty
+    if (pass.empty()) {
+        ui->labelSecurityLevel->setText("");
+        return;
+    }
+    // Passwords smaller than 10 chars are generally very weak
+    if (pass.size() < RECOMMEND_LENGTH) {
+        ui->labelSecurityLevel->setText("Very weak");
+        ui->labelSecurityLevel->setStyleSheet("QLabel {color: #ff0000; }");
+        return;
+    }
+    // Passwords with no mixed case or special characters but >10 are weak
+    if (pass.size() >= RECOMMEND_LENGTH && !mixedcase && !specialChars) {
+        ui->labelSecurityLevel->setText("Weak");
+        ui->labelSecurityLevel->setStyleSheet("QLabel {color: #ffa500; }");
+        return;
+    }
+    // If password contains special chars or mixed case
+    if (mixedcase || specialChars || digits) {
+        ui->labelSecurityLevel->setText("Normal");
+        ui->labelSecurityLevel->setStyleSheet("QLabel {color: #cccc00; }"); // We use a darker yellow because of contrast
+    }
+    // The crème de la crème: >10, mixed case, special chars and digits
+    if (mixedcase && specialChars && digits) {
+        ui->labelSecurityLevel->setText("Strong");
+        ui->labelSecurityLevel->setStyleSheet("QLabel {color: #00ff00; }");
+        return;
+    }
+
 }
 
 bool AskPassphraseDialog::event(QEvent *event)
