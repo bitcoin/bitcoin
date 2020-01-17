@@ -107,12 +107,7 @@ class SegWitTest(BitcoinTestFramework):
         assert tmpl['sigoplimit'] == 20000
         assert tmpl['transactions'][0]['hash'] == txid
         assert tmpl['transactions'][0]['sigops'] == 2
-        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
-        assert tmpl['sizelimit'] == 1000000
-        assert 'weightlimit' not in tmpl
-        assert tmpl['sigoplimit'] == 20000
-        assert tmpl['transactions'][0]['hash'] == txid
-        assert tmpl['transactions'][0]['sigops'] == 2
+        assert '!segwit' not in tmpl['rules']
         self.nodes[0].generate(1)  # block 162
 
         balance_presetup = self.nodes[0].getbalance()
@@ -212,6 +207,7 @@ class SegWitTest(BitcoinTestFramework):
         assert tmpl['sigoplimit'] == 80000
         assert tmpl['transactions'][0]['txid'] == txid
         assert tmpl['transactions'][0]['sigops'] == 8
+        assert '!segwit' in tmpl['rules']
 
         self.nodes[0].generate(1)  # Mine a block to clear the gbt cache
 
