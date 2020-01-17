@@ -905,12 +905,8 @@ void RPCConsole::on_lineEdit_returnPressed()
 
         cmdBeforeBrowsing = QString();
 
-        WalletModel* wallet_model{nullptr};
 #ifdef ENABLE_WALLET
-        const int wallet_index = ui->WalletSelector->currentIndex();
-        if (wallet_index > 0) {
-            wallet_model = ui->WalletSelector->itemData(wallet_index).value<WalletModel*>();
-        }
+        WalletModel* wallet_model = ui->WalletSelector->currentData().value<WalletModel*>();
 
         if (m_last_wallet_model != wallet_model) {
             if (wallet_model) {
