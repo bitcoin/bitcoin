@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2019 Daniel Kraft
+// Copyright (c) 2014-2020 Daniel Kraft
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -114,7 +114,7 @@ public:
    * @param tx The base tx to use.
    * @return The constructed CAuxPow object.
    */
-  CAuxPow get (const CTransactionRef &tx) const;
+  CAuxPow get (const CTransactionRef tx) const;
 
   /**
    * Build the finished CAuxPow object from the parent block's coinbase.
@@ -191,7 +191,7 @@ CAuxpowBuilder::buildAuxpowChain (const uint256& hashAux, unsigned h, int index)
 }
 
 CAuxPow
-CAuxpowBuilder::get (const CTransactionRef &tx) const
+CAuxpowBuilder::get (const CTransactionRef tx) const
 {
   LOCK(cs_main);
 
@@ -253,10 +253,19 @@ BOOST_FIXTURE_TEST_CASE (check_auxpow, BasicTestingSetup)
   index = CAuxPow::getExpectedIndex (nonce, ourChainId, height);
   auxRoot = builder.buildAuxpowChain (hashAux, height, index);
   data = CAuxpowBuilder::buildCoinbaseData (true, auxRoot, height, nonce);
-  scr = (CScript () << 2809 << 2013) + COINBASE_FLAGS;
+  scr = (CScript () << 2809 << 2013);
   scr = (scr << OP_2 << data);
   builder.setCoinbase (scr);
   BOOST_CHECK (builder.get ().check (hashAux, ourChainId, params));
+
+  /* An auxpow without any inputs in the parent coinbase tx should be
+     handled gracefully (and be considered invalid).  */
+  CMutableTransaction mtx(*builder.parentBlock.vtx[0]);
+  mtx.vin.clear ();
+  builder.parentBlock.vtx.clear ();
+  builder.parentBlock.vtx.push_back (MakeTransactionRef (std::move (mtx)));
+  builder.parentBlock.hashMerkleRoot = BlockMerkleRoot (builder.parentBlock);
+  BOOST_CHECK (!builder.get ().check (hashAux, ourChainId, params));
 
   /* Check that the auxpow is invalid if we change either the aux block's
      hash or the chain ID.  */
@@ -288,7 +297,7 @@ BOOST_FIXTURE_TEST_CASE (check_auxpow, BasicTestingSetup)
   index = CAuxPow::getExpectedIndex (nonce, ourChainId, height + 1);
   auxRoot = builder2.buildAuxpowChain (hashAux, height + 1, index);
   data = CAuxpowBuilder::buildCoinbaseData (true, auxRoot, height + 1, nonce);
-  scr = (CScript () << 2809 << 2013) + COINBASE_FLAGS;
+  scr = (CScript () << 2809 << 2013);
   scr = (scr << OP_2 << data);
   builder2.setCoinbase (scr);
   BOOST_CHECK (!builder2.get ().check (hashAux, ourChainId, params));
@@ -299,15 +308,16 @@ BOOST_FIXTURE_TEST_CASE (check_auxpow, BasicTestingSetup)
   tamperWith (builder2.parentBlock.hashMerkleRoot);
   BOOST_CHECK (!builder2.get ().check (hashAux, ourChainId, params));
 
-  /* Build a non-header legacy version and check that it is also accepted.  */
+  /* Build a non-header legacy version and check that it should be rejected, no backwards compat auxpow unlike NMC, 
+  because bridge smart contracts validates auxpow and doesn't have compat fallback, so syscoin consensus needs to enforce.  */
   builder2 = builder;
   index = CAuxPow::getExpectedIndex (nonce, ourChainId, height);
   auxRoot = builder2.buildAuxpowChain (hashAux, height, index);
   data = CAuxpowBuilder::buildCoinbaseData (false, auxRoot, height, nonce);
-  scr = (CScript () << 2809 << 2013) + COINBASE_FLAGS;
+  scr = (CScript () << 2809 << 2013);
   scr = (scr << OP_2 << data);
   builder2.setCoinbase (scr);
-  BOOST_CHECK (builder2.get ().check (hashAux, ourChainId, params));
+  BOOST_CHECK (!builder2.get ().check (hashAux, ourChainId, params));
 
   /* However, various attempts at smuggling two roots in should be detected.  */
 
@@ -316,7 +326,7 @@ BOOST_FIXTURE_TEST_CASE (check_auxpow, BasicTestingSetup)
   valtype data2
     = CAuxpowBuilder::buildCoinbaseData (false, wrongAuxRoot, height, nonce);
   builder2.setCoinbase (CScript () << data << data2);
-  BOOST_CHECK (builder2.get ().check (hashAux, ourChainId, params));
+  BOOST_CHECK (!builder2.get ().check (hashAux, ourChainId, params));
   builder2.setCoinbase (CScript () << data2 << data);
   BOOST_CHECK (!builder2.get ().check (hashAux, ourChainId, params));
 
@@ -517,19 +527,20 @@ public:
 
 BOOST_FIXTURE_TEST_CASE (auxpow_miner_blockRegeneration, TestChain100Setup)
 {
+  CTxMemPool mempool;
   AuxpowMinerForTest miner;
   LOCK (miner.cs);
 
   /* We use mocktime so that we can control GetTime() as it is used in the
      logic that determines whether or not to reconstruct a block.  The "base"
      time is set such that the blocks we have from the fixture are fresh.  */
-  const int64_t baseTime = ::ChainActive().Tip ()->GetMedianTimePast () + 1;
+  const int64_t baseTime = ::ChainActive ().Tip ()->GetMedianTimePast () + 1;
   SetMockTime (baseTime);
 
   /* Construct a first block.  */
   CScript scriptPubKey;
   uint256 target;
-  const CBlock* pblock1 = miner.getCurrentBlock (scriptPubKey, target);
+  const CBlock* pblock1 = miner.getCurrentBlock (mempool, scriptPubKey, target);
   BOOST_CHECK (pblock1 != nullptr);
   const uint256 hash1 = pblock1->GetHash ();
 
@@ -542,14 +553,14 @@ BOOST_FIXTURE_TEST_CASE (auxpow_miner_blockRegeneration, TestChain100Setup)
      time (even if we advance the clock, since there are no new
      transactions).  */
   SetMockTime (baseTime + 100);
-  const CBlock* pblock = miner.getCurrentBlock (scriptPubKey, target);
+  const CBlock* pblock = miner.getCurrentBlock (mempool, scriptPubKey, target);
   BOOST_CHECK (pblock == pblock1 && pblock->GetHash () == hash1);
 
   /* Mine a block, then we should get a new auxpow block constructed.  Note that
      it can be the same *pointer* if the memory was reused after clearing it,
      so we can only verify that the hash is different.  */
   CreateAndProcessBlock ({}, scriptPubKey);
-  const CBlock* pblock2 = miner.getCurrentBlock (scriptPubKey, target);
+  const CBlock* pblock2 = miner.getCurrentBlock (mempool, scriptPubKey, target);
   BOOST_CHECK (pblock2 != nullptr);
   const uint256 hash2 = pblock2->GetHash ();
   BOOST_CHECK (hash2 != hash1);
@@ -565,25 +576,26 @@ BOOST_FIXTURE_TEST_CASE (auxpow_miner_blockRegeneration, TestChain100Setup)
 
   /* We should still get back the cached block, for now.  */
   SetMockTime (baseTime + 160);
-  pblock = miner.getCurrentBlock (scriptPubKey, target);
+  pblock = miner.getCurrentBlock (mempool, scriptPubKey, target);
   BOOST_CHECK (pblock == pblock2 && pblock->GetHash () == hash2);
 
   /* With time advanced too far, we get a new block.  This time, we should also
      definitely get a different pointer, as there is no clearing.  The old
      blocks are freed only after a new tip is found.  */
   SetMockTime (baseTime + 161);
-  const CBlock* pblock3 = miner.getCurrentBlock (scriptPubKey, target);
+  const CBlock* pblock3 = miner.getCurrentBlock (mempool, scriptPubKey, target);
   BOOST_CHECK (pblock3 != pblock2 && pblock3->GetHash () != hash2);
 }
 
 BOOST_FIXTURE_TEST_CASE (auxpow_miner_createAndLookupBlock, TestChain100Setup)
 {
+  CTxMemPool mempool;
   AuxpowMinerForTest miner;
   LOCK (miner.cs);
 
   CScript scriptPubKey;
   uint256 target;
-  const CBlock* pblock = miner.getCurrentBlock (scriptPubKey, target);
+  const CBlock* pblock = miner.getCurrentBlock (mempool, scriptPubKey, target);
   BOOST_CHECK (pblock != nullptr);
 
   BOOST_CHECK (miner.lookupSavedBlock (pblock->GetHash ().GetHex ()) == pblock);

@@ -131,6 +131,7 @@ SYSCOIN_TESTS =\
   test/addrman_tests.cpp \
   test/amount_tests.cpp \
   test/allocator_tests.cpp \
+  test/auxpow_tests.cpp \
   test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \

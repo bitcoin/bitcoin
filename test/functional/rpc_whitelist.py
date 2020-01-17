@@ -5,7 +5,7 @@
 """
 A test for RPC users with restricted permissions
 """
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 import os
 from test_framework.util import (
     get_datadir_path,
@@ -26,7 +26,7 @@ def rpccall(node, user, method):
     return resp
 
 
-class RPCWhitelistTest(BitcoinTestFramework):
+class RPCWhitelistTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

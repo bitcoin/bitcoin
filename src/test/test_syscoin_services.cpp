@@ -104,7 +104,10 @@ void StartNodes()
 	//StopMainNetNodes();
 	tfm::format(std::cout,"Starting 3 nodes in a regtest setup...\n");
 	StartNode("node1");
-    BOOST_CHECK_NO_THROW(CallExtRPC("node1", "generate", "5"));
+	UniValue r;
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
+	string newaddress = r.get_str();
+	BOOST_CHECK_NO_THROW(CallExtRPC("node1", "generatetoaddress", "5,\"" + newaddress + "\"", false));
 	StartNode("node2");
 	StartNode("node3");
 
@@ -327,7 +330,10 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 	GetOtherNodes(node, otherNode1, otherNode2);
 	while (newHeight < targetHeight)
 	{
-		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "generate", sBlocks, false));
+
+		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "getnewaddress"));
+		string newaddress = r.get_str();
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "generatetoaddress", sBlocks + ",\"" + newaddress + "\"", false));
 		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "getblockchaininfo"));
 		newHeight = find_value(r.get_obj(), "blocks").get_int();
 		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "getwalletinfo"));
@@ -387,7 +393,9 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 	}
 	newHeight = find_value(r.get_obj(), "blocks").get_int() + nBlocks;
 	const string &sBlocks = strprintf("%d", nBlocks);
-	BOOST_CHECK_NO_THROW(CallExtRPC(node,  "generate", sBlocks, false));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "getnewaddress"));
+	string newaddress = r.get_str();
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "generatetoaddress", sBlocks + ",\"" + newaddress + "\"", false));
 	height = 0;
 	timeoutCounter = 0;
 	MilliSleep(10);
@@ -476,11 +484,12 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 void GenerateSpendableCoins() {
 	UniValue r;
 
-	const string &sBlocks = strprintf("%d", 101);
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "generate", sBlocks, false));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
+	string newaddress = r.get_str();
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "generatetoaddress", "101,\"" + newaddress + "\"", false));
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
 
-	string newaddress = r.get_str();
+	newaddress = r.get_str();
 	CallExtRPC("node1", "sendtoaddress", "\"" + newaddress + "\",\"100000\"", false);
 	GenerateBlocks(10, "node1");
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "getnewaddress"));
