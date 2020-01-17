@@ -117,7 +117,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 #if QT_VERSION >= 0x040700
     search_widget->setPlaceholderText(tr("Enter address, transaction id, or label to search"));
 #endif
-    addressWidget->setObjectName("addressWidget");
+    search_widget->setObjectName("search_widget");
     hlayout->addWidget(search_widget);
 
     amountWidget = new QLineEdit(this);
