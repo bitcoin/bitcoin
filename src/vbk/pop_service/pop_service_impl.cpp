@@ -15,6 +15,7 @@
 #include <shutdown.h>
 #include <streams.h>
 #include <validation.h>
+#include <util/strencodings.h>
 
 #include <vbk/merkle.hpp>
 #include <vbk/service_locator.hpp>
@@ -49,7 +50,7 @@ void BlockToProtoAltChainBlock(const CBlockHeader& block, const int& nHeight, Ve
 
 namespace VeriBlock {
 
-PopServiceImpl::PopServiceImpl()
+PopServiceImpl::PopServiceImpl(bool altautoconfig)
 {
     auto& config = VeriBlock::getService<VeriBlock::Config>();
     std::string ip = config.service_ip;
@@ -70,6 +71,9 @@ PopServiceImpl::PopServiceImpl()
         LogPrintf("Alt-service is not working, please run the alt-service before you start the daemon \n");
         LogPrintf("-------------------------------------------------------------------------------------------------\n");
         StartShutdown();
+    }
+    else if (altautoconfig){
+        setConfig();
     }
 }
 
@@ -403,6 +407,92 @@ bool PopServiceImpl::determineATVPlausibilityWithBTCRules(AltchainId altChainIde
     }
 
     return CheckProofOfWork(popEndorsementHeader.GetHash(), popEndorsementHeader.nBits, params);
+}
+
+void PopServiceImpl::setConfig()
+{
+    auto& config = getService<Config>();
+
+    ClientContext context;
+    SetConfigRequest request;
+    EmptyReply reply;
+
+    //AltChainConfig
+    AltChainConfigRequest* altChainConfig = new AltChainConfigRequest();
+    altChainConfig->set_keystoneinterval(config.keystone_interval);
+
+    // CalculatorConfig
+    CalculatorConfig* calculatorConfig = new CalculatorConfig();
+    calculatorConfig->set_basicreward(std::to_string(COIN));
+    calculatorConfig->set_payoutrounds(config.payoutRounds);
+    calculatorConfig->set_keystoneround(config.keystoneRound);
+    
+    RoundRatioConfig* roundRatioConfig = new RoundRatioConfig();
+    for (size_t i = 0; i < config.roundRatios.size(); ++i) {
+        std::string* round = roundRatioConfig->add_roundratio();
+        *round = config.roundRatios[i];
+    }
+    calculatorConfig->set_allocated_roundratios(roundRatioConfig);
+    
+    RewardCurveConfig* rewardCurveConfig = new RewardCurveConfig();
+    rewardCurveConfig->set_startofdecreasingline(config.startOfDecreasingLine);
+    rewardCurveConfig->set_widthofdecreasinglinenormal(config.widthOfDecreasingLineNormal);
+    rewardCurveConfig->set_widthofdecreasinglinekeystone(config.widthOfDecreasingLineKeystone);
+    rewardCurveConfig->set_aboveintendedpayoutmultipliernormal(config.aboveIntendedPayoutMultiplierNormal);
+    rewardCurveConfig->set_aboveintendedpayoutmultiplierkeystone(config.aboveIntendedPayoutMultiplierKeystone);
+    calculatorConfig->set_allocated_rewardcurve(rewardCurveConfig);
+
+    calculatorConfig->set_maxrewardthresholdnormal(config.maxRewardThresholdNormal);
+    calculatorConfig->set_maxrewardthresholdkeystone(config.maxRewardThresholdKeystone);
+
+    RelativeScoreConfig* relativeScoreConfig = new RelativeScoreConfig();
+    for (size_t i = 0; i < config.relativeScoreLookupTable.size(); ++i) {
+        std::string* score = relativeScoreConfig->add_score();
+        *score = config.relativeScoreLookupTable[i];
+    }
+    calculatorConfig->set_allocated_relativescorelookuptable(relativeScoreConfig);
+
+    FlatScoreRoundConfig* flatScoreRoundConfig = new FlatScoreRoundConfig();
+    flatScoreRoundConfig->set_round(config.flatScoreRound);
+    flatScoreRoundConfig->set_active(config.flatScoreRoundUse);
+    calculatorConfig->set_allocated_flatscoreround(flatScoreRoundConfig);
+
+    calculatorConfig->set_popdifficultyaveraginginterval(config.POP_DIFFICULTY_AVERAGING_INTERVAL);
+    calculatorConfig->set_poprewardsettlementinterval(config.POP_REWARD_SETTLEMENT_INTERVAL);
+    
+    //ForkresolutionConfig
+    ForkresolutionConfigRequest* forkresolutionConfig = new ForkresolutionConfigRequest();
+    forkresolutionConfig->set_keystonefinalitydelay(config.keystone_finality_delay);
+    forkresolutionConfig->set_amnestyperiod(config.amnesty_period);
+
+    //VeriBlockBootstrapConfig
+    VeriBlockBootstrapConfig* veriBlockBootstrapBlocks = new VeriBlockBootstrapConfig();
+    for (size_t i = 0; i < config.bootstrap_veriblock_blocks.size(); ++i) {
+        std::string* block = veriBlockBootstrapBlocks->add_blocks();
+        std::vector<uint8_t> bytes = ParseHex(config.bootstrap_veriblock_blocks[i]);
+        *block = std::string(bytes.begin(), bytes.end());
+    }
+
+    //BitcoinBootstrapConfig
+    BitcoinBootstrapConfig* bitcoinBootstrapBlocks = new BitcoinBootstrapConfig();
+    for (size_t i = 0; i < config.bootstrap_bitcoin_blocks.size(); ++i) {
+        std::string* block = bitcoinBootstrapBlocks->add_blocks();
+        std::vector<uint8_t> bytes = ParseHex(config.bootstrap_bitcoin_blocks[i]);
+        *block = std::string(bytes.begin(), bytes.end());
+    }
+    bitcoinBootstrapBlocks->set_firstblockheight(config.bitcoin_first_block_height);
+
+    request.set_allocated_altchainconfig(altChainConfig);
+    request.set_allocated_calculatorconfig(calculatorConfig);
+    request.set_allocated_forkresolutionconfig(forkresolutionConfig);
+    request.set_allocated_veriblockbootstrapconfig(veriBlockBootstrapBlocks);
+    request.set_allocated_bitcoinbootstrapconfig(bitcoinBootstrapBlocks);
+
+    Status status = grpcPopService->SetConfig(&context, request, &reply);
+
+    if (!status.ok()) {
+        throw PopServiceException(status);
+    }
 }
 
 bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
