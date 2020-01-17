@@ -598,6 +598,30 @@
         <translation>Informatie</translation>
     </message>
     <message>
+        <source>Received and sent multiple transactions</source>
+        <translation>Meerdere transacties ontvangen en verstuurd</translation>
+    </message>
+    <message>
+        <source>Sent multiple transactions</source>
+        <translation>Meerdere transacties verstuurd</translation>
+    </message>
+    <message>
+        <source>Received multiple transactions</source>
+        <translation>Meerdere transacties ontvangen</translation>
+    </message>
+    <message>
+        <source>Sent Amount: %1
+</source>
+        <translation>Verstuurd bedrag: %1
+</translation>
+    </message>
+    <message>
+        <source>Received Amount: %1
+</source>
+        <translation>Ontvangen bedrag: %1
+</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>Datum: %1
@@ -649,7 +673,7 @@
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for mixing only</source>
-        <translation>Portemonnee is &lt;b&gt;versleuteld&lt;/b&gt; en momenteel &lt;b&gt;ontgrendeld&lt;/b&gt; enkel voor mixing</translation>
+        <translation>Portemonnee is &lt;b&gt;versleuteld&lt;/b&gt; en momenteel &lt;b&gt;ontgrendeld&lt;/b&gt; enkel voor mixen</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
@@ -791,8 +815,8 @@
         <translation>Schakel over naar "Lijst mode" om deze functie te gebruiken.</translation>
     </message>
     <message>
-        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-anonymized inputs first and then check the PrivateSend checkbox again.</source>
-        <translation>Niet-anonieme invoer geselecteerd. &lt;b&gt;PrivateSend wordt uitgeschakeld. &lt;/b&gt;&lt;br&gt;&lt;br&gt; Indien je toch PrivateSend wenst te gebruiken, deselecteer dan eerst alle niet-anonieme invoer. Vink daarna PrivateSend opnieuw aan.</translation>
+        <source>Non-mixed input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-mixed inputs first and then check the PrivateSend checkbox again.</source>
+        <translation>Niet-anonieme invoer geselecteerd. &lt;b&gt;PrivateSend wordt uitgeschakeld. &lt;/b&gt;&lt;br&gt;&lt;br&gt; Indien u toch PrivateSend wenst te gebruiken, deselecteer dan eerst alle niet-anonieme invoer. Vink daarna PrivateSend opnieuw aan.</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -968,8 +992,8 @@
         <translation>PrivateSend informatie</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend geeft u een echte financiële privacy door de oorsprong van uw geld te verschuilen. Alle Dash in uw portefeuille bestaat uit verschillende "inputs" die u kunt beschouwen als afzonderlijke, discrete munten.&lt;br&gt; PrivateSend maakt gebruik van een innovatief proces om uw invoer te mengen met de invoer van twee andere mensen, zonder dat uw munten ooit uw portemonnee verlaten . U behoudt de controle over uw geld te allen tijde. &lt;hr&gt; &lt;b&gt;Het PrivateSend-proces werkt als volgt: &lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begint door uw transactie-inputs in de standaard denominaties te breken. Deze denominaties zijn 0,001 DASH, 0,01 DASH, 0,1 DASH, 1 DASH en 10 DASH - zoals de papiergeld dat u elke dag gebruikt.&lt;/li&gt; &lt;li&gt;Jouw portemonnee stuurt dan verzoeken naar speciaal geconfigureerde software nodes op het netwerk, genaamd "masternodes." Deze masternodes worden dan op de hoogte gesteld dat u geïnteresseerd bent in het mengen van een bepaalde denominaties. Er wordt geen identificeerbare informatie naar de masternodes gestuurd, zodat ze nooit weten wie je bent.&lt;/li&gt; &lt;li&gt;Wanneer twee andere mensen dezelfde berichten sturen, die aanduiden dat ze dezelfde denominaties willen vermengen, begint een mengsessie. De masternode mengt alle invoeren en instrueert de portefeuilles van alle drie de gebruikers om de nu getransformeerde invoer aan zichzelf terug te betalen. Jouw portemonnee betaalt die denominaties rechtstreeks naar zichzelf, maar met een ander adres (een wijziging adres genoemd).&lt;/li&gt; &lt;li&gt;Om uw geld volledig te verschuilen, moet uw portemonnee dit proces een aantal keren herhalen voor elke denominaties. Elke keer dat het proces wordt voltooid, dit heet een 'ronde'. Elke ronde van PrivateSend maakt het exponentieel moeilijker om te bepalen waar uw geld van afkomstig is.&lt;/li&gt; &lt;li&gt;Dit mengproces gebeurt op de achtergrond zonder enige interventie van uw kant. Wanneer u een transactie wenst uit te voeren, zijn uw fondsen al geanonimiseerd. Er is geen extra wachttijd nodig.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;BELANGRIJK:&lt;/b&gt; Je portemonnee bevat slechts 1000 van deze "wijzigingsadressen". Elke keer dat er een mengsessie plaatsvindt, worden maximaal 9 van uw adressen opgebruikt. Dit betekent dat deze 1000 adressen voor ongeveer 100 mengsessies volstaat. Wanneer er 900 werden gebruikt, moet je portemonnee meer adressen aanmaken. Dit kan alleen maar als u automatische back-ups hebt ingeschakeld.&lt;br&gt; Bijgevolg hebben gebruikers die back-ups hebben uitgeschakeld, ook PrivateSend uitgeschakeld. &lt;hr&gt;Voor meer informatie zie de &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentatie&lt;/a&gt;.</translation>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend geeft u een echte financiële privacy door de oorsprong van uw geld te verschuilen. Alle Dash in uw portefeuille bestaat uit verschillende "inputs" die u kunt beschouwen als afzonderlijke, discrete munten.&lt;br&gt; PrivateSend maakt gebruik van een innovatief proces om uw invoer te mengen met de invoer van twee andere mensen, zonder dat uw munten ooit uw portemonnee verlaten . U behoudt de controle over uw geld te allen tijde. &lt;hr&gt; &lt;b&gt;Het PrivateSend-proces werkt als volgt: &lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begint door uw transactie-inputs in de standaard denominaties te breken. Deze denominaties zijn 0,001 DASH, 0,01 DASH, 0,1 DASH, 1 DASH en 10 DASH - zoals het papiergeld dat u elke dag gebruikt.&lt;/li&gt; &lt;li&gt;Uw portemonnee stuurt dan verzoeken naar speciaal geconfigureerde software nodes op het netwerk, genaamd "masternodes." Deze masternodes worden dan op de hoogte gesteld dat u geïnteresseerd bent in het mengen van een bepaalde denominaties. Er wordt geen identificeerbare informatie naar de masternodes gestuurd, zodat ze nooit weten wie u bent.&lt;/li&gt; &lt;li&gt;Wanneer twee andere mensen dezelfde berichten sturen, die aanduiden dat ze dezelfde denominaties willen vermengen, begint een mengsessie. De masternode mengt alle invoeren en instrueert de portefeuilles van alle drie de gebruikers om de nu getransformeerde invoer aan zichzelf terug te betalen. Uw portemonnee betaalt die denominaties rechtstreeks naar zichzelf, maar met een ander adres (een wijzigingadres genoemd).&lt;/li&gt; &lt;li&gt;Om uw geld volledig te verschuilen, moet uw portemonnee dit proces een aantal keren herhalen voor alle denominaties. Elke keer dat het proces wordt voltooid, heet dit een 'ronde'. Elke ronde van PrivateSend maakt het exponentieel moeilijker om te bepalen waar uw geld van afkomstig is.&lt;/li&gt; &lt;li&gt;Dit mengproces gebeurt op de achtergrond zonder enige interventie van uw kant. Wanneer u een transactie wenst uit te voeren, is uw saldo al geanonimiseerd. Er is geen extra wachttijd nodig.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;BELANGRIJK:&lt;/b&gt; Uw portemonnee bevat slechts 1000 van deze "wijzigingsadressen". Elke keer dat er een mengsessie plaatsvindt, worden maximaal 9 van uw adressen opgebruikt. Dit betekent dat deze 1000 adressen voor ongeveer 100 mengsessies volstaat. Wanneer er 900 zijn verbruikt, moet uw portemonnee meer adressen aanmaken. Dit kan alleen maar als u automatische back-ups hebt ingeschakeld.&lt;br&gt; Daarom zodra gebruikers die back-ups hebben uitgeschakeld, ook PrivateSend is uitgeschakeld. &lt;hr&gt;Voor meer informatie zie de &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentatie&lt;/a&gt;.</translation>
     </message>
 </context>
 <context>
@@ -1046,16 +1070,8 @@
         <translation>Formulier</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adres</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>Status</translation>
-    </message>
-    <message>
-        <source>Payee</source>
-        <translation>Begunstigde</translation>
     </message>
     <message>
         <source>0</source>
@@ -1074,16 +1090,16 @@
         <translation>Aantal Nodes:</translation>
     </message>
     <message>
-        <source>DIP3 Masternodes</source>
-        <translation>DIP3 Masternodes</translation>
-    </message>
-    <message>
         <source>Show only masternodes this wallet has keys for.</source>
         <translation>Toon alleen masternodes waar deze portemonnee sleutels voor heeft.</translation>
     </message>
     <message>
         <source>My masternodes only</source>
         <translation>Alleen mijn masternodes</translation>
+    </message>
+    <message>
+        <source>Service</source>
+        <translation>Service</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1102,8 +1118,24 @@
         <translation>Volgende betaling</translation>
     </message>
     <message>
+        <source>Payout Address</source>
+        <translation>Betalingsadres</translation>
+    </message>
+    <message>
         <source>Operator Reward</source>
         <translation>Vergoeding voor Bediener</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Onderpand adres</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Adres eigenaar</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Stemadres</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1247,10 +1279,6 @@
         <translation>(0 = auto, &lt;0 = laat dit aantal kernen vrij)</translation>
     </message>
     <message>
-        <source>Amount of Dash to keep anonymized</source>
-        <translation>Aantal Dash om geanonimiseerd te houden</translation>
-    </message>
-    <message>
         <source>W&amp;allet</source>
         <translation>W&amp;allet</translation>
     </message>
@@ -1280,7 +1308,7 @@
     </message>
     <message>
         <source>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
-        <translation>Of je de experimentele PrivateSend-modus wenst te gebruiken met meerdere mengingssessies per blok.&lt;br/&gt;Nota: Je moet deze functie zorgvuldig gebruiken.&lt;br/&gt;Zorg ervoor dat je steeds een recente (auto)backup van jouw portemonnee op een veilige plek hebt!</translation>
+        <translation>Of je de experimentele PrivateSend-modus wenst te gebruiken met meerdere mixsessies per blok.&lt;br/&gt;Nota: Je moet deze functie zorgvuldig gebruiken.&lt;br/&gt;Zorg ervoor dat je steeds een recente (auto)backup van jouw portemonnee op een veilige plek hebt!</translation>
     </message>
     <message>
         <source>Enable PrivateSend &amp;multi-session</source>
@@ -1300,16 +1328,12 @@ Dit heeft ook invloed op de manier waarop uw saldo wordt berekend.</translation>
         <translation>Dit bedrag fungeert als een drempel om PrivateSend uit te schakelen zodra het werd bereikt.</translation>
     </message>
     <message>
+        <source>Target PrivateSend balance</source>
+        <translation>Target PrivateSend Saldo</translation>
+    </message>
+    <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Open automatisch de Dash client poort op de router. Dit werkt alleen als uw router UPnP ondersteunt en dit is ingeschakeld.</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>Laat uitgaande verbindingen toe.</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Laat binnenkomende verbindingen toe</translation>
     </message>
     <message>
         <source>Connect to the Dash network through a SOCKS5 proxy.</source>
@@ -1336,11 +1360,6 @@ Dit heeft ook invloed op de manier waarop uw saldo wordt berekend.</translation>
         <translation>Expert</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Deze instelling bepaalt het aantal individuele masternodes waardoor een input zal worden geanonimiseerd. 
-Meer anonimisatie rondes geeft een hoger niveau van privacy, maar kost ook meer aan vergoedingen.</translation>
-    </message>
-    <message>
         <source>Whether to show coin control features or not.</source>
         <translation>Munt controle functies weergeven of niet.</translation>
     </message>
@@ -1358,7 +1377,7 @@ Meer anonimisatie rondes geeft een hoger niveau van privacy, maar kost ook meer 
     </message>
     <message>
         <source>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
-        <translation>Toon systeem popups voor PrivateSend mixing transacties &lt;br/&gt;, net zoals voor alle andere transactie types.</translation>
+        <translation>Toon systeem popups voor PrivateSend mixtransacties &lt;br/&gt;, net zoals voor alle andere transactie types.</translation>
     </message>
     <message>
         <source>Show popups for PrivateSend transactions</source>
@@ -1369,12 +1388,24 @@ Meer anonimisatie rondes geeft een hoger niveau van privacy, maar kost ook meer 
         <translation>&amp;Spendeer onbevestigd wisselgeld</translation>
     </message>
     <message>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Deze instelling bepaalt het aantal individuele masternodes waardoor een input zal worden geanonimiseerd.&lt;br/&gt;Meer mixrondes geeft een hoger niveau van privacy, maar kost ook meer aan vergoedingen.</translation>
+    </message>
+    <message>
         <source>&amp;Network</source>
         <translation>&amp;Netwerk</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Portmapping via &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>Laat uitgaande verbindingen toe.</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Laat binnenkomende verbindingen toe</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1614,22 +1645,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Voltooiing:</translation>
     </message>
     <message>
-        <source>Try to manually submit a PrivateSend request.</source>
-        <translation>Probeer handmatig een PrivateSend verzoek in te dienen</translation>
-    </message>
-    <message>
-        <source>Reset the current status of PrivateSend (can interrupt PrivateSend if it's in the process of Mixing, which can cost you money!)</source>
-        <translation>Reset de huidige status van PrivateSend (kan PrivateSend onderbreken indien het Mix proces bezig is, wat u geld kan kosten!)</translation>
-    </message>
-    <message>
-        <source>Information about PrivateSend and Mixing</source>
-        <translation>Informatie over PrivateSend en mixen</translation>
-    </message>
-    <message>
-        <source>Info</source>
-        <translation>Informatie</translation>
-    </message>
-    <message>
         <source>Amount and Rounds:</source>
         <translation>Bedrag en Rondes:</translation>
     </message>
@@ -1651,7 +1666,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Start/Stop Mixing</source>
-        <translation>Start/Stop met Mixen</translation>
+        <translation>Start/Stop met mixen</translation>
     </message>
     <message>
         <source>PrivateSend Balance:</source>
@@ -1667,14 +1682,6 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <translation>(Laatste Bericht)</translation>
     </message>
     <message>
-        <source>Try Mix</source>
-        <translation>Probeer te Mixen</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation>Reset</translation>
-    </message>
-    <message>
         <source>out of sync</source>
         <translation>niet gesynchroniseerd</translation>
     </message>
@@ -1684,11 +1691,11 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
     </message>
     <message>
         <source>Start Mixing</source>
-        <translation>Start met Mixen</translation>
+        <translation>Start met mixen</translation>
     </message>
     <message>
         <source>Stop Mixing</source>
-        <translation>Stop met Mixen</translation>
+        <translation>Stop met mixen</translation>
     </message>
     <message>
         <source>No inputs detected</source>
@@ -1715,12 +1722,12 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <translation>Gedenomineerd</translation>
     </message>
     <message>
-        <source>Mixed</source>
-        <translation>Gemixt</translation>
+        <source>Partially mixed</source>
+        <translation>Gedeeltelijk gemengd</translation>
     </message>
     <message>
-        <source>Anonymized</source>
-        <translation>Geanonimiseerd</translation>
+        <source>Mixed</source>
+        <translation>Gemixt</translation>
     </message>
     <message numerus="yes">
         <source>Denominated inputs have %5 of %n rounds on average</source>
@@ -1775,10 +1782,6 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
 </source>
         <translation>Laatste PrivateSend bericht:
 </translation>
-    </message>
-    <message>
-        <source>PrivateSend was successfully reset.</source>
-        <translation>PrivateSend is succesvol gereset</translation>
     </message>
     <message>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
@@ -2792,18 +2795,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>gebruiken</translation>
     </message>
     <message>
-        <source>anonymous funds</source>
-        <translation>anonieme geldmiddelen</translation>
-    </message>
-    <message>
-        <source>(privatesend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>(PrivateSend vereist dat dit bedrag afgerond wordt naar dedichtstbijzijnde %1)</translation>
-    </message>
-    <message>
-        <source>any available funds (not anonymous)</source>
-        <translation>Al het beschikbare geldmiddelen (niet anoniem)</translation>
-    </message>
-    <message>
         <source>%1 to %2</source>
         <translation>%1 tot %2</translation>
     </message>
@@ -2822,6 +2813,34 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 van de %2 items weergegeven)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>PrivateSend funds only</source>
+        <translation>Allen PrivateSend saldo</translation>
+    </message>
+    <message>
+        <source>any available funds</source>
+        <translation>Beschikbare fondsen</translation>
+    </message>
+    <message>
+        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(PrivateSend-transacties hebben hogere kosten doordat er geen wisselgeld output is toegestaan)</translation>
+    </message>
+    <message>
+        <source>Transaction size: %1</source>
+        <translation>Transactiegrootte: %1</translation>
+    </message>
+    <message>
+        <source>Fee rate: %1</source>
+        <translation>Transactievergoeding: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>This transaction will consume %n input(s)</source>
+        <translation><numerusform>Deze transactie verbruikt %n inputs</numerusform><numerusform>Deze transactie verbruikt %n inputs</numerusform></translation>
+    </message>
+    <message>
+        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
+        <translation>Waarschuwing: het gebruik van PrivateSend met %1 of meer ingangen kan uw privacy schaden en wordt niet aanbevolen</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3789,10 +3808,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Ontvang command-lijn en JSON-RPC commando's.</translation>
     </message>
     <message>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Voeg een node toe om mee te verbinden en probeer de verbinding open te houden.</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Sta DNS opzoekingen to voor -addnode, -seednode en -connect</translation>
     </message>
@@ -3905,10 +3920,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Bind aan opgegeven adres en keur peers die ermee verbinden goed. Gebruik [host]:poort notatie voor IPv6</translation>
     </message>
     <message>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections</source>
-        <translation>Maak alleen verbinding met de opgegeven knooppunt (en); -connect = 0 schakelt automatische verbindingen uit</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Creër nieuwe bestanden met standaard systeem bestandsrechten in plaats van umask 077 (alleen effectief met uitgeschakelde portemonnee functionaliteit)</translation>
     </message>
@@ -3949,10 +3960,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Onderhoud een volledige transactieindex, gebruikt door de getrawtransaction rpc call (standaard: %u)</translation>
     </message>
     <message>
-        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!</source>
-        <translation>Zorg ervoor dat u uw wallet versleuteld, verwijder alle niet versleutelde backups nadat u getest hebt dat de nieuwe wallet werkt!</translation>
-    </message>
-    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Maximale grootte van de gegevens in gegevensdragertransacties die we doorgeven en mijnen (standaard: %u)</translation>
     </message>
@@ -3967,6 +3974,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
         <translation>Overschrijf minimum spork ondertekenaars om de spork waarde te veranderen. Alleen bruikbaar bij regtest en devnet. Door dit te gebruiken op mainnet of testnet zal een ban opleveren.</translation>
+    </message>
+    <message>
+        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>PrivateSend gebruikt exact genoemde bedragen om geld te verzenden. Wellicht moet u gewoon wat meer munten mixen.</translation>
     </message>
     <message>
         <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
@@ -4015,10 +4026,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
         <translation>Verbind naar KeePassHttps via poort &lt;port&gt; (standaard: %u)</translation>
-    </message>
-    <message>
-        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation>Stel de client toe om te handelen als een masternode (0-1, standaard: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4093,6 +4100,14 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Ongeldig minumum aantal spork ondertekenaars zoals ingesteld met -minsporkkeys</translation>
     </message>
     <message>
+        <source>Keep N DASH mixed (%u-%u, default: %u)</source>
+        <translation>Houdt N DASH gemixt (%u-%u, standaard: %u)</translation>
+    </message>
+    <message>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <translation>Bewaar maximaal &lt;n&gt; niet-koppelbare transacties in het geheugen (standaard: %u)</translation>
+    </message>
+    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Keypool op geraakt, roep alsjeblieft eerst keypoolrefill functie aan</translation>
     </message>
@@ -4149,6 +4164,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Geen compatibele Masternode gevonden.</translation>
     </message>
     <message>
+        <source>Not enough funds to mix.</source>
+        <translation>Onvoldoende fondsen om te mixen.</translation>
+    </message>
+    <message>
         <source>Not in the Masternode list.</source>
         <translation>Niet in de Masternode lijst.</translation>
     </message>
@@ -4175,10 +4194,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Stel sleutelpoelgrootte in op &lt;n&gt; (standaard: %u)</translation>
-    </message>
-    <message>
-        <source>Set the masternode BLS private key</source>
-        <translation>Stel de BLS geheime sleutel van de masternode in</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
@@ -4286,7 +4301,7 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
-        <translation>Kan niet Mixen tijdens het synchroniseren.</translation>
+        <translation>Kan niet mixen tijdens het synchroniseren.</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
@@ -4305,10 +4320,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>KeePassHttp sleutel voor AES versleutelde communicatie met KeePass</translation>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>Houd maximaal &lt;n&gt; onverbonden transacties in geheugen (standaard: %u)</translation>
-    </message>
-    <message>
         <source>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>Uitschakelen van alle Dash specifieke functies (Masternodes, PrivateSend, InstantSend, Governance) (0-1, standaard: %u)</translation>
     </message>
@@ -4317,8 +4328,20 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>%s bestand bevat alle persoonlijke sleutel van deze portemonnee. Deel deze met niemand!</translation>
     </message>
     <message>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>-masternode optie is verouderd en genegeerd, het specificeren van -masternodeblsprivkey is voldoende om deze node als een masternode te starten.</translation>
+    </message>
+    <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Voeg een node toe om verbinding mee te maken en om de verbinding open te houden (zie de `addnode` RPC-opdracht help voor meer info)</translation>
+    </message>
+    <message>
         <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
         <translation>Bind met opgegeven address om te luisteren voor JSON-RPC-connections. Deze optie wordt genegeerd behalve als -rpcallowip ook opgegeven is. Poort is optioneel en overschrijft -rpcport. Gebruik [host]:port notatie voor IPv6. Deze optie kan meerdere keren worden meegegeven (standaard: 127.0.0.1 en ::1 bijvoobeeld, localhost, of als -rpcallowip is opgegeven, 0.0.0.0 en :: bijvoorbeeld, alle adressen)</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>Maak alleen verbinding met de opgegeven node(s); -connect=0 schakelt automatische verbindingen uit (de regels voor deze peer zijn hetzelfde als voor -addnode)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4330,7 +4353,7 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     </message>
     <message>
         <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
-        <translation>Inschakel van meerdere PrivateSend mix sessies per blok, experimenteel (0-1, standaard: %u)</translation>
+        <translation>Inschakel van meerdere PrivateSend mixsessies per blok, experimenteel (0-1, standaard: %u)</translation>
     </message>
     <message>
         <source>Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)</source>
@@ -4373,8 +4396,12 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Onderhoudt maximaal &lt;n&gt; connecties met peers (tijdelijke service connecties uitgezonderd) (standaard: %u)</translation>
     </message>
     <message>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>PrivateSend gebruikt exact gedenomineerde bedragen om geld te versturen, u zult wellicht simpelweg meer geld moeten anonimiseren.</translation>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
+        <translation>Zorg ervoor dat u uw portefeuille codeert en alle niet-gecodeerde back-ups verwijdert nadat u hebt geverifieerd dat de portefeuille werkt!</translation>
+    </message>
+    <message>
+        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
+        <translation>Maximale totale grootte van alle wees-transacties in megabytes (standaard: %u)</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4395,6 +4422,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Herscannen is niet mogelijk i.c.m. -prune. U moet -reindex gebruiken dat de hele blockchain opnieuw zal downloaden.</translation>
+    </message>
+    <message>
+        <source>Set the masternode BLS private key and enable the client to act as a masternode</source>
+        <translation>Stel de geheime sleutel van de masternode in en laat de cliënt als een masternode werken</translation>
     </message>
     <message>
         <source>Specify full path to directory for automatic wallet backups (must exist)</source>
@@ -4446,11 +4477,15 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     </message>
     <message>
         <source>Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
-        <translation>Wallet is vergrendeld, niet instaat om keypool aan te vullen! Automatische backups en PrivateSend zijn uitgeschakeld, ontgrendel alstublieft uw wallet om de keypool aan te vullen.</translation>
+        <translation>Wallet is vergrendeld, niet instaat om keypool aan te vullen! Automatische backups en mixen zijn uitgeschakeld, ontgrendel alstublieft uw wallet om de keypool aan te vullen.</translation>
     </message>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>Waarschuwing: Onbekende blok versies worden gemined! Er zijn mogelijk onbekende regels in werking getreden</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
+        <translation>U moet de database opnieuw opbouwen met behulp van -reindex om -timestampindex te wijzigen</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -4641,10 +4676,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Niet genoeg file descriptors beschikbaar.</translation>
     </message>
     <message>
-        <source>Not enough funds to anonymize.</source>
-        <translation>Niet genoeg geld om the anonimiseren.</translation>
-    </message>
-    <message>
         <source>Number of automatic wallet backups (default: %u)</source>
         <translation>Aantal automatische wallet back-ups (standaard: %u)</translation>
     </message>
@@ -4769,6 +4800,14 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>U kunt geen masternode starten met portemennee ingeschakeld.</translation>
     </message>
     <message>
+        <source>You need to rebuild the database using -reindex to change -addressindex</source>
+        <translation>U moet de database opnieuw opbouwen met behulp van -reindex om -addressindex te wijzigen</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -spentindex</source>
+        <translation>U moet de database opnieuw opbouwen met behulp van -reindex om -spentindex te wijzigen</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>U moet de database opnieuw opbouwen met behulp van -reindex om -txindex te wijzigen</translation>
     </message>
@@ -4778,7 +4817,7 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     </message>
     <message>
         <source>no mixing available.</source>
-        <translation>Geen Mixen beschikbaar.</translation>
+        <translation>Mixen is niet beschikbaar.</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
@@ -4921,10 +4960,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>U start in lite-modus, de meeste Dash-specifieke functionaliteit is uitgeschakeld.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
-        <translation>U moet een masternodeblsprivkey opgeven in de configuratie. Raadpleeg de documentatie voor hulp.</translation>
-    </message>
-    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>%d van de laatste 100 blokken hebben een onverwachte versie</translation>
     </message>
@@ -5018,11 +5053,11 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     </message>
     <message>
         <source>Failed to find mixing queue to join</source>
-        <translation>Het is niet gelukt om een Mix-wachtrij te vinden om bij aan te sluiten</translation>
+        <translation>Het is niet gelukt om een mixwachtrij te vinden om bij aan te sluiten</translation>
     </message>
     <message>
         <source>Failed to start a new mixing queue</source>
-        <translation>Het is niet gelukt om een nieuwe Mix-wachtrij te starten</translation>
+        <translation>Het is niet gelukt om een nieuwe mixwachtrij te starten</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -5047,10 +5082,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
         <translation>Ongeldig sporkadres opgegeven met -sporkaddr</translation>
-    </message>
-    <message>
-        <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
-        <translation>Hou N Dash geanonimiseerd (%u-%u, standaard: %u)</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>

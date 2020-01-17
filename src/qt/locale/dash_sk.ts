@@ -598,6 +598,30 @@
         <translation>Informácie</translation>
     </message>
     <message>
+        <source>Received and sent multiple transactions</source>
+        <translation>Prijaté a odoslané hromadné transakcie</translation>
+    </message>
+    <message>
+        <source>Sent multiple transactions</source>
+        <translation>Odoslané hromadné transakcie</translation>
+    </message>
+    <message>
+        <source>Received multiple transactions</source>
+        <translation>Prijaté hromadné transakcie</translation>
+    </message>
+    <message>
+        <source>Sent Amount: %1
+</source>
+        <translation>Poslaná suma: %1
+</translation>
+    </message>
+    <message>
+        <source>Received Amount: %1
+</source>
+        <translation>Prijatá suma: %1
+</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>Dátum: %1
@@ -791,8 +815,8 @@
         <translation>Pre použitie tejto funkcie prepnite na "Zoznamový mód".</translation>
     </message>
     <message>
-        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-anonymized inputs first and then check the PrivateSend checkbox again.</source>
-        <translation>Vybratý ne-anonymizovaný vstup. &lt;b&gt;PrivateSend bude vypnutý.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Ak si stále želáte použiť PrivateSend, najskôr odznačte všetky ne-anonymizované vstupy a potom znova zaškrtnite PrivateSend políčko.</translation>
+        <source>Non-mixed input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-mixed inputs first and then check the PrivateSend checkbox again.</source>
+        <translation>Je vybraný nemiešaný vstup. &lt;b&gt;PrivateSend bude vypnutý.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Ak si stále želáte použiť PrivateSend, najskôr odznačte všetky nemiešané vstupy a potom znova zaškrtnite políčko PrivateSend.</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -968,8 +992,8 @@
         <translation>Informácie o PrivateSend</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;Základy PrivateSend&lt;/h3&gt; PrivateSend vám poskytuje skutočné finančné súkromie skrývaním pôvodu vašich zdrojov. Všetky Dashe vo vašej peňaženke pozostávajú z rôznych "vstupov", ktoré si môžete predstaviť ako rozdelené,  diskrétne mince.&lt;br&gt; PrivateSend používa zdokonalený proces pre miešanie vašich vstupov so vstupmi iných ľudí bez toho, aby vaše mince museli opustiť peňaženku. Počas celej doby máte kontrolu nad vašimi peniazmi.&lt;hr&gt; &lt;b&gt;Proces PrivateSend funguje nasledovne:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend začne rozdelením vašich transakčných vstupov na štandardné časti, takzvané denominácie. Tieto denominácie sú 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH a 10 DASH -- v podstate niečo ako papierové peniaze, ktoré používate každý deň.&lt;/li&gt; &lt;li&gt;Vaša peňaženka potom pošle požiadavok špeciálne nastavenému softvérovému uzlu nazvaného "Masternód". Tieto masternódy sú potom informované, že máte záujem miešať určité denominácie. Masternód neobdrží žiadne informácie ktoré by vás identifikovali, takže nikdy nevie kto ste.&lt;/li&gt; &lt;li&gt;Keď ďalší dvaja ľudia pošlú podobnú správu hovoriacu o tom, že chcú miešať rovnakú denomináciu, začne sa samotné miešanie. Masternód zamieša vstupy a povie peňaženkám všetkých troch používateľov, aby zaplatili teraz už zmiešané vstupy sami sebe. Vaša peňaženka zaplatí tieto denominácie priamo sebe, ale už na inú adresu (nazývanú "meniaca adresa").&lt;/li&gt; &lt;li&gt;Aby boli vaše zdroje plne ukryté, vaša peňaženka musí zopakovať tento proces niekoľko krát s každou denomináciou.  Vždy keď je tento proces dokončený, je nazvaný "kolo". Každé kolo PrivateSend exponenciálne sťažuje určiť, odkiaľ pochádzajú vaše zdroje.&lt;/li&gt; &lt;li&gt;Toto miešanie sa deje na pozadí, bez nutnosti zásahov z vašej strany. Keď si prajete uskutočniť transakciu, vaše zdroje budú už anonymné. Nie je nutné na nič čakať.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt; &lt;b&gt;DÔLEŽITÉ:&lt;/b&gt; Vaša peňaženka obsahuje iba 1000 takýchto "meniacich adries". Vždy keď prebehne miešanie, použije sa maximálne až 9 vašich adries. To znamená, že týchto 1000 adries vystačí zhruba na 100 miešaní. Keď sa použije 900 adries, vaša peňaženka musí vytvoriť viac adries. Toto je však možné iba vtedy, keď máte zapnuté automatické zálohovanie.&lt;br&gt; V dôsledku toho, používatelia ktorí majú zálohovanie vypnuté, budú mať vypnutý aj PrivateSend. &lt;hr&gt;Viac informácií nájdete v &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;dokumentácií ku PrivateSend&lt;/a&gt;.</translation>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;Základy PrivateSend&lt;/h3&gt; PrivateSend vám poskytuje skutočné finančné súkromie skrývaním pôvodu vašich zdrojov. Všetky Dashe vo vašej peňaženke pozostávajú z rôznych "vstupov", ktoré si môžete predstaviť ako rozdelené,  diskrétne mince.&lt;br&gt; PrivateSend používa zdokonalený proces pre miešanie vašich vstupov so vstupmi iných ľudí bez toho, aby vaše mince museli opustiť peňaženku. Počas celej doby máte kontrolu nad vašimi peniazmi.&lt;hr&gt; &lt;b&gt;Proces PrivateSend funguje nasledovne:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend začne rozdelením vašich transakčných vstupov na štandardné časti, takzvané denominácie. Tieto denominácie sú 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH a 10 DASH -- v podstate niečo ako papierové peniaze, ktoré používate každý deň.&lt;/li&gt; &lt;li&gt;Vaša peňaženka potom pošle požiadavok špeciálne nastavenému softvérovému uzlu nazvaného "Masternód". Tieto masternódy sú potom informované, že máte záujem miešať určité denominácie. Masternód neobdrží žiadne informácie ktoré by vás identifikovali, takže nikdy nevie kto ste.&lt;/li&gt; &lt;li&gt;Keď ďalší dvaja ľudia pošlú podobnú správu hovoriacu o tom, že chcú miešať rovnakú denomináciu, začne sa samotné miešanie. Masternód zamieša vstupy a povie peňaženkám všetkých troch používateľov, aby zaplatili teraz už zmiešané vstupy sami sebe. Vaša peňaženka zaplatí tieto denominácie priamo sebe, ale už na inú adresu (nazývanú "meniaca adresa").&lt;/li&gt; &lt;li&gt;Aby boli vaše zdroje plne ukryté, vaša peňaženka musí zopakovať tento proces niekoľko krát s každou denomináciou.  Vždy keď je tento proces dokončený, je nazvaný "kolo". Každé kolo PrivateSend exponenciálne sťažuje určiť, odkiaľ pochádzajú vaše zdroje.&lt;/li&gt; &lt;li&gt;Toto miešanie sa deje na pozadí, bez nutnosti zásahov z vašej strany. Keď si prajete uskutočniť transakciu, vaše zdroje budú už zmiešané. Nie je nutné na nič čakať.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt; &lt;b&gt;DÔLEŽITÉ:&lt;/b&gt; Vaša peňaženka obsahuje iba 1000 takýchto "meniacich adries". Vždy keď prebehne miešanie, použije sa maximálne až 9 vašich adries. To znamená, že týchto 1000 adries vystačí zhruba na 100 miešaní. Keď sa použije 900 adries, vaša peňaženka musí vytvoriť viac adries. Toto je však možné iba vtedy, keď máte zapnuté automatické zálohovanie.&lt;br&gt; V dôsledku toho, používatelia ktorí majú zálohovanie vypnuté, budú mať vypnutý aj PrivateSend. &lt;hr&gt;Viac informácií nájdete v &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;dokumentácií ku PrivateSend&lt;/a&gt;.</translation>
     </message>
 </context>
 <context>
@@ -1046,16 +1070,8 @@
         <translation>Od</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>Stav</translation>
-    </message>
-    <message>
-        <source>Payee</source>
-        <translation>Príjemca</translation>
     </message>
     <message>
         <source>0</source>
@@ -1074,16 +1090,16 @@
         <translation>Počet uzlov:</translation>
     </message>
     <message>
-        <source>DIP3 Masternodes</source>
-        <translation>DIP3 Masternódy</translation>
-    </message>
-    <message>
         <source>Show only masternodes this wallet has keys for.</source>
         <translation>Zobraziť len masternódy, pre ktoré má táto peňaženka kľúče.</translation>
     </message>
     <message>
         <source>My masternodes only</source>
         <translation>Iba moje masternódy</translation>
+    </message>
+    <message>
+        <source>Service</source>
+        <translation>Služba</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1102,8 +1118,24 @@
         <translation>Ďalšia platba</translation>
     </message>
     <message>
+        <source>Payout Address</source>
+        <translation>Výplatná adresa</translation>
+    </message>
+    <message>
         <source>Operator Reward</source>
         <translation>Odmena operátora</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Zaisťovacia adresa</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Adresa vlastníka</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Hlasovacia adresa</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1247,10 +1279,6 @@
         <translation>(0 = auto, &lt;0 = nechať toľkoto voľných jadier)</translation>
     </message>
     <message>
-        <source>Amount of Dash to keep anonymized</source>
-        <translation>Suma Dash ktorú držať anonymne </translation>
-    </message>
-    <message>
         <source>W&amp;allet</source>
         <translation>&amp;Peňaženka</translation>
     </message>
@@ -1299,16 +1327,12 @@
         <translation>Táto suma slúži ako hranica pre vypnutie PrivateSend akonáhle je dosiahnutá.</translation>
     </message>
     <message>
+        <source>Target PrivateSend balance</source>
+        <translation>Cieľový PrivateSend zostatok</translation>
+    </message>
+    <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Automaticky otvoriť na smerovači port pre Dash Core klient. Toto funguje iba ak váš smerovač  podporuje UPnP a je povolené</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>Akceptovať pripojenie z vonku</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Povoliť prichádzajúce spojenia</translation>
     </message>
     <message>
         <source>Connect to the Dash network through a SOCKS5 proxy.</source>
@@ -1333,10 +1357,6 @@
     <message>
         <source>Expert</source>
         <translation>Expert</translation>
-    </message>
-    <message>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Toto nastavenie určuje množstvo jednotlivých masternódov cez ktoré sa bude anonymizovať vstup.&lt;br/&gt; Viac kôl anonymizácie dáva väčšiu úroveň súkromia, ale tiež stojí viac na poplatkoch.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1367,12 +1387,24 @@
         <translation>&amp;Minúť nepotvrdený výdavok</translation>
     </message>
     <message>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Toto nastavenie určuje množstvo jednotlivých masternódov cez ktoré sa bude miešať vstup.&lt;br/&gt; Viac kôl miešania poskytuje väčšiu úroveň súkromia, ale tiež stojí viac na poplatkoch.</translation>
+    </message>
+    <message>
         <source>&amp;Network</source>
         <translation>&amp;Sieť</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Mapovať port pomocou &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>Akceptovať pripojenie z vonku</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Povoliť prichádzajúce spojenia</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1612,22 +1644,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Dokončenie:</translation>
     </message>
     <message>
-        <source>Try to manually submit a PrivateSend request.</source>
-        <translation>Skúsiť manuálne odoslať PrivateSend požiadavku.</translation>
-    </message>
-    <message>
-        <source>Reset the current status of PrivateSend (can interrupt PrivateSend if it's in the process of Mixing, which can cost you money!)</source>
-        <translation>Vynulovať súčasný stav PrivateSend (môže prerušiť PrivateSend ak je v procese miešania, čo Vás môže stáť peniaze!)</translation>
-    </message>
-    <message>
-        <source>Information about PrivateSend and Mixing</source>
-        <translation>Informácie o PrivateSend a miešaní</translation>
-    </message>
-    <message>
-        <source>Info</source>
-        <translation>Informácie</translation>
-    </message>
-    <message>
         <source>Amount and Rounds:</source>
         <translation>Čiastka a kolá:</translation>
     </message>
@@ -1662,14 +1678,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>(Last Message)</source>
         <translation>(Posledná správa)</translation>
-    </message>
-    <message>
-        <source>Try Mix</source>
-        <translation>Výskúšať mix</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation>Resetovať</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1712,12 +1720,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Denominované </translation>
     </message>
     <message>
-        <source>Mixed</source>
-        <translation>Zmiešané</translation>
+        <source>Partially mixed</source>
+        <translation>Čiastočne zmiešané</translation>
     </message>
     <message>
-        <source>Anonymized</source>
-        <translation>Anonymizované</translation>
+        <source>Mixed</source>
+        <translation>Zmiešané</translation>
     </message>
     <message numerus="yes">
         <source>Denominated inputs have %5 of %n rounds on average</source>
@@ -1773,10 +1781,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Posledná PrivateSend správa:
 
 </translation>
-    </message>
-    <message>
-        <source>PrivateSend was successfully reset.</source>
-        <translation>PrivateSend bol úspešne obnovený</translation>
     </message>
     <message>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
@@ -2787,18 +2791,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>používa</translation>
     </message>
     <message>
-        <source>anonymous funds</source>
-        <translation>anonymné zdroje</translation>
-    </message>
-    <message>
-        <source>(privatesend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>(PrivateSend vyžaduje aby bola táto suma zaokrúhlená nahor k najbližšej %1).</translation>
-    </message>
-    <message>
-        <source>any available funds (not anonymous)</source>
-        <translation>akékoľvek dostupné zdroje (nie anonýmne)</translation>
-    </message>
-    <message>
         <source>%1 to %2</source>
         <translation>%1 do %2</translation>
     </message>
@@ -2817,6 +2809,34 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 z %2 zobrazených položiek)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>PrivateSend funds only</source>
+        <translation>Iba PrivateSend prostriedky</translation>
+    </message>
+    <message>
+        <source>any available funds</source>
+        <translation>akékoľvek dostupné zdroje</translation>
+    </message>
+    <message>
+        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(Transakcie typu PrivateSend majú zvyčajne vyššie poplatky, pretože nie sú povolené žiadne zmeny výstupu)</translation>
+    </message>
+    <message>
+        <source>Transaction size: %1</source>
+        <translation>Veľkosť transakcie: %1</translation>
+    </message>
+    <message>
+        <source>Fee rate: %1</source>
+        <translation>Sadzba poplatku: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>This transaction will consume %n input(s)</source>
+        <translation><numerusform>Táto transakcia spotrebuje %n vstup</numerusform><numerusform>Táto transakcia spotrebuje %n vstupy</numerusform><numerusform>Táto transakcia spotrebuje %n vstupov</numerusform><numerusform>Táto transakcia spotrebuje %n vstupov</numerusform></translation>
+    </message>
+    <message>
+        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
+        <translation>Varovanie: Použitie PrivateSend s %1 alebo viac vstupmi môže poškodiť vaše súkromie a neodporúča sa</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3784,10 +3804,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Prijímať príkazy z príkazového riadku a JSON-RPC</translation>
     </message>
     <message>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Pridať uzol pre pripojenie a pokúsiť sa udržať otvorené pripojenie</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Povoliť vyhľadávania DNS pre -addnode, -seenode a -connect</translation>
     </message>
@@ -3900,10 +3916,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Spojiť s danou adresou a povolenými partnerskými zariadeniami ktoré sa tam pripájajú. Použite zápis [host]:port pre IPv6</translation>
     </message>
     <message>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections</source>
-        <translation>Pripojiť iba k zadanému uzlu(om); -connect=0 zakáže automatické pripojenia</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Vytvoriť nové súbory z predvolenými systémovými právami, namiesto umask 077 (funguje iba z vypnutou funkcionalitou peňaženky)</translation>
     </message>
@@ -3944,10 +3956,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Udržiavať kompletný transakčný index, využíva getrawtransaction rpc volanie (predvolené: %u)</translation>
     </message>
     <message>
-        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!</source>
-        <translation>Uistite sa, že máte´vašu peňaženku zašifrovanú a zmazané všetky nezašifrované zálohy potom, ako overíte, že peňaženka funguje! </translation>
-    </message>
-    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Maximálna veľkosť dát v transakciách nosných dát, ktoré prenášame a ťažíme (predvolené: %u)</translation>
     </message>
@@ -3962,6 +3970,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
         <translation>Nahrádza minimálny počet spork podpisovateľov pre zmenu spork hodnoty. Použiteľné iba pre regtest a devnet. Použitie tejto funkcie na hlavnej alebo testovacej vás zablokuje.</translation>
+    </message>
+    <message>
+        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>Pre poslanie zdrojov používa PrivateSend presné denominované sumy, možno iba potrebujete zmiešať viac mincí. </translation>
     </message>
     <message>
         <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
@@ -4010,10 +4022,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
         <translation>Pripojiť ku KeePassHttp na porte &lt;port&gt; (predvolené: %u)</translation>
-    </message>
-    <message>
-        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation>Povoliť klientovi aby vystupoval ako masternode (0-1, predvolené: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4088,6 +4096,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Neplatný minimálny počet spork podpisovateľov určených pomocou -minsporkkeys</translation>
     </message>
     <message>
+        <source>Keep N DASH mixed (%u-%u, default: %u)</source>
+        <translation>Udržovať zmiešaných N DASHov (%u-%u, predvolené: %u)</translation>
+    </message>
+    <message>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <translation>V pamäti udržiavať najviac &lt;n&gt; nespojiteľných transakcií (predvolené: %u)</translation>
+    </message>
+    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Vyčerpal sa zásobník kľúčov, zavolať najskôr keypoolrefill</translation>
     </message>
@@ -4144,6 +4160,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nekompatibilný Masternode zdroj.</translation>
     </message>
     <message>
+        <source>Not enough funds to mix.</source>
+        <translation>Nedostatok zdrojov pre miešanie.</translation>
+    </message>
+    <message>
         <source>Not in the Masternode list.</source>
         <translation>Nie je v zozname Masternode.</translation>
     </message>
@@ -4170,10 +4190,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Nastaviť veľkosť kľúča fronty na &lt;n&gt; (predvolené: %u)</translation>
-    </message>
-    <message>
-        <source>Set the masternode BLS private key</source>
-        <translation>Nastaviť súkromný kľúč masternode BLS</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
@@ -4300,10 +4316,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Kľúč KeePassHttp pre šifrovanú AES komunikáciu s KeePass</translation>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>V pamäti udržiavať najviac &lt;n&gt; nepotvrdených transakcií (predvolené: %u)</translation>
-    </message>
-    <message>
         <source>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>Vypnúť všetky funkcie špecifické pre Dash (Masternódy, PrivateSend, InstantSend, Správu) (0-1, predvolené: %u)</translation>
     </message>
@@ -4312,8 +4324,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Súbor %s obsahuje všetky súkromné kľúče z tejto peňaženky. Nezdieľajte s nikým!</translation>
     </message>
     <message>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>Podpora -masternode príkazu bola ukončená a je ignorovaná, na spustenie tohto uzla ako masternódu stačí zadanie -masternodeblsprivkey.</translation>
+    </message>
+    <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Pridať uzol pre pripojenie a pokúsiť sa udržať otvorené pripojenie (ďalšie informácie nájdete v pomocníkovi RPC príkazu „addnode“)</translation>
+    </message>
+    <message>
         <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
         <translation>Pripojte na zadanú adresu pre počúvanie spojenia JSON-RPC. Táto voľba sa ignoruje, pokiaľ nie je úspešne zadané -rpcallowip. Port je voliteľný a prepisuje -rpcport. Pre IPv6 použite zápis [host]:port. Táto možnosť môže byť zadaná viackrát (predvolené: 127.0.0.1 a ::1, t.j. localhost, alebo ak bolo zadané -rpcallowip, 0.0.0.0 a :: t.j. všetky adresy)</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>Pripojiť iba k zadanému uzlu(om); -connect=0 zakáže automatické pripojenia (pravidlá pre tento uzol sú rovnaké ako pre -addnode)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4368,8 +4392,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Udržiavať najviac &lt;n&gt; spojení s inými počítačmi (dočasné servisné spojenia nie sú zahrnuté) (predvolené: %u)</translation>
     </message>
     <message>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>Pre poslanie zdrojov používa PrivateSend presné sumy, potrebujete jednoducho anonymizovať viac mincí. </translation>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
+        <translation>Uistite sa, že máte vašu peňaženku zašifrovanú a zmazané všetky nezašifrované zálohy potom ako ste overili, že peňaženka funguje!</translation>
+    </message>
+    <message>
+        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
+        <translation>Maximálna celková veľkosť všetkých opustených transakcií v megabajtoch (predvolené: %u)</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4390,6 +4418,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>V orezanom režime nie je možné reťazec blokov pre-skenovať. Musíte vykonať -reindex, čo znova stiahne celý blockchain.</translation>
+    </message>
+    <message>
+        <source>Set the masternode BLS private key and enable the client to act as a masternode</source>
+        <translation>Nastaviť súkromný BLS masternód kľúč a umožniť klientovi, aby sa správal ako masternód</translation>
     </message>
     <message>
         <source>Specify full path to directory for automatic wallet backups (must exist)</source>
@@ -4446,6 +4478,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>Upozornenie: Ťaží sa neznáma verzia blokov! Je možné, že sú v platnosti neznáme pravidlá</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
+        <translation>Potrebujete prebudovať databázu použitím -reindex zmeniť -timestampindex</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -4636,10 +4672,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nedostatok kľúčových slov súboru.</translation>
     </message>
     <message>
-        <source>Not enough funds to anonymize.</source>
-        <translation>Nedostatok zdrojov na anonymizáciu.</translation>
-    </message>
-    <message>
         <source>Number of automatic wallet backups (default: %u)</source>
         <translation>Počet automatických záloh peňaženky (predvolené: %u)</translation>
     </message>
@@ -4762,6 +4794,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>You can not start a masternode with wallet enabled.</source>
         <translation>Nie je možné spustiť masternód s povolenou peňaženkou.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -addressindex</source>
+        <translation>Potrebujete prebudovať databázu použitím -reindex zmeniť -addressindex</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -spentindex</source>
+        <translation>Potrebujete prebudovať databázu použitím -reindex zmeniť -spentindex</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -4916,10 +4956,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Začínate v lite móde, kde väčšina funkcií špecifických pre Dash je vypnutá.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
-        <translation>V konfigurácii musíte špecifikovať masternodeblsprivkey. Pre pomoc sa prosím pozrite do dokumentácie.</translation>
-    </message>
-    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>%d z posledných 100 blokov má neočakávanú verziu</translation>
     </message>
@@ -5042,10 +5078,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
         <translation>Neplatná spork adresa určená pomocou -sporkaddr</translation>
-    </message>
-    <message>
-        <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
-        <translation>Udržujte N DASH anonymizovaných (%u-%u, predvolené: %u)</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>
