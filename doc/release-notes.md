@@ -221,8 +221,17 @@ modules were reorganized in separate folders to make navigation through code a b
 0.15 Change log
 ===============
 
-See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.x...dashpay:v0.15).
+See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.5...dashpay:v0.15.0.0).
 
+- [`1d9adbe63`](https://github.com/dashpay/dash/commit/1d9adbe63) Replace generic CScopedDBTransaction with specialized CEvoDBScopedCommitter (#3292)
+- [`8fd486c6b`](https://github.com/dashpay/dash/commit/8fd486c6b) Translations 2020-01 (#3192)
+- [`3c54f6527`](https://github.com/dashpay/dash/commit/3c54f6527) Bump copyright year to 2020 (#3290)
+- [`35d28c748`](https://github.com/dashpay/dash/commit/35d28c748) Update man pages (#3291)
+- [`203cc9077`](https://github.com/dashpay/dash/commit/203cc9077)  trivial: adding SVG and high contrast icons  (#3209)
+- [`e875d4925`](https://github.com/dashpay/dash/commit/e875d4925) Define defaultTheme and darkThemePrefix as constants and use them instead of plain strings (#3288)
+- [`1d203b422`](https://github.com/dashpay/dash/commit/1d203b422) Bump PROTOCOL_VERSION to 70216 (#3287)
+- [`b84482ac5`](https://github.com/dashpay/dash/commit/b84482ac5) Let regtest have its own qt settings (#3286)
+- [`1c885bbed`](https://github.com/dashpay/dash/commit/1c885bbed) Only load valid themes, fallback to "Light" theme otherwise (#3285)
 - [`ce924278d`](https://github.com/dashpay/dash/commit/ce924278d) Don't load caches when blocks/chainstate was deleted and also delete old caches (#3280)
 - [`ebf529e8a`](https://github.com/dashpay/dash/commit/ebf529e8a) Drop new connection instead of old one when duplicate MNAUTH is received (#3272)
 - [`817cd9a17`](https://github.com/dashpay/dash/commit/817cd9a17) AppInitMain should quit early and return `false` if shutdown was requested at some point (#3267)
@@ -434,6 +443,7 @@ Thanks to everyone who directly contributed to this release:
 - PastaPastaPasta
 - Riku (rikublock)
 - strophy
+- taw00
 - thephez
 - UdjinM6
 
