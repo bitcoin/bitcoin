@@ -177,23 +177,23 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     s.clear();
     s << ToByteVector(pubkey) << OP_CHECKSIG;
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(boost::get<PKHash>(&address) &&
-                *boost::get<PKHash>(&address) == PKHash(pubkey));
+    BOOST_CHECK(address.get_if<PKHash>() &&
+                *address.get_if<PKHash>() == PKHash(pubkey));
 
     // TX_PUBKEYHASH
     s.clear();
     s << OP_DUP << OP_HASH160 << ToByteVector(pubkey.GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(boost::get<PKHash>(&address) &&
-                *boost::get<PKHash>(&address) == PKHash(pubkey));
+    BOOST_CHECK(address.get_if<PKHash>() &&
+                *address.get_if<PKHash>() == PKHash(pubkey));
 
     // TX_SCRIPTHASH
     CScript redeemScript(s); // initialize with leftover P2PKH script
     s.clear();
     s << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(boost::get<ScriptHash>(&address) &&
-                *boost::get<ScriptHash>(&address) == ScriptHash(redeemScript));
+    BOOST_CHECK(address.get_if<ScriptHash>() &&
+                *address.get_if<ScriptHash>() == ScriptHash(redeemScript));
 
     // TX_MULTISIG
     s.clear();
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     BOOST_CHECK(ExtractDestination(s, address));
     WitnessV0KeyHash keyhash;
     CHash160().Write(pubkey.begin(), pubkey.size()).Finalize(keyhash.begin());
-    BOOST_CHECK(boost::get<WitnessV0KeyHash>(&address) && *boost::get<WitnessV0KeyHash>(&address) == keyhash);
+    BOOST_CHECK(address.get_if<WitnessV0KeyHash>() && *address.get_if<WitnessV0KeyHash>() == keyhash);
 
     // TX_WITNESS_V0_SCRIPTHASH
     s.clear();
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     CSHA256().Write(redeemScript.data(), redeemScript.size()).Finalize(scripthash.begin());
     s << OP_0 << ToByteVector(scripthash);
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(boost::get<WitnessV0ScriptHash>(&address) && *boost::get<WitnessV0ScriptHash>(&address) == scripthash);
+    BOOST_CHECK(address.get_if<WitnessV0ScriptHash>() && *address.get_if<WitnessV0ScriptHash>() == scripthash);
 
     // TX_WITNESS with unknown version
     s.clear();
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     unk.length = 33;
     unk.version = 1;
     std::copy(pubkey.begin(), pubkey.end(), unk.program);
-    BOOST_CHECK(boost::get<WitnessUnknown>(&address) && *boost::get<WitnessUnknown>(&address) == unk);
+    BOOST_CHECK(address.get_if<WitnessUnknown>() && *address.get_if<WitnessUnknown>() == unk);
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
@@ -253,8 +253,8 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
     BOOST_CHECK_EQUAL(whichType, TX_PUBKEY);
     BOOST_CHECK_EQUAL(addresses.size(), 1U);
     BOOST_CHECK_EQUAL(nRequired, 1);
-    BOOST_CHECK(boost::get<PKHash>(&addresses[0]) &&
-                *boost::get<PKHash>(&addresses[0]) == PKHash(pubkeys[0]));
+    BOOST_CHECK(addresses[0].get_if<PKHash>() &&
+                *addresses[0].get_if<PKHash>() == PKHash(pubkeys[0]));
 
     // TX_PUBKEYHASH
     s.clear();
@@ -263,8 +263,8 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
     BOOST_CHECK_EQUAL(whichType, TX_PUBKEYHASH);
     BOOST_CHECK_EQUAL(addresses.size(), 1U);
     BOOST_CHECK_EQUAL(nRequired, 1);
-    BOOST_CHECK(boost::get<PKHash>(&addresses[0]) &&
-                *boost::get<PKHash>(&addresses[0]) == PKHash(pubkeys[0]));
+    BOOST_CHECK(addresses[0].get_if<PKHash>() &&
+                *addresses[0].get_if<PKHash>() == PKHash(pubkeys[0]));
 
     // TX_SCRIPTHASH
     CScript redeemScript(s); // initialize with leftover P2PKH script
@@ -274,8 +274,8 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
     BOOST_CHECK_EQUAL(whichType, TX_SCRIPTHASH);
     BOOST_CHECK_EQUAL(addresses.size(), 1U);
     BOOST_CHECK_EQUAL(nRequired, 1);
-    BOOST_CHECK(boost::get<ScriptHash>(&addresses[0]) &&
-                *boost::get<ScriptHash>(&addresses[0]) == ScriptHash(redeemScript));
+    BOOST_CHECK(addresses[0].get_if<ScriptHash>() &&
+                *addresses[0].get_if<ScriptHash>() == ScriptHash(redeemScript));
 
     // TX_MULTISIG
     s.clear();
@@ -287,10 +287,10 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
     BOOST_CHECK_EQUAL(whichType, TX_MULTISIG);
     BOOST_CHECK_EQUAL(addresses.size(), 2U);
     BOOST_CHECK_EQUAL(nRequired, 2);
-    BOOST_CHECK(boost::get<PKHash>(&addresses[0]) &&
-                *boost::get<PKHash>(&addresses[0]) == PKHash(pubkeys[0]));
-    BOOST_CHECK(boost::get<PKHash>(&addresses[1]) &&
-                *boost::get<PKHash>(&addresses[1]) == PKHash(pubkeys[1]));
+    BOOST_CHECK(addresses[0].get_if<PKHash>() &&
+                *addresses[0].get_if<PKHash>() == PKHash(pubkeys[0]));
+    BOOST_CHECK(addresses[1].get_if<PKHash>() &&
+                *addresses[1].get_if<PKHash>() == PKHash(pubkeys[1]));
 
     // TX_NULL_DATA
     s.clear();

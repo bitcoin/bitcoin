@@ -124,7 +124,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                     continue;
                 }
 
-                if (!boost::get<CNoDestination>(&wtx.txout_address[nOut]))
+                if (!wtx.txout_address[nOut].get_if<CNoDestination>())
                 {
                     // Sent to Bitcoin Address
                     sub.type = TransactionRecord::SendToAddress;

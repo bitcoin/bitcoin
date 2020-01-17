@@ -555,7 +555,7 @@ static UniValue signmessage(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
     }
 
-    const PKHash *pkhash = boost::get<PKHash>(&dest);
+    const PKHash *pkhash = dest.get_if<PKHash>();
     if (!pkhash) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
     }
@@ -2947,7 +2947,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
             const SigningProvider* provider = pwallet->GetSigningProvider(scriptPubKey);
             if (provider) {
                 if (scriptPubKey.IsPayToScriptHash()) {
-                    const CScriptID& hash = CScriptID(boost::get<ScriptHash>(address));
+                    const CScriptID& hash = CScriptID(address.get<ScriptHash>());
                     CScript redeemScript;
                     if (provider->GetCScript(hash, redeemScript)) {
                         entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
@@ -2957,7 +2957,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
                             bool extracted = ExtractDestination(redeemScript, witness_destination);
                             CHECK_NONFATAL(extracted);
                             // Also return the witness script
-                            const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(witness_destination);
+                            const WitnessV0ScriptHash& whash = witness_destination.get<WitnessV0ScriptHash>();
                             CScriptID id;
                             CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
                             CScript witnessScript;
@@ -2967,7 +2967,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
                         }
                     }
                 } else if (scriptPubKey.IsPayToWitnessScriptHash()) {
-                    const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(address);
+                    const WitnessV0ScriptHash& whash = address.get<WitnessV0ScriptHash>();
                     CScriptID id;
                     CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
                     CScript witnessScript;

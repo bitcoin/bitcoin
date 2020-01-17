@@ -519,7 +519,7 @@ bool RPCArg::IsOptional() const
     if (m_fallback.which() == 1) {
         return true;
     } else {
-        return RPCArg::Optional::NO != boost::get<RPCArg::Optional>(m_fallback);
+        return RPCArg::Optional::NO != m_fallback.get<RPCArg::Optional>();
     }
 }
 
@@ -566,9 +566,9 @@ std::string RPCArg::ToDescriptionString() const
         }
     }
     if (m_fallback.which() == 1) {
-        ret += ", optional, default=" + boost::get<std::string>(m_fallback);
+        ret += ", optional, default=" + m_fallback.get<std::string>();
     } else {
-        switch (boost::get<RPCArg::Optional>(m_fallback)) {
+        switch (m_fallback.get<RPCArg::Optional>()) {
         case RPCArg::Optional::OMITTED: {
             // nothing to do. Element is treated as if not present and has no default value
             break;

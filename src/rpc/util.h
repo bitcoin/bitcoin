@@ -7,6 +7,7 @@
 
 #include <node/transaction.h>
 #include <outputtype.h>
+#include <variant.h>
 #include <protocol.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
@@ -19,8 +20,6 @@
 
 #include <string>
 #include <vector>
-
-#include <boost/variant.hpp>
 
 /**
  * String used to describe UNIX epoch time in documentation, factored out to a
@@ -124,7 +123,7 @@ struct RPCArg {
          */
         OMITTED,
     };
-    using Fallback = boost::variant<Optional, /* default value for optional args */ std::string>;
+    using Fallback = Variant<Optional, /* default value for optional args */ std::string>;
     const std::string m_name; //!< The name of the arg (can be empty for inner args)
     const Type m_type;
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
