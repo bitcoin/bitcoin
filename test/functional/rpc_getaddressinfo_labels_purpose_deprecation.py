@@ -8,12 +8,12 @@ containing a JSON hash of `name` and purpose` key-value pairs. It now
 returns an array of label names.
 
 """
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
 
 LABELS_TO_TEST = frozenset({"" , "New 𝅘𝅥𝅯 $<#>&!рыба Label"})
 
-class GetAddressInfoLabelsPurposeDeprecationTest(BitcoinTestFramework):
+class GetAddressInfoLabelsPurposeDeprecationTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = False

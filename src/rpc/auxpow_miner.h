@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Daniel Kraft
+// Copyright (c) 2018-2020 Daniel Kraft
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,9 @@
 
 #include <miner.h>
 #include <script/script.h>
+#include <script/standard.h>
 #include <sync.h>
+#include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>
 
@@ -40,12 +42,9 @@ private:
   std::vector<std::unique_ptr<CBlockTemplate>> templates;
   /** Maps block hashes to pointers in vTemplates.  Does not own the memory.  */
   std::map<uint256, const CBlock*> blocks;
+  /** Maps coinbase script hashes to pointers in vTemplates.  Does not own the memory.  */
+  std::map<CScriptID, const CBlock*> curBlocks;
 
-  /**
-   * The block we are "currently" working on.  This does not own the memory,
-   * instead, it points into an element of templates.
-   */
-  CBlock* pblockCur = nullptr;
   /** The current extra nonce for block creation.  */
   unsigned extraNonce = 0;
 
@@ -60,7 +59,8 @@ private:
    * that should be returned to a miner for working on at the moment.  Also
    * fills in the difficulty target value.
    */
-  const CBlock* getCurrentBlock (const CScript& scriptPubKey, uint256& target);
+  const CBlock* getCurrentBlock (const CTxMemPool& mempool,
+                                 const CScript& scriptPubKey, uint256& target);
 
   /**
    * Looks up a previously constructed block by its (hex-encoded) hash.  If the
@@ -89,6 +89,11 @@ public:
    */
   bool submitAuxBlock (const std::string& hashHex,
                        const std::string& auxpowHex) const;
+
+  /**
+   * Returns the singleton instance of AuxpowMiner that is used for RPCs.
+   */
+  static AuxpowMiner& get ();
 
 };
 

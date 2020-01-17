@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2019 Daniel Kraft
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
@@ -20,6 +20,7 @@
 class CBlock;
 class CBlockHeader;
 class CBlockIndex;
+class CValidationState;
 class UniValue;
 
 namespace auxpow_tests

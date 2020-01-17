@@ -67,8 +67,11 @@ class InvalidMessagesTest(SyscoinTestFramework):
 
         self.log.info("Sending a bunch of large, junk messages to test memory exhaustion. May take a bit...")
 
-        # Run a bunch of times to test for memory exhaustion.
-        for _ in range(80):
+        # Upstream uses 80 iterations here, but its messages are 8x smaller.
+        # So with 10 iterations, we get the same amount of junk data sent
+        # to the node.  If we use 80 here, Python uses an insane amount of
+        # memory by itself.
+        for _ in range(10):
             node.p2p.send_message(msg_at_size)
 
         # Check that, even though the node is being hammered by nonsense from one

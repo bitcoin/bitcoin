@@ -18,7 +18,6 @@ class CBlock;
 class CBlockIndex;
 struct CBlockLocator;
 class CConnman;
-class CReserveScript;
 class CValidationInterface;
 class uint256;
 class CScheduler;

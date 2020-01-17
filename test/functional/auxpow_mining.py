@@ -192,5 +192,10 @@ class AuxpowMiningTest (SyscoinTestFramework):
     assert_equal (addr1, coinbaseAddr)
     assert_equal (addr2, coinbaseAddr)
 
+    # Ensure that different payout addresses will generate different auxblocks
+    auxblock1 = self.nodes[0].createauxblock(self.nodes[0].getnewaddress ())
+    auxblock2 = self.nodes[0].createauxblock(self.nodes[0].getnewaddress ())
+    assert auxblock1['hash'] != auxblock2['hash']
+
 if __name__ == '__main__':
   AuxpowMiningTest ().main ()

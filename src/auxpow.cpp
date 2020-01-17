@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2011 Vince Durham
-// Copyright (c) 2009-2014 The Syscoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2019 Daniel Kraft
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
@@ -57,6 +57,10 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId,
     if (CheckMerkleBranch(coinbaseTx->GetHash(), vMerkleBranch, 0)
           != parentBlock.hashMerkleRoot)
         return error("Aux POW merkle root incorrect");
+
+    // Check that there is at least one input.
+    if (coinbaseTx->vin.empty())
+        return error("Aux POW coinbase has no inputs");
 
     const CScript script = coinbaseTx->vin[0].scriptSig;
 
@@ -123,7 +127,6 @@ CAuxPow::getExpectedIndex (uint32_t nNonce, int nChainId, unsigned h)
      though, since we take the mod against a power-of-two in the end anyway.
      This also ensures that the computation is, actually, consistent
      even if done in 64 bits as it was in the past on some systems.
-
      Note that h is always <= 30 (enforced by the maximum allowed chain
      merkle branch length), so that 32 bits are enough for the computation.  */
 

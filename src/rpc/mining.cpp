@@ -106,7 +106,7 @@ static UniValue getnetworkhashps(const JSONRPCRequest& request)
     LOCK(cs_main);
     return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1);
 }
-UniValue generateBlocks(const CTxMemPool& mempool, std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
+static UniValue generateBlocks(const CTxMemPool& mempool, const CScript& coinbase_script, int nGenerate, uint64_t nMaxTries)
 {
     int nHeightEnd = 0;
     int nHeight = 0;
@@ -120,7 +120,7 @@ UniValue generateBlocks(const CTxMemPool& mempool, std::shared_ptr<CReserveScrip
     UniValue blockHashes(UniValue::VARR);
     while (nHeight < nHeightEnd && !ShutdownRequested())
     {
-        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(mempool, Params()).CreateNewBlock(coinbaseScript->reserveScript));
+        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(mempool, Params()).CreateNewBlock(coinbase_script));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
@@ -143,11 +143,6 @@ UniValue generateBlocks(const CTxMemPool& mempool, std::shared_ptr<CReserveScrip
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
-        //mark script as important because it was used at least for one coinbase output if the script came from the wallet  
-        if (keepScript) 
-        {   
-            coinbaseScript->KeepScript();   
-        }
     }
     return blockHashes;
 }
@@ -159,7 +154,7 @@ static UniValue generatetodescriptor(const JSONRPCRequest& request)
         "\nMine blocks immediately to a specified descriptor (before the RPC call returns)\n",
         {
             {"num_blocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
-            {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor to send the newly generated syscoin to."},
+            {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor to send the newly generated bitcoin to."},
             {"maxtries", RPCArg::Type::NUM, /* default */ "1000000", "How many iterations to try."},
         },
         RPCResult{
@@ -191,10 +186,8 @@ static UniValue generatetodescriptor(const JSONRPCRequest& request)
     const CTxMemPool& mempool = EnsureMemPool();
 
     CHECK_NONFATAL(coinbase_script.size() == 1);
-    // SYSCOIN
-    std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
-    coinbaseScript->reserveScript = coinbase_script.at(0);
-    return generateBlocks(mempool, coinbaseScript, num_blocks, max_tries, false);
+
+    return generateBlocks(mempool, coinbase_script.at(0), num_blocks, max_tries);
 }
 
 static UniValue generatetoaddress(const JSONRPCRequest& request)
@@ -203,7 +196,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
                 "\nMine blocks immediately to a specified address (before the RPC call returns)\n",
                 {
                     {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated syscoin to."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated bitcoin to."},
                     {"maxtries", RPCArg::Type::NUM, /* default */ "1000000", "How many iterations to try."},
                 },
                 RPCResult{
@@ -212,7 +205,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
                 RPCExamples{
             "\nGenerate 11 blocks to myaddress\n"
             + HelpExampleCli("generatetoaddress", "11 \"myaddress\"")
-            + "If you are running the syscoin core wallet, you can get a new address to send the newly generated syscoin to with:\n"
+            + "If you are running the syscoin core wallet, you can get a new address to send the newly generated bitcoin to with:\n"
             + HelpExampleCli("getnewaddress", "")
                 },
             }.Check(request);
@@ -227,10 +220,12 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
     if (!IsValidDestination(destination)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
     }
+
     const CTxMemPool& mempool = EnsureMemPool();
-    std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
-    coinbaseScript->reserveScript = GetScriptForDestination(destination);
-    return generateBlocks(mempool, coinbaseScript, nGenerate, nMaxTries, false);
+
+    CScript coinbase_script = GetScriptForDestination(destination);
+
+    return generateBlocks(mempool, coinbase_script, nGenerate, nMaxTries);
 }
 
 static UniValue getmininginfo(const JSONRPCRequest& request)

@@ -688,7 +688,7 @@ Build system changes
 - #15771 Prevent concurrency issues reading .cookie file (promag)
 - #15693 travis: Switch to ubuntu keyserver to avoid timeouts (MarcoFalke)
 - #15629 init: Throw error when network specific config is ignored (MarcoFalke)
-- #15773 Add BitcoinTestFramework::sync_* methods (MarcoFalke)
+- #15773 Add SyscoinTestFramework::sync_* methods (MarcoFalke)
 - #15797 travis: Bump second timeout to 33 minutes, add rationale (MarcoFalke)
 - #15788 Unify testing setups for fuzz, bench, and unit tests (MarcoFalke)
 - #15352 Reduce noise level in test_bitcoin output (practicalswift)

@@ -68,7 +68,7 @@ def finishAuxpow (tx, header):
 
 def doubleHashHex (data):
   """
-  Perform Syscoin's Double-SHA256 hash on the given hex string.
+  Perform Bitcoin's Double-SHA256 hash on the given hex string.
   """
 
   hasher = hashlib.sha256 ()
