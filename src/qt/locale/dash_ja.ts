@@ -791,10 +791,6 @@
         <translation>この機能を使うにはリストモードにスイッチしてください。</translation>
     </message>
     <message>
-        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-anonymized inputs first and then check the PrivateSend checkbox again.</source>
-        <translation>匿名化されてないインプットが選択されました。 &lt;b&gt;プライベートセンドは無効になります。&lt;/b&gt;&lt;br&gt;&lt;br&gt;プライベートセンドを使用したい場合は、すべての匿名化されてないインプットの選択を解除して、プライベートセンドのチェックボックスを再びチェックしてください。</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 がロック中)</translation>
     </message>
@@ -967,11 +963,7 @@
         <source>PrivateSend information</source>
         <translation>プライベートセンドの情報</translation>
     </message>
-    <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;プライベートセンドの基本&lt;/h3&gt; プライベートセンドはあなたのファンドの起源を不明瞭にすることによって真のファイナンシャルプライバシーを提供します。あなたのウォレットにあるDashは別々の異なるコインとして考えられる”インプット”から構成されています。&lt;br&gt; プライベートセンドは画期的なプロセスを使用し、ウォレットからあなたのコインが移動させられることなく、他の二人の人々のインプットとあなたのインプットをミックスします。あなたは常にあなたのファンドをコントロールしています。&lt;hr&gt; &lt;b&gt;プライベートセンドのプロセスは以下のように機能します:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;プライベートセンドは、あなたのトランザクションインプットをスタンダードな通貨単位に分割します。これらの通貨単位は0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH そして 10 DASH -- 日常的に使われる紙幣のようなものです。&lt;/li&gt; &lt;li&gt;あなたのウォレットは次に、 "マスターノード"と呼ばれるネットワーク上に特別に設定されたソフトウェアノードにリクエストを送信します。これらのマスターノードは、特定の通貨単位をミキシングしたいというあなたの要望を知らされます。送信者を特定できる情報は送信されないので、マスターノードはあなたが誰かわかりません。 &lt;/li&gt; &lt;li&gt;二人の別の人たちが同じようなメッセージを送信して、同じ通貨単位をミキシングしたいという要望を伝え、ミキシングセッションが開始されます。マスターノードはインプットをミックスし、すべての三人のユーザーのウォレットに命じて変更されたインプットをもとのウォレットに戻させます。あなたのウォレットはその通貨単位を直接もとのウォレットに支払いますが、アドレスは異なっています（チェンジアドレスといいます）&lt;/li&gt; &lt;li&gt;完全にあなたのファンドを匿名化するには、あなたのウォレットはこのプロセスをそれぞれの通貨単位で何回もリピートする必要があります。このプロセスは "ラウンド"と呼びます。プライベートセンドのラウンドが進めば、あなたのファンドの起源を遡ることは指数関数的に困難になっていきます。&lt;/li&gt; &lt;li&gt;このミキシングのプロセスはあなたになにも干渉することなくバックグラウンドで実行されます。あなたがトランザクションを実行したいとき、あなたのファンドはすでに匿名化されています。追加の待ち時間は必要ありません。&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;重要:&lt;/b&gt; あなたのウォレットは、 1000個の "チェンジアドレス"しか保有できません。ミキシングが実行されるたびに、9個のアドレスが使用されます。これは1000個のアドレスを使い切るまでに約100回のミキシングがきることを意味します。900個のアドレスが使用されると、あなたのウォレットは追加のアドレスを生成しなくてはなりません。しかし、あなたが自動バックアップを有効にしていれば可能です。&lt;br&gt; つまりバックアップが無効なユーザーはプライベートセンドが無効になります。 &lt;hr&gt;詳細は &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;プライベートセンドドキュメンテーション&lt;/a&gt;参照.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1047,16 +1039,8 @@
         <translation>フォーム</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>アドレス</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>ステータス</translation>
-    </message>
-    <message>
-        <source>Payee</source>
-        <translation>受取人</translation>
     </message>
     <message>
         <source>0</source>
@@ -1073,10 +1057,6 @@
     <message>
         <source>Node Count:</source>
         <translation>ノード数:</translation>
-    </message>
-    <message>
-        <source>DIP3 Masternodes</source>
-        <translation>DIP3マスターノード</translation>
     </message>
     <message>
         <source>Show only masternodes this wallet has keys for.</source>
@@ -1248,10 +1228,6 @@
         <translation>(0 = 自動、0以上 = 指定した数のコアをフリーにする)</translation>
     </message>
     <message>
-        <source>Amount of Dash to keep anonymized</source>
-        <translation>匿名化されたDashの総額</translation>
-    </message>
-    <message>
         <source>W&amp;allet</source>
         <translation>ウォレット (&amp;A)</translation>
     </message>
@@ -1304,14 +1280,6 @@
         <translation>自動的にルーターのDash Core クライアントポートを開放します。これはルーターがUPnP機能をサポートしておりUPnP機能が有効な場合にのみ機能します。</translation>
     </message>
     <message>
-        <source>Accept connections from outside</source>
-        <translation>外部からの接続を許可</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>受信中の接続を許可</translation>
-    </message>
-    <message>
         <source>Connect to the Dash network through a SOCKS5 proxy.</source>
         <translation>SOCKS5プロキシ経由でDashネットワークに接続</translation>
     </message>
@@ -1334,10 +1302,6 @@
     <message>
         <source>Expert</source>
         <translation>エキスパート</translation>
-    </message>
-    <message>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>この設定はインプットが匿名化される個々のマスターノードの数を決めます。匿名化のラウンドが多ければ多いほどプライバシーのレベルが高くなりますがコストもかかるようになります。</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1374,6 +1338,14 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>UPnPを使ってポートを割り当て (&amp;U)</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>外部からの接続を許可</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>受信中の接続を許可</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1613,22 +1585,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>完了:</translation>
     </message>
     <message>
-        <source>Try to manually submit a PrivateSend request.</source>
-        <translation>手動でプライベートセンドのリクエストを送信</translation>
-    </message>
-    <message>
-        <source>Reset the current status of PrivateSend (can interrupt PrivateSend if it's in the process of Mixing, which can cost you money!)</source>
-        <translation>プライベートセンドの現在のステータスをリセット (これはミキシングの途中であればプライベートセンドを中止し、コストがかかります!)</translation>
-    </message>
-    <message>
-        <source>Information about PrivateSend and Mixing</source>
-        <translation>プライベートセンドとミキシングの情報</translation>
-    </message>
-    <message>
-        <source>Info</source>
-        <translation>情報</translation>
-    </message>
-    <message>
         <source>Amount and Rounds:</source>
         <translation>金額とラウンド</translation>
     </message>
@@ -1663,14 +1619,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>(Last Message)</source>
         <translation>(最新メッセージ)</translation>
-    </message>
-    <message>
-        <source>Try Mix</source>
-        <translation>ミキシング開始</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation>リセット</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1715,10 +1663,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Mixed</source>
         <translation>ミキシング完了</translation>
-    </message>
-    <message>
-        <source>Anonymized</source>
-        <translation>匿名化完了</translation>
     </message>
     <message numerus="yes">
         <source>Denominated inputs have %5 of %n rounds on average</source>
@@ -1773,10 +1717,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 </source>
         <translation>最後のプライベートセンドのメッセージ:
 </translation>
-    </message>
-    <message>
-        <source>PrivateSend was successfully reset.</source>
-        <translation>プライベートセンドのリセットに成功しました。</translation>
     </message>
     <message>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
@@ -2787,18 +2727,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>使用中</translation>
     </message>
     <message>
-        <source>anonymous funds</source>
-        <translation>匿名化されたファンド</translation>
-    </message>
-    <message>
-        <source>(privatesend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>(プライベートセンドはこの数値を %1までラウンドアップすることを要求します)</translation>
-    </message>
-    <message>
-        <source>any available funds (not anonymous)</source>
-        <translation>利用可能なファンド (匿名化されてない)</translation>
-    </message>
-    <message>
         <source>%1 to %2</source>
         <translation>%1 から %2</translation>
     </message>
@@ -2817,6 +2745,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 ／%2 項目を表示)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>any available funds</source>
+        <translation>利用可能なファンド </translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3784,10 +3716,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>コマンドラインと JSON-RPC コマンドを許可</translation>
     </message>
     <message>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>接続するノードを追加し接続を持続させます</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>-addnode, -seednode と -connect で DNS ルックアップを許可</translation>
     </message>
@@ -3900,10 +3828,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>指定されたアドレスおよび、そこに接続を行ってきたホワイトリストのピアに対してバインドを行います。IPv6の場合には [host]:port 表記を使用してください</translation>
     </message>
     <message>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections</source>
-        <translation>指定されたノードのみに接続; -connect=0 自動接続を無効化</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>umask 077 ではなく、システムのデフォルトパーミッションで新規ファイルを作成する (ウォレット機能が無効化されていた場合にのみ有効)</translation>
     </message>
@@ -3942,10 +3866,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
         <translation>getrawtransaction rpc 呼び出し時に用いる、完全なトランザクションインデックスを保持する (初期設定： %u)</translation>
-    </message>
-    <message>
-        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!</source>
-        <translation>ウォレットが機能することを検証したら、あなたのウォレットを暗号化しすべての非暗号化バックアップを削除してください。</translation>
     </message>
     <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
@@ -4010,10 +3930,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
         <translation>Connect to KeePassHttp に接続：ポート &lt;port&gt; (初期設定: %u)</translation>
-    </message>
-    <message>
-        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation>クライアントに対してマスターノードとしての機能を有効化する (0-1, 初期設定: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4172,10 +4088,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>key pool のサイズを &lt;n&gt; (初期設定： %u) にセット</translation>
     </message>
     <message>
-        <source>Set the masternode BLS private key</source>
-        <translation>マスターノードBLS秘密鍵の設定</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>RPC 呼び出しのスレッド数を設定 (初期設定： %d)</translation>
     </message>
@@ -4300,10 +4212,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>KeePassとの AES 暗号化接続用のKeePassHttp キー </translation>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>最大で &lt;n&gt; 個の孤立したトランザクションをメモリの中に保持する (初期設定： %u)</translation>
-    </message>
-    <message>
         <source>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>Dashに固有の機能(マスターノード, プライベートセンド, インスタントセンド, ガバナンス) を無効化(0-1, 初期設定: %u)</translation>
     </message>
@@ -4366,10 +4274,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (temporary service connections excluded) (default: %u)</source>
         <translation>最大 &lt;n&gt; 接続を保持 (一時的な接続を除外) (初期設定: %u)</translation>
-    </message>
-    <message>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>プライベートセンドは正確に分割された額を使用して送金します。あなたはさらに匿名化する必要があるかもしれません。</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4634,10 +4538,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Not enough file descriptors available.</source>
         <translation>使用可能なファイルディスクリプタが不足しています。</translation>
-    </message>
-    <message>
-        <source>Not enough funds to anonymize.</source>
-        <translation>匿名化のための資金が不足しています。</translation>
     </message>
     <message>
         <source>Number of automatic wallet backups (default: %u)</source>
@@ -4916,10 +4816,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ライトモードで起動すると、ほとんどのDash特有の機能が無効になります。</translation>
     </message>
     <message>
-        <source>You must specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
-        <translation> masternodeblsprivkeyを設定で指定する必要があります。ドキュメントを参照してください。</translation>
-    </message>
-    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>最新の100ブロックの %d で予期しないバージョンがあります。</translation>
     </message>
@@ -5042,10 +4938,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
         <translation>-sporkaddrに指定された無効なスポークアドレスI</translation>
-    </message>
-    <message>
-        <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
-        <translation>匿名化された N DASH を保持 (%u-%u, 初期設定: %u)</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>

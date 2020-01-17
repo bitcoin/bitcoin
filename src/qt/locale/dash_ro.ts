@@ -791,10 +791,6 @@
         <translation>Treci la "modul List" pentru a utiliza această funcție.</translation>
     </message>
     <message>
-        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-anonymized inputs first and then check the PrivateSend checkbox again.</source>
-        <translation>Intrare ne-anonimă selectată. &lt;b&gt;TrimitePrivat va fi dezactivat.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Dacă mai vrei să utilizezi TrimitePrivat, deselectează mai întâi toate intrările ne-anonime și apoi bifează TrimitePrivat din nou.</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 blocat)</translation>
     </message>
@@ -967,11 +963,7 @@
         <source>PrivateSend information</source>
         <translation>Informație TrimitePrivat</translation>
     </message>
-    <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;Informații de bază TrimitePrivat&lt;/h3&gt;TrimitePrivat oferă o intimitate financiară adevărată, ascunzând originea fondurilor. Toate monedele Dash din portofel sunt alcătuite din diferite "intrări" pe care le poți considera drept monede separate, discrete. &lt;br&gt; TrimitePrivat folosește un proces inovator pentru a amesteca intrările tale cu input-urile altor două persoane, fără ca monedele tale să părăsească vreodată portofelul tău. Menții controlul asupra banilor în orice moment.&lt;hr&gt; &lt;b&gt;Procesul TrimitePrivat funcționează astfel:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;TrimitePrivat începe prin ruperea intrărilor de tranzacții în denumiri standard. Aceste denumiri sunt 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH și 10 DASH - ceva asemănător cu banii de hârtie pe care îi folosim zilnic.&lt;/li&gt; &lt;li&gt;Portofelul tău trimite apoi cereri către nodurile software configurate special pe rețea, numite "masternodes". Aceste masternodes sunt informate atunci că eștii interesat să amesteci o anumită denominație. Nu sunt trimise nici un fel de informații identificabile la masternodes, astfel încât să nu știe niciodată "cine" ești.&lt;/li&gt; &lt;li&gt;Atunci când alte două persoane trimit mesaje similare, indicând faptul că doresc să amestece aceeași denominație, începe o sesiune de amestecare. Masternodul amestecă intrările și instruiește portofelele celor trei utilizatori să plătească intrarea transformată acum înapoi la ei înșiși. Portofelul tău plătește această denominație direct la sine, dar într-o altă adresă (numită o adresă de schimbare).&lt;/li&gt; &lt;li&gt;Pentru a închide complet fondurile tale, portofelul tău trebuie să repete acest proces de mai multe ori cu fiecare denominație. De fiecare dată când procesul este finalizat, se numește o "rundă". Fiecare rundă de TrimitePrivat o face exponențial mai dificil de determinat de unde au provenit fondurile.&lt;/li&gt; &lt;li&gt;Acest proces de amestecare se întâmplă în fundal, fără intervenție din partea ta când dorești să efectuezi o tranzacție, fondurile tale vor fi deja anonime. Nu este necesară o așteptare suplimentară.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt;Portofelul tău conține numai 1000 dintre aceste "adrese de schimbare". De fiecare dată când se întâmplă un eveniment de amestecare, până la 9 dintre adresele tale sunt epuizate. Aceasta înseamnă că cele 1000 de adrese durează aproximativ 100 de evenimente de amestecare. Atunci când sunt utilizate 900 dintre ele, portofelul tău trebuie să creeze mai multe adrese. Cu toate acestea, poți face acest lucru numai dacă ai activări de rezervă automate. &lt;br&gt;În consecință, utilizatorii care au backup-urile dezactivate vor avea și TrimitePrivat dezactivat . &lt;hr&gt;Pentru mai multe informații, consultă &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;documentația PrivateSend&lt;/a&gt;.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1046,16 +1038,8 @@
         <translation>Form</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>Stare</translation>
-    </message>
-    <message>
-        <source>Payee</source>
-        <translation>Primitorul plății</translation>
     </message>
     <message>
         <source>0</source>
@@ -1072,10 +1056,6 @@
     <message>
         <source>Node Count:</source>
         <translation>Numărul de Noduri:</translation>
-    </message>
-    <message>
-        <source>DIP3 Masternodes</source>
-        <translation>Masternode-uri DIP3</translation>
     </message>
     <message>
         <source>Show only masternodes this wallet has keys for.</source>
@@ -1247,10 +1227,6 @@
         <translation>(0 = automat, &lt;0 = lasă atîtea nuclee libere)</translation>
     </message>
     <message>
-        <source>Amount of Dash to keep anonymized</source>
-        <translation>Suma Dash pentru a păstra anonimă</translation>
-    </message>
-    <message>
         <source>W&amp;allet</source>
         <translation>Portofel</translation>
     </message>
@@ -1303,14 +1279,6 @@
         <translation>Deschide automat portul client Dash Core de pe router. Asta funcționează numai atunci când routerul dvs. acceptă UPnP și este activat.</translation>
     </message>
     <message>
-        <source>Accept connections from outside</source>
-        <translation>Acceptă conexiuni din exterior</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Acceptă conexiuni în curs de sosire</translation>
-    </message>
-    <message>
         <source>Connect to the Dash network through a SOCKS5 proxy.</source>
         <translation>Conectare la reţeaua Dash printr-un proxy SOCKS.</translation>
     </message>
@@ -1333,10 +1301,6 @@
     <message>
         <source>Expert</source>
         <translation>Expert</translation>
-    </message>
-    <message>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Această setare determină cantitatea de masternode-uri individuale prin care o intrare va fi anonimată.&lt;br/&gt;Mai multe runde de anonimizare oferă un grad mai mare de confidențialitate, dar costă mai mult în taxe.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1373,6 +1337,14 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Mapare port folosind &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>Acceptă conexiuni din exterior</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Acceptă conexiuni în curs de sosire</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1612,22 +1584,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Completare:</translation>
     </message>
     <message>
-        <source>Try to manually submit a PrivateSend request.</source>
-        <translation>Încearcă să trimiți manual o solicitare TrimitePrivat.</translation>
-    </message>
-    <message>
-        <source>Reset the current status of PrivateSend (can interrupt PrivateSend if it's in the process of Mixing, which can cost you money!)</source>
-        <translation>Resetază statusul curent pentru TrimitePrivat (poate întrerupe TrimitePrivat dacă este în proces de amestecare, ceea ce te poate costa bani!)</translation>
-    </message>
-    <message>
-        <source>Information about PrivateSend and Mixing</source>
-        <translation>Informații despre TrimitePrivat și Amestecare</translation>
-    </message>
-    <message>
-        <source>Info</source>
-        <translation>Info</translation>
-    </message>
-    <message>
         <source>Amount and Rounds:</source>
         <translation>Suma și Runde:</translation>
     </message>
@@ -1662,14 +1618,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>(Last Message)</source>
         <translation>(Ultimul Mesaj)</translation>
-    </message>
-    <message>
-        <source>Try Mix</source>
-        <translation>Încercă Amestecă</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation>Resetează</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1714,10 +1662,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Mixed</source>
         <translation>Amestecat</translation>
-    </message>
-    <message>
-        <source>Anonymized</source>
-        <translation>Anonimizat</translation>
     </message>
     <message numerus="yes">
         <source>Denominated inputs have %5 of %n rounds on average</source>
@@ -1772,10 +1716,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 </source>
         <translation>Ultimul mesaj TrimitePrivat:
 </translation>
-    </message>
-    <message>
-        <source>PrivateSend was successfully reset.</source>
-        <translation>TrimitePrivat a fost resetat cu succes. </translation>
     </message>
     <message>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
@@ -2786,18 +2726,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>folosind</translation>
     </message>
     <message>
-        <source>anonymous funds</source>
-        <translation>fonduri anonime</translation>
-    </message>
-    <message>
-        <source>(privatesend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>(trimiteprivat solicită ca această sumă să fie rotunjită la cel mai apropiat %1).</translation>
-    </message>
-    <message>
-        <source>any available funds (not anonymous)</source>
-        <translation>orice fonduri disponibile (nu sunt anonime)</translation>
-    </message>
-    <message>
         <source>%1 to %2</source>
         <translation>%1 la %2</translation>
     </message>
@@ -2816,6 +2744,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 of %2 înregistrările afișate)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>any available funds</source>
+        <translation>orice fonduri disponibile</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3783,10 +3715,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Se acceptă comenzi din linia de comandă și comenzi JSON-RPC</translation>
     </message>
     <message>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Adaugă un nod la care te poți conecta pentru a menține conexiunea deschisă</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Permite căutări DNS pentru -addnode, -seednode și -connect</translation>
     </message>
@@ -3899,10 +3827,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Leagă-te de adresa dată și whitelist peers care se conectează la ea. Utilizează [host]: notation port pentru IPv6</translation>
     </message>
     <message>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections</source>
-        <translation>Conectează-te numai la nodul (ele) specificat; -connect = 0 dezactivează conexiunile automate</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Creează fișiere noi cu permisiuni implicite de sistem, în loc de umask 077 (funcțional numai cu funcționalitatea portofelului dezactivată)</translation>
     </message>
@@ -3941,10 +3865,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
         <translation>Menține un index complet al tranzacțiilor, utilizat de către getrawtransaction rpc call (implicit: %u)</translation>
-    </message>
-    <message>
-        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!</source>
-        <translation>Asigură-te că ai criptat portofelul și șterge toate copiile de rezervă necriptate după ce ai confirmat că portofelul funcționează!</translation>
     </message>
     <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
@@ -4009,10 +3929,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
         <translation>Conectează-te la KeePassHttp  din port&lt;port&gt; (implicit: %u)</translation>
-    </message>
-    <message>
-        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation>Permite clientul să acționeze ca un masternode (0-1, implicit: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4171,10 +4087,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Setează dimensiunea polului cheilor la &lt;n&gt; (implicit: %u)</translation>
     </message>
     <message>
-        <source>Set the masternode BLS private key</source>
-        <translation>Setează cheia privată masternode BLS</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Setează numărul de fire pentru a activa apelurile RPC (implicit: %d)</translation>
     </message>
@@ -4299,10 +4211,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Cheie KeePassHttp pentru comunicarea criptată AES cu KeePass</translation>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>Păstrează cel mult &lt;n&gt;tranzacții inaccesibile în memorie (implicit: %u)</translation>
-    </message>
-    <message>
         <source>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>Dezactivează toate funcționalitățile specifice Dash (Masternode-uri, TrimitePrivat, TrimiteInstant, Guvernanță) (0-1, implicit: %u)</translation>
     </message>
@@ -4365,10 +4273,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (temporary service connections excluded) (default: %u)</source>
         <translation>Menține cel mult &lt;n&gt;conexiuni cu peers (excluderea conexiunilor temporare) (implicit : %u)</translation>
-    </message>
-    <message>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>TrimitePrivat folosește sumele denominate exacte pentru a trimite fonduri, este posibil să ai nevoie să anonimezi mai multe monede.</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4633,10 +4537,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Not enough file descriptors available.</source>
         <translation>Nu sînt destule descriptoare disponibile.</translation>
-    </message>
-    <message>
-        <source>Not enough funds to anonymize.</source>
-        <translation>Nu sunt suficiente fonduri pentru a anonimiza.</translation>
     </message>
     <message>
         <source>Number of automatic wallet backups (default: %u)</source>
@@ -4915,10 +4815,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Începeți în modul lite, cele mai multe funcționalități specifice Dash sunt dezactivate.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Trebuie să specifici un masternodeblsprivkey în configurație. Te rog să consulți documentația pentru ajutor.</translation>
-    </message>
-    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>%d din ultimele 100 de blocuri au versiune neașteptată</translation>
     </message>
@@ -5041,10 +4937,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
         <translation>Adresa spork nevalidă specificată cu -sporkaddr</translation>
-    </message>
-    <message>
-        <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
-        <translation>Pastrează N DASH anonimizat (%u-%u, implicit: %u)</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>
