@@ -51,6 +51,7 @@ struct PopService {
 
     virtual void addPayloads(const CBlock& block, const int& nHeight, const Publications& publications) = 0;
     virtual void removePayloads(const CBlock&, const int&) = 0;
+    virtual void setConfig() = 0;
 };
 } // namespace VeriBlock
 

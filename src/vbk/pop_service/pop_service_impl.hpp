@@ -22,7 +22,7 @@ private:
     std::shared_ptr<VeriBlock::GrpcPopService::Stub> grpcPopService;
 
 public:
-    PopServiceImpl();
+    PopServiceImpl(bool altautoconfig = true);
 
     ~PopServiceImpl() override = default;
 
@@ -42,14 +42,18 @@ public:
 
     void updateContext(const std::vector<std::vector<uint8_t>>& veriBlockBlocks, const std::vector<std::vector<uint8_t>>& bitcoinBlocks) override;
 
+     bool parsePopTx(const CTransactionRef& tx, Publications* publications, Context* ctx, PopTxType* type) override;
+
+    bool determineATVPlausibilityWithBTCRules(AltchainId altChainIdentifier, const CBlockHeader& popEndorsementHeader, const Consensus::Params& params) override;
+
+    void addPayloads(const CBlock& block, const int& nHeight, const Publications& publications) override;
+
+    void removePayloads(const CBlock&, const int&) override;
+
+    void setConfig() override;
+
 public:
-    virtual bool parsePopTx(const CTransactionRef& tx, Publications* publications, Context* ctx, PopTxType* type);
     virtual void getPublicationsData(const Publications& tx, PublicationData& publicationData);
-
-    virtual bool determineATVPlausibilityWithBTCRules(AltchainId altChainIdentifier, const CBlockHeader& popEndorsementHeader, const Consensus::Params& params);
-
-    virtual void addPayloads(const CBlock& block, const int& nHeight, const Publications& publications);
-    virtual void removePayloads(const CBlock&, const int&);
 };
 
 bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state);
