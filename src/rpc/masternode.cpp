@@ -895,13 +895,9 @@ static const CRPCCommand commands[] =
     { "governance",            "voteraw",                          &voteraw,                       {"masternode-tx-hash","tx_index","governancehash","vote-signal","vote","time","vote-sig"} },  
     { "governance",            "masternodelist",                   &masternodelist,                {"mode","filter"} },
     { "governance",            "sentinelping",                     &sentinelping,                  {"version"} }, 
-};
-static const CRPCCommand commandsWallet[] =
-{ //  category              name                                actor (function)                argNames
-    //  --------------------- ------------------------          -----------------------         ----------
-    { "governancewallet",            "gobject",                          &gobject,                       {} },
-    { "governancewallet",            "masternode",                       &masternode,                    {"command","data"} },
-    { "governancewallet",            "masternodebroadcast",              &masternodebroadcast,           {"command","data"} },
+    { "governance",            "masternodebroadcast",              &masternodebroadcast,           {"command","data"} },
+    { "governance",            "masternode",                       &masternode,                    {"command","data"} },
+    { "governance",            "gobject",                          &gobject,                       {} },
 };
 // clang-format on
 void RegisterGovernanceRPCCommands(CRPCTable &t)
@@ -909,10 +905,3 @@ void RegisterGovernanceRPCCommands(CRPCTable &t)
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }
-#ifdef ENABLE_WALLET
-void RegisterGovernanceWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique_ptr<interfaces::Handler>>& handlers)
-{
-    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commandsWallet); vcidx++)
-        handlers.emplace_back(chain.handleRpc(commandsWallet[vcidx]));
-}
-#endif
