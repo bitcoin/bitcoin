@@ -241,7 +241,7 @@ int test_one_input(std::vector<uint8_t> buffer) {
         case CTXOUTCOMPRESSOR_DESERIALIZE:
         {
             CTxOut to;
-            CTxOutCompressor toc(to);
+            auto toc = Using<TxOutCompression>(to);
             try
             {
                 ds >> toc;
