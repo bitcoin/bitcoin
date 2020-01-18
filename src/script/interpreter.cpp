@@ -37,12 +37,7 @@ bool CastToBool(const valtype& vch)
     for (unsigned int i = 0; i < vch.size(); i++)
     {
         if (vch[i] != 0)
-        {
-            // Can be negative zero
-            if (i == vch.size()-1 && vch[i] == 0x80)
-                return false;
             return true;
-        }
     }
     return false;
 }
@@ -787,7 +782,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     {
                     case OP_1ADD:       bn += bnOne; break;
                     case OP_1SUB:       bn -= bnOne; break;
-                    case OP_NEGATE:     bn = -bn; break;
+                    case OP_NEGATE:     if (bn != bnZero) bn = -bn; break;
                     case OP_ABS:        if (bn < bnZero) bn = -bn; break;
                     case OP_NOT:        bn = (bn == bnZero); break;
                     case OP_0NOTEQUAL:  bn = (bn != bnZero); break;
