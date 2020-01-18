@@ -22,6 +22,7 @@ Table of contents
   - [Allow any token to be traded for Bitcoin](#allow-any-token-to-be-traded-for-bitcoin)
   - [Updates to omni_senddexaccept to accept orders](#updates-to-omni_senddexaccept-to-accept-orders)
   - [New command omni_senddexpay to execute orders](#new-command-omni_senddexpay-to-execute-orders)
+  - [rpcallowip option changes](#rpcallowip-option-changes)
   - [Updates to the Omni Core logo](#updates-to-the-omni-core-logo)
   - [Several stability and performance improvements](#several-stability-and-performance-improvements)
 - [Change log](#change-log)
@@ -66,7 +67,7 @@ With this version, any token can be traded and there are no longer any trading r
 - [omni_senddexsell](https://github.com/OmniLayer/omnicore/blob/v0.7.1/src/omnicore/doc/rpc-api.md#omni_senddexsell)
 - [omni_senddexaccept](https://github.com/OmniLayer/omnicore/blob/v0.7.1/src/omnicore/doc/rpc-api.md#omni_senddexaccept)
 - [omni_senddexpay](https://github.com/OmniLayer/omnicore/blob/v0.7.1/src/omnicore/doc/rpc-api.md#omni_senddexpay)
-- [omni_getactivedexsells](https://github.com/OmniLayer/omnicore/blob/v0.7.1/src/omnicore/doc/rpc-api.omni_getactivedexsells#omni_senddexsell)
+- [omni_getactivedexsells](https://github.com/OmniLayer/omnicore/blob/v0.7.1/src/omnicore/doc/rpc-api.md#omni_getactivedexsells)
 
 As well as the specification of the Omni Layer protocol:
 
@@ -108,6 +109,7 @@ $ omnicore-cli "omni_senddexaccept" \
 
 ---
 
+
 New command `omni_senddexpay` to execute orders
 -----------------------------------------------
 
@@ -141,6 +143,12 @@ $ omnicore-cli "omni_senddexpay" \
 ---
 
 
+`rpcallowip` option changes
+------------------------
+
+The `rpcallowip` option can no longer be used to automatically listen on all network interfaces.  Instead, the `rpcbind` parameter must be used to specify the IP addresses to listen on. Listening for RPC commands over a public network connection is insecure and should be disabled, so a warning is now printed if a user selects such a configuration.  If you need to expose RPC in order to use a tool like  Docker, ensure you only bind RPC to your localhost, e.g. `docker run [...] -p 127.0.0.1:8332:8332` (this is an extra `:8332` over the normal Docker port specification).
+
+
 Updates to the Omni Core logo
 -----------------------------
 
@@ -168,6 +176,7 @@ The following list includes relevant pull requests merged into this release:
 - #1060 Only use wtxNew if fSuccess true
 - #1064 New icons and default splash
 - #1066 Prepare release of Omni Core v0.7.1
+- #1068 Update release notes for v0.7.1
 ```
 
 
