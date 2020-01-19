@@ -129,11 +129,11 @@ def select_coins(needed, inputs, criteria):
     n = 0
     if verbosity > 0: print("Selecting coins from the set of %d inputs"%len(inputs))
     if verbosity > 1: print(inputs)
-    while have < needed and n < len(inputs):
+    while have < needed and n < len(inputs) and n < 1660:
         outputs.append({ "txid":inputs[n]["txid"], "vout":inputs[n]["vout"]})
         have += inputs[n]["amount"]
         n += 1
-    if verbosity > 0: print("Chose %d UTXOs with total value %f requiring %f change"%(n, have, have-needed)) 
+    if verbosity > 0: print("Chose %d UTXOs with total value %f CRW requiring %f CRW change"%(n, have, have-needed)) 
     if verbosity > 2: print(outputs)   
     return (outputs, have-needed)
 
@@ -156,9 +156,9 @@ def create_tx(crownd, fromaddresses, toaddress, amount, fee, criteria, upto):
         if upto:
             needed = total_available
             amount = total_available - fee
-            print("Warning, only %f CRW available, sending %f"%(total_available, amount))
+            print("Warning, only %f CRW available, sending up to %f CRW"%(total_available, amount))
         else:
-            sys.stderr.write("Error, only %f CRW available, need %f\n"%(total_available, needed))
+            sys.stderr.write("Error, only %f CRW available, need %f CRW\n"%(total_available, needed))
             sys.exit(1)
         
     #
@@ -169,7 +169,13 @@ def create_tx(crownd, fromaddresses, toaddress, amount, fee, criteria, upto):
     #
     outputs = { toaddress : float(amount) }
     (inputs, change_amount) = select_coins(needed, potential_inputs, criteria)
-    if change_amount > BASE_FEE:  # don't bother with zero or tiny change
+    if change_amount < 0:         # hit the transaction UTXO limit
+        amount += change_amount
+        outputs[toaddress] = float(amount)
+        if not upto:
+            sys.stderr.write("Error, only %f CRW available, need %f\n"%(amount + fee, needed))
+            sys.exit(1)
+    elif change_amount > BASE_FEE:  # don't bother with zero or tiny change
         change_address = fromaddresses[-1]
         if change_address in outputs:
             outputs[change_address] += float(change_amount)
@@ -269,24 +275,28 @@ def main():
             for address,info in address_summary.items():
                 n_transactions = len(info['outputs'])
                 if n_transactions > 1:
-                    print("%s %.8f %s (%d transactions)"%(address, info['total'], info['account'], n_transactions))
+                    print("%s %.8f %s (%d UTXOs)"%(address, info['total'], info['account'], n_transactions))
                 else:
                     print("%s %.8f %s"%(address, info['total'], info['account']))
                 spendable_amount += info['total']
                 utxo_count += n_transactions
             print('-------------------------------------------------------------------------------')
-            print('Total spendable: %.8f CRW in %d UTXOs'%(spendable_amount, utxo_count))
+            print('Total spendable: %.8f CRW in %d UTXOs and %d addresses'%(spendable_amount, utxo_count, len(address_summary.items())))
         else:
-            print("Empty wallet!")
+            print("Nothing to spend!")
+
     else:
         if options.toaddress is None:
             print("You must specify a to address")
             sys.exit(1)
         if options.toaddress.lower() == 'new':
             options.toaddress = crownd.getnewaddress('')
-            print("Sending to generated address %s"%(options.toaddress))
+            print("Sending to new address %s"%(options.toaddress))
 
-        if crownd.validateaddress(options.toaddress)['isvalid']:
+        if not crownd.validateaddress(options.toaddress)['isvalid']:
+            print("To address is invalid")
+            sys.exit(1)
+        else:    
             fee = Decimal(options.fee)
             amount = Decimal(options.amount)
             while unlock_wallet(crownd) == False:
@@ -303,8 +313,6 @@ def main():
                 print(txid)
             else:
                 print("Transaction size is too large")
-        else:
-            print("To address is invalid")
 
 if __name__ == '__main__':
     main()
