@@ -589,7 +589,9 @@ void SyscoinGUI::setClientModel(ClientModel *_clientModel)
         // SYSCOIN
         connect(_clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &SyscoinGUI::setAdditionalDataSyncProgress);
         // Receive and report messages from client model
-        connect(_clientModel, &ClientModel::message, this, &SyscoinGUI::message);
+        connect(_clientModel, &ClientModel::message, [this](const QString &title, const QString &message, unsigned int style){
+            this->message(title, message, style);
+        });
 
         // Show progress dialog
         connect(_clientModel, &ClientModel::showProgress, this, &SyscoinGUI::showProgress);

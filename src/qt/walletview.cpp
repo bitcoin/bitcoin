@@ -103,7 +103,9 @@ void WalletView::setSyscoinGUI(SyscoinGUI *gui)
         connect(sendCoinsPage, &SendCoinsDialog::coinsSent, gui, &SyscoinGUI::gotoHistoryPage);
 
         // Receive and report messages
-        connect(this, &WalletView::message, gui, &SyscoinGUI::message);
+        connect(this, &WalletView::message, [gui](const QString &title, const QString &message, unsigned int style) {
+            gui->message(title, message, style);
+        });
 
         // Pass through encryption status changed signals
         connect(this, &WalletView::encryptionStatusChanged, gui, &SyscoinGUI::updateWalletStatus);
