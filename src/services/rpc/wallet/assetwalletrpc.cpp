@@ -904,13 +904,14 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
-    // create outputs for each receiver for zdag graph enforcement through CPFP
-    for (unsigned int idx = 0; idx < receivers.size(); idx++) {
-		const UniValue& receiver = receivers[idx];
-		if (!receiver.isObject())
-			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address'\" or \"amount\"}");
+    // create outputs for first receiver for zdag graph enforcement through CPFP
+    // if receivers are more than 5 we don't really care to send dust it is a batch payment likely
+    if(receivers.size() < 5){
+        const UniValue& receiver = receivers[0];
+        if (!receiver.isObject())
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address'\" or \"amount\"}");
 
-		const UniValue &receiverObj = receiver.get_obj();
+        const UniValue &receiverObj = receiver.get_obj();
         const std::string &toStr = find_value(receiverObj, "address").get_str();
         if(toStr != "burn"){
             // create a dust output and send to the recipient for further relay
@@ -918,7 +919,8 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
             vecSend.push_back(recipient);
         }
-	}
+    }
+	
     if(!lockedOutpoint.IsNull()){
         // this will let syscointxfund try to select this outpoint as the input
         mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
