@@ -361,7 +361,9 @@ void BitcoinApplication::initializeResult(bool success)
         if (paymentServer) {
             connect(paymentServer, &PaymentServer::receivedPaymentRequest, window, &BitcoinGUI::handlePaymentRequest);
             connect(window, &BitcoinGUI::receivedURI, paymentServer, &PaymentServer::handleURIOrFile);
-            connect(paymentServer, &PaymentServer::message, window, &BitcoinGUI::message);
+            connect(paymentServer, &PaymentServer::message, [this](const QString& title, const QString& message, unsigned int style) {
+                window->message(title, message, style);
+            });
             QTimer::singleShot(100, paymentServer, &PaymentServer::uiReady);
         }
 #endif
