@@ -12,9 +12,8 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
-WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, QWidget* parent)
-    : QFrame(parent),
-      platformStyle(_platformStyle)
+WalletFrame::WalletFrame(QWidget* parent)
+    : QFrame(parent)
 {
     // Leave HBox hook for adding a list view later
     QHBoxLayout *walletFrameLayout = new QHBoxLayout(this);

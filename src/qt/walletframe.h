@@ -9,7 +9,6 @@
 #include <QMap>
 
 class ClientModel;
-class PlatformStyle;
 class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
@@ -30,7 +29,7 @@ class WalletFrame : public QFrame
     Q_OBJECT
 
 public:
-    explicit WalletFrame(const PlatformStyle* platformStyle, QWidget* parent);
+    explicit WalletFrame(QWidget* parent);
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);
@@ -52,10 +51,7 @@ private:
     QStackedWidget *walletStack;
     ClientModel *clientModel;
     QMap<WalletModel*, WalletView*> mapWalletViews;
-
     bool bOutOfSync;
-
-    const PlatformStyle *platformStyle;
 
 public:
     WalletView* currentWalletView() const;
