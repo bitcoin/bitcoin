@@ -651,7 +651,9 @@ void BitcoinGUI::setWalletController(WalletController* wallet_controller)
 void BitcoinGUI::addWallet(WalletModel* walletModel)
 {
     if (!walletFrame) return;
-    if (!walletFrame->addWallet(walletModel)) return;
+    WalletView* walletView = new WalletView(platformStyle, walletFrame);
+    if (!walletFrame->addWallet(walletModel, walletView)) return;
+    walletView->setPrivacy(isPrivacyModeActivated());
     const QString display_name = walletModel->getDisplayName();
     setWalletActionsEnabled(true);
     rpcConsole->addWallet(walletModel);
@@ -660,6 +662,17 @@ void BitcoinGUI::addWallet(WalletModel* walletModel)
         m_wallet_selector_label_action->setVisible(true);
         m_wallet_selector_action->setVisible(true);
     }
+
+    connect(walletView, &WalletView::outOfSyncWarningClicked, walletFrame, &WalletFrame::outOfSyncWarningClicked);
+    connect(walletView, &WalletView::transactionClicked, this, &BitcoinGUI::gotoHistoryPage);
+    connect(walletView, &WalletView::coinsSent, this, &BitcoinGUI::gotoHistoryPage);
+    connect(walletView, &WalletView::message, [this](const QString& title, const QString& message, unsigned int style) {
+        this->message(title, message, style);
+    });
+    connect(walletView, &WalletView::encryptionStatusChanged, this, &BitcoinGUI::updateWalletStatus);
+    connect(walletView, &WalletView::incomingTransaction, this, &BitcoinGUI::incomingTransaction);
+    connect(walletView, &WalletView::hdEnabledStatusChanged, this, &BitcoinGUI::updateWalletStatus);
+    connect(this, &BitcoinGUI::setPrivacy, walletView, &WalletView::setPrivacy);
 }
 
 void BitcoinGUI::removeWallet(WalletModel* walletModel)
