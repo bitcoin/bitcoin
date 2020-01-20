@@ -1181,7 +1181,7 @@ static bool TxRelayMayResultInDisconnect(const CValidationState& state)
 /**
  * Potentially mark a node discouraged based on the contents of a CValidationState object
  *
- * @param[in] via_compact_block: this bool is passed in because net_processing should
+ * @param[in] via_compact_block this bool is passed in because net_processing should
  * punish peers differently depending on whether the data was provided in a compact
  * block message or not. If the compact block had a valid header, but contained invalid
  * txs, the peer should not be punished. See BIP 152.
