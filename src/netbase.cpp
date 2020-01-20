@@ -763,7 +763,7 @@ bool IsProxy(const CNetAddr &addr) {
  * @param hSocket The socket on which to connect to the SOCKS5 proxy.
  * @param nTimeout Wait this many milliseconds for the connection to the SOCKS5
  *                 proxy to be established.
- * @param outProxyConnectionFailed[out] Whether or not the connection to the
+ * @param[out] outProxyConnectionFailed Whether or not the connection to the
  *                                      SOCKS5 proxy failed.
  *
  * @returns Whether or not the operation succeeded.

@@ -584,7 +584,7 @@ void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransactio
 /**
  * Finalizes a PSBT if possible, combining partial signatures.
  *
- * @param[in,out] &psbtx reference to PartiallySignedTransaction to finalize
+ * @param[in,out] psbtx PartiallySignedTransaction to finalize
  * return True if the PSBT is now complete, false otherwise
  */
 bool FinalizePSBT(PartiallySignedTransaction& psbtx);
@@ -592,7 +592,7 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx);
 /**
  * Finalizes a PSBT if possible, and extracts it to a CMutableTransaction if it could be finalized.
  *
- * @param[in]  &psbtx reference to PartiallySignedTransaction
+ * @param[in]  psbtx PartiallySignedTransaction
  * @param[out] result CMutableTransaction representing the complete transaction, if successful
  * @return True if we successfully extracted the transaction, false otherwise
  */
@@ -601,7 +601,7 @@ bool FinalizeAndExtractPSBT(PartiallySignedTransaction& psbtx, CMutableTransacti
 /**
  * Combines PSBTs with the same underlying transaction, resulting in a single PSBT with all partial signatures from each input.
  *
- * @param[out] &out   the combined PSBT, if successful
+ * @param[out] out   the combined PSBT, if successful
  * @param[in]  psbtxs the PSBTs to combine
  * @return error (OK if we successfully combined the transactions, other error if they were not compatible)
  */
