@@ -598,6 +598,30 @@
         <translation>정보</translation>
     </message>
     <message>
+        <source>Received and sent multiple transactions</source>
+        <translation>보내고 받은 다중 거래</translation>
+    </message>
+    <message>
+        <source>Sent multiple transactions</source>
+        <translation>다중 거래가 전송되었습니다</translation>
+    </message>
+    <message>
+        <source>Received multiple transactions</source>
+        <translation>다중 거래를 받았습니다</translation>
+    </message>
+    <message>
+        <source>Sent Amount: %1
+</source>
+        <translation>전송 금액: %1
+</translation>
+    </message>
+    <message>
+        <source>Received Amount: %1
+</source>
+        <translation>받은 금액: %1
+</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>날짜: %1
@@ -791,8 +815,8 @@
         <translation>이 기능을 사용하기 위해서는 '리스트 모드'를 켜주세요.</translation>
     </message>
     <message>
-        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-anonymized inputs first and then check the PrivateSend checkbox again.</source>
-        <translation>익명화 되지 않은 입력이 선택되었습니다. &lt;b&gt;프라이빗샌드 기능이 비활성화됩니다. &lt;/b&gt;&lt;br&gt;&lt;br&gt;계속해서 프라이빗샌드 기능을 사용하고자 하신다면 모든 익명화되지 않은 입력 선택을 취소하시고 프라이빗샌드 체크박스를 다시 선택해주세요. </translation>
+        <source>Non-mixed input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-mixed inputs first and then check the PrivateSend checkbox again.</source>
+        <translation>믹싱되지 않은 입력이 선택되었습니다. &lt;b&gt;프라이빗샌드 기능이 비활성화됩니다. &lt;/b&gt;&lt;br&gt;&lt;br&gt;계속해서 프라이빗샌드 기능을 사용하고자 하시는 경우 믹싱되지 않은 모든 입력 선택을 취소하시고 프라이빗샌드 체크 박스를 다시 선택해주세요. </translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -968,8 +992,8 @@
         <translation>프라이빗샌드 정보</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;프라이빗샌드에 관한 기본 정보&lt;/h3&gt; 프라이빗 샌드는 당신의 자금 출처를 가려 진정한 재정적 프라이버시를 보장합니다. 당신의 지갑에 보관된 모든 대시는 각기 다른 ‘입력값’으로 구성되어 있습니다. 쉽게 생각하면 별도의 분리된 동전으로 구성되어 있다고 볼 수 있습니다.&lt;br&gt; 프라이빗샌드는 당신의 코인이 지갑을 떠나지 않고도 그 입력값을 다른 두 사람의 입력값과 섞는 혁신적인 방식을 사용합니다. 이로써 당신의 자금은 언제나 당신의 통제 하에 있습니다.&lt;hr&gt;&lt;b&gt; 프라이빗샌드는 다음과 같은 방식으로 작동합니다.&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt; 프라이빗샌드는 당신의 거래 입력값을 표준 단위로 쪼개는 것으로 시작합니다. 이렇게 분할하는 단위는 0.001대시, 0.01대시, 0.1대시, 1대시 혹은 10대시 입니다 - 귀하가 일상적으로 사용하는 지폐와 비슷하다고 생각하셔도 좋습니다. &lt;/li&gt;&lt;li&gt;이후 당신의 지갑은 ‘마스터노드’라고 불리는 네트워크의 특수 구성 소프트웨어 노드에 요청을 전송합니다. 이로써 이들 마스터노드는 당신이 특정 금액을 믹싱하고자 한다는 정보를 수신합니다. 마스터노드에는 당신의 개인 정보를 식별할 수 있는 어떤 내용도 전송되지 않습니다. 즉 당신이 ‘누구’인지 알 수 있는 방법은 없습니다.&lt;/li&gt;&lt;li&gt; 두 명의 다른 사람이 비슷한 메시지를 보내어 그들 역시 같은 단위의 금액을 믹싱하고 싶다는 정보를 표시하면 믹싱 세션이 시작됩니다. 마스터노드는 이들 입력값을 믹싱하여 세 사용자의 지갑에 변환된 입력을 지불하도록 지시합니다. 당신의 지갑은 해당 입력값을 지불하지만, 지불되는 주소는 '변경 주소'라고 불리는 다른 주소로 보내집니다.&lt;/li&gt;&lt;li&gt; 당신의 자금을 완전히 가리기 위해서, 당신의 지갑은 이 과정을 각 대시 분할 단위만큼 여러번 반복합니다. 이러한 반복을 ‘라운드’라고 부릅니다. 프라이빗샌드의 각 라운드가 진행됨에 따라 당신이 송금하고자 하는 자금의 출처는 기하급수적으로 높은 수준으로 가려집니다.&lt;/li&gt;&lt;li&gt; 이 믹싱 과정은 당신이 개입할 필요 없이 백그라운드에서 진행됩니다. 당신이 거래를 원하시는 경우, 당신의 자금은 이미 익명화가 진행되는 중입니다. 추가적으로 대기할 필요 역시 없습니다. &lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt;중요:&lt;/b&gt; 당신의 지갑은 1,000개의 ‘변경 주소’만을 가지고 있습니다. 믹싱을 실행할 때마다 최대 9개의 주소가 사용됩니다. 이는 곧 이들 1000개의 주소가 약 100개의 믹싱 작업을 위해 사용될 수 있다는 것을 의미합니다. 전체 1,000개의 주소 중 900개가 사용된 경우 당신의 지갑은 더 많은 주소를 만들어야 합니다. 그러나 이 작업은 당신이 자동 백업을 설정한 경우에만 수행됩니다. &lt;br&gt;따라서 백업이 비활성화된 사용자는 프라이빗샌드 역시 비활성화 됩니다. &lt;hr&gt;더 많은 정보를 위해서는 다음을 참조하세요 &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;프라이빗샌드 설명서&lt;/a&gt;. </translation>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;프라이빗샌드에 관한 기본 정보&lt;/h3&gt; 프라이빗 샌드는 당신의 자금 출처를 가려 진정한 재정적 프라이버시를 보장합니다. 당신의 지갑에 보관된 모든 대시는 각기 다른 ‘입력값’으로 구성되어 있습니다. 쉽게 생각하면 별도의 분리된 동전으로 구성되어 있다고 볼 수 있습니다.&lt;br&gt; 프라이빗샌드는 당신의 코인이 지갑을 떠나지 않고도 그 입력값을 다른 두 사람의 입력값과 섞는 혁신적인 방식을 사용합니다. 이로써 당신의 자금은 언제나 당신의 통제 하에 있습니다.&lt;hr&gt;&lt;b&gt; 프라이빗샌드는 다음과 같은 방식으로 작동합니다.&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt; 프라이빗샌드는 당신의 거래 입력값을 표준 단위로 쪼개는 것으로 시작합니다. 이렇게 분할하는 단위는 0.001대시, 0.01대시, 0.1대시, 1대시 혹은 10대시 입니다 - 귀하가 일상적으로 사용하는 지폐와 비슷하다고 생각하셔도 좋습니다. &lt;/li&gt;&lt;li&gt;이후 당신의 지갑은 ‘마스터노드’라고 불리는 네트워크의 특수 구성 소프트웨어 노드에 요청을 전송합니다. 이로써 이들 마스터노드는 당신이 특정 금액을 믹싱하고자 한다는 정보를 수신합니다. 마스터노드에는 당신의 개인 정보를 식별할 수 있는 어떤 내용도 전송되지 않습니다. 즉 당신이 ‘누구’인지 알 수 있는 방법은 없습니다.&lt;/li&gt;&lt;li&gt; 두 명의 다른 사람이 비슷한 메시지를 보내어 그들 역시 같은 단위의 금액을 믹싱하고 싶다는 정보를 표시하면 믹싱 세션이 시작됩니다. 마스터노드는 이들 입력값을 믹싱하여 세 사용자의 지갑에 변환된 입력을 지불하도록 지시합니다. 당신의 지갑은 해당 입력값을 지불하지만, 지불되는 주소는 '변경 주소'라고 불리는 다른 주소로 보내집니다.&lt;/li&gt;&lt;li&gt; 당신의 자금을 완전히 가리기 위해서, 당신의 지갑은 이 과정을 각 대시 분할 단위만큼 여러번 반복합니다. 이러한 반복을 ‘라운드’라고 부릅니다. 프라이빗샌드의 각 라운드가 진행됨에 따라 당신이 송금하고자 하는 자금의 출처는 기하급수적으로 높은 수준으로 가려집니다.&lt;/li&gt;&lt;li&gt; 이 믹싱 과정은 당신이 개입할 필요 없이 백그라운드에서 진행됩니다. 당신이 거래를 원하시는 경우, 당신의 자금은 이미 믹싱을 진행하는 중입니다. 추가적으로 대기할 필요 역시 없습니다. &lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt;중요:&lt;/b&gt; 당신의 지갑은 1,000개의 ‘변경 주소’만을 가지고 있습니다. 믹싱을 실행할 때마다 최대 9개의 주소가 사용됩니다. 이는 곧 이들 1000개의 주소가 약 100개의 믹싱 작업을 위해 사용될 수 있다는 것을 의미합니다. 전체 1,000개의 주소 중 900개가 사용된 경우 당신의 지갑은 더 많은 주소를 만들어야 합니다. 그러나 이 작업은 당신이 자동 백업을 설정한 경우에만 수행됩니다. &lt;br&gt;따라서 백업이 비활성화된 사용자는 프라이빗샌드 역시 비활성화 됩니다. &lt;hr&gt;더 많은 정보를 위해서는 다음을 참조하세요 &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;프라이빗샌드 설명서&lt;/a&gt;. </translation>
     </message>
 </context>
 <context>
@@ -1046,16 +1070,8 @@
         <translation>유형</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>주소</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>상태</translation>
-    </message>
-    <message>
-        <source>Payee</source>
-        <translation>수취인</translation>
     </message>
     <message>
         <source>0</source>
@@ -1074,16 +1090,16 @@
         <translation>노드 개수:</translation>
     </message>
     <message>
-        <source>DIP3 Masternodes</source>
-        <translation>DIP3 마스터노드</translation>
-    </message>
-    <message>
         <source>Show only masternodes this wallet has keys for.</source>
         <translation>이 지갑이 키를 가지고 있는 마스터노드만 보이기</translation>
     </message>
     <message>
         <source>My masternodes only</source>
         <translation>나의 마스터노드만</translation>
+    </message>
+    <message>
+        <source>Service</source>
+        <translation>서비스</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1102,8 +1118,24 @@
         <translation>다음 지불</translation>
     </message>
     <message>
+        <source>Payout Address</source>
+        <translation>지불 주소</translation>
+    </message>
+    <message>
         <source>Operator Reward</source>
         <translation>운영 보상</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>담보 주소</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>소유자 주소</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>투표 주소</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1247,10 +1279,6 @@
         <translation>(0 = 자동, &lt;0 = 지정된 코어 개수만큼 사용 안함)</translation>
     </message>
     <message>
-        <source>Amount of Dash to keep anonymized</source>
-        <translation>익명을 유지할 대시의 개수</translation>
-    </message>
-    <message>
         <source>W&amp;allet</source>
         <translation>지갑(&amp;a)</translation>
     </message>
@@ -1303,14 +1331,6 @@
         <translation>라우터에서 대시 코어 클라이언트를 자동으로 엽니다. 이 기능은 당신의 라우터가 UPnP를 지원하고 해당 기능이 작동하는 경우에만 가능합니다.</translation>
     </message>
     <message>
-        <source>Accept connections from outside</source>
-        <translation>외부로부터의 연결 허용</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>수신 연결 허용</translation>
-    </message>
-    <message>
         <source>Connect to the Dash network through a SOCKS5 proxy.</source>
         <translation>SOCKS5 프록시를 통해 대시 네트워크 연결</translation>
     </message>
@@ -1333,10 +1353,6 @@
     <message>
         <source>Expert</source>
         <translation>전문가</translation>
-    </message>
-    <message>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>이 설정은 얼마나 많은 개별 마스터노드를 거쳐 익명화를 진행할 지를 결정합니다.&lt;br/&gt;익명화를 위해 보다 많은 라운드를 거치는 것은 향상된 개인 정보 보호 수준을 제공하지만 더 많은 수수료가 발생합니다.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1367,12 +1383,24 @@
         <translation>검증되지 않은 잔돈 쓰기 (&amp;S)</translation>
     </message>
     <message>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>이 설정은 얼마나 많은 개별 마스터노드를 거쳐 믹싱을 진행할 지를 결정합니다.&lt;br/&gt;믹싱을 위해 보다 많은 라운드를 거치는 것은 향상된 개인 정보 보호 수준을 제공하지만 더 많은 수수료가 발생합니다.</translation>
+    </message>
+    <message>
         <source>&amp;Network</source>
         <translation>네트워크(&amp;N)</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>UPnP를 사용하는 맵 포트(&amp;U)</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>외부로부터의 연결 허용</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>수신 연결 허용</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1612,22 +1640,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>완료:</translation>
     </message>
     <message>
-        <source>Try to manually submit a PrivateSend request.</source>
-        <translation>프라이빗샌드 요청을 수동으로 제출합니다.</translation>
-    </message>
-    <message>
-        <source>Reset the current status of PrivateSend (can interrupt PrivateSend if it's in the process of Mixing, which can cost you money!)</source>
-        <translation>프라이빗샌드의 현재 상태를 재설정합니다. (프라이빗샌드가 믹싱 단계에 있다면 이를 방해할 수도 있습니다. 이 경우에 수수료가 발생할 수 있습니다!)</translation>
-    </message>
-    <message>
-        <source>Information about PrivateSend and Mixing</source>
-        <translation>프라이빗샌드와 믹싱에 관한 정보</translation>
-    </message>
-    <message>
-        <source>Info</source>
-        <translation>정보</translation>
-    </message>
-    <message>
         <source>Amount and Rounds:</source>
         <translation>금액과 라운드:</translation>
     </message>
@@ -1662,14 +1674,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>(Last Message)</source>
         <translation>(지난 메시지)</translation>
-    </message>
-    <message>
-        <source>Try Mix</source>
-        <translation>믹스하기</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation>재설정</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1714,10 +1718,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Mixed</source>
         <translation>믹싱 완료</translation>
-    </message>
-    <message>
-        <source>Anonymized</source>
-        <translation>익명화 처리 완료</translation>
     </message>
     <message numerus="yes">
         <source>Denominated inputs have %5 of %n rounds on average</source>
@@ -1772,10 +1772,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 </source>
         <translation>지난 프라이빗샌드 메시지:
 </translation>
-    </message>
-    <message>
-        <source>PrivateSend was successfully reset.</source>
-        <translation>프라이빗샌드가 성공적으로 재설정 되었습니다.</translation>
     </message>
     <message>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
@@ -2786,18 +2782,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>사용 중</translation>
     </message>
     <message>
-        <source>anonymous funds</source>
-        <translation>익명 처리된 자금</translation>
-    </message>
-    <message>
-        <source>(privatesend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>(프라이빗샌드는 %1 가까이 라운드를 진행하기 위해서 이 금액을 필요로 합니다).</translation>
-    </message>
-    <message>
-        <source>any available funds (not anonymous)</source>
-        <translation>이용 가능한 모든 자금(비익명 포함)</translation>
-    </message>
-    <message>
         <source>%1 to %2</source>
         <translation>%1을(를) %2(으)로</translation>
     </message>
@@ -2816,6 +2800,22 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%2 중 %1 입력값 표시됨)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(프라이빗샌드 거래는 잔돈 아웃풋이 허용되지 않아 보다 높은 수수료가 책정됩니다)</translation>
+    </message>
+    <message>
+        <source>Transaction size: %1</source>
+        <translation>거래 크기: %1</translation>
+    </message>
+    <message>
+        <source>Fee rate: %1</source>
+        <translation>수수료 요율: %1</translation>
+    </message>
+    <message>
+        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
+        <translation>경고:  %1 혹은 그 이상의 인풋으로 프라이빗샌드를 이용하게 되면 당신의 프라이버시가 침해될 수 있어 권장하지 않습니다.</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3783,10 +3783,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>명령줄과 JSON-RPC 명령 수락</translation>
     </message>
     <message>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>연결을 위해 노드를 추가하고 연결을 유지합니다.</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>-addnode, -seednode, -connect 에 대해 DNS 탐색 허용</translation>
     </message>
@@ -3899,10 +3895,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>선택한 주소와 이에 연결된 화이트리스트 피어를 바인드 합니다. IPv6인 경우 [host]:port 명령어 표기법을 사용합니다.</translation>
     </message>
     <message>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections</source>
-        <translation>지정된 노드(들)에만 연결합니다; -connect=0 을 이용하면 자동 연결이 해제됩니다</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>umask 077 를 대신하여 시스템 기본 권한으로 새 파일을 만듭니다. (지갑 기능이 비활성화 상태에서만 유효합니다)</translation>
     </message>
@@ -3943,10 +3935,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>getrawtransaction를 RPC CALL를 통해 완전한 거래 인덱스 유지 (기본값: %u)</translation>
     </message>
     <message>
-        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!</source>
-        <translation>해당 지갑이 작동하는 지 여부를 확인한 이후에는 당신의 지갑을 암호화하고, 암호화하지 않은 지갑 백업은 지워야 한다는 점을 주의하세요!</translation>
-    </message>
-    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>중계 및 채굴 시 데이터 운송 거래에서 데이터의 최대 크기 (디폴트: %u)</translation>
     </message>
@@ -3961,6 +3949,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
         <translation>최소 스포크 서명자를 무시하고 스포크 값을 변경합니다. 오직 회귀 테스트와 개발 네트워크에서만 유용합니다. 메인넷이나 테스트넷에서 사용하는 경우에는 금지당할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>프라이빗샌드는 송금을 위하여 정확한 분할 단위 금액을 사용합니다. 단순히 더 많은 코인을 믹싱함으로써 문제를 해결할 수 있을 지도 모릅니다.</translation>
     </message>
     <message>
         <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
@@ -4009,10 +4001,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
         <translation>포트 &lt;port&gt;로 KeePassHttp에 접속합니다. (디폴트: %u)</translation>
-    </message>
-    <message>
-        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation>클라이언트가 마스터노드로 활동하도록 활성화 합니다. (0-1, 디폴트: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4087,6 +4075,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-minsporkkeys로 지정된 스포크 서명자의 최소 숫자가 유효하지 않습니다.</translation>
     </message>
     <message>
+        <source>Keep N DASH mixed (%u-%u, default: %u)</source>
+        <translation>N 대시를 믹싱한 상태로 유지합니다(%u-%u, 디폴트: %u).</translation>
+    </message>
+    <message>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <translation>최대 &lt;n&gt;개의 연결할 수 없는 거래를 메모리에 저장 (기본값: %u)</translation>
+    </message>
+    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Keypool을 모두 사용하였습니다. 우선 keypoolrefill을 호출하십시오.</translation>
     </message>
@@ -4143,6 +4139,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>호환되는 마스터노드를 찾을 수 없습니다.</translation>
     </message>
     <message>
+        <source>Not enough funds to mix.</source>
+        <translation>믹싱을 진행하기에 잔고가 충분하지 않습니다.</translation>
+    </message>
+    <message>
         <source>Not in the Masternode list.</source>
         <translation>마스터노드 리스트에 없습니다.</translation>
     </message>
@@ -4169,10 +4169,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>키풀 크기를 &lt;n&gt; 로 설정합니다. (기본값: %u)</translation>
-    </message>
-    <message>
-        <source>Set the masternode BLS private key</source>
-        <translation>마스터노드 BLS 개인 키를 설정합니다.</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
@@ -4299,10 +4295,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>KeePass를 통해 AES 암호화된 의사 소통을 위한 KeePassHttp 키</translation>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>최대 &lt;n&gt;개의 연결할 수 없는 거래를 메모리에 저장 (기본값: %u)</translation>
-    </message>
-    <message>
         <source>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>모든 대시만의 기능(마스터노드, 프라이빗샌드, 인스턴트샌드, 거버넌스)을 비활성화 (0-1, 디폴트: %u)</translation>
     </message>
@@ -4311,8 +4303,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s 파일에는이 지갑의 모든 프라이빗키가 들어 있습니다. 절대 공유하지 마십시오!</translation>
     </message>
     <message>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>-masternode 옵션은 중요도가 하락하여 무시되고 -masternodeblsprivkey는 마스터노드로서 이 노드를 시작하기에 충분합니다.</translation>
+    </message>
+    <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>연결할 노드를 추가하고 이 연결을 유지합니다 (더 많은 정보를 확인하시려면 'addnode` RPC 코맨드를 확인하세요).</translation>
+    </message>
+    <message>
         <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
         <translation>JSON-RPC 연결을 수신하기 위해 선택한 주소를 바인드 합니다. -rpcallowip 역시 패스한 경우 외에는 이 옵션은 무시하셔도 좋습니다. 포트는 선택 사항이며 -rpcport를 덮어씁니다. IPv6인 경우 [host]:port 명령어 표기법을 사용합니다. 이 옵션은 복수로 설정할 수 있습니다 (디폴트: 127.0.0.1 및 ::1 즉 localhost, 혹은 -rpcallowip가 선택된 경우 0.0.0.0 및 :: 즉 모든 주소) </translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>지정된 노드(들)에만 연결합니다; -connecdt=0을 이용하면 자동 연결이 해제됩니다 (이 피어를 위한 규칙은 -addnode를 위한 규칙과 같습니다)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4367,8 +4371,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>최대한 &lt;n&gt;개의 피어 연결을 유지합니다. (일시적인 서비스 연결은 제외) (디폴트: %u)</translation>
     </message>
     <message>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>프라이빗샌드는 송금을 위하여 정확한 분할 단위 금액을 사용합니다. 단순히 더 많은 코인을 익명화함으로써 문제를 해결할 수 있을 지도 모릅니다.</translation>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
+        <translation>해당 지갑이 작동하는 지 여부를 확인한 이후에는 당신의 지갑을 암호화하고, 암호화하지 않은 지갑 백업은 지워야 한다는 점을 주의하세요!</translation>
+    </message>
+    <message>
+        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
+        <translation>메가 바이트로 표시된 모든 오펀 거래의 최대 총 사이즈 (디폴트: %u)</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4389,6 +4397,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>블록 축소 모드에서는 재검색이 불가능 합니다. -reindex 명령을 사용해서 모든 블록체인을 다시 다운로드 해야 합니다.</translation>
+    </message>
+    <message>
+        <source>Set the masternode BLS private key and enable the client to act as a masternode</source>
+        <translation>마스터노드로서 작동하기 위해 마스터노드 BLS 개인 키를 설정하고 클라이언트를 활성화합니다</translation>
     </message>
     <message>
         <source>Specify full path to directory for automatic wallet backups (must exist)</source>
@@ -4445,6 +4457,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>경고: 알려지지 않은 버전의 블록이 채굴되었습니다! 알려지지 않은 규칙이 적용되었을 가능성이 있습니다.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
+        <translation>-timestampindex를 변경하기 위해서는 -reindex 체인 상태를 사용하여 데이터를 재구성해야 합니다.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -4635,10 +4651,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>사용 가능한 파일 설명자가 부족합니다.</translation>
     </message>
     <message>
-        <source>Not enough funds to anonymize.</source>
-        <translation>익명화를 진행하기에 잔고가 충분하지 않습니다.</translation>
-    </message>
-    <message>
         <source>Number of automatic wallet backups (default: %u)</source>
         <translation>자동 지갑 백업의 수 (디폴트: %u)</translation>
     </message>
@@ -4761,6 +4773,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>You can not start a masternode with wallet enabled.</source>
         <translation>지갑이 활성화된 상태에서는 마스터노드를 실행할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -addressindex</source>
+        <translation>-addressindex를 변경하기 위해서는 -reindex 체인 상태를 사용하여 데이터를 재구성해야 합니다.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -spentindex</source>
+        <translation>-spentindex를 변경하기 위해서는 -reindex 체인 상태를 사용하여 데이터를 재구성해야 합니다.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -4915,10 +4935,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>라이트 모드로 시작하면 대부분의 대시 고유 기능은 비활성화 됩니다.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
-        <translation>설정에서 masternodeblsprivkey를 지정하십시오. 도움이 필요하신 경우 문서를 확인하십시오.</translation>
-    </message>
-    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>지난 100 블록 중 %d가 예상치 못한 버전을 지니고 있습니다</translation>
     </message>
@@ -5041,10 +5057,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
         <translation>-sporkaddr로 지정된 스포크 주소가 유효하지 않습니다.</translation>
-    </message>
-    <message>
-        <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
-        <translation>N 대시를 익명으로 유지합니다(%u-%u, 디폴트: %u).</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>

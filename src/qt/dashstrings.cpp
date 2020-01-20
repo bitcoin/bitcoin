@@ -18,6 +18,9 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "(1 = keep tx meta data e.g. account owner and payment request information, 2 "
 "= drop tx meta data)"),
 QT_TRANSLATE_NOOP("dash-core", ""
+"-masternode option is deprecated and ignored, specifying -"
+"masternodeblsprivkey is enough to start this node as a masternode."),
+QT_TRANSLATE_NOOP("dash-core", ""
 "-maxtxfee is set very high! Fees this large could be paid on a single "
 "transaction."),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -26,6 +29,9 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "Accept relayed transactions received from whitelisted peers even when not "
 "relaying transactions (default: %d)"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Add a node to connect to and attempt to keep the connection open (see the "
+"`addnode` RPC command help for more info)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Allow JSON-RPC connections from specified source. Valid for <ip> are a "
 "single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or "
@@ -46,7 +52,7 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Cannot obtain a lock on data directory %s. %s is probably already running."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Connect only to the specified node(s); -connect=0 disables automatic "
-"connections"),
+"connections (the rules for this peer are the same as for -addnode)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Create new files with system default permissions, instead of umask 077 (only "
 "effective with disabled wallet functionality)"),
@@ -155,7 +161,7 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "excluded) (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Make sure to encrypt your wallet and delete all non-encrypted backups after "
-"you verified that wallet works!"),
+"you have verified that the wallet works!"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Maximum allowed median peer time offset adjustment. Local perspective of "
 "time may be influenced by peers forward or backward by this amount. "
@@ -166,6 +172,8 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "Maximum total fees (in %s) to use in a single wallet transaction or raw "
 "transaction; setting this too low may abort large transactions (default: %s)"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Maximum total size of all orphan transactions in megabytes (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Name to construct url for KeePass entry that stores the wallet passphrase"),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -213,6 +221,9 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "Set lowest fee rate (in %s/kB) for transactions to be included in block "
 "creation. (default: %s)"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Set the masternode BLS private key and enable the client to act as a "
+"masternode"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Set the number of script verification threads (%u to %d, 0 = auto, <0 = "
 "leave that many cores free, default: %d)"),
@@ -327,8 +338,7 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "You are starting in lite mode, most Dash-specific functionality is disabled."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"You must specify a masternodeblsprivkey in the configuration. Please see "
-"documentation for help."),
+"You need to rebuild the database using -reindex to change -timestampindex"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "You need to rebuild the database using -reindex to go back to unpruned "
 "mode.  This will redownload the entire blockchain"),
@@ -347,7 +357,6 @@ QT_TRANSLATE_NOOP("dash-core", "<category> can be:"),
 QT_TRANSLATE_NOOP("dash-core", "Accept command line and JSON-RPC commands"),
 QT_TRANSLATE_NOOP("dash-core", "Accept connections from outside (default: 1 if no -proxy or -connect)"),
 QT_TRANSLATE_NOOP("dash-core", "Accept public REST requests (default: %u)"),
-QT_TRANSLATE_NOOP("dash-core", "Add a node to connect to and attempt to keep the connection open"),
 QT_TRANSLATE_NOOP("dash-core", "Allow DNS lookups for -addnode, -seednode and -connect"),
 QT_TRANSLATE_NOOP("dash-core", "Allow RFC1918 addresses to be relayed and connected to (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Already have that input."),
@@ -386,7 +395,6 @@ QT_TRANSLATE_NOOP("dash-core", "Enable publish hash transaction in <address>"),
 QT_TRANSLATE_NOOP("dash-core", "Enable publish raw block in <address>"),
 QT_TRANSLATE_NOOP("dash-core", "Enable publish raw transaction (locked via InstantSend) in <address>"),
 QT_TRANSLATE_NOOP("dash-core", "Enable publish raw transaction in <address>"),
-QT_TRANSLATE_NOOP("dash-core", "Enable the client to act as a masternode (0-1, default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Entries are full."),
 QT_TRANSLATE_NOOP("dash-core", "Entry exceeds maximum size."),
 QT_TRANSLATE_NOOP("dash-core", "Error initializing block database"),
@@ -515,7 +523,6 @@ QT_TRANSLATE_NOOP("dash-core", "Session timed out."),
 QT_TRANSLATE_NOOP("dash-core", "Set database cache size in megabytes (%d to %d, default: %d)"),
 QT_TRANSLATE_NOOP("dash-core", "Set key pool size to <n> (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Set maximum block size in bytes (default: %d)"),
-QT_TRANSLATE_NOOP("dash-core", "Set the masternode BLS private key"),
 QT_TRANSLATE_NOOP("dash-core", "Set the number of threads to service RPC calls (default: %d)"),
 QT_TRANSLATE_NOOP("dash-core", "Show all debugging options (usage: --help -help-debug)"),
 QT_TRANSLATE_NOOP("dash-core", "Shrink debug.log file on client startup (default: 1 when no -debug)"),
@@ -592,6 +599,8 @@ QT_TRANSLATE_NOOP("dash-core", "Whether to operate in a blocks only mode (defaul
 QT_TRANSLATE_NOOP("dash-core", "Will retry..."),
 QT_TRANSLATE_NOOP("dash-core", "You can not start a masternode in lite mode."),
 QT_TRANSLATE_NOOP("dash-core", "You can not start a masternode with wallet enabled."),
+QT_TRANSLATE_NOOP("dash-core", "You need to rebuild the database using -reindex to change -addressindex"),
+QT_TRANSLATE_NOOP("dash-core", "You need to rebuild the database using -reindex to change -spentindex"),
 QT_TRANSLATE_NOOP("dash-core", "You need to rebuild the database using -reindex to change -txindex"),
 QT_TRANSLATE_NOOP("dash-core", "Your entries added successfully."),
 QT_TRANSLATE_NOOP("dash-core", "Zapping all transactions from wallet..."),

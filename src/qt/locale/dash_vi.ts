@@ -598,6 +598,30 @@
         <translation>Thông tin</translation>
     </message>
     <message>
+        <source>Received and sent multiple transactions</source>
+        <translation>Đã nhận và gửi nhiều giao dịch</translation>
+    </message>
+    <message>
+        <source>Sent multiple transactions</source>
+        <translation>Đã gửi nhiều giao dịch</translation>
+    </message>
+    <message>
+        <source>Received multiple transactions</source>
+        <translation>Đã nhận nhiều giao dịch</translation>
+    </message>
+    <message>
+        <source>Sent Amount: %1
+</source>
+        <translation>Khoản tiền đã gửi: %1
+</translation>
+    </message>
+    <message>
+        <source>Received Amount: %1
+</source>
+        <translation>Khoản tiền đã nhận: %1
+</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>Ngày: %1
@@ -791,8 +815,8 @@
         <translation>Hãy chuyển về "Chế độ danh sách" để sử dụng tính năng này.</translation>
     </message>
     <message>
-        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-anonymized inputs first and then check the PrivateSend checkbox again.</source>
-        <translation>Đầu vào được chọn chưa được ẩn danh. &lt;b&gt;PrivateSend sẽ được tắt.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Nếu bạn vẫn muốn sử dụng PrivateSend, hãy bỏ chọn tất cả các đầu vào chưa được ẩn danh trước và sau đó chọn vào ô PrivateSend lần nữa.</translation>
+        <source>Non-mixed input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-mixed inputs first and then check the PrivateSend checkbox again.</source>
+        <translation>Đầu vào không trộn đã được chọn. &lt;b&gt;PrivateSend sẽ bị tắt.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Nếu bạn vẫn muốn sử dụng PrivateSend, hãy bỏ chọn tất cả các đầu vào không được trộn trước rồi sau đó đánh dấu vào ô PrivateSend lần nữa.</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -968,8 +992,8 @@
         <translation>Thông tin PrivateSend</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;Cơ bản về PrivateSend&lt;/h3&gt; PrivateSend cho bạn sự thực sự riêng tư về tài chính bằng việc che dấu những nguồn cung. Tất cả Dash trong ví của bạn bao gồm những "đầu vào" khác nhau mà bạn nghĩ đó là các coin riêng biệt và rời rạc.&lt;br&gt; PrivateSend sử dụng một tiến trình độc đáo để trộn các đầu vào của bạn với đầu vào của những người khác, mà không làm cho các coin rời khỏi ví của bạn. Bạn vẫn giữ quyền kiểm soát tiền của bạn bất cứ lúc nào.&lt;hr&gt; &lt;b&gt;Quá trình PrivateSend làm việc như sau: &lt;/b&gt; &lt;ol type="1"&gt; &lt;li&gt;PrivateSend bắt đầu bằng việc chia các giao dịch đầu vào của bạn thành những mệnh giá chuẩn. Những mệnh giá đó là 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH, và 10 DASH -- cũng giống như các mệnh giá trên tiền giấy mà bạn sử dụng hàng ngày. &lt;/li&gt;&lt;li&gt;Ví của bạn sau đó gửi yêu cầu đến những nút phần mềm được cấu hình đặc biệt trên mạng gọi là các "masternode". Những masternode được báo rằng bạn quan tâm đến việc xáo trộn một mệnh giá nào đó. Không có thông tin định danh nào được gửi đến cho các masternode, và như vậy họ không bao giờ biết bạn "là ai". &lt;/li&gt; &lt;li&gt;Khi hai người khác nhau gửi những thông điệp tương tự, có nghĩa là họ muốn xáo trộn cùng loại mệnh giá, một phiên xáo trộn bắt đầu. Masternode xáo trộn các đầu vào và hướng dẫn tất cả ví của tất cả ba người dùng để trả đầu vào đã được chuyển đổi trở lại cho chính họ. Ví của bạn sẽ trả mệnh giá đó trực tiếp cho nó, nhưng với một địa chỉ khác (được gọi là địa chỉ trả tiền lẻ). &lt;/li&gt; &lt;li&gt;Để thực sự che khuất nguồn tiền của bạn, ví của bạn phải lặp lại quy trình đó một số lần với mỗi mệnh giá nhất định. Mỗi lần tiến trình hoàn tất, nó được gọi là một "vòng". Mỗi vòng của PrivateSend làm nên độ khó bậc số mũ để xác định nguồn tiền của bạn đến từ đâu. &lt;/li&gt; &lt;li&gt;Quá trình xáo trộn này xảy ra trong chế độ nền mà không xen vào những việc khác của bạn. Khi bạn muốn thực hiện một giao dịch, nguồn tiền của bạn đã được ẩn danh rồi. Do đó bạn không cần phải đợi thêm gì nữa. &lt;/li&gt;&lt;/ol&gt; &lt;hr&gt; &lt;b&gt;QUAN TRỌNG:&lt;/b&gt; Ví của bạn chỉ có chứa 1000 "địa chỉ tiền trả lại". Mỗi lần một sự kiện xáo trộn xảy ra, có đến 9 địa chỉ sẽ được sử dụng. Điều đó có nghĩa với ví mới với 1000 địa chỉ thì dùng cho 100 lần trộn. Khi 900 địa chỉ đã được sử dụng, ví của bạn phải tạo thêm các địa chỉ mới. Nó chỉ có thể làm việc đó, tuy nhiên, nếu bạn có chế độ tự động backup được bật&lt;br&gt; Kết quả là, những người dùng mà chế độ backup bị tắt sẽ có chế độ PrivateSend cũng bị tắt.&lt;hr&gt; Để biết thêm thông tin hãy xem &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;Tài liệu về PrivateSend&lt;/a&gt;.</translation>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;Cơ bản về PrivateSend&lt;/h3&gt; PrivateSend cho bạn sự thực sự riêng tư về tài chính bằng việc che dấu những nguồn cung. Tất cả Dash trong ví của bạn bao gồm những "đầu vào" khác nhau mà bạn nghĩ đó là các coin riêng biệt và rời rạc.&lt;br&gt; PrivateSend sử dụng một tiến trình độc đáo để trộn các đầu vào của bạn với đầu vào của hai người khác, mà không làm cho các coin rời khỏi ví của bạn. Bạn vẫn giữ quyền kiểm soát tiền của bạn bất cứ lúc nào.&lt;hr&gt; &lt;b&gt;Quá trình PrivateSend làm việc như sau: &lt;/b&gt; &lt;ol type="1"&gt; &lt;li&gt;PrivateSend bắt đầu bằng việc chia các giao dịch đầu vào của bạn thành những mệnh giá chuẩn. Những mệnh giá đó là 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH, và 10 DASH -- cũng giống như các mệnh giá trên tiền giấy mà bạn sử dụng hàng ngày. &lt;/li&gt;&lt;li&gt;Ví của bạn sau đó gửi yêu cầu đến những nút phần mềm được cấu hình đặc biệt trên mạng gọi là các "masternode". Những masternode được báo rằng bạn quan tâm đến việc xáo trộn một mệnh giá nào đó. Không có thông tin định danh nào được gửi đến cho các masternode, và như vậy họ không bao giờ biết bạn "là ai". &lt;/li&gt; &lt;li&gt;Khi hai người kia gửi những thông điệp tương tự, có nghĩa là họ muốn xáo trộn cùng loại mệnh giá, một phiên xáo trộn bắt đầu. Masternode xáo trộn các đầu vào và hướng dẫn tất cả ví của cả ba người dùng để trả đầu vào đã được chuyển đổi trở lại cho chính họ. Ví của bạn sẽ trả mệnh giá đó trực tiếp cho nó, nhưng với một địa chỉ khác (được gọi là địa chỉ trả tiền lẻ). &lt;/li&gt; &lt;li&gt;Để thực sự che khuất nguồn tiền của bạn, ví của bạn phải lặp lại quy trình đó một số lần với mỗi mệnh giá nhất định. Mỗi lần tiến trình hoàn tất, nó được gọi là một "vòng". Mỗi vòng của PrivateSend làm nên độ khó bậc số mũ để xác định nguồn tiền của bạn đến từ đâu. &lt;/li&gt; &lt;li&gt;Quá trình xáo trộn này xảy ra trong chế độ nền mà không xen vào những việc khác của bạn. Khi bạn muốn thực hiện một giao dịch, nguồn tiền của bạn đã được ẩn danh rồi. Do đó bạn không cần phải đợi thêm gì nữa. &lt;/li&gt;&lt;/ol&gt; &lt;hr&gt; &lt;b&gt;QUAN TRỌNG:&lt;/b&gt; Ví của bạn chỉ có chứa 1000 "địa chỉ tiền trả lại". Mỗi lần một sự kiện xáo trộn xảy ra, có đến 9 địa chỉ sẽ được sử dụng. Điều đó có nghĩa với ví mới với 1000 địa chỉ thì dùng cho 100 lần trộn. Khi 900 địa chỉ đã được sử dụng, ví của bạn phải tạo thêm các địa chỉ mới. Nó chỉ có thể làm việc đó nếu bạn có chế độ tự động backup được bật&lt;br&gt; Kết quả là, những người dùng mà chế độ backup bị tắt sẽ có chế độ PrivateSend cũng bị tắt.&lt;hr&gt; Để biết thêm thông tin hãy xem &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;Tài liệu về PrivateSend&lt;/a&gt;.</translation>
     </message>
 </context>
 <context>
@@ -1046,16 +1070,8 @@
         <translation>Từ</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Địa chỉ</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>Trạng thái</translation>
-    </message>
-    <message>
-        <source>Payee</source>
-        <translation>Người nhận</translation>
     </message>
     <message>
         <source>0</source>
@@ -1074,16 +1090,16 @@
         <translation>Số lượng các nút:</translation>
     </message>
     <message>
-        <source>DIP3 Masternodes</source>
-        <translation>DIP3 Masternodes</translation>
-    </message>
-    <message>
         <source>Show only masternodes this wallet has keys for.</source>
         <translation>Chỉ hiển thị masternode mà có khoá trong ví này.</translation>
     </message>
     <message>
         <source>My masternodes only</source>
         <translation>Chỉ các masternode của tôi</translation>
+    </message>
+    <message>
+        <source>Service</source>
+        <translation>Dịch vụ</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1102,8 +1118,24 @@
         <translation>Kỳ thanh toán tiếp theo</translation>
     </message>
     <message>
+        <source>Payout Address</source>
+        <translation>Địa chỉ thanh toán</translation>
+    </message>
+    <message>
         <source>Operator Reward</source>
         <translation>Phần thưởng cho người vận hành</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Địa chỉ đặt cọc</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Địa chỉ chủ sở hữu</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Địa chỉ bỏ phiếu</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1247,10 +1279,6 @@
         <translation>(0 = tự động, &lt;0 = để đó rất nhiều lõi miễn phí)</translation>
     </message>
     <message>
-        <source>Amount of Dash to keep anonymized</source>
-        <translation>Lượng Dash muốn giữ vô danh</translation>
-    </message>
-    <message>
         <source>W&amp;allet</source>
         <translation>&amp;Ví</translation>
     </message>
@@ -1299,16 +1327,12 @@
         <translation>Số lượng này hoạt động như là một ngưỡng để tắt PrivateSend khi nó được chạm tới.</translation>
     </message>
     <message>
+        <source>Target PrivateSend balance</source>
+        <translation>Số dư đích cho PrivateSend</translation>
+    </message>
+    <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Tự động mở cổng cho phần mềm Dash Core trên rounter. Điều này chỉ hoạt động được khi rounter của bạn hỗ trợ UpnP và tính năng đó được bật lên.</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>Chấp nhận kết nối từ bên ngoài</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Cho phép các kết nối tới</translation>
     </message>
     <message>
         <source>Connect to the Dash network through a SOCKS5 proxy.</source>
@@ -1333,10 +1357,6 @@
     <message>
         <source>Expert</source>
         <translation>Chuyên gia</translation>
-    </message>
-    <message>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Thiết lập này xác định số tiền cho mỗi master nodes mà đầu vào thông qua đó được ẩn danh.&lt;br/&gt;Càng có nhiều vòng ẩn danh thì sẽ cho mức độ riêng tư càng cao, nhưng nó cũng tốn nhiều phí hơn.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1367,12 +1387,24 @@
         <translation>&amp;Tiêu phần trả lại chưa được xác nhận</translation>
     </message>
     <message>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Thiết lập này xác định một khoản của mỗi masternode mà một đầu vào sẽ được trộn qua.  Thêm &lt;br/&gt; vòng trộn nữa sẽ cho một mức độ riêng tư cao hơn, nhưng nó cũng tốt phí nhiều hơn.</translation>
+    </message>
+    <message>
         <source>&amp;Network</source>
         <translation>&amp;Mạng</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Ánh xạ cổng sử dụng &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>Chấp nhận kết nối từ bên ngoài</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Cho phép các kết nối tới</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1612,22 +1644,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Hoàn thành:</translation>
     </message>
     <message>
-        <source>Try to manually submit a PrivateSend request.</source>
-        <translation>Thử gửi một yêu cầu PrivateSend bằng tay.</translation>
-    </message>
-    <message>
-        <source>Reset the current status of PrivateSend (can interrupt PrivateSend if it's in the process of Mixing, which can cost you money!)</source>
-        <translation>Khởi tạo lại trạng thái hiện tại của PrivateSend (có thể làm ngắt PrivateSend nếu nó đang trong quá trình Trộn, điều đó có thể làm bạn tốn tiền!)</translation>
-    </message>
-    <message>
-        <source>Information about PrivateSend and Mixing</source>
-        <translation>Thông tin về PrivateSend và Trộn coin</translation>
-    </message>
-    <message>
-        <source>Info</source>
-        <translation>Thông tin</translation>
-    </message>
-    <message>
         <source>Amount and Rounds:</source>
         <translation>Số tiền và số vòng:</translation>
     </message>
@@ -1662,14 +1678,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>(Last Message)</source>
         <translation>(Thông điệp cuối)</translation>
-    </message>
-    <message>
-        <source>Try Mix</source>
-        <translation>Thử Trộn</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation>Khởi động lại</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1712,12 +1720,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Đã chia mệnh giá</translation>
     </message>
     <message>
-        <source>Mixed</source>
-        <translation>Đã trộn</translation>
+        <source>Partially mixed</source>
+        <translation>Đã trộn được một phần</translation>
     </message>
     <message>
-        <source>Anonymized</source>
-        <translation>Đã được ẩn danh</translation>
+        <source>Mixed</source>
+        <translation>Đã trộn</translation>
     </message>
     <message numerus="yes">
         <source>Denominated inputs have %5 of %n rounds on average</source>
@@ -1772,10 +1780,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 </source>
         <translation>Thông điệp PrivateSend cuối cùng:
 </translation>
-    </message>
-    <message>
-        <source>PrivateSend was successfully reset.</source>
-        <translation>PrivateSend đã được thiết lập lại thành công.</translation>
     </message>
     <message>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
@@ -2786,18 +2790,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>sử dụng</translation>
     </message>
     <message>
-        <source>anonymous funds</source>
-        <translation>các khoản tiền ẩn danh</translation>
-    </message>
-    <message>
-        <source>(privatesend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>(privatesend yêu cầu số lượng này để làm tròn về giá trị gần nhất %1).</translation>
-    </message>
-    <message>
-        <source>any available funds (not anonymous)</source>
-        <translation>bất kỳ nguồn cung nào còn (không ẩn danh)</translation>
-    </message>
-    <message>
         <source>%1 to %2</source>
         <translation>%1 đến %2</translation>
     </message>
@@ -2816,6 +2808,34 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 của %2 các thành phần được hiển thị)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>PrivateSend funds only</source>
+        <translation>Ngân quỹ chỉ cho PrivateSend</translation>
+    </message>
+    <message>
+        <source>any available funds</source>
+        <translation>bất kỳ nguồn cung nào còn</translation>
+    </message>
+    <message>
+        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(Các giao dịch PrivateSend có mức phí cao hơn thường do không được phép thay đổi đầu ra)</translation>
+    </message>
+    <message>
+        <source>Transaction size: %1</source>
+        <translation>Kích thước giao dịch: %1</translation>
+    </message>
+    <message>
+        <source>Fee rate: %1</source>
+        <translation>Mức phí: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>This transaction will consume %n input(s)</source>
+        <translation><numerusform>Giao dịch này sẽ dùng đến %n đầu vào</numerusform></translation>
+    </message>
+    <message>
+        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
+        <translation>Cảnh báo: Sử dụng PrivateSend với %1 hoặc nhiều hơn các đầu vào có thể làm hại tính riêng tư cho bạn và nó không phải là điều được khuyến nghị</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3783,10 +3803,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Chấp nhận dòng lệnh và các lệnh JSON-RPC</translation>
     </message>
     <message>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Thêm nút để kết nối tới và giữ mở kết nối</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Cho phép DNS tìm kiếm -addnode, -seednode và -connect</translation>
     </message>
@@ -3899,10 +3915,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Liên kết với địa chỉ cụ thể và đưa nó vào danh sách chấp nhận của các đối tác kết nối vào nó. Sử dụng cách viết [địa chỉ máy]:cổng cho IPv6</translation>
     </message>
     <message>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections</source>
-        <translation>Chỉ kết nối đến (các) nút được chỉ định; -connect=0 tắt các kết nối tự động.</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Tạo tệp mới với các quyền hệ thống ngầm định, thay vì umask 077 (chỉ có tác dụng với chức năng ví được tắt)</translation>
     </message>
@@ -3943,10 +3955,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Duy trì một chỉ mục giao dịch đầy đủ, sử dụng bởi lệnh gọi rpc getrawtransaction (ngầm định: %u)</translation>
     </message>
     <message>
-        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!</source>
-        <translation>Hãy chắc chắn rằng bạn mã hoá ví của bạn và xoá tất cả các bản backup không mã hoá sau khi bạn đã kiểm tra rằng ví hoạt động tốt mà không có lỗi.</translation>
-    </message>
-    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Kích thước tối đa của dữ liệu trong các giao dịch cung cấp dữ liệu, chúng tôi chuyển tiếp và đào (ngầm định: %u)</translation>
     </message>
@@ -3961,6 +3969,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
         <translation>Ghi đè yêu cầu về số người ký spork tối thiểu để thay đổi giá trị spork. Chỉ hữu ích cho regtest và devnet. Không được sử dụng cái này trên mainnet hoặc test net.</translation>
+    </message>
+    <message>
+        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>PrivateSend sử dụng chính xác số tiền đã được phân mệnh giá để gửi, bạn chỉ đơn giản cần trộn thêm nhiều coin nữa.</translation>
     </message>
     <message>
         <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
@@ -4009,10 +4021,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
         <translation>Kết nối tới KeePassHttp trên cổng &lt;port&gt; (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation>Cho phép phần mềm hoạt động như là masternode (0-1, ngầm định: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4087,6 +4095,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Số lượng người ký tối thiểu cho spork được chỉ bởi -minsporkkeys không hợp lệ</translation>
     </message>
     <message>
+        <source>Keep N DASH mixed (%u-%u, default: %u)</source>
+        <translation>Giữ N DASH được trộn (%u-%u, ngầm định: %u)</translation>
+    </message>
+    <message>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <translation>Giữ nhiều nhất &lt;n&gt;giao dịch không thể được kết nối trong bộ nhớ (ngầm định: %u)</translation>
+    </message>
+    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Keypool đã hết, hãy gọi keypoolrefill trước</translation>
     </message>
@@ -4143,6 +4159,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Không tìm thấy Masternode tương thích.</translation>
     </message>
     <message>
+        <source>Not enough funds to mix.</source>
+        <translation>Không đủ tiền để trộn.</translation>
+    </message>
+    <message>
         <source>Not in the Masternode list.</source>
         <translation>Không có trong danh sách Masternode.</translation>
     </message>
@@ -4169,10 +4189,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Thiết lập kích thước pool đến &lt;n&gt; (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Set the masternode BLS private key</source>
-        <translation>Thiết lập khoá riêng BLS cho masternode</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
@@ -4299,10 +4315,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Khoá KeePassHttp cho liên lạc mã hoá AES với KeePass</translation>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>Giữ nhiều nhất &lt;n&gt; các giao dịch không kết nối được trong bộ nhớ (ngầm định: %u)</translation>
-    </message>
-    <message>
         <source>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>Tắt tất cả các chức năng đắc trưng của Dash (Masternode, PrivateSend, InstantSend, Governance) (0-1, ngầm định: %u)</translation>
     </message>
@@ -4311,8 +4323,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>File %s có chứa tất cả các khoá riêng từ ví này. Không nên chia sẻ nó với bất cứ ai.</translation>
     </message>
     <message>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>Tuỳ chọn -masternode không được sử dụng nữa và bị bỏ qua, việc chỉ rõ tham số -masternodeblsprivkey là đủ để khởi động một nút như là một masternode.</translation>
+    </message>
+    <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Thêm một nút để kết nối và cố gắng giữ kết nối (xem hỗ trợ cho câu lệnh RPC `addnode` để có thêm thông tin)</translation>
+    </message>
+    <message>
         <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
         <translation>Ràng buộc với địa chỉ được cho để lắng nghe cho các kết nối JSON-RPC. Tuỳ chọn này được bỏ qua trừ khi tham số -rpcport được cung cấp. Cổng là tuỳ chọn và được thay thế bởi -rpcport. Sử dụng cách viết [host]:port cho IPv6. Tham số này có thể sử dụng nhiều lần (ngầm định: 127.0.0.1 và ::1 cho localhost, hoặc nếu tham số -rpcallowip được xác định, 0.0.0.0 và :: cho tất cả các địa chỉ)</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>Chỉ kết nối đến (các) nút cụ thể; -connect=0 là tắt các kết nối tự động (quy tắc cho nút này là giống như với -addnode)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4367,8 +4391,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Duy trì nhiều nhất &lt;n&gt; kết nối đến các nút ngang hàng (các kết nối dịch vụ tạm thời không được tính) (ngầm định: %u)</translation>
     </message>
     <message>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>PrivateSend sử dụng một số lượng mệnh giá nhất định để gửi tiền, bạn có thể đơn giản cần ẩn danh một ít coins nữa.</translation>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
+        <translation>Hãy chắc chắn rằng bạn sẽ mã hoá ví của bạn và xoá đi tất cả các bản sao lưu của ví mà không có mã hoá sau kiểm tra ví đã hoạt động tốt!</translation>
+    </message>
+    <message>
+        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
+        <translation>Kích thước tổng tối đa của tất cả các giao dịch mồ côi theo megabyte (ngầm định: %u)</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4389,6 +4417,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Rescans là không thể trong chế độ xén tỉa. Bạn cần sử dụng -reindex mà nó sẽ tải xuống toàn bộ blockchain lại.</translation>
+    </message>
+    <message>
+        <source>Set the masternode BLS private key and enable the client to act as a masternode</source>
+        <translation>Thiết lập khoá riêng BLS cho masternode và bật phần mềm để nó hoạt động như là một masternode</translation>
     </message>
     <message>
         <source>Specify full path to directory for automatic wallet backups (must exist)</source>
@@ -4445,6 +4477,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>Cảnh báo: Không xác định được phiên bản khối được đào! Có thể những luật chưa được biết đang có tác động</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
+        <translation>Bạn cần phải tái lập lại cơ sở dữ liệu sử dụng tham số -reindex để thay đổi -timestampindex</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -4635,10 +4671,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Chưa có đủ thông tin mô tả tệp.</translation>
     </message>
     <message>
-        <source>Not enough funds to anonymize.</source>
-        <translation>Không đủ tiền để ẩn danh.</translation>
-    </message>
-    <message>
         <source>Number of automatic wallet backups (default: %u)</source>
         <translation>Số lượng ví tự động backup (ngầm định: %u)</translation>
     </message>
@@ -4761,6 +4793,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>You can not start a masternode with wallet enabled.</source>
         <translation>Bạn không thể khởi động một masternode với ví được kích hoạt.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -addressindex</source>
+        <translation>Bạn cần tái lập lại cơ sở dữ liệu sử dụng -reindex để thay đổi -addressindex</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -spentindex</source>
+        <translation>Bạn cần tái lập lại cơ sở dữ liệu sử dụng -reindex để thay đổi -spentindex</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -4915,10 +4955,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bạn đang khởi động ở chế độ nhẹ, hầu hết các tính năng đặc trưng của Dash bị tắt.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Bạn cần chỉ ra một khoá masternodeblsprivkey trong cấu hình. Hãy xem trong tài liệu để biết thêm.</translation>
-    </message>
-    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>%d của 100 khối cuối cùng có phiên bản không mong đợi</translation>
     </message>
@@ -5041,10 +5077,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
         <translation>Địa chỉ spork được chỉ ra không hợp lệ với -sporkaddr</translation>
-    </message>
-    <message>
-        <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
-        <translation>Giữ N Dash ẩn danh (%u-%u, ngầm định: %u)</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>

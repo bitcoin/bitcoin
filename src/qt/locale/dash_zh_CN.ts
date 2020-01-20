@@ -598,6 +598,30 @@
         <translation>信息</translation>
     </message>
     <message>
+        <source>Received and sent multiple transactions</source>
+        <translation>已接收和发送的多重交易</translation>
+    </message>
+    <message>
+        <source>Sent multiple transactions</source>
+        <translation>已发送的多重交易</translation>
+    </message>
+    <message>
+        <source>Received multiple transactions</source>
+        <translation>已接收的多重交易</translation>
+    </message>
+    <message>
+        <source>Sent Amount: %1
+</source>
+        <translation>已发送数额: %1
+</translation>
+    </message>
+    <message>
+        <source>Received Amount: %1
+</source>
+        <translation>已接收数额: %1
+</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>日期：%1
@@ -791,8 +815,8 @@
         <translation>请切换到“列表模式”来使用此功能。</translation>
     </message>
     <message>
-        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-anonymized inputs first and then check the PrivateSend checkbox again.</source>
-        <translation>已选择非匿名输入。&lt;b&gt;匿名发送将会被禁用。&lt;/b&gt;&lt;br&gt;&lt;br&gt;如果你仍然想使用匿名发送功能，请先取消所选的非匿名输入，然后再勾选匿名发送。</translation>
+        <source>Non-mixed input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-mixed inputs first and then check the PrivateSend checkbox again.</source>
+        <translation>已选择非混币输入。&lt;b&gt;匿名发送将会被禁用。&lt;/b&gt;&lt;br&gt;&lt;br&gt;如果你仍然想使用匿名发送功能，请先取消所选的非混币输入，然后再勾选匿名发送。</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -968,8 +992,8 @@
         <translation>匿名发送信息</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;匿名发送基础知识&lt;/h3&gt;匿名发送通过隐藏您的资金来源为您提供真正的财务隐私。您的钱包中所有的达世币都由不同的“输入”组成，您可以将其视为分开的离散硬币。&lt;br&gt;匿名发送使用创新的方法将您的输入与其他两个人的输入相结合，而过程中不会让您的达世币离开您的钱包。每时每刻，您仍然控制着您的钱。&lt;hr&gt;&lt;b&gt;匿名发送的运作原理如下：&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt;匿名发送首先将您的交易分柝成多个标准面额的交易。这些标准面额分别为0.001 DASH，0.01 DASH，0.1 DASH，1 DASH和10 DASH --有点像您每天使用的纸币。&lt;/li&gt;&lt;li&gt;您的钱包然后发送请求到网络上有专门配置的软件节点，称为“主节点”。这些主节点会收到您希望混合一些资金的通知。没有可识别的信息发送到主节点，所以他们永远不会知道你是“谁”。&lt;li&gt;当另外两个人发送类似的消息时，表示希望混合相同的面额的话，混合会话就会开始。相关的主节点会混合这些输入，并指示所有三个用户的钱包将已经转换了输入的交易支付给自己。您的钱包直接支付给自己，但是付给不同的位址（称之为找零地址）。&lt;/li&gt;&lt;li&gt;为了完全掩盖您的资金来源，您的钱包必须以每个面额来重复此过程数次。每次这个过程完成后，都称之为一个“循环”。每个循环的匿名发送都会令确定您的资金来源的工作倍加困难。&lt;/li&gt;&lt;li&gt;这种混合过程发生在后台，而不需要您进行任何操作。当您想进行交易时，您的资金将已被匿名处理。不需再花额外的时间等待。&lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;重要：&lt;b&gt;您的钱包只能拥有1000个“找零地址”。每次混合事件发生时，最多会使用9个找零地址。这意味着这1000个地址可以容许100次的混合事件。当其的中900个已经被使用后，您的钱包必须创建更多的地址。如果您启用了自动备份，则只能够这样做。&lt;br&gt;因此，禁用备份的用户也将禁用匿名发送。&lt;hr&gt;如欲了解更多信息请参阅&lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;匿名发送文档&lt;/a&gt;。</translation>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;匿名发送基础知识&lt;/h3&gt;匿名发送通过隐藏您的资金来源为您提供真正的财务隐私。您的钱包中所有的达世币都由不同的“输入”组成，您可以将其视为分开的离散硬币。&lt;br&gt;匿名发送使用创新的方法将您的输入与其他两个人的输入相结合，而过程中不会让您的达世币离开您的钱包。每时每刻，您仍然控制着您的钱。&lt;hr&gt;&lt;b&gt;匿名发送的运作原理如下：&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt;匿名发送首先将您的交易分柝成多个标准面额的交易。这些标准面额分别为0.001 DASH，0.01 DASH，0.1 DASH，1 DASH和10 DASH --有点像您每天使用的纸币。&lt;/li&gt;&lt;li&gt;您的钱包然后发送请求到网络上有专门配置的软件节点，称为“主节点”。这些主节点会收到您希望混合一些资金的通知。没有可识别的信息发送到主节点，所以他们永远不会知道你是“谁”。&lt;li&gt;当另外两个人发送类似的消息时，表示希望混合相同的面额的话，混合会话就会开始。相关的主节点会混合这些输入，并指示所有三个用户的钱包将已经转换了输入的交易支付给自己。您的钱包直接支付给自己，但是付给不同的位址（称之为找零地址）。&lt;/li&gt;&lt;li&gt;为了完全掩盖您的资金来源，您的钱包必须以每个面额来重复此过程数次。每次这个过程完成后，都称之为一个“循环”。每个循环的匿名发送都会令确定您的资金来源的工作倍加困难。&lt;/li&gt;&lt;li&gt;这种混合过程发生在后台，而不需要您进行任何操作。当您想进行交易时，您的资金将已被混币处理。不需再花额外的时间等待。&lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;重要：&lt;b&gt;您的钱包只能拥有1000个“找零地址”。每次混合事件发生时，最多会使用9个找零地址。这意味着这1000个地址可以容许100次的混合事件。当其的中900个已经被使用后，您的钱包必须创建更多的地址。如果您启用了自动备份，则只能够这样做。&lt;br&gt;因此，禁用备份的用户也将禁用匿名发送。&lt;hr&gt;如欲了解更多信息请参阅&lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;匿名发送文档&lt;/a&gt;。</translation>
     </message>
 </context>
 <context>
@@ -1046,16 +1070,8 @@
         <translation>表单</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>地址</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>状态</translation>
-    </message>
-    <message>
-        <source>Payee</source>
-        <translation>收款人</translation>
     </message>
     <message>
         <source>0</source>
@@ -1074,16 +1090,16 @@
         <translation>节点数：</translation>
     </message>
     <message>
-        <source>DIP3 Masternodes</source>
-        <translation>DIP3 主节点</translation>
-    </message>
-    <message>
         <source>Show only masternodes this wallet has keys for.</source>
         <translation>仅显示此钱包拥有私钥的主节点</translation>
     </message>
     <message>
         <source>My masternodes only</source>
         <translation>仅我的主节点</translation>
+    </message>
+    <message>
+        <source>Service</source>
+        <translation>服务</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1102,8 +1118,24 @@
         <translation>下次支付</translation>
     </message>
     <message>
+        <source>Payout Address</source>
+        <translation>付款地址</translation>
+    </message>
+    <message>
         <source>Operator Reward</source>
         <translation>运行者奖励</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>保证金地址</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>所有者地址</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>投票地址</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1247,10 +1279,6 @@
         <translation>(0 = 自动, &lt;0 = 保留处理器核心不用的数目)</translation>
     </message>
     <message>
-        <source>Amount of Dash to keep anonymized</source>
-        <translation>保持匿名化的达世币数</translation>
-    </message>
-    <message>
         <source>W&amp;allet</source>
         <translation>钱包(&amp;A)</translation>
     </message>
@@ -1299,16 +1327,12 @@
         <translation>此金额为关闭匿名发送的阈值。</translation>
     </message>
     <message>
+        <source>Target PrivateSend balance</source>
+        <translation>目标混币数额</translation>
+    </message>
+    <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>自动在路由器打开达世币核心客户端端口。此项只在路由器支持UPnP且开启时有效。</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>接受来自外部的连接</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>接受外来连接</translation>
     </message>
     <message>
         <source>Connect to the Dash network through a SOCKS5 proxy.</source>
@@ -1333,10 +1357,6 @@
     <message>
         <source>Expert</source>
         <translation>专家</translation>
-    </message>
-    <message>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>此选项用以调整进行匿名化操作的主节点数量。&lt;br/&gt;越多的循环次数提供了更高级别的匿名性，同时也会花费更多的手续费</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1367,12 +1387,24 @@
         <translation>可以花还未确认的零钱(&amp;S)</translation>
     </message>
     <message>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>此选项用以调整进行混币操作的主节点数量。&lt;br/&gt;越多的循环次数提供了更高级别的匿名性，同时也会花费更多的手续费。</translation>
+    </message>
+    <message>
         <source>&amp;Network</source>
         <translation>网络(&amp;N)</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>使用UPnP映射端口(&amp;U)</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>接受来自外部的连接</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>接受外来连接</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1612,22 +1644,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>完成度：</translation>
     </message>
     <message>
-        <source>Try to manually submit a PrivateSend request.</source>
-        <translation>尝试手动提交匿名发送请求。</translation>
-    </message>
-    <message>
-        <source>Reset the current status of PrivateSend (can interrupt PrivateSend if it's in the process of Mixing, which can cost you money!)</source>
-        <translation>重置目前匿名发送状态（此操作可能会影响您目前正在执行的混合过程，并且产生费用！）</translation>
-    </message>
-    <message>
-        <source>Information about PrivateSend and Mixing</source>
-        <translation>关于匿名发送和混币的信息</translation>
-    </message>
-    <message>
-        <source>Info</source>
-        <translation>信息</translation>
-    </message>
-    <message>
         <source>Amount and Rounds:</source>
         <translation>数量与循环次数：</translation>
     </message>
@@ -1662,14 +1678,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>(Last Message)</source>
         <translation>(最近一次信息)</translation>
-    </message>
-    <message>
-        <source>Try Mix</source>
-        <translation>尝试混合</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation>重置</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1712,12 +1720,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>已面额化的</translation>
     </message>
     <message>
-        <source>Mixed</source>
-        <translation>混合的</translation>
+        <source>Partially mixed</source>
+        <translation>部分混币</translation>
     </message>
     <message>
-        <source>Anonymized</source>
-        <translation>已匿名处理的</translation>
+        <source>Mixed</source>
+        <translation>混合的</translation>
     </message>
     <message numerus="yes">
         <source>Denominated inputs have %5 of %n rounds on average</source>
@@ -1772,10 +1780,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 </source>
         <translation>最近收到的匿名发送信息：
 </translation>
-    </message>
-    <message>
-        <source>PrivateSend was successfully reset.</source>
-        <translation>匿名发送成功重置。</translation>
     </message>
     <message>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
@@ -2786,18 +2790,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>使用</translation>
     </message>
     <message>
-        <source>anonymous funds</source>
-        <translation>匿名化资金</translation>
-    </message>
-    <message>
-        <source>(privatesend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>（匿名发送需要这一数额四舍五入到最接近%1）。</translation>
-    </message>
-    <message>
-        <source>any available funds (not anonymous)</source>
-        <translation>任何可用资金（非匿名的）</translation>
-    </message>
-    <message>
         <source>%1 to %2</source>
         <translation>%1 到 %2</translation>
     </message>
@@ -2816,6 +2808,34 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;（在%2中%1个项目显示出来）&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>PrivateSend funds only</source>
+        <translation>仅支持混币资金</translation>
+    </message>
+    <message>
+        <source>any available funds</source>
+        <translation>全部有效金额</translation>
+    </message>
+    <message>
+        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(匿名发送交易的手续费更高通常由于输出不允许更改)</translation>
+    </message>
+    <message>
+        <source>Transaction size: %1</source>
+        <translation>交易大小: %1</translation>
+    </message>
+    <message>
+        <source>Fee rate: %1</source>
+        <translation>交易手续费比率: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>This transaction will consume %n input(s)</source>
+        <translation><numerusform>此交易将消耗 %n 个输入</numerusform></translation>
+    </message>
+    <message>
+        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
+        <translation>提醒: 使用 %1 或超过的输入不利于您的隐私保护，并不推荐</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3783,10 +3803,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>接受命令行以及JSON-RPC命令</translation>
     </message>
     <message>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>添加一个可连接节点，并尝试保持连接开放。</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>允许对-addnode，-seednode，-connect的参数使用DNS查询</translation>
     </message>
@@ -3899,10 +3915,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>和指定的地址连接，並且将连接的节点放入白名单中。IPv6请用[host]:port格式</translation>
     </message>
     <message>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections</source>
-        <translation>只连接指定节点(或多个); -connect=0 禁用自动连接</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>创建系统默认权限的文件，而不是 umask 077 (只在关闭钱包功能时有效) </translation>
     </message>
@@ -3943,10 +3955,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>维护一份完整的交易索引, 用于 getrawtransaction RPC调用 (默认：%u)</translation>
     </message>
     <message>
-        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!</source>
-        <translation>请确保加密您的钱包，并在验证您的钱包能够运作后删除所有未加密的备份！</translation>
-    </message>
-    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>转发和挖矿时，对只带数据的交易的大小上限（默认：%u）</translation>
     </message>
@@ -3961,6 +3969,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
         <translation>重写最少数叉勺签名人以更改叉勺值。仅适用于 regtest 和 devnet。在主网或测试网络使用会被禁止。</translation>
+    </message>
+    <message>
+        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>匿名发送要求使用准确的已除名资金来发送，您可能需要再混币处理一些资金。</translation>
     </message>
     <message>
         <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
@@ -4009,10 +4021,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
         <translation>连接至 KeePassHttp 端口 &lt;port&gt; (默认：%u)</translation>
-    </message>
-    <message>
-        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation>激活客户端，使其作为主节点(0-1，默认：%u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4087,6 +4095,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>无效的最少数叉勺签名人以  -minsporkkeys 标识</translation>
     </message>
     <message>
+        <source>Keep N DASH mixed (%u-%u, default: %u)</source>
+        <translation>保持N个混币处理的达世币 (%u-%u, 默认: %u)</translation>
+    </message>
+    <message>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <translation>内存中最多保留 &lt;n&gt; 笔孤立的交易 (默认: %u) </translation>
+    </message>
+    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Keypool用完了，请先调用keypoolrefill</translation>
     </message>
@@ -4143,6 +4159,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>没有找到任何兼容的主节点。</translation>
     </message>
     <message>
+        <source>Not enough funds to mix.</source>
+        <translation>没有足够的资金进行混币。</translation>
+    </message>
+    <message>
         <source>Not in the Masternode list.</source>
         <translation>在主节点列表中不存在。</translation>
     </message>
@@ -4169,10 +4189,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>设置密匙池大小至&lt;n&gt; (默认：%u)</translation>
-    </message>
-    <message>
-        <source>Set the masternode BLS private key</source>
-        <translation>设置主节点 BLS 私钥</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
@@ -4299,10 +4315,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>KeePassHttp的密钥，用作与KeePass的AES加密通信</translation>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>内存中最多保留 &lt;n&gt; 笔孤立的交易 (默认：%u) </translation>
-    </message>
-    <message>
         <source>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>禁止所有达世币的附加功能（主节点，匿名发送，即时发送，预算案）（0-1，默认：%u）</translation>
     </message>
@@ -4311,8 +4323,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s 文件包含此钱包中的所有私钥。不要与任何人分享！</translation>
     </message>
     <message>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>-masternode选项已被弃用并忽略, 指定-masternodeblsprivkey即可将此节点激活为主节点.</translation>
+    </message>
+    <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>添加一个可连接节点，并尝试保持连接开放 (查看 `addnode` RPC 帮助命令以获得更多信息)</translation>
+    </message>
+    <message>
         <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
         <translation>与指定的地址绑定, 监听JSON-RPC连接. 请忽略此选项, 除非-rpcallowip也被通过. 端口是可选的并且取代-rpcport. IPv6请用[host]:port格式. 此选项可以多次设定 (默认: 127.0.0.1 和 ::1 例如, localhost, 或 如果 -rpcallowip 已经被指定, 0.0.0.0 和 :: 例如, 所有地址)</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>只连接指定节点(或多个); -connect=0 禁用自动连接 (此规则与 -addnode 的规则相同)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4367,8 +4391,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>维持与节点联机数的上限为&lt;n&gt;个（临时服务连接除外）（默认：%u）</translation>
     </message>
     <message>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>匿名发送要求使用准确的已除名资金来发送，你可能需要再匿名处理一些资金。</translation>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
+        <translation>请确保加密您的钱包，并在验证您的钱包能够运作后删除所有未加密的备份！</translation>
+    </message>
+    <message>
+        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
+        <translation>以兆为单位最大化所有孤立交易总大小 (默认: %u)</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4389,6 +4417,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>无法在开启修剪的状态下重扫描。请使用 -reindex重新下载完整的区块链。</translation>
+    </message>
+    <message>
+        <source>Set the masternode BLS private key and enable the client to act as a masternode</source>
+        <translation>设置主节点BLS私钥并允许客户端作为主节点运行</translation>
     </message>
     <message>
         <source>Specify full path to directory for automatic wallet backups (must exist)</source>
@@ -4445,6 +4477,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>警告：未知的区块版本被挖出！未知规则可能已生效</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
+        <translation>你需要通过使用-reindex改变-timestampindex来重新建立数据库</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -4635,10 +4671,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>文件说明符不足</translation>
     </message>
     <message>
-        <source>Not enough funds to anonymize.</source>
-        <translation>没有足够的资金进行匿名处理。</translation>
-    </message>
-    <message>
         <source>Number of automatic wallet backups (default: %u)</source>
         <translation>自动备份的钱包数目 (默认：%u)</translation>
     </message>
@@ -4761,6 +4793,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>You can not start a masternode with wallet enabled.</source>
         <translation>您无法在开启钱包时启动主节点.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -addressindex</source>
+        <translation>你需要通过使用-reindex改变-addressindex来重新建立数据库</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -spentindex</source>
+        <translation>你需要通过使用-reindex改变-spentindex来重新建立数据库</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -4915,10 +4955,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>您启动了简化模式, 大多数达世币特有的功能已禁用.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
-        <translation>您必须在配置中指定一个masternodeblsprivkey。请参阅文档以获得帮助。</translation>
-    </message>
-    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>最近100个区块中的 %d 个区块有意外版本</translation>
     </message>
@@ -5041,10 +5077,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
         <translation>使用 -sporkaddr 指定的spork地址无效</translation>
-    </message>
-    <message>
-        <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
-        <translation>保持 N 个匿名处理的达世币 (%u-%u, default: %u)</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>

@@ -64,7 +64,7 @@
         <translation>C&amp;lose</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+54"/>
+        <location filename="../addressbookpage.cpp" line="+53"/>
         <source>Choose the address to send coins to</source>
         <translation>Choose the address to send coins to</translation>
     </message>
@@ -337,12 +337,12 @@
         <translation>A fatal error occurred. Dash Core can no longer continue safely and will quit.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="+1138"/>
+        <location filename="../bitcoingui.cpp" line="+1164"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
     <message>
-        <location line="-994"/>
+        <location line="-1016"/>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
@@ -352,7 +352,7 @@
         <translation>Node</translation>
     </message>
     <message>
-        <location line="+152"/>
+        <location line="+169"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overview</translation>
     </message>
@@ -627,12 +627,12 @@
         <translation>Show the %1 help message to get a list with possible Dash command-line options</translation>
     </message>
     <message>
-        <location line="+288"/>
+        <location line="+298"/>
         <source>%1 client</source>
         <translation>%1 client</translation>
     </message>
     <message>
-        <location line="-286"/>
+        <location line="-296"/>
         <source>&amp;PrivateSend information</source>
         <translation>&amp;PrivateSend information</translation>
     </message>
@@ -667,7 +667,7 @@
         <translation>Tabs toolbar</translation>
     </message>
     <message numerus="yes">
-        <location line="+366"/>
+        <location line="+375"/>
         <source>%n active connection(s) to Dash network</source>
         <translation>
             <numerusform>%n active connection to Dash network</numerusform>
@@ -718,7 +718,7 @@
         </translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+24"/>
         <source>%1 behind</source>
         <translation>%1 behind</translation>
     </message>
@@ -738,7 +738,7 @@
         <translation>Transactions after this will not yet be visible.</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+29"/>
         <source>Up to date</source>
         <translation>Up to date</translation>
     </message>
@@ -763,7 +763,36 @@
         <translation>Information</translation>
     </message>
     <message>
-        <location line="+95"/>
+        <location line="+136"/>
+        <source>Received and sent multiple transactions</source>
+        <translation>Received and sent multiple transactions</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Sent multiple transactions</source>
+        <translation>Sent multiple transactions</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Received multiple transactions</source>
+        <translation>Received multiple transactions</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Sent Amount: %1
+</source>
+        <translation>Sent Amount: %1
+</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Received Amount: %1
+</source>
+        <translation>Received Amount: %1
+</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Date: %1
 </source>
         <translation>Date: %1
@@ -818,7 +847,7 @@
         <translation>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+21"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</translation>
     </message>
@@ -997,14 +1026,14 @@
         <translation>Copy change</translation>
     </message>
     <message>
-        <location line="+148"/>
+        <location line="+147"/>
         <source>Please switch to &quot;List mode&quot; to use this function.</source>
         <translation>Please switch to &quot;List mode&quot; to use this function.</translation>
     </message>
     <message>
-        <location line="+196"/>
-        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-anonymized inputs first and then check the PrivateSend checkbox again.</source>
-        <translation>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-anonymized inputs first and then check the PrivateSend checkbox again.</translation>
+        <location line="+195"/>
+        <source>Non-mixed input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-mixed inputs first and then check the PrivateSend checkbox again.</source>
+        <translation>Non-mixed input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-mixed inputs first and then check the PrivateSend checkbox again.</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -1032,7 +1061,7 @@
         <translation>Can vary +/- %1 duff(s) per input.</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+41"/>
         <location line="+56"/>
         <source>(no label)</source>
         <translation>(no label)</translation>
@@ -1152,7 +1181,7 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+41"/>
+        <location filename="../utilitydialog.cpp" line="+42"/>
         <source>version</source>
         <translation>version</translation>
     </message>
@@ -1218,14 +1247,14 @@
         <translation>Reset all settings changed in the GUI</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+41"/>
         <source>PrivateSend information</source>
         <translation>PrivateSend information</translation>
     </message>
     <message>
         <location line="+4"/>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different &quot;inputs&quot; which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type=&quot;1&quot;&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called &quot;masternodes.&quot; These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know &quot;who&quot; you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users&apos; wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it&apos;s called a &quot;round.&quot; Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these &quot;change addresses.&quot; Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href=&quot;https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html&quot;&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different &quot;inputs&quot; which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type=&quot;1&quot;&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called &quot;masternodes.&quot; These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know &quot;who&quot; you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users&apos; wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it&apos;s called a &quot;round.&quot; Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these &quot;change addresses.&quot; Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href=&quot;https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html&quot;&gt;PrivateSend documentation&lt;/a&gt;.</translation>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different &quot;inputs&quot; which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type=&quot;1&quot;&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called &quot;masternodes.&quot; These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know &quot;who&quot; you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users&apos; wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it&apos;s called a &quot;round.&quot; Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these &quot;change addresses.&quot; Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href=&quot;https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html&quot;&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different &quot;inputs&quot; which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type=&quot;1&quot;&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called &quot;masternodes.&quot; These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know &quot;who&quot; you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users&apos; wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it&apos;s called a &quot;round.&quot; Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these &quot;change addresses.&quot; Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href=&quot;https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html&quot;&gt;PrivateSend documentation&lt;/a&gt;.</translation>
     </message>
 </context>
 <context>
@@ -1319,22 +1348,12 @@
         <translation>Form</translation>
     </message>
     <message>
-        <location line="+123"/>
-        <source>Address</source>
-        <translation>Address</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+120"/>
         <source>Status</source>
         <translation>Status</translation>
     </message>
     <message>
-        <location line="+25"/>
-        <source>Payee</source>
-        <translation>Payee</translation>
-    </message>
-    <message>
-        <location line="-58"/>
+        <location line="-33"/>
         <source>0</source>
         <translation>0</translation>
     </message>
@@ -1354,12 +1373,7 @@
         <translation>Node Count:</translation>
     </message>
     <message>
-        <location line="-48"/>
-        <source>DIP3 Masternodes</source>
-        <translation>DIP3 Masternodes</translation>
-    </message>
-    <message>
-        <location line="+25"/>
+        <location line="-23"/>
         <source>Show only masternodes this wallet has keys for.</source>
         <translation>Show only masternodes this wallet has keys for.</translation>
     </message>
@@ -1369,7 +1383,12 @@
         <translation>My masternodes only</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+55"/>
+        <source>Service</source>
+        <translation>Service</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>PoSe Score</source>
         <translation>PoSe Score</translation>
     </message>
@@ -1389,12 +1408,32 @@
         <translation>Next Payment</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+5"/>
+        <source>Payout Address</source>
+        <translation>Payout Address</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Operator Reward</source>
         <translation>Operator Reward</translation>
     </message>
     <message>
-        <location filename="../masternodelist.cpp" line="+69"/>
+        <location line="+5"/>
+        <source>Collateral Address</source>
+        <translation>Collateral Address</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Owner Address</source>
+        <translation>Owner Address</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Voting Address</source>
+        <translation>Voting Address</translation>
+    </message>
+    <message>
+        <location filename="../masternodelist.cpp" line="+77"/>
         <source>Copy ProTx Hash</source>
         <translation>Copy ProTx Hash</translation>
     </message>
@@ -1404,7 +1443,7 @@
         <translation>Copy Collateral Outpoint</translation>
     </message>
     <message>
-        <location line="+119"/>
+        <location line="+135"/>
         <source>ENABLED</source>
         <translation>ENABLED</translation>
     </message>
@@ -1416,12 +1455,13 @@
     <message>
         <location line="+0"/>
         <location line="+4"/>
-        <location line="+7"/>
+        <location line="+3"/>
+        <location line="+23"/>
         <source>UNKNOWN</source>
         <translation>UNKNOWN</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="-10"/>
         <source>to %1</source>
         <translation>to %1</translation>
     </message>
@@ -1436,12 +1476,12 @@
         <translation>but not claimed</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-12"/>
         <source>NONE</source>
         <translation>NONE</translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+120"/>
         <source>Additional information for DIP3 Masternode %1</source>
         <translation>Additional information for DIP3 Masternode %1</translation>
     </message>
@@ -1573,12 +1613,7 @@
         <translation>(0 = auto, &lt;0 = leave that many cores free)</translation>
     </message>
     <message>
-        <location line="+165"/>
-        <source>Amount of Dash to keep anonymized</source>
-        <translation>Amount of Dash to keep anonymized</translation>
-    </message>
-    <message>
-        <location line="-129"/>
+        <location line="+36"/>
         <source>W&amp;allet</source>
         <translation>W&amp;allet</translation>
     </message>
@@ -1638,22 +1673,17 @@
         <translation>This amount acts as a threshold to turn off PrivateSend once it&apos;s reached.</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+15"/>
+        <source>Target PrivateSend balance</source>
+        <translation>Target PrivateSend balance</translation>
+    </message>
+    <message>
+        <location line="+45"/>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>Accept connections from outside</source>
-        <translation>Accept connections from outside</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Allow incoming connections</source>
-        <translation>Allow incoming connections</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+20"/>
         <source>Connect to the Dash network through a SOCKS5 proxy.</source>
         <translation>Connect to the Dash network through a SOCKS5 proxy.</translation>
     </message>
@@ -1686,12 +1716,7 @@
         <translation>Expert</translation>
     </message>
     <message>
-        <location line="+81"/>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</translation>
-    </message>
-    <message>
-        <location line="-75"/>
+        <location line="+6"/>
         <source>Whether to show coin control features or not.</source>
         <translation>Whether to show coin control features or not.</translation>
     </message>
@@ -1726,7 +1751,12 @@
         <translation>&amp;Spend unconfirmed change</translation>
     </message>
     <message>
-        <location line="+93"/>
+        <location line="+12"/>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</translation>
+    </message>
+    <message>
+        <location line="+81"/>
         <source>&amp;Network</source>
         <translation>&amp;Network</translation>
     </message>
@@ -1736,7 +1766,17 @@
         <translation>Map port using &amp;UPnP</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+7"/>
+        <source>Accept connections from outside</source>
+        <translation>Accept connections from outside</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Allow incoming connections</source>
+        <translation>Allow incoming connections</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <location line="+187"/>
         <source>Proxy &amp;IP:</source>
         <translation>Proxy &amp;IP:</translation>
@@ -1892,7 +1932,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Cancel</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+109"/>
+        <location filename="../optionsdialog.cpp" line="+105"/>
         <source>default</source>
         <translation>default</translation>
     </message>
@@ -1937,13 +1977,13 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+53"/>
-        <location line="+355"/>
-        <location line="+258"/>
+        <location line="+352"/>
+        <location line="+200"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
         <translation>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</translation>
     </message>
     <message>
-        <location line="-364"/>
+        <location line="-306"/>
         <source>Available:</source>
         <translation>Available:</translation>
     </message>
@@ -1973,12 +2013,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Mined balance that has not yet matured</translation>
     </message>
     <message>
-        <location line="-160"/>
+        <location line="-157"/>
         <source>Balances</source>
         <translation>Balances</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+49"/>
         <source>Unconfirmed transactions to watch-only addresses</source>
         <translation>Unconfirmed transactions to watch-only addresses</translation>
     </message>
@@ -2019,18 +2059,17 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+35"/>
-        <location filename="../overviewpage.cpp" line="+511"/>
+        <location filename="../overviewpage.cpp" line="+500"/>
         <location line="+12"/>
         <location line="+8"/>
-        <location line="+55"/>
-        <location line="+15"/>
+        <location line="+53"/>
         <location line="+9"/>
         <location line="+14"/>
         <source>PrivateSend</source>
         <translation>PrivateSend</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+46"/>
         <source>Status:</source>
         <translation>Status:</translation>
     </message>
@@ -2045,27 +2084,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Completion:</translation>
     </message>
     <message>
-        <location line="+109"/>
-        <source>Try to manually submit a PrivateSend request.</source>
-        <translation>Try to manually submit a PrivateSend request.</translation>
-    </message>
-    <message>
-        <location line="+16"/>
-        <source>Reset the current status of PrivateSend (can interrupt PrivateSend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation>Reset the current status of PrivateSend (can interrupt PrivateSend if it&apos;s in the process of Mixing, which can cost you money!)</translation>
-    </message>
-    <message>
-        <location line="+19"/>
-        <source>Information about PrivateSend and Mixing</source>
-        <translation>Information about PrivateSend and Mixing</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Info</source>
-        <translation>Info</translation>
-    </message>
-    <message>
-        <location line="-107"/>
+        <location line="+40"/>
         <source>Amount and Rounds:</source>
         <translation>Amount and Rounds:</translation>
     </message>
@@ -2085,12 +2104,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>n/a</translation>
     </message>
     <message>
-        <location line="+131"/>
+        <location line="+76"/>
         <source>Recent transactions</source>
         <translation>Recent transactions</translation>
     </message>
     <message>
-        <location line="-101"/>
+        <location line="-46"/>
         <source>Start/Stop Mixing</source>
         <translation>Start/Stop Mixing</translation>
     </message>
@@ -2110,17 +2129,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>(Last Message)</translation>
     </message>
     <message>
-        <location line="+37"/>
-        <source>Try Mix</source>
-        <translation>Try Mix</translation>
-    </message>
-    <message>
-        <location line="+19"/>
-        <source>Reset</source>
-        <translation>Reset</translation>
-    </message>
-    <message>
-        <location filename="../overviewpage.cpp" line="-475"/>
+        <location filename="../overviewpage.cpp" line="-449"/>
         <location line="+1"/>
         <location line="+1"/>
         <source>out of sync</source>
@@ -2133,19 +2142,19 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+319"/>
-        <location line="+149"/>
+        <location line="+310"/>
+        <location line="+132"/>
         <source>Start Mixing</source>
         <translation>Start Mixing</translation>
     </message>
     <message>
-        <location line="-466"/>
-        <location line="+469"/>
+        <location line="-440"/>
+        <location line="+443"/>
         <source>Stop Mixing</source>
         <translation>Stop Mixing</translation>
     </message>
     <message>
-        <location line="-289"/>
+        <location line="-269"/>
         <location line="+6"/>
         <source>No inputs detected</source>
         <translation>No inputs detected</translation>
@@ -2182,13 +2191,13 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Mixed</source>
-        <translation>Mixed</translation>
+        <source>Partially mixed</source>
+        <translation>Partially mixed</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Anonymized</source>
-        <translation>Anonymized</translation>
+        <source>Mixed</source>
+        <translation>Mixed</translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
@@ -2199,22 +2208,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         </translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+32"/>
         <source>keys left: %1</source>
         <translation>keys left: %1</translation>
     </message>
     <message>
         <location line="+15"/>
         <location line="+48"/>
-        <location line="+125"/>
-        <location line="+1"/>
-        <location line="+1"/>
+        <location line="+108"/>
         <location line="+3"/>
         <source>Disabled</source>
         <translation>Disabled</translation>
     </message>
     <message>
-        <location line="-165"/>
+        <location line="-146"/>
         <source>Very low number of keys left since last automatic backup!</source>
         <translation>Very low number of keys left since last automatic backup!</translation>
     </message>
@@ -2268,12 +2275,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 </translation>
     </message>
     <message>
-        <location line="+18"/>
-        <source>PrivateSend was successfully reset.</source>
-        <translation>PrivateSend was successfully reset.</translation>
-    </message>
-    <message>
-        <location line="+15"/>
+        <location line="+16"/>
         <source>If you don&apos;t want to see internal PrivateSend fees/transactions select &quot;Most Common&quot; as Type on the &quot;Transactions&quot; tab.</source>
         <translation>If you don&apos;t want to see internal PrivateSend fees/transactions select &quot;Most Common&quot; as Type on the &quot;Transactions&quot; tab.</translation>
     </message>
@@ -2440,7 +2442,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../dash.cpp" line="+181"/>
+        <location filename="../dash.cpp" line="+182"/>
         <source>%1 didn&apos;t yet exit safely...</source>
         <translation>%1 didn&apos;t yet exit safely...</translation>
     </message>
@@ -2450,12 +2452,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Amount</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+131"/>
+        <location filename="../guiutil.cpp" line="+183"/>
         <source>Enter a Dash address (e.g. %1)</source>
         <translation>Enter a Dash address (e.g. %1)</translation>
     </message>
     <message>
-        <location line="+826"/>
+        <location line="+788"/>
         <source>%1 d</source>
         <translation>%1 d</translation>
     </message>
@@ -2808,8 +2810,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+62"/>
-        <location filename="../rpcconsole.cpp" line="+492"/>
-        <location line="+810"/>
+        <location filename="../rpcconsole.cpp" line="+500"/>
+        <location line="+808"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Select a peer to view detailed information.</translation>
     </message>
@@ -3010,7 +3012,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-reindex: Rebuild block chain index from current blk000??.dat files.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-713"/>
+        <location filename="../rpcconsole.cpp" line="-711"/>
         <source>&amp;Disconnect</source>
         <translation>&amp;Disconnect</translation>
     </message>
@@ -3048,7 +3050,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Unban</translation>
     </message>
     <message>
-        <location line="+197"/>
+        <location line="+195"/>
         <source>Welcome to the %1 RPC console.</source>
         <translation>Welcome to the %1 RPC console.</translation>
     </message>
@@ -3245,7 +3247,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Remove</translation>
     </message>
     <message>
-        <location filename="../receivecoinsdialog.cpp" line="+48"/>
+        <location filename="../receivecoinsdialog.cpp" line="+47"/>
         <source>Copy URI</source>
         <translation>Copy URI</translation>
     </message>
@@ -3375,7 +3377,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+668"/>
+        <location filename="../sendcoinsdialog.cpp" line="+686"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -3455,7 +3457,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Choose...</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+69"/>
         <source>collapse fee-settings</source>
         <translation>collapse fee-settings</translation>
     </message>
@@ -3486,7 +3488,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>per kilobyte</translation>
     </message>
     <message>
-        <location line="-89"/>
+        <location line="-101"/>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
         <translation>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</translation>
     </message>
@@ -3496,7 +3498,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Note: Not enough data for fee estimation, using the fallback fee instead.</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+41"/>
         <source>Hide</source>
         <translation>Hide</translation>
     </message>
@@ -3556,7 +3558,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Balance:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-546"/>
+        <location filename="../sendcoinsdialog.cpp" line="-565"/>
         <source>Copy quantity</source>
         <translation>Copy quantity</translation>
     </message>
@@ -3596,30 +3598,13 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 (%2 blocks)</translation>
     </message>
     <message>
-        <location line="+72"/>
-        <location line="+4"/>
-        <location line="+8"/>
+        <location line="+178"/>
+        <location line="+2"/>
         <source>using</source>
         <translation>using</translation>
     </message>
     <message>
-        <location line="-12"/>
-        <location line="+4"/>
-        <source>anonymous funds</source>
-        <translation>anonymous funds</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>(privatesend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>(privatesend requires this amount to be rounded up to the nearest %1).</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>any available funds (not anonymous)</source>
-        <translation>any available funds (not anonymous)</translation>
-    </message>
-    <message>
-        <location line="+73"/>
+        <location line="-42"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+4"/>
@@ -3627,27 +3612,65 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 to %2</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+19"/>
         <source>Are you sure you want to send?</source>
         <translation>Are you sure you want to send?</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+27"/>
         <source>are added as transaction fee</source>
         <translation>are added as transaction fee</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+41"/>
         <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
         <translation>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="-53"/>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</translation>
     </message>
     <message>
+        <location line="-8"/>
+        <source>PrivateSend funds only</source>
+        <translation>PrivateSend funds only</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>any available funds</source>
+        <translation>any available funds</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(PrivateSend transactions have higher fees usually due to no change output being allowed)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Transaction size: %1</source>
+        <translation>Transaction size: %1</translation>
+    </message>
+    <message>
         <location line="+3"/>
+        <source>Fee rate: %1</source>
+        <translation>Fee rate: %1</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+6"/>
+        <source>This transaction will consume %n input(s)</source>
+        <translation>
+            <numerusform>This transaction will consume %n input</numerusform>
+            <numerusform>This transaction will consume %n inputs</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
+        <translation>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</translation>
+    </message>
+    <message>
+        <location line="+21"/>
         <source>Confirm send coins</source>
         <translation>Confirm send coins</translation>
     </message>
@@ -3702,7 +3725,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Pay only the required fee of %1</translation>
     </message>
     <message numerus="yes">
-        <location line="+38"/>
+        <location line="+37"/>
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
             <numerusform>Estimated to begin confirmation within %n block.</numerusform>
@@ -3715,7 +3738,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Warning: Invalid Dash address</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+6"/>
         <source>Warning: Unknown change address</source>
         <translation>Warning: Unknown change address</translation>
     </message>
@@ -3982,7 +4005,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Click &quot;Sign Message&quot; to generate signature</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+102"/>
         <location line="+80"/>
         <source>The entered address is invalid.</source>
         <translation>The entered address is invalid.</translation>
@@ -4336,7 +4359,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+245"/>
+        <location filename="../transactiontablemodel.cpp" line="+262"/>
         <source>Date</source>
         <translation>Date</translation>
     </message>
@@ -4351,7 +4374,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Address / Label</translation>
     </message>
     <message numerus="yes">
-        <location line="+79"/>
+        <location line="+74"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Open for %n more block</numerusform>
@@ -4409,7 +4432,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Generated but not accepted</translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+38"/>
         <source>Received with</source>
         <translation>Received with</translation>
     </message>
@@ -4464,7 +4487,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>PrivateSend</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+31"/>
         <source>watch-only</source>
         <translation>watch-only</translation>
     </message>
@@ -4474,7 +4497,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>(n/a)</translation>
     </message>
     <message>
-        <location line="+240"/>
+        <location line="+239"/>
         <source>(no label)</source>
         <translation>(no label)</translation>
     </message>
@@ -4629,7 +4652,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Min amount</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+50"/>
         <source>Abandon transaction</source>
         <translation>Abandon transaction</translation>
     </message>
@@ -4679,7 +4702,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Show address QR code</translation>
     </message>
     <message>
-        <location line="+227"/>
+        <location line="+228"/>
         <source>Export Transaction History</source>
         <translation>Export Transaction History</translation>
     </message>
@@ -4762,7 +4785,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+138"/>
+        <location filename="../bitcoingui.cpp" line="+139"/>
         <source>Unit to show amounts in. Click to select another unit.</source>
         <translation>Unit to show amounts in. Click to select another unit.</translation>
     </message>
@@ -4778,7 +4801,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+340"/>
+        <location filename="../walletmodel.cpp" line="+339"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -4796,7 +4819,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Export the data in the current tab to a file</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+9"/>
         <source>Selected amount:</source>
         <translation>Selected amount:</translation>
     </message>
@@ -4834,7 +4857,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>dash-core</name>
     <message>
-        <location filename="../dashstrings.cpp" line="+33"/>
+        <location filename="../dashstrings.cpp" line="+39"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind to given address and always listen on it. Use [host]:port notation for IPv6</translation>
     </message>
@@ -4859,12 +4882,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+70"/>
         <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
         <translation>Name to construct url for KeePass entry that stores the wallet passphrase</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+50"/>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</translation>
     </message>
@@ -4884,17 +4907,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+30"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Accept command line and JSON-RPC commands</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Add a node to connect to and attempt to keep the connection open</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Allow DNS lookups for -addnode, -seednode and -connect</translation>
     </message>
@@ -4959,7 +4977,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Done loading</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+10"/>
         <source>Entries are full.</source>
         <translation>Entries are full.</translation>
     </message>
@@ -5004,12 +5022,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Failed to listen on any port. Use -listen=0 if you want this.</translation>
     </message>
     <message>
-        <location line="-395"/>
+        <location line="-403"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</translation>
     </message>
@@ -5024,7 +5042,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</translation>
     </message>
@@ -5034,12 +5052,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</translation>
     </message>
     <message>
-        <location line="+11"/>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections</source>
-        <translation>Connect only to the specified node(s); -connect=0 disables automatic connections</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+14"/>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</translation>
     </message>
@@ -5089,17 +5102,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!</source>
-        <translation>Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+16"/>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Maximum size of data in data carrier transactions we relay and mine (default: %u)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
         <translation>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</translation>
     </message>
@@ -5114,7 +5122,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</translation>
     </message>
     <message>
-        <location line="+95"/>
+        <location line="+9"/>
+        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</translation>
+    </message>
+    <message>
+        <location line="+89"/>
         <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
         <translation>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</translation>
     </message>
@@ -5139,7 +5152,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+14"/>
         <source>(default: %s)</source>
         <translation>(default: %s)</translation>
     </message>
@@ -5149,7 +5162,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Accept public REST requests (default: %u)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>Always query for peer addresses via DNS lookup (default: %u)</source>
         <translation>Always query for peer addresses via DNS lookup (default: %u)</translation>
     </message>
@@ -5174,12 +5187,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</translation>
     </message>
     <message>
-        <location line="+19"/>
-        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation>Enable the client to act as a masternode (0-1, default: %u)</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+20"/>
         <source>Entry exceeds maximum size.</source>
         <translation>Entry exceeds maximum size.</translation>
     </message>
@@ -5269,7 +5277,17 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Invalid minimum number of spork signers specified with -minsporkkeys</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+6"/>
+        <source>Keep N DASH mixed (%u-%u, default: %u)</source>
+        <translation>Keep N DASH mixed (%u-%u, default: %u)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <translation>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Keypool ran out, please call keypoolrefill first</translation>
     </message>
@@ -5339,7 +5357,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>No compatible Masternode found.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
+        <source>Not enough funds to mix.</source>
+        <translation>Not enough funds to mix.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Not in the Masternode list.</source>
         <translation>Not in the Masternode list.</translation>
     </message>
@@ -5375,11 +5398,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Set the masternode BLS private key</source>
-        <translation>Set the masternode BLS private key</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Set the number of threads to service RPC calls (default: %d)</translation>
     </message>
@@ -5504,7 +5522,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Will retry...</translation>
     </message>
     <message>
-        <location line="-232"/>
+        <location line="-230"/>
         <source>Can&apos;t find random Masternode.</source>
         <translation>Can&apos;t find random Masternode.</translation>
     </message>
@@ -5514,7 +5532,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Can&apos;t mix while sync in progress.</translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+80"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
         <translation>Invalid netmask specified in -whitelist: &apos;%s&apos;</translation>
     </message>
@@ -5534,27 +5552,37 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>KeePassHttp key for AES encrypted communication with KeePass</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</translation>
-    </message>
-    <message>
         <location line="-392"/>
         <source>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-48"/>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s file contains all private keys from this wallet. Do not share it with anyone!</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+6"/>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
         <translation>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+8"/>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
         <translation>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</translation>
     </message>
@@ -5619,12 +5647,17 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Maintain at most &lt;n&gt; connections to peers (temporary service connections excluded) (default: %u)</translation>
     </message>
     <message>
-        <location line="+34"/>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</translation>
+        <location line="+3"/>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
+        <translation>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+13"/>
+        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
+        <translation>Maximum total size of all orphan transactions in megabytes (default: %u)</translation>
+    </message>
+    <message>
+        <location line="+23"/>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation>Prune configured below the minimum of %d MiB.  Please use a higher number.</translation>
     </message>
@@ -5649,7 +5682,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+6"/>
+        <source>Set the masternode BLS private key and enable the client to act as a masternode</source>
+        <translation>Set the masternode BLS private key and enable the client to act as a masternode</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Specify full path to directory for automatic wallet backups (must exist)</source>
         <translation>Specify full path to directory for automatic wallet backups (must exist)</translation>
     </message>
@@ -5719,7 +5757,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+20"/>
+        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
+        <translation>You need to rebuild the database using -reindex to change -timestampindex</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</translation>
     </message>
@@ -5739,7 +5782,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&lt;category&gt; can be:</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Append comment to the user agent string</source>
         <translation>Append comment to the user agent string</translation>
     </message>
@@ -5799,7 +5842,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Enable publish raw transaction in &lt;address&gt;</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+17"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Error: A fatal internal error occurred, see debug.log for details</translation>
     </message>
@@ -5954,12 +5997,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Not enough file descriptors available.</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Not enough funds to anonymize.</source>
-        <translation>Not enough funds to anonymize.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Number of automatic wallet backups (default: %u)</source>
         <translation>Number of automatic wallet backups (default: %u)</translation>
     </message>
@@ -6019,7 +6057,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Rescan the block chain for missing wallet transactions on startup</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+27"/>
         <source>Synchronizing blockchain...</source>
         <translation>Synchronizing blockchain...</translation>
     </message>
@@ -6115,6 +6153,16 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+1"/>
+        <source>You need to rebuild the database using -reindex to change -addressindex</source>
+        <translation>You need to rebuild the database using -reindex to change -addressindex</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You need to rebuild the database using -reindex to change -spentindex</source>
+        <translation>You need to rebuild the database using -reindex to change -spentindex</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>You need to rebuild the database using -reindex to change -txindex</translation>
     </message>
@@ -6134,12 +6182,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>see debug.log for details.</translation>
     </message>
     <message>
-        <location line="-99"/>
+        <location line="-100"/>
         <source>RPC server options:</source>
         <translation>RPC server options:</translation>
     </message>
     <message>
-        <location line="-489"/>
+        <location line="-497"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
@@ -6149,7 +6197,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>The %s developers</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+38"/>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>Cannot obtain a lock on data directory %s. %s is probably already running.</translation>
     </message>
@@ -6204,7 +6252,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+11"/>
         <source>Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
         <translation>Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</translation>
     </message>
@@ -6229,7 +6277,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+18"/>
         <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
         <translation>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</translation>
     </message>
@@ -6304,12 +6352,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>You are starting in lite mode, most Dash-specific functionality is disabled.</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>You must specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
-        <translation>You must specify a masternodeblsprivkey in the configuration. Please see documentation for help.</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>%d of last 100 blocks have unexpected version</translation>
     </message>
@@ -6354,7 +6397,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Accept connections from outside (default: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Allow RFC1918 addresses to be relayed and connected to (default: %u)</source>
         <translation>Allow RFC1918 addresses to be relayed and connected to (default: %u)</translation>
     </message>
@@ -6384,7 +6427,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Create up to N inputs of each denominated amount (%u-%u, default: %u)</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+18"/>
         <source>Error loading %s</source>
         <translation>Error loading %s</translation>
     </message>
@@ -6464,12 +6507,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Invalid spork address specified with -sporkaddr</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
-        <translation>Keep N DASH anonymized (%u-%u, default: %u)</translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+11"/>
         <source>Loading P2P addresses...</source>
         <translation>Loading P2P addresses...</translation>
     </message>
@@ -6534,7 +6572,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Set maximum block size in bytes (default: %d)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Show all debugging options (usage: --help -help-debug)</translation>
     </message>
@@ -6694,7 +6732,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Warning</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Your entries added successfully.</source>
         <translation>Your entries added successfully.</translation>
     </message>
