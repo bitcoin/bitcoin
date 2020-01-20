@@ -191,7 +191,7 @@ std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
     return ret;
 }
 
-std::string BCLog::Logger::LogTimestampStr(const std::string& str)
+std::string BCLog::Logger::LogTimestampStr(const std::string& str) const
 {
     std::string strStamped;
 
@@ -238,9 +238,8 @@ namespace BCLog {
     }
 }
 
-void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line)
+std::string BCLog::Logger::AddPrefix(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line)
 {
-    StdLockGuard scoped_lock(m_cs);
     std::string str_prefixed = LogEscapeMessage(str);
 
     if (m_log_sourcelocations && m_started_new_line) {
@@ -250,8 +249,13 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
     if (m_log_threadnames && m_started_new_line) {
         str_prefixed.insert(0, "[" + util::ThreadGetInternalName() + "] ");
     }
+    return LogTimestampStr(str_prefixed);
+}
 
-    str_prefixed = LogTimestampStr(str_prefixed);
+void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line)
+{
+    StdLockGuard scoped_lock(m_cs);
+    std::string str_prefixed = AddPrefix(str, logging_function, source_file, source_line);
 
     m_started_new_line = !str.empty() && str[str.size()-1] == '\n';
 
@@ -280,6 +284,16 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
                 setbuf(new_fileout, nullptr); // unbuffered
                 fclose(m_fileout);
                 m_fileout = new_fileout;
+
+                // Re-log important messages to the new file.
+                bool save_started_new_line = m_started_new_line;
+                m_started_new_line = true;
+                for (const std::string& msg : m_msgs_relog) {
+                    std::string s{AddPrefix(msg, logging_function, source_file, source_line) + '\n'};
+                    FileWriteStr(s, m_fileout);
+                }
+                str_prefixed = AddPrefix(str, logging_function, source_file, source_line);
+                m_started_new_line = save_started_new_line;
             }
         }
         FileWriteStr(str_prefixed, m_fileout);
