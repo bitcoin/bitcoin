@@ -1,6 +1,6 @@
 {
   "devnet":{
-    "name": "platform-prerelease"
+    "name": "devnet-name"
   },
 
   "nodes": {

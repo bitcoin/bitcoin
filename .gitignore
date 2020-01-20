@@ -123,4 +123,5 @@ cmake-build-*/
 .vscode/
 
 scripts/*.json
-scripts/*.sh
+scripts/sb.sh
+scripts/sb-wallet.sh

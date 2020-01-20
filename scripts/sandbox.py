@@ -332,6 +332,8 @@ class Sandbox:
         colltx = self.get_transaction(control_node, txhash)
         claddr = tx_find_output(colltx, 10000)
 
+        print 'colltx hash: {0}'.format(txhash)
+
         self.network['nodes'][control_node]['mnconfig'][masternode] = {
             'ip': self.node_ip(masternode),
             'key': prvkey,
