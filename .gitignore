@@ -120,4 +120,7 @@ qa/pull-tester/test.*/*
 
 .idea/
 cmake-build-*/
+.vscode/
 
+scripts/*.json
+scripts/*.sh

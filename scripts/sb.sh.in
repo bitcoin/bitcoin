@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+./sandbox.py -d=/path/to/sandbox -f=/path/to/sandbox/json/config/devnet.json -b=/path/to/sandbox-bin "$@"
