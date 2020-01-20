@@ -864,6 +864,32 @@ std::vector<util::SettingsValue> ArgsManager::GetSettingsList(const std::string&
     return util::GetSettingsList(m_settings, m_network, SettingName(arg), !UseDefaultSection(arg));
 }
 
+void ArgsManager::logArgsPrefix(
+    const std::string& prefix,
+    const std::string& section,
+    const std::map<std::string, std::vector<util::SettingsValue>>& args) const
+{
+    std::string section_str = section.empty() ? "" : "[" + section + "] ";
+    for (const auto& arg : args) {
+        for (const auto& value : arg.second) {
+            Optional<unsigned int> flags = GetArgFlags('-' + arg.first);
+            if (flags) {
+                std::string value_str = (*flags & SENSITIVE) ? "****" : value.write();
+                LogPrintf("%s %s%s=%s\n", prefix, section_str, arg.first, value_str);
+            }
+        }
+    }
+}
+
+void ArgsManager::LogArgs() const
+{
+    LOCK(cs_args);
+    for (const auto& section : m_settings.ro_config) {
+        logArgsPrefix("Config file arg:", section.first, section.second);
+    }
+    logArgsPrefix("Command-line arg:", "", m_settings.command_line_options);
+}
+
 bool RenameOver(fs::path src, fs::path dest)
 {
 #ifdef WIN32

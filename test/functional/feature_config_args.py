@@ -83,10 +83,40 @@ class ConfArgsTest(BitcoinTestFramework):
             self.start_node(0, extra_args=['-noconnect=0'])
         self.stop_node(0)
 
+    def test_args_log(self):
+        self.log.info('Test config args logging')
+        with self.nodes[0].assert_debug_log(
+                expected_msgs=[
+                    'Command-line arg: addnode="some.node"',
+                    'Command-line arg: rpcauth=****',
+                    'Command-line arg: rpcbind=****',
+                    'Command-line arg: rpcpassword=****',
+                    'Command-line arg: rpcuser=****',
+                    'Command-line arg: torpassword=****',
+                    'Config file arg: regtest="1"',
+                    'Config file arg: [regtest] server="1"',
+                ],
+                unexpected_msgs=[
+                    'alice:f7efda5c189b999524f151318c0c86$d5b51b3beffbc0',
+                    '127.1.1.1',
+                    'secret-rpcuser',
+                    'secret-torpassword',
+                ]):
+            self.start_node(0, extra_args=[
+                '-addnode=some.node',
+                '-rpcauth=alice:f7efda5c189b999524f151318c0c86$d5b51b3beffbc0',
+                '-rpcbind=127.1.1.1',
+                '-rpcpassword=',
+                '-rpcuser=secret-rpcuser',
+                '-torpassword=secret-torpassword',
+            ])
+        self.stop_node(0)
+
     def run_test(self):
         self.stop_node(0)
 
         self.test_log_buffer()
+        self.test_args_log()
 
         self.test_config_file_parser()
 

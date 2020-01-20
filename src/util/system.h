@@ -145,6 +145,8 @@ public:
          * between mainnet and regtest/testnet won't cause problems due to these
          * parameters by accident. */
         NETWORK_ONLY = 0x200,
+        // This argument's value is sensitive (such as a password).
+        SENSITIVE = 0x400,
     };
 
 protected:
@@ -318,6 +320,19 @@ public:
      * Return nullopt for unknown arg.
      */
     Optional<unsigned int> GetArgFlags(const std::string& name) const;
+
+    /**
+     * Log the config file options and the command line arguments,
+     * useful for troubleshooting.
+     */
+    void LogArgs() const;
+
+private:
+    // Helper function for LogArgs().
+    void logArgsPrefix(
+        const std::string& prefix,
+        const std::string& section,
+        const std::map<std::string, std::vector<util::SettingsValue>>& args) const;
 };
 
 extern ArgsManager gArgs;
