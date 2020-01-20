@@ -111,6 +111,22 @@ class NodeType(Enum):
     THRESH_M = 29
 
 
+class SatType(Enum):
+    # SatType Class provides information on how to construct satisfying or
+    # non-satisfying witnesses. sat/dsat methods return list of tuples:
+    # [(SatType, Value), (SatType, Value), ...]
+    # The value provides a hint how to construct the resp. witness element.
+    OLDER = 0                       # Value: Delay
+    AFTER = 1                       # Value: Time
+    SIGNATURE = 2                   # Value: 33B Key/20B HASH160 Digest
+    KEY_AND_HASH160_PREIMAGE = 3    # Value: 20B HASH160 Digest
+    SHA256_PREIMAGE = 4             # Value: 32B SHA256 Digest
+    HASH256_PREIMAGE = 5            # Value: 32B HASH256 Digest
+    RIPEMD160_PREIMAGE = 6          # Value: 20B RIPEMD160 Digest
+    HASH160_PREIMAGE = 7            # Value: 20B HASH160 Digest
+    DATA = 8                        # Value: Bytes
+
+
 class Node:
     """Miniscript expression class
 
