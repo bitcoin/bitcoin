@@ -7,11 +7,12 @@
 from enum import Enum
 
 from .key import ECPubKey
-from .script import CScript, OP_ADD, OP_CHECKLOCKTIMEVERIFY, \
-    OP_CHECKSEQUENCEVERIFY, OP_CHECKMULTISIG, OP_CHECKSIG, \
-    OP_CHECKMULTISIGVERIFY, OP_CHECKSIGVERIFY, OP_DUP, OP_EQUAL, \
-    OP_EQUALVERIFY, OP_HASH160, OP_HASH256, OP_RIPEMD160, OP_SHA256, \
-    OP_SIZE, OP_VERIFY
+from .script import CScript, OP_ADD, OP_BOOLAND, OP_BOOLOR, OP_DUP, OP_ELSE, \
+    OP_ENDIF, OP_EQUAL, OP_EQUALVERIFY, OP_FROMALTSTACK, OP_IFDUP, OP_IF, \
+    OP_CHECKLOCKTIMEVERIFY, OP_CHECKMULTISIG, OP_CHECKMULTISIGVERIFY, \
+    OP_CHECKSEQUENCEVERIFY, OP_CHECKSIG, OP_CHECKSIGVERIFY, OP_HASH160, \
+    OP_HASH256, OP_NOTIF, OP_RIPEMD160, OP_SHA256, OP_SIZE, OP_SWAP, \
+    OP_TOALTSTACK, OP_VERIFY, OP_0NOTEQUAL
 
 
 class Property:
@@ -40,7 +41,7 @@ class Property:
     def from_string(self, property_str):
         """Construct property from string of valid property and types"""
         for char in property_str:
-            assert(hasattr(self, char))
+            assert (hasattr(self, char))
             setattr(self, char, True)
         assert self.is_valid()
         return self
@@ -317,8 +318,250 @@ class Node:
             return expr_list[0]
 
         # Step through each list index and match against templates.
+
+        # Right - to - left parsing.
+            # Note: Parsing from script is ambiguous:
+            # r-to-l:
+            #    and_v(vc:pk_h(KEY),c:pk_h(KEY))
+            # l-to-r:
+            #   c:and_v(vc:pk_h(KEY),pk_h(KEY))
+
+        # Step through each list index and match against templates.
         idx = expr_list_len - 1
         while idx >= 0:
+
+            # 2 element expressions.
+            if expr_list_len-idx >= 2:
+
+                # Match against and_v.
+                if isinstance(expr_list[idx], Node) and \
+                        isinstance(expr_list[idx+1], Node):
+                    try:
+                        node = Node().construct_and_v(
+                            expr_list[idx], expr_list[idx+1])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+2:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against c wrapper.
+                if isinstance(expr_list[idx], Node) and \
+                        expr_list[idx+1] == OP_CHECKSIG:
+                    try:
+                        # Construct AST tree node.
+                        node = Node().construct_c(expr_list[idx])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+2:]
+                        # Recursive parse of remaining top-level nodes.
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against t wrapper.
+                if isinstance(expr_list[idx], Node) and \
+                        isinstance(expr_list[idx+1], Node) and \
+                        expr_list[idx+1].t == NodeType.JUST_1:
+                    try:
+                        node = Node().construct_t(expr_list[idx])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+2:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against v wrapper.
+                elif isinstance(expr_list[idx], Node) and \
+                        expr_list[idx+1] == OP_VERIFY:
+                    try:
+                        node = Node().construct_v(expr_list[idx])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+2:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against s wrapper.
+                elif isinstance(expr_list[idx+1], Node) and \
+                        expr_list[idx] == OP_SWAP:
+                    try:
+                        node = Node().construct_s(expr_list[idx+1])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+2:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against n wrapper.
+                elif isinstance(expr_list[idx], Node) and \
+                        expr_list[idx+1] == OP_0NOTEQUAL:
+                    try:
+                        node = Node().construct_n(expr_list[idx])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+2:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+            # 3 element expressions.
+            if expr_list_len-idx >= 3:
+
+                # Match against and_b.
+                if isinstance(expr_list[idx], Node) and \
+                        isinstance(expr_list[idx+1], Node) and \
+                        expr_list[idx+2] == OP_BOOLAND:
+                    try:
+                        node = Node().construct_and_b(expr_list[idx],
+                                                      expr_list[idx+1])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+3:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against or_b.
+                if isinstance(expr_list[idx], Node) and \
+                        isinstance(expr_list[idx+1], Node) and \
+                        expr_list[idx+2] == OP_BOOLOR:
+                    try:
+                        node = Node().construct_or_b(expr_list[idx],
+                                                     expr_list[idx+1])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+3:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against a wrapper.
+                if expr_list[idx] == OP_TOALTSTACK and \
+                        isinstance(expr_list[idx+1], Node) and \
+                        expr_list[idx+2] == OP_FROMALTSTACK:
+                    try:
+                        node = Node().construct_a(expr_list[idx+1])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+3:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+            # 4 element expressions.
+            if expr_list_len-idx >= 4:
+
+                # Match against or_c.
+                if isinstance(expr_list[idx], Node) and \
+                        expr_list[idx+1] == OP_NOTIF and \
+                        isinstance(expr_list[idx+2], Node) and \
+                        expr_list[idx+3] == OP_ENDIF:
+                    try:
+                        node = Node().construct_or_c(expr_list[idx],
+                                                     expr_list[idx+2])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+4:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against d wrapper.
+                if expr_list[idx:idx+2] == [OP_DUP, OP_IF] and \
+                        isinstance(expr_list[idx+2], Node) and \
+                        expr_list[idx+3] == OP_ENDIF:
+                    try:
+                        node = Node().construct_d(expr_list[idx+2])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+4:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+            # 5 element expressions.
+            if expr_list_len-idx >= 5:
+
+                # Match against or_d.
+                if isinstance(expr_list[idx], Node) and \
+                        expr_list[idx+1:idx+3] == [OP_IFDUP, OP_NOTIF] and \
+                        isinstance(expr_list[idx+3], Node) and \
+                        expr_list[idx+4] == OP_ENDIF:
+                    try:
+                        node = Node().construct_or_d(expr_list[idx],
+                                                     expr_list[idx+3])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+5:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against or_i.
+                if expr_list[idx] == OP_IF and \
+                        isinstance(expr_list[idx+1], Node) and \
+                        expr_list[idx+2] == OP_ELSE and \
+                        isinstance(expr_list[idx+3], Node) and \
+                        expr_list[idx+4] == OP_ENDIF:
+                    try:
+                        node = Node().construct_or_i(expr_list[idx+1],
+                                                     expr_list[idx+3])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+5:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against j wrapper.
+                if expr_list[idx:idx+3] == [OP_SIZE, OP_0NOTEQUAL, OP_IF] and \
+                        isinstance(expr_list[idx+3], Node) and \
+                        expr_list[idx+4] == OP_ENDIF:
+                    try:
+                        node = Node().construct_j(expr_list[idx+3])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+5:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against l wrapper.
+                if expr_list[idx] == OP_IF and \
+                        isinstance(expr_list[idx+1], Node) and \
+                        expr_list[idx+1].t == NodeType.JUST_0 and \
+                        expr_list[idx+2] == OP_ELSE and \
+                        isinstance(expr_list[idx+3], Node) and \
+                        expr_list[idx+4] == OP_ENDIF:
+                    try:
+                        node = Node().construct_l(expr_list[idx+3])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+5:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against u wrapper.
+                if expr_list[idx] == OP_IF and \
+                        isinstance(expr_list[idx+1], Node) and \
+                        expr_list[idx+2:idx+5] == [OP_ELSE, 0, OP_ENDIF]:
+                    try:
+                        node = Node().construct_u(expr_list[idx+1])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+5:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+            # 6 element expressions.
+            if expr_list_len-idx >= 6:
+
+                # Match against and_n.
+                if isinstance(expr_list[idx], Node) and \
+                        expr_list[idx+1] == OP_NOTIF and \
+                        isinstance(expr_list[idx+2], Node) and \
+                        expr_list[idx+2].t == NodeType.JUST_0 and \
+                        expr_list[idx+3] == OP_ELSE and \
+                        isinstance(expr_list[idx+4], Node) and \
+                        expr_list[idx+5] == OP_ENDIF:
+                    try:
+                        node = Node().construct_and_n(expr_list[idx],
+                                                      expr_list[idx+4])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+6:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
+
+                # Match against andor.
+                if isinstance(expr_list[idx], Node) and \
+                        expr_list[idx+1] == OP_NOTIF and \
+                        isinstance(expr_list[idx+2], Node) and \
+                        expr_list[idx+3] == OP_ELSE and \
+                        isinstance(expr_list[idx+4], Node) and \
+                        expr_list[idx+5] == OP_ENDIF:
+                    try:
+                        node = Node().construct_andor(expr_list[idx],
+                                                      expr_list[idx+4],
+                                                      expr_list[idx+2])
+                        expr_list = expr_list[:idx]+[node]+expr_list[idx+6:]
+                        return Node._parse_expr_list(expr_list)
+                    except Exception:
+                        pass
 
             # Match against thresh_m.
             # Termainal expression, but k and n values can be Nodes (JUST_0/1)
@@ -354,6 +597,39 @@ class Node:
                                 node = Node().construct_thresh_m(k, pk_m)
                                 expr_list = expr_list[:idx] + [node] + \
                                     expr_list[idx+n+3:]
+                                return Node._parse_expr_list(expr_list)
+                            except Exception:
+                                pass
+
+            # Match against thresh.
+            if expr_list_len-idx >= 7:
+                # Permissible values for n:
+                # (len(list)-1)/2 >= n >= 3:
+                for n in range(3, int((expr_list_len-1)/2)+1):
+                    # Length of k-of-n thresh expression.
+                    thresh_expr_len = 1+2*n
+                    # Match (<expr> <OP_ADD>)*(n-1)
+                    match = True
+                    children = []
+                    for i in range(n-1):
+                        if not isinstance(expr_list[i*2+1], Node) or \
+                                expr_list[i*2+2] != OP_ADD:
+                            match = False
+                            break
+                        else:
+                            children.append(expr_list[i*2+1])
+                    # Match <expr> ... <k> <OP_EQUAL>
+                    if match is True:
+                        k = Node._coerce_to_int(expr_list[thresh_expr_len-2])
+                        if isinstance(expr_list[idx], Node) and \
+                            isinstance(k, int) and \
+                                expr_list[thresh_expr_len-1] == OP_EQUAL:
+                            try:
+                                k = expr_list[thresh_expr_len-2]
+                                children = [expr_list[idx]] + children
+                                node = Node().construct_thresh(k, children)
+                                expr_list = expr_list[:idx] + [node] + \
+                                    expr_list[idx+thresh_expr_len:]
                                 return Node._parse_expr_list(expr_list)
                             except Exception:
                                 pass
@@ -473,6 +749,392 @@ class Node:
         self._construct(NodeType.THRESH_M, Property().from_string(prop_str),
                         [],
                         [k, *self._pk_n, n, OP_CHECKMULTISIG], desc
+                        )
+        return self
+
+
+    def construct_and_v(self, child_x, child_y):
+        prop_str = ""
+        prop_str += "B" if child_x.p.V and child_y.p.B else ""
+        prop_str += "K" if child_x.p.V and child_y.p.K else ""
+        prop_str += "V" if child_x.p.V and child_y.p.V else ""
+        prop_str += "u" if child_y.p.u else ""
+        prop_str += "n" if child_x.p.n or (child_x.p.z and child_y.p.n) else ""
+        prop_str += "z" if child_x.p.z and child_y.p.z else ""
+        prop_str += "o" if (child_x.p.z and child_y.p.o) or \
+            (child_x.p.o and child_y.p.z) else ""
+        prop_str += "f" if child_x.p.s or child_y.p.f else ""
+        prop_str += "m" if child_x.p.m and child_y.p.m else ""
+        prop_str += "s" if child_x.p.s or child_y.p.s else ""
+        self._construct(NodeType.AND_V, Property().from_string(prop_str),
+                        [child_x, child_y],
+                        child_x._script+child_y._script,
+                        "and_v("+child_x.desc+","+child_y.desc+")"
+                        )
+        return self
+
+    def construct_and_b(self, child_x, child_y):
+        prop_str = "u"
+        prop_str += "B" if child_x.p.B and child_y.p.W else ""
+        prop_str += "z" if child_x.p.z and child_y.p.z else ""
+        prop_str += "o" if (child_x.p.z and child_y.p.o) or \
+            (child_x.p.o and child_y.p.z) else ""
+        prop_str += "n" if child_x.p.n or (child_x.p.z and child_y.p.n) else ""
+        prop_str += "d" if child_x.p.d and child_y.p.d else ""
+        prop_str += "f" if (child_x.p.f and child_y.p.f) or \
+            (child_x.p.s and child_x.p.f) or \
+            (child_y.p.s and child_y.p.f) else ""
+        prop_str += "e" if child_x.p.e and child_y.p.e and \
+            child_x.p.s and child_y.p.s else ""
+        prop_str += "m" if child_x.p.m and child_y.p.m else ""
+        prop_str += "s" if child_x.p.s or child_y.p.s else ""
+        self._construct(NodeType.AND_B, Property().from_string(prop_str),
+                        [child_x, child_y],
+                        child_x._script+child_y._script+[OP_BOOLAND],
+                        "and_b("+child_x.desc+","+child_y.desc+")"
+                        )
+        return self
+
+    def construct_and_n(self, child_x, child_y):
+        assert (child_x.p.d and child_x.p.u)
+        assert (child_x.p.f and child_y.p.f) is False
+        prop_str = "d"
+        prop_str += "B" if child_x.p.B and child_y.p.B else ""
+        prop_str += "z" if child_x.p.z and child_y.p.z else ""
+        prop_str += "o" if child_x.p.o and child_y.p.z else ""
+        prop_str += "u" if child_y.p.u else ""
+        prop_str += "e" if child_x.p.e and \
+            (child_x.p.s or child_y.p.f) else ""
+        prop_str += "m" if child_x.p.m and child_y.p.m and \
+            child_x.p.e else ""
+        prop_str += "s" if child_x.p.s or child_y.p.s else ""
+        self._construct(NodeType.AND_N, Property().from_string(prop_str),
+                        [child_x, child_y],
+                        child_x._script+[OP_NOTIF, 0, OP_ELSE]+child_y._script+[
+                            OP_ENDIF],
+                        "and_n("+child_x.desc+","+child_y.desc+")"
+                        )
+        return self
+
+    def construct_or_b(self, child_x, child_z):
+        assert (child_x.p.d and child_z.p.d)
+        assert (child_x.p.f or child_z.p.f) is False
+        prop_str = "du"
+        prop_str += "B" if child_x.p.B and child_z.p.W else ""
+        prop_str += "z" if child_x.p.z and child_z.p.z else ""
+        prop_str += "o" if (child_x.p.z and child_z.p.o) or \
+            (child_x.p.o and child_z.p.z) else ""
+        prop_str += "e" if child_x.p.e and child_z.p.e else ""
+        prop_str += "m" if child_x.p.m and child_z.p.m and \
+            child_x.p.e and child_z.p.e and \
+            (child_x.p.s or child_z.p.s) else ""
+        prop_str += "s" if child_x.p.s and child_z.p.s else ""
+        self._construct(NodeType.OR_B, Property().from_string(prop_str),
+                        [child_x, child_z],
+                        child_x._script+child_z._script+[OP_BOOLOR],
+                        "or_b("+child_x.desc+","+child_z.desc+")"
+                        )
+        return self
+
+    def construct_or_d(self, child_x, child_z):
+        assert (child_x.p.d and child_x.p.u)
+        prop_str = ""
+        prop_str += "B" if child_x.p.B and child_z.p.B else ""
+        prop_str += "z" if child_x.p.z and child_z.p.z else ""
+        prop_str += "o" if child_x.p.o and child_z.p.z else ""
+        prop_str += "u" if child_x.p.u and \
+            (child_x.p.f or child_z.p.u) else ""
+        prop_str += "d" if child_x.p.d and child_z.p.d else ""
+        prop_str += "f" if child_x.p.f or child_z.p.f else ""
+        prop_str += "e" if child_x.p.e and child_z.p.e else ""
+        prop_str += "m" if child_x.p.m and child_z.p.m and \
+            child_x.p.e and (child_x.p.s or child_z.p.s) else ""
+        prop_str += "s" if child_x.p.s and child_z.p.s else ""
+        self._construct(NodeType.OR_D, Property().from_string(prop_str),
+                        [child_x, child_z],
+                        child_x._script+[OP_IFDUP, OP_NOTIF]+child_z._script+[
+                            OP_ENDIF],
+                        "or_d("+child_x.desc+","+child_z.desc+")"
+                        )
+        return self
+
+    def construct_or_c(self, child_x, child_z):
+        assert (child_x.p.d and child_x.p.u)
+        prop_str = ""
+        prop_str += "V" if child_x.p.B and child_z.p.V else ""
+        prop_str += "z" if child_x.p.z and child_z.p.z else ""
+        prop_str += "o" if child_x.p.o and child_z.p.z else ""
+        prop_str += "f" if child_x.p.f or child_z.p.f else ""
+        prop_str += "m" if child_x.p.m and child_z.p.m and \
+            child_x.p.e and (child_x.p.s or child_z.p.s) else ""
+        prop_str += "s" if child_x.p.s and child_z.p.s else ""
+        self._construct(NodeType.OR_C, Property().from_string(prop_str),
+                        [child_x, child_z],
+                        child_x._script+[OP_NOTIF]+child_z._script+[OP_ENDIF],
+                        "or_c("+child_x.desc+","+child_z.desc+")"
+                        )
+        return self
+
+    def construct_or_i(self, child_x, child_z):
+        prop_str = ""
+        prop_str += "B" if child_x.p.B and child_z.p.B else ""
+        prop_str += "K" if child_x.p.K and child_z.p.K else ""
+        prop_str += "K" if child_x.p.V and child_z.p.V else ""
+        prop_str += "u" if child_x.p.u and child_z.p.u else ""
+        prop_str += "d" if child_x.p.d or child_z.p.d else ""
+        prop_str += "o" if child_x.p.z and child_z.p.z else ""
+        prop_str += "e" if (child_x.p.e and child_z.p.f) or \
+            (child_x.p.f and child_z.p.e) else ""
+        prop_str += "f" if child_x.p.f and child_z.p.f else ""
+        prop_str += "m" if child_x.p.m and child_z.p.m and \
+            (child_x.p.s or child_z.p.s) else ""
+        prop_str += "s" if child_x.p.s and child_z.p.s else ""
+        self._construct(NodeType.OR_I, Property().from_string(prop_str),
+                        [child_x, child_z],
+                        [OP_IF]+child_x._script+[OP_ELSE]+child_z._script+[
+                        OP_ENDIF],
+                        "or_i("+child_x.desc+","+child_z.desc+")"
+                        )
+        return self
+
+    def construct_andor(self, child_x, child_y, child_z):
+        assert (child_x.p.d and child_x.p.u)
+        prop_str = ""
+        prop_str += "B" if child_x.p.B and child_y.p.B and child_z.p.B else ""
+        prop_str += "K" if child_x.p.B and child_y.p.K and child_z.p.K else ""
+        prop_str += "V" if child_x.p.B and child_y.p.V and child_z.p.V else ""
+        prop_str += "z" if child_x.p.z and child_y.p.z and child_z.p.z else ""
+        prop_str += "o" if (child_x.p.z and child_y.p.o and child_z.p.o) or \
+            (child_x.p.o and child_y.p.z and child_z.p.z) else ""
+        prop_str += "u" if child_y.p.u and child_z.p.u else ""
+        prop_str += "d" if child_x.p.d and child_z.p.d else ""
+        prop_str += "f" if child_z.p.f and (child_x.p.s or child_y.p.f) else ""
+        prop_str += "e" if child_x.p.e and child_z.p.e and \
+            (child_x.p.s or child_y.p.f) else ""
+        prop_str += "m" if child_x.p.m and child_y.p.m and child_z.p.m and \
+            child_x.p.e and (child_x.p.s or child_y.p.s or child_z.p.s) else ""
+        prop_str += "s" if child_z.p.s and (child_x.p.s or child_y.p.s) else ""
+        self._construct(NodeType.ANDOR, Property().from_string(prop_str),
+                        [child_x, child_y, child_z],
+                        child_x._script+[OP_NOTIF]+child_z._script+[
+                        OP_ELSE]+child_y._script+[OP_ENDIF],
+                        "andor("+child_x.desc+","+child_y.desc+","
+                        + child_z.desc+")"
+                        )
+        return self
+
+    def construct_a(self, child_x):
+        prop_str = ""
+        prop_str += "W" if child_x.p.B else ""
+        prop_str += "u" if child_x.p.u else ""
+        prop_str += "d" if child_x.p.d else ""
+        prop_str += "f" if child_x.p.f else ""
+        prop_str += "e" if child_x.p.e else ""
+        prop_str += "m" if child_x.p.m else ""
+        prop_str += "s" if child_x.p.s else ""
+        tag = "a" if child_x.t.name.startswith('WRAP_') else "a:"
+        self._construct(NodeType.WRAP_A, Property().from_string(prop_str),
+                        [child_x],
+                        [OP_TOALTSTACK]+child_x._script+[OP_FROMALTSTACK],
+                        tag+child_x.desc
+                        )
+        return self
+
+    def construct_s(self, child_x):
+        assert (child_x.p.B and child_x.p.o)
+        prop_str = "W"
+        prop_str += "u" if child_x.p.u else ""
+        prop_str += "d" if child_x.p.d else ""
+        prop_str += "f" if child_x.p.f else ""
+        prop_str += "e" if child_x.p.e else ""
+        prop_str += "m" if child_x.p.m else ""
+        prop_str += "s" if child_x.p.s else ""
+        tag = "s" if child_x.t.name.startswith('WRAP_') else "s:"
+        self._construct(NodeType.WRAP_S, Property().from_string(prop_str),
+                        [child_x],
+                        [OP_SWAP]+child_x._script, tag+child_x.desc
+                        )
+        return self
+
+    def construct_c(self, child_x):
+        assert child_x.p.K
+        prop_str = "Bu"
+        prop_str += "o" if child_x.p.o else ""
+        prop_str += "n" if child_x.p.n else ""
+        prop_str += "d" if child_x.p.d else ""
+        prop_str += "e" if child_x.p.e else ""
+        prop_str += "m" if child_x.p.m else ""
+        prop_str += "s" if child_x.p.s else ""
+        tag = "c" if child_x.t.name.startswith('WRAP_') else "c:"
+        self._construct(NodeType.WRAP_C, Property().from_string(prop_str),
+                        [child_x],
+                        child_x._script+[OP_CHECKSIG], tag+child_x.desc
+                        )
+        return self
+
+    def construct_t(self, child_x):
+        prop_str = "uf"
+        prop_str += "B" if child_x.p.V else ""
+        prop_str += "n" if child_x.p.n else ""
+        prop_str += "z" if child_x.p.z else ""
+        prop_str += "o" if child_x.p.o else ""
+        prop_str += "m" if child_x.p.m else ""
+        prop_str += "s" if child_x.p.s else ""
+        tag = "t" if child_x.t.name.startswith('WRAP_') else "t:"
+        self._construct(NodeType.WRAP_T, Property().from_string(prop_str),
+                        [child_x],
+                        child_x._script+[1], tag+child_x.desc
+                        )
+        return self
+
+    def construct_d(self, child_x):
+        assert (child_x.p.z)
+        prop_str = "nud"
+        prop_str += "B" if child_x.p.V else ""
+        prop_str += "o" if child_x.p.z else ""
+        prop_str += "e" if child_x.p.f else ""
+        prop_str += "m" if child_x.p.m else ""
+        prop_str += "s" if child_x.p.s else ""
+        tag = "d" if child_x.t.name.startswith('WRAP_') else "d:"
+        self._construct(NodeType.WRAP_D, Property().from_string(prop_str),
+                        [child_x],
+                        [OP_DUP, OP_IF]+child_x._script+[OP_ENDIF],
+                        tag+child_x.desc
+                        )
+        return self
+
+    def construct_v(self, child_x):
+        assert child_x.p.B
+        prop_str = "V"
+        prop_str += "z" if child_x.p.z else ""
+        prop_str += "o" if child_x.p.o else ""
+        prop_str += "n" if child_x.p.n else ""
+        prop_str += "f"
+        prop_str += "m" if child_x.p.m else ""
+        prop_str += "s" if child_x.p.s else ""
+        tag = "v" if child_x.t.name.startswith('WRAP_') else "v:"
+        # Combine OP_CHECKSIG/OP_CHECKMULTISIG/OP_EQUAL with OP_VERIFY.
+        if child_x._script[-1] == OP_CHECKSIG:
+            script = child_x._script[:-1]+[OP_CHECKSIGVERIFY]
+        elif child_x._script[-1] == OP_CHECKMULTISIG:
+            script = child_x._script[:-1]+[OP_CHECKMULTISIGVERIFY]
+        elif child_x._script[-1] == OP_EQUAL:
+            script = child_x._script[:-1]+[OP_EQUALVERIFY]
+        else:
+            script = child_x._script+[OP_VERIFY]
+        self._construct(NodeType.WRAP_V, Property().from_string(prop_str),
+                        [child_x],
+                        script, tag+child_x.desc)
+        return self
+
+    def construct_j(self, child_x):
+        assert (child_x.p.n)
+        prop_str = "nd"
+        prop_str += "B" if child_x.p.B else ""
+        prop_str += "o" if child_x.p.o else ""
+        prop_str += "u" if child_x.p.u else ""
+        prop_str += "e" if child_x.p.f else ""
+        prop_str += "m" if child_x.p.m else ""
+        prop_str += "s" if child_x.p.s else ""
+        tag = "j" if child_x.t.name.startswith('WRAP_') else "j:"
+        script = [OP_SIZE, OP_0NOTEQUAL, OP_IF]+child_x._script+[OP_ENDIF]
+        self._construct(NodeType.WRAP_J, Property().from_string(prop_str),
+                        [child_x],
+                        script, tag+child_x.desc)
+        return self
+
+    def construct_n(self, child_x):
+        prop_str = "u"
+        prop_str += "B" if child_x.p.B else ""
+        prop_str += "z" if child_x.p.z else ""
+        prop_str += "o" if child_x.p.o else ""
+        prop_str += "n" if child_x.p.n else ""
+        prop_str += "d" if child_x.p.d else ""
+        prop_str += "f" if child_x.p.f else ""
+        prop_str += "e" if child_x.p.e else ""
+        prop_str += "m" if child_x.p.m else ""
+        prop_str += "s" if child_x.p.s else ""
+        tag = "n" if child_x.t.name.startswith('WRAP_') else "n:"
+        self._construct(NodeType.WRAP_N, Property().from_string(prop_str),
+                        [child_x],
+                        child_x._script+[OP_0NOTEQUAL], tag+child_x.desc)
+        return self
+
+    def construct_l(self, child_x):
+        prop_str = "d"
+        prop_str += "B" if child_x.p.B else ""
+        prop_str += "o" if child_x.p.z else ""
+        prop_str += "u" if child_x.p.u else ""
+        prop_str += "e" if child_x.p.f else ""
+        prop_str += "m" if child_x.p.m else ""
+        prop_str += "s" if child_x.p.s else ""
+        tag = "l" if child_x.t.name.startswith('WRAP_') else "l:"
+        script = [OP_IF, 0, OP_ELSE]+child_x._script+[OP_ENDIF]
+        self._construct(NodeType.WRAP_L, Property().from_string(prop_str),
+                        [child_x],
+                        script, tag+child_x.desc)
+        return self
+
+    def construct_u(self, child_x):
+        prop_str = "d"
+        prop_str += "B" if child_x.p.B else ""
+        prop_str += "o" if child_x.p.z else ""
+        prop_str += "u" if child_x.p.u else ""
+        prop_str += "e" if child_x.p.f else ""
+        prop_str += "m" if child_x.p.m else ""
+        prop_str += "s" if child_x.p.s else ""
+        tag = "u" if child_x.t.name.startswith('WRAP_') else "u:"
+        script = [OP_IF]+child_x._script+[OP_ELSE, 0, OP_ENDIF]
+        self._construct(NodeType.WRAP_U, Property().from_string(prop_str),
+                        [child_x],
+                        script, tag+child_x.desc)
+        return self
+
+    def construct_thresh(self, k, children_n):
+        n = len(children_n)
+        assert n > k > 1
+        child_is_z_count = 0
+        child_is_o_count = 0
+        child_is_s_count = 0
+        child_is_e = True
+        child_is_m = True
+        for idx, child in enumerate(children_n):
+            assert child.p.d and child.p.u
+            child_is_z_count += 1 if child.p.z else 0
+            child_is_o_count += 1 if child.p.o else 0
+            child_is_s_count += 1 if child.p.s else 0
+            child_is_e = child_is_e and child.p.e
+            child_is_m = child_is_m and child.p.m
+            if idx == 0:
+                is_B = child.p.B
+            else:
+                is_B = is_B and child.p.W
+        prop_str = "Bdu" if is_B else ""
+        if child_is_z_count == n:
+            prop_str += "z"
+        elif (child_is_z_count == n-1) and (child_is_o_count == 1):
+            prop_str += "o"
+        if child_is_e and (child_is_s_count is n):
+            prop_str += "e"
+        if child_is_e and child_is_m and child_is_s_count >= (n-k):
+            prop_str += "m"
+        if child_is_s_count >= (n-k+1):
+            prop_str += "s"
+        script = []
+        script.extend(children_n[0]._script)
+        for child in children_n[1:]:
+            script.extend(child._script+[OP_ADD])
+        script.extend([k] + [OP_EQUAL])
+        self._k = k
+
+        desc = "thresh("+str(k)+","
+        for idx, child in enumerate(children_n):
+            desc += child.desc
+            desc += "," if idx != (n-1) else ")"
+
+        self._construct(NodeType.THRESH, Property().from_string(prop_str),
+                        children_n,
+                        script, desc
                         )
         return self
 
