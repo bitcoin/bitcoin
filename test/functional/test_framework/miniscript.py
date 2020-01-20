@@ -4,6 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Classes and methods to encode and decode miniscripts"""
 
+from enum import Enum
+
 
 class Property:
     """Miniscript expression property"""
@@ -66,3 +68,36 @@ class Property:
             (not self.V or self.f) and \
             (not self.K or self.s) and \
             (not self.z or self.m)
+
+
+class NodeType(Enum):
+    JUST_0 = 0
+    JUST_1 = 1
+    PK = 2
+    PK_H = 3
+    OLDER = 4
+    AFTER = 5
+    SHA256 = 6
+    HASH256 = 7
+    RIPEMD160 = 8
+    HASH160 = 9
+    WRAP_A = 10
+    WRAP_S = 11
+    WRAP_C = 12
+    WRAP_T = 13
+    WRAP_D = 14
+    WRAP_V = 15
+    WRAP_J = 16
+    WRAP_N = 17
+    WRAP_U = 18
+    WRAP_L = 19
+    AND_V = 20
+    AND_B = 21
+    AND_N = 22
+    OR_B = 23
+    OR_C = 24
+    OR_D = 25
+    OR_I = 26
+    ANDOR = 27
+    THRESH = 28
+    THRESH_M = 29
