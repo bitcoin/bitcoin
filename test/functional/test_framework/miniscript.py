@@ -733,6 +733,80 @@ class Node:
         child_dsat_set_ls = list(product(*child_dsat_var_ls))
         return child_sat_set_ls, child_dsat_set_ls
 
+    @property
+    def sat_ncan(self):
+        """Retrieve non-canonical satisfactions of miniscript object"""
+        if self._sat_ncan == [[None]]:
+            return []
+        else:
+            return self._sat_ncan
+
+    @property
+    def dsat_ncan(self):
+        """Retrieve non-canonical dissatisfactions of miniscript object"""
+        if self._dsat_ncan == [[None]]:
+            return []
+        else:
+            return self._dsat_ncan
+
+    def _lift_sat_ncan(self):
+        if not self.children:
+            return [[None]]
+
+        (child_sat_n_can_set_ls,
+         child_dsat_n_can_set_ls) = self._generate_child_sat_dsat_ncan()
+
+        sat_ncan_ls = self._lift_function(
+            self._sat, child_sat_n_can_set_ls, child_dsat_n_can_set_ls)
+        sat_ncan_ls += self._lift_function(
+            self._sat_ncan, child_sat_n_can_set_ls, child_dsat_n_can_set_ls)
+
+        # Check if already in sat_can
+        sat__ncan_ls_ret = []
+        for sat_ncan in sat_ncan_ls:
+            if sat_ncan not in self.sat:
+                sat__ncan_ls_ret.append(sat_ncan)
+        if len(sat__ncan_ls_ret) == 0:
+            return [[None]]
+        else:
+            return sat__ncan_ls_ret
+
+    def _lift_dsat_ncan(self):
+        if not self.children:
+            return [[None]]
+
+        (child_sat_n_can_set_ls,
+         child_dsat_n_can_set_ls) = self._generate_child_sat_dsat_ncan()
+
+        dsat_ncan_ls = self._lift_function(
+            self._dsat, child_sat_n_can_set_ls, child_dsat_n_can_set_ls)
+        dsat_ncan_ls += self._lift_function(
+            self._dsat_ncan, child_sat_n_can_set_ls, child_dsat_n_can_set_ls)
+
+        # Check if already in dsat_can
+        dsat__ncan_ls_ret = []
+        for dsat_ncan in dsat_ncan_ls:
+            if dsat_ncan not in self.dsat:
+                dsat__ncan_ls_ret.append(dsat_ncan)
+        if len(dsat__ncan_ls_ret) == 0:
+            return [[None]]
+        else:
+            return dsat__ncan_ls_ret
+
+    def _generate_child_sat_dsat_ncan(self):
+        child_sat_n_can_var_ls = []
+        child_dsat_n_can_var_ls = []
+
+        for child in self.children:
+            child_sat_n_can_var_ls.append(child.sat+child._sat_ncan)
+            child_dsat_n_can_var_ls.append(child.dsat+child._dsat_ncan)
+
+        # List iterators are reusable.
+        child_sat_n_can_set_ls = list(product(*child_sat_n_can_var_ls))
+        child_dsat_n_can_set_ls = list(product(*child_dsat_n_can_var_ls))
+
+        return (child_sat_n_can_set_ls,
+                child_dsat_n_can_set_ls)
 
     def construct_just_1(self):
         self._construct(NodeType.JUST_1, Property().from_string("Bzufm"),
@@ -1272,6 +1346,8 @@ class Node:
         self._dsat = dsat
         self.sat = self._lift_sat()
         self.dsat = self._lift_dsat()
+        self._sat_ncan = self._lift_sat_ncan()
+        self._dsat_ncan = self._lift_dsat_ncan()
         self._script = script
         self.desc = desc
 
@@ -1496,6 +1572,39 @@ class Node:
             thres_dsat.extend(child_dsat)
         return [thres_dsat]
 
+    def _sat_ncan(self, child_sat_set, child_dsat_set):
+        if self.t is NodeType.OR_B:
+            return [child_sat_set[1]+child_sat_set[0]]
+        else:
+            return [[None]]
+
+    def _dsat_ncan(self, child_sat_set, child_dsat_set):
+        if self.t is NodeType.ANDOR:
+            return [child_dsat_set[1]+child_sat_set[0]]
+        elif self.t is NodeType.AND_V:
+            return [child_dsat_set[1]+child_sat_set[0]]
+        elif self.t is NodeType.AND_B:
+            return [child_sat_set[1]+child_dsat_set[0],
+                    child_dsat_set[1]+child_sat_set[0]]
+        elif self.t is NodeType.THRESH:
+            thresh_dsat_ls = []
+            n = len(self.children)
+            for i in range(2**n):
+                if bin(i).count("1") != self._k and \
+                        bin(i).count("1") != 0:
+                    sat = []
+                    for j in reversed(range(n)):
+                        if ((1 << j) & i) != 0:
+                            sat.extend(child_sat_set[j])
+                        else:
+                            sat.extend(child_dsat_set[j])
+                    thresh_dsat_ls.append(sat)
+            return thresh_dsat_ls
+        elif self.t is NodeType.WRAP_J:
+            return [[None]] if child_dsat_set[0] is [(SatType.DATA, b'')] \
+                else [child_dsat_set[0]]
+        else:
+            return [[None]]
 
     # Utility methods.
     @staticmethod

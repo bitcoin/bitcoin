@@ -56,7 +56,7 @@ class MiniscriptTest(BitcoinTestFramework):
                                                tx.vout[0].nValue)
         # Test each canonical AND non-canonical
         # satisfying witness for spending transaction.
-        for wit_sat in node.sat:
+        for wit_sat in node.sat+node.sat_ncan:
             witness_arr = []
             for sat_element in wit_sat:
                 # Set sequence for input at index 0.
