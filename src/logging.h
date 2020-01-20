@@ -85,6 +85,13 @@ namespace BCLog {
         bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
 
         /**
+         * Some logged messages are important enough that they should be
+         * re-logged to the new debug.log file when it rotates, so that they
+         * are always visible near the start of the current debug.log file.
+         */
+        std::list<std::string> m_msgs_relog;
+
+        /**
          * m_started_new_line is a state variable that will suppress printing of
          * the timestamp when multiple calls are made that don't end in a
          * newline.
@@ -94,7 +101,7 @@ namespace BCLog {
         /** Log categories bitfield. */
         std::atomic<uint32_t> m_categories{0};
 
-        std::string LogTimestampStr(const std::string& str);
+        std::string LogTimestampStr(const std::string& str) const;
 
         /** Slots that connect to the print signal */
         std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
@@ -160,6 +167,20 @@ namespace BCLog {
         };
 
         bool DefaultShrinkDebugFile() const;
+
+        /** (Re)log important string to debug.log later, each time it rotates */
+        void AddRelogMessage(const std::string& str)
+        {
+            if (m_print_to_file) {
+                m_msgs_relog.push_back(str);
+            }
+        }
+
+        /** Only for testing */
+        void DeleteRelogMessages()
+        {
+            m_msgs_relog.clear();
+        }
     };
 
 } // namespace BCLog

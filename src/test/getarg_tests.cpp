@@ -442,12 +442,80 @@ BOOST_AUTO_TEST_CASE(logargs)
     local_args.LogArgs();
 
     LogInstance().DeleteCallback(print_connection);
+    LogInstance().DeleteRelogMessages();
     // Check that what should appear does, and what shouldn't doesn't.
     BOOST_CHECK(str.find("Command-line arg: okaylog-bool=\"\"") != std::string::npos);
     BOOST_CHECK(str.find("Command-line arg: okaylog-negbool=false") != std::string::npos);
     BOOST_CHECK(str.find("Command-line arg: okaylog=\"public\"") != std::string::npos);
     BOOST_CHECK(str.find("dontlog=****") != std::string::npos);
     BOOST_CHECK(str.find("private") == std::string::npos);
+}
+
+static void relogargscheck()
+{
+    // Open and read debug.log. This test can't use PushBackCallback() like the
+    // logargs test above because, by design, log file rotation doesn't cause
+    // the relogged messages to be sent to that interface, only to the file.
+    FILE* file = fsbridge::fopen(LogInstance().m_file_path, "rb");
+    fseek(file, 0, SEEK_END);
+    std::vector<char> vch(ftell(file), 0);
+    fseek(file, 0, SEEK_SET);
+    size_t nbytes = fread(vch.data(), 1, vch.size(), file);
+    fclose(file);
+
+    assert(nbytes == vch.size());
+
+    // Check that what should appear does, and what shouldn't doesn't.
+    std::string str(vch.begin(), vch.end());
+    BOOST_CHECK(str.find("test relogargs") != std::string::npos);
+    BOOST_CHECK(str.find("Bitcoin Core version") != std::string::npos);
+    BOOST_CHECK(str.find("Command-line arg: okaylog-bool=\"\"") != std::string::npos);
+    BOOST_CHECK(str.find("Command-line arg: okaylog-negbool=false") != std::string::npos);
+    BOOST_CHECK(str.find("Command-line arg: okaylog=\"public\"") != std::string::npos);
+    BOOST_CHECK(str.find("dontlog=****") != std::string::npos);
+    BOOST_CHECK(str.find("private") == std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(relogargs)
+{
+    ArgsManager local_args;
+
+    const auto okaylog_bool = std::make_pair("-okaylog-bool", ArgsManager::ALLOW_ANY);
+    const auto okaylog_negbool = std::make_pair("-okaylog-negbool", ArgsManager::ALLOW_ANY);
+    const auto okaylog = std::make_pair("-okaylog", ArgsManager::ALLOW_ANY);
+    const auto dontlog = std::make_pair("-dontlog", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE);
+    SetupArgs(local_args, {okaylog_bool, okaylog_negbool, okaylog, dontlog});
+    ResetArgs(local_args, "-okaylog-bool -nookaylog-negbool -okaylog=public -dontlog=private");
+
+    // Log the arguments to debug.log.
+    local_args.LogArgs();
+
+    // This should also appear in the log.
+    LogPrintf("test relogargs\n");
+
+    // Verify that the arguments were logged.
+    relogargscheck();
+
+    // Simulate log rotation.
+#ifdef WIN32
+    // Windows doesn't allow an open file to be renamed, so close and reopen (below).
+    LogInstance().DisconnectTestLogger();
+#endif
+    fs::path newname = LogInstance().m_file_path + ".rename";
+    fs::rename(LogInstance().m_file_path, newname);
+#ifdef WIN32
+    LogInstance().StartLogging();
+#endif
+
+    // Simulate SIGHUP (on a real system, signal causes HandleSIGHUP() to run).
+    LogInstance().m_reopen_file = true;
+
+    // The first log message after signal causes the arguments to be relogged.
+    LogPrintf("test relogargs\n");
+
+    // Verify that the arguments were (re)logged.
+    relogargscheck();
+    LogInstance().DeleteRelogMessages();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

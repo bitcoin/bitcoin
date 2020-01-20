@@ -287,7 +287,7 @@ std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
     return ret;
 }
 
-std::string BCLog::Logger::LogTimestampStr(const std::string& str)
+std::string BCLog::Logger::LogTimestampStr(const std::string& str) const
 {
     std::string strStamped;
 
@@ -368,25 +368,12 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
         str_prefixed.insert(0, "[" + (threadname.empty() ? "unknown" : threadname) + "] ");
     }
 
-    str_prefixed = LogTimestampStr(str_prefixed);
-
-    m_started_new_line = !str.empty() && str[str.size()-1] == '\n';
-
-    if (m_buffering) {
-        // buffer if we haven't started logging yet
-        m_msgs_before_open.push_back(str_prefixed);
-        return;
-    }
-
+    std::string str_console;
     if (m_print_to_console) {
-        // print to console
-        fwrite(str_prefixed.data(), 1, str_prefixed.size(), stdout);
-        fflush(stdout);
+        str_console = LogTimestampStr(str_prefixed);
     }
-    for (const auto& cb : m_print_callbacks) {
-        cb(str_prefixed);
-    }
-    if (m_print_to_file) {
+
+    if (!m_buffering && m_print_to_file) {
         assert(m_fileout != nullptr);
 
         // reopen the log file, if requested
@@ -397,8 +384,36 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
                 setbuf(new_fileout, nullptr); // unbuffered
                 fclose(m_fileout);
                 m_fileout = new_fileout;
+
+                // Re-log important messages to the new file so they're not lost.
+                m_started_new_line = true; // prepend timestamp to these messages
+                FileWriteStr(LogTimestampStr("*** reopen log file ***\n"), m_fileout);
+                for (const std::string& msg : m_msgs_relog) {
+                    FileWriteStr(LogTimestampStr(msg) + '\n', m_fileout);
+                }
             }
         }
+    }
+    str_prefixed = LogTimestampStr(str_prefixed);
+
+    m_started_new_line = !str.empty() && str[str.size() - 1] == '\n';
+
+    if (m_buffering) {
+        // buffer if we haven't started logging yet
+        m_msgs_before_open.push_back(str_prefixed);
+        return;
+    }
+
+    if (m_print_to_console) {
+        // print to console
+        fwrite(str_console.data(), 1, str_console.size(), stdout);
+        fflush(stdout);
+    }
+    for (const auto& cb : m_print_callbacks) {
+        cb(str_prefixed);
+    }
+    if (m_print_to_file) {
+        assert(m_fileout != nullptr);
         FileWriteStr(str_prefixed, m_fileout);
     }
 }

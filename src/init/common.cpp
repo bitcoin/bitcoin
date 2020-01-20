@@ -124,6 +124,10 @@ void LogPackageVersion()
 #else
     version_string += " (release build)";
 #endif
-    LogPrintf(PACKAGE_NAME " version %s\n", version_string);
+    std::string str{strprintf("%s version %s", PACKAGE_NAME, version_string)};
+    LogPrintf("%s\n", str);
+
+    // Useful to always have in the debug.log file (even after log rotation).
+    LogInstance().AddRelogMessage(str);
 }
 } // namespace init

@@ -1115,7 +1115,10 @@ void ArgsManager::logArgsPrefix(
             std::optional<unsigned int> flags = GetArgFlags('-' + arg.first);
             if (flags) {
                 std::string value_str = (*flags & SENSITIVE) ? "****" : value.write();
-                LogPrintf("%s %s%s=%s\n", prefix, section_str, arg.first, value_str);
+                std::string str{strprintf("%s %s%s=%s", prefix, section_str, arg.first, value_str)};
+                LogPrintf("%s\n", str);
+                // Useful to always have in the current debug.log file.
+                LogInstance().AddRelogMessage(str);
             }
         }
     }

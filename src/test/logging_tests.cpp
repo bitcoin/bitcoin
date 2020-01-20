@@ -52,6 +52,19 @@ struct LogSetup : public BasicTestingSetup {
         LogInstance().m_log_threadnames = prev_log_threadnames;
         LogInstance().m_log_sourcelocations = prev_log_sourcelocations;
     }
+
+    std::vector<std::string> GetLogLines() const
+    {
+        std::ifstream file{tmp_log_path};
+        std::vector<std::string> log_lines;
+        for (std::string log; std::getline(file, log);) {
+            // The log file get "reopened", so ignore some extra lines.
+            if (log.find("reopen log file") != std::string::npos) continue;
+            if (log.find("version") != std::string::npos) continue;
+            log_lines.push_back(log);
+        }
+        return log_lines;
+    }
 };
 
 BOOST_AUTO_TEST_CASE(logging_timer)
@@ -78,11 +91,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)
     LogPrintf_("fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::None, "foo2: %s", "bar2\n");
     LogPrintf_("fn3", "src3", 3, BCLog::LogFlags::NONE, BCLog::Level::Debug, "foo3: %s", "bar3\n");
     LogPrintf_("fn4", "src4", 4, BCLog::LogFlags::NONE, BCLog::Level::None, "foo4: %s", "bar4\n");
-    std::ifstream file{tmp_log_path};
-    std::vector<std::string> log_lines;
-    for (std::string log; std::getline(file, log);) {
-        log_lines.push_back(log);
-    }
+    std::vector<std::string> log_lines{GetLogLines()};
     std::vector<std::string> expected = {
         "[src1:1] [fn1] [net:debug] foo1: bar1",
         "[src2:2] [fn2] [net] foo2: bar2",
@@ -104,11 +113,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
     LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "foo9: %s\n", "bar9");
     LogPrintLevel(BCLog::NET, BCLog::Level::Error, "foo10: %s\n", "bar10");
     LogPrintfCategory(BCLog::VALIDATION, "foo11: %s\n", "bar11");
-    std::ifstream file{tmp_log_path};
-    std::vector<std::string> log_lines;
-    for (std::string log; std::getline(file, log);) {
-        log_lines.push_back(log);
-    }
+    std::vector<std::string> log_lines{GetLogLines()};
     std::vector<std::string> expected = {
         "foo5: bar5",
         "[net] foo6: bar6",
@@ -145,11 +150,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
         expected.push_back(expected_log);
     }
 
-    std::ifstream file{tmp_log_path};
-    std::vector<std::string> log_lines;
-    for (std::string log; std::getline(file, log);) {
-        log_lines.push_back(log);
-    }
+    std::vector<std::string> log_lines{GetLogLines()};
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
