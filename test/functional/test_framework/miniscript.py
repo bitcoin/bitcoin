@@ -3,8 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Classes and methods to encode and decode miniscripts"""
-
 from enum import Enum
+from itertools import product
 
 from .key import ECPubKey
 from .script import CScript, OP_ADD, OP_BOOLAND, OP_BOOLOR, OP_DUP, OP_ELSE, \
@@ -657,15 +657,94 @@ class Node:
         # No match found.
         raise Exception("Malformed miniscript")
 
+    def _lift_sat(self):
+        # Return satisfying witnesses if terminal node.
+        if not self.children:
+            return self._sat()
+        child_sat_set_ls, child_dsat_set_ls = self._generate_child_sat_dsat()
+        return self._lift_function(self._sat, child_sat_set_ls, child_dsat_set_ls)
+
+    def _lift_dsat(self):
+        # Return non-satisfying witness if terminal node.
+        if not self.children:
+            return self._dsat()
+        child_sat_set_ls, child_dsat_set_ls = self._generate_child_sat_dsat()
+        return self._lift_function(self._dsat, child_sat_set_ls, child_dsat_set_ls)
+
+    def _lift_function(self, function, child_sat_set_ls, child_dsat_set_ls):
+        # Applies (d)sat function on all child_sat_set x child_dsat_set
+        # permutations. Returns list of unique (dis)satisfying witnesses.
+        ret_ls = []
+        for child_sat_set in child_sat_set_ls:
+            for child_dsat_set in child_dsat_set_ls:
+                for ret in function(child_sat_set, child_dsat_set):
+                    if ret not in ret_ls:
+                        # Order (d)sat elements with OLDER/AFTER
+                        # SatType elements at beginning.
+                        ret_older = []
+                        ret_after = []
+                        ret_ordered = []
+                        valid = True
+                        for element in ret:
+                            # Handle None element from children,
+                            # which represents lack of non-cannonical (d)sat.
+                            if element is None:
+                                valid = False
+                                break
+                            else:
+                                if element[0] == SatType.OLDER:
+                                    ret_older.append(element)
+                                elif element[0] == SatType.AFTER:
+                                    ret_after.append(element)
+                                else:
+                                    ret_ordered.append(element)
+                        if valid is True:
+                            ret_ordered = ret_older+ret_after+ret_ordered
+                            # Append ordered (d)sat.
+                            ret_ls.append(ret_ordered)
+        return ret_ls
+
+    def _generate_child_sat_dsat(self):
+        # Create list of lists of unique satisfying witnesses for each child.
+        # [
+        # [satx', satx'', satx'''],
+        # [saty', saty'', saty'''],
+        # [satz', satz'', satz''']
+        # ]
+        child_sat_var_ls = []
+        child_dsat_var_ls = []
+        for child in self.children:
+            child_sat_var_ls.append(child.sat) # what if multiple are returned?
+            child_dsat_var_ls.append(child.dsat)
+
+        # Generate all permutations of sets each containing a single satisfying
+        # witness element from each child.
+        # [
+        # [satx', saty', satz'],
+        # [satx', saty', satz''],
+        # [satx', saty'', satz''],
+        # [satx'', saty'', satz''],
+        # [satx'', saty'', satz'],
+        # [satx'', saty', satz'], ...
+        # ]
+
+        # List iterators are reusable.
+        child_sat_set_ls = list(product(*child_sat_var_ls))
+        child_dsat_set_ls = list(product(*child_dsat_var_ls))
+        return child_sat_set_ls, child_dsat_set_ls
+
+
     def construct_just_1(self):
         self._construct(NodeType.JUST_1, Property().from_string("Bzufm"),
                         [],
+                        self._just_1_sat, self._just_1_dsat,
                         [1], '1')
         return self
 
     def construct_just_0(self):
         self._construct(NodeType.JUST_0, Property().from_string("Bzudems"),
                         [],
+                        self._just_0_sat, self._just_0_dsat,
                         [0], '0')
         return self
 
@@ -674,6 +753,7 @@ class Node:
         self._pk = [pubkey.get_bytes()]
         self._construct(NodeType.PK, Property().from_string("Konudems"),
                         [],
+                        self._pk_sat, self._pk_dsat,
                         [pubkey.get_bytes()], 'pk('+self._pk[0].hex()+')'
                         )
         return self
@@ -683,6 +763,7 @@ class Node:
         self._pk_h = pk_hash_digest
         self._construct(NodeType.PK_H, Property().from_string("Knudems"),
                         [],
+                        self._pk_h_sat, self._pk_h_dsat,
                         [OP_DUP, OP_HASH160, pk_hash_digest, OP_EQUALVERIFY],
                         'pk_h('+pk_hash_digest.hex()+')'
                         )
@@ -693,6 +774,7 @@ class Node:
         self._delay = delay
         self._construct(NodeType.OLDER, Property().from_string("Bzfm"),
                         [],
+                        self._older_sat, self._older_dsat,
                         [delay, OP_CHECKSEQUENCEVERIFY],
                         'older('+str(delay)+')'
                         )
@@ -703,6 +785,7 @@ class Node:
         self._time = time
         self._construct(NodeType.AFTER, Property().from_string("Bzfm"),
                         [],
+                        self._after_sat, self._after_dsat,
                         [time, OP_CHECKLOCKTIMEVERIFY],
                         'after('+str(time)+')'
                         )
@@ -713,6 +796,7 @@ class Node:
         self._sha256 = hash_digest
         self._construct(NodeType.SHA256, Property().from_string("Bonudm"),
                         [],
+                        self._sha256_sat, self._sha256_dsat,
                         [OP_SIZE, 32, OP_EQUALVERIFY,
                          OP_SHA256, hash_digest, OP_EQUAL],
                         'sha256('+hash_digest.hex()+')'
@@ -724,6 +808,7 @@ class Node:
         self._hash256 = hash_digest
         self._construct(NodeType.HASH256, Property().from_string("Bonudm"),
                         [],
+                        self._hash256_sat, self._hash256_dsat,
                         [OP_SIZE, 32, OP_EQUALVERIFY,
                          OP_HASH256, hash_digest, OP_EQUAL],
                         'hash256('+hash_digest.hex()+')'
@@ -735,6 +820,7 @@ class Node:
         self._ripemd160 = hash_digest
         self._construct(NodeType.RIPEMD160, Property().from_string("Bonudm"),
                         [],
+                        self._ripemd160_sat, self._ripemd160_dsat,
                         [OP_SIZE, 32, OP_EQUALVERIFY,
                          OP_RIPEMD160, hash_digest, OP_EQUAL],
                         'ripemd160('+hash_digest.hex()+')'
@@ -746,6 +832,7 @@ class Node:
         self._hash160 = hash_digest
         self._construct(NodeType.HASH160, Property().from_string("Bonudm"),
                         [],
+                        self._hash160_sat, self._hash160_dsat,
                         [OP_SIZE, 32, OP_EQUALVERIFY,
                          OP_HASH160, hash_digest, OP_EQUAL],
                         'hash160('+hash_digest.hex()+')'
@@ -764,10 +851,10 @@ class Node:
             desc += "," if idx != (n-1) else ")"
         self._construct(NodeType.THRESH_M, Property().from_string(prop_str),
                         [],
+                        self._thresh_m_sat, self._thresh_m_dsat,
                         [k, *self._pk_n, n, OP_CHECKMULTISIG], desc
                         )
         return self
-
 
     def construct_and_v(self, child_x, child_y):
         prop_str = ""
@@ -784,6 +871,7 @@ class Node:
         prop_str += "s" if child_x.p.s or child_y.p.s else ""
         self._construct(NodeType.AND_V, Property().from_string(prop_str),
                         [child_x, child_y],
+                        self._and_v_sat, self._and_v_dsat,
                         child_x._script+child_y._script,
                         "and_v("+child_x.desc+","+child_y.desc+")"
                         )
@@ -806,6 +894,7 @@ class Node:
         prop_str += "s" if child_x.p.s or child_y.p.s else ""
         self._construct(NodeType.AND_B, Property().from_string(prop_str),
                         [child_x, child_y],
+                        self._and_b_sat, self._and_b_dsat,
                         child_x._script+child_y._script+[OP_BOOLAND],
                         "and_b("+child_x.desc+","+child_y.desc+")"
                         )
@@ -826,6 +915,7 @@ class Node:
         prop_str += "s" if child_x.p.s or child_y.p.s else ""
         self._construct(NodeType.AND_N, Property().from_string(prop_str),
                         [child_x, child_y],
+                        self._and_n_sat, self._and_n_dsat,
                         child_x._script+[OP_NOTIF, 0, OP_ELSE]+child_y._script+[
                             OP_ENDIF],
                         "and_n("+child_x.desc+","+child_y.desc+")"
@@ -847,6 +937,7 @@ class Node:
         prop_str += "s" if child_x.p.s and child_z.p.s else ""
         self._construct(NodeType.OR_B, Property().from_string(prop_str),
                         [child_x, child_z],
+                        self._or_b_sat, self._or_b_dsat,
                         child_x._script+child_z._script+[OP_BOOLOR],
                         "or_b("+child_x.desc+","+child_z.desc+")"
                         )
@@ -868,6 +959,7 @@ class Node:
         prop_str += "s" if child_x.p.s and child_z.p.s else ""
         self._construct(NodeType.OR_D, Property().from_string(prop_str),
                         [child_x, child_z],
+                        self._or_d_sat, self._or_d_dsat,
                         child_x._script+[OP_IFDUP, OP_NOTIF]+child_z._script+[
                             OP_ENDIF],
                         "or_d("+child_x.desc+","+child_z.desc+")"
@@ -886,6 +978,7 @@ class Node:
         prop_str += "s" if child_x.p.s and child_z.p.s else ""
         self._construct(NodeType.OR_C, Property().from_string(prop_str),
                         [child_x, child_z],
+                        self._or_c_sat, self._or_c_dsat,
                         child_x._script+[OP_NOTIF]+child_z._script+[OP_ENDIF],
                         "or_c("+child_x.desc+","+child_z.desc+")"
                         )
@@ -907,6 +1000,7 @@ class Node:
         prop_str += "s" if child_x.p.s and child_z.p.s else ""
         self._construct(NodeType.OR_I, Property().from_string(prop_str),
                         [child_x, child_z],
+                        self._or_i_sat, self._or_i_dsat,
                         [OP_IF]+child_x._script+[OP_ELSE]+child_z._script+[
                         OP_ENDIF],
                         "or_i("+child_x.desc+","+child_z.desc+")"
@@ -932,6 +1026,7 @@ class Node:
         prop_str += "s" if child_z.p.s and (child_x.p.s or child_y.p.s) else ""
         self._construct(NodeType.ANDOR, Property().from_string(prop_str),
                         [child_x, child_y, child_z],
+                        self._andor_sat, self._andor_dsat,
                         child_x._script+[OP_NOTIF]+child_z._script+[
                         OP_ELSE]+child_y._script+[OP_ENDIF],
                         "andor("+child_x.desc+","+child_y.desc+","
@@ -951,6 +1046,7 @@ class Node:
         tag = "a" if child_x.t.name.startswith('WRAP_') else "a:"
         self._construct(NodeType.WRAP_A, Property().from_string(prop_str),
                         [child_x],
+                        self._a_sat, self._a_dsat,
                         [OP_TOALTSTACK]+child_x._script+[OP_FROMALTSTACK],
                         tag+child_x.desc
                         )
@@ -968,6 +1064,7 @@ class Node:
         tag = "s" if child_x.t.name.startswith('WRAP_') else "s:"
         self._construct(NodeType.WRAP_S, Property().from_string(prop_str),
                         [child_x],
+                        self._s_sat, self._s_dsat,
                         [OP_SWAP]+child_x._script, tag+child_x.desc
                         )
         return self
@@ -984,6 +1081,7 @@ class Node:
         tag = "c" if child_x.t.name.startswith('WRAP_') else "c:"
         self._construct(NodeType.WRAP_C, Property().from_string(prop_str),
                         [child_x],
+                        self._c_sat, self._c_dsat,
                         child_x._script+[OP_CHECKSIG], tag+child_x.desc
                         )
         return self
@@ -999,6 +1097,7 @@ class Node:
         tag = "t" if child_x.t.name.startswith('WRAP_') else "t:"
         self._construct(NodeType.WRAP_T, Property().from_string(prop_str),
                         [child_x],
+                        self._t_sat, self._t_dsat,
                         child_x._script+[1], tag+child_x.desc
                         )
         return self
@@ -1014,6 +1113,7 @@ class Node:
         tag = "d" if child_x.t.name.startswith('WRAP_') else "d:"
         self._construct(NodeType.WRAP_D, Property().from_string(prop_str),
                         [child_x],
+                        self._d_sat, self._d_dsat,
                         [OP_DUP, OP_IF]+child_x._script+[OP_ENDIF],
                         tag+child_x.desc
                         )
@@ -1040,6 +1140,7 @@ class Node:
             script = child_x._script+[OP_VERIFY]
         self._construct(NodeType.WRAP_V, Property().from_string(prop_str),
                         [child_x],
+                        self._v_sat, self._v_dsat,
                         script, tag+child_x.desc)
         return self
 
@@ -1056,6 +1157,7 @@ class Node:
         script = [OP_SIZE, OP_0NOTEQUAL, OP_IF]+child_x._script+[OP_ENDIF]
         self._construct(NodeType.WRAP_J, Property().from_string(prop_str),
                         [child_x],
+                        self._j_sat, self._j_dsat,
                         script, tag+child_x.desc)
         return self
 
@@ -1073,6 +1175,7 @@ class Node:
         tag = "n" if child_x.t.name.startswith('WRAP_') else "n:"
         self._construct(NodeType.WRAP_N, Property().from_string(prop_str),
                         [child_x],
+                        self._n_sat, self._n_dsat,
                         child_x._script+[OP_0NOTEQUAL], tag+child_x.desc)
         return self
 
@@ -1088,6 +1191,7 @@ class Node:
         script = [OP_IF, 0, OP_ELSE]+child_x._script+[OP_ENDIF]
         self._construct(NodeType.WRAP_L, Property().from_string(prop_str),
                         [child_x],
+                        self._l_sat, self._l_dsat,
                         script, tag+child_x.desc)
         return self
 
@@ -1103,6 +1207,7 @@ class Node:
         script = [OP_IF]+child_x._script+[OP_ELSE, 0, OP_ENDIF]
         self._construct(NodeType.WRAP_U, Property().from_string(prop_str),
                         [child_x],
+                        self._u_sat, self._u_dsat,
                         script, tag+child_x.desc)
         return self
 
@@ -1150,6 +1255,7 @@ class Node:
 
         self._construct(NodeType.THRESH, Property().from_string(prop_str),
                         children_n,
+                        self._thresh_sat, self._thresh_dsat,
                         script, desc
                         )
         return self
@@ -1157,12 +1263,239 @@ class Node:
     def _construct(self,
                    node_type, node_prop,
                    children,
+                   sat, dsat,
                    script, desc):
         self.t = node_type
         self.p = node_prop
         self.children = children
+        self._sat = sat
+        self._dsat = dsat
+        self.sat = self._lift_sat()
+        self.dsat = self._lift_dsat()
         self._script = script
         self.desc = desc
+
+    # sat/dsat methods for terminal node types:
+    def _just_1_sat(self):
+        return [[]]
+
+    def _just_1_dsat(self):
+        return [[]]
+
+    def _just_0_sat(self):
+        return [[]]
+
+    def _just_0_dsat(self):
+        return [[]]
+
+    def _pk_sat(self):
+        # Returns (SIGNATURE, 33B_PK) tuple.
+        return [[(SatType.SIGNATURE, self._pk[0])]]
+
+    def _pk_dsat(self):
+        return [[(SatType.DATA, b'')]]
+
+    def _pk_h_sat(self):
+        # Returns (SIGNATURE, 32B_PK_HASH) tuple.
+        return [[(SatType.SIGNATURE, self._pk_h),
+                 (SatType.KEY_AND_HASH160_PREIMAGE, self._pk_h)]]
+
+    def _pk_h_dsat(self):
+        return [[(SatType.DATA, b''),
+                (SatType.KEY_AND_HASH160_PREIMAGE, self._pk_h)]]
+
+    def _older_sat(self):
+        return [[(SatType.OLDER, self._delay)]]
+
+    def _older_dsat(self):
+        return [[]]
+
+    def _after_sat(self):
+        return [[(SatType.AFTER, self._time)]]
+
+    def _after_dsat(self):
+        return [[]]
+
+    def _sha256_sat(self):
+        return [[(SatType.SHA256_PREIMAGE, self._sha256)]]
+
+    def _sha256_dsat(self):
+        return [[(SatType.DATA, bytes(32))]]
+
+    def _hash256_sat(self):
+        return [[(SatType.HASH256_PREIMAGE, self._hash256)]]
+
+    def _hash256_dsat(self):
+        return [[(SatType.DATA, bytes(32))]]
+
+    def _ripemd160_sat(self):
+        return [[(SatType.RIPEMD160_PREIMAGE, self._ripemd160)]]
+
+    def _ripemd160_dsat(self):
+        return [[(SatType.DATA, bytes(32))]]
+
+    def _hash160_sat(self):
+        return [[(SatType.HASH160_PREIMAGE, self._hash160)]]
+
+    def _hash160_dsat(self):
+        return [[(SatType.DATA, bytes(32))]]
+
+    def _thresh_m_sat(self):
+        thresh_m_sat_ls = []
+        n = len(self._pk_n)
+        for i in range(2**n):
+            if bin(i).count("1") == self._k:
+                sat = [(SatType.DATA, b'')]
+                for j in range(n):
+                    if ((1 << j) & i) != 0:
+                        sat.append((SatType.SIGNATURE, self._pk_n[j]))
+                thresh_m_sat_ls.append(sat)
+        return thresh_m_sat_ls
+
+    def _thresh_m_dsat(self):
+        return [[(SatType.DATA, b'')]*(self._k+1)]
+
+    # sat/dsat methods for node types with children:
+        # sat must return list of possible satisfying witnesses.
+        # dsat must return (unique) non-satisfying witness if available.
+
+    # child_sat_set: [child_x_sat, child_y_dsat, ...]
+    # dsat child_dsat_set: [child_x_dsat, child_y_dsat, ...]
+
+    def _and_v_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[1]+child_sat_set[0]]
+
+    def _and_v_dsat(self, child_sat_set, child_dsat_set):
+        return [[]]
+
+    def _and_b_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[1]+child_sat_set[0]]
+
+    def _and_b_dsat(self, child_sat_set, child_dsat_set):
+        return [child_dsat_set[1]+child_dsat_set[0]]
+
+    def _and_n_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[1]+child_sat_set[0]]
+
+    def _and_n_dsat(self, child_sat_set, child_dsat_set):
+        return [child_dsat_set[0]]
+
+    def _or_b_sat(self, child_sat_set, child_dsat_set):
+        return [child_dsat_set[1]+child_sat_set[0],
+                child_sat_set[1]+child_dsat_set[0]]
+
+    def _or_b_dsat(self, child_sat_set, child_dsat_set):
+        return [child_dsat_set[1]+child_dsat_set[0]]
+
+    def _or_d_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0],
+                child_sat_set[1]+child_dsat_set[0]]
+
+    def _or_d_dsat(self, child_sat_set, child_dsat_set):
+        return [child_dsat_set[1]+child_dsat_set[0]]
+
+    def _or_c_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0],
+                child_sat_set[1]+child_dsat_set[0]]
+
+    def _or_c_dsat(self, child_sat_set, child_dsat_set):
+        return [[]]
+
+    def _or_i_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0]+[(SatType.DATA, b'\x01')],
+                child_sat_set[1]+[(SatType.DATA, b'')]]
+
+    def _or_i_dsat(self, child_sat_set, child_dsat_set):
+        return [[(SatType.DATA, b'\x01')]+child_dsat_set[1] + [
+                (SatType.DATA, b'')]]
+
+    def _andor_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[1]+child_sat_set[0],
+                child_sat_set[2]+child_dsat_set[0]]
+
+    def _andor_dsat(self, child_sat_set, child_dsat_set):
+        return [child_dsat_set[2]+child_dsat_set[0]]
+
+    def _a_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0]]
+
+    def _a_dsat(self, child_sat_set, child_dsat_set):
+        return [child_dsat_set[0]]
+
+    def _s_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0]]
+
+    def _s_dsat(self, child_sat_set, child_dsat_set):
+        return [child_dsat_set[0]]
+
+    def _c_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0]]
+
+    def _c_dsat(self, child_sat_set, child_dsat_set):
+        return [child_dsat_set[0]]
+
+    def _t_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0]]
+
+    def _t_dsat(self, child_sat_set, child_dsat_set):
+        return [[]]
+
+    def _d_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0]+[(SatType.DATA, b'\x01')]]
+
+    def _d_dsat(self, child_sat_set, child_dsat_set):
+        return [[(SatType.DATA, b'')]]
+
+    def _v_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0]]
+
+    def _v_dsat(self, child_sat_set, child_dsat_set):
+        return [[]]
+
+    def _j_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0]]
+
+    def _j_dsat(self, child_sat_set, child_dsat_set):
+        return [[(SatType.DATA, b'')]]
+
+    def _n_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0]]
+
+    def _n_dsat(self, child_sat_set, child_dsat_set):
+        return [child_dsat_set[0]]
+
+    def _l_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0]+[(SatType.DATA, b'')]]
+
+    def _l_dsat(self, child_sat_set, child_dsat_set):
+        return [[(SatType.DATA, b'\x01')]]
+
+    def _u_sat(self, child_sat_set, child_dsat_set):
+        return [child_sat_set[0]+[(SatType.DATA, b'\x01')]]
+
+    def _u_dsat(self, child_sat_set, child_dsat_set):
+        return [[(SatType.DATA, b'')]]
+
+    def _thresh_sat(self, child_sat_set, child_dsat_set):
+        thresh_sat_ls = []
+        n = len(self.children)
+        for i in range(2**n):
+            if bin(i).count("1") is self._k:
+                sat = []
+                for j in reversed(range(n)):
+                    if ((1 << j) & i) != 0:
+                        sat.extend(child_sat_set[j])
+                    else:
+                        sat.extend(child_dsat_set[j])
+                thresh_sat_ls.append(sat)
+        return thresh_sat_ls
+
+    def _thresh_dsat(self, child_sat_set, child_dsat_set):
+        thres_dsat = []
+        for child_dsat in child_dsat_set:
+            thres_dsat.extend(child_dsat)
+        return [thres_dsat]
+
 
     # Utility methods.
     @staticmethod
