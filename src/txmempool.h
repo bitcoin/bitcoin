@@ -49,6 +49,20 @@ struct LockPoints
     LockPoints() : height(0), time(0), maxInputBlock(nullptr) { }
 };
 
+struct CompareIteratorByHash {
+    // SFINAE for T where T is either a pointer type (e.g., a txiter) or a reference_wrapper<T>
+    // (e.g. a wrapped CTxMemPoolEntry&)
+    template <typename T>
+    bool operator()(const std::reference_wrapper<T>& a, const std::reference_wrapper<T>& b) const
+    {
+        return a.get().GetTx().GetHash() < b.get().GetTx().GetHash();
+    }
+    template <typename T>
+    bool operator()(const T& a, const T& b) const
+    {
+        return a->GetTx().GetHash() < b->GetTx().GetHash();
+    }
+};
 /** \class CTxMemPoolEntry
  *
  * CTxMemPoolEntry stores data about the corresponding transaction, as well
@@ -63,8 +77,16 @@ struct LockPoints
 
 class CTxMemPoolEntry
 {
+public:
+    typedef std::reference_wrapper<const CTxMemPoolEntry> CTxMemPoolEntryRef;
+    // two aliases, should the types ever diverge
+    typedef std::set<CTxMemPoolEntryRef, CompareIteratorByHash> Parents;
+    typedef std::set<CTxMemPoolEntryRef, CompareIteratorByHash> Children;
+
 private:
     const CTransactionRef tx;
+    mutable Parents m_parents;
+    mutable Children m_children;
     const CAmount nFee;             //!< Cached to avoid expensive parent-transaction lookups
     const size_t nTxWeight;         //!< ... and avoid recomputing tx weight (also used for GetTxSize())
     const size_t nUsageSize;        //!< ... and total memory usage
@@ -126,6 +148,11 @@ public:
     uint64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
     CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
     int64_t GetSigOpCostWithAncestors() const { return nSigOpCostWithAncestors; }
+
+    const Parents& GetMemPoolParentsConst() const { return m_parents; }
+    const Children& GetMemPoolChildrenConst() const { return m_children; }
+    Parents& GetMemPoolParents() const { return m_parents; }
+    Children& GetMemPoolChildren() const { return m_children; }
 
     mutable size_t vTxHashesIdx; //!< Index in mempool's vTxHashes
     mutable uint64_t m_epoch; //!< epoch when last touched, useful for graph algorithms
@@ -547,26 +574,14 @@ public:
     using txiter = indexed_transaction_set::nth_index<0>::type::const_iterator;
     std::vector<std::pair<uint256, txiter>> vTxHashes GUARDED_BY(cs); //!< All tx witness hashes/entries in mapTx, in random order
 
-    struct CompareIteratorByHash {
-        bool operator()(const txiter &a, const txiter &b) const {
-            return a->GetTx().GetHash() < b->GetTx().GetHash();
-        }
-    };
     typedef std::set<txiter, CompareIteratorByHash> setEntries;
 
-    const setEntries & GetMemPoolParents(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    const setEntries & GetMemPoolChildren(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    const CTxMemPoolEntry::Parents & GetMemPoolParents(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    const CTxMemPoolEntry::Children & GetMemPoolChildren(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
-    struct TxLinks {
-        setEntries parents;
-        setEntries children;
-    };
-
-    typedef std::map<txiter, TxLinks, CompareIteratorByHash> txlinksMap;
-    txlinksMap mapLinks;
 
     void UpdateParent(txiter entry, txiter parent, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void UpdateChild(txiter entry, txiter child, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
