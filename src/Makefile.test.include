@@ -32,6 +32,7 @@ FUZZ_TARGETS = \
   test/fuzz/hex \
   test/fuzz/integer \
   test/fuzz/inv_deserialize \
+  test/fuzz/key \
   test/fuzz/key_origin_info_deserialize \
   test/fuzz/merkle_block_deserialize \
   test/fuzz/messageheader_deserialize \
@@ -402,6 +403,12 @@ test_fuzz_inv_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_inv_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_inv_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_inv_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_key_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_key_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_key_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_key_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_key_SOURCES = $(FUZZ_SUITE) test/fuzz/key.cpp
 
 test_fuzz_key_origin_info_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DKEY_ORIGIN_INFO_DESERIALIZE=1
 test_fuzz_key_origin_info_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
