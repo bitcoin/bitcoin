@@ -337,11 +337,10 @@ bool CWallet::AddKeyPubKeyWithDB(CWalletDB &walletdb, const CKey& secret, const 
         pwalletdbEncryption = &walletdb;
     }
     if (!CCryptoKeyStore::AddKeyPubKey(secret, pubkey)) {
-        if (needsDB) pwalletdbEncryption = NULL;
-        return false;
+        if (needsDB) pwalletdbEncryption = nullptr;
         return false;
     }
-    if (needsDB) pwalletdbEncryption = NULL;
+    if (needsDB) pwalletdbEncryption = nullptr;
     // check if we need to remove from watch-only
     CScript script;
     script = GetScriptForDestination(pubkey.GetID());
