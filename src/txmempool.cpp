@@ -57,46 +57,75 @@ size_t CTxMemPoolEntry::GetTxSize() const
 // Update the given tx for any in-mempool descendants.
 // Assumes that setMemPoolChildren is correct for the given tx and all
 // descendants.
-void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendants, const std::set<uint256> &setExclude)
+void CTxMemPool::UpdateForDescendants(txiter update_it, cacheMap& cache)
 {
-    setEntries stageEntries, setAllDescendants;
-    stageEntries = GetMemPoolChildren(updateIt);
-
-    while (!stageEntries.empty()) {
-        const txiter cit = *stageEntries.begin();
-        setAllDescendants.insert(cit);
-        stageEntries.erase(cit);
-        const setEntries &setChildren = GetMemPoolChildren(cit);
-        for (txiter childEntry : setChildren) {
-            cacheMap::iterator cacheIt = cachedDescendants.find(childEntry);
-            if (cacheIt != cachedDescendants.end()) {
-                // We've already calculated this one, just add the entries for this set
-                // but don't traverse again.
-                for (txiter cacheEntry : cacheIt->second) {
-                    setAllDescendants.insert(cacheEntry);
+    const auto epoch = GetFreshEpoch();
+    // set up the new_cache_line to contain all of our transaction's children (note --
+    // already de-duplicated in case multiple outputs of ours are spent in one
+    // transaction).
+    // Always creates a new cache line entry.
+    vecEntries& new_cache_line = cache[update_it];
+    assert(new_cache_line.empty());
+    // next_idx_to_walk index keeps track of the elements that we've
+    // already expanded.
+    // Invariants:
+    // If index is < next_idx_to_walk, we've already walked it.
+    // If index is >= next_idx_to_walk, we need to walk it.
+    // If next_idx_to_walk >= new_cache_line.size(), we're finished.
+    size_t next_idx_to_walk = 0;
+    txiter next_it = update_it;
+    do {
+        for (const txiter& child_it : GetMemPoolChildren(next_it)) {
+            // N.B. children can also be grand children, so guarding
+            // here is neccessary
+            if (visited(child_it)) continue;
+            // if it exists in the cache, copy cached descendants
+            // - All elements in cache are not excluded, no need to check when adding.
+            // - All keys in the cache are already excluded, no need to add
+            //   `child_it` to the new_cache_line (but not all excluded keys
+            //   are in the cache yet!)
+            cacheMap::iterator cached_grand_children = cache.find(child_it);
+            if (cached_grand_children != cache.end()) {
+                for (const txiter& grand_child_it : cached_grand_children->second) {
+                    if (visited(grand_child_it)) continue;
+                    // place on the back and then swap into the next_idx_to_walk index
+                    // so we don't walk it ourselves (whoever put the grand
+                    // child in the cache must have already traversed this, so it must
+                    // not be excluded)
+                    new_cache_line.emplace_back(grand_child_it);
+                    std::swap(new_cache_line[next_idx_to_walk], new_cache_line.back());
+                    ++next_idx_to_walk;
                 }
-            } else if (!setAllDescendants.count(childEntry)) {
+            } else {
                 // Schedule for later processing
-                stageEntries.insert(childEntry);
+                // Element must not be excluded, or it would be in the cache already.
+                new_cache_line.emplace_back(child_it);
             }
         }
+
+        // finish loop here!
+        if (next_idx_to_walk >= new_cache_line.size()) break;
+
+        // Prepare for next iteration:
+        next_it = new_cache_line[next_idx_to_walk];
+        ++next_idx_to_walk;
+    } while (true);
+
+    // new_cache_line now contains all in-mempool descendants of update_it,
+    // compute updates now.
+    int64_t modify_size = 0;
+    CAmount modify_fee = 0;
+    int64_t modify_count = 0;
+    // All entries in the new_cache_line have
+    // already been checked against excluded list
+    for (txiter child_it : new_cache_line) {
+        const CTxMemPoolEntry& child = *child_it;
+        modify_size += child.GetTxSize();
+        modify_fee += child.GetModifiedFee();
+        modify_count++;
+        mapTx.modify(child_it, update_ancestor_state(update_it->GetTxSize(), update_it->GetModifiedFee(), 1, update_it->GetSigOpCost()));
     }
-    // setAllDescendants now contains all in-mempool descendants of updateIt.
-    // Update and add to cached descendant map
-    int64_t modifySize = 0;
-    CAmount modifyFee = 0;
-    int64_t modifyCount = 0;
-    for (txiter cit : setAllDescendants) {
-        if (!setExclude.count(cit->GetTx().GetHash())) {
-            modifySize += cit->GetTxSize();
-            modifyFee += cit->GetModifiedFee();
-            modifyCount++;
-            cachedDescendants[updateIt].insert(cit);
-            // Update ancestor state for each descendant
-            mapTx.modify(cit, update_ancestor_state(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost()));
-        }
-    }
-    mapTx.modify(updateIt, update_descendant_state(modifySize, modifyFee, modifyCount));
+    mapTx.modify(update_it, update_descendant_state(modify_size, modify_fee, modify_count));
 }
 
 // vHashesToUpdate is the set of transaction hashes from a disconnected block
@@ -110,11 +139,10 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
     // For each entry in vHashesToUpdate, store the set of in-mempool, but not
     // in-vHashesToUpdate transactions, so that we don't have to recalculate
     // descendants when we come across a previously seen entry.
+    //
+    // Also use as a set for lookups into vHashesToUpdate (these entries are
+    // already accounted for in the state of their ancestors)
     cacheMap mapMemPoolDescendantsToUpdate;
-
-    // Use a set for lookups into vHashesToUpdate (these entries are already
-    // accounted for in the state of their ancestors)
-    std::set<uint256> setAlreadyIncluded(vHashesToUpdate.begin(), vHashesToUpdate.end());
 
     // Iterate in reverse, so that whenever we are looking at a transaction
     // we are sure that all in-mempool descendants have already been processed.
@@ -139,13 +167,13 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
                 assert(childIter != mapTx.end());
                 // We can skip updating entries we've encountered before or that
                 // are in the block (which are already accounted for).
-                if (!visited(childIter) && !setAlreadyIncluded.count(childHash)) {
+                if (!visited(childIter) && !mapMemPoolDescendantsToUpdate.count(childIter)) {
                     UpdateChild(it, childIter, true);
                     UpdateParent(childIter, it, true);
                 }
             }
         } // release epoch guard for UpdateForDescendants
-        UpdateForDescendants(it, mapMemPoolDescendantsToUpdate, setAlreadyIncluded);
+        UpdateForDescendants(it, mapMemPoolDescendantsToUpdate);
     }
 }
 

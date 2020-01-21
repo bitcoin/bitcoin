@@ -530,12 +530,13 @@ public:
         }
     };
     typedef std::set<txiter, CompareIteratorByHash> setEntries;
+    typedef std::vector<txiter> vecEntries;
 
     const setEntries & GetMemPoolParents(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     const setEntries & GetMemPoolChildren(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 private:
-    typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
+    typedef std::map<txiter, vecEntries, CompareIteratorByHash> cacheMap;
 
     struct TxLinks {
         setEntries parents;
@@ -706,19 +707,22 @@ private:
     /** UpdateForDescendants is used by UpdateTransactionsFromBlock to update
      *  the descendants for a single transaction that has been added to the
      *  mempool but may have child transactions in the mempool, eg during a
-     *  chain reorg.  setExclude is the set of descendant transactions in the
-     *  mempool that must not be accounted for (because any descendants in
-     *  setExclude were added to the mempool after the transaction being
-     *  updated and hence their state is already reflected in the parent
-     *  state).
+     *  chain reorg.
      *
      *  cachedDescendants will be updated with the descendants of the transaction
      *  being updated, so that future invocations don't need to walk the
      *  same transaction again, if encountered in another transaction chain.
+     *
+     *  cachedDescendants must have an entry for each of the set of descendant
+     *  transactions in the mempool that must not be accounted for (because any
+     *  descendants in cache were added to the mempool after the
+     *  transaction being updated and hence their state is already reflected in
+     *  the parent state). This is ensured by UpdateTransactionsFromBlock using
+     *  reverse_iterate.
+     *
      */
     void UpdateForDescendants(txiter updateIt,
-            cacheMap &cachedDescendants,
-            const std::set<uint256> &setExclude) EXCLUSIVE_LOCKS_REQUIRED(cs);
+            cacheMap &cachedDescendants) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
     void UpdateAncestorsOf(bool add, txiter hash, setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Set ancestor state for an entry */
