@@ -146,6 +146,12 @@ public:
     //! or contents.
     virtual bool findBlock(const uint256& hash, const FoundBlock& block={}) = 0;
 
+    //! Find first block in the chain with timestamp >= the given time
+    //! and height >= than the given height, return false if there is no block
+    //! with a high enough timestamp and height. Optionally return block
+    //! information.
+    virtual bool findFirstBlockWithTimeAndHeight(int64_t min_time, int min_height, const FoundBlock& block={}) = 0;
+
     //! Find ancestor of block at specified height and optionally return
     //! ancestor information.
     virtual bool findAncestorByHeight(const uint256& block_hash, int ancestor_height, const FoundBlock& ancestor_out={}) = 0;
