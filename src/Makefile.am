@@ -10,9 +10,7 @@ AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS)
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 EXTRA_LIBRARIES =
 
-FAKEIT_DIR = $(top_srcdir)/third_party/include
-FAKEIT_HEADER = $(FAKEIT_DIR)/fakeit.hpp
-THIRD_PARTY_INCLUDE = -isystem $(FAKEIT_DIR)
+
 
 if EMBEDDED_UNIVALUE
 LIBUNIVALUE = univalue/libunivalue.la

@@ -2,8 +2,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-THIRD_PARTY_INCLUDE = -isystem $(top_srcdir)/third_party/include
-
 bin_PROGRAMS += bench/bench_bitcoin
 BENCH_SRCDIR = bench
 BENCH_BINARY = bench/bench_bitcoin$(EXEEXT)
@@ -46,7 +44,7 @@ bench_bench_bitcoin_SOURCES = \
 nodist_bench_bench_bitcoin_SOURCES = $(GENERATED_BENCH_FILES)
 
 bench_bench_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
-bench_bench_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(THIRD_PARTY_INCLUDE)
+bench_bench_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(FAKEIT_CXXFLAGS)
 bench_bench_bitcoin_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \

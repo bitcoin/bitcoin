@@ -6,6 +6,9 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <vbk/init.hpp>
+#include <node/context.h>
+
 #include <qt/bitcoin.h>
 #include <qt/bitcoingui.h>
 
@@ -406,6 +409,8 @@ int GuiMain(int argc, char* argv[])
     util::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
+    VeriBlock::InitUtilService();
+    VeriBlock::InitConfig();
     SetupEnvironment();
     util::ThreadSetInternalName("main");
 
@@ -520,6 +525,11 @@ int GuiMain(int argc, char* argv[])
     // Parse URIs on command line -- this can affect Params()
     PaymentServer::ipcParseCommandLine(*node, argc, argv);
 #endif
+
+    VeriBlock::InitPopService(
+        gArgs.GetArg("-althost", "127.0.0.1"),
+        gArgs.GetArg("-altport", "19012"),
+        gArgs.GetBoolArg("-altautoconfig", true));
 
     QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(Params().NetworkIDString()));
     assert(!networkStyle.isNull());

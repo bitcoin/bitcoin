@@ -499,7 +499,8 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
 {
     bool isValid = true;
     const auto& config = getService<Config>();
-
+    size_t numOfPubTxes = 0;
+    size_t numOfCtxTxes = 0;
     std::string error_message;
 
     LOCK(mempool.cs);
@@ -522,6 +523,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
 
         switch (type) {
         case PopTxType::CONTEXT: {
+            ++numOfCtxTxes;
             try {
                 pop.updateContext(context.vbk, context.btc);
             } catch (const PopServiceException& e) {
@@ -534,6 +536,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
         }
 
         case PopTxType::PUBLICATIONS: {
+            ++numOfPubTxes;
             PublicationData popEndorsement;
             pop.getPublicationsData(publications, popEndorsement);
 
@@ -602,6 +605,16 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             continue;
         }
+    }
+
+    if(numOfCtxTxes > config.max_update_context_tx_amount) {
+        pop.removePayloads(block, pindexPrev.nHeight + 1);
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "too-many-update-ctx-txes", strprintf("too many 'updatecontext' transactions: actual %d > %d expected", numOfCtxTxes, config.max_update_context_tx_amount));
+    }
+
+    if(numOfCtxTxes + numOfPubTxes > config.max_pop_tx_amount) {
+        pop.removePayloads(block, pindexPrev.nHeight + 1);
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "too-many-pop-txes", strprintf("too many PoP transactions: actual %d > %d expected", numOfPubTxes + numOfCtxTxes, config.max_pop_tx_amount));
     }
 
     if (!isValid) {
