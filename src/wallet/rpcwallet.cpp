@@ -3536,22 +3536,23 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
     }
 
     int start_height = 0;
-    uint256 start_block, stop_block;
+    Optional<int> stop_height;
+    uint256 start_block;
     {
         auto locked_chain = pwallet->chain().lock();
-        Optional<int> tip_height = locked_chain->getHeight();
+        LOCK(pwallet->cs_wallet);
+        int tip_height = pwallet->GetLastBlockHeight();
 
         if (!request.params[0].isNull()) {
             start_height = request.params[0].get_int();
-            if (start_height < 0 || !tip_height || start_height > *tip_height) {
+            if (start_height < 0 || start_height > tip_height) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid start_height");
             }
         }
 
-        Optional<int> stop_height;
         if (!request.params[1].isNull()) {
             stop_height = request.params[1].get_int();
-            if (*stop_height < 0 || !tip_height || *stop_height > *tip_height) {
+            if (*stop_height < 0 || *stop_height > tip_height) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid stop_height");
             }
             else if (*stop_height < start_height) {
@@ -3560,25 +3561,15 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
         }
 
         // We can't rescan beyond non-pruned blocks, stop and throw an error
-        if (locked_chain->findPruned(start_height, stop_height)) {
+        if (!pwallet->chain().hasBlocks(pwallet->GetLastBlockHash(), start_height, stop_height)) {
             throw JSONRPCError(RPC_MISC_ERROR, "Can't rescan beyond pruned data. Use RPC call getblockchaininfo to determine your pruned height.");
         }
 
-        if (tip_height) {
-            start_block = locked_chain->getBlockHash(start_height);
-            // If called with a stop_height, set the stop_height here to
-            // trigger a rescan to that height.
-            // If called without a stop height, leave stop_height as null here
-            // so rescan continues to the tip (even if the tip advances during
-            // rescan).
-            if (stop_height) {
-                stop_block = locked_chain->getBlockHash(*stop_height);
-            }
-        }
+        CHECK_NONFATAL(pwallet->chain().findAncestorByHeight(pwallet->GetLastBlockHash(), start_height, FoundBlock().hash(start_block)));
     }
 
     CWallet::ScanResult result =
-        pwallet->ScanForWalletTransactions(start_block, stop_block, reserver, true /* fUpdate */);
+        pwallet->ScanForWalletTransactions(start_block, stop_height, reserver, true /* fUpdate */);
     switch (result.status) {
     case CWallet::ScanResult::SUCCESS:
         break;
