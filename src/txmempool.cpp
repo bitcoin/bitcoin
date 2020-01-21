@@ -57,58 +57,44 @@ size_t CTxMemPoolEntry::GetTxSize() const
 // Update the given tx for any in-mempool descendants.
 // Assumes that setMemPoolChildren is correct for the given tx and all
 // descendants.
-void CTxMemPool::UpdateForDescendants(txiter update_it, cacheMap& cache, const std::set<uint256>& exclude)
+void CTxMemPool::UpdateForDescendants(txiter update_it, const std::set<uint256>& exclude)
 {
     const auto epoch = GetFreshEpoch();
     const CTxMemPool::setEntries& direct_children = GetMemPoolChildren(update_it);
-    // set up the update_cache to contain all of our transaction's children (note --
+    // set up the stage to contain all of our transaction's children (note --
     // already de-duplicated in case multiple outputs of ours are spent in one
     // transaction)
-    vecEntries update_cache;
-    update_cache.reserve(direct_children.size());
+    vecEntries stage;
+    stage.reserve(direct_children.size());
     // mark every direct_child as visited so that we don't accidentally re-add them
     // to the cache in the grandchild is child case
     for (const txiter direct_child : direct_children) {
-        update_cache.emplace_back(direct_child);
+        stage.emplace_back(direct_child);
         visited(direct_child);
     }
     // already_traversed index keeps track of the elements that we've
     // already expanded. If index is < already_traversed, we've walked it.
     // If index is >= already_traversed, we need to walk it.
-    // If already_traversed >= update_cache.size(), we're finished.
-    for (size_t already_traversed = 0; already_traversed < update_cache.size(); /* modified in loop body */) {
+    // If already_traversed >= stage.size(), we're finished.
+    for (size_t already_traversed = 0; already_traversed < stage.size(); /* modified in loop body */) {
         // rotate the back() to behind already_traversed
-        const txiter child_it = update_cache.back();
-        std::swap(update_cache[already_traversed++], update_cache.back());
+        const txiter child_it = stage.back();
+        std::swap(stage[already_traversed++], stage.back());
 
         // N.B. grand_children may also be children
         const CTxMemPool::setEntries& grand_children = GetMemPoolChildren(child_it);
         for (const txiter grand_child_it : grand_children) {
             if (visited(grand_child_it)) continue;
-            // Schedule for later processing
-            update_cache.emplace_back(grand_child_it);
-            // if it exists in the cache, unschedule and use cached descendants
-            cacheMap::iterator cached_great_grand_children = cache.find(grand_child_it);
-            if (cached_great_grand_children != cache.end()) {
-                std::swap(update_cache[already_traversed++], update_cache.back());
-                for (const txiter great_grand_child : cached_great_grand_children->second) {
-                    if (visited(great_grand_child)) continue;
-                    update_cache.emplace_back(great_grand_child);
-                    // place on the back and then swap into the already_traversed index
-                    // so we don't walk it ourselves (whoever put the grand
-                    // child in the cache must have already traversed this)
-                    std::swap(update_cache[already_traversed++], update_cache.back());
-                }
-            }
+            stage.emplace_back(grand_child_it);
         }
     }
 
-    // update_cache now contains all in-mempool descendants of update_it,
+    // stage now contains all in-mempool descendants of update_it,
     // compute updates now.
     int64_t modify_size = 0;
     CAmount modify_fee = 0;
     int64_t modify_count = 0;
-    for (txiter child_it : update_cache) {
+    for (txiter child_it : stage) {
         const CTxMemPoolEntry& child = *child_it;
         if (!exclude.count(child.GetTx().GetHash())) {
             modify_size += child.GetTxSize();
@@ -118,8 +104,6 @@ void CTxMemPool::UpdateForDescendants(txiter update_it, cacheMap& cache, const s
         }
     }
     mapTx.modify(update_it, update_descendant_state(modify_size, modify_fee, modify_count));
-    // share the cache (if there is one)
-    if (!update_cache.empty()) cache.emplace(update_it, std::move(update_cache));
 }
 // vHashesToUpdate is the set of transaction hashes from a disconnected block
 // which has been re-added to the mempool.
@@ -129,10 +113,6 @@ void CTxMemPool::UpdateForDescendants(txiter update_it, cacheMap& cache, const s
 void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashesToUpdate)
 {
     AssertLockHeld(cs);
-    // For each entry in vHashesToUpdate, store the set of in-mempool, but not
-    // in-vHashesToUpdate transactions, so that we don't have to recalculate
-    // descendants when we come across a previously seen entry.
-    cacheMap mapMemPoolDescendantsToUpdate;
 
     // Use a set for lookups into vHashesToUpdate (these entries are already
     // accounted for in the state of their ancestors)
@@ -140,9 +120,8 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
 
     // Iterate in reverse, so that whenever we are looking at a transaction
     // we are sure that all in-mempool descendants have already been processed.
-    // This maximizes the benefit of the descendant cache and guarantees that
-    // setMemPoolChildren will be updated, an assumption made in
-    // UpdateForDescendants.
+    // This guarantees that setMemPoolChildren will be up to date, an assumption
+    // made in UpdateForDescendants.
     for (const uint256 &hash : reverse_iterate(vHashesToUpdate)) {
         // calculate children from mapNextTx
         txiter it = mapTx.find(hash);
@@ -167,7 +146,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
                 }
             }
         } // release epoch guard for UpdateForDescendants
-        UpdateForDescendants(it, mapMemPoolDescendantsToUpdate, setAlreadyIncluded);
+        UpdateForDescendants(it, setAlreadyIncluded);
     }
 }
 
