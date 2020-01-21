@@ -28,6 +28,7 @@ FUZZERS_MISSING_CORPORA = [
     "float",
     "hex",
     "integer",
+    "key",
     "key_origin_info_deserialize",
     "merkle_block_deserialize",
     "out_point_deserialize",
