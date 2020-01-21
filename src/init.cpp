@@ -1321,6 +1321,8 @@ bool AppInitMain(NodeContext& node)
     assert(!node.connman);
     node.connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
 
+    VeriBlock::InitRpcService(node.connman.get());
+
     node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), scheduler));
     RegisterValidationInterface(node.peer_logic.get());
 

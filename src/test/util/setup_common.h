@@ -123,6 +123,9 @@ struct TestChain100Setup : public RegTestingSetup {
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
                                  const CScript& scriptPubKey);
 
+    CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
+                                 const CScript& scriptPubKey, bool* isBlockValid);
+
     ~TestChain100Setup() override;
 
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions

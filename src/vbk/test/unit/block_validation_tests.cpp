@@ -34,7 +34,7 @@ struct BlockValidationFixture : public TestChain100Setup {
 
     BlockValidationFixture()
     {
-        VeriBlock::InitConfig();
+        auto& config = VeriBlock::InitConfig();
         VeriBlock::InitUtilService();
 
         CBlockIndex* endorsedBlockIndex = ChainActive().Tip()->pprev;
@@ -43,6 +43,25 @@ struct BlockValidationFixture : public TestChain100Setup {
 
         stream = std::make_shared<CDataStream>(SER_NETWORK, PROTOCOL_VERSION);
         *stream << endorsedBlock.GetBlockHeader();
+
+        When(OverloadedMethod(pop_impl_mock, getPublicationsData, void(const VeriBlock::Publications&, VeriBlock::PublicationData&)))
+            .Do([&](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
+                publicationData.set_identifier(config.index.unwrap());
+                publicationData.set_header(stream->data(), stream->size());
+            });
+        When(Method(pop_impl_mock, parsePopTx)).AlwaysDo([](const CTransactionRef& tx, VeriBlock::Publications* pub, VeriBlock::Context* ctx, VeriBlock::PopTxType* type) -> bool {
+            std::vector<std::vector<uint8_t>> stack;
+            return VeriBlock::EvalScriptImpl(tx->vin[0].scriptSig, stack, nullptr, pub, ctx, type, false);
+        });
+        When(Method(pop_impl_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
+        Fake(Method(pop_impl_mock, addPayloads));
+        Fake(Method(pop_impl_mock, updateContext));
+
+        When(Method(pop_service_mock, checkVTBinternally)).AlwaysReturn(true);
+        When(Method(pop_service_mock, checkATVinternally)).AlwaysReturn(true);
+        When(Method(pop_service_mock, blockPopValidation)).AlwaysDo([&](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) -> bool {
+            return VeriBlock::blockPopValidationImpl(pop_impl_mock.get(), block, pindexPrev, params, state);
+        });
     };
 
     std::shared_ptr<CDataStream> stream;
@@ -50,30 +69,65 @@ struct BlockValidationFixture : public TestChain100Setup {
 
 BOOST_AUTO_TEST_SUITE(block_validation_tests)
 
+BOOST_FIXTURE_TEST_CASE(BlockWith256PublicationTxes, BlockValidationFixture)
+{
+    std::vector<CMutableTransaction> pubs;
+    for (size_t i = 0; i < 256 /* more than 50 */; ++i) {
+        CScript script;
+        script << std::vector<uint8_t>{(uint8_t)i};
+        pubs.emplace_back(VeriBlock::MakePopTx(script));
+    }
+
+    bool isBlockValid = true;
+    auto block = CreateAndProcessBlock(pubs, cbKey, &isBlockValid);
+    BOOST_CHECK(!isBlockValid);
+}
+
+BOOST_FIXTURE_TEST_CASE(BlockWithMaxNumberOfPublicationTxes, BlockValidationFixture)
+{
+    auto& config = VeriBlock::getService<VeriBlock::Config>();
+    std::vector<CMutableTransaction> pubs;
+    for (size_t i = 0; i < std::min(config.max_pop_tx_amount, 256u); ++i) {
+        CScript script;
+        script << std::vector<uint8_t>{(uint8_t)i};
+        pubs.emplace_back(VeriBlock::MakePopTx(script));
+    }
+
+    bool isBlockValid = true;
+    auto block = CreateAndProcessBlock(pubs, cbKey, &isBlockValid);
+    BOOST_CHECK(isBlockValid);
+    BOOST_CHECK(block.vtx.size() == config.max_pop_tx_amount + 1 /* coinbase */);
+}
+
+BOOST_FIXTURE_TEST_CASE(BlockWith1000ContextTxes, BlockValidationFixture)
+{
+    std::vector<CMutableTransaction> pubs;
+    std::generate_n(std::back_inserter(pubs), 1000, [&]() {
+        return VeriBlock::MakePopTx(ctxscript);
+    });
+
+    bool isBlockValid = true;
+    auto block = CreateAndProcessBlock(pubs, cbKey, &isBlockValid);
+    BOOST_CHECK(!isBlockValid);
+}
+
+BOOST_FIXTURE_TEST_CASE(BlockWithMaxContextTxes, BlockValidationFixture)
+{
+    auto& config = VeriBlock::getService<VeriBlock::Config>();
+    std::vector<CMutableTransaction> pubs;
+    std::generate_n(std::back_inserter(pubs), config.max_update_context_tx_amount, [&]() {
+        return VeriBlock::MakePopTx(ctxscript);
+    });
+
+    bool isBlockValid = true;
+    auto block = CreateAndProcessBlock(pubs, cbKey, &isBlockValid);
+    BOOST_CHECK(isBlockValid);
+    BOOST_CHECK(block.vtx.size() == config.max_update_context_tx_amount + 1 /* coinbase */);
+}
+
 
 BOOST_FIXTURE_TEST_CASE(BlockWithBothPopTxes, BlockValidationFixture)
 {
-    auto& config = VeriBlock::getService<VeriBlock::Config>();
-
-    When(OverloadedMethod(pop_impl_mock, getPublicationsData, void(const VeriBlock::Publications&, VeriBlock::PublicationData&)))
-        .Do([&](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-            publicationData.set_identifier(config.index.unwrap());
-            publicationData.set_header(stream->data(), stream->size());
-        });
-    When(Method(pop_impl_mock, parsePopTx)).AlwaysDo([](const CTransactionRef& tx, VeriBlock::Publications* pub, VeriBlock::Context* ctx, VeriBlock::PopTxType* type) -> bool {
-        std::vector<std::vector<uint8_t>> stack;
-        return VeriBlock::EvalScriptImpl(tx->vin[0].scriptSig, stack, nullptr, pub, ctx, type, false);
-    });
-    When(Method(pop_impl_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
-    Fake(Method(pop_impl_mock, addPayloads));
-    Fake(Method(pop_impl_mock, updateContext));
-
-    When(Method(pop_service_mock, checkVTBinternally)).AlwaysReturn(true);
-    When(Method(pop_service_mock, checkATVinternally)).AlwaysReturn(true);
-    When(Method(pop_service_mock, blockPopValidation)).AlwaysDo([&](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) -> bool {
-        return VeriBlock::blockPopValidationImpl(pop_impl_mock.get(), block, pindexPrev, params, state);
-    });
-
     VeriBlock::Context ctx;
     ctx.btc.push_back(btc_header);
     ctx.vbk.push_back(vbk_header);
