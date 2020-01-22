@@ -18,6 +18,9 @@
 #include <stdint.h>
 #include <string>
 
+/** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
+static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
+
 /** Message header.
  * (4) message start.
  * (12) command.
