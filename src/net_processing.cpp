@@ -1011,6 +1011,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     switch (inv.type)
     {
     case MSG_TX:
+    case MSG_DSTX:
     case MSG_LEGACY_TXLOCK_REQUEST: // we treat legacy IX messages as TX messages
         {
             assert(recentRejects);
@@ -1034,7 +1035,17 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             // and re-request the locked transaction (which did not make it into the mempool
             // previously due to txn-mempool-conflict rule). This means that we must ignore
             // recentRejects filter for such locked txes here.
-            return (recentRejects->contains(inv.hash) && !llmq::quorumInstantSendManager->IsLocked(inv.hash)) ||
+            // We also ignore recentRejects filter for DSTX-es because a malicious peer  might
+            // relay a valid DSTX as a regular TX first which would skip all the specific checks
+            // but would cause such tx to be rejected by ATMP due to 0 fee. Ignoring it here
+            // should let DSTX to be propagated by honest peer later. Note, that a malicious
+            // masternode would not be able to exploit this to spam the network with specially
+            // crafted invalid DSTX-es and potentially cause high load cheaply, because
+            // corresponding checks in ProcessMessage won't let it to send DSTX-es too often.
+            bool fIgnoreRecentRejects = llmq::quorumInstantSendManager->IsLocked(inv.hash) || inv.type == MSG_DSTX;
+
+            return (!fIgnoreRecentRejects && recentRejects->contains(inv.hash)) ||
+                   (inv.type == MSG_DSTX && static_cast<bool>(CPrivateSend::GetDSTX(inv.hash))) ||
                    mempool.exists(inv.hash) ||
                    pcoinsTip->HaveCoinInCache(COutPoint(inv.hash, 0)) || // Best effort: only try output 0 and 1
                    pcoinsTip->HaveCoinInCache(COutPoint(inv.hash, 1)) ||
@@ -1059,10 +1070,6 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             CSporkMessage spork;
             return sporkManager.GetSporkByHash(inv.hash, spork);
         }
-
-    case MSG_DSTX: {
-        return static_cast<bool>(CPrivateSend::GetDSTX(inv.hash));
-    }
 
     case MSG_GOVERNANCE_OBJECT:
     case MSG_GOVERNANCE_OBJECT_VOTE:
@@ -1274,17 +1281,29 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
 
             // Send stream from relay memory
             bool push = false;
-            if (inv.type == MSG_TX) {
+            if (inv.type == MSG_TX || inv.type == MSG_DSTX) {
+                CPrivateSendBroadcastTx dstx;
+                if (inv.type == MSG_DSTX) {
+                    dstx = CPrivateSend::GetDSTX(inv.hash);
+                }
                 auto mi = mapRelay.find(inv.hash);
                 if (mi != mapRelay.end()) {
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::TX, *mi->second));
+                    if (dstx) {
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::DSTX, dstx));
+                    } else {
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::TX, *mi->second));
+                    }
                     push = true;
                 } else if (pfrom->timeLastMempoolReq) {
                     auto txinfo = mempool.info(inv.hash);
                     // To protect privacy, do not answer getdata using the mempool when
                     // that TX couldn't have been INVed in reply to a MEMPOOL request.
                     if (txinfo.tx && txinfo.nTime <= pfrom->timeLastMempoolReq) {
-                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::TX, *txinfo.tx));
+                        if (dstx) {
+                            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::DSTX, dstx));
+                        } else {
+                            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::TX, *txinfo.tx));
+                        }
                         push = true;
                     }
                 }
@@ -1294,14 +1313,6 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 CSporkMessage spork;
                 if(sporkManager.GetSporkByHash(inv.hash, spork)) {
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
-                    push = true;
-                }
-            }
-
-            if (!push && inv.type == MSG_DSTX) {
-                CPrivateSendBroadcastTx dstx = CPrivateSend::GetDSTX(inv.hash);
-                if(dstx) {
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::DSTX, dstx));
                     push = true;
                 }
             }
@@ -2452,7 +2463,19 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 return true; // not an error
             }
 
-            auto dmn = deterministicMNManager->GetListAtChainTip().GetMNByCollateral(dstx.masternodeOutpoint);
+            const CBlockIndex* pindex{nullptr};
+            CDeterministicMNCPtr dmn{nullptr};
+            {
+                LOCK(cs_main);
+                pindex = chainActive.Tip();
+            }
+            // It could be that a MN is no longer in the list but its DSTX is not yet mined.
+            // Try to find a MN up to 24 blocks deep to make sure such dstx-es are relayed and processed correctly.
+            for (int i = 0; i < 24 && pindex; ++i) {
+                dmn = deterministicMNManager->GetListForBlock(pindex).GetMNByCollateral(dstx.masternodeOutpoint);
+                if (dmn) break;
+                pindex = pindex->pprev;
+            }
             if(!dmn) {
                 LogPrint(BCLog::PRIVATESEND, "DSTX -- Can't find masternode %s to verify %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
                 return false;
@@ -2523,6 +2546,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     CInv _inv(MSG_TX, txin.prevout.hash);
                     pfrom->AddInventoryKnown(_inv);
                     if (!AlreadyHave(_inv)) pfrom->AskFor(_inv);
+                    // We don't know if the previous tx was a regular or a mixing one, try both
+                    CInv _inv2(MSG_DSTX, txin.prevout.hash);
+                    pfrom->AddInventoryKnown(_inv2);
+                    if (!AlreadyHave(_inv2)) pfrom->AskFor(_inv2);
                 }
                 AddOrphanTx(ptx, pfrom->GetId());
 
@@ -3785,7 +3812,11 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
 
                 for (const auto& txinfo : vtxinfo) {
                     const uint256& hash = txinfo.tx->GetHash();
-                    CInv inv(MSG_TX, hash);
+                    int nInvType = MSG_TX;
+                    if (CPrivateSend::GetDSTX(hash)) {
+                        nInvType = MSG_DSTX;
+                    }
+                    CInv inv(nInvType, hash);
                     pto->setInventoryTxToSend.erase(hash);
                     if (pto->pfilter) {
                         if (!pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
@@ -3851,7 +3882,11 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                     }
                     if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                     // Send
-                    vInv.push_back(CInv(MSG_TX, hash));
+                    int nInvType = MSG_TX;
+                    if (CPrivateSend::GetDSTX(hash)) {
+                        nInvType = MSG_DSTX;
+                    }
+                    vInv.push_back(CInv(nInvType, hash));
                     nRelayedTransactions++;
                     {
                         // Expire old relay messages

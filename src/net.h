@@ -999,7 +999,7 @@ public:
     void PushInventory(const CInv& inv)
     {
         LOCK(cs_inventory);
-        if (inv.type == MSG_TX) {
+        if (inv.type == MSG_TX || inv.type == MSG_DSTX) {
             if (!filterInventoryKnown.contains(inv.hash)) {
                 LogPrint(BCLog::NET, "PushInventory --  inv: %s peer=%d\n", inv.ToString(), id);
                 setInventoryTxToSend.insert(inv.hash);

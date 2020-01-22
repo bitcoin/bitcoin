@@ -107,4 +107,5 @@ void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDet
 void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLockSig& clsig)
 {
     llmq::quorumInstantSendManager->NotifyChainLock(pindex);
+    CPrivateSend::NotifyChainLock(pindex);
 }
