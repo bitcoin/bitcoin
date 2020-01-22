@@ -356,6 +356,8 @@ class Sandbox:
             time.sleep(2)
             colltx = self.get_transaction(control_node, txhash)
 
+        print '{0} confirmations, done'.format(colltx['confirmations'] if 'confirmations' in colltx else 0)
+        time.sleep(1)
         out, err = self.start_masternode(control_node, masternode)
         print err
         print out
