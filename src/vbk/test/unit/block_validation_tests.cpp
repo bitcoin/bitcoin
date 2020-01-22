@@ -45,7 +45,7 @@ struct BlockValidationFixture : public TestChain100Setup {
         *stream << endorsedBlock.GetBlockHeader();
 
         When(OverloadedMethod(pop_impl_mock, getPublicationsData, void(const VeriBlock::Publications&, VeriBlock::PublicationData&)))
-            .Do([&](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
+            .AlwaysDo([&](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
                 publicationData.set_identifier(config.index.unwrap());
                 publicationData.set_header(stream->data(), stream->size());
             });
@@ -74,7 +74,7 @@ BOOST_FIXTURE_TEST_CASE(BlockWith256PublicationTxes, BlockValidationFixture)
     std::vector<CMutableTransaction> pubs;
     for (size_t i = 0; i < 256 /* more than 50 */; ++i) {
         CScript script;
-        script << std::vector<uint8_t>{(uint8_t)i};
+        script << std::vector<uint8_t>{10, (uint8_t)i} << OP_CHECKATV << OP_CHECKPOP;
         pubs.emplace_back(VeriBlock::MakePopTx(script));
     }
 
@@ -89,7 +89,7 @@ BOOST_FIXTURE_TEST_CASE(BlockWithMaxNumberOfPublicationTxes, BlockValidationFixt
     std::vector<CMutableTransaction> pubs;
     for (size_t i = 0; i < std::min(config.max_pop_tx_amount, 256u); ++i) {
         CScript script;
-        script << std::vector<uint8_t>{(uint8_t)i};
+        script << std::vector<uint8_t>{10, (uint8_t)i} << OP_CHECKATV << OP_CHECKPOP;
         pubs.emplace_back(VeriBlock::MakePopTx(script));
     }
 
