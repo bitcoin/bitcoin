@@ -107,7 +107,7 @@ class ReceivedByTest(BitcoinTestFramework):
 
         # Create a new account named "mynewaccount" that has a 0 balance
         self.nodes[1].getaccountaddress("mynewaccount")
-        received_by_account_json = [r for r inself.nodes[1].listreceivedbyaccount(0, False, True)if r["account"] == "mynewaccount"][0]
+        received_by_account_json = [r for r in self.nodes[1].listreceivedbyaccount(0, True) if r["account"] == "mynewaccount"][0]
 
         # Test includeempty of listreceivedbyaccount
         assert_equal(received_by_account_json["amount"], Decimal("0.0"))
