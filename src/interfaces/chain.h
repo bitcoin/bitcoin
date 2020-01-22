@@ -148,6 +148,11 @@ public:
     //! information.
     virtual bool findFirstBlockWithTimeAndHeight(int64_t min_time, int min_height, const FoundBlock& block={}) = 0;
 
+    //! Find next block if block is part of current chain. Also flag if
+    //! there was a reorg and the specified block hash is no longer in the
+    //! current chain, and optionally return block information.
+    virtual bool findNextBlock(const uint256& block_hash, int block_height, const FoundBlock& next={}, bool* reorg=nullptr) = 0;
+
     //! Find ancestor of block at specified height and optionally return
     //! ancestor information.
     virtual bool findAncestorByHeight(const uint256& block_hash, int ancestor_height, const FoundBlock& ancestor_out={}) = 0;

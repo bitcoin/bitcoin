@@ -3569,7 +3569,7 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
     }
 
     CWallet::ScanResult result =
-        pwallet->ScanForWalletTransactions(start_block, stop_height, reserver, true /* fUpdate */);
+        pwallet->ScanForWalletTransactions(start_block, start_height, stop_height, reserver, true /* fUpdate */);
     switch (result.status) {
     case CWallet::ScanResult::SUCCESS:
         break;
