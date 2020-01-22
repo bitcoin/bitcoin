@@ -132,6 +132,16 @@ class P2PPermissionsTests(BitcoinTestFramework):
             p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
             wait_until(lambda: txid in self.nodes[0].getrawmempool())
 
+        self.log.debug("Check that node[1] will not send an invalid tx to node[0]")
+        tx.vout[0].nValue += 1
+        txid = tx.rehash()
+        p2p_rebroadcast_wallet.send_txs_and_test(
+            [tx],
+            self.nodes[1],
+            success=False,
+            reject_reason='Not relaying non-mempool transaction {} from whitelisted peer=0'.format(txid),
+        )
+
     def checkpermission(self, args, expectedPermissions, whitelisted):
         self.restart_node(1, args)
         connect_nodes(self.nodes[0], 1)
