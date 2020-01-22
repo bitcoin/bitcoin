@@ -24,13 +24,13 @@ class TestNode(NodeConnCB):
         self.last_mnlistdiff = message
 
     def wait_for_mnlistdiff(self, timeout=30):
-        self.last_mnlistdiff = None
         def received_mnlistdiff():
             return self.last_mnlistdiff is not None
         return wait_until(received_mnlistdiff, timeout=timeout)
 
     def getmnlistdiff(self, baseBlockHash, blockHash):
         msg = msg_getmnlistd(baseBlockHash, blockHash)
+        self.last_mnlistdiff = None
         self.send_message(msg)
         self.wait_for_mnlistdiff()
         return self.last_mnlistdiff
