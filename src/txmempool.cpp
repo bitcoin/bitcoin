@@ -993,18 +993,6 @@ void CTxMemPool::UpdateParent(txiter entry, txiter parent, bool add)
     }
 }
 
-const CTxMemPoolEntry::Parents & CTxMemPool::GetMemPoolParents(txiter entry) const
-{
-    assert(entry != mapTx.end());
-    return entry->GetMemPoolParentsConst();
-}
-
-const CTxMemPoolEntry::Children & CTxMemPool::GetMemPoolChildren(txiter entry) const
-{
-    assert(entry != mapTx.end());
-    return entry->GetMemPoolChildrenConst();
-}
-
 CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
     LOCK(cs);
     if (!blockSinceLastRollingFeeBump || rollingMinimumFeeRate == 0)

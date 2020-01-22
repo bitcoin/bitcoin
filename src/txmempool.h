@@ -576,8 +576,6 @@ public:
 
     typedef std::set<txiter, CompareIteratorByHash> setEntries;
 
-    const CTxMemPoolEntry::Parents & GetMemPoolParents(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    const CTxMemPoolEntry::Children & GetMemPoolChildren(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
