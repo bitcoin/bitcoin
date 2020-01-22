@@ -4,7 +4,7 @@ distro: "ubuntu"
 suites:
 - "bionic"
 architectures:
-- "linux64"
+- "amd64"
 packages:
 - "libssl-dev" # do not merge bitcoin#13782, see https://github.com/dashpay/dash/pull/3894
 - "autoconf"
