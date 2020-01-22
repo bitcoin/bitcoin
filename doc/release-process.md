@@ -3,8 +3,8 @@
 ## Branch updates
 
 ### Before every release candidate
-* Update translations (ping [@wumpus](https://github.com/laanwj) on IRC) see [translation_process.md](./translation_process.md#synchronising-translations).
-* Update manpages, see [gen-manpages.sh](/contrib/devtools/README.md#gen-manpagessh).
+* Update translations (ping [@wumpus](https://github.com/laanwj) on IRC) see [`translation_process.md]`(./translation_process.md#synchronising-translations).
+* Update manpages, see [`gen-manpages.sh`](/contrib/devtools/README.md#gen-manpagessh).
 * Update release candidate version in [`configure.ac`](/configure.ac) (`CLIENT_VERSION_RC`).
 
 ### Before every major and minor release
