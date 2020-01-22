@@ -45,7 +45,7 @@ bool IsProxy(const CNetAddr &addr);
 bool SetNameProxy(const proxyType &addrProxy);
 bool HaveNameProxy();
 bool GetNameProxy(proxyType &nameProxyOut);
-bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup);
+bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, int addrinfo_family = AF_UNSPEC);
 bool LookupHost(const char *pszName, CNetAddr& addr, bool fAllowLookup);
 bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowLookup);
 bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions);

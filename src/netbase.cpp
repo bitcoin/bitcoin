@@ -59,7 +59,7 @@ std::string GetNetworkName(enum Network net) {
     }
 }
 
-bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
+bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, int addrinfo_family = AF_UNSPEC)
 {
     vIP.clear();
 
@@ -84,7 +84,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
     aiHint.ai_socktype = SOCK_STREAM;
     aiHint.ai_protocol = IPPROTO_TCP;
     // We don't care which address family (IPv4 or IPv6) is returned
-    aiHint.ai_family = AF_UNSPEC;
+    aiHint.ai_family = addrinfo_family;
     // If we allow lookups of hostnames, use the AI_ADDRCONFIG flag to only
     // return addresses whose family we have an address configured for.
     //
@@ -102,6 +102,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
     struct addrinfo *aiTrav = aiRes;
     while (aiTrav != nullptr && (nMaxSolutions == 0 || vIP.size() < nMaxSolutions))
     {
+        assert(addrinfo_family == AF_UNSPEC ||  addrinfo_family == aiTrav->ai_family);
         CNetAddr resolved;
         if (aiTrav->ai_family == AF_INET)
         {
@@ -143,7 +144,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
  * @see Lookup(const char *, std::vector<CService>&, int, bool, unsigned int)
  *      for additional parameter descriptions.
  */
-bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
+bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, int addrinfo_family)
 {
     std::string strHost(pszName);
     if (strHost.empty())
@@ -152,7 +153,7 @@ bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nM
         strHost = strHost.substr(1, strHost.size() - 2);
     }
 
-    return LookupIntern(strHost.c_str(), vIP, nMaxSolutions, fAllowLookup);
+    return LookupIntern(strHost.c_str(), vIP, nMaxSolutions, fAllowLookup, addrinfo_family);
 }
 
  /**
