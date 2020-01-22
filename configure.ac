@@ -359,10 +359,13 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
 fi
 
 # fakeit does not work with GCC's devirtualization, which is enabled with -O2 or higher
-FAKEIT_CXXFLAGS=
+THIRD_PARTY_INCLUDE="-isystem ../third_party/include"
+
+FAKEIT_CXXFLAGS=$THIRD_PARTY_INCLUDE
 AX_CHECK_COMPILE_FLAG([-fno-devirtualize],[FAKEIT_CXXFLAGS="$FAKEIT_CXXFLAGS -fno-devirtualize"])
 AX_CHECK_COMPILE_FLAG([-Wno-ignored-optimization-argument],[FAKEIT_CXXFLAGS="$FAKEIT_CXXFLAGS -Wno-ignored-optimization-argument"])
 AC_SUBST(FAKEIT_CXXFLAGS)
+CXXFLAGS="$CXXFLAGS $FAKEIT_CXXFLAGS"
 
 enable_hwcrc32=no
 enable_sse41=no

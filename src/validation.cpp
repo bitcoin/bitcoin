@@ -3328,9 +3328,20 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     // First transaction must be coinbase, the rest must not be
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
-    for (unsigned int i = 1; i < block.vtx.size(); i++)
+
+    size_t totalPopTxes = 0;
+    for (unsigned int i = 1; i < block.vtx.size(); i++) {
+        if(VeriBlock::isPopTx(*block.vtx[i]))
+            ++totalPopTxes;
+
         if (block.vtx[i]->IsCoinBase())
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-multiple", "more than one coinbase");
+    }
+
+    auto& config = VeriBlock::getService<VeriBlock::Config>();
+    if(totalPopTxes > config.max_pop_tx_amount) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "too many pop txes", "number of pop vtx in a block is too high");
+    }
 
     // Check transactions
     // Must check for duplicate inputs (see CVE-2018-17144)

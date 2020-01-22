@@ -14,8 +14,8 @@
 #include <script/sigcache.h>
 #include <shutdown.h>
 #include <streams.h>
-#include <validation.h>
 #include <util/strencodings.h>
+#include <validation.h>
 
 #include <vbk/merkle.hpp>
 #include <vbk/service_locator.hpp>
@@ -71,8 +71,7 @@ PopServiceImpl::PopServiceImpl(bool altautoconfig)
         LogPrintf("Alt-service is not working, please run the alt-service before you start the daemon \n");
         LogPrintf("-------------------------------------------------------------------------------------------------\n");
         StartShutdown();
-    }
-    else if (altautoconfig){
+    } else if (altautoconfig) {
         setConfig();
     }
 }
@@ -143,7 +142,7 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
         assert(parsePopTx(tx, &publications, nullptr, &type) && "scriptSig of pop tx is invalid in savePopTxToDatabase");
 
         // skip all non-publications txes
-        if(type != PopTxType::PUBLICATIONS) {
+        if (type != PopTxType::PUBLICATIONS) {
             continue;
         }
 
@@ -426,14 +425,14 @@ void PopServiceImpl::setConfig()
     calculatorConfig->set_basicreward(std::to_string(COIN));
     calculatorConfig->set_payoutrounds(config.payoutRounds);
     calculatorConfig->set_keystoneround(config.keystoneRound);
-    
+
     RoundRatioConfig* roundRatioConfig = new RoundRatioConfig();
     for (size_t i = 0; i < config.roundRatios.size(); ++i) {
         std::string* round = roundRatioConfig->add_roundratio();
         *round = config.roundRatios[i];
     }
     calculatorConfig->set_allocated_roundratios(roundRatioConfig);
-    
+
     RewardCurveConfig* rewardCurveConfig = new RewardCurveConfig();
     rewardCurveConfig->set_startofdecreasingline(config.startOfDecreasingLine);
     rewardCurveConfig->set_widthofdecreasinglinenormal(config.widthOfDecreasingLineNormal);
@@ -459,7 +458,7 @@ void PopServiceImpl::setConfig()
 
     calculatorConfig->set_popdifficultyaveraginginterval(config.POP_DIFFICULTY_AVERAGING_INTERVAL);
     calculatorConfig->set_poprewardsettlementinterval(config.POP_REWARD_SETTLEMENT_INTERVAL);
-    
+
     //ForkresolutionConfig
     ForkresolutionConfigRequest* forkresolutionConfig = new ForkresolutionConfigRequest();
     forkresolutionConfig->set_keystonefinalitydelay(config.keystone_finality_delay);
@@ -499,7 +498,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
 {
     bool isValid = true;
     const auto& config = getService<Config>();
-
+    size_t numOfPopTxes = 0;
     std::string error_message;
 
     LOCK(mempool.cs);
@@ -510,6 +509,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
             continue;
         }
 
+        ++numOfPopTxes;
         Publications publications;
         Context context;
         PopTxType type = PopTxType::UNKNOWN;
@@ -602,6 +602,11 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             continue;
         }
+    }
+
+    if (numOfPopTxes > config.max_pop_tx_amount) {
+        error_message += strprintf("too many pop transactions: actual %d > %d expected \n", numOfPopTxes, config.max_pop_tx_amount);
+        isValid = false;
     }
 
     if (!isValid) {

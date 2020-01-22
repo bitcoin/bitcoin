@@ -111,7 +111,7 @@ static bool AppInit(int argc, char* argv[])
         VeriBlock::InitPopService(
             gArgs.GetArg("-althost", "127.0.0.1"),
             gArgs.GetArg("-altport", "19012"),
-            gArgs.GetBoolArg("-altautoconfig", true));
+            gArgs.GetBoolArg("-altautoconfig", false));
 
         if (!AppInitBasicSetup())
         {
@@ -155,8 +155,6 @@ static bool AppInit(int argc, char* argv[])
             return false;
         }
         fRet = AppInitMain(node);
-        // connman is initialized in AppInitMain
-        VeriBlock::InitRpcService(node.connman.get());
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");

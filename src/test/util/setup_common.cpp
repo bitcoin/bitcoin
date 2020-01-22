@@ -176,7 +176,11 @@ TestChain100Setup::TestChain100Setup()
 
 // Create a new block with just given transactions, coinbase paying to
 // scriptPubKey, and try to add it to the current chain.
-CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
+CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey) {
+    return this->CreateAndProcessBlock(txns, scriptPubKey, nullptr);
+}
+
+CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey, bool* isBlockValid)
 {
     const CChainParams& chainparams = Params();
     std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
@@ -196,7 +200,11 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
+
+    bool isValid = ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
+    if(isBlockValid != nullptr) {
+        *isBlockValid = isValid;
+    }
 
     CBlock result = block;
     return result;

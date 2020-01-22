@@ -20,7 +20,7 @@ VBK_INTEGRATION_TESTS =  \
   
   
 vbk_test_integration_test_int_vbk_SOURCES = $(VBK_INTEGRATION_TEST_SUITE) $(VBK_INTEGRATION_TESTS)
-vbk_test_integration_test_int_vbk_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS) $(THIRD_PARTY_INCLUDE)
+vbk_test_integration_test_int_vbk_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS) $(FAKEIT_CXXFLAGS)
 vbk_test_integration_test_int_vbk_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(FAKEIT_CXXFLAGS)
 
 vbk_test_integration_test_int_vbk_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) \
