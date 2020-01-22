@@ -75,7 +75,7 @@ bool NetWhitebindPermissions::TryParse(const std::string& str, NetWhitebindPermi
 
     const std::string strBind = str.substr(offset);
     CService addrBind;
-    if (!Lookup(strBind.c_str(), addrBind, 0, false)) {
+    if (!Lookup(strBind, addrBind, 0, false)) {
         error = ResolveErrMsg("whitebind", strBind);
         return false;
     }
@@ -98,7 +98,7 @@ bool NetWhitelistPermissions::TryParse(const std::string& str, NetWhitelistPermi
 
     const std::string net = str.substr(offset);
     CSubNet subnet;
-    LookupSubNet(net.c_str(), subnet);
+    LookupSubNet(net, subnet);
     if (!subnet.IsValid()) {
         error = strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net);
         return false;

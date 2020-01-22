@@ -116,7 +116,7 @@ int StatsdClient::init()
     d->server.sin_port = htons(d->port);
 
     CNetAddr netaddr(d->server.sin_addr);
-    if (!LookupHost(d->host.c_str(), netaddr, true) || !netaddr.GetInAddr(&d->server.sin_addr)) {
+    if (!LookupHost(d->host, netaddr, true) || !netaddr.GetInAddr(&d->server.sin_addr)) {
         snprintf(d->errmsg, sizeof(d->errmsg), "LookupHost or GetInAddr failed");
         return -2;
     }
