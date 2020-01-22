@@ -45,8 +45,6 @@ struct Config {
 
     /// The maximum allowed number of PoP transaction in a block
     uint32_t max_pop_tx_amount = 50;
-    /// The maximum allowed number of "UpdateContext" transactions in a block
-    uint32_t max_update_context_tx_amount = 1;
 
 
     /////// Pop Rewards section start
