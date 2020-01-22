@@ -156,8 +156,8 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     }
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
-    usedReceivingAddressesPage->setModel(_walletModel->getAddressTableModel());
-    usedSendingAddressesPage->setModel(_walletModel->getAddressTableModel());
+    usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
+    usedSendingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
 
     if (_walletModel)
     {

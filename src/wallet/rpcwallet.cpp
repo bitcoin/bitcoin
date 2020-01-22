@@ -3150,6 +3150,81 @@ UniValue generate(const JSONRPCRequest& request)
 }
 #endif //ENABLE_MINING
 
+UniValue rescanblockchain(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 2) {
+        throw std::runtime_error(
+            "rescanblockchain (\"start_height\") (\"stop_height\")\n"
+            "\nRescan the local blockchain for wallet related transactions.\n"
+            "\nArguments:\n"
+            "1. \"start_height\"    (numeric, optional) block height where the rescan should start\n"
+            "2. \"stop_height\"     (numeric, optional) the last block height that should be scanned\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"start_height\"     (numeric) The block height where the rescan has started. If omitted, rescan started from the genesis block.\n"
+            "  \"stop_height\"      (numeric) The height of the last rescanned block. If omitted, rescan stopped at the chain tip.\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("rescanblockchain", "100000 120000")
+            + HelpExampleRpc("rescanblockchain", "100000, 120000")
+            );
+    }
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    CBlockIndex *pindexStart = chainActive.Genesis();
+    CBlockIndex *pindexStop = nullptr;
+    if (!request.params[0].isNull()) {
+        pindexStart = chainActive[request.params[0].get_int()];
+        if (!pindexStart) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid start_height");
+        }
+    }
+
+    if (!request.params[1].isNull()) {
+        pindexStop = chainActive[request.params[1].get_int()];
+        if (!pindexStop) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid stop_height");
+        }
+        else if (pindexStop->nHeight < pindexStart->nHeight) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "stop_height must be greater then start_height");
+        }
+    }
+
+    // We can't rescan beyond non-pruned blocks, stop and throw an error
+    if (fPruneMode) {
+        CBlockIndex *block = pindexStop ? pindexStop : chainActive.Tip();
+        while (block && block->nHeight >= pindexStart->nHeight) {
+            if (!(block->nStatus & BLOCK_HAVE_DATA)) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Can't rescan beyond pruned data. Use RPC call getblockchaininfo to determine your pruned height.");
+            }
+            block = block->pprev;
+        }
+    }
+
+    CBlockIndex *stopBlock = pwallet->ScanForWalletTransactions(pindexStart, pindexStop, true);
+    if (!stopBlock) {
+        if (pwallet->IsAbortingRescan()) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted.");
+        }
+        // if we got a nullptr returned, ScanForWalletTransactions did rescan up to the requested stopindex
+        stopBlock = pindexStop ? pindexStop : chainActive.Tip();
+    }
+    else {
+        throw JSONRPCError(RPC_MISC_ERROR, "Rescan failed. Potentially corrupted data files.");
+    }
+
+    UniValue response(UniValue::VOBJ);
+    response.pushKV("start_height", pindexStart->nHeight);
+    response.pushKV("stop_height", stopBlock->nHeight);
+    return response;
+}
+
 extern UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue importprivkey(const JSONRPCRequest& request);
@@ -3160,6 +3235,7 @@ extern UniValue importwallet(const JSONRPCRequest& request);
 extern UniValue importprunedfunds(const JSONRPCRequest& request);
 extern UniValue removeprunedfunds(const JSONRPCRequest& request);
 extern UniValue importmulti(const JSONRPCRequest& request);
+extern UniValue rescanblockchain(const JSONRPCRequest& request);
 
 extern UniValue dumphdinfo(const JSONRPCRequest& request);
 extern UniValue importelectrumwallet(const JSONRPCRequest& request);
@@ -3218,6 +3294,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   {"oldpassphrase","newpassphrase"} },
     { "wallet",             "walletpassphrase",         &walletpassphrase,         {"passphrase","timeout","mixingonly"} },
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        {"txid"} },
+    { "wallet",             "rescanblockchain",         &rescanblockchain,         {"start_height", "stop_height"} },
 
 #if ENABLE_MINER
     { "generating",         "generate",                 &generate,                 {"nblocks","maxtries"} },

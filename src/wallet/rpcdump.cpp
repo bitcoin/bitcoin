@@ -674,7 +674,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
     pwallet->UpdateTimeFirstKey(nTimeBegin);
 
     LogPrintf("Rescanning %i blocks\n", chainActive.Height() - nStartHeight + 1);
-    pwallet->ScanForWalletTransactions(chainActive[nStartHeight], true);
+    pwallet->ScanForWalletTransactions(chainActive[nStartHeight], nullptr, true);
 
     if (!fGood)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys to wallet");

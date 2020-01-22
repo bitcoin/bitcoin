@@ -24,9 +24,9 @@ facilitates social contribution, easy testing and peer review.
 
 To contribute a patch, the workflow is as follows:
 
-  - Fork repository
-  - Create topic branch
-  - Commit patches
+  1. Fork repository
+  1. Create topic branch
+  1. Commit patches
 
 The project coding conventions in the [developer notes](doc/developer-notes.md)
 must be adhered to.
@@ -42,8 +42,8 @@ in init.cpp") in which case a single title line is sufficient. Commit messages s
 helpful to people reading your code in the future, so explain the reasoning for
 your decisions. Further explanation [here](http://chris.beams.io/posts/git-commit/).
 
-If a particular commit references another issue, please add the reference, for
-example `refs #1234`, or `fixes #4321`. Using the `fixes` or `closes` keywords
+If a particular commit references another issue, please add the reference. For
+example: `refs #1234` or `fixes #4321`. Using the `fixes` or `closes` keywords
 will cause the corresponding issue to be closed when the pull request is merged.
 
 Please refer to the [Git manual](https://git-scm.com/doc) for more information
@@ -85,7 +85,7 @@ Note that translations should not be submitted as pull requests, please see
 [Translation Process](https://github.com/dashpay/dash/blob/master/doc/translation_process.md) 
 for more information on helping with translations.
 
-If a pull request is specifically not to be considered for merging (yet) please
+If a pull request is not to be considered for merging (yet), please
 prefix the title with [WIP] or use [Tasks Lists](https://help.github.com/articles/basic-writing-and-formatting-syntax/#task-lists)
 in the body of the pull request to indicate tasks are pending.
 
