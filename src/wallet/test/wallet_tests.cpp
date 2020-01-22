@@ -629,10 +629,16 @@ public:
         BOOST_CHECK(wallet->CreateTransaction({recipient}, wtx, reservekey, fee, changePos, error, dummy));
         CValidationState state;
         BOOST_CHECK(wallet->CommitTransaction(wtx, reservekey, nullptr, state));
+        CMutableTransaction blocktx;
+        {
+            LOCK(wallet->cs_wallet);
+            blocktx = CMutableTransaction(*wallet->mapWallet.at(wtx.tx->GetHash()).tx);
+        }
+        CreateAndProcessBlock({CMutableTransaction(blocktx)}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+        LOCK(cs_main);
         LOCK(wallet->cs_wallet);
         auto it = wallet->mapWallet.find(wtx.GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
-        CreateAndProcessBlock({CMutableTransaction(*it->second.tx)}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         it->second.SetMerkleBranch(chainActive.Tip(), 1);
         return it->second;
     }
