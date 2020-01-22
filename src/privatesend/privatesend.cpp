@@ -603,6 +603,13 @@ void CPrivateSend::UpdatedBlockTip(const CBlockIndex* pindex)
     }
 }
 
+void CPrivateSend::NotifyChainLock(const CBlockIndex* pindex)
+{
+    if (pindex && masternodeSync.IsBlockchainSynced()) {
+        CheckDSTXes(pindex);
+    }
+}
+
 void CPrivateSend::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, int nHeight)
 {
     AssertLockHeld(cs_mapdstx);
