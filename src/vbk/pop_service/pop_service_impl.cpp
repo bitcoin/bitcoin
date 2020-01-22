@@ -498,8 +498,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
 {
     bool isValid = true;
     const auto& config = getService<Config>();
-    size_t numOfPubTxes = 0;
-    size_t numOfCtxTxes = 0;
+    size_t numOfPopTxes = 0;
     std::string error_message;
 
     LOCK(mempool.cs);
@@ -510,6 +509,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
             continue;
         }
 
+        ++numOfPopTxes;
         Publications publications;
         Context context;
         PopTxType type = PopTxType::UNKNOWN;
@@ -522,7 +522,6 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
 
         switch (type) {
         case PopTxType::CONTEXT: {
-            ++numOfCtxTxes;
             try {
                 pop.updateContext(context.vbk, context.btc);
             } catch (const PopServiceException& e) {
@@ -535,7 +534,6 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
         }
 
         case PopTxType::PUBLICATIONS: {
-            ++numOfPubTxes;
             PublicationData popEndorsement;
             pop.getPublicationsData(publications, popEndorsement);
 
@@ -606,13 +604,8 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
         }
     }
 
-    if (numOfCtxTxes > config.max_update_context_tx_amount) {
-        error_message += strprintf("too many 'updatecontext' transactions: actual %d > %d expected \n", numOfCtxTxes, config.max_update_context_tx_amount);
-        isValid = false;
-    }
-
-    if (numOfCtxTxes + numOfPubTxes > config.max_pop_tx_amount) {
-        error_message += strprintf("too many PoP transactions: actual %d > %d expected \n", numOfPubTxes + numOfCtxTxes, config.max_pop_tx_amount);
+    if (numOfPopTxes > config.max_pop_tx_amount) {
+        error_message += strprintf("too many pop transactions: actual %d > %d expected \n", numOfPopTxes, config.max_pop_tx_amount);
         isValid = false;
     }
 
