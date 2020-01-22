@@ -7,6 +7,7 @@
 #include <test/setup_common.h>
 #include <random.h>
 #include <thread>
+#include <deque>
 
 /** Test Suite for CuckooCache
  *
