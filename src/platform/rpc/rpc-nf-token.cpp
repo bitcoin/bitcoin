@@ -362,7 +362,7 @@ Arguments:
 Examples:
 Display balance of "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address
 )"
-+ HelpExampleCli("nftoken", R"(balanceof "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" within global protocol context)")
++ HelpExampleCli("nftoken", R"(balanceof "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc")")
 + R"(Display balance of "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address within the "doc" protocol context
 )"
 + HelpExampleRpc("nftoken", R"(balanceof "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" "doc")");
