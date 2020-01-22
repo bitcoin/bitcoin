@@ -72,7 +72,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
         }
     }
 
-    TxToUniv(tx, uint256(), entry, &txSpentInfo);
+    TxToUniv(tx, uint256(), entry, true, &txSpentInfo);
 
     bool chainLock = false;
     if (!hashBlock.IsNull()) {
@@ -204,10 +204,8 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
             : "No such mempool transaction. Use -txindex to enable blockchain transaction queries") +
             ". Use gettransaction for wallet transactions.");
 
-    std::string strHex = EncodeHexTx(*tx);
-
     if (!fVerbose)
-        return strHex;
+        return EncodeHexTx(*tx);
 
     UniValue result(UniValue::VOBJ);
     TxToJSON(*tx, hashBlock, result);
@@ -520,7 +518,7 @@ UniValue decoderawtransaction(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
 
     UniValue result(UniValue::VOBJ);
-    TxToUniv(CTransaction(std::move(mtx)), uint256(), result);
+    TxToUniv(CTransaction(std::move(mtx)), uint256(), result, false);
 
     return result;
 }
