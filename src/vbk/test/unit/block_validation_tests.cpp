@@ -69,7 +69,7 @@ struct BlockValidationFixture : public TestChain100Setup {
 
 BOOST_AUTO_TEST_SUITE(block_validation_tests)
 
-BOOST_FIXTURE_TEST_CASE(BlockWith256PublicationTxes, BlockValidationFixture)
+BOOST_FIXTURE_TEST_CASE(BlockWithTooManyPublicationTxes, BlockValidationFixture)
 {
     std::vector<CMutableTransaction> pubs;
     for (size_t i = 0; i < 256 /* more than 50 */; ++i) {
@@ -83,7 +83,7 @@ BOOST_FIXTURE_TEST_CASE(BlockWith256PublicationTxes, BlockValidationFixture)
     BOOST_CHECK(!isBlockValid);
 }
 
-BOOST_FIXTURE_TEST_CASE(BlockWithMaxNumberOfPublicationTxes, BlockValidationFixture)
+BOOST_FIXTURE_TEST_CASE(BlockWithMaxNumberOfPopTxes, BlockValidationFixture)
 {
     auto& config = VeriBlock::getService<VeriBlock::Config>();
     std::vector<CMutableTransaction> pubs;
@@ -97,32 +97,6 @@ BOOST_FIXTURE_TEST_CASE(BlockWithMaxNumberOfPublicationTxes, BlockValidationFixt
     auto block = CreateAndProcessBlock(pubs, cbKey, &isBlockValid);
     BOOST_CHECK(isBlockValid);
     BOOST_CHECK(block.vtx.size() == config.max_pop_tx_amount + 1 /* coinbase */);
-}
-
-BOOST_FIXTURE_TEST_CASE(BlockWith1000ContextTxes, BlockValidationFixture)
-{
-    std::vector<CMutableTransaction> pubs;
-    std::generate_n(std::back_inserter(pubs), 1000, [&]() {
-        return VeriBlock::MakePopTx(ctxscript);
-    });
-
-    bool isBlockValid = true;
-    auto block = CreateAndProcessBlock(pubs, cbKey, &isBlockValid);
-    BOOST_CHECK(!isBlockValid);
-}
-
-BOOST_FIXTURE_TEST_CASE(BlockWithMaxContextTxes, BlockValidationFixture)
-{
-    auto& config = VeriBlock::getService<VeriBlock::Config>();
-    std::vector<CMutableTransaction> pubs;
-    std::generate_n(std::back_inserter(pubs), config.max_update_context_tx_amount, [&]() {
-        return VeriBlock::MakePopTx(ctxscript);
-    });
-
-    bool isBlockValid = true;
-    auto block = CreateAndProcessBlock(pubs, cbKey, &isBlockValid);
-    BOOST_CHECK(isBlockValid);
-    BOOST_CHECK(block.vtx.size() == config.max_update_context_tx_amount + 1 /* coinbase */);
 }
 
 
