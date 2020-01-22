@@ -280,13 +280,13 @@ bool CSporkManager::GetSporkByHash(const uint256& hash, CSporkMessage &sporkRet)
 
 bool CSporkManager::SetSporkAddress(const std::string& strAddress) {
     LOCK(cs);
-    CBitcoinAddress address(strAddress);
-    CKeyID keyid;
-    if (!address.IsValid() || !address.GetKeyID(keyid)) {
+    CTxDestination dest = DecodeDestination(strAddress);
+    const CKeyID *keyID = boost::get<CKeyID>(&dest);
+    if (!keyID) {
         LogPrintf("CSporkManager::SetSporkAddress -- Failed to parse spork address\n");
         return false;
     }
-    setSporkPubKeyIDs.insert(keyid);
+    setSporkPubKeyIDs.insert(*keyID);
     return true;
 }
 

@@ -219,7 +219,7 @@ void MasternodeList::updateDIP3List()
         CTxDestination payeeDest;
         QString payeeStr = tr("UNKNOWN");
         if (ExtractDestination(dmn->pdmnState->scriptPayout, payeeDest)) {
-            payeeStr = QString::fromStdString(CBitcoinAddress(payeeDest).ToString());
+            payeeStr = QString::fromStdString(EncodeDestination(payeeDest));
         }
         QTableWidgetItem* payeeItem = new QTableWidgetItem(payeeStr);
 
@@ -230,7 +230,7 @@ void MasternodeList::updateDIP3List()
             if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
                 CTxDestination operatorDest;
                 if (ExtractDestination(dmn->pdmnState->scriptOperatorPayout, operatorDest)) {
-                    operatorRewardStr += tr("to %1").arg(QString::fromStdString(CBitcoinAddress(operatorDest).ToString()));
+                    operatorRewardStr += tr("to %1").arg(QString::fromStdString(EncodeDestination(operatorDest)));
                 } else {
                     operatorRewardStr += tr("to UNKNOWN");
                 }
@@ -243,14 +243,14 @@ void MasternodeList::updateDIP3List()
         QString collateralStr = tr("UNKNOWN");
         auto collateralDestIt = mapCollateralDests.find(dmn->proTxHash);
         if (collateralDestIt != mapCollateralDests.end()) {
-            collateralStr = QString::fromStdString(CBitcoinAddress(collateralDestIt->second).ToString());
+            collateralStr = QString::fromStdString(EncodeDestination(collateralDestIt->second));
         }
         QTableWidgetItem* collateralItem = new QTableWidgetItem(collateralStr);
 
-        QString ownerStr = QString::fromStdString(CBitcoinAddress(dmn->pdmnState->keyIDOwner).ToString());
+        QString ownerStr = QString::fromStdString(EncodeDestination(dmn->pdmnState->keyIDOwner));
         QTableWidgetItem* ownerItem = new QTableWidgetItem(ownerStr);
 
-        QString votingStr = QString::fromStdString(CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString());
+        QString votingStr = QString::fromStdString(EncodeDestination(dmn->pdmnState->keyIDVoting));
         QTableWidgetItem* votingItem = new QTableWidgetItem(votingStr);
 
         QTableWidgetItem* proTxHashItem = new QTableWidgetItem(QString::fromStdString(dmn->proTxHash.ToString()));

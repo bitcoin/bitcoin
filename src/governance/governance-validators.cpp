@@ -152,13 +152,14 @@ bool CProposalValidator::ValidatePaymentAddress()
         return false;
     }
 
-    CBitcoinAddress address(strPaymentAddress);
-    if (!address.IsValid()) {
+    CTxDestination dest = DecodeDestination(strPaymentAddress);
+    if (!IsValidDestination(dest)) {
         strErrorMessages += "payment_address is invalid;";
         return false;
     }
 
-    if (address.IsScript()) {
+    const CScriptID *scriptID = boost::get<CScriptID>(&dest);
+    if (scriptID) {
         strErrorMessages += "script addresses are not supported;";
         return false;
     }

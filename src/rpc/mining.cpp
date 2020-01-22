@@ -187,12 +187,13 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
         nMaxTries = request.params[2].get_int();
     }
 
-    CBitcoinAddress address(request.params[1].get_str());
-    if (!address.IsValid())
+    CTxDestination destination = DecodeDestination(request.params[1].get_str());
+    if (!IsValidDestination(destination)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
+    }
 
     std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
-    coinbaseScript->reserveScript = GetScriptForDestination(address.Get());
+    coinbaseScript->reserveScript = GetScriptForDestination(destination);
 
     return generateBlocks(coinbaseScript, nGenerate, nMaxTries, false);
 }
@@ -682,12 +683,11 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     UniValue masternodeObj(UniValue::VARR);
     for (const auto& txout : pblocktemplate->voutMasternodePayments) {
-        CTxDestination address1;
-        ExtractDestination(txout.scriptPubKey, address1);
-        CBitcoinAddress address2(address1);
+        CTxDestination dest;
+        ExtractDestination(txout.scriptPubKey, dest);
 
         UniValue obj(UniValue::VOBJ);
-        obj.push_back(Pair("payee", address2.ToString().c_str()));
+        obj.push_back(Pair("payee", EncodeDestination(dest).c_str()));
         obj.push_back(Pair("script", HexStr(txout.scriptPubKey)));
         obj.push_back(Pair("amount", txout.nValue));
         masternodeObj.push_back(obj);
@@ -701,10 +701,9 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     if(pblocktemplate->voutSuperblockPayments.size()) {
         for (const auto& txout : pblocktemplate->voutSuperblockPayments) {
             UniValue entry(UniValue::VOBJ);
-            CTxDestination address1;
-            ExtractDestination(txout.scriptPubKey, address1);
-            CBitcoinAddress address2(address1);
-            entry.push_back(Pair("payee", address2.ToString().c_str()));
+            CTxDestination dest;
+            ExtractDestination(txout.scriptPubKey, dest);
+            entry.push_back(Pair("payee", EncodeDestination(dest).c_str()));
             entry.push_back(Pair("script", HexStr(txout.scriptPubKey)));
             entry.push_back(Pair("amount", txout.nValue));
             superblockObjArray.push_back(entry);
