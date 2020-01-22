@@ -48,9 +48,9 @@ class P2PPermissionsTests(BitcoinTestFramework):
         ip_port = "127.0.0.1:{}".format(p2p_port(1))
         self.replaceinconfig(1, "bind=127.0.0.1", "whitebind=bloomfilter,forcerelay@" + ip_port)
         self.checkpermission(
-            ["-whitelist=noban@127.0.0.1" ],
+            ["-whitelist=noban@127.0.0.1"],
             # Check parameter interaction forcerelay should activate relay
-            ["noban", "bloomfilter", "forcerelay", "relay" ],
+            ["noban", "bloomfilter", "forcerelay", "relay"],
             False)
         self.replaceinconfig(1, "whitebind=bloomfilter,forcerelay@" + ip_port, "bind=127.0.0.1")
 
@@ -95,9 +95,10 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
     def replaceinconfig(self, nodeid, old, new):
         with open(self.nodes[nodeid].bitcoinconf, encoding="utf8") as f:
-            newText=f.read().replace(old, new)
+            newText = f.read().replace(old, new)
         with open(self.nodes[nodeid].bitcoinconf, 'w', encoding="utf8") as f:
             f.write(newText)
+
 
 if __name__ == '__main__':
     P2PPermissionsTests().main()
