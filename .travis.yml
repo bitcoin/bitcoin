@@ -3,7 +3,7 @@
 #   IPv6 support
 
 sudo: required
-dist: trusty
+dist: bionic
 
 os: linux
 language: minimal
@@ -112,10 +112,6 @@ jobs:
 before_cache:
   # Save builder image
   - docker save dash-builder-$BUILD_TARGET-$TRAVIS_JOB_NUMBER $(docker history -q dash-builder-$BUILD_TARGET-$TRAVIS_JOB_NUMBER | grep -v \<missing\>) | gzip -2 > $HOME/cache/docker/dash-builder-$BUILD_TARGET.tar.gz
-
-before_install:
-  - travis_retry travis_apt_get_update
-  - travis_retry sudo apt-get -yq --no-install-suggests --no-install-recommends install docker-ce realpath
 
 install:
     # Our scripts try to be Travis agnostic
