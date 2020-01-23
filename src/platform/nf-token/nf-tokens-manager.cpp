@@ -327,7 +327,7 @@ namespace Platform
     void NfTokensManager::ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                                        int height,
                                                        int count,
-                                                       int startFrom) const
+                                                       int skipFromTip) const
     {
         LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
@@ -340,10 +340,8 @@ namespace Platform
             long rangeSize = std::distance(originalRange.first, originalRange.second);
             assert(rangeSize >= 0);
 
-            long reverseBegin = rangeSize < startFrom ? rangeSize : startFrom;
-            long reverseEnd = rangeSize < startFrom + count ? 0 : reverseBegin - count;
-            auto begin = std::prev(originalRange.second, reverseBegin);
-            auto end = std::prev(originalRange.second, reverseEnd);
+            auto begin = skipFromTip + count > rangeSize ? originalRange.first : std::prev(originalRange.second, skipFromTip + count);
+            auto end = skipFromTip > rangeSize ? originalRange.first : std::prev(originalRange.second, skipFromTip);
 
             NftIndexRange finalRange(begin, end);
             for (const auto & nftIndex : finalRange)
@@ -363,7 +361,7 @@ namespace Platform
                                                       uint64_t nftProtoId,
                                                       int height,
                                                       int count,
-                                                      int startFrom) const
+                                                      int skipFromTip) const
     {
         LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
@@ -374,10 +372,8 @@ namespace Platform
             long rangeSize = std::distance(first, second);
             assert(rangeSize >= 0);
 
-            long reverseBegin = rangeSize < startFrom ? rangeSize : startFrom;
-            long reverseEnd = rangeSize < startFrom + count ? 0 : reverseBegin - count;
-            auto begin = std::prev(second, reverseBegin);
-            auto end = std::prev(second, reverseEnd);
+            auto begin = skipFromTip + count > rangeSize ? first : std::prev(second, skipFromTip + count);
+            auto end = skipFromTip > rangeSize ? first : std::prev(second, skipFromTip);
 
             NftIndexRange finalRange(begin, end);
             for (const auto & nftIndex : finalRange)
@@ -397,7 +393,7 @@ namespace Platform
                                                        CKeyID keyId,
                                                        int height,
                                                        int count,
-                                                       int startFrom) const
+                                                       int skipFromTip) const
     {
         LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
@@ -408,10 +404,8 @@ namespace Platform
             long rangeSize = std::distance(first, second);
             assert(rangeSize >= 0);
 
-            long reverseBegin = rangeSize < startFrom ? rangeSize : startFrom;
-            long reverseEnd = rangeSize < startFrom + count ? 0 : reverseBegin - count;
-            auto begin = std::prev(second, reverseBegin);
-            auto end = std::prev(second, reverseEnd);
+            auto begin = skipFromTip + count > rangeSize ? first : std::prev(second, skipFromTip + count);
+            auto end = skipFromTip > rangeSize ? first : std::prev(second, skipFromTip);
 
             NftIndexRange finalRange(begin, end);
             for (const auto & nftIndex : finalRange)
@@ -432,7 +426,7 @@ namespace Platform
                                                        CKeyID keyId,
                                                        int height,
                                                        int count,
-                                                       int startFrom) const
+                                                       int skipFromTip) const
     {
         LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
@@ -443,10 +437,8 @@ namespace Platform
             long rangeSize = std::distance(first, second);
             assert(rangeSize >= 0);
 
-            long reverseBegin = rangeSize < startFrom ? rangeSize : startFrom;
-            long reverseEnd = rangeSize < startFrom + count ? 0 : reverseBegin - count;
-            auto begin = std::prev(second, reverseBegin);
-            auto end = std::prev(second, reverseEnd);
+            auto begin = skipFromTip + count > rangeSize ? first : std::prev(second, skipFromTip + count);
+            auto end = skipFromTip > rangeSize ? first : std::prev(second, skipFromTip);
 
             NftIndexRange finalRange(begin, end);
             for (const auto & nftIndex : finalRange)

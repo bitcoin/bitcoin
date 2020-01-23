@@ -150,9 +150,9 @@ Examples:
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
 
         static const int defaultTxsCount = 20;
-        static const int defaultStartFrom = 20;
+        static const int defaultSkipFromTip = 0;
         int count = (params.size() > 2) ? ParseInt32V(params[2], "count") : defaultTxsCount;
-        int startFrom = (params.size() > 3) ? ParseInt32V(params[3], "from") : defaultStartFrom;
+        int skipFromTip = (params.size() > 3) ? ParseInt32V(params[3], "skipFromTip") : defaultSkipFromTip;
         bool regTxOnly = (params.size() > 4) ? ParseBoolV(params[4], "regTxOnly") : false;
 
         json_spirit::Array protoList;
@@ -172,7 +172,7 @@ Examples:
             return true;
         };
 
-        NftProtocolsManager::Instance().ProcessNftProtoIndexRangeByHeight(protoHandler, height, count, startFrom);
+        NftProtocolsManager::Instance().ProcessNftProtoIndexRangeByHeight(protoHandler, height, count, skipFromTip);
         return protoList;
     }
 
@@ -185,7 +185,7 @@ Lists all NFT protocol records on chain
 Arguments:
 1. height      (numeric, optional) If height is not specified, it defaults to the current chain-tip
 2. count       (numeric, optional, default=20) The number of transactions to return
-3. from        (numeric, optional, default=0) The number of transactions to skip
+3. skipFromTip (numeric, optional, default=0) The number of transactions to skip from tip
 4. regTxOnly   (boolean, optional, default=false) false for a detailed list, true for an array of transaction IDs
 
 Examples:
@@ -195,10 +195,10 @@ List the most recent 20 NFT protocol records
 + R"(List the most recent 20 NFT protocol records up to 5050st block
 )"
 + HelpExampleCli("nftproto", R"(list 5050)")
-+ R"(List records 100 to 150 up to 5050st block
++ R"(List recent 100 records skipping 50 from the end up to 5050st block
 )"
 + HelpExampleCli("nftproto", R"(list 5050 100 50)")
-+ R"(List records 100 to 150 up to 5050st block. List only registration tx IDs.
++ R"(List recent 100 records skipping 50 from the end up to 5050st block. List only registration tx IDs.
 )"
 + HelpExampleCli("nftoken", R"(list 5050 100 50 true)")
 + R"(As JSON-RPC calls

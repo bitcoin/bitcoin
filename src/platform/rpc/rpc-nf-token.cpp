@@ -131,7 +131,7 @@ Arguments:
                       The private key belonging to this address may be or may be not known in your wallet. If "*" is set, it will list NFTs for all addresses.
 3. height             (numeric, optional) If height is not specified, it defaults to the current chain-tip
 4. count              (numeric, optional, default=20) The number of transactions to return
-5. from               (numeric, optional, default=0) The number of transactions to skip
+5. skipFromTip        (numeric, optional, default=0) The number of transactions to skip from tip
 6. regTxOnly          (boolean, optional, default=false) false for a detailed list, true for an array of transaction IDs
 
 Examples:
@@ -151,10 +151,10 @@ List the most recent 20 NFT records
  + R"(List the most recent 20 records of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address up to 5050st block
 )"
 + HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050)")
-+ R"(List records 100 to 150 of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address up to 5050st block
++ R"(List recent 100 records skipping 50 from the end of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address up to 5050st block
 )"
 + HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050 100 50)")
-+ R"(List records 100 to 150 of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address up to 5050st block. List only registration tx IDs.
++ R"(List recent 100 records skipping 50 from the end of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address up to 5050st block. List only registration tx IDs.
 )"
 + HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050 100 50 true)")
 + R"(As JSON-RPC calls
@@ -213,9 +213,9 @@ List the most recent 20 NFT records
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
 
         static const int defaultTxsCount = 20;
-        static const int defaultStartFrom = 20;
+        static const int defaultSkipFromTip = 0;
         int count = (params.size() > 4) ? ParseInt32V(params[4], "count") : defaultTxsCount;
-        int startFrom = (params.size() > 5) ? ParseInt32V(params[5], "from") : defaultStartFrom;
+        int skipFromTip = (params.size() > 5) ? ParseInt32V(params[5], "skipFromTip") : defaultSkipFromTip;
         bool regTxOnly = (params.size() > 6) ? ParseBoolV(params[6], "regTxOnly") : false;
 
         json_spirit::Array nftList;
@@ -236,13 +236,13 @@ List the most recent 20 NFT records
         };
 
         if (nftProtoId == NfToken::UNKNOWN_TOKEN_PROTOCOL && filterKeyId.IsNull())
-            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, height, count, startFrom);
+            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, height, count, skipFromTip);
         else if (nftProtoId != NfToken::UNKNOWN_TOKEN_PROTOCOL && filterKeyId.IsNull())
-            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, nftProtoId, height, count, startFrom);
+            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, nftProtoId, height, count, skipFromTip);
         else if (nftProtoId == NfToken::UNKNOWN_TOKEN_PROTOCOL && !filterKeyId.IsNull())
-            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, filterKeyId, height, count, startFrom);
+            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, filterKeyId, height, count, skipFromTip);
         else if (nftProtoId != NfToken::UNKNOWN_TOKEN_PROTOCOL && !filterKeyId.IsNull())
-            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, nftProtoId, filterKeyId, height, count, startFrom);
+            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, nftProtoId, filterKeyId, height, count, skipFromTip);
 
         return nftList;
     }

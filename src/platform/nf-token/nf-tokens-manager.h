@@ -217,26 +217,26 @@ namespace Platform
             void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                               int height,
                                               int count,
-                                              int startFrom) const;
+                                              int skipFromTip) const;
 
             void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                               uint64_t nftProtoId,
                                               int height,
                                               int count,
-                                              int startFrom) const;
+                                              int skipFromTip) const;
 
             void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                               CKeyID keyId,
                                               int height,
                                               int count,
-                                              int startFrom) const;
+                                              int skipFromTip) const;
 
             void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                               uint64_t nftProtoId,
                                               CKeyID keyId,
                                               int height,
                                               int count,
-                                              int startFrom) const;
+                                              int skipFromTip) const;
 
             /// Delete a specified nf-token
             bool Delete(uint64_t protocolId, const uint256 & tokenId);
