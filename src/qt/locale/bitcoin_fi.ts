@@ -791,6 +791,10 @@
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
         <translation>Luodaan lompakkoa &lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Lompakon luonti epäonnistui</translation>
+    </message>
     </context>
 <context>
     <name>CreateWalletDialog</name>
@@ -809,6 +813,14 @@
     <message>
         <source>Encrypt Wallet</source>
         <translation>Salaa lompakko</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Poista yksityisavaimet käytöstä</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Luo tyhjä lompakko. Tyhjissä lompakoissa ei aluksi ole yksityisavaimia tai skriptejä. Myöhemmin voidaan tuoda yksityisavaimia ja -osoitteita, tai asettaa HD-siemen.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -933,6 +945,10 @@
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
         <translation>Kun valitset OK, %1 aloittaa lataamaan ja käsittelemään koko %4 lohkoketjua (%2GB) aloittaen ensimmäisestä siirrosta %3 jolloin %4 käynnistettiin ensimmäistä kertaa.</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>Tämän asetuksen peruuttaminen vaatii koko lohkoketjun uudelleenlataamisen. On nopeampaa ladata koko ketju ensin ja karsia se myöhemmin. Tämä myös poistaa käytöstä joitain edistyneitä toimintoja.</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1678,6 +1694,10 @@
         <translation>Virhe käännettäessä URI:a QR-koodiksi.</translation>
     </message>
     <message>
+        <source>QR code support not available.</source>
+        <translation>Tukea QR-koodeille ei ole saatavilla.</translation>
+    </message>
+    <message>
         <source>Save QR Code</source>
         <translation>Tallenna QR-koodi</translation>
     </message>
@@ -2355,6 +2375,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>%1 (%2 blocks)</source>
         <translation>%1 (%2 lohkoa)</translation>
+    </message>
+    <message>
+        <source> from wallet '%1'</source>
+        <translation> lompakosta '%1'</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -3434,6 +3458,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Ladataan P2P-vertaisten osoitteita...</translation>
     </message>
     <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>Virhe: Liian vähän levytilaa!</translation>
+    </message>
+    <message>
         <source>Loading banlist...</source>
         <translation>Ladataan kieltolistaa...</translation>
     </message>
@@ -3536,6 +3564,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Pitää määritellä portti argumentilla -whitebind: '%s'</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>Karsintatila ei ole yhteensopiva -blockfilterindex valinnan kanssa</translation>
     </message>
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>

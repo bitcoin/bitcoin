@@ -1494,6 +1494,10 @@
         <translation>BIP70のサポートが組み込まれていないため、支払いリクエストを処理することができません。</translation>
     </message>
     <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>BIP70 に内在する広く知られたセキュリティ上の欠陥がるため、ウォレットを切り替えるというマーチャントからの指示については無視することが強く推奨されます。</translation>
+    </message>
+    <message>
         <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
         <translation>このエラーが発生する場合は、販売者にBIP21互換URIの提供を依頼するべきです。</translation>
     </message>

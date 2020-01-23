@@ -19,7 +19,7 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;நகல்</translation>
+        <translation>&amp;காபி</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -35,7 +35,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>தற்போதைய தாவலில் தரவை ஒரு கோப்பிற்கு ஏற்றுமதி செய்க</translation>
+        <translation>தற்போதைய டாபில் உள்ள தகவலை ஒரு பைலிற்கு ஏக்ஸ்போர்ட் செய்க</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -51,7 +51,7 @@
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>நாணயங்களைப் பெற முகவரியைத் தேர்வுசெய்யவும்</translation>
+        <translation>பிட்காயின்களை பெற முகவரியைத் தேர்வுசெய்யவும்</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -67,7 +67,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>இவை பணம் அனுப்புவதற்கு உங்கள் பிட்கின் முகவரிகள். நாணயங்களை அனுப்புவதற்கு முன் எப்பொழுதும் தொகையும் பெறுதலையும் சரிபார்க்கவும்.</translation>
+        <translation>இவை பணம் அனுப்புவதற்கு உங்களின் பிட்காயின் முகவரிகள். பிட்காயின்களை அனுப்புவதற்கு முன் எப்பொழுதும் தொகையும் பெறுதலையும் சரிபார்க்கவும்.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
@@ -75,19 +75,19 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp; நகல் முகவரி</translation>
+        <translation>&amp;காபி முகவரி</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>&amp; லேபிள் நகலெடு</translation>
+        <translation>காபி &amp;லேபிள்</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>&amp;தொகு</translation>
+        <translation>&amp;எடிட்</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>முகவரி பட்டியல் ஏற்றுமதி</translation>
+        <translation>முகவரி பட்டியல் ஏக்ஸ்போர்ட் செய்க </translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -95,11 +95,11 @@
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>ஏற்றுமதி தோல்வியடைந்தது</translation>
+        <translation>ஏக்ஸ்போர்ட் தோல்வியடைந்தது</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>முகவரி பட்டியலை %1 க்கு சேமிக்க முயற்சிக்கும் ஒரு பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சி செய்க.</translation>
+        <translation>முகவரி பட்டியலை %1 க்கு சேமிக்க முயற்சிக்கும் ஒரு பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.</translation>
     </message>
 </context>
 <context>
@@ -141,7 +141,7 @@
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>குறியாக்க பணப்பையை</translation>
+        <translation>வாலட்டை குறியாக்கு</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
@@ -448,6 +448,10 @@
     <message>
         <source>&amp;Command-line options</source>
         <translation>&amp; கட்டளை வரி விருப்பங்கள்</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>பிட்காயின் வலையமைப்புடன் %n செயலில் உள்ள இணைப்புகள்</numerusform><numerusform>பிட்காயின் வலையமைப்புடன் %n செயலில் உள்ள இணைப்புகள்</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -1001,6 +1005,14 @@
     <message>
         <source>Error</source>
         <translation>பிழை</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n ஜிபி அளவு காலியாக உள்ளது</numerusform><numerusform>%n ஜிபி அளவு காலியாக உள்ளது</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(%n ஜிபி தேவை)</numerusform><numerusform>(%n ஜிபி தேவை)</numerusform></translation>
     </message>
     </context>
 <context>
@@ -2446,7 +2458,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>%n பிளாக்குள் உறுதிப்படுத்தலைத் தொடங்க மதிப்பிடப்பட்டுள்ளது.</numerusform><numerusform>%n பிளாக்குள் உறுதிப்படுத்தலைத் தொடங்க மதிப்பிடப்பட்டுள்ளது.</numerusform></translation>
+        <translation><numerusform>%n பிளாக் உறுதிப்படுத்தலைத் தொடங்க மதிப்பிடப்பட்டுள்ளது.</numerusform><numerusform>%n பிளாக்குள் உறுதிப்படுத்தலைத் தொடங்க மதிப்பிடப்பட்டுள்ளது.</numerusform></translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -3155,9 +3167,13 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
-        <translation>நீங்கள் வாலட்டை மூட விரும்புகிறீர்களா? &lt;i&gt;%1&lt;/i&gt;?</translation>
+        <translation>நீங்கள் வாலட்டை மூட விரும்புகிறீர்களா &lt;i&gt;%1&lt;/i&gt;?</translation>
     </message>
-    </context>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>வாலட்டை அதிக நேரம் மூடுவதாலும் ப்ரூனிங் இயக்கப்பட்டாலோ முழு செயினை ரீசிங்க் செய்வதற்கு இது வழிவகுக்கும்.</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -3258,6 +3274,18 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>எம்ஐடி சாப்ட்வேர் விதிமுறைகளின் கீழ் பகிர்ந்தளிக்கப்படுகிறது, அதனுடன் கொடுக்கப்பட்டுள்ள %s அல்லது %s பைல் ஐ பார்க்கவும்</translation>
     </message>
     <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation>ப்ரூனிங் குறைந்தபட்சம் %d MiB க்கு கீழே கட்டமைக்கப்பட்டுள்ளது. அதிக எண்ணிக்கையைப் பயன்படுத்தவும்.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>ப்ரூன்: கடைசி வாலட் ஒத்திசைவு ப்ரூன் தரவுக்கு அப்பாற்பட்டது. நீங்கள் -reindex செய்ய வேண்டும் (ப்ரூன் நோட் உபயோகித்தால் முழு பிளாக்செயினையும் மீண்டும் டவுன்லோட் செய்யவும்)</translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>ப்ரூனிங் பயன்முறையில் ரீஸ்கேன்கள் சாத்தியமில்லை. நீங்கள் -reindex ஐப் பயன்படுத்த வேண்டும், இது முழு பிளாக்செயினையும் மீண்டும் டவுன்லோட் செய்யும்.</translation>
+    </message>
+    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>பிழை: ஆபத்தான உள் பிழை ஏற்பட்டது, விவரங்களுக்கு debug.log ஐ பார்க்கவும்</translation>
     </message>
@@ -3274,8 +3302,20 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%s டெவலப்பர்கள்</translation>
     </message>
     <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>மாற்று-முகவரி கீயை உருவாக்க முடியாது. கீ தகவல்தளத்தில் கீகள் இல்லை மற்றும் எந்த கீயையும் உருவாக்க முடியாது.</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>தரவு கோப்பகத்தை %s லாக் செய்ய முடியாது. %s ஏற்கனவே இயங்குகிறது.</translation>
+    </message>
+    <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>%s பயனுள்ளதாக இருந்தால் தயவுசெய்து பங்களியுங்கள். இந்த சாஃட்வேர் பற்றிய கூடுதல் தகவலுக்கு %s ஐப் பார்வையிடவும்.</translation>
+    </message>
+    <message>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation>இது ஒரு வெளியீட்டுக்கு முந்தைய சோதனை கட்டமைப்பாகும் - உங்கள் சொந்த ஆபத்தில் பயன்படுத்தவும் - மைனிங் அல்லது வணிக பயன்பாடுகளுக்கு பயன்படுத்த வேண்டாம்</translation>
     </message>
     <message>
         <source>%d of last 100 blocks have unexpected version</source>
@@ -3366,8 +3406,24 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>-discardfee கான தவறான தொகை=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
+        <translation>தவறான தொகை -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>குறிப்பிடப்பட்ட பிளாக் டைரக்டரி "%s" இல்லை.</translation>
+    </message>
+    <message>
         <source>Unknown address type '%s'</source>
         <translation>தெரியாத முகவரி வகை '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>தெரியாத மாற்று வகை '%s'</translation>
+    </message>
+    <message>
+        <source>Upgrading txindex database</source>
+        <translation>txindex தகவல்தளத்தை மேம்படுத்துதல்</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>
@@ -3375,7 +3431,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Error: Disk space is too low!</source>
-        <translation>பிழை: டிஸ்க் ஸ்பேஸ் மிகக் குறைவு!</translation>
+        <translation>பிழை: டிஸ்க் ஸ்பேஸ் மிகக் குறைவாக உள்ளது!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3386,8 +3442,20 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>போதுமான ஃபைல் டிஸ்கிரிப்டார் கிடைக்கவில்லை.</translation>
     </message>
     <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation>ப்ரூனை எதிர்மறை மதிப்புகளுடன் கட்டமைக்க முடியாது.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation>ப்ரூன் பயன்முறை -txindex உடன் பொருந்தாது.</translation>
+    </message>
+    <message>
         <source>Replaying blocks...</source>
         <translation>பிளாக்குகள் மீண்டும் இயக்குகிறது...</translation>
+    </message>
+    <message>
+        <source>Rewinding blocks...</source>
+        <translation>பிளாக்குகள் ரீவைன்ட் செய்யப்படுகிறது...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
@@ -3400,6 +3468,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Unable to generate keys</source>
         <translation>கீஸை உருவாக்க முடியவில்லை</translation>
+    </message>
+    <message>
+        <source>Upgrading UTXO database</source>
+        <translation>UTXO தகவல்தளம் மேம்படுத்தப்படுகிறது</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -3416,6 +3488,50 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>டேட்டாபேசிலிருந்து படிப்பதில் பிழை, ஷட் டவுன் செய்யப்படுகிறது.</translation>
+    </message>
+    <message>
+        <source>Error upgrading chainstate database</source>
+        <translation>செயின்ஸ்டேட் தகவல்தளத்தை மேம்படுத்துவதில் பிழை</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>பிழை: டிஸ்க் ஸ்பேஸ் %s க்கு குறைவாக உள்ளது</translation>
+    </message>
+    <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>தவறான -onion முகவரி அல்லது ஹோஸ்ட்நேம்: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>தவறான -proxy முகவரி அல்லது ஹோஸ்ட்நேம்: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation>-paytxfee க்கான தவறான தொகை=&lt;amount&gt;: '%s' (குறைந்தது %s ஆக இருக்க வேண்டும்)</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>ப்ரூன் பயன்முறை -blockfilterindex உடன் பொருந்தாது.</translation>
+    </message>
+    <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation>கணினி வரம்புகள் காரணமாக -maxconnections %d இலிருந்து %d ஆகக் குறைக்கப்படுகிறது.</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>பிரிவு [%s] கண்டறியப்படவில்லை.</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation>கையொப்பமிடும் பரிவர்த்தனை தோல்வியடைந்தது</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>குறிப்பிடப்பட்ட -walletdir "%s" இல்லை</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>குறிப்பிடப்பட்ட -walletdir "%s" ஒரு டைரக்டரி அல்ல</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3456,6 +3572,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Loading wallet...</source>
         <translation>வாலட் லோடிங் செய்யப்படுகிறது...</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet</source>
+        <translation>வாலட்டை தரமிறக்க முடியாது</translation>
+    </message>
+    <message>
+        <source>Rescanning...</source>
+        <translation>ரீஸ்கேன்னிங்...</translation>
     </message>
     <message>
         <source>Done loading</source>
