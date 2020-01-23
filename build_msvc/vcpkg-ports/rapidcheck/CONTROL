@@ -1,0 +1,3 @@
+Source: rapidcheck
+Version: 2018-11-05-1
+Description: A property-based testing library for C++ (a la QuickCheck) with the goal of being simple to use with as little boilerplate as possible.

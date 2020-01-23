@@ -1,0 +1,23 @@
+using msvc : 14.0 : cl.exe :
+<setup>echo
+<compileflags>"\"/AI@PLATFORM_WINMD_DIR@\""
+<linkflags>kernel32.lib
+<linkflags>RuntimeObject.lib
+<linkflags>ole32.lib
+;
+
+using msvc : 14.1 : cl.exe :
+<setup>echo
+<compileflags>"\"/AI@PLATFORM_WINMD_DIR@\""
+<linkflags>kernel32.lib
+<linkflags>RuntimeObject.lib
+<linkflags>ole32.lib
+;
+
+project user-config ;
+              
+lib icuuc : : <name>dummy_lib_that_doesnt_exist ;
+                            
+lib icuin : : <name>dummy_lib_that_doesnt_exist ;
+              
+lib icudt : : <name>dummy_lib_that_doesnt_exist ;

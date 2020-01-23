@@ -1,0 +1,4 @@
+Source: berkeleydb
+Version: 4.8.30-3
+Homepage: https://download.oracle.com/
+Description: BDB - A high-performance embedded database for key/value data.

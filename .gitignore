@@ -81,6 +81,7 @@ src/qt/bitcoin-qt.includes
 # Only ignore unexpected patches
 *.patch
 !depends/patches/**/*.patch
+!build_msvc/vcpkg-ports/**/*.patch
 
 #libtool object files
 *.lo

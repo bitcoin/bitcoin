@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index bf333f3..5bc2a54 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -230,7 +230,7 @@ endif()
+ 
+ if (${MSVC})
+     set(msvc_static_runtime OFF)
+-    if ("${EVENT_LIBRARY_TYPE}" STREQUAL "STATIC")
++    if ("${VCPKG_CRT_LINKAGE}" STREQUAL "STATIC")
+         set(msvc_static_runtime ON)
+     endif()
+ 

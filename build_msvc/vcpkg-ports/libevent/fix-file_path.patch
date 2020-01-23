@@ -1,0 +1,26 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6e91c08..44b6e18 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1430,7 +1430,7 @@ configure_file(${PROJECT_SOURCE_DIR}/cmake/LibeventConfigBuildTree.cmake.in
+ # Calculate the relative directory from the Cmake dir.
+ file(RELATIVE_PATH
+      REL_INCLUDE_DIR
+-     "${EVENT_INSTALL_CMAKE_DIR}"
++     "${CURRENT_PACKAGES_DIR}/${EVENT_INSTALL_CMAKE_DIR}"
+      "${CMAKE_INSTALL_PREFIX}/include")
+ 
+ # Note the LIBEVENT_CMAKE_DIR is defined in LibeventConfig.cmake.in,
+diff --git a/cmake/AddEventLibrary.cmake b/cmake/AddEventLibrary.cmake
+index 9de4484..411ca9d 100644
+--- a/cmake/AddEventLibrary.cmake
++++ b/cmake/AddEventLibrary.cmake
+@@ -113,7 +113,7 @@ macro(add_event_library LIB_NAME)
+         EXPORT LibeventTargets
+         LIBRARY DESTINATION "lib" COMPONENT lib
+         ARCHIVE DESTINATION "lib" COMPONENT lib
+-        RUNTIME DESTINATION "lib" COMPONENT lib
++        RUNTIME DESTINATION "bin" COMPONENT bin
+         PUBLIC_HEADER DESTINATION "include/event2"
+         COMPONENT dev
+     )

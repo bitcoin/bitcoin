@@ -1,0 +1,4 @@
+Source: double-conversion
+Version: 3.1.5
+Homepage: https://github.com/google/double-conversion
+Description: Efficient binary-decimal and decimal-binary conversion routines for IEEE doubles.

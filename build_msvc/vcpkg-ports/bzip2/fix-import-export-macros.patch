@@ -1,0 +1,40 @@
+diff --git a/bzlib.h b/bzlib.h
+index 8277123..84fbd0a 100644
+--- a/bzlib.h
++++ b/bzlib.h
+@@ -65,29 +65,23 @@ typedef
+    } 
+    bz_stream;
+ 
+-
+-#ifndef BZ_IMPORT
+-#define BZ_EXPORT
+-#endif
+-
+ #ifndef BZ_NO_STDIO
+ /* Need a definitition for FILE */
+ #include <stdio.h>
+ #endif
+ 
+ #ifdef _WIN32
+-#   include <windows.h>
+ #   ifdef small
+       /* windows.h define small to char */
+ #      undef small
+ #   endif
+-#   ifdef BZ_EXPORT
+-#   define BZ_API(func) WINAPI func
+-#   define BZ_EXTERN extern
++#   define BZ_API(func) func
++#   if defined(BZ_BUILD_DLL)
++#      define BZ_EXTERN __declspec(dllexport)
++#   elif defined(BZ_IMPORT)
++#      define BZ_EXTERN __declspec(dllimport)
+ #   else
+-   /* import windows dll dynamically */
+-#   define BZ_API(func) (WINAPI * func)
+-#   define BZ_EXTERN
++#      define BZ_EXTERN
+ #   endif
+ #else
+ #   define BZ_API(func) func

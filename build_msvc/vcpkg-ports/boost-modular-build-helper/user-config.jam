@@ -1,0 +1,52 @@
+import toolset ;
+
+if "@VCPKG_PLATFORM_TOOLSET@" != "external"
+{
+    using msvc : : cl.exe :
+    <setup>"@NOTHING_BAT@"
+    @TOOLSET_OPTIONS@
+    ;
+}
+else
+{
+    using gcc : 5.4.1 : @CMAKE_CXX_COMPILER@
+        :
+        <ranlib>@CMAKE_RANLIB@
+        <archiver>@CMAKE_AR@
+        @CXXFLAGS@
+        @CFLAGS@
+        @LDFLAGS@
+        # MINGW here causes b2 to not run cygpath
+        <flavor>mingw
+        ;
+}
+
+if "@PORT@" = "boost-python"
+{
+    using python : @PYTHON_VERSION@ : : "@PYTHON_INCLUDE_PATH@" : "@PYTHONLIBS_RELEASE@" ;
+    using python : @PYTHON_VERSION@ : : "@PYTHON_INCLUDE_PATH@" : "@PYTHONLIBS_DEBUG@" : <python-debugging>on ;
+}
+
+if "@PORT@" = "boost-mpi"
+{
+    using mpi : :
+        <library-path>"@CURRENT_INSTALLED_DIR@/lib"
+        <include>"@CURRENT_INSTALLED_DIR@/include"
+        <find-shared-library>msmpi ;
+}
+
+project user-config : ;
+
+lib advapi32 ;
+
+lib icuuc : : <file>"@CURRENT_INSTALLED_DIR@/lib/icuuc.lib" <variant>release : : <library>advapi32 ;
+lib icuuc : : <file>"@CURRENT_INSTALLED_DIR@/debug/lib/icuucd.lib" <variant>debug : : <library>advapi32 ;
+
+lib icuin : : <file>"@CURRENT_INSTALLED_DIR@/lib/icuin.lib" <variant>release : : ;
+lib icuin : : <file>"@CURRENT_INSTALLED_DIR@/debug/lib/icuind.lib" <variant>debug : : ;
+
+lib icudt : : <file>"@CURRENT_INSTALLED_DIR@/lib/icudt.lib" <variant>release : : ;
+lib icudt : : <file>"@CURRENT_INSTALLED_DIR@/debug/lib/icudtd.lib" <variant>debug : : ;
+
+lib iconv : : <file>"@LIBICONV_LIBRARY@" <link>shared <runtime-link>shared <variant>release : : ;
+lib iconv : : <file>"@LIBICONV_LIBRARY@" <link>shared <runtime-link>shared <variant>debug : : ;

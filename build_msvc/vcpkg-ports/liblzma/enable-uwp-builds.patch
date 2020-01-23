@@ -1,0 +1,26 @@
+diff --git a/src/common/tuklib_physmem.c b/src/common/tuklib_physmem.c
+index 4053ad0..c49db6d 100644
+--- a/src/common/tuklib_physmem.c
++++ b/src/common/tuklib_physmem.c
+@@ -79,6 +79,13 @@ tuklib_physmem(void)
+ 	uint64_t ret = 0;
+ 
+ #if defined(_WIN32) || defined(__CYGWIN__)
++#if defined (WINAPI_FAMILY_PARTITION) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP | WINAPI_PARTITION_SYSTEM)
++	MEMORYSTATUSEX ms;
++	ms.dwLength = sizeof(ms);
++	if(!GlobalMemoryStatusEx(&ms))
++		return 0;
++	return ms.ullTotalPhys;
++#else
+ 	if ((GetVersion() & 0xFF) >= 5) {
+ 		// Windows 2000 and later have GlobalMemoryStatusEx() which
+ 		// supports reporting values greater than 4 GiB. To keep the
+@@ -107,6 +114,7 @@ tuklib_physmem(void)
+ 		GlobalMemoryStatus(&meminfo);
+ 		ret = meminfo.dwTotalPhys;
+ 	}
++#endif
+ 
+ #elif defined(__OS2__)
+ 	unsigned long mem;

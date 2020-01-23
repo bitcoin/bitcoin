@@ -1,0 +1,13 @@
+diff --git a/cmake/LibeventConfig.cmake.in b/cmake/LibeventConfig.cmake.in
+index 5422336..d436100 100644
+--- a/cmake/LibeventConfig.cmake.in
++++ b/cmake/LibeventConfig.cmake.in
+@@ -8,7 +8,7 @@
+ get_filename_component(LIBEVENT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+ 
+ # Set the include directories.
+-set(LIBEVENT_INCLUDE_DIRS "@EVENT_INSTALL_INCLUDE_DIR@")
++set(LIBEVENT_INCLUDE_DIRS "${LIBEVENT_CMAKE_DIR}/../../include")
+ 
+ # Include the project Targets file, this contains definitions for IMPORTED targets.
+ include(${LIBEVENT_CMAKE_DIR}/LibeventTargets.cmake)

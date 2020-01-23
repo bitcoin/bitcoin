@@ -1,0 +1,166 @@
+---
+ libs/locale/build/Jamfile.v2       | 63 ++++++--------------------------------
+ libs/locale/build/has_icu_test.cpp |  4 ---
+ libs/regex/build/Jamfile.v2        | 47 +++++++---------------------
+ 3 files changed, 20 insertions(+), 94 deletions(-)
+
+diff --git a/libs/locale/build/Jamfile.v2 b/libs/locale/build/Jamfile.v2
+index 578e722..5f25917 100644
+--- a/libs/locale/build/Jamfile.v2
++++ b/libs/locale/build/Jamfile.v2
+@@ -70,62 +70,17 @@ if $(ICU_LINK)
+ }
+ else
+ {
+-    searched-lib icuuc : :  <name>icuuc
+-                            <search>$(ICU_PATH)/lib 
+-                            <link>shared 
+-                            <runtime-link>shared ;
+-
+-    searched-lib icuuc : :  <toolset>msvc
+-                            <variant>debug
+-                            <name>icuucd
+-                            <search>$(ICU_PATH)/lib
+-                            <link>shared
+-                            <runtime-link>shared ;
+-
+-    searched-lib icuuc : :  <name>this_is_an_invalid_library_name ;
+-
+-    searched-lib icudt : :  <search>$(ICU_PATH)/lib
+-                            <name>icudata
+-                            <link>shared
+-                            <runtime-link>shared ;
+-
+-    searched-lib icudt : :  <search>$(ICU_PATH)/lib
+-                            <name>icudt
+-                            <toolset>msvc
+-                            <link>shared
+-                            <runtime-link>shared ;
+-
+-    searched-lib icudt : :  <name>this_is_an_invalid_library_name ;
+-
+-    searched-lib icuin : :  <search>$(ICU_PATH)/lib
+-                            <name>icui18n
+-                            <link>shared
+-                            <runtime-link>shared ;
+-
+-    searched-lib icuin : :  <toolset>msvc
+-                            <variant>debug
+-                            <name>icuind
+-                            <search>$(ICU_PATH)/lib
+-                            <link>shared
+-                            <runtime-link>shared ;
+-
+-    searched-lib icuin : :  <toolset>msvc
+-                            <variant>release
+-                            <name>icuin
+-                            <search>$(ICU_PATH)/lib
+-                            <link>shared
+-                            <runtime-link>shared ;
+-
+-    searched-lib icuin : :  <name>this_is_an_invalid_library_name ;
+-
+-    explicit icuuc icudt icuin ;
++    alias icuuc : /user-config//icuuc ;
++    alias icuin : /user-config//icuin ;
++    alias icudt : /user-config//icudt ;
++
++    explicit icuuc icuin icudt ;
+ 
+     ICU_OPTS =   <include>$(ICU_PATH)/include 
+-      <library>icuuc/<link>shared/<runtime-link>shared 
+-      <library>icudt/<link>shared/<runtime-link>shared 
+-      <library>icuin/<link>shared/<runtime-link>shared
+-      <dll-path>$(ICU_PATH)/bin
+-        <runtime-link>shared ;
++      <library>icuuc
++      <library>icuin
++      <library>icudt
++      <dll-path>$(ICU_PATH)/bin ;
+ 
+ 
+ 
+diff --git a/libs/locale/build/has_icu_test.cpp b/libs/locale/build/has_icu_test.cpp
+index 9419b30..ed9be05 100644
+--- a/libs/locale/build/has_icu_test.cpp
++++ b/libs/locale/build/has_icu_test.cpp
+@@ -15,10 +15,6 @@
+ #include <unicode/uchar.h>
+ #include <unicode/coll.h>
+ 
+-#if defined(_MSC_VER) && !defined(_DLL)
+-#error "Mixing ICU with a static runtime doesn't work"
+-#endif
+-
+ int main()
+ {
+    icu::Locale loc;
+diff --git a/libs/regex/build/Jamfile.v2 b/libs/regex/build/Jamfile.v2
+index 58fd1fb..76ee9f4 100644
+--- a/libs/regex/build/Jamfile.v2
++++ b/libs/regex/build/Jamfile.v2
+@@ -48,50 +48,25 @@ if ! $(disable-icu)
+    }
+    else
+    {
+-      lib icuuc : :                                                               <runtime-link>shared <conditional>@path_options ;
+-      lib icuuc : : <toolset>msvc                     <variant>debug <name>icuucd <runtime-link>shared <conditional>@path_options ;
+-      lib icuuc : : <toolset>intel <target-os>windows <variant>debug <name>icuucd <runtime-link>shared <conditional>@path_options ;
+-      lib icuuc : :                                                  <name>sicuuc <runtime-link>static <conditional>@path_options ;
+-      lib icuuc : : <toolset>msvc                     <variant>debug <name>sicuucd <runtime-link>static <conditional>@path_options ;
+-      lib icuuc : : <toolset>intel <target-os>windows <variant>debug <name>sicuucd <runtime-link>static <conditional>@path_options ;
+-      lib icuuc : : <name>this_is_an_invalid_library_name ;
+-
+-      lib icudt : : <name>icudata                                   <runtime-link>shared <conditional>@path_options ;
+-      lib icudt : : <name>icudt   <toolset>msvc                     <runtime-link>shared <conditional>@path_options ;
+-      lib icudt : : <name>icudt   <toolset>intel <target-os>windows <runtime-link>shared <conditional>@path_options ;
+-      lib icudt : : <name>sicudata                                   <runtime-link>static <conditional>@path_options ;
+-      lib icudt : : <name>sicudt   <toolset>msvc                     <runtime-link>static <conditional>@path_options ;
+-      lib icudt : : <name>sicudt   <toolset>intel <target-os>windows <runtime-link>static <conditional>@path_options ;
+-      lib icudt : : <name>this_is_an_invalid_library_name ;
+-
+-      lib icuin : :                                                    <name>icui18n <runtime-link>shared <conditional>@path_options ;
+-      lib icuin : : <toolset>msvc                     <variant>debug   <name>icuind  <runtime-link>shared <conditional>@path_options ;
+-      lib icuin : : <toolset>msvc                                      <name>icuin   <runtime-link>shared <conditional>@path_options ;
+-      lib icuin : : <toolset>intel <target-os>windows <variant>debug   <name>icuind  <runtime-link>shared <conditional>@path_options ;
+-      lib icuin : : <toolset>intel <target-os>windows                  <name>icuin   <runtime-link>shared <conditional>@path_options ;
+-      lib icuin : :                                                    <name>sicui18n <runtime-link>static <conditional>@path_options ;
+-      lib icuin : : <toolset>msvc                     <variant>debug   <name>sicuind  <runtime-link>static <conditional>@path_options ;
+-      lib icuin : : <toolset>msvc                                      <name>sicuin   <runtime-link>static <conditional>@path_options ;
+-      lib icuin : : <toolset>intel <target-os>windows <variant>debug   <name>sicuind  <runtime-link>static <conditional>@path_options ;
+-      lib icuin : : <toolset>intel <target-os>windows                  <name>sicuin   <runtime-link>static <conditional>@path_options ;
+-      lib icuin : : <name>this_is_an_invalid_library_name ;
++
++      alias icuuc : /user-config//icuuc ;
++      alias icuin : /user-config//icuin ;
++      alias icudt : /user-config//icudt ;
++      
++      explicit icuuc icuin icudt ;
+ 
+       ICU_OPTS = 
+          <include>$(ICU_PATH)/include 
+-         <runtime-link>shared:<library>icuuc/<link>shared
+-         <runtime-link>shared:<library>icudt/<link>shared
+-         <runtime-link>shared:<library>icuin/<link>shared
+-         <runtime-link>static:<library>icuuc
+-         <runtime-link>static:<library>icudt
+-         <runtime-link>static:<library>icuin
+-         <define>BOOST_HAS_ICU=1 
+-         <runtime-link>static:<define>U_STATIC_IMPLEMENTATION=1
++         <library>icuuc
++         <library>icudt
++         <library>icuin
++         <define>BOOST_HAS_ICU=1
+          ;
+    }
+ 
+ }
+ 
+-unit-test has_icu : has_icu_test.cpp : $(ICU_OPTS) ;
++exe has_icu : has_icu_test.cpp : $(ICU_OPTS) ;
+ explicit has_icu ;
+ 
+ alias icu_options : : : : [ check-target-builds has_icu : $(ICU_OPTS) : ] ;
+-- 
+2.12.2.windows.2
+

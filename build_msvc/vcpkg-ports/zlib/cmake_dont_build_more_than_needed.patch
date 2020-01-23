@@ -1,0 +1,42 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 0fe939d..8d2f5f1 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -7,6 +7,7 @@ set(VERSION "1.2.11")
+ 
+ option(ASM686 "Enable building i686 assembly implementation")
+ option(AMD64 "Enable building amd64 assembly implementation")
++option(SKIP_BUILD_EXAMPLES "Skip build of the examples" OFF)
+ 
+ set(INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE PATH "Installation directory for executables")
+ set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Installation directory for libraries")
+@@ -211,7 +212,15 @@ elseif(BUILD_SHARED_LIBS AND WIN32)
+ endif()
+ 
+ if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
+-    install(TARGETS zlib zlibstatic
++    if (BUILD_SHARED_LIBS)
++        set(ZLIB_TARGETS zlib)
++        set_target_properties(zlibstatic PROPERTIES EXCLUDE_FROM_ALL ON)
++    else()
++        set(ZLIB_TARGETS zlibstatic)
++        set_target_properties(zlib PROPERTIES EXCLUDE_FROM_ALL ON)
++    endif()
++
++    install(TARGETS ${ZLIB_TARGETS}
+         RUNTIME DESTINATION "${INSTALL_BIN_DIR}"
+         ARCHIVE DESTINATION "${INSTALL_LIB_DIR}"
+         LIBRARY DESTINATION "${INSTALL_LIB_DIR}" )
+@@ -230,6 +239,7 @@ endif()
+ # Example binaries
+ #============================================================================
+ 
++if (NOT SKIP_BUILD_EXAMPLES)
+ add_executable(example test/example.c)
+ target_link_libraries(example zlib)
+ add_test(example example)
+@@ -247,3 +257,4 @@ if(HAVE_OFF64_T)
+     target_link_libraries(minigzip64 zlib)
+     set_target_properties(minigzip64 PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
+ endif()
++endif()

@@ -1,0 +1,15 @@
+diff --git a/include/boost/asio/detail/impl/socket_ops.ipp b/include/boost/asio/detail/impl/socket_ops.ipp
+index 7d7c31f..d2cd468 100644
+--- a/include/boost/asio/detail/impl/socket_ops.ipp
++++ b/include/boost/asio/detail/impl/socket_ops.ipp
+@@ -27,6 +27,10 @@
+ #include <boost/asio/detail/socket_ops.hpp>
+ #include <boost/asio/error.hpp>
+ 
++#if defined(BOOST_ASIO_WINDOWS)
++#include <malloc.h>
++#endif
++
+ #if defined(BOOST_ASIO_WINDOWS_RUNTIME)
+ # include <codecvt>
+ # include <locale>

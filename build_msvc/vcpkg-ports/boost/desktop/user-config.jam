@@ -1,0 +1,38 @@
+using msvc : 14.0 : cl.exe :
+<setup>echo
+;
+
+using msvc : 14.1 : cl.exe :
+<setup>echo
+;
+
+using python : @PYTHON_VERSION@ : : "@PYTHON_INCLUDE_PATH@" : "@PYTHONLIBS_RELEASE@" ;
+using python : @PYTHON_VERSION@ : : "@PYTHON_INCLUDE_PATH@" : "@PYTHONLIBS_DEBUG@" : <python-debugging>on ;
+
+project user-config ;
+lib advapi32 ;
+lib icuuc : : <search>"@CURRENT_INSTALLED_DIR@/lib" : :
+              <runtime-link>"@LIB_RUNTIME_LINK@"
+              <library>advapi32 ;
+
+lib icuuc : : <search>"@CURRENT_INSTALLED_DIR@/debug/lib"
+              <variant>debug
+              <name>icuucd : :
+              <runtime-link>"@LIB_RUNTIME_LINK@"
+              <library>advapi32 ;
+
+lib icuin : : <search>"@CURRENT_INSTALLED_DIR@/lib" : :
+              <runtime-link>"@LIB_RUNTIME_LINK@" ;
+
+lib icuin : : <search>"@CURRENT_INSTALLED_DIR@/debug/lib"
+              <variant>debug
+              <name>icuind : :
+              <runtime-link>"@LIB_RUNTIME_LINK@" ;
+
+lib icudt : : <search>"@CURRENT_INSTALLED_DIR@/lib" : :
+              <runtime-link>"@LIB_RUNTIME_LINK@" ;
+
+lib icudt : : <search>"@CURRENT_INSTALLED_DIR@/debug/lib"
+              <variant>debug
+              <name>icudtd : :
+              <runtime-link>"@LIB_RUNTIME_LINK@" ;

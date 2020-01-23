@@ -1,0 +1,11 @@
+Source: zeromq
+Version: 2019-09-20
+Homepage: https://github.com/zeromq/libzmq
+Description: The ZeroMQ lightweight messaging kernel is a library which extends the standard socket interfaces with features traditionally provided by specialised messaging middleware products
+
+Feature: sodium
+Description: Using libsodium for CURVE security
+Build-Depends: libsodium
+
+Feature: websockets-sha1
+Description: Enable WebSocket transport through builtin sha1 (libzmq#3676)
