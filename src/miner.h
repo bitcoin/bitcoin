@@ -147,6 +147,7 @@ protected:
     // Information on the current status of the block
     uint64_t nBlockWeight;
     uint64_t nBlockTx;
+    uint64_t nPopTx = 0;
     uint64_t nBlockSigOpsCost;
     CAmount nFees;
     CTxMemPool::setEntries inBlock;
