@@ -223,6 +223,9 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
 
 void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 {
+    if(VeriBlock::isPopTx(*iter->GetSharedTx())) {
+        ++nPopTx;
+    }
     pblock->vtx.emplace_back(iter->GetSharedTx());
     pblocktemplate->vTxFees.push_back(iter->GetFee());
     pblocktemplate->vTxSigOpsCost.push_back(iter->GetSigOpCost());
@@ -306,8 +309,6 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 template<typename MempoolComparatorTagName>
 void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated)
 {
-    // count of pop txs
-    size_t popTxCount = 0 ;
     auto& config = VeriBlock::getService<VeriBlock::Config>();
 
     // mapModifiedTx will store sorted packages after they are modified
@@ -426,14 +427,11 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         SortForBlock(ancestors, sortedEntries);
 
         for (size_t i=0; i<sortedEntries.size(); ++i) {
-            AddToBlock(sortedEntries[i]);
+            if (!(nPopTx >= config.max_pop_tx_amount && VeriBlock::isPopTx(*sortedEntries[i]->GetSharedTx()))){
+                AddToBlock(sortedEntries[i]);
+            }
             // Erase from the modified set, if present
             mapModifiedTx.erase(sortedEntries[i]);
-            if (VeriBlock::isPopTx(*sortedEntries[i]->GetSharedTx())) {
-                ++popTxCount;
-                if (popTxCount == config.max_pop_tx_amount)
-                    return;
-            }
         }
 
         ++nPackagesSelected;
