@@ -126,6 +126,42 @@ BOOST_AUTO_TEST_CASE(generate_auxfees)
     BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 200.1005005*COIN,8, address), 86040200);
     BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 2500001*COIN,8, address), 19456000000);
 }
+BOOST_AUTO_TEST_CASE(generate_auxfees1)
+{
+	tfm::format(std::cout,"Running generate_auxfees1...\n");
+	string newaddress = GetNewFundedAddress("node1");
+    string newaddressfee = GetNewFundedAddress("node1");
+    UniValue pubDataObj(UniValue::VOBJ);
+    pubDataObj.pushKV("description", "AGX silver backed token, licensed and operated by Interfix corporation");
+    UniValue auxfeesObj(UniValue::VOBJ);
+    auxfeesObj.pushKV("address", newaddressfee);
+    UniValue feestructArr(UniValue::VARR);
+    UniValue boundsArr(UniValue::VARR);
+    boundsArr.push_back("0");
+    boundsArr.push_back("0.01");
+    feestructArr.push_back(boundsArr);
+    UniValue boundsArr1(UniValue::VARR);
+    boundsArr1.push_back("10");
+    boundsArr1.push_back("0.004");
+    feestructArr.push_back(boundsArr1);
+    UniValue boundsArr2(UniValue::VARR);
+    boundsArr2.push_back("250");
+    boundsArr2.push_back("0.002");
+    feestructArr.push_back(boundsArr2);
+    UniValue boundsArr3(UniValue::VARR);
+    boundsArr3.push_back("2500");
+    boundsArr3.push_back("0.0007");
+    feestructArr.push_back(boundsArr3);
+    auxfeesObj.pushKV("fee_struct", feestructArr);
+    pubDataObj.pushKV("aux_fees", auxfeesObj);
+    CWitnessAddress address;
+    const std::string& pubDataStr = pubDataObj.write();
+ 
+    BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 10*COIN,8, address), 10000000);
+    BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 3000*COIN,8, address), 591000000);
+    BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 2500*COIN,8, address), 556000000);
+    BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 7500*COIN,8, address), 906000000);
+}
 BOOST_AUTO_TEST_CASE(generate_asset_auxfees)
 {
 	tfm::format(std::cout,"Running generate_asset_auxfees...\n");

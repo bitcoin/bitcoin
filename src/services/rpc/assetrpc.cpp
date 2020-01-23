@@ -492,7 +492,10 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, ActorSet& actorS
             return ZDAG_NOT_FOUND;
         if(!IsAssetAllocationTx(txRef->nVersion))
             return ZDAG_STATUS_OK;
-        
+        // the zdag tx or any others from this sender should be under MTU of IP packet
+        if(GetSerializeSize(txRef, PROTOCOL_VERSION) > 1100){
+            return ZDAG_WARNING_RBF;
+        }
         // get actors for this transaction, irrelevant to ancestors in case the double spend is happening on the same utxo
         GetActorsFromSyscoinTx(txRef, true, false, actorSetSender);
         // check this transaction isn't RBF enabled
@@ -1456,9 +1459,13 @@ CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const 
             return -1;
         // case where amount is in between the bounds
         if(nAmount >= nBoundAmount && nAmount < nNextBoundAmount){
-            return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
+            break;    
         }
         nBoundAmount = nNextBoundAmount - nBoundAmount;
+        // must be last bound
+        if(nBoundAmount <= 0){
+            return (nAmount - nNextBoundAmount) * nRate + nAccumulatedFee;
+        }
         nAccumulatedFee += (nBoundAmount * nRate);
     }
     return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
