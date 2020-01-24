@@ -1327,6 +1327,10 @@
         <translation>이 금액에 도달하는 경우 프라이빗샌드를 끄기 위한 한계점으로 작동합니다.</translation>
     </message>
     <message>
+        <source>Target PrivateSend balance</source>
+        <translation>타깃 프라이빗샌드 잔고</translation>
+    </message>
+    <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>라우터에서 대시 코어 클라이언트를 자동으로 엽니다. 이 기능은 당신의 라우터가 UPnP를 지원하고 해당 기능이 작동하는 경우에만 가능합니다.</translation>
     </message>
@@ -1714,6 +1718,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Denominated</source>
         <translation>단위 분할 완료</translation>
+    </message>
+    <message>
+        <source>Partially mixed</source>
+        <translation>부분적으로 믹싱됨</translation>
     </message>
     <message>
         <source>Mixed</source>
@@ -2802,6 +2810,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&lt;b&gt;(%2 중 %1 입력값 표시됨)&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>PrivateSend funds only</source>
+        <translation>프라이빗샌드 자금만</translation>
+    </message>
+    <message>
+        <source>any available funds</source>
+        <translation>이용이 가능한 모든 자금</translation>
+    </message>
+    <message>
         <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
         <translation>(프라이빗샌드 거래는 잔돈 아웃풋이 허용되지 않아 보다 높은 수수료가 책정됩니다)</translation>
     </message>
@@ -2812,6 +2828,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Fee rate: %1</source>
         <translation>수수료 요율: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>This transaction will consume %n input(s)</source>
+        <translation><numerusform>이 거래는 %n 입력값을 소모합니다</numerusform></translation>
     </message>
     <message>
         <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
@@ -5040,7 +5060,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Inputs vs outputs size mismatch.</source>
-        <translation>인풋 vs 아웃풋 사이즈가 일치하지 않습니다.</translation>
+        <translation>입력값 vs 출력값 사이즈가 일치하지 않습니다.</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>

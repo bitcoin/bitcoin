@@ -598,6 +598,30 @@
         <translation>資訊</translation>
     </message>
     <message>
+        <source>Received and sent multiple transactions</source>
+        <translation>接收和發送多個交易</translation>
+    </message>
+    <message>
+        <source>Sent multiple transactions</source>
+        <translation>發送多筆交易</translation>
+    </message>
+    <message>
+        <source>Received multiple transactions</source>
+        <translation>收到多筆交易</translation>
+    </message>
+    <message>
+        <source>Sent Amount: %1
+</source>
+        <translation>發送金額: %1
+</translation>
+    </message>
+    <message>
+        <source>Received Amount: %1
+</source>
+        <translation>收到的款項: %1
+</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>日期: %1
@@ -1066,6 +1090,10 @@
         <translation>只顯示我的主節點</translation>
     </message>
     <message>
+        <source>Service</source>
+        <translation>服務</translation>
+    </message>
+    <message>
         <source>PoSe Score</source>
         <translation>PoSe 評分</translation>
     </message>
@@ -1082,8 +1110,24 @@
         <translation>下一次付款</translation>
     </message>
     <message>
+        <source>Payout Address</source>
+        <translation>獎金位址</translation>
+    </message>
+    <message>
         <source>Operator Reward</source>
         <translation>運營者獎勵</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>抵押品位址</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>所有者位址</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>投票位址</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1273,6 +1317,10 @@
     <message>
         <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
         <translation>此金額為關閉匿名發送的門檻。</translation>
+    </message>
+    <message>
+        <source>Target PrivateSend balance</source>
+        <translation>目標匿名發送餘額</translation>
     </message>
     <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -2750,6 +2798,18 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>任何可用資金</translation>
     </message>
     <message>
+        <source>Transaction size: %1</source>
+        <translation>交易大小: %1</translation>
+    </message>
+    <message>
+        <source>Fee rate: %1</source>
+        <translation>費用率: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>This transaction will consume %n input(s)</source>
+        <translation><numerusform>此交易將消耗 %n 個輸入</numerusform></translation>
+    </message>
+    <message>
         <source>Confirm send coins</source>
         <translation>確認發送資金</translation>
     </message>
@@ -4059,6 +4119,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>沒有找到相容的主節點。</translation>
     </message>
     <message>
+        <source>Not enough funds to mix.</source>
+        <translation>沒有足夠的資金以供混合使用。</translation>
+    </message>
+    <message>
         <source>Not in the Masternode list.</source>
         <translation>不在主節點列表中。</translation>
     </message>
@@ -4349,6 +4413,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>警告 : 正在開採未知版本的區塊。未知的規則可能正在生效</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
+        <translation>您需要使用-reindex來重建數據庫，並更改-timestampindex</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -4661,6 +4729,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>You can not start a masternode with wallet enabled.</source>
         <translation>您無法在啟用了錢包的情況下啟動主節點。</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -addressindex</source>
+        <translation>您需要使用-reindex  來重建數據庫，並更改-addressindex</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -spentindex</source>
+        <translation>您需要使用-reindex  來重建數據庫，並更改-spentindex </translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
