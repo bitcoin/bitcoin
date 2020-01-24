@@ -249,6 +249,7 @@ void Shutdown(NodeContext& node)
     if (node.connman) node.connman->Stop();
     if (g_auxpow_miner != nullptr) {
         g_auxpow_miner.reset();
+    }
     StopTorControl();
 
     // After everything has been shut down, but before things get flushed, stop the
