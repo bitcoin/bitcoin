@@ -16,14 +16,22 @@
 #include <map>
 
 // Database-independent metric indicating the UTXO set size
-static uint64_t GetBogoSize(const CScript& scriptPubKey)
+uint64_t GetBogoSize(const CScript& script_pub_key)
 {
     return 32 /* txid */ +
            4 /* vout index */ +
            4 /* height + coinbase */ +
            8 /* amount */ +
            2 /* scriptPubKey len */ +
-           scriptPubKey.size() /* scriptPubKey */;
+           script_pub_key.size() /* scriptPubKey */;
+}
+
+CDataStream TxOutSer(const COutPoint& outpoint, const Coin& coin) {
+    CDataStream ss(SER_DISK, PROTOCOL_VERSION);
+    ss << outpoint;
+    ss << static_cast<uint32_t>(coin.nHeight * 2 + coin.fCoinBase);
+    ss << coin.out;
+    return ss;
 }
 
 //! Warning: be very careful when changing this! assumeutxo and UTXO snapshot
@@ -63,12 +71,7 @@ static void ApplyHash(MuHash3072& muhash, const uint256& hash, const std::map<ui
     for (auto it = outputs.begin(); it != outputs.end(); ++it) {
         COutPoint outpoint = COutPoint(hash, it->first);
         Coin coin = it->second;
-
-        CDataStream ss(SER_DISK, PROTOCOL_VERSION);
-        ss << outpoint;
-        ss << static_cast<uint32_t>(coin.nHeight * 2 + coin.fCoinBase);
-        ss << coin.out;
-        muhash.Insert(MakeUCharSpan(ss));
+        muhash.Insert(MakeUCharSpan(TxOutSer(outpoint, coin)));
     }
 }
 

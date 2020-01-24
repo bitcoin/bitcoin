@@ -81,6 +81,8 @@ protected:
 
     void ChainStateFlushed(const CBlockLocator& locator) override;
 
+    const CBlockIndex* CurrentIndex() { return m_best_block_index.load(); };
+
     /// Initialize internal state from the database and block index.
     virtual bool Init();
 

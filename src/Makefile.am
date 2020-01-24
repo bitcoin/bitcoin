@@ -152,6 +152,7 @@ BITCOIN_CORE_H = \
   i2p.h \
   index/base.h \
   index/blockfilterindex.h \
+  index/coinstatsindex.h \
   index/disktxpos.h \
   index/txindex.h \
   indirectmap.h \
@@ -318,6 +319,7 @@ libbitcoin_server_a_SOURCES = \
   i2p.cpp \
   index/base.cpp \
   index/blockfilterindex.cpp \
+  index/coinstatsindex.cpp \
   index/txindex.cpp \
   init.cpp \
   mapport.cpp \
