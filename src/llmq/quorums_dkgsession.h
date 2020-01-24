@@ -274,7 +274,6 @@ private:
     std::map<uint256, CDKGComplaint> complaints;
     std::map<uint256, CDKGJustification> justifications;
     std::map<uint256, CDKGPrematureCommitment> prematureCommitments;
-    std::set<CInv> invSet;
 
     std::vector<size_t> pendingContributionVerifications;
 
