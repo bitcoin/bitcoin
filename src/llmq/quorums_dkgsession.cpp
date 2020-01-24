@@ -280,7 +280,6 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
         member->contributions.emplace(hash);
 
         CInv inv(MSG_QUORUM_CONTRIB, hash);
-        invSet.emplace(inv);
         RelayInvToParticipants(inv);
 
         quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
@@ -547,7 +546,6 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, b
         member->complaints.emplace(hash);
 
         CInv inv(MSG_QUORUM_COMPLAINT, hash);
-        invSet.emplace(inv);
         RelayInvToParticipants(inv);
 
         quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
@@ -762,7 +760,6 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGJustification& q
 
         // we always relay, even if further verification fails
         CInv inv(MSG_QUORUM_JUSTIFICATION, hash);
-        invSet.emplace(inv);
         RelayInvToParticipants(inv);
 
         quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
@@ -1130,7 +1127,6 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGPrematureCommitm
     validCommitments.emplace(hash);
 
     CInv inv(MSG_QUORUM_PREMATURE_COMMITMENT, hash);
-    invSet.emplace(inv);
     RelayInvToParticipants(inv);
 
     quorumDKGDebugManager->UpdateLocalMemberStatus(params.type, member->idx, [&](CDKGDebugMemberStatus& status) {
