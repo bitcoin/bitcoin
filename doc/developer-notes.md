@@ -9,6 +9,7 @@ Developer Notes
     - [Coding Style (C++)](#coding-style-c)
     - [Coding Style (Python)](#coding-style-python)
     - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
+      - [Generating Documentation](#generating-documentation)
     - [Development tips and tricks](#development-tips-and-tricks)
         - [Compiling for debugging](#compiling-for-debugging)
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
@@ -35,6 +36,9 @@ Developer Notes
     - [Source code organization](#source-code-organization)
     - [GUI](#gui)
     - [Subtrees](#subtrees)
+    - [Upgrading LevelDB](#upgrading-leveldb)
+      - [File Descriptor Counts](#file-descriptor-counts)
+      - [Consensus Compatibility](#consensus-compatibility)
     - [Scripted diffs](#scripted-diffs)
         - [Suggestions and examples](#suggestions-and-examples)
     - [Release notes](#release-notes)
@@ -138,12 +142,17 @@ For example, to describe a function use:
 
 ```c++
 /**
- * ... text ...
- * @param[in] arg1    A description
- * @param[in] arg2    Another argument description
- * @pre Precondition for function...
+ * ... Description ...
+ *
+ * @param[in]  arg1 input description...
+ * @param[in]  arg2 input description...
+ * @param[out] arg3 output description...
+ * @return Return cases...
+ * @throws Error type and cases...
+ * @pre  Pre-condition for function...
+ * @post Post-condition for function...
  */
-bool function(int arg1, const char *arg2)
+bool function(int arg1, const char *arg2, std::string& arg3)
 ```
 
 A complete list of `@xxx` commands can be found at http://www.doxygen.nl/manual/commands.html.
@@ -158,44 +167,73 @@ To describe a class, use the same construct above the class definition:
  * @see GetWarnings()
  */
 class CAlert
-{
 ```
 
 To describe a member or variable use:
-```c++
-int var; //!< Detailed description after the member
-```
-
-or
 ```c++
 //! Description before the member
 int var;
 ```
 
+or
+```c++
+int var; //!< Description after the member
+```
+
 Also OK:
 ```c++
 ///
-/// ... text ...
+/// ... Description ...
 ///
 bool function2(int arg1, const char *arg2)
 ```
 
-Not OK (used plenty in the current source, but not picked up):
+Not picked up by Doxygen:
 ```c++
 //
-// ... text ...
+// ... Description ...
 //
+```
+
+Also not picked up by Doxygen:
+```c++
+/*
+ * ... Description ...
+ */
 ```
 
 A full list of comment syntaxes picked up by Doxygen can be found at http://www.doxygen.nl/manual/docblocks.html,
 but the above styles are favored.
 
-Documentation can be generated with `make docs` and cleaned up with `make clean-docs`. The resulting files are located in `doc/doxygen/html`; open `index.html` to view the homepage.
+Recommendations:
 
-Before running `make docs`, you will need to install dependencies `doxygen` and `dot`. For example, on macOS via Homebrew:
-```
-brew install graphviz doxygen
-```
+- Avoiding duplicating type and input/output information in function
+  descriptions.
+
+- Use backticks (&#96;&#96;) to refer to `argument` names in function and
+  parameter descriptions.
+
+- Backticks aren't required when referring to functions Doxygen already knows
+  about; it will build hyperlinks for these automatically. See
+  http://www.doxygen.nl/manual/autolink.html for complete info.
+
+- Avoid linking to external documentation; links can break.
+
+- Javadoc and all valid Doxygen comments are stripped from Doxygen source code
+  previews (`STRIP_CODE_COMMENTS = YES` in [Doxyfile.in](doc/Doxyfile.in)). If
+  you want a comment to be preserved, it must instead use `//` or `/* */`.
+
+### Generating Documentation
+
+The documentation can be generated with `make docs` and cleaned up with `make
+clean-docs`. The resulting files are located in `doc/doxygen/html`; open
+`index.html` in that directory to view the homepage.
+
+Before running `make docs`, you'll need to install these dependencies:
+
+Linux: `sudo apt install doxygen graphviz`
+
+MacOS: `brew install doxygen graphviz`
 
 Development tips and tricks
 ---------------------------
@@ -919,7 +957,7 @@ introduce accidental changes.
 Some good examples of scripted-diff:
 
 - [scripted-diff: Rename InitInterfaces to NodeContext](https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d)
-uses an elegant script to replace occurences of multiple terms in all source files.
+uses an elegant script to replace occurrences of multiple terms in all source files.
 
 - [scripted-diff: Remove g_connman, g_banman globals](https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d)
 replaces specific terms in a list of specific source files.
@@ -1046,6 +1084,11 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   - *Exception*: Using RPC method aliases may be appropriate in cases where a
     new RPC is replacing a deprecated RPC, to avoid both RPCs confusingly
     showing up in the command list.
+
+- Use *invalid* bech32 addresses for `RPCExamples` help documentation.
+
+  - *Rationale*: Prevent accidental transactions by users and encourage the use
+    of bech32 addresses by default.
 
 - Use the `UNIX_EPOCH_TIME` constant when describing UNIX epoch time or
   timestamps in the documentation.

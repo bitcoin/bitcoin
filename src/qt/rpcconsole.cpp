@@ -905,12 +905,8 @@ void RPCConsole::on_lineEdit_returnPressed()
 
         cmdBeforeBrowsing = QString();
 
-        WalletModel* wallet_model{nullptr};
 #ifdef ENABLE_WALLET
-        const int wallet_index = ui->WalletSelector->currentIndex();
-        if (wallet_index > 0) {
-            wallet_model = ui->WalletSelector->itemData(wallet_index).value<WalletModel*>();
-        }
+        WalletModel* wallet_model = ui->WalletSelector->currentData().value<WalletModel*>();
 
         if (m_last_wallet_model != wallet_model) {
             if (wallet_model) {
@@ -1240,7 +1236,7 @@ void RPCConsole::unbanSelectedNode()
         QString strNode = nodes.at(i).data().toString();
         CSubNet possibleSubnet;
 
-        LookupSubNet(strNode.toStdString().c_str(), possibleSubnet);
+        LookupSubNet(strNode.toStdString(), possibleSubnet);
         if (possibleSubnet.IsValid() && m_node.unban(possibleSubnet))
         {
             clientModel->getBanTableModel()->refresh();

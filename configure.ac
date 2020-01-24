@@ -329,6 +329,7 @@ if test "x$enable_werror" = "xyes"; then
   AX_CHECK_COMPILE_FLAG([-Werror=switch],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=switch"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=thread-safety-analysis],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=thread-safety-analysis"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=unused-variable],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=unused-variable"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Werror=date-time],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=date-time"],,[[$CXXFLAG_WERROR]])
 fi
 
 if test "x$CXXFLAGS_overridden" = "xno"; then
@@ -342,6 +343,7 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   AX_CHECK_COMPILE_FLAG([-Wrange-loop-analysis],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wrange-loop-analysis"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wredundant-decls],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wredundant-decls"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wunused-variable],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunused-variable"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wdate-time],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdate-time"],,[[$CXXFLAG_WERROR]])
 
   dnl Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
   dnl unknown options if any other warning is produced. Test the -Wfoo case, and
@@ -481,29 +483,24 @@ use_pkgconfig=yes
 case $host in
   *mingw*)
 
-     #pkgconfig does more harm than good with MinGW
+     dnl pkgconfig does more harm than good with MinGW
      use_pkgconfig=no
 
      TARGET_OS=windows
-     AC_CHECK_LIB([mingwthrd],      [main],, AC_MSG_ERROR(libmingwthrd missing))
-     AC_CHECK_LIB([kernel32],      [main],, AC_MSG_ERROR(libkernel32 missing))
-     AC_CHECK_LIB([user32],      [main],, AC_MSG_ERROR(libuser32 missing))
-     AC_CHECK_LIB([gdi32],      [main],, AC_MSG_ERROR(libgdi32 missing))
-     AC_CHECK_LIB([comdlg32],      [main],, AC_MSG_ERROR(libcomdlg32 missing))
-     AC_CHECK_LIB([winspool],      [main],, AC_MSG_ERROR(libwinspool missing))
-     AC_CHECK_LIB([winmm],      [main],, AC_MSG_ERROR(libwinmm missing))
-     AC_CHECK_LIB([shell32],      [main],, AC_MSG_ERROR(libshell32 missing))
-     AC_CHECK_LIB([comctl32],      [main],, AC_MSG_ERROR(libcomctl32 missing))
-     AC_CHECK_LIB([ole32],      [main],, AC_MSG_ERROR(libole32 missing))
-     AC_CHECK_LIB([oleaut32],      [main],, AC_MSG_ERROR(liboleaut32 missing))
-     AC_CHECK_LIB([uuid],      [main],, AC_MSG_ERROR(libuuid missing))
-     AC_CHECK_LIB([rpcrt4],      [main],, AC_MSG_ERROR(librpcrt4 missing))
-     AC_CHECK_LIB([advapi32],      [main],, AC_MSG_ERROR(libadvapi32 missing))
-     AC_CHECK_LIB([ws2_32],      [main],, AC_MSG_ERROR(libws2_32 missing))
-     AC_CHECK_LIB([mswsock],      [main],, AC_MSG_ERROR(libmswsock missing))
-     AC_CHECK_LIB([shlwapi],      [main],, AC_MSG_ERROR(libshlwapi missing))
-     AC_CHECK_LIB([iphlpapi],      [main],, AC_MSG_ERROR(libiphlpapi missing))
-     AC_CHECK_LIB([crypt32],      [main],, AC_MSG_ERROR(libcrypt32 missing))
+     AC_CHECK_LIB([kernel32], [GetModuleFileNameA],, AC_MSG_ERROR(libkernel32 missing))
+     AC_CHECK_LIB([user32],   [main],, AC_MSG_ERROR(libuser32 missing))
+     AC_CHECK_LIB([gdi32],    [main],, AC_MSG_ERROR(libgdi32 missing))
+     AC_CHECK_LIB([comdlg32], [main],, AC_MSG_ERROR(libcomdlg32 missing))
+     AC_CHECK_LIB([winmm],    [main],, AC_MSG_ERROR(libwinmm missing))
+     AC_CHECK_LIB([shell32],  [SHGetSpecialFolderPathW],, AC_MSG_ERROR(libshell32 missing))
+     AC_CHECK_LIB([comctl32], [main],, AC_MSG_ERROR(libcomctl32 missing))
+     AC_CHECK_LIB([ole32],    [CoCreateInstance],, AC_MSG_ERROR(libole32 missing))
+     AC_CHECK_LIB([oleaut32], [main],, AC_MSG_ERROR(liboleaut32 missing))
+     AC_CHECK_LIB([uuid],     [main],, AC_MSG_ERROR(libuuid missing))
+     AC_CHECK_LIB([advapi32], [CryptAcquireContextW],, AC_MSG_ERROR(libadvapi32 missing))
+     AC_CHECK_LIB([ws2_32],   [WSAStartup],, AC_MSG_ERROR(libws2_32 missing))
+     AC_CHECK_LIB([shlwapi],  [PathRemoveFileSpecW],, AC_MSG_ERROR(libshlwapi missing))
+     AC_CHECK_LIB([iphlpapi], [GetAdaptersAddresses],, AC_MSG_ERROR(libiphlpapi missing))
 
      dnl -static is interpreted by libtool, where it has a different meaning.
      dnl In libtool-speak, it's -all-static.
@@ -692,10 +689,6 @@ AX_GCC_FUNC_ATTRIBUTE([dllexport])
 AX_GCC_FUNC_ATTRIBUTE([dllimport])
 
 if test x$use_glibc_compat != xno; then
-
-  dnl glibc absorbed clock_gettime in 2.17. librt (its previous location) is safe to link
-  dnl in anyway for back-compat.
-  AC_CHECK_LIB([rt],[clock_gettime],, AC_MSG_ERROR(librt missing))
 
   dnl __fdelt_chk's params and return type have changed from long unsigned int to long int.
   dnl See which one is present here.

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -281,8 +281,11 @@ void BitcoinApplication::parameterSetup()
     m_node.initParameterInteraction();
 }
 
-void BitcoinApplication::SetPrune(bool prune, bool force) {
-     optionsModel->SetPrune(prune, force);
+void BitcoinApplication::InitializePruneSetting(bool prune)
+{
+    // If prune is set, intentionally override existing prune size with
+    // the default size since this is called when choosing a new datadir.
+    optionsModel->SetPruneTargetGB(prune ? DEFAULT_PRUNE_TARGET_GB : 0, true);
 }
 
 void BitcoinApplication::requestInitialize()
@@ -556,12 +559,13 @@ int GuiMain(int argc, char* argv[])
     qInstallMessageHandler(DebugMessageHandler);
     // Allow parameter interaction before we create the options model
     app.parameterSetup();
+    GUIUtil::LogQtInfo();
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
 
     if (did_show_intro) {
         // Store intro dialog settings other than datadir (network specific)
-        app.SetPrune(prune, true);
+        app.InitializePruneSetting(prune);
     }
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))

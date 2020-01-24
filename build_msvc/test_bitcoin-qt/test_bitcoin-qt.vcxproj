@@ -67,21 +67,23 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\libbitcoin_qt\$(GeneratedFilesOutDir)\..\;$(QtIncludeDir)\QtTest;$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(QtLibraryDir)\Qt5Test.lib;$(QtReleaseLibraries);%(AdditionalDependencies)</AdditionalDependencies>
+	  <AdditionalOptions>/ignore:4206</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
 
-    <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\libbitcoin_qt\$(GeneratedFilesOutDir)\..\;$(QtIncludeDir)\QtTest;$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(QtDebugLibraries);%(AdditionalDependencies)</AdditionalDependencies>
+	  <AdditionalOptions>/ignore:4206</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

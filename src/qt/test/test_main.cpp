@@ -37,6 +37,8 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 #endif
 
+const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
+
 // This is all you need to run all the tests
 int main(int argc, char *argv[])
 {

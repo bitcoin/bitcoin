@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -51,7 +51,7 @@ struct COrphanTx {
     NodeId fromPeer;
     int64_t nTimeExpire;
 };
-extern CCriticalSection g_cs_orphans;
+extern RecursiveMutex g_cs_orphans;
 extern std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
 
 static CService ip(uint32_t i)

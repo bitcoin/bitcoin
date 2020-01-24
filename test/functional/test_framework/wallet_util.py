@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2019 The Bitcoin Core developers
+# Copyright (c) 2018-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Useful util functions for testing the wallet"""
@@ -87,11 +87,6 @@ def get_multisig(node):
                     p2wsh_addr=script_to_p2wsh(script_code),
                     p2sh_p2wsh_script=CScript([OP_HASH160, witness_script, OP_EQUAL]).hex(),
                     p2sh_p2wsh_addr=script_to_p2sh_p2wsh(script_code))
-
-def labels_value(name="", purpose="receive"):
-    """Generate a getaddressinfo labels array from a name and purpose.
-    Often used as the value of a labels kwarg for calling test_address below."""
-    return [{"name": name, "purpose": purpose}]
 
 def test_address(node, address, **kwargs):
     """Get address info for `address` and test whether the returned values are as expected."""

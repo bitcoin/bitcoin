@@ -8,6 +8,7 @@ from io import BytesIO
 import math
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.key import ECKey
 from test_framework.messages import (
     BIP125_SEQUENCE_NUMBER,
     COIN,
@@ -20,6 +21,9 @@ from test_framework.script import (
     hash160,
     CScript,
     OP_0,
+    OP_2,
+    OP_3,
+    OP_CHECKMULTISIG,
     OP_EQUAL,
     OP_HASH160,
     OP_RETURN,
@@ -35,7 +39,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[
-            '-txindex',
+            '-txindex','-permitbaremultisig=0',
         ]] * self.num_nodes
         self.supports_cli = False
 
@@ -259,6 +263,15 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.vout[0].scriptPubKey = CScript([OP_0])  # Some non-standard script
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'scriptpubkey'}],
+            rawtxs=[tx.serialize().hex()],
+        )
+        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
+        key = ECKey()
+        key.generate()
+        pubkey = key.get_pubkey().get_bytes()
+        tx.vout[0].scriptPubKey = CScript([OP_2, pubkey, pubkey, pubkey, OP_3, OP_CHECKMULTISIG])  # Some bare multisig script (2-of-3)
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bare-multisig'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))

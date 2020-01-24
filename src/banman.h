@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_BANMAN_H
@@ -59,7 +59,7 @@ private:
     //!clean unused entries (if bantime has expired)
     void SweepBanned();
 
-    CCriticalSection m_cs_banned;
+    RecursiveMutex m_cs_banned;
     banmap_t m_banned GUARDED_BY(m_cs_banned);
     bool m_is_dirty GUARDED_BY(m_cs_banned);
     CClientUIInterface* m_client_interface = nullptr;

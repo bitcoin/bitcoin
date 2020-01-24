@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -420,7 +420,7 @@ public:
     void NotifyCanGetAddressesChanged() const;
     template<typename... Params> void WalletLogPrintf(const std::string& fmt, const Params&... parameters) const;
     CWallet& m_wallet;
-    CCriticalSection& cs_wallet;
+    RecursiveMutex& cs_wallet;
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H

@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,7 +18,7 @@
 #include <memory> // for unique_ptr
 #include <unordered_map>
 
-static CCriticalSection cs_rpcWarmup;
+static RecursiveMutex cs_rpcWarmup;
 static std::atomic<bool> g_rpc_running{false};
 static bool fRPCInWarmup GUARDED_BY(cs_rpcWarmup) = true;
 static std::string rpcWarmupStatus GUARDED_BY(cs_rpcWarmup) = "RPC server started";

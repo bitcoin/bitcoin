@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -85,7 +85,7 @@ static const uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL; // S
 bool fDiscover = true;
 bool fListen = true;
 bool g_relay_txes = !DEFAULT_BLOCKSONLY;
-CCriticalSection cs_mapLocalHost;
+RecursiveMutex cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
 static bool vfLimited[NET_MAX] GUARDED_BY(cs_mapLocalHost) = {};
 std::string strSubVersion;
@@ -410,7 +410,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             if (hSocket == INVALID_SOCKET) {
                 return nullptr;
             }
-            connected = ConnectThroughProxy(proxy, addrConnect.ToStringIP(), addrConnect.GetPort(), hSocket, nConnectTimeout, &proxyConnectionFailed);
+            connected = ConnectThroughProxy(proxy, addrConnect.ToStringIP(), addrConnect.GetPort(), hSocket, nConnectTimeout, proxyConnectionFailed);
         } else {
             // no proxy needed (none set for target network)
             hSocket = CreateSocket(addrConnect);
@@ -432,7 +432,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         std::string host;
         int port = default_port;
         SplitHostPort(std::string(pszDest), port, host);
-        connected = ConnectThroughProxy(proxy, host, port, hSocket, nConnectTimeout, nullptr);
+        bool proxyConnectionFailed;
+        connected = ConnectThroughProxy(proxy, host, port, hSocket, nConnectTimeout, proxyConnectionFailed);
     }
     if (!connected) {
         CloseSocket(hSocket);
@@ -1609,7 +1610,7 @@ void CConnman::ThreadDNSAddressSeed()
                 continue;
             }
             unsigned int nMaxIPs = 256; // Limits number of IPs learned from a DNS seed
-            if (LookupHost(host.c_str(), vIPs, nMaxIPs, true)) {
+            if (LookupHost(host, vIPs, nMaxIPs, true)) {
                 for (const CNetAddr& ip : vIPs) {
                     int nOneDay = 24*3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()), requiredServiceBits);
@@ -1907,7 +1908,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
     }
 
     for (const std::string& strAddNode : lAddresses) {
-        CService service(LookupNumeric(strAddNode.c_str(), Params().GetDefaultPort()));
+        CService service(LookupNumeric(strAddNode, Params().GetDefaultPort()));
         AddedNodeInfo addedNode{strAddNode, CService(), false, false};
         if (service.IsValid()) {
             // strAddNode is an IP:port

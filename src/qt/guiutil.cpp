@@ -44,14 +44,20 @@
 #include <QFont>
 #include <QFontDatabase>
 #include <QFontMetrics>
+#include <QGuiApplication>
 #include <QKeyEvent>
 #include <QLineEdit>
+#include <QList>
 #include <QMouseEvent>
 #include <QProgressDialog>
+#include <QScreen>
 #include <QSettings>
+#include <QSize>
+#include <QString>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
 #include <QUrlQuery>
+#include <QtGlobal>
 
 #if defined(Q_OS_MAC)
 
@@ -877,6 +883,25 @@ int TextWidth(const QFontMetrics& fm, const QString& text)
 #else
     return fm.width(text);
 #endif
+}
+
+void LogQtInfo()
+{
+#ifdef QT_STATIC
+    const std::string qt_link{"static"};
+#else
+    const std::string qt_link{"dynamic"};
+#endif
+#ifdef QT_STATICPLUGIN
+    const std::string plugin_link{"static"};
+#else
+    const std::string plugin_link{"dynamic"};
+#endif
+    LogPrintf("Qt %s (%s), plugin=%s (%s)\n", qVersion(), qt_link, QGuiApplication::platformName().toStdString(), plugin_link);
+    LogPrintf("System: %s, %s\n", QSysInfo::prettyProductName().toStdString(), QSysInfo::buildAbi().toStdString());
+    for (const QScreen* s : QGuiApplication::screens()) {
+        LogPrintf("Screen: %s %dx%d, pixel ratio=%.1f\n", s->name().toStdString(), s->size().width(), s->size().height(), s->devicePixelRatio());
+    }
 }
 
 } // namespace GUIUtil

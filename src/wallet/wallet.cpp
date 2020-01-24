@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -45,8 +45,9 @@ const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
 
 static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 
-static CCriticalSection cs_wallets;
+static RecursiveMutex cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
+static std::list<LoadWalletFn> g_load_wallet_fns GUARDED_BY(cs_wallets);
 
 bool AddWallet(const std::shared_ptr<CWallet>& wallet)
 {
@@ -87,6 +88,13 @@ std::shared_ptr<CWallet> GetWallet(const std::string& name)
         if (wallet->GetName() == name) return wallet;
     }
     return nullptr;
+}
+
+std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet)
+{
+    LOCK(cs_wallets);
+    auto it = g_load_wallet_fns.emplace(g_load_wallet_fns.end(), std::move(load_wallet));
+    return interfaces::MakeHandler([it] { LOCK(cs_wallets); g_load_wallet_fns.erase(it); });
 }
 
 static Mutex g_wallet_release_mutex;
@@ -700,7 +708,7 @@ bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
     return success;
 }
 
-void CWallet::SetUsedDestinationState(WalletBatch& batch, const uint256& hash, unsigned int n, bool used)
+void CWallet::SetUsedDestinationState(WalletBatch& batch, const uint256& hash, unsigned int n, bool used, std::set<CTxDestination>& tx_destinations)
 {
     AssertLockHeld(cs_wallet);
     const CWalletTx* srctx = GetWalletTx(hash);
@@ -710,7 +718,9 @@ void CWallet::SetUsedDestinationState(WalletBatch& batch, const uint256& hash, u
     if (ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst)) {
         if (IsMine(dst)) {
             if (used && !GetDestData(dst, "used", nullptr)) {
-                AddDestData(batch, dst, "used", "p"); // p for "present", opposite of absent (null)
+                if (AddDestData(batch, dst, "used", "p")) { // p for "present", opposite of absent (null)
+                    tx_destinations.insert(dst);
+                }
             } else if (!used && GetDestData(dst, "used", nullptr)) {
                 EraseDestData(batch, dst, "used");
             }
@@ -718,17 +728,33 @@ void CWallet::SetUsedDestinationState(WalletBatch& batch, const uint256& hash, u
     }
 }
 
-bool CWallet::IsUsedDestination(const CTxDestination& dst) const
-{
-    LOCK(cs_wallet);
-    return IsMine(dst) && GetDestData(dst, "used", nullptr);
-}
-
 bool CWallet::IsUsedDestination(const uint256& hash, unsigned int n) const
 {
+    AssertLockHeld(cs_wallet);
     CTxDestination dst;
     const CWalletTx* srctx = GetWalletTx(hash);
-    return srctx && ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst) && IsUsedDestination(dst);
+    if (srctx) {
+        assert(srctx->tx->vout.size() > n);
+        LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
+        // When descriptor wallets arrive, these additional checks are
+        // likely superfluous and can be optimized out
+        assert(spk_man != nullptr);
+        for (const auto& keyid : GetAffectedKeys(srctx->tx->vout[n].scriptPubKey, *spk_man)) {
+            WitnessV0KeyHash wpkh_dest(keyid);
+            if (GetDestData(wpkh_dest, "used", nullptr)) {
+                return true;
+            }
+            ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
+            if (GetDestData(sh_wpkh_dest, "used", nullptr)) {
+                return true;
+            }
+            PKHash pkh_dest(keyid);
+            if (GetDestData(pkh_dest, "used", nullptr)) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
@@ -741,10 +767,14 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 
     if (IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE)) {
         // Mark used destinations
+        std::set<CTxDestination> tx_destinations;
+
         for (const CTxIn& txin : wtxIn.tx->vin) {
             const COutPoint& op = txin.prevout;
-            SetUsedDestinationState(batch, op.hash, op.n, true);
+            SetUsedDestinationState(batch, op.hash, op.n, true, tx_destinations);
         }
+
+        MarkDestinationsDirty(tx_destinations);
     }
 
     // Inserts only if not already there, returns tx inserted or tx found
@@ -1765,6 +1795,7 @@ CAmount CWalletTx::GetCachableAmount(AmountType type, const isminefilter& filter
     auto& amount = m_amounts[type];
     if (recalculate || !amount.m_cached[filter]) {
         amount.Set(filter, type == DEBIT ? pwallet->GetDebit(*tx, filter) : pwallet->GetCredit(*tx, filter));
+        m_is_cache_empty = false;
     }
     return amount.m_value[filter];
 }
@@ -1841,6 +1872,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache, const isminefilter& filter
 
     if (allow_cache) {
         m_amounts[AVAILABLE_CREDIT].Set(filter, nCredit);
+        m_is_cache_empty = false;
     }
 
     return nCredit;
@@ -2167,8 +2199,8 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins(interfaces::Ch
 
     std::vector<COutPoint> lockedCoins;
     ListLockedCoins(lockedCoins);
-    // Include watch-only for wallets without private keys
-    const bool include_watch_only = IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+    // Include watch-only for LegacyScriptPubKeyMan wallets without private keys
+    const bool include_watch_only = GetLegacyScriptPubKeyMan() && IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     const isminetype is_mine_filter = include_watch_only ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
     for (const COutPoint& output : lockedCoins) {
         auto it = mapWallet.find(output.hash);
@@ -3138,6 +3170,20 @@ int64_t CWallet::GetOldestKeyPoolTime()
     return oldestKey;
 }
 
+void CWallet::MarkDestinationsDirty(const std::set<CTxDestination>& destinations) {
+    for (auto& entry : mapWallet) {
+        CWalletTx& wtx = entry.second;
+        if (wtx.m_is_cache_empty) continue;
+        for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
+            CTxDestination dst;
+            if (ExtractDestination(wtx.tx->vout[i].scriptPubKey, dst) && destinations.count(dst)) {
+                wtx.MarkDirty();
+                break;
+            }
+        }
+    }
+}
+
 std::map<CTxDestination, CAmount> CWallet::GetAddressBalances(interfaces::Chain::Lock& locked_chain)
 {
     std::map<CTxDestination, CAmount> balances;
@@ -3895,7 +3941,12 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         }
     }
 
-    chain.loadWallet(interfaces::MakeWallet(walletInstance));
+    {
+        LOCK(cs_wallets);
+        for (auto& load_wallet : g_load_wallet_fns) {
+            load_wallet(interfaces::MakeWallet(walletInstance));
+        }
+    }
 
     // Register with the validation interface. It's ok to do this after rescan since we're still holding locked_chain.
     walletInstance->handleNotifications();
