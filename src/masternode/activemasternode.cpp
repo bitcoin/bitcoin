@@ -177,8 +177,15 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
 
 bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
 {
-    // First try to find whatever local address is specified by externalip option
-    bool fFoundLocal = GetLocal(addrRet) && IsValidNetAddr(addrRet);
+    // First try to find whatever our own local address is known internally.
+    // Addresses could be specified via externalip or bind option, discovered via UPnP
+    // or added by TorController. Use some random dummy IPv4 peer to prefer the one
+    // reachable via IPv4.
+    CNetAddr addrDummyPeer;
+    bool fFoundLocal{false};
+    if (LookupHost("8.8.8.8", addrDummyPeer, false)) {
+        fFoundLocal = GetLocal(addrRet, &addrDummyPeer) && IsValidNetAddr(addrRet);
+    }
     if (!fFoundLocal && Params().NetworkIDString() == CBaseChainParams::REGTEST) {
         if (Lookup("127.0.0.1", addrRet, GetListenPort(), false)) {
             fFoundLocal = true;
