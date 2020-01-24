@@ -53,9 +53,6 @@
 /* define if the Boost::Filesystem library is available */
 #define HAVE_BOOST_FILESYSTEM /**/
 
-/* define if the Boost::PROGRAM_OPTIONS library is available */
-#define HAVE_BOOST_PROGRAM_OPTIONS /**/
-
 /* define if the Boost::System library is available */
 #define HAVE_BOOST_SYSTEM /**/
 
@@ -182,72 +179,6 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
-
-/* Define to 1 if you have the `advapi32' library (-ladvapi32). */
-#define HAVE_LIBADVAPI32 1
-
-/* Define to 1 if you have the `comctl32' library (-lcomctl32). */
-#define HAVE_LIBCOMCTL32 1
-
-/* Define to 1 if you have the `comdlg32' library (-lcomdlg32). */
-#define HAVE_LIBCOMDLG32 1
-
-/* Define to 1 if you have the `crypt32' library (-lcrypt32). */
-#define HAVE_LIBCRYPT32 1
-
-/* Define to 1 if you have the `gdi32' library (-lgdi32). */
-#define HAVE_LIBGDI32 1
-
-/* Define to 1 if you have the `imm32' library (-limm32). */
-#define HAVE_LIBIMM32 1
-
-/* Define to 1 if you have the `iphlpapi' library (-liphlpapi). */
-#define HAVE_LIBIPHLPAPI 1
-
-/* Define to 1 if you have the `kernel32' library (-lkernel32). */
-#define HAVE_LIBKERNEL32 1
-
-/* Define to 1 if you have the `mingwthrd' library (-lmingwthrd). */
-#define HAVE_LIBMINGWTHRD 1
-
-/* Define to 1 if you have the `mswsock' library (-lmswsock). */
-#define HAVE_LIBMSWSOCK 1
-
-/* Define to 1 if you have the `ole32' library (-lole32). */
-#define HAVE_LIBOLE32 1
-
-/* Define to 1 if you have the `oleaut32' library (-loleaut32). */
-#define HAVE_LIBOLEAUT32 1
-
-/* Define to 1 if you have the `rpcrt4' library (-lrpcrt4). */
-#define HAVE_LIBRPCRT4 1
-
-/* Define to 1 if you have the `shell32' library (-lshell32). */
-#define HAVE_LIBSHELL32 1
-
-/* Define to 1 if you have the `shlwapi' library (-lshlwapi). */
-#define HAVE_LIBSHLWAPI 1
-
-/* Define to 1 if you have the `ssp' library (-lssp). */
-#define HAVE_LIBSSP 1
-
-/* Define to 1 if you have the `user32' library (-luser32). */
-#define HAVE_LIBUSER32 1
-
-/* Define to 1 if you have the `uuid' library (-luuid). */
-#define HAVE_LIBUUID 1
-
-/* Define to 1 if you have the `winmm' library (-lwinmm). */
-#define HAVE_LIBWINMM 1
-
-/* Define to 1 if you have the `winspool' library (-lwinspool). */
-#define HAVE_LIBWINSPOOL 1
-
-/* Define to 1 if you have the `ws2_32' library (-lws2_32). */
-#define HAVE_LIBWS2_32 1
-
-/* Define to 1 if you have the `z ' library (-lz ). */
-#define HAVE_LIBZ_ 1
 
 /* Define this symbol if you have malloc_info */
 /* #undef HAVE_MALLOC_INFO */
