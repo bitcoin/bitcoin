@@ -223,6 +223,12 @@ modules were reorganized in separate folders to make navigation through code a b
 
 See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.5...dashpay:v0.15.0.0).
 
+- [`546e69f1a`](https://github.com/dashpay/dash/commit/546e69f1a) Fix CActiveMasternodeManager::GetLocalAddress to prefer IPv4 if multiple local addresses are known (#3304)
+- [`e4ef7e8d0`](https://github.com/dashpay/dash/commit/e4ef7e8d0) Drop unused `invSet` in `CDKGSession` (#3303)
+- [`da7686c93`](https://github.com/dashpay/dash/commit/da7686c93) Update translations 2020-01-23 (#3302)
+- [`6b5d3edae`](https://github.com/dashpay/dash/commit/6b5d3edae) Fix dip4-coinbasemerkleroots.py race condition (#3297)
+- [`a8213cadb`](https://github.com/dashpay/dash/commit/a8213cadb) Various fixes for DSTX-es (#3295)
+- [`2c26bdf2d`](https://github.com/dashpay/dash/commit/2c26bdf2d) Update release-notes.md
 - [`1d9adbe63`](https://github.com/dashpay/dash/commit/1d9adbe63) Replace generic CScopedDBTransaction with specialized CEvoDBScopedCommitter (#3292)
 - [`8fd486c6b`](https://github.com/dashpay/dash/commit/8fd486c6b) Translations 2020-01 (#3192)
 - [`3c54f6527`](https://github.com/dashpay/dash/commit/3c54f6527) Bump copyright year to 2020 (#3290)
