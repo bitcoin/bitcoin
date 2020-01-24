@@ -45,13 +45,25 @@ bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
     stats = CCoinsStats();
     std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
     assert(pcursor);
-
-    MuHash3072 muhash;
     stats.hashBlock = pcursor->GetBestBlock();
+
+    const CBlockIndex* block_index;
     {
         LOCK(cs_main);
-        stats.nHeight = LookupBlockIndex(stats.hashBlock)->nHeight;
+        block_index = LookupBlockIndex(pcursor->GetBestBlock());
     }
+    stats.nHeight = block_index->nHeight;
+
+    // Use CoinStatsIndex if it is available
+    if (g_coin_stats_index) {
+        if (g_coin_stats_index->LookupStats(block_index, stats)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    MuHash3072 muhash;
     uint256 prevkey;
     std::map<uint32_t, Coin> outputs;
     while (pcursor->Valid()) {

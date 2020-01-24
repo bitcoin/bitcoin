@@ -22,6 +22,7 @@
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
+#include <index/coinstatsindex.h>
 #include <interfaces/chain.h>
 #include <key.h>
 #include <miner.h>
@@ -168,6 +169,9 @@ void Interrupt(NodeContext& node)
         g_txindex->Interrupt();
     }
     ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Interrupt(); });
+    if (g_coin_stats_index) {
+        g_coin_stats_index->Interrupt();
+    }
 }
 
 void Shutdown(NodeContext& node)
@@ -260,6 +264,10 @@ void Shutdown(NodeContext& node)
     if (g_txindex) {
         g_txindex->Stop();
         g_txindex.reset();
+    }
+    if (g_coin_stats_index) {
+        g_coin_stats_index->Stop();
+        g_coin_stats_index.reset();
     }
     ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Stop(); });
     DestroyAllBlockFilterIndexes();
@@ -424,6 +432,7 @@ void SetupServerArgs(NodeContext& node)
                  strprintf("Maintain an index of compact filters by block (default: %s, values: %s).", DEFAULT_BLOCKFILTERINDEX, ListBlockFilterTypes()) +
                  " If <type> is not supplied or if <type> = 1, indexes for all known types are enabled.",
                  ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-coinstatsindex", strprintf("Maintain coin statistics index, used by the gettxoutset rpc call (default: %u)", DEFAULT_TXINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
     gArgs.AddArg("-addnode=<ip>", "Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-asmap=<file>", strprintf("Specify asn mapping used for bucketing of the peers (default: %s). Relative paths will be prefixed by the net-specific datadir location.", DEFAULT_ASMAP_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -1001,10 +1010,12 @@ bool AppInitParameterInteraction()
         return InitError(_("Cannot set -peerblockfilters without -blockfilterindex."));
     }
 
-    // if using block pruning, then disallow txindex
+    // if using block pruning, then disallow txindex, coinstatsindex and blockfilterindex
     if (gArgs.GetArg("-prune", 0)) {
         if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
+        if (gArgs.GetBoolArg("-coinstatsindex", DEFAULT_UTXOSTATSINDEX))
+            return InitError(_("Prune mode is incompatible with -coinstatsindex."));
         if (!g_enabled_filter_types.empty()) {
             return InitError(_("Prune mode is incompatible with -blockfilterindex."));
         }
@@ -1526,6 +1537,7 @@ bool AppInitMain(NodeContext& node)
         filter_index_cache = max_cache / n_indexes;
         nTotalCache -= filter_index_cache * n_indexes;
     }
+    int64_t coin_stats_cache = 0;
     int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
     nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
     nTotalCache -= nCoinDBCache;
@@ -1780,6 +1792,11 @@ bool AppInitMain(NodeContext& node)
     for (const auto& filter_type : g_enabled_filter_types) {
         InitBlockFilterIndex(filter_type, filter_index_cache, false, fReindex);
         GetBlockFilterIndex(filter_type)->Start();
+    }
+
+    if (gArgs.GetBoolArg("-coinstatsindex", DEFAULT_UTXOSTATSINDEX)) {
+        g_coin_stats_index = MakeUnique<CoinStatsIndex>(coin_stats_cache, false, fReindex);
+        g_coin_stats_index->Start();
     }
 
     // ********************************************************* Step 9: load wallet
