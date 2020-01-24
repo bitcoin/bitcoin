@@ -114,6 +114,8 @@ before_cache:
   - docker save dash-builder-$BUILD_TARGET-$TRAVIS_JOB_NUMBER $(docker history -q dash-builder-$BUILD_TARGET-$TRAVIS_JOB_NUMBER | grep -v \<missing\>) | gzip -2 > $HOME/cache/docker/dash-builder-$BUILD_TARGET.tar.gz
 
 install:
+    # Fix annoying Travis bug: a branch with a single commit has an empty TRAVIS_COMMIT_RANGE sometimes
+    - if [ -z "$TRAVIS_COMMIT_RANGE" ]; then export TRAVIS_COMMIT_RANGE="HEAD~..HEAD"; fi
     # Our scripts try to be Travis agnostic
     - export PULL_REQUEST="$TRAVIS_PULL_REQUEST"
     - export COMMIT_RANGE="$TRAVIS_COMMIT_RANGE"
