@@ -14,6 +14,7 @@
 #include <core_io.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
+#include <index/coinstatsindex.h>
 #include <node/blockstorage.h>
 #include <node/coinstats.h>
 #include <node/context.h>
@@ -1124,6 +1125,13 @@ static RPCHelpMan gettxoutsetinfo()
         ret.pushKV("disk_size", stats.nDiskSize);
         ret.pushKV("total_amount", ValueFromAmount(stats.nTotalAmount));
     } else {
+        if (g_coin_stats_index) {
+            const IndexSummary summary{g_coin_stats_index->GetSummary()};
+
+            if (!summary.synced) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to read UTXO set because coinstatsindex is still syncing. Current height: %d", summary.best_block_height));
+            }
+        }
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
     }
     return ret;
