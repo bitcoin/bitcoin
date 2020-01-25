@@ -40,7 +40,7 @@ class AbortNodeTest(BitcoinTestFramework):
 
             # Check that node0 aborted
             self.log.info("Waiting for crash")
-            wait_until(lambda: self.nodes[0].is_node_stopped(), timeout=60)
+            wait_until(lambda: self.nodes[0].is_node_stopped(), timeout=200)
         self.log.info("Node crashed - now verifying restart fails")
         self.nodes[0].assert_start_raises_init_error()
 

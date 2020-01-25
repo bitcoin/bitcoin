@@ -76,7 +76,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         spend_101_id = self.nodes[0].sendrawtransaction(spend_101_raw)
         spend_102_1_id = self.nodes[0].sendrawtransaction(spend_102_1_raw)
 
-        self.sync_all()
+        self.sync_all(timeout=360)
 
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_101_id, spend_102_1_id, timelock_tx_id})
 
@@ -91,7 +91,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         for node in self.nodes:
             node.invalidateblock(new_blocks[0])
 
-        self.sync_all()
+        self.sync_all(timeout=360)
 
         # mempool should be empty.
         assert_equal(set(self.nodes[0].getrawmempool()), set())
