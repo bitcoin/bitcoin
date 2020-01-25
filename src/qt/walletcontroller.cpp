@@ -164,15 +164,24 @@ WalletControllerActivity::~WalletControllerActivity()
     delete m_progress_dialog;
 }
 
-void WalletControllerActivity::showProgressDialog(const QString& label_text)
+void WalletControllerActivity::showProgressDialog(const QString& title_text, const QString& label_text)
 {
     m_progress_dialog = new QProgressDialog(m_parent_widget);
-
     m_progress_dialog->setLabelText(label_text);
-    m_progress_dialog->setRange(0, 0);
+    m_progress_dialog->setRange(0, 100);
+    m_progress_dialog->setWindowTitle(title_text);
     m_progress_dialog->setCancelButton(nullptr);
     m_progress_dialog->setWindowModality(Qt::ApplicationModal);
+
+    for ( int i = 1, inc = 1000; i < 60000; ++inc, i += inc )
+      QTimer::singleShot(i,  this, &WalletControllerActivity::updateProgress);
+
     GUIUtil::PolishProgressDialog(m_progress_dialog);
+}
+
+void WalletControllerActivity::updateProgress()
+{
+    m_progress_dialog->setValue(m_progress_dialog->value()+1.66);
 }
 
 CreateWalletActivity::CreateWalletActivity(WalletController* wallet_controller, QWidget* parent_widget)
@@ -206,7 +215,7 @@ void CreateWalletActivity::askPassphrase()
 
 void CreateWalletActivity::createWallet()
 {
-    showProgressDialog(tr("Creating Wallet <b>%1</b>...").arg(m_create_wallet_dialog->walletName().toHtmlEscaped()));
+    showProgressDialog(tr("Creating Wallet"), tr("%1").arg(m_create_wallet_dialog->walletName()));
 
     std::string name = m_create_wallet_dialog->walletName().toStdString();
     uint64_t flags = 0;
@@ -287,7 +296,7 @@ void OpenWalletActivity::open(const std::string& path)
 {
     QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
 
-    showProgressDialog(tr("Opening Wallet <b>%1</b>...").arg(name.toHtmlEscaped()));
+    showProgressDialog(tr("Opening Wallet"),tr("%1").arg(name));
 
     QTimer::singleShot(0, worker(), [this, path] {
         std::unique_ptr<interfaces::Wallet> wallet = node().loadWallet(path, m_error_message, m_warning_message);
