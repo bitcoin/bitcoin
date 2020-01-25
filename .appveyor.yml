@@ -13,6 +13,7 @@ environment:
   QT_DOWNLOAD_HASH: '9a8c6eb20967873785057fdcd329a657c7f922b0af08c5fde105cc597dd37e21'
   QT_LOCAL_PATH: 'C:\Qt5.9.8_x64_static_vs2019'
   VCPKG_INSTALL_PATH: 'C:\tools\vcpkg\installed'
+  VCPKG_COMMIT_ID: 'ed0df8ecc4ed7e755ea03e18aaf285fd9b4b4a74'
 cache:
 - C:\tools\vcpkg\installed -> build_msvc\vcpkg-packages.txt
 - C:\Users\appveyor\clcache -> .appveyor.yml, build_msvc\**, **\Makefile.am, **\*.vcxproj.in
@@ -25,7 +26,7 @@ install:
 # 1. Check whether the vcpkg install directory exists (note that updating the vcpkg-packages.txt file
 #    will cause the appveyor cache rules to invalidate the directory)
 # 2. If the directory is missing:
-#    a. Update the vcpkg source (including port files) and build the vcpkg binary,
+#    a. Checkout the vcpkg source (including port files) for the specific checkout and build the vcpkg binary,
 #    b. Install the missing packages.
 - ps: |
       $env:PACKAGES = Get-Content -Path build_msvc\vcpkg-packages.txt
@@ -34,6 +35,7 @@ install:
           cd c:\tools\vcpkg
           $env:GIT_REDIRECT_STDERR = '2>&1' # git is writing non-errors to STDERR when doing git pull. Send to STDOUT instead.
           git pull origin master
+          git checkout $env:VCPKG_COMMIT_ID
           .\bootstrap-vcpkg.bat
           Add-Content "C:\tools\vcpkg\triplets\$env:PLATFORM-windows-static.cmake" "set(VCPKG_BUILD_TYPE release)"
           .\vcpkg install --triplet $env:PLATFORM-windows-static $env:PACKAGES.split() > $null
