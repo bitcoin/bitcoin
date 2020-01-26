@@ -4,6 +4,6 @@ setup(name='btcspendfrom',
       description='Command-line utility for bitcoin "coin control"',
       author='Gavin Andresen',
       author_email='gavin@bitcoinfoundation.org',
-      requires=['jsonrpc'],
+      requires=['bitcoinrpc'],
       scripts=['spendfrom.py'],
       )
