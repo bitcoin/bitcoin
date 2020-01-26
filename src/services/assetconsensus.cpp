@@ -1414,6 +1414,10 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if(theAsset.witnessAddressTransfer.IsNull())   {
                 return FormatSyscoinErrorMessage(state, "asset-missing-transfer-address", bMiner);
             }
+            if(theAsset.nBalance > 0)
+            {
+                return FormatSyscoinErrorMessage(state, "asset-transfer-invalid-balance", bMiner);
+            }   
             break;
         default:
             return FormatSyscoinErrorMessage(state, "asset-invalid-op", bMiner);
@@ -1458,7 +1462,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         if(theAsset.strSymbol != storedSenderAssetRef.strSymbol)
         {
             return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bMiner);
-        }        
+        }     
         storedSenderAssetRef.witnessAddress = theAsset.witnessAddressTransfer;   
         // sanity to ensure transfer field is never set on the actual asset in db  
         storedSenderAssetRef.witnessAddressTransfer.SetNull();      
