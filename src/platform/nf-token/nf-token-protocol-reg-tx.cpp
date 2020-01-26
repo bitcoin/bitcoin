@@ -7,6 +7,7 @@
 #include "platform/platform-utils.h"
 #include "platform/specialtx.h"
 #include "nft-protocols-manager.h"
+#include "nf-tokens-manager.h"
 
 #include "sync.h"
 #include "main.h"
@@ -70,6 +71,7 @@ namespace Platform
 
         if (!NftProtocolsManager::Instance().AddNftProto(nftProto, tx, pindex))
             return state.DoS(100, false, REJECT_DUPLICATE/*TODO: REJECT_CONFLICT*/, "nft-proto-reg-tx-conflict");
+        NfTokensManager::Instance().OnNewProtocolRegistered(nftProto.tokenProtocolId);
         return true;
     }
 

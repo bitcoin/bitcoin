@@ -57,7 +57,7 @@ namespace Platform
         void ProcessNftProtoIndexGutsOnly(std::function<bool(NftProtoIndex)> protoIndexHandler);
         bool ProcessNftIndex(const leveldb::Iterator & dbIt, std::function<bool(NfTokenIndex)> nftIndexHandler);
         bool ProcessNftProtoIndex(const leveldb::Iterator & dbIt, std::function<bool(NftProtoIndex)> protoIndexHandler);
-        bool ProcessNftProtosSupply(const leveldb::Iterator & dbIt, std::function<bool(uint64_t, std::size_t)> protoSupplyHandler);
+        bool ProcessNftSupply(const leveldb::Iterator & dbIt, std::function<bool(uint64_t, std::size_t)> protoSupplyHandler);
 
         bool IsNftIndexEmpty();
         void WriteNftDiskIndex(const NfTokenDiskIndex & nftDiskIndex);

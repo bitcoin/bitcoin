@@ -36,7 +36,7 @@ namespace Platform
         {
             PlatformDb::Instance().ProcessPlatformDbGuts([&, this](const leveldb::Iterator & dbIt) -> bool
             {
-                if (!PlatformDb::Instance().ProcessNftProtosSupply(dbIt, protoSupplyHandler))
+                if (!PlatformDb::Instance().ProcessNftSupply(dbIt, protoSupplyHandler))
                 {
                     return false;
                 }
@@ -50,7 +50,7 @@ namespace Platform
         {
             PlatformDb::Instance().ProcessPlatformDbGuts([&](const leveldb::Iterator & dbIt) -> bool
             {
-                PlatformDb::Instance().ProcessNftProtosSupply(dbIt, protoSupplyHandler);
+                PlatformDb::Instance().ProcessNftSupply(dbIt, protoSupplyHandler);
                 return true;
             });
         }
@@ -500,6 +500,13 @@ namespace Platform
             m_tipHeight = pindex->nHeight;
             m_tipBlockHash = pindex->GetBlockHash();
         }
+    }
+
+    void NfTokensManager::OnNewProtocolRegistered(uint64_t protocolId)
+    {
+        LOCK(m_cs);
+        m_protocolsTotalSupply[protocolId] = 0;
+        PlatformDb::Instance().WriteTotalSupply(0, protocolId);
     }
 
     void NfTokensManager::UpdateTotalSupply(uint64_t protocolId, bool increase)

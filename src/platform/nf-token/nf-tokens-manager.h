@@ -246,6 +246,9 @@ namespace Platform
             /// Update with the best block tip
             void UpdateBlockTip(const CBlockIndex * pindex);
 
+            /// Add new registered NFT protocol
+            void OnNewProtocolRegistered(uint64_t protocolId);
+
         private:
             NfTokensManager();
 

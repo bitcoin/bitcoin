@@ -164,9 +164,9 @@ namespace Platform
         return true;
     }
 
-    bool PlatformDb::ProcessNftProtosSupply(const leveldb::Iterator & dbIt, std::function<bool(uint64_t, std::size_t)> protoSupplyHandler)
+    bool PlatformDb::ProcessNftSupply(const leveldb::Iterator & dbIt, std::function<bool(uint64_t, std::size_t)> protoSupplyHandler)
     {
-        if (dbIt.key().starts_with(std::string(1, DB_NFT_PROTO_TOTAL)))
+        if (dbIt.key().starts_with(std::string(1, DB_NFT_TOTAL)))
         {
             leveldb::Slice sliceKey = dbIt.key();
             CDataStream streamKey(sliceKey.data(), sliceKey.data() + sliceKey.size(), SER_DISK, CLIENT_VERSION);
