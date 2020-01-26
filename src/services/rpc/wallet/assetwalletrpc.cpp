@@ -647,6 +647,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     
 
     theAsset.ClearAsset();
+    theAsset.nBalance = 0;
     CScript scriptPubKey;
     theAsset.witnessAddressTransfer = DescribeWitnessAddress(strAddressTo);
 
