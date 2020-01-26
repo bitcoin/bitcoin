@@ -39,6 +39,7 @@ FUZZERS_MISSING_CORPORA = [
     "psbt_output_deserialize",
     "pub_key_deserialize",
     "script_deserialize",
+    "strprintf",
     "sub_net_deserialize",
     "tx_in",
     "tx_in_deserialize",
