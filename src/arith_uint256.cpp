@@ -106,18 +106,6 @@ base_uint<BITS>& base_uint<BITS>::operator/=(const base_uint& b)
 }
 
 template <unsigned int BITS>
-int base_uint<BITS>::CompareTo(const base_uint<BITS>& b) const
-{
-    for (int i = WIDTH - 1; i >= 0; i--) {
-        if (pn[i] < b.pn[i])
-            return -1;
-        if (pn[i] > b.pn[i])
-            return 1;
-    }
-    return 0;
-}
-
-template <unsigned int BITS>
 bool base_uint<BITS>::EqualTo(uint64_t b) const
 {
     for (int i = WIDTH - 1; i >= 2; i--) {
@@ -189,7 +177,6 @@ template base_uint<256>& base_uint<256>::operator>>=(unsigned int);
 template base_uint<256>& base_uint<256>::operator*=(uint32_t b32);
 template base_uint<256>& base_uint<256>::operator*=(const base_uint<256>& b);
 template base_uint<256>& base_uint<256>::operator/=(const base_uint<256>& b);
-template int base_uint<256>::CompareTo(const base_uint<256>&) const;
 template bool base_uint<256>::EqualTo(uint64_t) const;
 template double base_uint<256>::getdouble() const;
 template std::string base_uint<256>::GetHex() const;

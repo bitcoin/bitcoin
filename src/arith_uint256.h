@@ -170,9 +170,7 @@ public:
     base_uint& operator++()
     {
         // prefix operator
-        int i = 0;
-        while (i < WIDTH && ++pn[i] == 0)
-            i++;
+        for (int i = 0; i < WIDTH && ++pn[i] == 0; i++);
         return *this;
     }
 
@@ -187,9 +185,7 @@ public:
     base_uint& operator--()
     {
         // prefix operator
-        int i = 0;
-        while (i < WIDTH && --pn[i] == std::numeric_limits<uint32_t>::max())
-            i++;
+        for (int i = 0; i < WIDTH && --pn[i] == std::numeric_limits<uint32_t>::max(); i++);
         return *this;
     }
 
@@ -216,10 +212,10 @@ public:
     friend inline const base_uint operator*(const base_uint& a, uint32_t b) { return base_uint(a) *= b; }
     friend inline bool operator==(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) == 0; }
     friend inline bool operator!=(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) != 0; }
-    friend inline bool operator>(const base_uint& a, const base_uint& b) { return a.CompareTo(b) > 0; }
-    friend inline bool operator<(const base_uint& a, const base_uint& b) { return a.CompareTo(b) < 0; }
-    friend inline bool operator>=(const base_uint& a, const base_uint& b) { return a.CompareTo(b) >= 0; }
-    friend inline bool operator<=(const base_uint& a, const base_uint& b) { return a.CompareTo(b) <= 0; }
+    friend inline bool operator>(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) > 0; }
+    friend inline bool operator<(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) < 0; }
+    friend inline bool operator>=(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) >= 0; }
+    friend inline bool operator<=(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) <= 0; }
     friend inline bool operator==(const base_uint& a, uint64_t b) { return a.EqualTo(b); }
     friend inline bool operator!=(const base_uint& a, uint64_t b) { return !a.EqualTo(b); }
 
