@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <clientversion.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
@@ -12,6 +13,7 @@
 #include <interfaces/init.h>
 #include <interfaces/ipc.h>
 #include <key_io.h>
+#include <net.h>
 #include <node/context.h>
 #include <outputtype.h>
 #include <rpc/blockchain.h>
@@ -529,6 +531,38 @@ static RPCHelpMan getmemoryinfo()
     };
 }
 
+static RPCHelpMan getgeneralinfo()
+{
+    return RPCHelpMan{"getgeneralinfo",
+                "Returns data about the bitcoin daemon.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "clientversion", "Client version"},
+                        {RPCResult::Type::STR, "useragent", "Client name"},
+                        {RPCResult::Type::STR, "datadir", "Data directory path"},
+                        {RPCResult::Type::STR, "blocksdir", "Blocks directory path"},
+                        {RPCResult::Type::NUM, "startuptime", "Startup time"},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("getgeneralinfo", "")
+            + HelpExampleRpc("getgeneralinfo", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("clientversion", FormatFullVersion());
+        obj.pushKV("useragent", strSubVersion);
+        obj.pushKV("datadir", gArgs.GetDataDirNet().string());
+        obj.pushKV("blocksdir", gArgs.GetBlocksDirPath().string());
+        obj.pushKV("startuptime", GetStartupTime());
+        return obj;
+},
+    };
+}
+
 static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
     cats = cats.get_array();
     for (unsigned int i = 0; i < cats.size(); ++i) {
@@ -753,6 +787,7 @@ static const CRPCCommand commands[] =
 { //  category              actor (function)
   //  --------------------- ------------------------
     { "control",            &getmemoryinfo,           },
+    { "control",            &getgeneralinfo,          },
     { "control",            &logging,                 },
     { "util",               &validateaddress,         },
     { "util",               &createmultisig,          },
