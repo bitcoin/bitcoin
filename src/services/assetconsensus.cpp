@@ -1413,11 +1413,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         case SYSCOIN_TX_VERSION_ASSET_TRANSFER:
             if(theAsset.witnessAddressTransfer.IsNull())   {
                 return FormatSyscoinErrorMessage(state, "asset-missing-transfer-address", bMiner);
-            }
-            if(theAsset.nBalance > 0)
-            {
-                return FormatSyscoinErrorMessage(state, "asset-transfer-invalid-balance", bMiner);
-            }   
+            }  
             break;
         default:
             return FormatSyscoinErrorMessage(state, "asset-invalid-op", bMiner);
