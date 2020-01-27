@@ -31,7 +31,7 @@ class Intro : public QDialog
 
 public:
     explicit Intro(QWidget *parent = nullptr,
-                   uint64_t blockchain_size = 0, uint64_t chain_state_size = 0);
+                   int64_t blockchain_size_gb = 0, int64_t chain_state_size_gb = 0);
     ~Intro();
 
     QString getDataDirectory();
@@ -67,12 +67,18 @@ private:
     QMutex mutex;
     bool signalled;
     QString pathToCheck;
-    uint64_t m_blockchain_size;
-    uint64_t m_chain_state_size;
+    const int64_t m_blockchain_size_gb;
+    const int64_t m_chain_state_size_gb;
+    //! Total required space (in GB) depending on user choice (prune or not prune).
+    int64_t m_required_space_gb{0};
+    uint64_t m_bytes_available{0};
+    const int64_t m_prune_target_gb;
 
     void startThread();
     void checkPath(const QString &dataDir);
     QString getPathToCheck();
+    void UpdatePruneLabels(bool prune_checked);
+    void UpdateFreeSpaceLabel();
 
     friend class FreespaceChecker;
 };
