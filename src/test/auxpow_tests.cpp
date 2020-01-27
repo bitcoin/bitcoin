@@ -285,12 +285,16 @@ BOOST_FIXTURE_TEST_CASE (check_auxpow, BasicTestingSetup)
   auxpow = builder.get (builder.parentBlock.vtx[1]);
   BOOST_CHECK (!auxpow.check (hashAux, ourChainId, params));
 
-  /* The parent chain can't have the same chain ID.  */
+  /* The parent chain can't have the same chain ID if its using auxpow.  */
   CAuxpowBuilder builder2(builder);
   builder2.parentBlock.SetChainId (100);
+  builder2.parentBlock.SetAuxpowVersion (true);
   BOOST_CHECK (builder2.get ().check (hashAux, ourChainId, params));
   builder2.parentBlock.SetChainId (ourChainId);
   BOOST_CHECK (!builder2.get ().check (hashAux, ourChainId, params));
+  // without auxpow parent have whatever it wants in those chain id bits
+  builder2.parentBlock.SetAuxpowVersion (false);
+  BOOST_CHECK (builder2.get ().check (hashAux, ourChainId, params));
 
   /* Disallow too long merkle branches.  */
   builder2 = builder;
@@ -432,13 +436,14 @@ BOOST_FIXTURE_TEST_CASE (auxpow_pow, BasicTestingSetup)
 
   block.nVersion = 2;
   mineBlock (block, true);
-  BOOST_CHECK (!CheckProofOfWork (block, params));
+  BOOST_CHECK (CheckProofOfWork (block, params));
 
   block.SetBaseVersion (2, params.nAuxpowChainId);
   mineBlock (block, true);
   BOOST_CHECK (CheckProofOfWork (block, params));
 
   block.SetChainId (params.nAuxpowChainId + 1);
+  block.SetAuxpowVersion (true);
   mineBlock (block, true);
   BOOST_CHECK (!CheckProofOfWork (block, params));
 
