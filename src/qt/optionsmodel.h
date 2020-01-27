@@ -6,6 +6,7 @@
 #define SYSCOIN_QT_OPTIONSMODEL_H
 
 #include <amount.h>
+#include <qt/guiconstants.h>
 
 #include <QAbstractListModel>
 
@@ -16,7 +17,17 @@ class Node;
 extern const char *DEFAULT_GUI_PROXY_HOST;
 static constexpr unsigned short DEFAULT_GUI_PROXY_PORT = 9050;
 
-/** Interface from Qt to configuration data structure for Syscoin client.
+/**
+ * Convert configured prune target MiB to displayed GB. Round up to avoid underestimating max disk usage.
+ */
+static inline int PruneMiBtoGB(int64_t mib) { return (mib * 1024 * 1024 + GB_BYTES - 1) / GB_BYTES; }
+
+/**
+ * Convert displayed prune target GB to configured MiB. Round down so roundtrip GB -> MiB -> GB conversion is stable.
+ */
+static inline int64_t PruneGBtoMiB(int gb) { return gb * GB_BYTES / 1024 / 1024; }
+
+/** Interface from Qt to configuration data structure for Bitcoin client.
    To Qt, the options are presented as a list with the different options
    laid out vertically.
    This can be changed to a tree once the settings become sufficiently
