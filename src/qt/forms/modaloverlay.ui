@@ -351,6 +351,9 @@ QLabel { color: rgb(40,40,40);  }</string>
              <property name="text">
               <string>Hide</string>
              </property>
+             <property name="shortcut">
+              <string>Esc</string>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::StrongFocus</enum>
              </property>
