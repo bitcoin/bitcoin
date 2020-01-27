@@ -49,9 +49,9 @@ struct BlockValidationFixture : public TestChain100Setup {
                 publicationData.set_identifier(config.index.unwrap());
                 publicationData.set_header(stream->data(), stream->size());
             });
-        When(Method(pop_impl_mock, parsePopTx)).AlwaysDo([](const CTransactionRef& tx, VeriBlock::Publications* pub, VeriBlock::Context* ctx, VeriBlock::PopTxType* type) -> bool {
+        When(Method(pop_impl_mock, parsePopTx)).AlwaysDo([](const CTransactionRef& tx, ScriptError* serror, VeriBlock::Publications* pub, VeriBlock::Context* ctx, VeriBlock::PopTxType* type) -> bool {
             std::vector<std::vector<uint8_t>> stack;
-            return VeriBlock::EvalScriptImpl(tx->vin[0].scriptSig, stack, nullptr, pub, ctx, type, false);
+            return VeriBlock::EvalScriptImpl(tx->vin[0].scriptSig, stack, serror, pub, ctx, type, false);
         });
         When(Method(pop_impl_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
         Fake(Method(pop_impl_mock, addPayloads));

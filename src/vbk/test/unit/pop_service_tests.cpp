@@ -36,7 +36,8 @@ struct PopServiceFixture : public TestChain100Setup {
         VeriBlock::InitConfig();
         Fake(Method(pop_service_impl_mock, addPayloads));
         Fake(Method(pop_service_impl_mock, removePayloads));
-        When(OverloadedMethod(pop_service_impl_mock, parsePopTx, bool(const CTransactionRef&, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType*))).AlwaysReturn(true);
+        Fake(Method(pop_service_impl_mock, clearTemporaryPayloads));
+        When(OverloadedMethod(pop_service_impl_mock, parsePopTx, bool(const CTransactionRef&, ScriptError*, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType*))).AlwaysReturn(true);
         When(Method(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
     }
 };
@@ -60,10 +61,13 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test, PopServiceFixture)
             setPublicationData(publicationData, stream, config.index.unwrap());
         });
 
-    When(OverloadedMethod(pop_service_impl_mock, parsePopTx, bool(const CTransactionRef&, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType*)))
-        .Do([](const CTransactionRef&, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType* type) -> bool {
+    When(OverloadedMethod(pop_service_impl_mock, parsePopTx, bool(const CTransactionRef&, ScriptError*, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType*)))
+        .Do([](const CTransactionRef&, ScriptError* serror, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType* type) -> bool {
             if (type != nullptr) {
                 *type = VeriBlock::PopTxType::PUBLICATIONS;
+            }
+            if (serror != nullptr) {
+                *serror = ScriptError::SCRIPT_ERR_OK;
             }
             return true;
         });
@@ -213,7 +217,7 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_addPayloads, PopServiceFix
             setPublicationData(publicationData, stream, config.index.unwrap());
         });
 
-    When(Method(pop_service_impl_mock, addPayloads)).AlwaysDo([](const CBlock& block, const int& nHeight, const VeriBlock::Publications& publications) -> void {
+    When(Method(pop_service_impl_mock, addPayloads)).AlwaysDo([](std::string hash, const int& nHeight, const VeriBlock::Publications& publications) -> void {
         throw VeriBlock::PopServiceException("fail");
     });
 
