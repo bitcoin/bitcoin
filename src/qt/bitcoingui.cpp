@@ -401,7 +401,7 @@ void BitcoinGUI::createActions()
     openInfoAction = new QAction(tr("&Information"), this);
     openInfoAction->setStatusTip(tr("Show diagnostic information"));
     openRPCConsoleAction = new QAction(tr("&Debug console"), this);
-    openRPCConsoleAction->setStatusTip(tr("Open debugging console"));
+    openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
     openGraphAction = new QAction(tr("&Network Monitor"), this);
     openGraphAction->setStatusTip(tr("Show network monitor"));
     openPeersAction = new QAction(tr("&Peers list"), this);
