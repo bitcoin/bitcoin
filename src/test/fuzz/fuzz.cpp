@@ -12,6 +12,7 @@
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
+#if defined(__AFL_COMPILER)
 static bool read_stdin(std::vector<uint8_t>& data)
 {
     uint8_t buffer[1024];
@@ -23,6 +24,7 @@ static bool read_stdin(std::vector<uint8_t>& data)
     }
     return length == 0;
 }
+#endif
 
 // Default initialization: Override using a non-weak initialize().
 __attribute__((weak)) void initialize()
@@ -44,9 +46,9 @@ extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
     return 0;
 }
 
-// Declare main(...) "weak" to allow for libFuzzer linking. libFuzzer provides
-// the main(...) function.
-__attribute__((weak)) int main(int argc, char** argv)
+// Generally, the fuzzer will provide main(), except for AFL
+#if defined(__AFL_COMPILER)
+int main(int argc, char** argv)
 {
     initialize();
 #ifdef __AFL_INIT
@@ -74,3 +76,4 @@ __attribute__((weak)) int main(int argc, char** argv)
 #endif
     return 0;
 }
+#endif
