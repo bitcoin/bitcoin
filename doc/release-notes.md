@@ -1,25 +1,11 @@
-*After branching off for a major version release of Bitcoin Core, use this
-template to create the initial release notes draft.*
-
-*The release notes draft is a temporary file that can be added to by anyone. See
-[/doc/developer-notes.md#release-notes](/doc/developer-notes.md#release-notes)
-for the process.*
-
-*Create the draft, named* "*version* Release Notes Draft"
-*(e.g. "0.20.0 Release Notes Draft"), as a collaborative wiki in:*
-
-https://github.com/bitcoin-core/bitcoin-devwiki/wiki/
-
-*Before the final release, move the notes back to this git repository.*
-
-*version* Release Notes Draft
+0.19.1 Release Notes
 ===============================
 
-Bitcoin Core version *version* is now available from:
+Bitcoin Core version 0.19.1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-*version*/>
+  <https://bitcoincore.org/bin/bitcoin-core-0.19.1/>
 
-This release includes new features, various bug fixes and performance
+This minor release includes various bug fixes and performance
 improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
@@ -60,14 +46,63 @@ macOS "dark mode" is activated.
 In addition to previously supported CPU platforms, this release's pre-compiled
 distribution provides binaries for the RISC-V platform.
 
-Notable changes
-===============
+0.19.1 change log
+=================
+
+### Wallet
+- #17643 Fix origfee return for bumpfee with feerate arg (instagibbs)
+- #16963 Fix `unique_ptr` usage in boost::signals2 (promag)
+- #17258 Fix issue with conflicted mempool tx in listsinceblock (adamjonas)
+- #17924 Bug: IsUsedDestination shouldn't use key id as script id for ScriptHash (instagibbs)
+- #17621 IsUsedDestination should count any known single-key address (instagibbs)
+
+### RPC and other APIs
+- #17687 cli: Fix fatal leveldb error when specifying -blockfilterindex=basic twice (brakmic)
+- #17728 require second argument only for scantxoutset start action (achow101)
+- #17445 zmq: Fix due to invalid argument and multiple notifiers (promag)
+- #17524 psbt: handle unspendable psbts (achow101)
+
+### GUI
+- #17427 Fix missing qRegisterMetaType for `size_t` (hebasto)
+- #17695 disable File-\>CreateWallet during startup (fanquake)
+- #17634 Fix comparison function signature (hebasto)
+
+### Tests and QA
+- #17416 Appveyor improvement - text file for vcpkg package list (sipsorcery)
+- #17488 fix "bitcoind already running" warnings on macOS (fanquake)
+- #17980 add missing #include to fix compiler errors (kallewoof)
+
+### Platform support
+- #17736 Update msvc build for Visual Studio 2019 v16.4 (sipsorcery)
+- #17364 Updates to appveyor config for VS2019 and Qt5.9.8 + msvc project fixes (sipsorcery)
+- #17887 bug-fix macos: give free bytes to `F_PREALLOCATE` (kallewoof)
+
+### Miscellaneous
+- #17897 init: Stop indexes on shutdown after ChainStateFlushed callback (jimpo)
+- #17450 util: Add missing headers to util/fees.cpp (hebasto)
+- #17654 Unbreak build with Boost 1.72.0 (jbeich)
+- #17857 scripts: Fix symbol-check & security-check argument passing (fanquake)
+- #17762 Log to net category for exceptions in ProcessMessages (laanwj)
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+- Aaron Clauson
+- Adam Jonas
+- Andrew Chow
+- fanquake
+- Gregory Sanders
+- Harris
+- Hennadii Stepanov
+- Jan Beich
+- Jim Posen
+- João Barbosa
+- Karl-Johan Alm
+- Luke Dashjr
+- Russell Yanofsky
+- Wladimir J. van der Laan
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
