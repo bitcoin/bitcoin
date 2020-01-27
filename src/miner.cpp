@@ -221,8 +221,27 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     std::vector<COutPoint> vecLockedOutpoints;
     ActorSet actorSet;
     bool bFoundError = false;
+    bool bFoundInputConflict = false;
     for(const CTransactionRef& tx: pblock->vtx){
         const uint256& txHash = tx->GetHash();
+        // if asset allocation tx we want to ensure we reject conflicting inputs as we would have allowed potentailly a conflicting input into our mempool which is not RBF based
+        // because the first dbl spend attempt on an asset is propogated and this would cause conflict even though CheckSyscoinInputs may have returned true (no asset balances overflowed)
+        if(IsAssetAllocationTx(tx->nVersion)){
+            // check if any inputs are dbl spent, reject tx and create block without it if so
+            for (const CTxIn &txin : tx->vin)
+            {
+                if (mempool.GetConflictTx(txin.prevout)){
+                    txsToRemove.emplace_back(std::move(txHash));
+                    bFoundInputConflict = true;
+                    break;
+                }
+            }
+        }
+        if(bFoundInputConflict){
+            bFoundError = true;
+            break;
+        }
+           
         if(!CheckSyscoinInputs(false, *tx, txHash, tx_state, view, false, nHeight, ::ChainActive().Tip()->GetMedianTimePast(), pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
             txsToRemove.emplace_back(std::move(txHash));
             bFoundError = true;
