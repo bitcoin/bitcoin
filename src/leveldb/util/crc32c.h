@@ -14,12 +14,10 @@ namespace crc32c {
 // Return the crc32c of concat(A, data[0,n-1]) where init_crc is the
 // crc32c of some string A.  Extend() is often used to maintain the
 // crc32c of a stream of data.
-extern uint32_t Extend(uint32_t init_crc, const char* data, size_t n);
+uint32_t Extend(uint32_t init_crc, const char* data, size_t n);
 
 // Return the crc32c of data[0,n-1]
-inline uint32_t Value(const char* data, size_t n) {
-  return Extend(0, data, n);
-}
+inline uint32_t Value(const char* data, size_t n) { return Extend(0, data, n); }
 
 static const uint32_t kMaskDelta = 0xa282ead8ul;
 
