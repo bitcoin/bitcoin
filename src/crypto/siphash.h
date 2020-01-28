@@ -15,8 +15,8 @@ class CSipHasher
 {
 private:
     uint64_t v[4];
-    uint64_t tmp;
-    uint8_t count; // Only the low 8 bits of the input size matter.
+    uint64_t tail; // bytes that weren't processed yet.
+    uint8_t count;  // total amount of bytes inputted.
 
 public:
     /** Construct a SipHash calculator initialized with 128-bit key (k0, k1) */
