@@ -61,6 +61,17 @@ inline std::string heightToHash(uint32_t height)
     return arith_uint256(height).GetHex();
 }
 
+void clearTemporaryPayloadsImpl(VeriBlock::PopService& pop, uint32_t begin, uint32_t end)
+{
+    for (uint32_t height = begin; height < end; ++height) {
+        try {
+            pop.removePayloads(heightToHash(height), height);
+        } catch (const std::exception& e) {
+            LogPrintf("removePayloads failed on height %s, but this is okay.", height);
+        }
+    }
+}
+
 } // namespace
 
 
@@ -141,7 +152,9 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
 {
     SaveBlockPopTxRequest request;
     EmptyReply reply;
-    ClientContext context;
+
+    AddPayloadsDataRequest payloads;
+
 
     auto* b1 = new AltChainBlock();
     BlockToProtoAltChainBlock(block, nHeight, *b1);
@@ -154,7 +167,6 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
 
         PopTxData* popTxData = request.add_popdata();
 
-
         Publications publications;
         PopTxType type;
         ScriptError serror;
@@ -163,6 +175,12 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
         // skip all non-publications txes
         if (type != PopTxType::PUBLICATIONS) {
             continue;
+        }
+
+        // insert payloads
+        payloads.add_altpublications(publications.atv.data(), publications.atv.size());
+        for (const auto& vtb : publications.vtbs) {
+            payloads.add_veriblockpublications(vtb.data(), vtb.size());
         }
 
         // Fill the proto objects with pop data
@@ -187,15 +205,30 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
         popTxData->set_allocated_endorsedblock(b2);
 
         for (const auto& vtb : publications.vtbs) {
-            std::string* data = popTxData->add_veriblockpublications();
-            *data = std::string(vtb.begin(), vtb.end());
+            popTxData->add_veriblockpublications(vtb.data(), vtb.size());
         }
     }
 
     if (request.popdata_size() != 0) {
-        Status status = grpcPopService->SaveBlockPopTxToDatabase(&context, request, &reply);
-        if (!status.ok()) {
-            throw PopServiceException(status);
+        // first, addPayloads
+        {
+            auto* index = new BlockIndex();
+            index->set_height(nHeight);
+            index->set_hash(block.GetHash().ToString());
+            payloads.set_allocated_blockindex(index);
+            ClientContext context;
+            Status status = grpcPopService->AddPayloads(&context, payloads, &reply);
+            if (!status.ok()) {
+                throw PopServiceException(status);
+            }
+        }
+        // then, save pop txes to database
+        {
+            ClientContext context;
+            Status status = grpcPopService->SaveBlockPopTxToDatabase(&context, request, &reply);
+            if (!status.ok()) {
+                throw PopServiceException(status);
+            }
         }
     }
 }
@@ -284,13 +317,11 @@ void PopServiceImpl::updateContext(const std::vector<std::vector<uint8_t>>& veri
     ClientContext context;
 
     for (const auto& bitcoin_block : bitcoinBlocks) {
-        std::string* pb = request.add_bitcoinblocks();
-        *pb = std::string(bitcoin_block.begin(), bitcoin_block.end());
+        request.add_bitcoinblocks(bitcoin_block.data(), bitcoin_block.size());
     }
 
     for (const auto& veriblock_block : veriBlockBlocks) {
-        std::string* pb = request.add_veriblockblocks();
-        *pb = std::string(veriblock_block.begin(), veriblock_block.end());
+        request.add_veriblockblocks(veriblock_block.data(), veriblock_block.size());
     }
 
     Status status = grpcPopService->UpdateContext(&context, request, &reply);
@@ -469,8 +500,7 @@ void PopServiceImpl::setConfig()
 
     auto* relativeScoreConfig = new RelativeScoreConfig();
     for (const auto& i : config.relativeScoreLookupTable) {
-        std::string* score = relativeScoreConfig->add_score();
-        *score = i;
+        relativeScoreConfig->add_score(i);
     }
     calculatorConfig->set_allocated_relativescorelookuptable(relativeScoreConfig);
 
@@ -490,17 +520,15 @@ void PopServiceImpl::setConfig()
     //VeriBlockBootstrapConfig
     auto* veriBlockBootstrapBlocks = new VeriBlockBootstrapConfig();
     for (const auto& bootstrap_veriblock_block : config.bootstrap_veriblock_blocks) {
-        std::string* block = veriBlockBootstrapBlocks->add_blocks();
         std::vector<uint8_t> bytes = ParseHex(bootstrap_veriblock_block);
-        *block = std::string(bytes.begin(), bytes.end());
+        veriBlockBootstrapBlocks->add_blocks(bytes.data(), bytes.size());
     }
 
     //BitcoinBootstrapConfig
     auto* bitcoinBootstrapBlocks = new BitcoinBootstrapConfig();
     for (const auto& bootstrap_bitcoin_block : config.bootstrap_bitcoin_blocks) {
-        std::string* block = bitcoinBootstrapBlocks->add_blocks();
         std::vector<uint8_t> bytes = ParseHex(bootstrap_bitcoin_block);
-        *block = std::string(bytes.begin(), bytes.end());
+        bitcoinBootstrapBlocks->add_blocks(bytes.data(), bytes.size());
     }
     bitcoinBootstrapBlocks->set_firstblockheight(config.bitcoin_first_block_height);
 
@@ -525,10 +553,8 @@ void PopServiceImpl::clearTemporaryPayloads()
     // 3. if node was shutdown during block pop validation, also clear all payloads within given height range
     // range is [uint32_t::max() - pop_tx_amount_per_block...uint32_t::max); total size is config.pop_tx_amount
 
-    auto& config = VeriBlock::getService<Config>();
-    for (uint32_t height = getReservedBlockIndexBegin(config), end = getReservedBlockIndexEnd(config); height < end; ++height) {
-        removePayloads(heightToHash(height), height);
-    }
+    auto& config = getService<Config>();
+    clearTemporaryPayloadsImpl(*this, getReservedBlockIndexBegin(config), getReservedBlockIndexEnd(config));
 }
 
 
@@ -619,10 +645,8 @@ bool txPopValidation(PopServiceImpl& pop, const CTransactionRef& tx, const CBloc
 
 bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    bool isValid = true;
     const auto& config = getService<Config>();
     size_t numOfPopTxes = 0;
-    std::string error_message;
 
     // block index here works as a database transaction ID
     // if given tx is invalid, we need to rollback the alt-service state
@@ -646,21 +670,19 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
         }
 
         TxValidationState txstate;
-        assert(blockIndexBegin < blockIndexEnd && "oh no, programming error");
+        assert(blockIndexBegin <= blockIndexEnd && "oh no, programming error");
         if (!txPopValidation(pop, tx, pindexPrev, params, txstate, blockIndexIt++)) {
-            isValid = false;
-            pop.removePayloads(heightToHash(blockIndexIt), blockIndexIt);
+            clearTemporaryPayloadsImpl(pop, getReservedBlockIndexBegin(config), blockIndexIt);
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, txstate.GetRejectReason(), txstate.GetDebugMessage());
         }
     }
 
+    // because this is validation, we need to clear current temporary payloads
+    // actual addPayloads call is performed in savePopTxToDatabase
+    clearTemporaryPayloadsImpl(pop, getReservedBlockIndexBegin(config), blockIndexIt);
 
-    if (!isValid) {
-        pop.clearTemporaryPayloads();
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "pop-block-invalid", "bad pop data \n" + error_message);
-    }
-
-    return true;
+    return state.IsValid();
 }
 
 bool PopServiceImpl::blockPopValidation(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
