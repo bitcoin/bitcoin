@@ -126,6 +126,7 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
         }
 
         if (!std::regex_match(p.first, baseMatch, reFilter)) {
+             g_testing_setup = nullptr;
             continue;
         }
 
