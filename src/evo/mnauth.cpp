@@ -63,13 +63,19 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         }
         if (fAlreadyHaveMNAUTH) {
             LOCK(cs_main);
-            Misbehaving(pnode->GetId(), 100);
+            Misbehaving(pnode->GetId(), 100, "duplicate mnauth");
+            return;
+        }
+
+        if (mnauth.proRegTxHash.IsNull()) {
+            LOCK(cs_main);
+            Misbehaving(pnode->GetId(), 100, "empty mnauth proRegTxHash");
             return;
         }
 
         if (mnauth.proRegTxHash.IsNull() || !mnauth.sig.IsValid()) {
             LOCK(cs_main);
-            Misbehaving(pnode->GetId(), 100);
+            Misbehaving(pnode->GetId(), 100, "invalid mnauth signature");
             return;
         }
 
@@ -80,7 +86,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             // in case he was unlucky and not up to date, just let him be connected as a regular node, which gives him
             // a chance to get up-to-date and thus realize by himself that he's not a MN anymore. We still give him a
             // low DoS score.
-            Misbehaving(pnode->GetId(), 10);
+            Misbehaving(pnode->GetId(), 10, "missing mnauth masternode");
             return;
         }
 
@@ -95,7 +101,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             LOCK(cs_main);
             // Same as above, MN seems to not know about his fate yet, so give him a chance to update. If this is a
             // malicious actor (DoSing us), we'll ban him soon.
-            Misbehaving(pnode->GetId(), 10);
+            Misbehaving(pnode->GetId(), 10, "mnauth signature verification failed");
             return;
         }
 
