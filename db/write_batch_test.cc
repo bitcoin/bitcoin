@@ -52,7 +52,7 @@ static std::string PrintContents(WriteBatch* b) {
   return state;
 }
 
-class WriteBatchTest { };
+class WriteBatchTest {};
 
 TEST(WriteBatchTest, Empty) {
   WriteBatch batch;
@@ -68,10 +68,11 @@ TEST(WriteBatchTest, Multiple) {
   WriteBatchInternal::SetSequence(&batch, 100);
   ASSERT_EQ(100, WriteBatchInternal::Sequence(&batch));
   ASSERT_EQ(3, WriteBatchInternal::Count(&batch));
-  ASSERT_EQ("Put(baz, boo)@102"
-            "Delete(box)@101"
-            "Put(foo, bar)@100",
-            PrintContents(&batch));
+  ASSERT_EQ(
+      "Put(baz, boo)@102"
+      "Delete(box)@101"
+      "Put(foo, bar)@100",
+      PrintContents(&batch));
 }
 
 TEST(WriteBatchTest, Corruption) {
@@ -81,40 +82,56 @@ TEST(WriteBatchTest, Corruption) {
   WriteBatchInternal::SetSequence(&batch, 200);
   Slice contents = WriteBatchInternal::Contents(&batch);
   WriteBatchInternal::SetContents(&batch,
-                                  Slice(contents.data(),contents.size()-1));
-  ASSERT_EQ("Put(foo, bar)@200"
-            "ParseError()",
-            PrintContents(&batch));
+                                  Slice(contents.data(), contents.size() - 1));
+  ASSERT_EQ(
+      "Put(foo, bar)@200"
+      "ParseError()",
+      PrintContents(&batch));
 }
 
 TEST(WriteBatchTest, Append) {
   WriteBatch b1, b2;
   WriteBatchInternal::SetSequence(&b1, 200);
   WriteBatchInternal::SetSequence(&b2, 300);
-  WriteBatchInternal::Append(&b1, &b2);
-  ASSERT_EQ("",
-            PrintContents(&b1));
+  b1.Append(b2);
+  ASSERT_EQ("", PrintContents(&b1));
   b2.Put("a", "va");
-  WriteBatchInternal::Append(&b1, &b2);
-  ASSERT_EQ("Put(a, va)@200",
-            PrintContents(&b1));
+  b1.Append(b2);
+  ASSERT_EQ("Put(a, va)@200", PrintContents(&b1));
   b2.Clear();
   b2.Put("b", "vb");
-  WriteBatchInternal::Append(&b1, &b2);
-  ASSERT_EQ("Put(a, va)@200"
-            "Put(b, vb)@201",
-            PrintContents(&b1));
+  b1.Append(b2);
+  ASSERT_EQ(
+      "Put(a, va)@200"
+      "Put(b, vb)@201",
+      PrintContents(&b1));
   b2.Delete("foo");
-  WriteBatchInternal::Append(&b1, &b2);
-  ASSERT_EQ("Put(a, va)@200"
-            "Put(b, vb)@202"
-            "Put(b, vb)@201"
-            "Delete(foo)@203",
-            PrintContents(&b1));
+  b1.Append(b2);
+  ASSERT_EQ(
+      "Put(a, va)@200"
+      "Put(b, vb)@202"
+      "Put(b, vb)@201"
+      "Delete(foo)@203",
+      PrintContents(&b1));
+}
+
+TEST(WriteBatchTest, ApproximateSize) {
+  WriteBatch batch;
+  size_t empty_size = batch.ApproximateSize();
+
+  batch.Put(Slice("foo"), Slice("bar"));
+  size_t one_key_size = batch.ApproximateSize();
+  ASSERT_LT(empty_size, one_key_size);
+
+  batch.Put(Slice("baz"), Slice("boo"));
+  size_t two_keys_size = batch.ApproximateSize();
+  ASSERT_LT(one_key_size, two_keys_size);
+
+  batch.Delete(Slice("box"));
+  size_t post_delete_size = batch.ApproximateSize();
+  ASSERT_LT(two_keys_size, post_delete_size);
 }
 
 }  // namespace leveldb
 
-int main(int argc, char** argv) {
-  return leveldb::test::RunAllTests();
-}
+int main(int argc, char** argv) { return leveldb::test::RunAllTests(); }
