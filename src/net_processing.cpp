@@ -2105,18 +2105,20 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     }
 
 
-    else if (strCommand == NetMsgType::SENDDSQUEUE)
+    if (strCommand == NetMsgType::SENDDSQUEUE)
     {
         bool b;
         vRecv >> b;
         pfrom->fSendDSQueue = b;
+        return true;
     }
 
 
-    else if (strCommand == NetMsgType::QSENDRECSIGS) {
+    if (strCommand == NetMsgType::QSENDRECSIGS) {
         bool b;
         vRecv >> b;
         pfrom->fSendRecSigs = b;
+        return true;
     }
 
     if (strCommand == NetMsgType::INV) {
@@ -2598,7 +2600,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-     if (strCommand == NetMsgType::CMPCTBLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
+    if (strCommand == NetMsgType::CMPCTBLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         CBlockHeaderAndShortTxIDs cmpctblock;
         vRecv >> cmpctblock;
