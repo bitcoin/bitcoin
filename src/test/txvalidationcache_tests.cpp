@@ -21,7 +21,7 @@
 
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks);
 
-BOOST_AUTO_TEST_SUITE(tx_validationcache_tests)
+BOOST_AUTO_TEST_SUITE(txvalidationcache_tests)
 
 static bool
 ToMemPool(const CMutableTransaction& tx)
