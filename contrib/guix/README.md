@@ -62,15 +62,16 @@ Likewise, to perform a bootstrapped build (takes even longer):
 export ADDITIONAL_GUIX_ENVIRONMENT_FLAGS='--bootstrap --no-substitutes'
 ```
 
-### Using the right Guix
+### Using a version of Guix with `guix time-machine` capabilities
 
-Once Guix is installed, deploy our patched version into your current Guix
-profile. The changes there are slowly being upstreamed.
+> Note: This entire section can be skipped if you are already using a version of
+> Guix that has [the `guix time-machine` command][guix/time-machine].
+
+Once Guix is installed, if it doesn't have the `guix time-machine` command, pull
+the latest `guix`.
 
 ```sh
-guix pull --url=https://github.com/dongcarl/guix.git \
-          --commit=82c77e52b8b46e0a3aad2cb12307c2e30547deec \
-          --max-jobs=4 # change accordingly
+guix pull --max-jobs=4 # change number of jobs accordingly
 ```
 
 Make sure that you are using your current profile. (You are prompted to do this
@@ -79,9 +80,6 @@ at the end of the `guix pull`)
 ```bash
 export PATH="${HOME}/.config/guix/current/bin${PATH:+:}$PATH"
 ```
-
-> Note: There is ongoing work to eliminate this entire section using Guix
-> [inferiors][guix/inferiors] and [channels][guix/channels].
 
 ## Usage
 
@@ -224,6 +222,7 @@ repository and will likely put one up soon.
 [guix/substitute-server-auth]: https://www.gnu.org/software/guix/manual/en/html_node/Substitute-Server-Authorization.html
 [guix/inferiors]: https://www.gnu.org/software/guix/manual/en/html_node/Inferiors.html
 [guix/channels]: https://www.gnu.org/software/guix/manual/en/html_node/Channels.html
+[guix/time-machine]: https://guix.gnu.org/manual/en/html_node/Invoking-guix-time_002dmachine.html
 
 [debian/guix-package]: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=850644
 [fanquake/guix-docker]: https://github.com/fanquake/core-review/tree/master/guix
