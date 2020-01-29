@@ -168,6 +168,15 @@ There are also new RPC commands:
 
 `getpoolinfo` was deprecated in favor of `getprivatesendinfo` and no longer returns any data.
 
+There are also new RPC commands backported from Bitcoin Core 0.15:
+- `abortrescan`
+- `combinerawtransaction`
+- `getblockstats`
+- `getchaintxstats`
+- `listwallets`
+- `logging`
+- `uptime`
+
 Make sure to check Bitcoin Core 0.15 release notes in a [section](#backports-from-bitcoin-core-015) below
 for more RPC changes.
 
