@@ -1910,17 +1910,35 @@ void static ProcessOrphanTx(CConnman* connman, CTxMemPool& mempool, std::set<uin
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee
             LogPrint(BCLog::MEMPOOL, "   removed orphan tx %s\n", orphanHash.ToString());
-            if ((!orphanTx.HasWitness() && orphan_state.GetResult() != TxValidationResult::TX_WITNESS_MUTATED) ||
-                    orphan_state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD) {
-                // Do not use rejection cache for witness transactions or
-                // witness-stripped transactions, as they can have been malleated.
-                // See https://github.com/bitcoin/bitcoin/issues/8279 for details.
-                // However, if the transaction failed for TX_INPUTS_NOT_STANDARD,
+            if (orphanTx.HasWitness() || orphan_state.GetResult() != TxValidationResult::TX_WITNESS_MUTATED) {
+                // We can add the wtxid of this transaction to our reject filter.
+                // Do not add txids of witness transactions or witness-stripped
+                // transactions to the filter, as they can have been malleated;
+                // adding such txids to the reject filter would potentially
+                // interfere with relay of valid transactions from peers that
+                // do not support wtxid-based relay. See
+                // https://github.com/bitcoin/bitcoin/issues/8279 for details.
+                // We can remove this restriction (and always add wtxids to
+                // the filter even for witness stripped transactions) once
+                // wtxid-based relay is broadly deployed.
+                // See also comments in https://github.com/bitcoin/bitcoin/pull/18044#discussion_r443419034
+                // for concerns around weakening security of unupgraded nodes
+                // if we start doing this too early.
+                assert(recentRejects);
+                recentRejects->insert(orphanTx.GetWitnessHash());
+                // If the transaction failed for TX_INPUTS_NOT_STANDARD,
                 // then we know that the witness was irrelevant to the policy
                 // failure, since this check depends only on the txid
                 // (the scriptPubKey being spent is covered by the txid).
-                assert(recentRejects);
-                recentRejects->insert(orphanHash);
+                // Add the txid to the reject filter to prevent repeated
+                // processing of this transaction in the event that child
+                // transactions are later received (resulting in
+                // parent-fetching by txid via the orphan-handling logic).
+                if (orphan_state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && orphanTx.GetWitnessHash() != orphanTx.GetHash()) {
+                    // We only add the txid if it differs from the wtxid, to
+                    // avoid wasting entries in the rolling bloom filter.
+                    recentRejects->insert(orphanTx.GetHash());
+                }
             }
             EraseOrphanTx(orphanHash);
             done = true;
@@ -2608,19 +2626,36 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
                 // We will continue to reject this tx since it has rejected
                 // parents so avoid re-requesting it from other peers.
                 recentRejects->insert(tx.GetHash());
+                recentRejects->insert(tx.GetWitnessHash());
             }
         } else {
-            if ((!tx.HasWitness() && state.GetResult() != TxValidationResult::TX_WITNESS_MUTATED) ||
-                    state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD) {
-                // Do not use rejection cache for witness transactions or
-                // witness-stripped transactions, as they can have been malleated.
-                // See https://github.com/bitcoin/bitcoin/issues/8279 for details.
-                // However, if the transaction failed for TX_INPUTS_NOT_STANDARD,
+            if (tx.HasWitness() || state.GetResult() != TxValidationResult::TX_WITNESS_MUTATED) {
+                // We can add the wtxid of this transaction to our reject filter.
+                // Do not add txids of witness transactions or witness-stripped
+                // transactions to the filter, as they can have been malleated;
+                // adding such txids to the reject filter would potentially
+                // interfere with relay of valid transactions from peers that
+                // do not support wtxid-based relay. See
+                // https://github.com/bitcoin/bitcoin/issues/8279 for details.
+                // We can remove this restriction (and always add wtxids to
+                // the filter even for witness stripped transactions) once
+                // wtxid-based relay is broadly deployed.
+                // See also comments in https://github.com/bitcoin/bitcoin/pull/18044#discussion_r443419034
+                // for concerns around weakening security of unupgraded nodes
+                // if we start doing this too early.
+                assert(recentRejects);
+                recentRejects->insert(tx.GetWitnessHash());
+                // If the transaction failed for TX_INPUTS_NOT_STANDARD,
                 // then we know that the witness was irrelevant to the policy
                 // failure, since this check depends only on the txid
                 // (the scriptPubKey being spent is covered by the txid).
-                assert(recentRejects);
-                recentRejects->insert(tx.GetHash());
+                // Add the txid to the reject filter to prevent repeated
+                // processing of this transaction in the event that child
+                // transactions are later received (resulting in
+                // parent-fetching by txid via the orphan-handling logic).
+                if (state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && tx.GetWitnessHash() != tx.GetHash()) {
+                    recentRejects->insert(tx.GetHash());
+                }
                 if (RecursiveDynamicUsage(*ptx) < 100000) {
                     AddToCompactExtraTransactions(ptx);
                 }
