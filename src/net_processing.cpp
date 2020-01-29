@@ -1185,14 +1185,15 @@ PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CS
     recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
 
     // Blocks don't typically have more than 4000 transactions, so this should
-    // be at least six blocks (~1 hr) worth of transactions that we can store.
+    // be at least six blocks (~1 hr) worth of transactions that we can store,
+    // inserting both a txid and wtxid for every observed transaction.
     // If the number of transactions appearing in a block goes up, or if we are
     // seeing getdata requests more than an hour after initial announcement, we
     // can increase this number.
     // The false positive rate of 1/1M should come out to less than 1
     // transaction per day that would be inadvertently ignored (which is the
     // same probability that we have in the reject filter).
-    g_recent_confirmed_transactions.reset(new CRollingBloomFilter(24000, 0.000001));
+    g_recent_confirmed_transactions.reset(new CRollingBloomFilter(48000, 0.000001));
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
     // Stale tip checking and peer eviction are on two different timers, but we
@@ -1248,6 +1249,9 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
         LOCK(g_cs_recent_confirmed_transactions);
         for (const auto& ptx : pblock->vtx) {
             g_recent_confirmed_transactions->insert(ptx->GetHash());
+            if (ptx->GetHash() != ptx->GetWitnessHash()) {
+                g_recent_confirmed_transactions->insert(ptx->GetWitnessHash());
+            }
         }
     }
 }
