@@ -198,6 +198,22 @@ struct mempoolentry_txid
     }
 };
 
+// extracts a transaction witness-hash from CTxMemPoolEntry or CTransactionRef
+struct mempoolentry_wtxid
+{
+    typedef uint256 result_type;
+    result_type operator() (const CTxMemPoolEntry &entry) const
+    {
+        return entry.GetTx().GetWitnessHash();
+    }
+
+    result_type operator() (const CTransactionRef& tx) const
+    {
+        return tx->GetWitnessHash();
+    }
+};
+
+
 /** \class CompareTxMemPoolEntryByDescendantScore
  *
  *  Sort an entry by max(score/size of entry's tx, score/size with all descendants).
@@ -318,6 +334,7 @@ public:
 struct descendant_score {};
 struct entry_time {};
 struct ancestor_score {};
+struct index_by_wtxid {};
 
 class CBlockPolicyEstimator;
 
@@ -383,8 +400,9 @@ public:
  *
  * CTxMemPool::mapTx, and CTxMemPoolEntry bookkeeping:
  *
- * mapTx is a boost::multi_index that sorts the mempool on 4 criteria:
- * - transaction hash
+ * mapTx is a boost::multi_index that sorts the mempool on 5 criteria:
+ * - transaction hash (txid)
+ * - witness-transaction hash (wtxid)
  * - descendant feerate [we use max(feerate of tx, feerate of tx with all descendants)]
  * - time in mempool
  * - ancestor feerate [we use min(feerate of tx, feerate of tx with all unconfirmed ancestors)]
@@ -469,6 +487,12 @@ public:
         boost::multi_index::indexed_by<
             // sorted by txid
             boost::multi_index::hashed_unique<mempoolentry_txid, SaltedTxidHasher>,
+            // sorted by wtxid
+            boost::multi_index::hashed_unique<
+                boost::multi_index::tag<index_by_wtxid>,
+                mempoolentry_wtxid,
+                SaltedTxidHasher
+            >,
             // sorted by fee rate
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::tag<descendant_score>,
@@ -586,7 +610,7 @@ public:
 
     void clear();
     void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
-    bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb);
+    bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid=false);
     void queryHashes(std::vector<uint256>& vtxid) const;
     bool isSpent(const COutPoint& outpoint) const;
     unsigned int GetTransactionsUpdated() const;
@@ -689,14 +713,22 @@ public:
         return totalTxSize;
     }
 
-    bool exists(const uint256& hash) const
+    bool exists(const uint256& hash, bool wtxid=false) const
     {
         LOCK(cs);
+        if (wtxid) {
+            return (mapTx.get<index_by_wtxid>().count(hash) != 0);
+        }
         return (mapTx.count(hash) != 0);
     }
 
     CTransactionRef get(const uint256& hash) const;
-    TxMempoolInfo info(const uint256& hash) const;
+    txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
+        return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
+    }
+    TxMempoolInfo info(const uint256& hash, bool wtxid=false) const;
     std::vector<TxMempoolInfo> infoAll() const;
 
     size_t DynamicMemoryUsage() const;
