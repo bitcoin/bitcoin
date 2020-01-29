@@ -39,6 +39,9 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
         // Get the scriptPubKey to know which SigningProvider to use
         CScript script;
         if (input.non_witness_utxo) {
+            if (txin.prevout.n >= input.non_witness_utxo->vout.size()) {
+                return TransactionError::MISSING_INPUTS;
+            }
             script = input.non_witness_utxo->vout[txin.prevout.n].scriptPubKey;
         } else {
             // There's no UTXO so we can just skip this now

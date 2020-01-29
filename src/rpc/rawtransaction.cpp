@@ -1067,7 +1067,13 @@ UniValue decodepsbt(const JSONRPCRequest& request)
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, uint256(), non_wit, false);
             in.pushKV("non_witness_utxo", non_wit);
-            total_in += input.non_witness_utxo->vout[psbtx.tx->vin[i].prevout.n].nValue;
+            CAmount utxo_val = input.non_witness_utxo->vout[psbtx.tx->vin[i].prevout.n].nValue;
+            if (MoneyRange(utxo_val) && MoneyRange(total_in + utxo_val)) {
+                total_in += utxo_val;
+            } else {
+                // Hack to just not show fee later
+                have_all_utxos = false;
+            }
         } else {
             have_all_utxos = false;
         }
@@ -1166,7 +1172,12 @@ UniValue decodepsbt(const JSONRPCRequest& request)
         outputs.push_back(out);
 
         // Fee calculation
-        output_value += psbtx.tx->vout[i].nValue;
+        if (MoneyRange(psbtx.tx->vout[i].nValue) && MoneyRange(output_value + psbtx.tx->vout[i].nValue)) {
+            output_value += psbtx.tx->vout[i].nValue;
+        } else {
+            // Hack to just not show fee later
+            have_all_utxos = false;
+        }
     }
     result.pushKV("outputs", outputs);
     if (have_all_utxos) {
