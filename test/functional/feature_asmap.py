@@ -18,8 +18,7 @@ Verify node behaviour and debug log when launching bitcoind in these cases:
 
 6. `bitcoind -asmap` with an empty (unparsable) default asmap file
 
-The tests are order-independent. The slowest tests (missing default asmap and
-empty asmap) are placed last.
+The tests are order-independent.
 
 """
 import os
