@@ -94,7 +94,6 @@ namespace Platform
         result.push_back(json_spirit::Pair("tokenMetadataSchemaUri", m_nfTokenProtocol.tokenMetadataSchemaUri));
         result.push_back(json_spirit::Pair("tokenMetadataMimeType", m_nfTokenProtocol.tokenMetadataMimeType));
         result.push_back(json_spirit::Pair("isTokenTransferable", m_nfTokenProtocol.isTokenTransferable));
-        result.push_back(json_spirit::Pair("isTokenImmutable", m_nfTokenProtocol.isTokenImmutable));
         result.push_back(json_spirit::Pair("isMetadataEmbedded", m_nfTokenProtocol.isMetadataEmbedded));
         auto nftRegSignStr = NftRegSignToString(static_cast<NftRegSign>(m_nfTokenProtocol.nftRegSign));
         result.push_back(json_spirit::Pair("nftRegSign", nftRegSignStr));
@@ -109,8 +108,7 @@ namespace Platform
         out << "NfTokenProtocolRegTx(nft protocol ID=" << ProtocolName{m_nfTokenProtocol.tokenProtocolId}.ToString()
         << ", nft protocol name=" << m_nfTokenProtocol.tokenProtocolName << ", nft metadata schema url=" << m_nfTokenProtocol.tokenMetadataSchemaUri
         << ", nft metadata mimetype=" << m_nfTokenProtocol.tokenMetadataMimeType << ", transferable=" << m_nfTokenProtocol.isTokenTransferable
-        << ", immutable=" << m_nfTokenProtocol.isTokenImmutable << ", is metadata embedded" << m_nfTokenProtocol.isMetadataEmbedded
-        << ", max metadata size=" << m_nfTokenProtocol.maxMetadataSize
+        << ", is metadata embedded" << m_nfTokenProtocol.isMetadataEmbedded << ", max metadata size=" << m_nfTokenProtocol.maxMetadataSize
         << ", nft Protocol owner ID=" << CBitcoinAddress(m_nfTokenProtocol.tokenProtocolOwnerId).ToString() << ")";
         return out.str();
     }

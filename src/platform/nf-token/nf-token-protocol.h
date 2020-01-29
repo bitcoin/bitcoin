@@ -43,9 +43,6 @@ namespace Platform
         /// Defines if this NF token type can be transferred
         bool isTokenTransferable{true};
 
-        /// Defines if this NF token id can be changed during token lifetime
-        bool isTokenImmutable{true};
-
         /// Defines if metadata is embedded or contains a URI
         /// It's recommended to use embedded metadata only if it's shorter than URI
         bool isMetadataEmbedded{false};
@@ -76,7 +73,6 @@ namespace Platform
             READWRITE(tokenMetadataSchemaUri);
             READWRITE(tokenMetadataMimeType);
             READWRITE(isTokenTransferable);
-            READWRITE(isTokenImmutable);
             READWRITE(isMetadataEmbedded);
             READWRITE(nftRegSign);
             READWRITE(maxMetadataSize);
@@ -89,7 +85,6 @@ namespace Platform
     tokenProtocolName = nftoken.glbl;
     tokenMetadataSchemaUri = null;
     tokenMetadataMimeType = null;
-    isTokenImmutable = false;
     isTokenTransferable = false;
     isMetadataEmbedded = false;
     nftRegSign = NftRegSign::SignPayer;
@@ -98,7 +93,6 @@ namespace Platform
     tokenProtocolName = ercS21.kitts;
     tokenMetadataSchemaUri = https://erc721-json-schema-url;
     tokenMetadataMimeType = text/json;
-    isTokenImmutable = false;
     isTokenTransferable = false;
     isMetadataEmbedded = false;
     nftRegSign = NftRegSign::SignByCreator;
@@ -107,7 +101,6 @@ namespace Platform
     tokenProtocolName = crown.id;
     tokenMetadataSchemaUri = https://binary-schema;
     tokenMetadataMimeType = application/x-binary;
-    isTokenImmutable = false;
     isTokenTransferable = false;
     isMetadataEmbedded = false;
     nftRegSign = NftRegSign::SelfSign;
@@ -116,7 +109,6 @@ namespace Platform
     tokenProtocolName = docproof;
     tokenMetadataSchemaUri = https://document-desciption-schema;
     tokenMetadataMimeType = text/plain;
-    isTokenImmutable = true;
     isTokenTransferable = true;
     isMetadataEmbedded = true;
     nftRegSign = NftRegSign::SignPayer; */

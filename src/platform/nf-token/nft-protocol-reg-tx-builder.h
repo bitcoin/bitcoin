@@ -73,12 +73,6 @@ namespace Platform
             return *this;
         }
 
-        NftProtocolRegTxBuilder & SetIsTokenImmutable(const json_spirit::Value & value)
-        {
-            m_nftProto.isTokenImmutable = ParseBoolV(value, "isTokenImmutable");
-            return *this;
-        }
-
         NftProtocolRegTxBuilder & SetIsMetadataEmbedded(const json_spirit::Value & value)
         {
             m_nftProto.isMetadataEmbedded = ParseBoolV(value, "isMetadataEmbedded");

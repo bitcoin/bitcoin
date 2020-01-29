@@ -49,7 +49,6 @@ namespace Platform
         protoJsonObj.push_back(json_spirit::Pair("tokenMetadataSchemaUri", nftProtoIndex.NftProtoPtr()->tokenMetadataSchemaUri));
         protoJsonObj.push_back(json_spirit::Pair("tokenMetadataMimeType", nftProtoIndex.NftProtoPtr()->tokenMetadataMimeType));
         protoJsonObj.push_back(json_spirit::Pair("isTokenTransferable", nftProtoIndex.NftProtoPtr()->isTokenTransferable));
-        protoJsonObj.push_back(json_spirit::Pair("isTokenImmutable", nftProtoIndex.NftProtoPtr()->isTokenImmutable));
         protoJsonObj.push_back(json_spirit::Pair("isMetadataEmbedded", nftProtoIndex.NftProtoPtr()->isMetadataEmbedded));
         auto nftRegSignStr = NftRegSignToString(static_cast<NftRegSign>(nftProtoIndex.NftProtoPtr()->nftRegSign));
         protoJsonObj.push_back(json_spirit::Pair("nftRegSign", nftRegSignStr));
@@ -61,7 +60,7 @@ namespace Platform
 
     json_spirit::Value RegisterNftProtocol(const json_spirit::Array& params, bool fHelp)
     {
-        if (params.size() < 4 || params.size() > 11)
+        if (params.size() < 4 || params.size() > 10)
             RegisterNftProtocolHelp();
 
         CKey ownerKey;
@@ -77,11 +76,9 @@ namespace Platform
         if (params.size() > 7)
             txBuilder.SetIsTokenTransferable(params[7]);
         if (params.size() > 8)
-            txBuilder.SetIsTokenImmutable(params[8]);
+            txBuilder.SetIsMetadataEmbedded(params[8]);
         if (params.size() > 9)
-            txBuilder.SetIsMetadataEmbedded(params[9]);
-        if (params.size() > 10)
-            txBuilder.SetMaxMetadataSize(params[10]);
+            txBuilder.SetMaxMetadataSize(params[9]);
 
         auto nftProtoRegTx = txBuilder.BuildTx();
 
@@ -123,19 +120,18 @@ Arguments:
                              Default: "". Arbitrary data can be written by default.
 
 7. "isTokenTransferable"     (string, optional) Defines if this NF token type can be transferred. Default: true
-8. "isTokenImmutable"        (string, optional) Defines if this NF token id can be changed during token lifetime. Default: true
-9. "isMetadataEmbedded"      (string, optional) Defines if metadata is embedded or contains a URI
+8. "isMetadataEmbedded"      (string, optional) Defines if metadata is embedded or contains a URI
                              It's recommended to use embedded metadata only if it's shorter than the URI. Default: false
-10 "maxMetadataSize"         (number, optional) Defines maximum metadata length for the NFT. Absolute max length is 255.
+9 "maxMetadataSize"          (number, optional) Defines maximum metadata length for the NFT. Absolute max length is 255.
                              So the value must be <= 255. Default: 255.
 Examples:
 )"
-+ HelpExampleCli("nftproto", R"(register "doc" "Doc Proof" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 3 "text/plain" "" true true false)")
-+ HelpExampleCli("nftproto", R"(register "crd" "Crown ID" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 1 "application/octet-stream" "https://binary-schema" false true false)")
-+ HelpExampleCli("nftproto", R"(register "crd" "Crown ID" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 1 "application/octet-stream" "https://binary-schema" false true false 64)")
++ HelpExampleCli("nftproto", R"(register "doc" "Doc Proof" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 3 "text/plain" "" true false)")
++ HelpExampleCli("nftproto", R"(register "crd" "Crown ID" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 1 "application/octet-stream" "https://binary-schema" false false)")
++ HelpExampleCli("nftproto", R"(register "crd" "Crown ID" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 1 "application/octet-stream" "https://binary-schema" false false 64)")
 + HelpExampleRpc("nftproto", R"(register "doc" "Doc Proof" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 3 "text/plain" "" true true false)")
-+ HelpExampleRpc("nftproto", R"(register "crd" "Crown ID" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 1 "application/octet-stream" "https://binary-schema" false true false 127)")
-+ HelpExampleRpc("nftproto", R"(register "cks" "ERC721 CryptoKitties" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 2 "text/plain" "" true true false)");
++ HelpExampleRpc("nftproto", R"(register "crd" "Crown ID" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 1 "application/octet-stream" "https://binary-schema" false false 127)")
++ HelpExampleRpc("nftproto", R"(register "cks" "ERC721 CryptoKitties" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 2 "text/plain" "" true false)");
 
         throw std::runtime_error(helpMessage);
     }
