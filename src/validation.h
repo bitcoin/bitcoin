@@ -823,14 +823,41 @@ private:
     //! free the chainstate contents immediately after it finishes validation
     //! to cautiously avoid a case where some other part of the system is still
     //! using this pointer (e.g. net_processing).
+    //!
+    //! Once this pointer is set to a corresponding chainstate, it will not
+    //! be reset until init.cpp:Shutdown(). This means it is safe to acquire
+    //! the contents of this pointer with ::cs_main held, release the lock,
+    //! and then use the reference without concern of it being deconstructed.
+    //!
+    //! This is especially important when, e.g., calling ActivateBestChain()
+    //! on all chainstates because we are not able to hold ::cs_main going into
+    //! that call.
     std::unique_ptr<CChainState> m_ibd_chainstate;
 
     //! A chainstate initialized on the basis of a UTXO snapshot. If this is
     //! non-null, it is always our active chainstate.
+    //!
+    //! Once this pointer is set to a corresponding chainstate, it will not
+    //! be reset until init.cpp:Shutdown(). This means it is safe to acquire
+    //! the contents of this pointer with ::cs_main held, release the lock,
+    //! and then use the reference without concern of it being deconstructed.
+    //!
+    //! This is especially important when, e.g., calling ActivateBestChain()
+    //! on all chainstates because we are not able to hold ::cs_main going into
+    //! that call.
     std::unique_ptr<CChainState> m_snapshot_chainstate;
 
     //! Points to either the ibd or snapshot chainstate; indicates our
     //! most-work chain.
+    //!
+    //! Once this pointer is set to a corresponding chainstate, it will not
+    //! be reset until init.cpp:Shutdown(). This means it is safe to acquire
+    //! the contents of this pointer with ::cs_main held, release the lock,
+    //! and then use the reference without concern of it being deconstructed.
+    //!
+    //! This is especially important when, e.g., calling ActivateBestChain()
+    //! on all chainstates because we are not able to hold ::cs_main going into
+    //! that call.
     CChainState* m_active_chainstate{nullptr};
 
     //! If true, the assumed-valid chainstate has been fully validated
@@ -894,7 +921,7 @@ public:
     void Reset();
 };
 
-extern ChainstateManager g_chainman;
+extern ChainstateManager g_chainman GUARDED_BY(::cs_main);
 
 /** @returns the most-work valid chainstate. */
 CChainState& ChainstateActive();

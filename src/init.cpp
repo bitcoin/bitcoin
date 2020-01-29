@@ -709,11 +709,17 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     }
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
-    BlockValidationState state;
-    if (!ActivateBestChain(state, chainparams)) {
-        LogPrintf("Failed to connect best block (%s)\n", state.ToString());
-        StartShutdown();
-        return;
+
+    // We can't hold cs_main during ActivateBestChain even though we're accessing
+    // the g_chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
+    // the relevant pointers before the ABC call.
+    for (CChainState* chainstate : WITH_LOCK(::cs_main, return g_chainman.GetAll())) {
+        BlockValidationState state;
+        if (!chainstate->ActivateBestChain(state, chainparams, nullptr)) {
+            LogPrintf("Failed to connect best block (%s)\n", state.ToString());
+            StartShutdown();
+            return;
+        }
     }
 
     if (gArgs.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
@@ -1622,8 +1628,9 @@ bool AppInitMain(NodeContext& node)
             }
 
             bool failed_rewind{false};
-
-            for (CChainState* chainstate : g_chainman.GetAll()) {
+            // Can't hold cs_main while calling RewindBlockIndex, so retrieve the relevant
+            // chainstates beforehand.
+            for (CChainState* chainstate : WITH_LOCK(::cs_main, return g_chainman.GetAll())) {
                 if (!fReset) {
                     // Note that RewindBlockIndex MUST run even if we're about to -reindex-chainstate.
                     // It both disconnects blocks based on the chainstate, and drops block data in
