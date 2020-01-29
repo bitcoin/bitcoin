@@ -206,7 +206,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         DeserializeFromFuzzingInput(buffer, dbi);
 #elif TXOUTCOMPRESSOR_DESERIALIZE
         CTxOut to;
-        CTxOutCompressor toc(to);
+        auto toc = Using<TxOutCompression>(to);
         DeserializeFromFuzzingInput(buffer, toc);
 #elif BLOCKTRANSACTIONS_DESERIALIZE
         BlockTransactions bt;
