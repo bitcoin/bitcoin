@@ -4246,6 +4246,11 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                             if (ret.second) {
                                 vRelayExpiration.push_back(std::make_pair(nNow + std::chrono::microseconds{RELAY_TX_CACHE_TIME}.count(), ret.first));
                             }
+                            // Add wtxid-based lookup into mapRelay as well, so that peers can request by wtxid
+                            auto ret2 = mapRelay.emplace(ret.first->second->GetWitnessHash(), ret.first->second);
+                            if (ret2.second) {
+                                vRelayExpiration.emplace_back(nNow + std::chrono::microseconds{RELAY_TX_CACHE_TIME}.count(), ret2.first);
+                            }
                         }
                         if (vInv.size() == MAX_INV_SZ) {
                             connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
