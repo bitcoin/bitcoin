@@ -172,15 +172,15 @@ are held, and adds warnings to the debug.log file if inconsistencies are detecte
 
 Valgrind is a programming tool for memory debugging, memory leak detection, and
 profiling. The repo contains a Valgrind suppressions file
-([`valgrind.supp`](https://github.com/bitcoin/bitcoin/blob/master/contrib/valgrind.supp))
+([`valgrind.supp`](https://github.com/dashpay/dash/blob/master/contrib/valgrind.supp))
 which includes known Valgrind warnings in our dependencies that cannot be fixed
 in-tree. Example use:
 
 ```shell
-$ valgrind --suppressions=contrib/valgrind.supp src/test/test_bitcoin
+$ valgrind --suppressions=contrib/valgrind.supp src/test/test_dash
 $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
-      --show-leak-kinds=all src/test/test_bitcoin --log_level=test_suite
-$ valgrind -v --leak-check=full src/bitcoind -printtoconsole
+      --show-leak-kinds=all src/test/test_dash --log_level=test_suite
+$ valgrind -v --leak-check=full src/dashd -printtoconsole
 ```
 
 **compiling for test coverage**
@@ -196,7 +196,7 @@ To enable LCOV report generation during test runs:
 make
 make cov
 
-# A coverage report will now be accessible at `./test_bitcoin.coverage/index.html`.
+# A coverage report will now be accessible at `./test_dash.coverage/index.html`.
 ```
 
 Locking/mutex usage notes
