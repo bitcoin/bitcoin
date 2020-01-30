@@ -10,6 +10,13 @@ Supporting RPCs are:
 - `deriveaddresses` takes as input a descriptor and computes the corresponding
   addresses.
 - `listunspent` outputs a specialized descriptor for the reported unspent outputs.
+- `getaddressinfo` outputs a descriptor for solvable addresses (since v0.18).
+- `importmulti` takes as input descriptors to import into the wallet
+  (since v0.18).
+- `generatetodescriptor` takes as input a descriptor and generates coins to it
+  (`regtest` only, since v0.19).
+- `utxoupdatepsbt` takes as input descriptors to add information to the psbt
+  (since v0.19).
 
 This document describes the language. For the specifics on usage, see the RPC
 documentation for the functions mentioned above.
