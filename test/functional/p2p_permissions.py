@@ -7,21 +7,35 @@
 Test that permissions are correctly calculated and applied
 """
 
+from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from test_framework.messages import (
+    CTransaction,
+    CTxInWitness,
+    FromHex,
+)
+from test_framework.mininode import P2PDataStore
+from test_framework.script import (
+    CScript,
+    OP_TRUE,
+)
 from test_framework.test_node import ErrorMatch
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes,
     p2p_port,
+    wait_until,
 )
+
 
 class P2PPermissionsTests(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
-        self.extra_args = [[],[]]
 
     def run_test(self):
+        self.check_tx_relay()
+
         self.checkpermission(
             # default permissions (no specific permissions)
             ["-whitelist=127.0.0.1"],
@@ -48,9 +62,9 @@ class P2PPermissionsTests(BitcoinTestFramework):
         ip_port = "127.0.0.1:{}".format(p2p_port(1))
         self.replaceinconfig(1, "bind=127.0.0.1", "whitebind=bloomfilter,forcerelay@" + ip_port)
         self.checkpermission(
-            ["-whitelist=noban@127.0.0.1" ],
+            ["-whitelist=noban@127.0.0.1"],
             # Check parameter interaction forcerelay should activate relay
-            ["noban", "bloomfilter", "forcerelay", "relay" ],
+            ["noban", "bloomfilter", "forcerelay", "relay"],
             False)
         self.replaceinconfig(1, "whitebind=bloomfilter,forcerelay@" + ip_port, "bind=127.0.0.1")
 
@@ -83,6 +97,41 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.nodes[1].assert_start_raises_init_error(["-whitelist=noban@127.0.0.1:230"], "Invalid netmask specified in", match=ErrorMatch.PARTIAL_REGEX)
         self.nodes[1].assert_start_raises_init_error(["-whitebind=noban@127.0.0.1/10"], "Cannot resolve -whitebind address", match=ErrorMatch.PARTIAL_REGEX)
 
+    def check_tx_relay(self):
+        block_op_true = self.nodes[0].getblock(self.nodes[0].generatetoaddress(100, ADDRESS_BCRT1_P2WSH_OP_TRUE)[0])
+        self.sync_all()
+
+        self.log.debug("Create a connection from a whitelisted wallet that rebroadcasts raw txs")
+        # A python mininode is needed to send the raw transaction directly. If a full node was used, it could only
+        # rebroadcast via the inv-getdata mechanism. However, even for whitelisted connections, a full node would
+        # currently not request a txid that is already in the mempool.
+        self.restart_node(1, extra_args=["-whitelist=forcerelay@127.0.0.1"])
+        p2p_rebroadcast_wallet = self.nodes[1].add_p2p_connection(P2PDataStore())
+
+        self.log.debug("Send a tx from the wallet initially")
+        tx = FromHex(
+            CTransaction(),
+            self.nodes[0].createrawtransaction(
+                inputs=[{
+                    'txid': block_op_true['tx'][0],
+                    'vout': 0,
+                }], outputs=[{
+                    ADDRESS_BCRT1_P2WSH_OP_TRUE: 5,
+                }]),
+        )
+        tx.wit.vtxinwit = [CTxInWitness()]
+        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+        txid = tx.rehash()
+
+        self.log.debug("Wait until tx is in node[1]'s mempool")
+        p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
+
+        self.log.debug("Check that node[1] will send the tx to node[0] even though it is already in the mempool")
+        connect_nodes(self.nodes[1], 0)
+        with self.nodes[1].assert_debug_log(["Force relaying tx {} from whitelisted peer=0".format(txid)]):
+            p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
+            wait_until(lambda: txid in self.nodes[0].getrawmempool())
+
     def checkpermission(self, args, expectedPermissions, whitelisted):
         self.restart_node(1, args)
         connect_nodes(self.nodes[0], 1)
@@ -95,9 +144,10 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
     def replaceinconfig(self, nodeid, old, new):
         with open(self.nodes[nodeid].bitcoinconf, encoding="utf8") as f:
-            newText=f.read().replace(old, new)
+            newText = f.read().replace(old, new)
         with open(self.nodes[nodeid].bitcoinconf, 'w', encoding="utf8") as f:
             f.write(newText)
+
 
 if __name__ == '__main__':
     P2PPermissionsTests().main()

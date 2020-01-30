@@ -1105,17 +1105,17 @@ class msg_tx:
         self.tx.deserialize(f)
 
     def serialize(self):
-        return self.tx.serialize_without_witness()
+        return self.tx.serialize_with_witness()
 
     def __repr__(self):
         return "msg_tx(tx=%s)" % (repr(self.tx))
 
 
-class msg_witness_tx(msg_tx):
+class msg_no_witness_tx(msg_tx):
     __slots__ = ()
 
     def serialize(self):
-        return self.tx.serialize_with_witness()
+        return self.tx.serialize_without_witness()
 
 
 class msg_block:
