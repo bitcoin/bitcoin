@@ -261,6 +261,12 @@ extern const char* GETCFCHECKPT;
  * evenly spaced filter headers for blocks on the requested chain.
  */
 extern const char* CFCHECKPT;
+/**
+ * Indicates that a node prefers to relay transactions via wtxid, rather than
+ * txid.
+ * @since protocol version 70016 as described by BIP XXX.
+ */
+extern const char *WTXIDRELAY;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
