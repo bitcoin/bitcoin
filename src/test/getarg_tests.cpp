@@ -183,4 +183,32 @@ BOOST_AUTO_TEST_CASE(boolargno)
     BOOST_CHECK(gArgs.GetBoolArg("-foo", false));
 }
 
+BOOST_AUTO_TEST_CASE(logargs)
+{
+    const auto okaylog_bool = std::make_pair("-okaylog-bool", ArgsManager::ALLOW_BOOL);
+    const auto okaylog_negbool = std::make_pair("-okaylog-negbool", ArgsManager::ALLOW_BOOL);
+    const auto okaylog = std::make_pair("-okaylog", ArgsManager::ALLOW_ANY);
+    const auto dontlog = std::make_pair("-dontlog", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE);
+    SetupArgs({okaylog_bool, okaylog_negbool, okaylog, dontlog});
+    ResetArgs("-okaylog-bool -nookaylog-negbool -okaylog=public -dontlog=private");
+
+    // Everything logged to debug.log will also append to str
+    std::string str;
+    auto print_connection = LogInstance().PushBackCallback(
+        [&str](const std::string& s) {
+            str += s;
+        });
+
+    // Log the arguments
+    gArgs.LogArgs();
+
+    LogInstance().DeleteCallback(print_connection);
+    // Check that what should appear does, and what shouldn't doesn't.
+    BOOST_CHECK(str.find("Command-line arg: okaylog-bool=\"\"") != std::string::npos);
+    BOOST_CHECK(str.find("Command-line arg: okaylog-negbool=false") != std::string::npos);
+    BOOST_CHECK(str.find("Command-line arg: okaylog=\"public\"") != std::string::npos);
+    BOOST_CHECK(str.find("dontlog=****") != std::string::npos);
+    BOOST_CHECK(str.find("private") == std::string::npos);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
