@@ -2593,7 +2593,7 @@ void ProcessMessage(
                     best_block = &inv.hash;
                 }
             } else {
-                pfrom.AddInventoryKnown(inv);
+                pfrom.AddInventoryKnown(inv.hash);
                 if (fBlocksOnly) {
                     LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.hash.ToString(), pfrom.GetId());
                     pfrom.fDisconnect = true;
@@ -2832,26 +2832,26 @@ void ProcessMessage(
         vRecv >> ptx;
         const CTransaction& tx = *ptx;
 
-        CInv inv(MSG_TX, tx.GetHash());
-        pfrom.AddInventoryKnown(inv);
+        const uint256& txid = ptx->GetHash();
+        pfrom.AddInventoryKnown(txid);
 
         LOCK2(cs_main, g_cs_orphans);
 
         TxValidationState state;
 
         CNodeState* nodestate = State(pfrom.GetId());
-        nodestate->m_tx_download.m_tx_announced.erase(inv.hash);
-        nodestate->m_tx_download.m_tx_in_flight.erase(inv.hash);
-        EraseTxRequest(inv.hash);
+        nodestate->m_tx_download.m_tx_announced.erase(txid);
+        nodestate->m_tx_download.m_tx_in_flight.erase(txid);
+        EraseTxRequest(txid);
 
         std::list<CTransactionRef> lRemovedTxn;
 
-        if (!AlreadyHave(inv, mempool) &&
+        if (!AlreadyHave(CInv(MSG_TX, txid), mempool) &&
             AcceptToMemoryPool(mempool, state, ptx, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             mempool.check(&::ChainstateActive().CoinsTip());
             RelayTransaction(tx.GetHash(), connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
-                auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(inv.hash, i));
+                auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(txid, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
                     for (const auto& elem : it_by_prev->second) {
                         pfrom.orphan_work_set.insert(elem->first);
@@ -2884,7 +2884,7 @@ void ProcessMessage(
 
                 for (const CTxIn& txin : tx.vin) {
                     CInv _inv(MSG_TX | nFetchFlags, txin.prevout.hash);
-                    pfrom.AddInventoryKnown(_inv);
+                    pfrom.AddInventoryKnown(txin.prevout.hash);
                     if (!AlreadyHave(_inv, mempool)) RequestTx(State(pfrom.GetId()), _inv.hash, current_time);
                 }
                 AddOrphanTx(ptx, pfrom.GetId());
