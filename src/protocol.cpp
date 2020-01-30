@@ -177,6 +177,8 @@ std::string CInv::GetCommand() const
     switch (masked)
     {
     case MSG_TX:             return cmd.append(NetMsgType::TX);
+    // WTX is not a message type, just an inv type
+    case MSG_WTX:            return cmd.append("wtx");
     case MSG_BLOCK:          return cmd.append(NetMsgType::BLOCK);
     case MSG_FILTERED_BLOCK: return cmd.append(NetMsgType::MERKLEBLOCK);
     case MSG_CMPCT_BLOCK:    return cmd.append(NetMsgType::CMPCTBLOCK);

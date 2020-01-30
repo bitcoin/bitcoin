@@ -82,7 +82,8 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         // best-effort of initial broadcast
         node.mempool->AddUnbroadcastTx(hashTx, tx->GetWitnessHash());
 
-        RelayTransaction(hashTx, *node.connman);
+        LOCK(cs_main);
+        RelayTransaction(hashTx, tx->GetWitnessHash(), *node.connman);
     }
 
     return TransactionError::OK;
