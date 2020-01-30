@@ -39,7 +39,6 @@ class CNetAddr
         explicit CNetAddr(const struct in_addr& ipv4Addr);
         void SetIP(const CNetAddr& ip);
 
-    private:
         /**
          * Set raw IPv4 or IPv6 address (in network byte order)
          * @note Only NET_IPV4 and NET_IPV6 are allowed for network.
