@@ -55,21 +55,21 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
         }
         SignatureData sigdata;
         input.FillSignatureData(sigdata);
-        const SigningProvider* provider = pwallet->GetSigningProvider(script, sigdata);
+        std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(script, sigdata);
         if (!provider) {
             complete = false;
             continue;
         }
 
-        complete &= SignPSBTInput(HidingSigningProvider(provider, !sign, !bip32derivs), psbtx, i, sighash_type);
+        complete &= SignPSBTInput(HidingSigningProvider(provider.get(), !sign, !bip32derivs), psbtx, i, sighash_type);
     }
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
     for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
         const CTxOut& out = psbtx.tx->vout.at(i);
-        const SigningProvider* provider = pwallet->GetSigningProvider(out.scriptPubKey);
+        std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(out.scriptPubKey);
         if (provider) {
-            UpdatePSBTOutput(HidingSigningProvider(provider, true, !bip32derivs), psbtx, i);
+            UpdatePSBTOutput(HidingSigningProvider(provider.get(), true, !bip32derivs), psbtx, i);
         }
     }
 

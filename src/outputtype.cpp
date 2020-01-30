@@ -19,6 +19,8 @@ static const std::string OUTPUT_TYPE_STRING_LEGACY = "legacy";
 static const std::string OUTPUT_TYPE_STRING_P2SH_SEGWIT = "p2sh-segwit";
 static const std::string OUTPUT_TYPE_STRING_BECH32 = "bech32";
 
+const std::array<OutputType, 3> OUTPUT_TYPES = {OutputType::LEGACY, OutputType::P2SH_SEGWIT, OutputType::BECH32};
+
 bool ParseOutputType(const std::string& type, OutputType& output_type)
 {
     if (type == OUTPUT_TYPE_STRING_LEGACY) {
@@ -80,22 +82,30 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
 {
     // Add script to keystore
     keystore.AddCScript(script);
+    ScriptHash sh(script);
     // Note that scripts over 520 bytes are not yet supported.
     switch (type) {
     case OutputType::LEGACY:
-        return ScriptHash(script);
+        keystore.AddCScript(GetScriptForDestination(sh));
+        return sh;
     case OutputType::P2SH_SEGWIT:
     case OutputType::BECH32: {
         CTxDestination witdest = WitnessV0ScriptHash(script);
         CScript witprog = GetScriptForDestination(witdest);
         // Check if the resulting program is solvable (i.e. doesn't use an uncompressed key)
-        if (!IsSolvable(keystore, witprog)) return ScriptHash(script);
+        if (!IsSolvable(keystore, witprog)) {
+            // Since the wsh is invalid, add and return the sh instead.
+            keystore.AddCScript(GetScriptForDestination(sh));
+            return sh;
+        }
         // Add the redeemscript, so that P2WSH and P2SH-P2WSH outputs are recognized as ours.
         keystore.AddCScript(witprog);
         if (type == OutputType::BECH32) {
             return witdest;
         } else {
-            return ScriptHash(witprog);
+            ScriptHash sh_w = ScriptHash(witprog);
+            keystore.AddCScript(GetScriptForDestination(sh_w));
+            return sh_w;
         }
     }
     default: assert(false);

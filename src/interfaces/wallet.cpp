@@ -119,7 +119,7 @@ public:
     }
     bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) override
     {
-        const SigningProvider* provider = m_wallet->GetSigningProvider(script);
+        std::unique_ptr<SigningProvider> provider = m_wallet->GetSigningProvider(script);
         if (provider) {
             return provider->GetPubKey(address, pub_key);
         }
@@ -127,7 +127,7 @@ public:
     }
     bool getPrivKey(const CScript& script, const CKeyID& address, CKey& key) override
     {
-        const SigningProvider* provider = m_wallet->GetSigningProvider(script);
+        std::unique_ptr<SigningProvider> provider = m_wallet->GetSigningProvider(script);
         if (provider) {
             return provider->GetKey(address, key);
         }
@@ -180,7 +180,6 @@ public:
         }
         return result;
     }
-    void learnRelatedScripts(const CPubKey& key, OutputType type) override { m_wallet->GetLegacyScriptPubKeyMan()->LearnRelatedScripts(key, type); }
     bool addDestData(const CTxDestination& dest, const std::string& key, const std::string& value) override
     {
         LOCK(m_wallet->cs_wallet);

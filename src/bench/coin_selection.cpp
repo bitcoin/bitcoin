@@ -31,7 +31,8 @@ static void CoinSelection(benchmark::State& state)
 {
     NodeContext node;
     auto chain = interfaces::MakeChain(node);
-    const CWallet wallet(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+    CWallet wallet(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+    wallet.SetupLegacyScriptPubKeyMan();
     std::vector<std::unique_ptr<CWalletTx>> wtxs;
     LOCK(wallet.cs_wallet);
 
@@ -64,7 +65,7 @@ static void CoinSelection(benchmark::State& state)
 typedef std::set<CInputCoin> CoinSet;
 static NodeContext testNode;
 static auto testChain = interfaces::MakeChain(testNode);
-static const CWallet testWallet(testChain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+static CWallet testWallet(testChain.get(), WalletLocation(), WalletDatabase::CreateDummy());
 std::vector<std::unique_ptr<CWalletTx>> wtxn;
 
 // Copied from src/wallet/test/coinselector_tests.cpp
@@ -93,6 +94,7 @@ static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
 static void BnBExhaustion(benchmark::State& state)
 {
     // Setup
+    testWallet.SetupLegacyScriptPubKeyMan();
     std::vector<OutputGroup> utxo_pool;
     CoinSet selection;
     CAmount value_ret = 0;

@@ -10,6 +10,7 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -26,6 +27,8 @@ enum class OutputType {
      */
     CHANGE_AUTO,
 };
+
+extern const std::array<OutputType, 3> OUTPUT_TYPES;
 
 NODISCARD bool ParseOutputType(const std::string& str, OutputType& output_type);
 const std::string& FormatOutputType(OutputType type);
@@ -47,4 +50,3 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key);
 CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, const CScript& script, OutputType);
 
 #endif // BITCOIN_OUTPUTTYPE_H
-
