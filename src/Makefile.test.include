@@ -54,6 +54,7 @@ FUZZ_TARGETS = \
   test/fuzz/script_flags \
   test/fuzz/service_deserialize \
   test/fuzz/spanparsing \
+  test/fuzz/strprintf \
   test/fuzz/sub_net_deserialize \
   test/fuzz/transaction \
   test/fuzz/tx_in \
@@ -535,6 +536,12 @@ test_fuzz_spanparsing_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_spanparsing_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_spanparsing_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_spanparsing_SOURCES = $(FUZZ_SUITE) test/fuzz/spanparsing.cpp
+
+test_fuzz_strprintf_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_strprintf_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_strprintf_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_strprintf_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_strprintf_SOURCES = $(FUZZ_SUITE) test/fuzz/strprintf.cpp
 
 test_fuzz_sub_net_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DSUB_NET_DESERIALIZE=1
 test_fuzz_sub_net_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
