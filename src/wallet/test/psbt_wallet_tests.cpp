@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
     // Try to sign the mutated input
     SignatureData sigdata;
     psbtx.inputs[0].FillSignatureData(sigdata);
-    const SigningProvider* provider = m_wallet.GetSigningProvider(ws1, sigdata);
+    const std::unique_ptr<SigningProvider> provider = m_wallet.GetSigningProvider(ws1, sigdata);
     BOOST_CHECK(!SignPSBTInput(*provider, psbtx, 0, SIGHASH_ALL));
 }
 
