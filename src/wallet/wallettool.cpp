@@ -27,6 +27,7 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
     }
     // dummy chain interface
     std::shared_ptr<CWallet> wallet_instance(new CWallet(nullptr /* chain */, WalletLocation(name), WalletDatabase::Create(path)), WalletToolReleaseWallet);
+    LOCK(wallet_instance->cs_wallet);
     bool first_run = true;
     DBErrors load_wallet_ret = wallet_instance->LoadWallet(first_run);
     if (load_wallet_ret != DBErrors::LOAD_OK) {
@@ -37,7 +38,7 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
     wallet_instance->SetMinVersion(FEATURE_HD_SPLIT);
 
     // generate a new HD seed
-    auto spk_man = wallet_instance->GetLegacyScriptPubKeyMan();
+    auto spk_man = wallet_instance->GetOrCreateLegacyScriptPubKeyMan();
     CPubKey seed = spk_man->GenerateNewSeed();
     spk_man->SetHDSeed(seed);
 

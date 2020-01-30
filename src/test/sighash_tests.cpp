@@ -26,10 +26,9 @@ extern UniValue read_json(const std::string& jsondata);
 // Old script.cpp SignatureHash function
 uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
-    static const uint256 one(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
     if (nIn >= txTo.vin.size())
     {
-        return one;
+        return UINT256_ONE();
     }
     CMutableTransaction txTmp(txTo);
 
@@ -59,7 +58,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
         unsigned int nOut = nIn;
         if (nOut >= txTmp.vout.size())
         {
-            return one;
+            return UINT256_ONE();
         }
         txTmp.vout.resize(nOut+1);
         for (unsigned int i = 0; i < nOut; i++)
