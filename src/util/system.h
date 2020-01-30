@@ -37,6 +37,8 @@
 
 #include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 
+class UniValue;
+
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
@@ -96,6 +98,16 @@ std::string ShellEscape(const std::string& arg);
 #if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
 #endif
+#ifdef HAVE_BOOST_PROCESS
+/**
+ * Execute a command which returns JSON, and parse the result.
+ *
+ * @param str_command The command to execute, including any arguments
+ * @param str_std_in string to pass to stdin
+ * @return parsed JSON
+ */
+UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in="");
+#endif // HAVE_BOOST_PROCESS
 
 /**
  * Most paths passed as configuration arguments are treated as relative to
