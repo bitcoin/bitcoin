@@ -5,6 +5,10 @@
 
 #include <util/system.h>
 
+#ifdef HAVE_BOOST_PROCESS
+#include <boost/process.hpp>
+#endif
+
 #include <chainparamsbase.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -1035,6 +1039,39 @@ void runCommand(const std::string& strCommand)
 #endif
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
+}
+#endif
+
+#ifdef HAVE_BOOST_PROCESS
+UniValue runCommandParseJSON(const std::string& str_command, const std::string& str_std_in)
+{
+    namespace bp = boost::process;
+
+    UniValue result_json;
+    bp::opstream stdin_stream;
+    bp::ipstream stdout_stream;
+
+    if (str_command.empty()) return UniValue::VNULL;
+
+    bp::child c(
+        str_command,
+        bp::std_out > stdout_stream,
+        bp::std_in < stdin_stream
+    );
+    if (!str_std_in.empty()) {
+        stdin_stream << str_std_in << std::endl;
+    }
+    stdin_stream.pipe().close();
+
+    std::string result;
+    std::getline(stdout_stream, result);
+
+    c.wait();
+    const int n_error = c.exit_code();
+    if (n_error) throw std::runtime_error(strprintf("runCommandParseJSON error: process(%s) returned %d\n", str_command, n_error));
+    if (!result_json.read(result)) throw std::runtime_error("Unable to parse JSON: " + result);
+
+    return result_json;
 }
 #endif
 
