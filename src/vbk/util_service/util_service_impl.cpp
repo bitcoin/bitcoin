@@ -188,7 +188,7 @@ PoPRewards UtilServiceImpl::getPopRewards(const CBlockIndex& pindexPrev, const C
     // erase rewards, that pay 0 satoshis and halve rewards
     for (auto it = rewards.begin(), end = rewards.end(); it != end;) {
         it->second >>= halvings;
-        if (it->second == 0) {
+        if (it->second == 0 || halvings >= 64) {
             rewards.erase(it++);
         } else {
             ++it;

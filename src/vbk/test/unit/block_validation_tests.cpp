@@ -57,6 +57,7 @@ struct BlockValidationFixture : public TestChain100Setup {
         Fake(Method(pop_impl_mock, addPayloads));
         Fake(Method(pop_impl_mock, removePayloads));
         Fake(Method(pop_impl_mock, updateContext));
+        Fake(Method(pop_impl_mock, clearTemporaryPayloads));
 
         When(Method(pop_service_mock, checkVTBinternally)).AlwaysReturn(true);
         When(Method(pop_service_mock, checkATVinternally)).AlwaysReturn(true);
