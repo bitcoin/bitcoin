@@ -87,6 +87,10 @@ dnl Outputs: See _BITCOIN_QT_FIND_LIBS_*
 dnl Outputs: Sets variables for all qt-related tools.
 dnl Outputs: bitcoin_enable_qt, bitcoin_enable_qt_dbus, bitcoin_enable_qt_test
 AC_DEFUN([BITCOIN_QT_CONFIGURE],[
+  if test x$TARGET_OS = xdarwin; then
+    use_dbus=no
+  fi
+
   use_pkgconfig=$1
 
   if test "x$use_pkgconfig" = x; then
