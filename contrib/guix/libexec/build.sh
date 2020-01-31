@@ -55,10 +55,10 @@ case "$HOST" in
         export CROSS_LIBRARY_PATH="${CROSS_GCC}/lib:${CROSS_GCC}/${HOST}/lib:${CROSS_GCC_LIB}:${CROSS_GLIBC}/lib"
         ;;
     *linux*)
-        CROSS_GLIBC="$(store_path glibc-cross-${HOST})"
-        CROSS_GLIBC_STATIC="$(store_path glibc-cross-${HOST} static)"
-        CROSS_KERNEL="$(store_path linux-libre-headers-cross-${HOST})"
-        CROSS_GCC="$(store_path gcc-cross-${HOST})"
+        CROSS_GLIBC="$(store_path "glibc-cross-${HOST}")"
+        CROSS_GLIBC_STATIC="$(store_path "glibc-cross-${HOST}" static)"
+        CROSS_KERNEL="$(store_path "linux-libre-headers-cross-${HOST}")"
+        CROSS_GCC="$(store_path "gcc-cross-${HOST}")"
         CROSS_GCC_LIBS=( "${CROSS_GCC}/lib/gcc/${HOST}"/* ) # This expands to an array of directories...
         CROSS_GCC_LIB="${CROSS_GCC_LIBS[0]}" # ...we just want the first one (there should only be one)
 
