@@ -24,13 +24,13 @@
 #ifdef Q_OS_MAC
 #include <ApplicationServices/ApplicationServices.h>
 #include <qt/macnotificationhandler.h>
-#endif
-
-
+#else
 #ifdef USE_DBUS
 // https://wiki.ubuntu.com/NotificationDevelopmentGuidelines recommends at least 128
 const int FREEDESKTOP_NOTIFICATION_ICON_SIZE = 128;
 #endif
+#endif
+
 
 Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon, QWidget *_parent) :
     QObject(_parent),
@@ -46,6 +46,12 @@ Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon
     {
         mode = QSystemTray;
     }
+#ifdef Q_OS_MAC
+    // check if users OS has support for NSUserNotification
+    if( MacNotificationHandler::instance()->hasUserNotificationCenterSupport()) {
+        mode = UserNotificationCenter;
+    }
+#else
 #ifdef USE_DBUS
     interface = new QDBusInterface("org.freedesktop.Notifications",
         "/org/freedesktop/Notifications", "org.freedesktop.Notifications");
@@ -54,21 +60,19 @@ Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon
         mode = Freedesktop;
     }
 #endif
-#ifdef Q_OS_MAC
-    // check if users OS has support for NSUserNotification
-    if( MacNotificationHandler::instance()->hasUserNotificationCenterSupport()) {
-        mode = UserNotificationCenter;
-    }
 #endif
 }
 
 Notificator::~Notificator()
 {
+#ifndef Q_OS_MAC
 #ifdef USE_DBUS
     delete interface;
 #endif
+#endif
 }
 
+#ifndef Q_OS_MAC
 #ifdef USE_DBUS
 
 // Loosely based on http://www.qtcentre.org/archive/index.php/t-25879.html
@@ -208,6 +212,7 @@ void Notificator::notifyDBus(Class cls, const QString &title, const QString &tex
     interface->callWithArgumentList(QDBus::NoBlock, "Notify", args);
 }
 #endif
+#endif
 
 void Notificator::notifySystray(Class cls, const QString &title, const QString &text, int millisTimeout)
 {
@@ -233,19 +238,20 @@ void Notificator::notify(Class cls, const QString &title, const QString &text, c
 {
     switch(mode)
     {
+#ifdef Q_OS_MAC
+    case UserNotificationCenter:
+        notifyMacUserNotificationCenter(title, text);
+        break;
+#else
 #ifdef USE_DBUS
     case Freedesktop:
         notifyDBus(cls, title, text, icon, millisTimeout);
         break;
 #endif
+#endif
     case QSystemTray:
         notifySystray(cls, title, text, millisTimeout);
         break;
-#ifdef Q_OS_MAC
-    case UserNotificationCenter:
-        notifyMacUserNotificationCenter(title, text);
-        break;
-#endif
     default:
         if(cls == Critical)
         {
