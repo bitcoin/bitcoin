@@ -140,6 +140,7 @@ private:
     QAction* signMessageAction = nullptr;
     QAction* verifyMessageAction = nullptr;
     QAction* m_load_psbt_action = nullptr;
+    QAction* m_load_psbt_clipboard_action = nullptr;
     QAction* aboutAction = nullptr;
     QAction* receiveCoinsAction = nullptr;
     QAction* receiveCoinsMenuAction = nullptr;
@@ -289,8 +290,8 @@ public Q_SLOTS:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
-    /** Show load Partially Signed Bitcoin Transaction dialog */
-    void gotoLoadPSBT();
+    /** Load Partially Signed Syscoin Transaction from file or clipboard */
+    void gotoLoadPSBT(bool from_clipboard = false);
 
     /** Show open dialog */
     void openClicked();
