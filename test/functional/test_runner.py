@@ -142,6 +142,7 @@ BASE_SCRIPTS= [
     'feature_shutdown.py',
     'privatesend.py',
     'uacomment.py',
+    'feature_logging.py',
 ]
 
 EXTENDED_SCRIPTS = [

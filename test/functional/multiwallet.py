@@ -16,10 +16,10 @@ class MultiWalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3']]
+        self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3', '-wallet=w']]
 
     def run_test(self):
-        assert_equal(set(self.nodes[0].listwallets()), {"w1", "w2", "w3"})
+        assert_equal(set(self.nodes[0].listwallets()), {"w1", "w2", "w3", "w"})
 
         self.stop_node(0)
 
@@ -44,6 +44,7 @@ class MultiWalletTest(BitcoinTestFramework):
         w1 = self.nodes[0].get_wallet_rpc("w1")
         w2 = self.nodes[0].get_wallet_rpc("w2")
         w3 = self.nodes[0].get_wallet_rpc("w3")
+        w4 = self.nodes[0].get_wallet_rpc("w")
         wallet_bad = self.nodes[0].get_wallet_rpc("bad")
 
         w1.generate(1)
@@ -69,18 +70,22 @@ class MultiWalletTest(BitcoinTestFramework):
         w3_name = w3.getwalletinfo()['walletname']
         assert_equal(w3_name, "w3")
 
-        assert_equal({"w1", "w2", "w3"}, {w1_name, w2_name, w3_name})
+        w4_name = w4.getwalletinfo()['walletname']
+        assert_equal(w4_name, "w")
 
         w1.generate(101)
         assert_equal(w1.getbalance(), 1000)
         assert_equal(w2.getbalance(), 0)
         assert_equal(w3.getbalance(), 0)
+        assert_equal(w4.getbalance(), 0)
 
         w1.sendtoaddress(w2.getnewaddress(), 1)
         w1.sendtoaddress(w3.getnewaddress(), 2)
+        w1.sendtoaddress(w4.getnewaddress(), 3)
         w1.generate(1)
         assert_equal(w2.getbalance(), 1)
         assert_equal(w3.getbalance(), 2)
+        assert_equal(w4.getbalance(), 3)
 
         batch = w1.batch([w1.getblockchaininfo.get_request(), w1.getwalletinfo.get_request()])
         assert_equal(batch[0]["result"]["chain"], "regtest")

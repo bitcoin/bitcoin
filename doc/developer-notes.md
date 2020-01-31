@@ -168,6 +168,37 @@ can be very difficult to track down. Compiling with -DDEBUG_LOCKORDER (configure
 CXXFLAGS="-DDEBUG_LOCKORDER -g") inserts run-time checks to keep track of which locks
 are held, and adds warnings to the debug.log file if inconsistencies are detected.
 
+**Valgrind suppressions file**
+
+Valgrind is a programming tool for memory debugging, memory leak detection, and
+profiling. The repo contains a Valgrind suppressions file
+([`valgrind.supp`](https://github.com/dashpay/dash/blob/master/contrib/valgrind.supp))
+which includes known Valgrind warnings in our dependencies that cannot be fixed
+in-tree. Example use:
+
+```shell
+$ valgrind --suppressions=contrib/valgrind.supp src/test/test_dash
+$ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
+      --show-leak-kinds=all src/test/test_dash --log_level=test_suite
+$ valgrind -v --leak-check=full src/dashd -printtoconsole
+```
+
+**compiling for test coverage**
+
+LCOV can be used to generate a test coverage report based upon `make check`
+execution. LCOV must be installed on your system (e.g. the `lcov` package
+on Debian/Ubuntu).
+
+To enable LCOV report generation during test runs:
+
+```shell
+./configure --enable-lcov
+make
+make cov
+
+# A coverage report will now be accessible at `./test_dash.coverage/index.html`.
+```
+
 Locking/mutex usage notes
 -------------------------
 

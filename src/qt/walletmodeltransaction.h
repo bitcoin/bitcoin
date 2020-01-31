@@ -40,7 +40,7 @@ public:
 private:
     QList<SendCoinsRecipient> recipients;
     CWalletTx *walletTransaction;
-    CReserveKey *keyChange;
+    std::unique_ptr<CReserveKey> keyChange;
     CAmount fee;
 };
 
