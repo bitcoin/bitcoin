@@ -1935,7 +1935,10 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // is enforced in ContextualCheckBlockHeader(); we wouldn't want to
     // re-enforce that rule here (at least until we make it impossible for
     // GetAdjustedTime() to go backward).
-    if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck)) {
+
+    //VeriBlock : was added ContextualCheckBlock() here becuse merkleRoot calculation was moved from the CheckBlock() to the ContextualCheckBlock()
+
+    if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck) && !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev, true)) {
         if (state.GetResult() == BlockValidationResult::BLOCK_MUTATED) {
             // We don't write down blocks to disk if they may have been
             // corrupted, so this should be impossible unless we're having hardware
@@ -3329,18 +3332,9 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
 
-    size_t totalPopTxes = 0;
     for (unsigned int i = 1; i < block.vtx.size(); i++) {
-        if(VeriBlock::isPopTx(*block.vtx[i]))
-            ++totalPopTxes;
-
         if (block.vtx[i]->IsCoinBase())
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-multiple", "more than one coinbase");
-    }
-
-    auto& config = VeriBlock::getService<VeriBlock::Config>();
-    if(totalPopTxes > config.max_pop_tx_amount) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "too many pop txes", "number of pop vtx in a block is too high");
     }
 
     // Check transactions
@@ -3500,13 +3494,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     return true;
 }
 
-/** NOTE: This function is not currently invoked by ConnectBlock(), so we
- *  should consider upgrade issues if we change which consensus rules are
- *  enforced in this function (eg by adding a new consensus rule). See comment
- *  in ConnectBlock().
- *  Note that -reindex-chainstate skips the validation that happens here!
- */
-static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, bool fCheckMerkleRoot = true)
+bool ContextualCheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, bool fCheckMerkleRoot)
 {
     const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
 
