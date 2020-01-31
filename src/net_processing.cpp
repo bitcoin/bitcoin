@@ -68,6 +68,8 @@ static constexpr int HISTORICAL_BLOCK_AGE = 7 * 24 * 60 * 60;
 static constexpr int32_t MAX_PEER_TX_IN_FLIGHT = 100;
 /** Maximum number of announced transactions from a peer */
 static constexpr int32_t MAX_PEER_TX_ANNOUNCEMENTS = 2 * MAX_INV_SZ;
+/** How many microseconds to delay requesting transactions via txids, if we have wtxid-relaying peers */
+static constexpr std::chrono::microseconds TXID_RELAY_DELAY{std::chrono::seconds{2}};
 /** How many microseconds to delay requesting transactions from inbound peers */
 static constexpr std::chrono::microseconds INBOUND_PEER_TX_DELAY{std::chrono::seconds{2}};
 /** How long to wait (in microseconds) before downloading a transaction from an additional peer */
@@ -173,6 +175,9 @@ namespace {
 
     /** Number of peers from which we're downloading blocks. */
     int nPeersWithValidatedDownloads GUARDED_BY(cs_main) = 0;
+
+    /** Number of peers with wtxid relay. */
+    int g_wtxid_relay_peers GUARDED_BY(cs_main) = 0;
 
     /** Number of outbound peers with m_chain_sync.m_protect. */
     int g_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
@@ -715,7 +720,7 @@ void UpdateTxRequestTime(const uint256& txid, std::chrono::microseconds request_
     }
 }
 
-std::chrono::microseconds CalculateTxGetDataTime(const uint256& txid, std::chrono::microseconds current_time, bool use_inbound_delay) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+std::chrono::microseconds CalculateTxGetDataTime(const uint256& txid, std::chrono::microseconds current_time, bool use_inbound_delay, bool use_txid_delay) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::chrono::microseconds process_time;
     const auto last_request_time = GetTxRequestTime(txid);
@@ -730,6 +735,9 @@ std::chrono::microseconds CalculateTxGetDataTime(const uint256& txid, std::chron
 
     // We delay processing announcements from inbound peers
     if (use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
+
+    // We delay processing announcements from peers that use txid-relay (instead of wtxid)
+    if (use_txid_delay) process_time += TXID_RELAY_DELAY;
 
     return process_time;
 }
@@ -748,7 +756,7 @@ void RequestTx(CNodeState* state, const uint256& txid, std::chrono::microseconds
 
     // Calculate the time to try requesting this transaction. Use
     // fPreferredDownload as a proxy for outbound peers.
-    const auto process_time = CalculateTxGetDataTime(txid, current_time, !state->fPreferredDownload);
+    const auto process_time = CalculateTxGetDataTime(txid, current_time, !state->fPreferredDownload, !state->m_wtxid_relay && g_wtxid_relay_peers > 0);
 
     peer_download_state.m_tx_process_time.emplace(process_time, txid);
 }
@@ -805,6 +813,8 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
     assert(nPeersWithValidatedDownloads >= 0);
     g_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
     assert(g_outbound_peers_with_protect_from_disconnect >= 0);
+    g_wtxid_relay_peers -= state->m_wtxid_relay;
+    assert(g_wtxid_relay_peers >= 0);
 
     mapNodeState.erase(nodeid);
 
@@ -814,6 +824,7 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
         assert(nPreferredDownload == 0);
         assert(nPeersWithValidatedDownloads == 0);
         assert(g_outbound_peers_with_protect_from_disconnect == 0);
+        assert(g_wtxid_relay_peers == 0);
     }
     LogPrint(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
 }
@@ -2205,6 +2216,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             LOCK(cs_main);
             if (!State(pfrom->GetId())->m_wtxid_relay) {
                 State(pfrom->GetId())->m_wtxid_relay = true;
+                g_wtxid_relay_peers++;
             }
         }
         return false;
@@ -4208,7 +4220,15 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     // up processing to happen after the download times out
                     // (with a slight delay for inbound peers, to prefer
                     // requests to outbound peers).
-                    const auto next_process_time = CalculateTxGetDataTime(txid, current_time, !state.fPreferredDownload);
+                    // Don't apply the txid-delay to re-requests of a
+                    // transaction; the heuristic of delaying requests to
+                    // txid-relay peers is to save bandwidth on initial
+                    // announcement of a transaction, and doesn't make sense
+                    // for a followup request if our first peer times out (and
+                    // would open us up to an attacker using inbound
+                    // wtxid-relay to prevent us from requesting transactions
+                    // from outbound txid-relay peers).
+                    const auto next_process_time = CalculateTxGetDataTime(txid, current_time, !state.fPreferredDownload, false);
                     tx_process_time.emplace(next_process_time, txid);
                 }
             } else {
