@@ -168,7 +168,7 @@ void OptionsModel::Init(bool resetSettings)
 
     if (!settings.contains("fUseProxy"))
         settings.setValue("fUseProxy", false);
-    if (!settings.contains("addrProxy"))
+    if (!settings.contains("addrProxy") || !settings.value("addrProxy").toString().contains(':'))
         settings.setValue("addrProxy", "127.0.0.1:9050");
     // Only try to set -proxy, if user has enabled fUseProxy
     if (settings.value("fUseProxy").toBool() && !gArgs.SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString()))
@@ -178,7 +178,7 @@ void OptionsModel::Init(bool resetSettings)
 
     if (!settings.contains("fUseSeparateProxyTor"))
         settings.setValue("fUseSeparateProxyTor", false);
-    if (!settings.contains("addrSeparateProxyTor"))
+    if (!settings.contains("addrSeparateProxyTor") || !settings.value("addrSeparateProxyTor").toString().contains(':'))
         settings.setValue("addrSeparateProxyTor", "127.0.0.1:9050");
     // Only try to set -onion, if user has enabled fUseSeparateProxyTor
     if (settings.value("fUseSeparateProxyTor").toBool() && !gArgs.SoftSetArg("-onion", settings.value("addrSeparateProxyTor").toString().toStdString()))

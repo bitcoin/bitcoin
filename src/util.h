@@ -184,6 +184,10 @@ template<typename T, typename... Args> static inline void MarkUsed(const T& t, c
     MarkUsed(args...);
 }
 
+// Be conservative when using LogPrintf/error or other things which
+// unconditionally log to debug.log! It should not be the case that an inbound
+// peer can fill up a users disk with debug.log entries.
+
 #ifdef USE_COVERAGE
 #define LogPrintf(...) do { MarkUsed(__VA_ARGS__); } while(0)
 #define LogPrint(category, ...) do { MarkUsed(__VA_ARGS__); } while(0)
