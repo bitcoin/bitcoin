@@ -491,17 +491,15 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, ActorSet& actorS
         if (!txRef)
             return ZDAG_NOT_FOUND;
         if(!IsAssetAllocationTx(txRef->nVersion))
-            return ZDAG_NOT_FOUND;
+            return ZDAG_STATUS_OK;
         // the zdag tx or any others from this sender should be under MTU of IP packet
         if(GetSerializeSize(txRef, PROTOCOL_VERSION) > 1100){
             return ZDAG_WARNING_RBF;
         }
         // check if any inputs are dbl spent, reject if so
-        for (const CTxIn &txin : txRef->vin)
-        {
-            if (mempool.GetConflictTx(txin.prevout))
-                return ZDAG_MAJOR_CONFLICT;
-        }
+        if(mempool.existsConflicts(*txRef))
+            return ZDAG_MAJOR_CONFLICT;        
+
         // get actors for this transaction, irrelevant to ancestors in case the double spend is happening on the same utxo
         GetActorsFromSyscoinTx(txRef, true, false, actorSetSender);
         // check this transaction isn't RBF enabled
@@ -513,14 +511,11 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, ActorSet& actorS
         }
         for (CTxMemPool::txiter it : setAncestors) {
             const CTransactionRef& ancestorTxRef = it->GetSharedTx();
+            // check if any ancestor inputs are dbl spent, reject if so
+            if(mempool.existsConflicts(*ancestorTxRef))
+                return ZDAG_MAJOR_CONFLICT;
             const uint256& ancestorTxHash = it->GetSharedTx()->GetHash();
             if(IsAssetAllocationTx(ancestorTxRef->nVersion)){
-                 // check if any ancestor inputs are dbl spent, reject if so
-                for (const CTxIn &txin : ancestorTxRef->vin)
-                {
-                    if (mempool.GetConflictTx(txin.prevout))
-                        return ZDAG_MAJOR_CONFLICT;
-                }
                 if(setTXIDs.find(ancestorTxHash) == setTXIDs.end()){
                     setTXIDs.emplace(ancestorTxHash);  
                     GetActorsFromSyscoinTx(ancestorTxRef, true, false, actorSet);

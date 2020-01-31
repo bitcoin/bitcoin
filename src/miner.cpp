@@ -196,7 +196,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     }
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
-    // SYSCOIN remove bad burn transactions prior to accepting block                      
+    // SYSCOIN remove bad burn transactions prior to accepting block  
+    txsToRemove.clear();                    
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     CCoinsViewCache &viewChain = ::ChainstateActive().CoinsTip();
@@ -209,11 +210,19 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                 view.AccessCoin(txin.prevout); // Load entries from viewChain into view; can fail.
             }
         }
+        // if input conflict was present, one got mined the other got left in mempool we want to also detect that and remove it
+        if (!view.HaveInputs(*tx)) {
+            const uint256& txHash = tx->GetHash();
+            mempool.ClearPrioritisation(txHash);
+            mempool.removeRecursive(*tx, MemPoolRemovalReason::CONFLICT);
+            txsToRemove.emplace_back(std::move(txHash));
+            return CreateNewBlock(scriptPubKeyIn, txsToRemove);
+         }
     }
     view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
       
     TxValidationState tx_state;
-    txsToRemove.clear();
+    
     bool bSenderConflicted = false;
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
@@ -221,27 +230,17 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     std::vector<COutPoint> vecLockedOutpoints;
     ActorSet actorSet;
     bool bFoundError = false;
-    bool bFoundInputConflict = false;
     for(const CTransactionRef& tx: pblock->vtx){
+       
         const uint256& txHash = tx->GetHash();
-        // if asset allocation tx we want to ensure we reject conflicting inputs as we would have allowed potentailly a conflicting input into our mempool which is not RBF based
-        // because the first dbl spend attempt on an asset is propogated and this would cause conflict even though CheckSyscoinInputs may have returned true (no asset balances overflowed)
-        if(IsAssetAllocationTx(tx->nVersion)){
-            // check if any inputs are dbl spent, reject tx and create block without it if so
-            for (const CTxIn &txin : tx->vin)
-            {
-                if (mempool.GetConflictTx(txin.prevout)){
-                    txsToRemove.emplace_back(std::move(txHash));
-                    bFoundInputConflict = true;
-                    break;
-                }
-            }
-        }
-        if(bFoundInputConflict){
+         
+         // check if any inputs are dbl spent, reject tx and create block without it if so
+        if(mempool.removeConflicts(*tx)){
+            txsToRemove.emplace_back(std::move(txHash));
             bFoundError = true;
             break;
         }
-           
+
         if(!CheckSyscoinInputs(false, *tx, txHash, tx_state, view, false, nHeight, ::ChainActive().Tip()->GetMedianTimePast(), pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
             txsToRemove.emplace_back(std::move(txHash));
             bFoundError = true;
