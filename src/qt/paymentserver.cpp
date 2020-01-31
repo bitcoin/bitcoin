@@ -363,8 +363,7 @@ void PaymentServer::initNetManager()
 {
     if (!optionsModel)
         return;
-    if (netManager != nullptr)
-        delete netManager;
+    delete netManager;
 
     // netManager is used to fetch paymentrequests given in dash: URIs
     netManager = new QNetworkAccessManager(this);

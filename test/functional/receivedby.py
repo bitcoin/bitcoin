@@ -3,97 +3,83 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listreceivedbyaddress RPC."""
+from decimal import Decimal
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-
-def get_sub_array_from_array(object_array, to_match):
-    '''
-        Finds and returns a sub array from an array of arrays.
-        to_match should be a unique idetifier of a sub array
-    '''
-    for item in object_array:
-        all_match = True
-        for key,value in to_match.items():
-            if item[key] != value:
-                all_match = False
-        if not all_match:
-            continue
-        return item
-    return []
+from test_framework.util import (assert_array_result,
+                                 assert_equal,
+                                 assert_raises_rpc_error,
+                                 )
 
 class ReceivedByTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.set_cache_mocktime()
 
     def run_test(self):
-        '''
-        listreceivedbyaddress Test
-        '''
+        # Generate block to get out of IBD
+        self.nodes[0].generate(1)
+
+        self.log.info("listreceivedbyaddress Test")
+
         # Send from node 0 to 1
         addr = self.nodes[1].getnewaddress()
         txid = self.nodes[0].sendtoaddress(addr, 0.1)
         self.sync_all()
 
-        #Check not listed in listreceivedbyaddress because has 0 confirmations
+        # Check not listed in listreceivedbyaddress because has 0 confirmations
         assert_array_result(self.nodes[1].listreceivedbyaddress(),
-                           {"address":addr},
-                           { },
-                           True)
-        #Bury Tx under 10 block so it will be returned by listreceivedbyaddress
+                            {"address": addr},
+                            {},
+                            True)
+        # Bury Tx under 10 block so it will be returned by listreceivedbyaddress
         self.nodes[1].generate(10)
         self.sync_all()
         assert_array_result(self.nodes[1].listreceivedbyaddress(),
-                           {"address":addr},
-                           {"address":addr, "account":"", "amount":Decimal("0.1"), "confirmations":10, "txids":[txid,]})
-        #With min confidence < 10
+                            {"address": addr},
+                            {"address": addr, "account": "", "amount": Decimal("0.1"), "confirmations": 10, "txids": [txid, ]})
+        # With min confidence < 10
         assert_array_result(self.nodes[1].listreceivedbyaddress(5),
-                           {"address":addr},
-                           {"address":addr, "account":"", "amount":Decimal("0.1"), "confirmations":10, "txids":[txid,]})
-        #With min confidence > 10, should not find Tx
-        assert_array_result(self.nodes[1].listreceivedbyaddress(11),{"address":addr},{ },True)
+                            {"address": addr},
+                            {"address": addr, "account": "", "amount": Decimal("0.1"), "confirmations": 10, "txids": [txid, ]})
+        # With min confidence > 10, should not find Tx
+        assert_array_result(self.nodes[1].listreceivedbyaddress(11), {"address": addr}, {}, True)
 
-        #Empty Tx
+        # Empty Tx
         addr = self.nodes[1].getnewaddress()
         assert_array_result(self.nodes[1].listreceivedbyaddress(0, False, True),
                            {"address":addr},
                            {"address":addr, "account":"", "amount":0, "confirmations":0, "txids":[]})
 
-        '''
-            getreceivedbyaddress Test
-        '''
+        self.log.info("getreceivedbyaddress Test")
+
         # Send from node 0 to 1
         addr = self.nodes[1].getnewaddress()
         txid = self.nodes[0].sendtoaddress(addr, 0.1)
         self.sync_all()
 
-        #Check balance is 0 because of 0 confirmations
+        # Check balance is 0 because of 0 confirmations
         balance = self.nodes[1].getreceivedbyaddress(addr)
-        if balance != Decimal("0.0"):
-            raise AssertionError("Wrong balance returned by getreceivedbyaddress, %0.2f"%(balance))
+        assert_equal(balance, Decimal("0.0"))
 
-        #Check balance is 0.1
-        balance = self.nodes[1].getreceivedbyaddress(addr,0)
-        if balance != Decimal("0.1"):
-            raise AssertionError("Wrong balance returned by getreceivedbyaddress, %0.2f"%(balance))
+        # Check balance is 0.1
+        balance = self.nodes[1].getreceivedbyaddress(addr, 0)
+        assert_equal(balance, Decimal("0.1"))
 
-        #Bury Tx under 10 block so it will be returned by the default getreceivedbyaddress
+        # Bury Tx under 10 block so it will be returned by the default getreceivedbyaddress
         self.nodes[1].generate(10)
         self.sync_all()
         balance = self.nodes[1].getreceivedbyaddress(addr)
-        if balance != Decimal("0.1"):
-            raise AssertionError("Wrong balance returned by getreceivedbyaddress, %0.2f"%(balance))
+        assert_equal(balance, Decimal("0.1"))
 
-        '''
-            listreceivedbyaccount + getreceivedbyaccount Test
-        '''
-        #set pre-state
+        # Trying to getreceivedby for an address the wallet doesn't own should return an error
+        assert_raises_rpc_error(-4, "Address not found in wallet", self.nodes[0].getreceivedbyaddress, addr)
+
+        self.log.info("listreceivedbyaccount + getreceivedbyaccount Test")
+
+        # set pre-state
         addrArr = self.nodes[1].getnewaddress()
         account = self.nodes[1].getaccount(addrArr)
-        received_by_account_json = get_sub_array_from_array(self.nodes[1].listreceivedbyaccount(),{"account":account})
-        if len(received_by_account_json) == 0:
-            raise AssertionError("No accounts found in node")
+        received_by_account_json = [r for r in self.nodes[1].listreceivedbyaccount() if r["account"] == account][0]
         balance_by_account = self.nodes[1].getreceivedbyaccount(account)
 
         txid = self.nodes[0].sendtoaddress(addr, 0.1)
@@ -101,40 +87,34 @@ class ReceivedByTest(BitcoinTestFramework):
 
         # listreceivedbyaccount should return received_by_account_json because of 0 confirmations
         assert_array_result(self.nodes[1].listreceivedbyaccount(),
-                           {"account":account},
-                           received_by_account_json)
+                            {"account": account},
+                            received_by_account_json)
 
         # getreceivedbyaddress should return same balance because of 0 confirmations
         balance = self.nodes[1].getreceivedbyaccount(account)
-        if balance != balance_by_account:
-            raise AssertionError("Wrong balance returned by getreceivedbyaccount, %0.2f"%(balance))
+        assert_equal(balance, balance_by_account)
 
         self.nodes[1].generate(10)
         self.sync_all()
         # listreceivedbyaccount should return updated account balance
         assert_array_result(self.nodes[1].listreceivedbyaccount(),
-                           {"account":account},
-                           {"account":received_by_account_json["account"], "amount":(received_by_account_json["amount"] + Decimal("0.1"))})
+                            {"account": account},
+                            {"account": received_by_account_json["account"], "amount": (received_by_account_json["amount"] + Decimal("0.1"))})
 
         # getreceivedbyaddress should return updates balance
         balance = self.nodes[1].getreceivedbyaccount(account)
-        if balance != balance_by_account + Decimal("0.1"):
-            raise AssertionError("Wrong balance returned by getreceivedbyaccount, %0.2f"%(balance))
+        assert_equal(balance, balance_by_account + Decimal("0.1"))
 
-        #Create a new account named "mynewaccount" that has a 0 balance
+        # Create a new account named "mynewaccount" that has a 0 balance
         self.nodes[1].getaccountaddress("mynewaccount")
-        received_by_account_json = get_sub_array_from_array(self.nodes[1].listreceivedbyaccount(0, False, True),{"account":"mynewaccount"})
-        if len(received_by_account_json) == 0:
-            raise AssertionError("No accounts found in node")
+        received_by_account_json = [r for r in self.nodes[1].listreceivedbyaccount(0, False, True) if r["account"] == "mynewaccount"][0]
 
         # Test includeempty of listreceivedbyaccount
-        if received_by_account_json["amount"] != Decimal("0.0"):
-            raise AssertionError("Wrong balance returned by listreceivedbyaccount, %0.2f"%(received_by_account_json["amount"]))
+        assert_equal(received_by_account_json["amount"], Decimal("0.0"))
 
         # Test getreceivedbyaccount for 0 amount accounts
         balance = self.nodes[1].getreceivedbyaccount("mynewaccount")
-        if balance != Decimal("0.0"):
-            raise AssertionError("Wrong balance returned by getreceivedbyaccount, %0.2f"%(balance))
+        assert_equal(balance, Decimal("0.0"))
 
 if __name__ == '__main__':
     ReceivedByTest().main()

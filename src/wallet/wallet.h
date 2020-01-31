@@ -229,10 +229,6 @@ public:
         Init();
     }
 
-    /** Helper conversion operator to allow passing CMerkleTx where CTransaction is expected.
-     *  TODO: adapt callers and remove this operator. */
-    operator const CTransaction&() const { return *tx; }
-
     void Init()
     {
         hashBlock = uint256();

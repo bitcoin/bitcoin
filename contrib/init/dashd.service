@@ -1,22 +1,25 @@
+# It is not recommended to modify this file in-place, because it will
+# be overwritten during package upgrades. If you want to add further
+# options or overwrite existing ones then use
+# $ systemctl edit dashd.service
+# See "man systemd.service" for details.
+
+# Note that almost all daemon options could be specified in
+# /etc/dash/dash.conf
+
 [Unit]
-Description=Dash's distributed currency daemon
+Description=Dash daemon
 After=network.target
 
 [Service]
+ExecStart=/usr/bin/dashd -daemon -conf=/etc/dash/dash.conf -pid=/run/dashd/dashd.pid
+# Creates /run/dash owned by dashcore
+RuntimeDirectory=dashd
 User=dashcore
-Group=dashcore
-
 Type=forking
-PIDFile=/var/lib/dashd/dashd.pid
-ExecStart=/usr/bin/dashd -daemon -pid=/var/lib/dashd/dashd.pid \
--conf=/etc/dashcore/dash.conf -datadir=/var/lib/dashd -disablewallet
-
-Restart=always
+PIDFile=/run/dashd/dashd.pid
+Restart=on-failure
 PrivateTmp=true
-TimeoutStopSec=60s
-TimeoutStartSec=2s
-StartLimitInterval=120s
-StartLimitBurst=5
 
 [Install]
 WantedBy=multi-user.target
