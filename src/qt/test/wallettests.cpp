@@ -19,6 +19,7 @@
 
 #include <QAbstractButton>
 #include <QApplication>
+#include <QPushButton>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QTextEdit>
@@ -130,7 +131,7 @@ void TestGUI()
     QString balanceText = balanceLabel->text();
     int unit = walletModel.getOptionsModel()->getDisplayUnit();
     CAmount balance = walletModel.getBalance();
-    QString balanceComparison = BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::separatorAlways);
+    QString balanceComparison = BitcoinUnits::floorHtmlWithUnit(unit, balance, false, BitcoinUnits::separatorAlways);
     QCOMPARE(balanceText, balanceComparison);
 
     // Check Request Payment button
@@ -159,9 +160,9 @@ void TestGUI()
             QString paymentText = rlist->toPlainText();
             QStringList paymentTextList = paymentText.split('\n');
             QCOMPARE(paymentTextList.at(0), QString("Payment information"));
-            QVERIFY(paymentTextList.at(1).indexOf(QString("URI: bitcoin:")) != -1);
+            QVERIFY(paymentTextList.at(1).indexOf(QString("URI: dash:")) != -1);
             QVERIFY(paymentTextList.at(2).indexOf(QString("Address:")) != -1);
-            QCOMPARE(paymentTextList.at(3), QString("Amount: 0.00000001 ") + QString::fromStdString(CURRENCY_UNIT));
+            QCOMPARE(paymentTextList.at(3), QString("Amount: 0.00000001 ") + BitcoinUnits::name(unit));
             QCOMPARE(paymentTextList.at(4), QString("Label: TEST_LABEL_1"));
             QCOMPARE(paymentTextList.at(5), QString("Message: TEST_MESSAGE_1"));
         }
