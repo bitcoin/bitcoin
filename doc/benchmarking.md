@@ -2,29 +2,47 @@ Benchmarking
 ============
 
 Bitcoin Core has an internal benchmarking framework, with benchmarks
-for cryptographic algorithms such as SHA1, SHA256, SHA512 and RIPEMD160. As well as the rolling bloom filter.
+for cryptographic algorithms (e.g. SHA1, SHA256, SHA512, RIPEMD160, Poly1305, ChaCha20), rolling bloom filter, coins selection,
+thread queue, wallet balance.
+
+Running
+---------------------
+
+For benchmarks purposes you only need to compile `bitcoin_bench`. Beware of configuring without `--enable-debug` as this would impact
+benchmarking by unlatching log printers and lock analysis.
+
+    make -C src bitcoin_bench
 
 After compiling bitcoin-core, the benchmarks can be run with:
-`src/bench/bench_bitcoin`
+
+    src/bench/bench_bitcoin
 
 The output will look similar to:
 ```
-#Benchmark,count,min,max,average
-RIPEMD160,448,0.001245033173334,0.002638196945190,0.002461894814457
-RollingBloom-refresh,1,0.000635000000000,0.000635000000000,0.000635000000000
-RollingBloom-refresh,1,0.000108000000000,0.000108000000000,0.000108000000000
-RollingBloom-refresh,1,0.000107000000000,0.000107000000000,0.000107000000000
-RollingBloom-refresh,1,0.000204000000000,0.000204000000000,0.000204000000000
-SHA1,640,0.000909024336207,0.001938136418660,0.001843086257577
-SHA256,256,0.002209486499909,0.008500099182129,0.004300644621253
-SHA512,384,0.001319904176016,0.002813005447388,0.002615700786312
-Sleep100ms,10,0.205592155456543,0.210056066513062,0.104166316986084
-Trig,67108864,0.000000014997003,0.000000015448112,0.000000015188842
+# Benchmark, evals, iterations, total, min, max, median
+AssembleBlock, 5, 700, 1.79954, 0.000510913, 0.000517018, 0.000514497
+...
 ```
 
+Help
+---------------------
+
+    src/bench/bench_bitcoin --help
+
+To print options like scaling factor or per-benchmark filter.
+
+Notes
+---------------------
 More benchmarks are needed for, in no particular order:
 - Script Validation
-- CCoinDBView caching
 - Coins database
 - Memory pool
-- Wallet coin selection
+- Cuckoo Cache
+- P2P throughput
+
+Going Further
+--------------------
+
+To monitor Bitcoin Core performance more in depth (like reindex or IBD): https://github.com/chaincodelabs/bitcoinperf
+
+To generate Flame Graphs for Bitcoin Core: https://github.com/eklitzke/bitcoin/blob/flamegraphs/doc/flamegraphs.md

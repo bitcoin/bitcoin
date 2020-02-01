@@ -30,15 +30,14 @@ Status BlockHandle::DecodeFrom(Slice* input) {
 }
 
 void Footer::EncodeTo(std::string* dst) const {
-#ifndef NDEBUG
   const size_t original_size = dst->size();
-#endif
   metaindex_handle_.EncodeTo(dst);
   index_handle_.EncodeTo(dst);
   dst->resize(2 * BlockHandle::kMaxEncodedLength);  // Padding
   PutFixed32(dst, static_cast<uint32_t>(kTableMagicNumber & 0xffffffffu));
   PutFixed32(dst, static_cast<uint32_t>(kTableMagicNumber >> 32));
   assert(dst->size() == original_size + kEncodedLength);
+  (void)original_size;  // Disable unused variable warning.
 }
 
 Status Footer::DecodeFrom(Slice* input) {
@@ -83,7 +82,7 @@ Status ReadBlock(RandomAccessFile* file,
   }
   if (contents.size() != n + kBlockTrailerSize) {
     delete[] buf;
-    return Status::Corruption("truncated block read");
+    return Status::Corruption("truncated block read", file->GetName());
   }
 
   // Check the crc of the type and the block contents
@@ -93,7 +92,7 @@ Status ReadBlock(RandomAccessFile* file,
     const uint32_t actual = crc32c::Value(data, n + 1);
     if (actual != crc) {
       delete[] buf;
-      s = Status::Corruption("block checksum mismatch");
+      s = Status::Corruption("block checksum mismatch", file->GetName());
       return s;
     }
   }
@@ -120,13 +119,13 @@ Status ReadBlock(RandomAccessFile* file,
       size_t ulength = 0;
       if (!port::Snappy_GetUncompressedLength(data, n, &ulength)) {
         delete[] buf;
-        return Status::Corruption("corrupted compressed block contents");
+        return Status::Corruption("corrupted compressed block contents", file->GetName());
       }
       char* ubuf = new char[ulength];
       if (!port::Snappy_Uncompress(data, n, ubuf)) {
         delete[] buf;
         delete[] ubuf;
-        return Status::Corruption("corrupted compressed block contents");
+        return Status::Corruption("corrupted compressed block contents", file->GetName());
       }
       delete[] buf;
       result->data = Slice(ubuf, ulength);
@@ -136,7 +135,7 @@ Status ReadBlock(RandomAccessFile* file,
     }
     default:
       delete[] buf;
-      return Status::Corruption("bad block type");
+      return Status::Corruption("bad block type", file->GetName());
   }
 
   return Status::OK();

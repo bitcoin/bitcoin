@@ -1,191 +1,177 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include <config/bitcoin-config.h>
 #endif
 
-#include "chainparams.h"
-#include "clientversion.h"
-#include "rpc/server.h"
-#include "init.h"
-#include "noui.h"
-#include "scheduler.h"
-#include "util.h"
-#include "httpserver.h"
-#include "httprpc.h"
-#include "utilstrencodings.h"
+#include <chainparams.h>
+#include <clientversion.h>
+#include <compat.h>
+#include <init.h>
+#include <interfaces/chain.h>
+#include <node/context.h>
+#include <noui.h>
+#include <shutdown.h>
+#include <ui_interface.h>
+#include <util/strencodings.h>
+#include <util/system.h>
+#include <util/threadnames.h>
+#include <util/translation.h>
 
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/thread.hpp>
+#include <functional>
 
-#include <stdio.h>
+const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
-/* Introduction text for doxygen: */
-
-/*! \mainpage Developer documentation
- *
- * \section intro_sec Introduction
- *
- * This is the developer documentation of the reference client for an experimental new digital currency called Bitcoin (https://www.bitcoin.org/),
- * which enables instant payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
- * with no central authority: managing transactions and issuing money are carried out collectively by the network.
- *
- * The software is a community-driven open source project, released under the MIT license.
- *
- * \section Navigation
- * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
- */
-
-static bool fDaemon;
-
-void WaitForShutdown(boost::thread_group* threadGroup)
+static void WaitForShutdown(NodeContext& node)
 {
-    bool fShutdown = ShutdownRequested();
-    // Tell the main threads to shutdown.
-    while (!fShutdown)
+    while (!ShutdownRequested())
     {
         MilliSleep(200);
-        fShutdown = ShutdownRequested();
     }
-    if (threadGroup)
-    {
-        Interrupt(*threadGroup);
-        threadGroup->join_all();
-    }
+    Interrupt(node);
 }
 
 //////////////////////////////////////////////////////////////////////////////
 //
 // Start
 //
-bool AppInit(int argc, char* argv[])
+static bool AppInit(int argc, char* argv[])
 {
-    boost::thread_group threadGroup;
-    CScheduler scheduler;
+    NodeContext node;
+    node.chain = interfaces::MakeChain(node);
 
     bool fRet = false;
+
+    util::ThreadSetInternalName("init");
 
     //
     // Parameters
     //
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
-    ParseParameters(argc, argv);
+    SetupServerArgs();
+    std::string error;
+    if (!gArgs.ParseParameters(argc, argv, error)) {
+        return InitError(strprintf("Error parsing command line arguments: %s\n", error));
+    }
 
     // Process help and version before taking care about datadir
-    if (mapArgs.count("-?") || mapArgs.count("-h") ||  mapArgs.count("-help") || mapArgs.count("-version"))
-    {
-        std::string strUsage = strprintf(_("%s Daemon"), _(PACKAGE_NAME)) + " " + _("version") + " " + FormatFullVersion() + "\n";
+    if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
+        std::string strUsage = PACKAGE_NAME " version " + FormatFullVersion() + "\n";
 
-        if (mapArgs.count("-version"))
+        if (gArgs.IsArgSet("-version"))
         {
-            strUsage += FormatParagraph(LicenseInfo());
+            strUsage += FormatParagraph(LicenseInfo()) + "\n";
         }
         else
         {
-            strUsage += "\n" + _("Usage:") + "\n" +
-                  "  bitcoind [options]                     " + strprintf(_("Start %s Daemon"), _(PACKAGE_NAME)) + "\n";
-
-            strUsage += "\n" + HelpMessage(HMM_BITCOIND);
+            strUsage += "\nUsage:  bitcoind [options]                     Start " PACKAGE_NAME "\n";
+            strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
-        fprintf(stdout, "%s", strUsage.c_str());
-        return false;
+        tfm::format(std::cout, "%s", strUsage);
+        return true;
     }
 
     try
     {
-        if (!boost::filesystem::is_directory(GetDataDir(false)))
-        {
-            fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
-            return false;
+        if (!CheckDataDirOption()) {
+            return InitError(strprintf("Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "")));
         }
-        try
-        {
-            ReadConfigFile(mapArgs, mapMultiArgs);
-        } catch (const std::exception& e) {
-            fprintf(stderr,"Error reading configuration file: %s\n", e.what());
-            return false;
+        if (!gArgs.ReadConfigFiles(error, true)) {
+            return InitError(strprintf("Error reading configuration file: %s\n", error));
         }
-        // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+        // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
-            SelectParams(ChainNameFromCommandLine());
+            SelectParams(gArgs.GetChainName());
         } catch (const std::exception& e) {
-            fprintf(stderr, "Error: %s\n", e.what());
-            return false;
+            return InitError(strprintf("%s\n", e.what()));
         }
 
-        // Command-line RPC
-        bool fCommandLine = false;
-        for (int i = 1; i < argc; i++)
-            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "bitcoin:"))
-                fCommandLine = true;
-
-        if (fCommandLine)
-        {
-            fprintf(stderr, "Error: There is no RPC client functionality in bitcoind anymore. Use the bitcoin-cli utility instead.\n");
-            exit(1);
-        }
-#ifndef WIN32
-        fDaemon = GetBoolArg("-daemon", false);
-        if (fDaemon)
-        {
-            fprintf(stdout, "Bitcoin server starting\n");
-
-            // Daemonize
-            pid_t pid = fork();
-            if (pid < 0)
-            {
-                fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
-                return false;
+        // Error out when loose non-argument tokens are encountered on command line
+        for (int i = 1; i < argc; i++) {
+            if (!IsSwitchChar(argv[i][0])) {
+                return InitError(strprintf("Command line contains unexpected token '%s', see bitcoind -h for a list of options.\n", argv[i]));
             }
-            if (pid > 0) // Parent process, pid is child process id
-            {
-                return true;
-            }
-            // Child process falls through to rest of initialization
-
-            pid_t sid = setsid();
-            if (sid < 0)
-                fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
         }
-#endif
-        SoftSetBoolArg("-server", true);
 
+        // -server defaults to true for bitcoind but not for the GUI so do this here
+        gArgs.SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
         InitLogging();
         InitParameterInteraction();
-        fRet = AppInit2(threadGroup, scheduler);
+        if (!AppInitBasicSetup())
+        {
+            // InitError will have been called with detailed error, which ends up on console
+            return false;
+        }
+        if (!AppInitParameterInteraction())
+        {
+            // InitError will have been called with detailed error, which ends up on console
+            return false;
+        }
+        if (!AppInitSanityChecks())
+        {
+            // InitError will have been called with detailed error, which ends up on console
+            return false;
+        }
+        if (gArgs.GetBoolArg("-daemon", false))
+        {
+#if HAVE_DECL_DAEMON
+#if defined(MAC_OSX)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+            tfm::format(std::cout, PACKAGE_NAME " starting\n");
+
+            // Daemonize
+            if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)
+                return InitError(strprintf("daemon() failed: %s\n", strerror(errno)));
+            }
+#if defined(MAC_OSX)
+#pragma GCC diagnostic pop
+#endif
+#else
+            return InitError("-daemon is not supported on this operating system\n");
+#endif // HAVE_DECL_DAEMON
+        }
+        // Lock data directory after daemonization
+        if (!AppInitLockDataDirectory())
+        {
+            // If locking the data directory failed, exit immediately
+            return false;
+        }
+        fRet = AppInitMain(node);
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");
     } catch (...) {
-        PrintExceptionContinue(NULL, "AppInit()");
+        PrintExceptionContinue(nullptr, "AppInit()");
     }
 
     if (!fRet)
     {
-        Interrupt(threadGroup);
-        // threadGroup.join_all(); was left out intentionally here, because we didn't re-test all of
-        // the startup-failure cases to make sure they don't result in a hang due to some
-        // thread-blocking-waiting-for-another-thread-during-startup case
+        Interrupt(node);
     } else {
-        WaitForShutdown(&threadGroup);
+        WaitForShutdown(node);
     }
-    Shutdown();
+    Shutdown(node);
 
     return fRet;
 }
 
 int main(int argc, char* argv[])
 {
+#ifdef WIN32
+    util::WinCmdLineArgs winArgs;
+    std::tie(argc, argv) = winArgs.get();
+#endif
     SetupEnvironment();
 
     // Connect bitcoind signal handlers
     noui_connect();
 
-    return (AppInit(argc, argv) ? 0 : 1);
+    return (AppInit(argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
 }

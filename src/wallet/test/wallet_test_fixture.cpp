@@ -1,28 +1,16 @@
-#include "wallet/test/wallet_test_fixture.h"
+// Copyright (c) 2016-2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
-#include "wallet/db.h"
-#include "wallet/wallet.h"
+#include <wallet/test/wallet_test_fixture.h>
 
-WalletTestingSetup::WalletTestingSetup(const std::string& chainName):
-    TestingSetup(chainName)
+WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
+    : TestingSetup(chainName),
+      m_wallet(m_chain.get(), WalletLocation(), WalletDatabase::CreateMock())
 {
-    bitdb.MakeMock();
-
     bool fFirstRun;
-    pwalletMain = new CWallet("wallet_test.dat");
-    pwalletMain->LoadWallet(fFirstRun);
-    RegisterValidationInterface(pwalletMain);
+    m_wallet.LoadWallet(fFirstRun);
+    m_wallet.handleNotifications();
 
-    RegisterWalletRPCCommands(tableRPC);
-}
-
-WalletTestingSetup::~WalletTestingSetup()
-{
-    UnregisterValidationInterface(pwalletMain);
-    delete pwalletMain;
-    pwalletMain = NULL;
-
-    bitdb.Flush(true);
-    bitdb.Reset();
+    m_chain_client->registerRpcs();
 }

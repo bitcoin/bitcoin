@@ -25,10 +25,10 @@ typedef struct {
     secp256k1_gej gej_x, gej_y;
     unsigned char data[64];
     int wnaf[256];
-} bench_inv_t;
+} bench_inv;
 
 void bench_setup(void* arg) {
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     static const unsigned char init_x[32] = {
         0x02, 0x03, 0x05, 0x07, 0x0b, 0x0d, 0x11, 0x13,
@@ -58,7 +58,7 @@ void bench_setup(void* arg) {
 
 void bench_scalar_add(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 2000000; i++) {
         secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
@@ -67,7 +67,7 @@ void bench_scalar_add(void* arg) {
 
 void bench_scalar_negate(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 2000000; i++) {
         secp256k1_scalar_negate(&data->scalar_x, &data->scalar_x);
@@ -76,7 +76,7 @@ void bench_scalar_negate(void* arg) {
 
 void bench_scalar_sqr(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 200000; i++) {
         secp256k1_scalar_sqr(&data->scalar_x, &data->scalar_x);
@@ -85,7 +85,7 @@ void bench_scalar_sqr(void* arg) {
 
 void bench_scalar_mul(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 200000; i++) {
         secp256k1_scalar_mul(&data->scalar_x, &data->scalar_x, &data->scalar_y);
@@ -95,7 +95,7 @@ void bench_scalar_mul(void* arg) {
 #ifdef USE_ENDOMORPHISM
 void bench_scalar_split(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 20000; i++) {
         secp256k1_scalar l, r;
@@ -107,7 +107,7 @@ void bench_scalar_split(void* arg) {
 
 void bench_scalar_inverse(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 2000; i++) {
         secp256k1_scalar_inverse(&data->scalar_x, &data->scalar_x);
@@ -117,7 +117,7 @@ void bench_scalar_inverse(void* arg) {
 
 void bench_scalar_inverse_var(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 2000; i++) {
         secp256k1_scalar_inverse_var(&data->scalar_x, &data->scalar_x);
@@ -127,7 +127,7 @@ void bench_scalar_inverse_var(void* arg) {
 
 void bench_field_normalize(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 2000000; i++) {
         secp256k1_fe_normalize(&data->fe_x);
@@ -136,7 +136,7 @@ void bench_field_normalize(void* arg) {
 
 void bench_field_normalize_weak(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 2000000; i++) {
         secp256k1_fe_normalize_weak(&data->fe_x);
@@ -145,7 +145,7 @@ void bench_field_normalize_weak(void* arg) {
 
 void bench_field_mul(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 200000; i++) {
         secp256k1_fe_mul(&data->fe_x, &data->fe_x, &data->fe_y);
@@ -154,7 +154,7 @@ void bench_field_mul(void* arg) {
 
 void bench_field_sqr(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 200000; i++) {
         secp256k1_fe_sqr(&data->fe_x, &data->fe_x);
@@ -163,7 +163,7 @@ void bench_field_sqr(void* arg) {
 
 void bench_field_inverse(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 20000; i++) {
         secp256k1_fe_inv(&data->fe_x, &data->fe_x);
@@ -173,7 +173,7 @@ void bench_field_inverse(void* arg) {
 
 void bench_field_inverse_var(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 20000; i++) {
         secp256k1_fe_inv_var(&data->fe_x, &data->fe_x);
@@ -181,19 +181,21 @@ void bench_field_inverse_var(void* arg) {
     }
 }
 
-void bench_field_sqrt_var(void* arg) {
+void bench_field_sqrt(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
+    secp256k1_fe t;
 
     for (i = 0; i < 20000; i++) {
-        secp256k1_fe_sqrt_var(&data->fe_x, &data->fe_x);
+        t = data->fe_x;
+        secp256k1_fe_sqrt(&data->fe_x, &t);
         secp256k1_fe_add(&data->fe_x, &data->fe_y);
     }
 }
 
 void bench_group_double_var(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 200000; i++) {
         secp256k1_gej_double_var(&data->gej_x, &data->gej_x, NULL);
@@ -202,7 +204,7 @@ void bench_group_double_var(void* arg) {
 
 void bench_group_add_var(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 200000; i++) {
         secp256k1_gej_add_var(&data->gej_x, &data->gej_x, &data->gej_y, NULL);
@@ -211,7 +213,7 @@ void bench_group_add_var(void* arg) {
 
 void bench_group_add_affine(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 200000; i++) {
         secp256k1_gej_add_ge(&data->gej_x, &data->gej_x, &data->ge_y);
@@ -220,16 +222,25 @@ void bench_group_add_affine(void* arg) {
 
 void bench_group_add_affine_var(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 200000; i++) {
         secp256k1_gej_add_ge_var(&data->gej_x, &data->gej_x, &data->ge_y, NULL);
     }
 }
 
+void bench_group_jacobi_var(void* arg) {
+    int i;
+    bench_inv *data = (bench_inv*)arg;
+
+    for (i = 0; i < 20000; i++) {
+        secp256k1_gej_has_quad_y_var(&data->gej_x);
+    }
+}
+
 void bench_ecmult_wnaf(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 20000; i++) {
         secp256k1_ecmult_wnaf(data->wnaf, 256, &data->scalar_x, WINDOW_A);
@@ -239,10 +250,10 @@ void bench_ecmult_wnaf(void* arg) {
 
 void bench_wnaf_const(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
+    bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 20000; i++) {
-        secp256k1_wnaf_const(data->wnaf, data->scalar_x, WINDOW_A);
+        secp256k1_wnaf_const(data->wnaf, data->scalar_x, WINDOW_A, 256);
         secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
     }
 }
@@ -250,8 +261,8 @@ void bench_wnaf_const(void* arg) {
 
 void bench_sha256(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
-    secp256k1_sha256_t sha;
+    bench_inv *data = (bench_inv*)arg;
+    secp256k1_sha256 sha;
 
     for (i = 0; i < 20000; i++) {
         secp256k1_sha256_initialize(&sha);
@@ -262,8 +273,8 @@ void bench_sha256(void* arg) {
 
 void bench_hmac_sha256(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
-    secp256k1_hmac_sha256_t hmac;
+    bench_inv *data = (bench_inv*)arg;
+    secp256k1_hmac_sha256 hmac;
 
     for (i = 0; i < 20000; i++) {
         secp256k1_hmac_sha256_initialize(&hmac, data->data, 32);
@@ -274,8 +285,8 @@ void bench_hmac_sha256(void* arg) {
 
 void bench_rfc6979_hmac_sha256(void* arg) {
     int i;
-    bench_inv_t *data = (bench_inv_t*)arg;
-    secp256k1_rfc6979_hmac_sha256_t rng;
+    bench_inv *data = (bench_inv*)arg;
+    secp256k1_rfc6979_hmac_sha256 rng;
 
     for (i = 0; i < 20000; i++) {
         secp256k1_rfc6979_hmac_sha256_initialize(&rng, data->data, 64);
@@ -299,24 +310,24 @@ void bench_context_sign(void* arg) {
     }
 }
 
+#ifndef USE_NUM_NONE
+void bench_num_jacobi(void* arg) {
+    int i;
+    bench_inv *data = (bench_inv*)arg;
+    secp256k1_num nx, norder;
 
-int have_flag(int argc, char** argv, char *flag) {
-    char** argm = argv + argc;
-    argv++;
-    if (argv == argm) {
-        return 1;
+    secp256k1_scalar_get_num(&nx, &data->scalar_x);
+    secp256k1_scalar_order_get_num(&norder);
+    secp256k1_scalar_get_num(&norder, &data->scalar_y);
+
+    for (i = 0; i < 200000; i++) {
+        secp256k1_num_jacobi(&nx, &norder);
     }
-    while (argv != NULL && argv != argm) {
-        if (strcmp(*argv, flag) == 0) {
-            return 1;
-        }
-        argv++;
-    }
-    return 0;
 }
+#endif
 
 int main(int argc, char **argv) {
-    bench_inv_t data;
+    bench_inv data;
     if (have_flag(argc, argv, "scalar") || have_flag(argc, argv, "add")) run_benchmark("scalar_add", bench_scalar_add, bench_setup, NULL, &data, 10, 2000000);
     if (have_flag(argc, argv, "scalar") || have_flag(argc, argv, "negate")) run_benchmark("scalar_negate", bench_scalar_negate, bench_setup, NULL, &data, 10, 2000000);
     if (have_flag(argc, argv, "scalar") || have_flag(argc, argv, "sqr")) run_benchmark("scalar_sqr", bench_scalar_sqr, bench_setup, NULL, &data, 10, 200000);
@@ -333,12 +344,13 @@ int main(int argc, char **argv) {
     if (have_flag(argc, argv, "field") || have_flag(argc, argv, "mul")) run_benchmark("field_mul", bench_field_mul, bench_setup, NULL, &data, 10, 200000);
     if (have_flag(argc, argv, "field") || have_flag(argc, argv, "inverse")) run_benchmark("field_inverse", bench_field_inverse, bench_setup, NULL, &data, 10, 20000);
     if (have_flag(argc, argv, "field") || have_flag(argc, argv, "inverse")) run_benchmark("field_inverse_var", bench_field_inverse_var, bench_setup, NULL, &data, 10, 20000);
-    if (have_flag(argc, argv, "field") || have_flag(argc, argv, "sqrt")) run_benchmark("field_sqrt_var", bench_field_sqrt_var, bench_setup, NULL, &data, 10, 20000);
+    if (have_flag(argc, argv, "field") || have_flag(argc, argv, "sqrt")) run_benchmark("field_sqrt", bench_field_sqrt, bench_setup, NULL, &data, 10, 20000);
 
     if (have_flag(argc, argv, "group") || have_flag(argc, argv, "double")) run_benchmark("group_double_var", bench_group_double_var, bench_setup, NULL, &data, 10, 200000);
     if (have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_var", bench_group_add_var, bench_setup, NULL, &data, 10, 200000);
     if (have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_affine", bench_group_add_affine, bench_setup, NULL, &data, 10, 200000);
     if (have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_affine_var", bench_group_add_affine_var, bench_setup, NULL, &data, 10, 200000);
+    if (have_flag(argc, argv, "group") || have_flag(argc, argv, "jacobi")) run_benchmark("group_jacobi_var", bench_group_jacobi_var, bench_setup, NULL, &data, 10, 20000);
 
     if (have_flag(argc, argv, "ecmult") || have_flag(argc, argv, "wnaf")) run_benchmark("wnaf_const", bench_wnaf_const, bench_setup, NULL, &data, 10, 20000);
     if (have_flag(argc, argv, "ecmult") || have_flag(argc, argv, "wnaf")) run_benchmark("ecmult_wnaf", bench_ecmult_wnaf, bench_setup, NULL, &data, 10, 20000);
@@ -350,5 +362,8 @@ int main(int argc, char **argv) {
     if (have_flag(argc, argv, "context") || have_flag(argc, argv, "verify")) run_benchmark("context_verify", bench_context_verify, bench_setup, NULL, &data, 10, 20);
     if (have_flag(argc, argv, "context") || have_flag(argc, argv, "sign")) run_benchmark("context_sign", bench_context_sign, bench_setup, NULL, &data, 10, 200);
 
+#ifndef USE_NUM_NONE
+    if (have_flag(argc, argv, "num") || have_flag(argc, argv, "jacobi")) run_benchmark("num_jacobi", bench_num_jacobi, bench_setup, NULL, &data, 10, 200000);
+#endif
     return 0;
 }

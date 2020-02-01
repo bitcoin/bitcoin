@@ -1,18 +1,24 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_PEERTABLEMODEL_H
 #define BITCOIN_QT_PEERTABLEMODEL_H
 
-#include "main.h" // For CNodeStateStats
-#include "net.h"
+#include <net_processing.h> // For CNodeStateStats
+#include <net.h>
+
+#include <memory>
 
 #include <QAbstractTableModel>
 #include <QStringList>
 
 class ClientModel;
 class PeerTablePriv;
+
+namespace interfaces {
+class Node;
+}
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -45,16 +51,20 @@ class PeerTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit PeerTableModel(ClientModel *parent = 0);
+    explicit PeerTableModel(interfaces::Node& node, ClientModel *parent = nullptr);
+    ~PeerTableModel();
     const CNodeCombinedStats *getNodeStats(int idx);
     int getRowByNodeId(NodeId nodeid);
     void startAutoRefresh();
     void stopAutoRefresh();
 
     enum ColumnIndex {
-        Address = 0,
-        Subversion = 1,
-        Ping = 2
+        NetNodeId = 0,
+        Address = 1,
+        Ping = 2,
+        Sent = 3,
+        Received = 4,
+        Subversion = 5
     };
 
     /** @name Methods overridden from QAbstractTableModel
@@ -72,9 +82,10 @@ public Q_SLOTS:
     void refresh();
 
 private:
+    interfaces::Node& m_node;
     ClientModel *clientModel;
     QStringList columns;
-    PeerTablePriv *priv;
+    std::unique_ptr<PeerTablePriv> priv;
     QTimer *timer;
 };
 

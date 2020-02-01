@@ -30,6 +30,10 @@
         <translation>Eliminar la dirección actualmente seleccionada de la lista</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Ingrese dirección o capa a buscar </translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar la información en la tabla actual a un archivo</translation>
     </message>
@@ -41,9 +45,80 @@
         <source>&amp;Delete</source>
         <translation>&amp;Borrar</translation>
     </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Elija la direccion a donde se enviaran las monedas</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Elija la dirección para recibir monedas.</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>Elija</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Direcciones de Envio</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Direcciones de recibo</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Estas son tus direcciones de Bitcoin para enviar pagos. Siempre revisa el monto y la dirección de envío antes de enviar monedas.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Copiar dirección</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>copiar y etiquetar</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>Editar</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Exportar lista de direcciones </translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Arhchivo separado por comas (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Exportación Fallida</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Hubo un error al tratar de salvar a la lista de direcciones a %1. Por favor intente de nuevo.</translation>
+    </message>
+</context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Etiqueta</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Dirección</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(sin etiqueta)</translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation>Dialogo de contraseña</translation>
+    </message>
     <message>
         <source>Enter passphrase</source>
         <translation>Ingrese la contraseña</translation>
@@ -56,10 +131,94 @@
         <source>Repeat new passphrase</source>
         <translation>Repita la nueva contraseña</translation>
     </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>Encriptar cartera</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>Esta operación necesita la contraseña de su cartera para desbloquear su cartera.</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>Desbloquear cartera</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>Esta operación necesita la contraseña de su cartera para desencriptar su cartera.</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>Desencriptar cartera</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>Cambiar contraseña</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>Confirmar la encriptación de cartera</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>Advertencia: Si encripta su cartera y pierde su contraseña, &lt;b&gt;PERDERÁ TODOS SUS BITCOINS&lt;/b&gt;!</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>¿Está seguro que desea encriptar su cartera?</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>Cartera encriptada</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>IMPORTANTE: cualquier copia de seguridad anterior que haya hecho de su archivo de cartera debe ser reemplazada por el archivo de cartera encriptado y recién generado. Por razones de seguridad, las copias de seguridad anteriores del archivo de cartera sin cifrar serán inútiles tan pronto como empieces a usar la nueva billetera encriptada.</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>Encriptación de la cartera fallida</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>La encriptación de la cartera falló debido a un error interno. Su cartera no fue encriptada.</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>Las contraseñas dadas no coinciden.</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>El desbloqueo de la cartera falló.</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation>La contraseña ingresada para la desencriptación de la cartera es incorrecta.</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>La desencriptación de la cartera fallo</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>La contraseña de la cartera ha sido exitosamente cambiada.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Advertencia: ¡La tecla Bloq Mayus está activada!</translation>
+    </message>
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Máscara de red</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Prohibido Hasta</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -73,10 +232,6 @@
     <message>
         <source>&amp;Overview</source>
         <translation>&amp;Vista previa</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Nodo</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
@@ -99,6 +254,14 @@
         <translation>Salir de la aplicación</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation>%Acerca de%1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>Mostrar información acerca de %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>Acerca de &amp;Qt</translation>
     </message>
@@ -109,6 +272,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Opciones</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Modificar las opciones de configuración para %1</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -123,16 +290,20 @@
         <translation>&amp;Cambiar contraseña...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>Direcciones de &amp;envío...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Direcciones de &amp;recepción...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Abrir &amp;URL...</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Cartera:</translation>
+    </message>
+    <message>
+        <source>Click to disable network activity.</source>
+        <translation>Haga clic para desactivar la actividad de la red.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Actividad de red deshabilitada.</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -163,20 +334,28 @@
         <translation>&amp;Verificar mensaje...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Cartera</translation>
-    </message>
-    <message>
         <source>&amp;Send</source>
         <translation>&amp;Enviar</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
         <translation>&amp;Recibir</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Mostrar / Ocultar</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>Mostrar u ocultar la ventana principal</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Cifre las claves privadas que pertenecen a su billetera</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation>Firme mensajes con sus direcciones de Bitcoin para demostrar que los posee</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -234,7 +413,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>La cartera esta &lt;b&gt;encriptada&lt;/b&gt; y &lt;b&gt;bloqueada&lt;/b&gt; actualmente </translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -248,10 +427,6 @@
     <message>
         <source>Amount:</source>
         <translation>Monto:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioridad:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -278,10 +453,16 @@
         <translation>Confirmado </translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>Prioridad</translation>
+        <source>(no label)</source>
+        <translation>(sin etiqueta)</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -296,7 +477,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Dirección</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -318,24 +499,30 @@
         <source>Command-line options</source>
         <translation>opciones de la Linea de comandos</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Uso:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>Opciones de comando de lineas</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
     <message>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     </context>
 <context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Formulario</translation>
+    </message>
+    </context>
+<context>
     <name>OpenURIDialog</name>
+    </context>
+<context>
+    <name>OpenWalletActivity</name>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -344,16 +531,16 @@
         <translation>Opciones</translation>
     </message>
     <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Activar las opciones de linea de comando que sobre escriben las siguientes opciones:</translation>
-    </message>
-    <message>
         <source>W&amp;allet</source>
         <translation>Cartera</translation>
     </message>
     <message>
         <source>none</source>
         <translation>Ninguno </translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Error</translation>
     </message>
     </context>
 <context>
@@ -364,6 +551,9 @@
     </message>
     </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     </context>
 <context>
@@ -372,6 +562,13 @@
         <source>Amount</source>
         <translation>Monto</translation>
     </message>
+    <message>
+        <source>unknown</source>
+        <translation>desconocido</translation>
+    </message>
+</context>
+<context>
+    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -413,6 +610,37 @@
         <source>Copy &amp;Address</source>
         <translation>&amp;Copiar dirección</translation>
     </message>
+    <message>
+        <source>Address</source>
+        <translation>Dirección</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Monto</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiqueta</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Cartera</translation>
+    </message>
+</context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiqueta</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(sin etiqueta)</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -433,10 +661,6 @@
         <translation>Monto:</translation>
     </message>
     <message>
-        <source>Priority:</source>
-        <translation>Prioridad:</translation>
-    </message>
-    <message>
         <source>Fee:</source>
         <translation>Cuota:</translation>
     </message>
@@ -447,10 +671,6 @@
     <message>
         <source>Change:</source>
         <translation>Cambio</translation>
-    </message>
-    <message>
-        <source>fast</source>
-        <translation>rápido</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -464,7 +684,11 @@
         <source>Confirm the send action</source>
         <translation>Confirme la acción de enviar</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(sin etiqueta)</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -509,6 +733,9 @@
     </message>
     </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
     <name>ShutdownWindow</name>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -535,10 +762,22 @@
     </message>
     </context>
 <context>
-    <name>SplashScreen</name>
+    <name>TrafficGraphWidget</name>
     </context>
 <context>
-    <name>TrafficGraphWidget</name>
+    <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>desconocido</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Monto</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -546,47 +785,81 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Este panel muestras una descripción detallada de la transacción</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiqueta</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(sin etiqueta)</translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Arhchivo separado por comas (*.csv)</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation>Confirmado </translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiqueta</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Dirección</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Exportación Fallida</translation>
+    </message>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    <message>
+        <source>Send Coins</source>
+        <translation>Enviar monedas</translation>
+    </message>
+    </context>
+<context>
+    <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Exportar</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exportar la información en la pestaña actual a un archivo</translation>
+    </message>
+    </context>
+<context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Opciones:</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>nucleo Bitcoin</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;categoria&gt; puede ser:</translation>
-    </message>
     <message>
         <source>Verifying blocks...</source>
         <translation>Verificando bloques...</translation>
-    </message>
-    <message>
-        <source>Verifying wallet...</source>
-        <translation>Verificando cartera...</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>Opciones de cartera:</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Información </translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Aviso</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>Cargando direcciones...</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -599,10 +872,6 @@
     <message>
         <source>Done loading</source>
         <translation>Carga completa</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Error</translation>
     </message>
 </context>
 </TS>

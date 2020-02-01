@@ -1,10 +1,14 @@
 *.tar.gz
 
 *.exe
+*.pdb
 src/bitcoin
 src/bitcoind
 src/bitcoin-cli
 src/bitcoin-tx
+src/bitcoin-wallet
+src/test/fuzz
+!src/test/fuzz/*.*
 src/test/test_bitcoin
 src/qt/test/test_bitcoin-qt
 
@@ -25,6 +29,7 @@ build-aux/m4/ltversion.m4
 build-aux/missing
 build-aux/compile
 build-aux/test-driver
+config.cache
 config.log
 config.status
 configure
@@ -32,6 +37,7 @@ libtool
 src/config/bitcoin-config.h
 src/config/bitcoin-config.h.in
 src/config/stamp-h1
+src/obj
 share/setup.nsi
 share/qt/Info.plist
 
@@ -42,6 +48,12 @@ src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
+
+src/qt/bitcoin-qt.config
+src/qt/bitcoin-qt.creator
+src/qt/bitcoin-qt.creator.user
+src/qt/bitcoin-qt.files
+src/qt/bitcoin-qt.includes
 
 .deps
 .dirstamp
@@ -54,11 +66,10 @@ src/qt/test/moc*.cpp
 *.pyc
 *.o
 *.o-*
-*.patch
-.bitcoin
 *.a
 *.pb.cc
 *.pb.h
+*.dat
 
 *.log
 *.trs
@@ -67,6 +78,10 @@ src/qt/test/moc*.cpp
 *.json.h
 *.raw.h
 
+# Only ignore unexpected patches
+*.patch
+!depends/patches/**/*.patch
+
 #libtool object files
 *.lo
 *.la
@@ -74,13 +89,17 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
+!depends/Makefile
 bitcoin-qt
 Bitcoin-Qt.app
+background.tiff*
+
+# Qt Creator
+Makefile.am.user
 
 # Unit-tests
 Makefile.test
 bitcoin-qt_test
-src/test/buildenv.py
 
 # Resources cpp
 qrc_*.cpp
@@ -101,13 +120,8 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
-qa/pull-tester/run-bitcoind-for-test.sh
-qa/pull-tester/tests_config.py
-qa/pull-tester/cache/*
-qa/pull-tester/test.*/*
-qa/tmp
-cache/
-share/BitcoindComparisonTool.jar
+test/config.ini
+test/cache/*
 
 !src/leveldb*/Makefile
 
@@ -115,3 +129,13 @@ share/BitcoindComparisonTool.jar
 
 libbitcoinconsensus.pc
 contrib/devtools/split-debug.sh
+
+# Output from running db4 installation
+db4/
+
+# clang-check
+*.plist
+
+osx_volname
+dist/
+*.background.tiff

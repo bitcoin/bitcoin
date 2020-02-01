@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include <util/strencodings.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -16,10 +16,21 @@ BOOST_AUTO_TEST_CASE(base64_testvectors)
     for (unsigned int i=0; i<sizeof(vstrIn)/sizeof(vstrIn[0]); i++)
     {
         std::string strEnc = EncodeBase64(vstrIn[i]);
-        BOOST_CHECK(strEnc == vstrOut[i]);
+        BOOST_CHECK_EQUAL(strEnc, vstrOut[i]);
         std::string strDec = DecodeBase64(strEnc);
-        BOOST_CHECK(strDec == vstrIn[i]);
+        BOOST_CHECK_EQUAL(strDec, vstrIn[i]);
     }
+
+    // Decoding strings with embedded NUL characters should fail
+    bool failure;
+    (void)DecodeBase64(std::string("invalid", 7), &failure);
+    BOOST_CHECK_EQUAL(failure, true);
+    (void)DecodeBase64(std::string("nQB/pZw=", 8), &failure);
+    BOOST_CHECK_EQUAL(failure, false);
+    (void)DecodeBase64(std::string("nQB/pZw=\0invalid", 16), &failure);
+    BOOST_CHECK_EQUAL(failure, true);
+    (void)DecodeBase64(std::string("nQB/pZw=invalid", 15), &failure);
+    BOOST_CHECK_EQUAL(failure, true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

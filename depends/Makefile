@@ -1,10 +1,18 @@
 .NOTPARALLEL :
 
+# Pattern rule to print variables, e.g. make print-top_srcdir
+print-%:
+	@echo $* = $($*)
+
 SOURCES_PATH ?= $(BASEDIR)/sources
+WORK_PATH = $(BASEDIR)/work
 BASE_CACHE ?= $(BASEDIR)/built
 SDK_PATH ?= $(BASEDIR)/SDKs
 NO_QT ?=
+NO_QR ?=
+RAPIDCHECK ?=
 NO_WALLET ?=
+NO_ZMQ ?=
 NO_UPNP ?=
 FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
 
@@ -13,7 +21,7 @@ HOST ?= $(BUILD)
 PATCHES_PATH = $(BASEDIR)/patches
 BASEDIR = $(CURDIR)
 HASH_LENGTH:=11
-DOWNLOAD_CONNECT_TIMEOUT:=10
+DOWNLOAD_CONNECT_TIMEOUT:=30
 DOWNLOAD_RETRIES:=3
 HOST_ID_SALT ?= salt
 BUILD_ID_SALT ?= salt
@@ -21,7 +29,6 @@ BUILD_ID_SALT ?= salt
 host:=$(BUILD)
 ifneq ($(HOST),)
 host:=$(HOST)
-host_toolchain:=$(HOST)-
 endif
 
 ifneq ($(DEBUG),)
@@ -30,9 +37,9 @@ else
 release_type=release
 endif
 
-base_build_dir=$(BASEDIR)/work/build
-base_staging_dir=$(BASEDIR)/work/staging
-base_download_dir=$(BASEDIR)/work/download
+base_build_dir=$(WORK_PATH)/build
+base_staging_dir=$(WORK_PATH)/staging
+base_download_dir=$(WORK_PATH)/download
 canonical_host:=$(shell ./config.sub $(HOST))
 build:=$(shell ./config.sub $(BUILD))
 
@@ -52,6 +59,11 @@ full_host_os:=$(subst $(host_arch)-$(host_vendor)-,,$(canonical_host))
 host_os:=$(findstring linux,$(full_host_os))
 host_os+=$(findstring darwin,$(full_host_os))
 host_os+=$(findstring mingw32,$(full_host_os))
+
+ifeq (android,$(findstring android,$(full_host_os)))
+host_os:=android
+endif
+
 host_os:=$(strip $(host_os))
 ifeq ($(host_os),)
 host_os=$(full_host_os)
@@ -89,15 +101,25 @@ $(host_arch)_$(host_os)_id_string+=$(shell $(host_CXX) --version 2>/dev/null)
 $(host_arch)_$(host_os)_id_string+=$(shell $(host_RANLIB) --version 2>/dev/null)
 $(host_arch)_$(host_os)_id_string+=$(shell $(host_STRIP) --version 2>/dev/null)
 
-qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch)_$(host_os)_packages)
+qrencode_packages_$(NO_QR) = $(qrencode_packages)
+
+qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch)_$(host_os)_packages) $(qrencode_packages_)
+
 wallet_packages_$(NO_WALLET) = $(wallet_packages)
 upnp_packages_$(NO_UPNP) = $(upnp_packages)
+zmq_packages_$(NO_ZMQ) = $(zmq_packages)
+
+rapidcheck_packages_$(RAPIDCHECK) = $(rapidcheck_packages)
 
 packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(qt_packages_) $(wallet_packages_) $(upnp_packages_)
 native_packages += $($(host_arch)_$(host_os)_native_packages) $($(host_os)_native_packages)
 
-ifneq ($(qt_packages_),)
-native_packages += $(qt_native_packages)
+ifneq ($(zmq_packages_),)
+packages += $(zmq_packages)
+endif
+
+ifeq ($(rapidcheck_packages_),)
+packages += $(rapidcheck_packages)
 endif
 
 all_packages = $(packages) $(native_packages)
@@ -134,7 +156,10 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             -e 's|@CXXFLAGS@|$(strip $(host_CXXFLAGS) $(host_$(release_type)_CXXFLAGS))|' \
             -e 's|@CPPFLAGS@|$(strip $(host_CPPFLAGS) $(host_$(release_type)_CPPFLAGS))|' \
             -e 's|@LDFLAGS@|$(strip $(host_LDFLAGS) $(host_$(release_type)_LDFLAGS))|' \
+            -e 's|@allow_host_packages@|$(ALLOW_HOST_PACKAGES)|' \
             -e 's|@no_qt@|$(NO_QT)|' \
+            -e 's|@no_qr@|$(NO_QR)|' \
+            -e 's|@no_zmq@|$(NO_ZMQ)|' \
             -e 's|@no_wallet@|$(NO_WALLET)|' \
             -e 's|@no_upnp@|$(NO_UPNP)|' \
             -e 's|@debug@|$(DEBUG)|' \
@@ -165,17 +190,25 @@ $(host_prefix)/share/config.site: check-packages
 
 check-packages: check-sources
 
+clean-all: clean
+	@rm -rf $(SOURCES_PATH) x86_64* i686* mips* arm* aarch64* powerpc* riscv32* riscv64* s390x*
+
+clean:
+	@rm -rf $(WORK_PATH) $(BASE_CACHE) $(BUILD)
+
 install: check-packages $(host_prefix)/share/config.site
 
 
 download-one: check-sources $(all_sources)
 
 download-osx:
-	@$(MAKE) -s HOST=x86_64-apple-darwin11 download-one
+	@$(MAKE) -s HOST=x86_64-apple-darwin14 download-one
 download-linux:
 	@$(MAKE) -s HOST=x86_64-unknown-linux-gnu download-one
 download-win:
 	@$(MAKE) -s HOST=x86_64-w64-mingw32 download-one
 download: download-osx download-linux download-win
 
-.PHONY: install cached download-one download-osx download-linux download-win download check-packages check-sources
+$(foreach package,$(all_packages),$(eval $(call ext_add_stages,$(package))))
+
+.PHONY: install cached clean clean-all download-one download-osx download-linux download-win download check-packages check-sources

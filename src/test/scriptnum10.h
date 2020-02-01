@@ -1,18 +1,17 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_TEST_SCRIPTNUM10_H
 #define BITCOIN_TEST_SCRIPTNUM10_H
 
-#include <algorithm>
 #include <limits>
 #include <stdexcept>
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include "assert.h"
+#include <assert.h>
 
 class scriptnum10_error : public std::runtime_error
 {
