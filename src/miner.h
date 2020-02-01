@@ -46,7 +46,8 @@ struct CTxMemPoolModifiedEntry {
         nModFeesWithAncestors = entry->GetModFeesWithAncestors();
         nSigOpCostWithAncestors = entry->GetSigOpCostWithAncestors();
     }
-
+    // SYSCOIN
+    std::chrono::seconds GetTime() const { return iter->GetTime(); }
     int64_t GetModifiedFee() const { return iter->GetModifiedFee(); }
     uint64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
     CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
