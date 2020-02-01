@@ -527,11 +527,28 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
     }
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
 }
-
-void CTxMemPool::removeConflicts(const CTransaction &tx)
+// SYSCOIN
+bool CTxMemPool::existsConflicts(const CTransaction &tx)
+{
+    // check for and turn true on transactions which depend on inputs of tx, recursively
+    AssertLockHeld(cs);
+    for (const CTxIn &txin : tx.vin) {
+        auto it = mapNextTx.find(txin.prevout);
+        if (it != mapNextTx.end()) {
+            const CTransaction &txConflict = *it->second;
+            if (txConflict != tx)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+bool CTxMemPool::removeConflicts(const CTransaction &tx)
 {
     // Remove transactions which depend on inputs of tx, recursively
     AssertLockHeld(cs);
+    bool bRemoved = false;
     for (const CTxIn &txin : tx.vin) {
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
@@ -540,9 +557,11 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
             {
                 ClearPrioritisation(txConflict.GetHash());
                 removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+                bRemoved = true;
             }
         }
     }
+    return bRemoved;
 }
 
 /**

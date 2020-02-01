@@ -27,7 +27,6 @@
 // SYSCOIN
 #include <masternodepayments.h>
 #include <masternodesync.h>
-#include <services/graph.h>
 #include <services/assetconsensus.h>
 extern std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
@@ -190,13 +189,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->txoutMasternode, pblocktemplate->voutSuperblock);
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
-    if (!OrderBasedOnArrivals(pblock->vtx))
-    {
-        throw std::runtime_error("OrderBasedOnArrivalTime failed!");
-    }
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
-    // SYSCOIN remove bad burn transactions prior to accepting block                      
+    // SYSCOIN remove bad burn transactions prior to accepting block  
+    txsToRemove.clear();                    
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     CCoinsViewCache &viewChain = ::ChainstateActive().CoinsTip();
@@ -209,11 +205,19 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                 view.AccessCoin(txin.prevout); // Load entries from viewChain into view; can fail.
             }
         }
+        // if input conflict was present, one got mined the other got left in mempool we want to also detect that and remove it
+        if (!view.HaveInputs(*tx)) {
+            const uint256& txHash = tx->GetHash();
+            mempool.ClearPrioritisation(txHash);
+            mempool.removeRecursive(*tx, MemPoolRemovalReason::CONFLICT);
+            txsToRemove.emplace_back(std::move(txHash));
+            return CreateNewBlock(scriptPubKeyIn, txsToRemove);
+         }
     }
     view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
       
     TxValidationState tx_state;
-    txsToRemove.clear();
+    
     bool bSenderConflicted = false;
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
@@ -222,7 +226,16 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     ActorSet actorSet;
     bool bFoundError = false;
     for(const CTransactionRef& tx: pblock->vtx){
+       
         const uint256& txHash = tx->GetHash();
+         
+         // check if any inputs are dbl spent, reject tx and create block without it if so
+        if(mempool.removeConflicts(*tx)){
+            txsToRemove.emplace_back(std::move(txHash));
+            bFoundError = true;
+            break;
+        }
+
         if(!CheckSyscoinInputs(false, *tx, txHash, tx_state, view, false, nHeight, ::ChainActive().Tip()->GetMedianTimePast(), pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
             txsToRemove.emplace_back(std::move(txHash));
             bFoundError = true;
