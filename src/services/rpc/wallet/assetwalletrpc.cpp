@@ -79,7 +79,7 @@ private:
     int &nNumSigs;
 
 public:
-    CCountSigsVisitor(const SigningProvider* _provider, int &numSigs) : provider(_provider), nNumSigs(numSigs) { }
+    CCountSigsVisitor(const SigningProvider& _provider, int &numSigs) : provider(&_provider), nNumSigs(numSigs) { }
 
     void Process(const CScript &script) {
         txnouttype type;
@@ -226,8 +226,8 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             vin.nSequence = CTxIn::SEQUENCE_FINAL - 1;
         tx.vin.emplace_back(vin);
         int numSigs = 0;
-        const SigningProvider* provider = pwallet->GetSigningProvider(coin.out.scriptPubKey);
-        CCountSigsVisitor(provider, numSigs).Process(coin.out.scriptPubKey);
+        std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(coin.out.scriptPubKey);
+        CCountSigsVisitor(*provider, numSigs).Process(coin.out.scriptPubKey);
         if(isSyscoinTx)
             numSigs *= 2;
         nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, &fee_calc);
@@ -307,8 +307,8 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
                 }
             }
             int numSigs = 0;
-            const SigningProvider* provider = pwallet->GetSigningProvider(scriptPubKey);
-            CCountSigsVisitor(provider, numSigs).Process(scriptPubKey);
+            std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(scriptPubKey);
+            CCountSigsVisitor(*provider, numSigs).Process(scriptPubKey);
             if(isSyscoinTx){
                  // double relay fee for zdag tx to account for dbl bandwidth on dbl spend relays
                 numSigs *= 2;
