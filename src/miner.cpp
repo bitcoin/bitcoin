@@ -27,7 +27,6 @@
 // SYSCOIN
 #include <masternodepayments.h>
 #include <masternodesync.h>
-#include <services/graph.h>
 #include <services/assetconsensus.h>
 extern std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
@@ -190,10 +189,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->txoutMasternode, pblocktemplate->voutSuperblock);
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
-    if (!OrderBasedOnArrivals(pblock->vtx))
-    {
-        throw std::runtime_error("OrderBasedOnArrivalTime failed!");
-    }
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
     // SYSCOIN remove bad burn transactions prior to accepting block  
