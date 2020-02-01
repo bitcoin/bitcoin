@@ -290,7 +290,8 @@ public:
         double f2 = a_size * b_mod_fee;
 
         if (f1 == f2) {
-            return a.GetTx().GetHash() < b.GetTx().GetHash();
+            // SYSCOIN
+            return a.GetTime() < b.GetTime();
         }
         return f1 > f2;
     }
