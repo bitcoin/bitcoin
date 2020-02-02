@@ -502,7 +502,6 @@ class ImportMultiTest(BitcoinTestFramework):
                      key.p2pkh_addr,
                      solvable=True,
                      ismine=False,
-                     label=p2pkh_label,
                      labels=[p2pkh_label])
 
         # Test import fails if both desc and scriptPubKey are provided
