@@ -240,7 +240,15 @@ public:
         if (try_lock && result && !*result) return {};
         // std::move necessary on some compilers due to conversion from
         // LockImpl to Lock pointer
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wredundant-move"
+#endif
         return std::move(result);
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
     }
     bool findBlock(const uint256& hash, CBlock* block, int64_t* time, int64_t* time_max) override
     {
