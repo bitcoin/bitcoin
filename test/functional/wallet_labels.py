@@ -155,7 +155,7 @@ class Label:
         if self.receive_address is not None:
             assert self.receive_address in self.addresses
         for address in self.addresses:
-            test_address(node, address, label=self.name, labels=[self.name])
+            test_address(node, address, labels=[self.name])
         assert self.name in node.listlabels()
         assert_equal(
             node.getaddressesbylabel(self.name),
