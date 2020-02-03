@@ -208,7 +208,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             // INITIAL TIMEOUT
 
             if(nCurrentAsset == MASTERNODE_SYNC_WAITING) {
-                if(!pnode->fInbound && gArgs.GetBoolArg("-syncmempool", DEFAULT_SYNC_MEMPOOL) && !netfulfilledman.HasFulfilledRequest(pnode->addr, "mempool-sync")) {
+                if(pnode->nVersion >= 70216 && !pnode->fInbound && gArgs.GetBoolArg("-syncmempool", DEFAULT_SYNC_MEMPOOL) && !netfulfilledman.HasFulfilledRequest(pnode->addr, "mempool-sync")) {
                     netfulfilledman.AddFulfilledRequest(pnode->addr, "mempool-sync");
                     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MEMPOOL));
                     LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- syncing mempool from peer=%d\n", nTick, nCurrentAsset, pnode->GetId());
