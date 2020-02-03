@@ -107,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_index, PopServiceFixture)
     Verify_Method(Method(pop_service_impl_mock, removePayloads)).Once();
 }
 
-BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_ancestor, PopServiceFixture)
+BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_from_main_chain, PopServiceFixture)
 {
     CBlockIndex* endorsedBlockIndex = ChainActive().Tip()->pprev->pprev->pprev;
     CBlock endorsedBlock;
@@ -123,7 +123,6 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_ancestor, PopServiceFixtur
     BlockValidationState state;
     InvalidateBlock(state, Params(), endorsedBlockIndex);
     ActivateBestChain(state, Params());
-    ChainstateActive().ActivateBestChain(state, Params(), nullptr);
     BOOST_CHECK(ChainActive().Height() < prevHeight);
 
     CBlock block = createBlockWithPopTx(*this);
