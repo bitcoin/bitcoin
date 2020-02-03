@@ -75,6 +75,8 @@ static constexpr std::chrono::microseconds INBOUND_PEER_TX_DELAY{std::chrono::se
 static constexpr std::chrono::microseconds GETDATA_TX_INTERVAL{std::chrono::seconds{60}};
 /** Maximum delay (in microseconds) for transaction requests to avoid biasing some peers over others. */
 static constexpr std::chrono::microseconds MAX_GETDATA_RANDOM_DELAY{std::chrono::seconds{2}};
+/** Delay between receiving a NOTFOUND and trying the next peer. */
+static constexpr std::chrono::microseconds MAX_NOTFOUND_RETRY_RANDOM_DELAY{std::chrono::seconds{2}};
 /** How long to wait (in microseconds) before expiring an in-flight getdata request to a peer */
 static constexpr std::chrono::microseconds TX_EXPIRY_INTERVAL{GETDATA_TX_INTERVAL * 10};
 static_assert(INBOUND_PEER_TX_DELAY >= MAX_GETDATA_RANDOM_DELAY,
@@ -344,8 +346,10 @@ struct CNodeState {
          */
         std::multimap<std::chrono::microseconds, uint256> m_tx_process_time;
 
-        //! Store all the transactions a peer has recently announced
-        std::set<uint256> m_tx_announced;
+        /* Store all the transactions a peer has recently announced,
+         * along with their process time
+         */
+        std::map<uint256, std::chrono::microseconds> m_tx_announced;
 
         //! Store transactions which were requested by us, with timestamp
         std::map<uint256, std::chrono::microseconds> m_tx_in_flight;
@@ -731,6 +735,37 @@ std::chrono::microseconds CalculateTxGetDataTime(const uint256& txid, std::chron
     return process_time;
 }
 
+static void RetryProcessTx(CConnman& connman, const uint256& txid, const std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    CNodeState::TxDownloadState* best_d = nullptr;
+    std::chrono::microseconds best;
+
+    for (auto& el : mapNodeState) {
+         CNodeState::TxDownloadState* d = &el.second.m_tx_download;
+         if (d->m_tx_in_flight.size() >= MAX_PEER_TX_IN_FLIGHT) continue;
+         auto it = d->m_tx_announced.find(txid);
+         if (it != d->m_tx_announced.end()) {
+             if (best_d == nullptr || (it->second != std::chrono::microseconds::zero() && it->second < best)) {
+                 best_d = d;
+                 best = it->second;
+             }
+         }
+    }
+
+    std::chrono::microseconds process_time = current_time + GetRandMicros(MAX_NOTFOUND_RETRY_RANDOM_DELAY);
+    if (best_d != nullptr && process_time < best) {
+        auto end = best_d->m_tx_process_time.end();
+        for (auto it = best_d->m_tx_process_time.lower_bound(best); it != end && it->first == best; ++it) {
+            if (it->second == txid) {
+                best_d->m_tx_process_time.erase(it);
+                best_d->m_tx_announced[txid] = process_time;
+                best_d->m_tx_process_time.emplace(process_time, txid);
+                break;
+            }
+        }
+    }
+}
+
 void RequestTx(CNodeState* state, const uint256& txid, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     CNodeState::TxDownloadState& peer_download_state = state->m_tx_download;
@@ -741,12 +776,12 @@ void RequestTx(CNodeState* state, const uint256& txid, std::chrono::microseconds
         // this announcement
         return;
     }
-    peer_download_state.m_tx_announced.insert(txid);
 
     // Calculate the time to try requesting this transaction. Use
     // fPreferredDownload as a proxy for outbound peers.
     const auto process_time = CalculateTxGetDataTime(txid, current_time, !state->fPreferredDownload);
 
+    peer_download_state.m_tx_announced.emplace(txid, process_time);
     peer_download_state.m_tx_process_time.emplace(process_time, txid);
 }
 
@@ -3222,6 +3257,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         std::vector<CInv> vInv;
         vRecv >> vInv;
         if (vInv.size() <= MAX_PEER_TX_IN_FLIGHT + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+            const auto current_time = GetTime<std::chrono::microseconds>();
             for (CInv &inv : vInv) {
                 if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) {
                     // If we receive a NOTFOUND message for a txid we requested, erase
@@ -3234,6 +3270,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     }
                     state->m_tx_download.m_tx_in_flight.erase(in_flight_it);
                     state->m_tx_download.m_tx_announced.erase(inv.hash);
+                    RetryProcessTx(*connman, inv.hash, current_time);
                 }
             }
         }
@@ -4039,6 +4076,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             // Erase this entry from tx_process_time (it may be added back for
             // processing at a later time, see below)
             tx_process_time.erase(tx_process_time.begin());
+            state.m_tx_download.m_tx_announced[txid] = std::chrono::microseconds::zero();
             CInv inv(MSG_TX | GetFetchFlags(pto), txid);
             if (!AlreadyHave(inv)) {
                 // If this transaction was last requested more than 1 minute ago,
@@ -4060,6 +4098,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     // requests to outbound peers).
                     const auto next_process_time = CalculateTxGetDataTime(txid, current_time, !state.fPreferredDownload);
                     tx_process_time.emplace(next_process_time, txid);
+                    state.m_tx_download.m_tx_announced[txid] = next_process_time;
                 }
             } else {
                 // We have already seen this transaction, no need to download.
