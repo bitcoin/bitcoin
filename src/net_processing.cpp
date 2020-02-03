@@ -1365,7 +1365,7 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
     }
     {
         LOCK(g_cs_recent_confirmed_transactions);
-        for (const auto ptx : pblock->vtx) {
+        for (const auto& ptx : pblock->vtx) {
             g_recent_confirmed_transactions->insert(ptx->GetHash());
         }
     }
