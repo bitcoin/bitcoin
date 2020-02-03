@@ -72,7 +72,7 @@ future version.
 
 Mempool sync improvements
 -------------------------
-Nodes joining the network will now always try to sync their mempool from other peers via the `mempool` p2p message.
+Nodes joining the network will now try to sync their mempool from other v0.15+ peers via the `mempool` p2p message.
 This behaviour can be disabled via the new `--syncmempool` option. Nodes serving such requests will now also push
 `inv` p2p messages for InstandSend locks which are held for transactions in their mempool. These two changes
 should help new nodes to quickly catchup on start and detect any potential double-spend as soon as possible.
@@ -232,6 +232,16 @@ modules were reorganized in separate folders to make navigation through code a b
 
 See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.5...dashpay:v0.15.0.0).
 
+- [`2c305d02d`](https://github.com/dashpay/dash/commit/2c305d02d) Update translations 2020-02-03 (#3322)
+- [`672e18e48`](https://github.com/dashpay/dash/commit/672e18e48) Only sync mempool from v0.15+ (proto 70216+) nodes (#3321)
+- [`829bde81e`](https://github.com/dashpay/dash/commit/829bde81e) Fix dark text on dark background in combobox dropdowns on windows (#3315)
+- [`c0a671e84`](https://github.com/dashpay/dash/commit/c0a671e84) Fix node protection logic false positives (#3314)
+- [`8d5fc6e0a`](https://github.com/dashpay/dash/commit/8d5fc6e0a) Merge #13162: [net] Don't incorrectly log that REJECT messages are unknown.
+- [`9e711befd`](https://github.com/dashpay/dash/commit/9e711befd) More of 13946
+- [`e5e3572e9`](https://github.com/dashpay/dash/commit/e5e3572e9) Merge #13946: p2p: Clarify control flow in ProcessMessage
+- [`dbbc51121`](https://github.com/dashpay/dash/commit/dbbc51121) Add `automake` package to dash-win-signer's packages list (#3307)
+- [`fd0f24335`](https://github.com/dashpay/dash/commit/fd0f24335) [Trivial] Release note update (#3308)
+- [`058872d4f`](https://github.com/dashpay/dash/commit/058872d4f) Update release-notes.md
 - [`546e69f1a`](https://github.com/dashpay/dash/commit/546e69f1a) Fix CActiveMasternodeManager::GetLocalAddress to prefer IPv4 if multiple local addresses are known (#3304)
 - [`e4ef7e8d0`](https://github.com/dashpay/dash/commit/e4ef7e8d0) Drop unused `invSet` in `CDKGSession` (#3303)
 - [`da7686c93`](https://github.com/dashpay/dash/commit/da7686c93) Update translations 2020-01-23 (#3302)
