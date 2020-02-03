@@ -597,8 +597,8 @@ bool txPopValidation(PopServiceImpl& pop, const CTransactionRef& tx, const CBloc
 
         AssertLockHeld(cs_main);
         const CBlockIndex* popEndorsementIdnex = LookupBlockIndex(popEndorsementHeader.GetHash());
-        if (popEndorsementIdnex == nullptr || pindexPrev.GetAncestor(popEndorsementIdnex->nHeight) == nullptr) {
-            return state.Invalid(TxValidationResult::TX_BAD_POP_DATA, "pop-tx-endorsed-block-not-from-this-chain", strprintf("[%s] can not find endorsed block in this chain: %s", tx->GetHash().ToString(), popEndorsementHeader.GetHash().ToString()));
+        if (popEndorsementIdnex == nullptr || !ChainActive().Contains(popEndorsementIdnex)) {
+            return state.Invalid(TxValidationResult::TX_BAD_POP_DATA, "pop-tx-endorsed-block-not-from-this-main-chain", strprintf("[%s] can not find endorsed block in the main chain: %s", tx->GetHash().ToString(), popEndorsementHeader.GetHash().ToString()));
         }
 
         CBlock popEndorsementBlock;
