@@ -212,7 +212,8 @@ void TestGUI(interfaces::Node& node)
     // Check Request Payment button
     ReceiveCoinsDialog receiveCoinsDialog(platformStyle.get());
     receiveCoinsDialog.setModel(&walletModel);
-    RecentRequestsTableModel* requestTableModel = walletModel.getRecentRequestsTableModel();
+    RecentRequestsTableModel* requestTableModel = receiveCoinsDialog.recentRequestsTableModel();
+    assert(requestTableModel);
 
     // Label input
     QLineEdit* labelInput = receiveCoinsDialog.findChild<QLineEdit*>("reqLabel");

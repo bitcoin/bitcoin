@@ -16,6 +16,7 @@
 #include <QVariant>
 
 class PlatformStyle;
+class RecentRequestsTableModel;
 class WalletModel;
 
 namespace Ui {
@@ -44,6 +45,8 @@ public:
 
     void setModel(WalletModel *model);
 
+    RecentRequestsTableModel* recentRequestsTableModel() const { return m_recent_requests_table_model; }
+
 public Q_SLOTS:
     void clear();
     void reject();
@@ -56,6 +59,7 @@ private:
     Ui::ReceiveCoinsDialog *ui;
     GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
     WalletModel *model;
+    RecentRequestsTableModel* m_recent_requests_table_model{nullptr};
     QMenu *contextMenu;
     const PlatformStyle *platformStyle;
 
