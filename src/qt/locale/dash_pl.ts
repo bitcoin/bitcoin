@@ -598,6 +598,30 @@
         <translation>Informacja</translation>
     </message>
     <message>
+        <source>Received and sent multiple transactions</source>
+        <translation>Otrzymano i wysłano wiele transakcji</translation>
+    </message>
+    <message>
+        <source>Sent multiple transactions</source>
+        <translation>Wysłano wiele transakcji</translation>
+    </message>
+    <message>
+        <source>Received multiple transactions</source>
+        <translation>Otrzymano wiele transakcji</translation>
+    </message>
+    <message>
+        <source>Sent Amount: %1
+</source>
+        <translation>Wyślij kowtę: %1
+</translation>
+    </message>
+    <message>
+        <source>Received Amount: %1
+</source>
+        <translation>Otrzymano kwotę: %1
+</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>Data: %1
@@ -791,6 +815,10 @@
         <translation>W celu użycia tej funkcji, przełącz na "Tryb Listy"</translation>
     </message>
     <message>
+        <source>Non-mixed input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-mixed inputs first and then check the PrivateSend checkbox again.</source>
+        <translation>Wybrane zostały niezmiksowane kwoty.&lt;b&gt;PrivateSend zostanie wyłączony.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Jeśli dalej chcesz używać PrivateSend odhacz wszystkie niezmiksowane kwoty i ponownie wybierz PrivateSend.</translation>
+    </message>
+    <message>
         <source>(%1 locked)</source>
         <translation>(%1 zablokowane)</translation>
     </message>
@@ -963,7 +991,11 @@
         <source>PrivateSend information</source>
         <translation>Informacje o PrivateSend</translation>
     </message>
-    </context>
+    <message>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;Podstawy PrivateSend&lt;/h3&gt; PrivateSend daje ci prawdziwą anonimowość finansową poprzez zacieranie śladów prowadzących do osoby która wysłała daną transakcję. Wszystkie monety Dash w twoim portfelu składają się z różnych "kwot" o których możesz myśleć jako osobne nominały monet.&lt;br&gt; PrivateSend używa innowacyjny proces do mieszania twoich monet razem z monetami dwóch innych użytkowników bez potrzeby opuszczania portfela. Przez cały czas posiadasz kontrolę nad twoimi funduszami. &lt;hr&gt;&lt;b&gt;PrivateSend  działa w ten sposób: &lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt; PrivateSend rozpoczyna rozmienianie twoich monet na standardowe nominały czyli 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH, 10 DASH - coś w rodzaju nominałów banknotów. &lt;/li&gt;&lt;li&gt; Następnie, twój portfel wysyła prośbę do specjalnie skonfigurowanych serewerów sieci zwanych jako "masternody". Masternody te zostają poinformowane że chcesz wymieszać pewne nominały swoich monet. Żadne informacje mogące cię zidentyfikować zostają wysłane do masternodów, więc nie wiedzą one kim jesteś. &lt;/li&gt;&lt;li&gt; Kiedy dwoje innych użytkowników wyśle podobne prośby o wymieszanie takich samych nominałów, rozpoczyna się sesja miksowania. Masternode miesza dane nominały oraz wydaje polecenie portfelom danych użytkowników aby te wysłały wymieszane kwoty do samych siebie ale na nowy adres (również znany jako adres reszty). &lt;/li&gt;&lt;li&gt; Aby całkowicie zanonimizować fundusze, twój portfel wielokrotnie powtarza ten sam proces z każdym nominałem. Pojedyńczy proces nazywa się "runda". Trudność wyśledzenia źródła funduszy rośnie wykładniczo z każdą dodatkową rundą PrivateSend. &lt;/li&gt;&lt;li&gt; Proces mieszania odbywa się w tle, bez jakiejkolwiek potrzeby interwencji. Kiedy chcesz dokonać anonimowej transakcji twoje fundusze będą już wymieszane i gotowe do wysyłki. &lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt; UWAGA:&lt;/b&gt; Twój portfel posiada jedynie 1000 "adresów reszty." Za każdym razem kiedy odbywa się sesja miksowania monet, aż 9 adresów może zostać zużytych. Oznacza to, że 1000 adresów reszty może wystarczyć na około 100 rund miksowania. Jeśli 900 adresów zostanie zużyte twój portfel musi wygenerować więcej adresów. Twój portfel może to zrobić jedynie jeśli masz włączone automatyczne tworzenie kopii zapasowych. &lt;br&gt;Jeżeli użytkownik nie ma włączonej opcji automatycznego tworzenia kopii zapasowych to onzacza że nie będzie mógł korzystać z PrivateSend. &lt;hr&gt; Więcej  informacji możesz znaleźć w &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt; pełnej dokumentacji PrivateSend&lt;/a&gt;.</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1066,6 +1098,10 @@
         <translation>Tylko moje masternody</translation>
     </message>
     <message>
+        <source>Service</source>
+        <translation>Usługa</translation>
+    </message>
+    <message>
         <source>PoSe Score</source>
         <translation>Wynik PoSe</translation>
     </message>
@@ -1082,8 +1118,24 @@
         <translation>Następna płatność</translation>
     </message>
     <message>
+        <source>Payout Address</source>
+        <translation>Adres Wypłaty</translation>
+    </message>
+    <message>
         <source>Operator Reward</source>
         <translation>Nagroda dla operatora</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Adres Zastawu</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Adres Właściciela</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Adres głosujący</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1275,6 +1327,10 @@
         <translation>Ta kwota działa jako próg, po którego przekroczeniu PrivateSend zostaje wyłączony.</translation>
     </message>
     <message>
+        <source>Target PrivateSend balance</source>
+        <translation>Celem jest bilans PrivateSend</translation>
+    </message>
+    <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Automatycznie otwórz port klienta Dash Core na ruterze. Opcja działa jedynie, jeżeli router obsługuje UPnP i funkcja UPnP jest włączona.</translation>
     </message>
@@ -1329,6 +1385,10 @@
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;Wydaj niepotwierdzoną resztę</translation>
+    </message>
+    <message>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>To ustawienie decyduje o liczbie osobnych masternodów któe będą miksować wybraną kwotę. &lt;br/&gt;Im więcej rund mieszania, tym większy poziom prywatności, ale również kosztuje więcej w opłatach za transakcje.</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1658,6 +1718,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Denominated</source>
         <translation>Denominowane</translation>
+    </message>
+    <message>
+        <source>Partially mixed</source>
+        <translation>Częściowo wymieszane</translation>
     </message>
     <message>
         <source>Mixed</source>
@@ -2746,8 +2810,32 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&lt;b&gt;(%1 z %2 wyświetlonych wpisów)&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>PrivateSend funds only</source>
+        <translation>Tylko fundusze PrivateSend</translation>
+    </message>
+    <message>
         <source>any available funds</source>
         <translation>jakiekolwiek dostępne środki</translation>
+    </message>
+    <message>
+        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(Transakcje PrivateSend mają większe opłaty ponieważ reszta nie jest zwracana do odbiorcy)</translation>
+    </message>
+    <message>
+        <source>Transaction size: %1</source>
+        <translation>Rozmiar transakcji: %1</translation>
+    </message>
+    <message>
+        <source>Fee rate: %1</source>
+        <translation>Opłata: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>This transaction will consume %n input(s)</source>
+        <translation><numerusform>Transakcja ta zużyje %n nominał</numerusform><numerusform>Transakcja ta zużyje %n nominały</numerusform><numerusform>Transakcja ta zużyje %n nominałów</numerusform><numerusform>Transakcja ta zużyje %n nominałów</numerusform></translation>
+    </message>
+    <message>
+        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
+        <translation>Uwaga: Używanie PrivateSend z %1 lub więcej nominałami może stanowić zagrożenie dla twojej anonimowości i nie jest zalecane.</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3883,6 +3971,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Zastępuje minimalną liczbę osób podpsujących sporka. Użyeczne tylko dla regtest oraz devnet. Używanie tego na normalnej sieci lub testnecie zaskutkuje banem.</translation>
     </message>
     <message>
+        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>PrivateSend używa dokładnie zdenominowanych kwot, możliwe że musisz zmiksować więcej monet. </translation>
+    </message>
+    <message>
         <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
         <translation>Użyj N osobnych masternodów jednocześnie aby wymieszać monety (%u-%u, domyślnie: %u)</translation>
     </message>
@@ -4003,6 +4095,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nieważna  minimalna liczba osób podpisujących sporka ustawiona z -minsporkkeys</translation>
     </message>
     <message>
+        <source>Keep N DASH mixed (%u-%u, default: %u)</source>
+        <translation>Trzymaj N DASH wymieszane (%u-%u, domyślnie: %u)</translation>
+    </message>
+    <message>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <translation>Trzymaj nie więcej niż &lt;n&gt; niepołączonych transakcji w pamięci (domyślnie: %u)</translation>
+    </message>
+    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Wyczerpana pula kluczy, najpierw wywołaj keypoolrefill</translation>
     </message>
@@ -4057,6 +4157,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>No compatible Masternode found.</source>
         <translation>Nie znalezione zadnego kompatybilnego Masternoda.</translation>
+    </message>
+    <message>
+        <source>Not enough funds to mix.</source>
+        <translation>Nie masz wystarczających środków do mieszania.</translation>
     </message>
     <message>
         <source>Not in the Masternode list.</source>
@@ -4219,8 +4323,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s plik zawiera wszystkie klucze prywatne przechowywane w tym portfelu. Nie dawaj nikomu dostępu do tego pliku. </translation>
     </message>
     <message>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>-masternode funkcja ta jest przestarzała i ignorowana, -masterndebisprivkey wystarczy do uruchomienia tego węzłą jako masternode. </translation>
+    </message>
+    <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Dodaj węzeł do którego chcesz się połączyć oraz próbuj utrzymać to połączenie otwarte (zobacz 'addnode' RPC komenda pomoc po więcej informacji)</translation>
+    </message>
+    <message>
         <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
         <translation>Powiąż z podanym adresem, aby nasłuchiwać połączeń JSON-RPC. Ta opcja jest ignorowana, chyba że przekazany zostanie także -rpcallowip. Port jest opcjonalny i zastępuje -rpcport. Użyj [host]: notacja portu dla IPv6. Ta opcja może być podana wiele razy (domyślnie: 127.0.0.1 i :: 1 tj. Localhost lub jeśli podano -rpcallowip, 0.0.0.0 i :: tj. wszystkie adresy)</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>Połącz tylko do wyznaczonych węzłów(a); -connect=0 wyłącza automatyczne połączenia (zasady dla tego węzła są takie same jak dla -addnode)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4275,6 +4391,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Utrzymuj nie więcej niż &lt;n&gt; połączeń z peerami (tymczasowe połączenia serwisowe nie są liczone) (domyślnie: %u)</translation>
     </message>
     <message>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
+        <translation>Jeśli już zweryfikowałeś że porfel działa jak należy, to nie zapomnij zaszyfrować porfel oraz usunąć wszystkie niezaszyfrowane kopie zapasowe.</translation>
+    </message>
+    <message>
+        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
+        <translation>Całkowity maksymalny rozmiar wszystkich osieroconych transakcji w megabytach (domyślnie: %u)</translation>
+    </message>
+    <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation>Czyszczenie starych danych ustawiono poniżej minimum %d MiB.  Ustaw wyższą wartość.</translation>
     </message>
@@ -4293,6 +4417,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Ponownie skanowanie jest niemożliwe w trybie oczyszczania. Użyj -reindex, co spowoduje ponowne pobranie całego łańcucha bloków.</translation>
+    </message>
+    <message>
+        <source>Set the masternode BLS private key and enable the client to act as a masternode</source>
+        <translation>Wyznacz prywatny klucz BLS dla masternoda oraz pozwól klienotowi na działanie jako masternode. </translation>
     </message>
     <message>
         <source>Specify full path to directory for automatic wallet backups (must exist)</source>
@@ -4349,6 +4477,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>Uwaga: Wykopywane są bloki o nieznanej wersji! Możliwe, że zostały aktywowane inne zasady na których opiera się sieć.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
+        <translation>Musisz odnowić bazę danych używając -reindex aby zmienić -timestampindex</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -4661,6 +4793,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>You can not start a masternode with wallet enabled.</source>
         <translation>Nie możesz uruchomić masternode z włączonym portfelem.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -addressindex</source>
+        <translation>Musisz odnowić bazę danych używając -reindex aby zmienić -addressindex</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -spentindex</source>
+        <translation>Musisz odnowić bazę danych używając -reindex aby zmienić -spentindex</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
