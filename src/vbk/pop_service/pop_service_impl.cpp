@@ -670,6 +670,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
 
         TxValidationState txstate;
         assert(blockIndexBegin <= blockIndexEnd && "oh no, programming error");
+
         if (!txPopValidation(pop, tx, pindexPrev, params, txstate, blockIndexIt++)) {
             clearTemporaryPayloadsImpl(pop, getReservedBlockIndexBegin(config), blockIndexIt);
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
@@ -681,7 +682,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
     // actual addPayloads call is performed in savePopTxToDatabase
     clearTemporaryPayloadsImpl(pop, getReservedBlockIndexBegin(config), blockIndexIt);
 
-    return state.IsValid();
+    return true;
 }
 
 bool PopServiceImpl::blockPopValidation(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
