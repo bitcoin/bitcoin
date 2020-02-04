@@ -185,6 +185,7 @@ border-image: url(':/images/arrow_down') 0 0 0 0 stretch stretch;
 }
 
 QComboBox QListView {
+color: #aaa;
 background: #555;
 padding: 3px;
 }

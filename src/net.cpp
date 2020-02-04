@@ -744,24 +744,6 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         int handled;
         if (!msg.in_data) {
             handled = msg.readHeader(pch, nBytes);
-            if (msg.in_data && nTimeFirstMessageReceived == 0) {
-                if (fSuccessfullyConnected) {
-                    // First message after VERSION/VERACK.
-                    // We record the time when the header is fully received and not when the full message is received.
-                    // otherwise a peer might send us a very large message as first message after VERSION/VERACK and fill
-                    // up our memory with multiple parallel connections doing this.
-                    nTimeFirstMessageReceived = nTimeMicros;
-                    fFirstMessageIsMNAUTH = msg.hdr.GetCommand() == NetMsgType::MNAUTH;
-                } else {
-                    // We're still in the VERSION/VERACK handshake process, so any message received in this state is
-                    // expected to be very small. This protects against attackers filling up memory by sending oversized
-                    // VERSION messages while the incoming connection is still protected against eviction
-                    if (msg.hdr.nMessageSize > 1024) {
-                        LogPrint(BCLog::NET, "Oversized VERSION/VERACK message from peer=%i, disconnecting\n", GetId());
-                        return false;
-                    }
-                }
-            }
         } else {
             handled = msg.readData(pch, nBytes);
         }
@@ -1008,7 +990,7 @@ bool CConnman::AttemptToEvictConnection()
             if (fMasternodeMode) {
                 // This handles eviction protected nodes. Nodes are always protected for a short time after the connection
                 // was accepted. This short time is meant for the VERSION/VERACK exchange and the possible MNAUTH that might
-                // follow when the incoming connection is from another masternode. When another message then MNAUTH
+                // follow when the incoming connection is from another masternode. When a message other than MNAUTH
                 // is received after VERSION/VERACK, the protection is lifted immediately.
                 bool isProtected = GetSystemTimeInSeconds() - node->nTimeConnected < INBOUND_EVICTION_PROTECTION_TIME;
                 if (node->nTimeFirstMessageReceived != 0 && !node->fFirstMessageIsMNAUTH) {
