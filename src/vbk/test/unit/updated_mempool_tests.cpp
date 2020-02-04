@@ -10,11 +10,16 @@
 #include <validation.h>
 #include <wallet/wallet.h>
 
+#include <fakeit.hpp>
+#include <vbk/init.hpp>
+#include <vbk/pop_service/pop_service_impl.hpp>
 #include <vbk/test/util/mock.hpp>
 #include <vbk/test/util/tx.hpp>
 
 #include <algorithm>
 #include <vector>
+
+using namespace fakeit;
 
 BOOST_AUTO_TEST_SUITE(updated_mempool_tests)
 
@@ -40,7 +45,6 @@ struct BlockAssemblerTest : public BlockAssembler {
         return *this->pblock;
     }
 };
-
 
 template <typename name>
 static void CheckSort(CTxMemPool& pool, std::vector<std::string>& sortedOrder) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
@@ -275,6 +279,40 @@ BOOST_FIXTURE_TEST_CASE(check_the_pop_tx_limits_in_block, TestingSetup)
 
 
     BOOST_CHECK(blockAssembler.getBlock().vtx.size() == config.max_pop_tx_amount);
+}
+
+BOOST_FIXTURE_TEST_CASE(check_CreateNewBlock_with_blockPopValidation_fail, TestingSetup)
+{
+    Fake(Method(pop_service_mock, addPayloads));
+    Fake(Method(pop_service_mock, removePayloads));
+    Fake(Method(pop_service_mock, clearTemporaryPayloads));
+    When(Method(pop_service_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
+
+    When(Method(pop_service_mock, blockPopValidation)).AlwaysDo([](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) -> bool { return VeriBlock::blockPopValidationImpl((VeriBlock::PopServiceImpl&)VeriBlock::getService<VeriBlock::PopService>(), block, pindexPrev, params, state); });
+    When(Method(pop_service_mock, parsePopTx)).AlwaysDo([](const CTransactionRef&, ScriptError* serror, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType* type) -> bool {
+        if (type != nullptr) {
+            *type = VeriBlock::PopTxType::CONTEXT;
+        }
+        if (serror != nullptr) {
+            *serror = ScriptError::SCRIPT_ERR_OK;
+        }
+        return true; });
+
+    // Simulate that we have 8 invalid popTxs
+    When(Method(pop_service_mock, updateContext)).Throw(8_Times(VeriBlock::PopServiceException("fail"))).AlwaysDo([](const std::vector<std::vector<uint8_t>>& veriBlockBlocks, const std::vector<std::vector<uint8_t>>& bitcoinBlocks) {});
+
+    TestMemPoolEntryHelper entry;
+    for (size_t i = 0; i < 10; ++i) {
+        LOCK2(cs_main, mempool.cs);
+        CMutableTransaction popTx = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, i)});
+        mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx));
+    }
+
+    BlockAssembler blkAssembler(Params());
+    CScript scriptPubKey = CScript() << OP_CHECKSIG;
+    std::unique_ptr<CBlockTemplate> pblockTemplate = blkAssembler.CreateNewBlock(scriptPubKey);
+
+    BOOST_TEST(pblockTemplate->block.vtx.size() == 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
