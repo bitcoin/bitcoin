@@ -68,11 +68,11 @@ class WalletHDTest(BitcoinTestFramework):
 
         self.log.info("Restore backup ...")
         self.stop_node(1)
-        # we need to delete the complete regtest directory
+        # we need to delete the complete chain directory
         # otherwise node1 would auto-recover all funds in flag the keypool keys as used
-        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "blocks"))
-        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "chainstate"))
-        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, "regtest", "wallets", "wallet.dat"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "blocks"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "chainstate"))
+        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, self.chain, "wallets", "wallet.dat"))
         self.start_node(1)
 
         # Assert that derivation is deterministic
@@ -93,9 +93,9 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Try a RPC based rescan
         self.stop_node(1)
-        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "blocks"))
-        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "chainstate"))
-        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, "regtest", "wallets", "wallet.dat"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "blocks"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "chainstate"))
+        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, self.chain, "wallets", "wallet.dat"))
         self.start_node(1, extra_args=self.extra_args[1])
         connect_nodes(self.nodes[0], 1)
         self.sync_all()

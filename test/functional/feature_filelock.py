@@ -19,7 +19,7 @@ class FilelockTest(BitcoinTestFramework):
         self.nodes[0].wait_for_rpc_connection()
 
     def run_test(self):
-        datadir = os.path.join(self.nodes[0].datadir, 'regtest')
+        datadir = os.path.join(self.nodes[0].datadir, self.chain)
         self.log.info("Using datadir {}".format(datadir))
 
         self.log.info("Check that we can't start a second bitcoind instance using the same datadir")
