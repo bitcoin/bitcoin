@@ -286,35 +286,6 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 
     pool.removeRecursive(pool.mapTx.find(tx9.GetHash())->GetTx());
     pool.removeRecursive(pool.mapTx.find(tx8.GetHash())->GetTx());
-    /* Now check the sort on the mining score index.
-     * Final order should be:
-     *
-     * tx7 (2M)
-     * tx2 (20k)
-     * tx4 (15000)
-     * tx1/tx5 (10000)
-     * tx3/6 (0)
-     * (Ties resolved by hash)
-     */
-    sortedOrder.clear();
-    sortedOrder.push_back(tx7.GetHash().ToString());
-    sortedOrder.push_back(tx2.GetHash().ToString());
-    sortedOrder.push_back(tx4.GetHash().ToString());
-    if (tx1.GetHash() < tx5.GetHash()) {
-        sortedOrder.push_back(tx5.GetHash().ToString());
-        sortedOrder.push_back(tx1.GetHash().ToString());
-    } else {
-        sortedOrder.push_back(tx1.GetHash().ToString());
-        sortedOrder.push_back(tx5.GetHash().ToString());
-    }
-    if (tx3.GetHash() < tx6.GetHash()) {
-        sortedOrder.push_back(tx6.GetHash().ToString());
-        sortedOrder.push_back(tx3.GetHash().ToString());
-    } else {
-        sortedOrder.push_back(tx3.GetHash().ToString());
-        sortedOrder.push_back(tx6.GetHash().ToString());
-    }
-    CheckSort<mining_score>(pool, sortedOrder);
 }
 
 BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
@@ -560,15 +531,15 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     // ... we should keep the same min fee until we get a block
     pool.removeForBlock(vtx, 1);
     SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE);
-    BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), (maxFeeRateRemoved.GetFeePerK() + 1000)/2);
+    BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/2.0));
     // ... then feerate should drop 1/2 each halflife
 
     SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2);
-    BOOST_CHECK_EQUAL(pool.GetMinFee(pool.DynamicMemoryUsage() * 5 / 2).GetFeePerK(), (maxFeeRateRemoved.GetFeePerK() + 1000)/4);
+    BOOST_CHECK_EQUAL(pool.GetMinFee(pool.DynamicMemoryUsage() * 5 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/4.0));
     // ... with a 1/2 halflife when mempool is < 1/2 its target size
 
     SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
-    BOOST_CHECK_EQUAL(pool.GetMinFee(pool.DynamicMemoryUsage() * 9 / 2).GetFeePerK(), (maxFeeRateRemoved.GetFeePerK() + 1000)/8);
+    BOOST_CHECK_EQUAL(pool.GetMinFee(pool.DynamicMemoryUsage() * 9 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/8.0));
     // ... with a 1/4 halflife when mempool is < 1/4 its target size
 
     SetMockTime(42 + 7*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);

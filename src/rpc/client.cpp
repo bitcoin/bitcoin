@@ -253,7 +253,7 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
     UniValue params(UniValue::VOBJ);
 
     for (const std::string &s: strParams) {
-        size_t pos = s.find("=");
+        size_t pos = s.find('=');
         if (pos == std::string::npos) {
             throw(std::runtime_error("No '=' in named argument '"+s+"', this needs to be present for every argument (even if it is empty)"));
         }
