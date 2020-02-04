@@ -132,11 +132,6 @@ bool CWalletDB::WriteOrderPosNext(int64_t nOrderPosNext)
     return WriteIC(std::string("orderposnext"), nOrderPosNext);
 }
 
-bool CWalletDB::WriteDefaultKey(const CPubKey& vchPubKey)
-{
-    return WriteIC(std::string("defaultkey"), vchPubKey);
-}
-
 bool CWalletDB::ReadPool(int64_t nPool, CKeyPool& keypool)
 {
     return batch.Read(std::make_pair(std::string("pool"), nPool), keypool);
@@ -454,7 +449,14 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "defaultkey")
         {
-            ssValue >> pwallet->vchDefaultKey;
+            // We don't want or need the default key, but if there is one set,
+            // we want to make sure that it is valid so that we can detect corruption
+            CPubKey vchPubKey;
+            ssValue >> vchPubKey;
+            if (!vchPubKey.IsValid()) {
+                strErr = "Error reading wallet database: Default Key corrupt";
+                return false;
+            }
         }
         else if (strType == "pool")
         {
@@ -553,7 +555,6 @@ bool CWalletDB::IsKeyType(const std::string& strType)
 
 DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 {
-    pwallet->vchDefaultKey = CPubKey();
     CWalletScanState wss;
     bool fNoncriticalErrors = false;
     DBErrors result = DB_LOAD_OK;
@@ -596,7 +597,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
             {
                 // losing keys is considered a catastrophic error, anything else
                 // we assume the user can live with:
-                if (IsKeyType(strType))
+                if (IsKeyType(strType) || strType == "defaultkey")
                     result = DB_CORRUPT;
                 else
                 {

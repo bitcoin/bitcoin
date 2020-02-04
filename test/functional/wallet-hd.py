@@ -55,7 +55,7 @@ class WalletHDTest(BitcoinTestFramework):
         for i in range(num_hd_adds):
             hd_add = self.nodes[1].getnewaddress()
             hd_info = self.nodes[1].validateaddress(hd_add)
-            assert_equal(hd_info["hdkeypath"], "m/44'/1'/0'/0/"+str(i+1))
+            assert_equal(hd_info["hdkeypath"], "m/44'/1'/0'/0/"+str(i))
             assert_equal(hd_info["hdchainid"], chainid)
             self.nodes[0].sendtoaddress(hd_add, 1)
             self.nodes[0].generate(1)
@@ -86,7 +86,7 @@ class WalletHDTest(BitcoinTestFramework):
         for _ in range(num_hd_adds):
             hd_add_2 = self.nodes[1].getnewaddress()
             hd_info_2 = self.nodes[1].validateaddress(hd_add_2)
-            assert_equal(hd_info_2["hdkeypath"], "m/44'/1'/0'/0/"+str(_+1))
+            assert_equal(hd_info_2["hdkeypath"], "m/44'/1'/0'/0/"+str(_))
             assert_equal(hd_info_2["hdchainid"], chainid)
         assert_equal(hd_add, hd_add_2)
         connect_nodes_bi(self.nodes, 0, 1)

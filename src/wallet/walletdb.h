@@ -148,8 +148,6 @@ public:
 
     bool WriteOrderPosNext(int64_t nOrderPosNext);
 
-    bool WriteDefaultKey(const CPubKey& vchPubKey);
-
     bool ReadPool(int64_t nPool, CKeyPool& keypool);
     bool WritePool(int64_t nPool, const CKeyPool& keypool);
     bool ErasePool(int64_t nPool);
