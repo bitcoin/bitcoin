@@ -152,69 +152,16 @@ public:
     {
     }
 
-    bool IsCrypted() const
-    {
-        return fUseCrypto;
-    }
-
-    // This function should be used in a different combinations to determine
-    // if CCryptoKeyStore is fully locked so that no operations requiring access
-    // to private keys are possible:
-    //      IsLocked(true)
-    // or if CCryptoKeyStore's private keys are available for mixing only:
-    //      !IsLocked(true) && IsLocked()
-    // or if they are available for everything:
-    //      !IsLocked()
-    bool IsLocked(bool fForMixing = false) const
-    {
-        if (!IsCrypted())
-            return false;
-        bool result;
-        {
-            LOCK(cs_KeyStore);
-            result = vMasterKey.empty();
-        }
-        // fForMixing   fOnlyMixingAllowed  return
-        // ---------------------------------------
-        // true         true                result
-        // true         false               result
-        // false        true                true
-        // false        false               result
-
-        if(!fForMixing && fOnlyMixingAllowed) return true;
-
-        return result;
-    }
-
-    bool Lock(bool fAllowMixing = false);
+    bool IsCrypted() const { return fUseCrypto; }
+    bool IsLocked(bool fForMixing = false) const;
+    bool Lock(bool fForMixing = false);
 
     virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
-    bool HaveKey(const CKeyID &address) const override
-    {
-        {
-            LOCK(cs_KeyStore);
-            if (!IsCrypted()) {
-                return CBasicKeyStore::HaveKey(address);
-            }
-            return mapCryptedKeys.count(address) > 0;
-        }
-        return false;
-    }
+    bool HaveKey(const CKeyID &address) const override;
     bool GetKey(const CKeyID &address, CKey& keyOut) const override;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
-    std::set<CKeyID> GetKeys() const override
-    {
-        LOCK(cs_KeyStore);
-        if (!IsCrypted()) {
-            return CBasicKeyStore::GetKeys();
-        }
-        std::set<CKeyID> set_address;
-        for (const auto& mi : mapCryptedKeys) {
-            set_address.insert(mi.first);
-        }
-        return set_address;
-    }
+    std::set<CKeyID> GetKeys() const override;
 
     virtual bool GetHDChain(CHDChain& hdChainRet) const override;
 
