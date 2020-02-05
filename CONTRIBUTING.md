@@ -177,7 +177,7 @@ There are three categories of refactoring, code only moves, code style fixes,
 code refactoring. In general refactoring pull requests should not mix these
 three kinds of activity in order to make refactoring pull requests easy to
 review and uncontroversial. In all cases, refactoring PRs must not change the
-behaviour of code within the pull request (bugs must be preserved as is).
+behavior of code within the pull request (bugs must be preserved as is).
 
 Project maintainers aim for a quick turnaround on refactoring pull requests, so
 where possible keep them short, uncomplex and easy to verify.
