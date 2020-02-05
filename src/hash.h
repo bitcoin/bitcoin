@@ -194,6 +194,12 @@ uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL
     return ss.GetHash();
 }
 
+/** Single-SHA256 a 32-byte input (represented as uint256).
+ *  hash_io is read and written over with the result.
+ */
+void SHA256Uint256(uint256& hash_io);
+uint256 SHA256Uint256(uint256&& hash_io);
+
 unsigned int MurmurHash3(unsigned int nHashSeed, Span<const unsigned char> vDataToHash);
 
 void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char header, const unsigned char data[32], unsigned char output[64]);
