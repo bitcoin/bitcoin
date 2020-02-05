@@ -32,7 +32,7 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "MacOSX10.11.sdk.tar.gz"
+- "MacOSX10.14.sdk.tar.gz"
 script: |
   set -e -o pipefail
 
@@ -90,7 +90,7 @@ script: |
   BASEPREFIX="${PWD}/depends"
 
   mkdir -p ${BASEPREFIX}/SDKs
-  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX10.11.sdk.tar.gz
+  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX10.14.sdk.tar.gz
 
   # Build dependencies for each host
   for i in $HOSTS; do
