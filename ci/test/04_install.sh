@@ -64,6 +64,7 @@ if [ -z "$RUN_CI_ON_HOST" ]; then
                   --mount type=bind,src=$DEPENDS_DIR,dst=$DEPENDS_DIR \
                   -w $BASE_ROOT_DIR \
                   --env-file /tmp/env \
+                  --name $CONTAINER_NAME \
                   $DOCKER_NAME_TAG)
 
   DOCKER_EXEC () {

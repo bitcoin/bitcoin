@@ -16,6 +16,7 @@ if [ -n "$QEMU_USER_CMD" ]; then
   # Likely cross-compiling, so install the needed gcc and qemu-user
   export PACKAGES="$PACKAGES qemu-user"
 fi
+export CONTAINER_NAME=ci_arm_linux
 # Use debian to avoid 404 apt errors when cross compiling
 export DOCKER_NAME_TAG="debian:buster"
 export USE_BUSY_BOX=true
