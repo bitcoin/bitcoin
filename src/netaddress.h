@@ -45,7 +45,6 @@ class CNetAddr
          */
         void SetRaw(Network network, const uint8_t *data);
 
-    public:
         bool SetInternal(const std::string& name);
 
         bool SetSpecial(const std::string &strName); // for Tor addresses
@@ -66,6 +65,7 @@ class CNetAddr
         bool IsRFC4862() const; // IPv6 autoconfig (FE80::/64)
         bool IsRFC6052() const; // IPv6 well-known prefix for IPv4-embedded address (64:FF9B::/96)
         bool IsRFC6145() const; // IPv6 IPv4-translated address (::FFFF:0:0:0/96) (actually defined in RFC2765)
+        bool IsHeNet() const;   // IPv6 Hurricane Electric - https://he.net (2001:0470::/36)
         bool IsTor() const;
         bool IsLocal() const;
         bool IsRoutable() const;
