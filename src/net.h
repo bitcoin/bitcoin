@@ -409,7 +409,7 @@ public:
     }
     void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
 
-    void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = asmap; }
+    void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
 private:
     struct ListenSocket {
@@ -1075,7 +1075,7 @@ public:
 
     void CloseSocketDisconnect();
 
-    void copyStats(CNodeStats &stats, std::vector<bool> &m_asmap);
+    void copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap);
 
     ServiceFlags GetLocalServices() const
     {
