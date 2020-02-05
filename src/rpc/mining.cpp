@@ -908,7 +908,7 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
             "               lower buckets."},
                 },
                 RPCResult{
-            "{\n"
+            "{                        (json object) Results are returned for any horizon which tracks blocks up to the confirmation target\n"
             "  \"short\" : {            (json object, optional) estimate for short time horizon\n"
             "      \"feerate\" : x.x,        (numeric, optional) estimate fee rate in " + CURRENCY_UNIT + "/kB\n"
             "      \"decay\" : x.x,          (numeric) exponential decay (per block) for historical moving average of confirmation data\n"
@@ -921,14 +921,22 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
             "          \"inmempool\" : x.x,      (numeric) current number of txs in mempool in the feerate range unconfirmed for at least target blocks\n"
             "          \"leftmempool\" : x.x,    (numeric) number of txs over history horizon in the feerate range that left mempool unconfirmed after target\n"
             "      },\n"
-            "      \"fail\" : { ... },       (json object, optional) information about the highest range of feerates to fail to meet the threshold\n"
-            "      \"errors\":  [ str... ]   (json array of strings, optional) Errors encountered during processing\n"
+            "      \"fail\" : {              (json object, optional) information about the highest range of feerates to fail to meet the threshold\n"
+            "        ...\n"
+            "      },\n"
+            "      \"errors\":  [            (json array, optional) Errors encountered during processing\n"
+            "        \"str\",                (string)\n"
+            "        ...\n"
+            "      ],\n"
             "  },\n"
-            "  \"medium\" : { ... },    (json object, optional) estimate for medium time horizon\n"
-            "  \"long\" : { ... }       (json object) estimate for long time horizon\n"
+            "  \"medium\" : {           (json object, optional) estimate for medium time horizon\n"
+            "    ...\n"
+            "  },\n"
+            "  \"long\" : {             (json object, optional) estimate for long time horizon\n"
+            "    ...\n"
+            "  },\n"
             "}\n"
             "\n"
-            "Results are returned for any horizon which tracks blocks up to the confirmation target.\n"
                 },
                 RPCExamples{
                     HelpExampleCli("estimaterawfee", "6 0.9")
