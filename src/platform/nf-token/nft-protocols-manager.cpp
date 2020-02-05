@@ -106,6 +106,12 @@ namespace Platform
         return CKeyID();
     }
 
+    std::size_t NftProtocolsManager::TotalSupply() const
+    {
+        LOCK(m_cs);
+        return m_totalProtocolsCount;
+    }
+
     void NftProtocolsManager::ProcessFullNftProtoIndexRange(std::function<bool(const NftProtoIndex &)> protoIndexHandler) const
     {
         LOCK(m_cs);

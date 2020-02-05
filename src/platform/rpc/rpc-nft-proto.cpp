@@ -26,6 +26,8 @@ json_spirit::Value nftproto(const json_spirit::Array& params, bool fHelp)
         return Platform::GetNftProtocolByTxId(params, fHelp);
     else if (command == "ownerof")
         return Platform::NftProtoOwnerOf(params, fHelp);
+    else if (command == "totalsupply")
+        return Platform::NftProtoTotalSupply(params, fHelp);
 
     throw std::runtime_error("Invalid command: " + command);
 }
@@ -295,5 +297,26 @@ Examples:
             throw std::runtime_error("Can't find an NFT protocol: " + std::to_string(tokenProtocolId));
 
         return CBitcoinAddress(ownerId).ToString();
+    }
+
+    json_spirit::Value NftProtoTotalSupply(const json_spirit::Array& params, bool fHelp)
+    {
+        if (fHelp || params.empty() || params.size() > 1)
+            NftProtoTotalSupplyHelp();
+
+        std::size_t totalSupply = NftProtocolsManager::Instance().TotalSupply();
+        return static_cast<uint64_t>(totalSupply);
+    }
+
+    void NftProtoTotalSupplyHelp()
+    {
+        static std::string helpMessage = R"(nftproto totalsupply
+Get NFT protocols current total supply
+Examples:
+)"
++ HelpExampleCli("nftproto",   "totalsupply")
++ HelpExampleRpc("nftproto", R"(totalsupply)");
+
+        throw std::runtime_error(helpMessage);
     }
 }

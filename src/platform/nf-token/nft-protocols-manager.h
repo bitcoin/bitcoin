@@ -99,6 +99,9 @@ namespace Platform
         /// Owner of a specified nf-token protocol
         CKeyID OwnerOf(uint64_t protocolId);
 
+        /// Retrieve total amount of nft protocols
+        std::size_t TotalSupply() const;
+
         using NftProtoIndexRange = boost::any_range<const NftProtoIndex &, boost::bidirectional_traversal_tag>;
 
         void ProcessFullNftProtoIndexRange(std::function<bool(const NftProtoIndex &)> protoIndexHandler) const;

@@ -21,6 +21,8 @@ namespace Platform
     void GetNftProtocolByTxIdHelp();
     json_spirit::Value NftProtoOwnerOf(const json_spirit::Array& params, bool fHelp);
     void NftProtoOwnerOfHelp();
+    json_spirit::Value NftProtoTotalSupply(const json_spirit::Array& params, bool fHelp);
+    void NftProtoTotalSupplyHelp();
 }
 
 #endif // PROJECT_RPC_NFT_PROTO_H
