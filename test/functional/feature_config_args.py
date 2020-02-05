@@ -93,8 +93,8 @@ class ConfArgsTest(BitcoinTestFramework):
                     'Command-line arg: rpcpassword=****',
                     'Command-line arg: rpcuser=****',
                     'Command-line arg: torpassword=****',
-                    'Config file arg: regtest="1"',
-                    'Config file arg: [regtest] server="1"',
+                    'Config file arg: %s="1"' % self.chain,
+                    'Config file arg: [%s] server="1"' % self.chain,
                 ],
                 unexpected_msgs=[
                     'alice:f7efda5c189b999524f151318c0c86$d5b51b3beffbc0',

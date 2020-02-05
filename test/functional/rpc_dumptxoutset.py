@@ -25,7 +25,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
 
         FILENAME = 'txoutset.dat'
         out = node.dumptxoutset(FILENAME)
-        expected_path = Path(node.datadir) / 'regtest' / FILENAME
+        expected_path = Path(node.datadir) / self.chain / FILENAME
 
         assert expected_path.is_file()
 
