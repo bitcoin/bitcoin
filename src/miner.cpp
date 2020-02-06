@@ -236,7 +236,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
             break;
         }
 
-        if(!CheckSyscoinInputs(false, *tx, txHash, tx_state, view, false, nHeight, ::ChainActive().Tip()->GetMedianTimePast(), pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
+        if(!CheckSyscoinInputs(false, *tx, txHash, tx_state, view, false, nHeight, ::ChainActive().Tip()->GetMedianTimePast(), pblock->GetHash(), true, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
             txsToRemove.emplace_back(std::move(txHash));
             bFoundError = true;
         }

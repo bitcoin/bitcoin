@@ -634,7 +634,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
     
     // SYSCOIN
-    bool bDuplicate = false;
     // Check for conflicts with in-memory transactions
     const bool& IsAssetAllocation = IsAssetAllocationTx(tx.nVersion);
     for (const CTxIn &txin : tx.vin)
@@ -693,8 +692,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                     else
                         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                 }
-                if(!bDuplicate)
-                    setConflicts.insert(ptxConflicting->GetHash());
+                setConflicts.insert(ptxConflicting->GetHash());
             }
         }
     }
@@ -2301,7 +2299,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             // SYSCOIN
             if(IsSyscoinTx(tx.nVersion)){
                 TxValidationState tx_state;
-                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, false, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
+                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
                     // Any transaction validation failure in ConnectBlock is a block consensus failure
                     state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                                 tx_state.GetRejectReason(), tx_state.GetDebugMessage());
