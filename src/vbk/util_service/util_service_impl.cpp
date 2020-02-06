@@ -8,10 +8,10 @@
 #include <script/sigcache.h>
 #include <validation.h>
 
+#include <vbk/interpreter.hpp>
 #include <vbk/pop_service.hpp>
 #include <vbk/service_locator.hpp>
 #include <vbk/util.hpp>
-#include <vbk/interpreter.hpp>
 
 namespace VeriBlock {
 
@@ -123,7 +123,7 @@ uint256 UtilServiceImpl::makeTopLevelRoot(int height, const KeystoneArray& keyst
 void UtilServiceImpl::addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams)
 {
     PoPRewards rewards = getPopRewards(pindexPrev, consensusParams);
-
+    assert(coinbaseTx.vout.size() == 1 && "at this place we should have only PoW payout here");
     for (const auto& itr : rewards) {
         CTxOut out;
         out.scriptPubKey = itr.first;
@@ -135,28 +135,57 @@ void UtilServiceImpl::addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseT
 bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state)
 {
     PoPRewards rewards = getPopRewards(pindexPrev, consensusParams);
+    CAmount nTotalPopReward = 0;
 
     if (tx.vout.size() < rewards.size()) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
-            strprintf("checkCoinbaseTxWithPopRewards(): coinbase has incorrect size of pop vouts (vouts_size=%d vs pop_vouts=%d)", tx.vout.size(), rewards.size()), "bad-pop-vouts-size");
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-pop-vouts-size",
+            strprintf("checkCoinbaseTxWithPopRewards(): coinbase has incorrect size of pop vouts (actual vouts size=%d vs expected vouts=%d)", tx.vout.size(), rewards.size()));
     }
 
-    CAmount nTotalPopReward = 0;
-    for (const auto& out : tx.vout) {
-        const auto& it = rewards.find(out.scriptPubKey);
-        if (it != rewards.end() && it->second == out.nValue) {
-            nTotalPopReward += it->second; // Pop reward
-            rewards.erase(it);
+    std::map<CScript, CAmount> cbpayouts;
+    // skip first reward, as it is always PoW payout
+    for (auto out = tx.vout.begin() + 1, end = tx.vout.end(); out != end; ++out) {
+        // pop payouts can not be null
+        if (out->IsNull()) {
+            continue;
         }
+        cbpayouts[out->scriptPubKey] += out->nValue;
     }
 
-    if (!rewards.empty()) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, strprintf("checkCoinbaseTxWithPopRewards(): coinbase has incorrect pop vout in coinbase trx"), "bad-pop-vout");
+    // skip first (regular pow) payout, and last 2 0-value payouts
+    for (const auto& payout : rewards) {
+        auto& script = payout.first;
+        auto& expectedAmount = payout.second;
+
+        auto p = cbpayouts.find(script);
+        // coinbase pays correct reward?
+        if (p == rewards.end()) {
+            // we expected payout for that address
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-pop-missing-payout",
+                strprintf("[tx: %s] missing payout for scriptPubKey: '%s' with amount: '%d'",
+                    tx.GetHash().ToString(),
+                    HexStr(script),
+                    expectedAmount));
+        }
+
+        // payout found
+        auto& actualAmount = p->second;
+        // does it have correct amount?
+        if (actualAmount != expectedAmount) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-pop-wrong-payout",
+                strprintf("[tx: %s] wrong payout for scriptPubKey: '%s'. Expected %d, got %d.",
+                    tx.GetHash().ToString(),
+                    HexStr(script),
+                    expectedAmount, actualAmount));
+        }
+
+        nTotalPopReward += expectedAmount;
     }
 
     if (tx.GetValueOut() > nTotalPopReward + PoWBlockReward) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
-            strprintf("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)", tx.GetValueOut(), PoWBlockReward + nTotalPopReward), "bad-cb-amount");
+            "bad-cb-pop-amount",
+            strprintf("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)", tx.GetValueOut(), PoWBlockReward + nTotalPopReward));
     }
 
     return true;
@@ -189,7 +218,7 @@ PoPRewards UtilServiceImpl::getPopRewards(const CBlockIndex& pindexPrev, const C
     for (auto it = rewards.begin(), end = rewards.end(); it != end;) {
         it->second >>= halvings;
         if (it->second == 0 || halvings >= 64) {
-            rewards.erase(it++);
+            it = rewards.erase(it);
         } else {
             ++it;
         }
