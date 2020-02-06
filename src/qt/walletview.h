@@ -71,7 +71,7 @@ private:
 
     TransactionView *transactionView;
 
-    QProgressDialog *progressDialog;
+    QProgressDialog* progressDialog{nullptr};
     QLabel *transactionSum;
 
 public Q_SLOTS:
