@@ -103,7 +103,7 @@ class WalletHDTest(BitcoinTestFramework):
         shutil.rmtree(os.path.join(tmpdir, "node1/regtest/chainstate"))
         shutil.rmtree(os.path.join(tmpdir, "node1/regtest/evodb"))
         shutil.rmtree(os.path.join(tmpdir, "node1/regtest/llmq"))
-        shutil.copyfile(os.path.join(tmpdir, "hd.bak"), os.path.join(tmpdir, "node1/regtest/wallet.dat"))
+        shutil.copyfile(os.path.join(tmpdir, "hd.bak"), os.path.join(tmpdir, "node1/regtest/wallets/wallet.dat"))
         self.start_node(1, extra_args=self.extra_args[1])
         connect_nodes_bi(self.nodes, 0, 1)
         self.sync_all()

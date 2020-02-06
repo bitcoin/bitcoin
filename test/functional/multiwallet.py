@@ -57,7 +57,7 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_equal(set(self.nodes[0].listwallets()), {"w4", "w5"})
         w5 = self.nodes[0].get_wallet_rpc("w5")
         w5_info = w5.getwalletinfo()
-        assert_equal(w5_info['immature_balance'], 50)
+        assert_equal(w5_info['immature_balance'], 500)
 
         self.stop_node(0)
 
