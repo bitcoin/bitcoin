@@ -1,5 +1,6 @@
 #include <boost/test/unit_test.hpp>
 #include <consensus/validation.h>
+#include <shutdown.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
@@ -32,6 +33,7 @@ struct PopServiceFixture : public TestChain100Setup {
 
     PopServiceFixture()
     {
+        AbortShutdown();
         VeriBlock::InitUtilService();
         VeriBlock::InitConfig();
         Fake(Method(pop_service_impl_mock, addPayloads));
@@ -108,6 +110,33 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_index, PopServiceFixture)
     Verify_Method(Method(pop_service_impl_mock, removePayloads)).Once();
 }
 
+BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_known_orphan_block, PopServiceFixture)
+{
+    CBlockIndex* endorsedBlockIndex = ChainActive().Tip();
+    CBlock endorsedBlock;
+    BOOST_CHECK(ReadBlockFromDisk(endorsedBlock, endorsedBlockIndex, Params().GetConsensus()));
+    endorsedBlock.hashPrevBlock.SetHex("ff");
+
+    CBlock block = createBlockWithPopTx(*this);
+
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    stream << endorsedBlock.GetBlockHeader();
+    auto& config = VeriBlock::getService<VeriBlock::Config>();
+
+    When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData)))
+        .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
+            setPublicationData(publicationData, stream, config.index.unwrap());
+        });
+
+    {
+        BlockValidationState state;
+        LOCK(cs_main);
+        BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-endorsed-block-not-known-orphan-block");
+    }
+    Verify_Method(Method(pop_service_impl_mock, removePayloads)).Once();
+}
+
 BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_from_chain, PopServiceFixture)
 {
     CBlockIndex* endorsedBlockIndex = ChainActive().Tip()->pprev->pprev;
@@ -141,33 +170,6 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_from_chain, P
         LOCK(cs_main);
         BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-endorsed-block-not-from-this-chain");
-    }
-    Verify_Method(Method(pop_service_impl_mock, removePayloads)).Once();
-}
-
-BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_known_orphan_block, PopServiceFixture)
-{
-    CBlockIndex* endorsedBlockIndex = ChainActive().Tip();
-    CBlock endorsedBlock;
-    BOOST_CHECK(ReadBlockFromDisk(endorsedBlock, endorsedBlockIndex, Params().GetConsensus()));
-    endorsedBlock.hashPrevBlock.SetHex("ff");
-
-    CBlock block = createBlockWithPopTx(*this);
-
-    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
-    stream << endorsedBlock.GetBlockHeader();
-    auto& config = VeriBlock::getService<VeriBlock::Config>();
-
-    When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData)))
-        .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-            setPublicationData(publicationData, stream, config.index.unwrap());
-        });
-
-    {
-        BlockValidationState state;
-        LOCK(cs_main);
-        BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
-        BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-endorsed-block-not-known-orphan-block");
     }
     Verify_Method(Method(pop_service_impl_mock, removePayloads)).Once();
 }
