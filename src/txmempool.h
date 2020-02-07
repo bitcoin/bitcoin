@@ -870,7 +870,8 @@ struct DisconnectedBlockTransactions {
             boost::multi_index::sequenced<
                 boost::multi_index::tag<insertion_order>
             >
-        >
+        >,
+        memusage::AccountingAllocator<CTransactionRef>
     > indexed_disconnected_transactions;
 
     // It's almost certainly a logic bug if we don't clear out queuedTx before
@@ -883,13 +884,14 @@ struct DisconnectedBlockTransactions {
     // reorg, besides draining this object).
     ~DisconnectedBlockTransactions() { assert(queuedTx.empty()); }
 
+    size_t m_allocation_counter;
     indexed_disconnected_transactions queuedTx;
     uint64_t cachedInnerUsage = 0;
 
-    // Estimate the overhead of queuedTx to be 6 pointers + an allocation, as
-    // no exact formula for boost::multi_index_contained is implemented.
+    DisconnectedBlockTransactions() : m_allocation_counter(0), queuedTx(memusage::AccountingAllocator<CTransactionRef>(m_allocation_counter)) {}
+
     size_t DynamicMemoryUsage() const {
-        return memusage::MallocUsage(sizeof(CTransactionRef) + 6 * sizeof(void*)) * queuedTx.size() + cachedInnerUsage;
+        return m_allocation_counter + cachedInnerUsage;
     }
 
     void addTransaction(const CTransactionRef& tx)
