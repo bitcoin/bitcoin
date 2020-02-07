@@ -380,6 +380,7 @@ CTxMemPool::CTxMemPool(const Options& opts)
       minerPolicyEstimator{opts.estimator},
       m_allocation_counter{0},
       mapTx{memusage::AccountingAllocator<CTxMemPoolEntry>{m_allocation_counter}},
+      mapDeltas{memusage::AccountingAllocator<std::pair<const uint256, CAmount>>{m_allocation_counter}},
       m_max_size_bytes{opts.max_size_bytes},
       m_expiry{opts.expiry},
       m_incremental_relay_feerate{opts.incremental_relay_feerate},
@@ -882,7 +883,7 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
 void CTxMemPool::ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const
 {
     AssertLockHeld(cs);
-    std::map<uint256, CAmount>::const_iterator pos = mapDeltas.find(hash);
+    auto pos = mapDeltas.find(hash);
     if (pos == mapDeltas.end())
         return;
     const CAmount &delta = pos->second;
@@ -960,7 +961,7 @@ void CCoinsViewMemPool::PackageAddTransaction(const CTransactionRef& tx)
 
 size_t CTxMemPool::DynamicMemoryUsage() const {
     LOCK(cs);
-    return m_allocation_counter + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
+    return m_allocation_counter + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
 }
 
 void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked) {

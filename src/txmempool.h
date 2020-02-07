@@ -451,7 +451,7 @@ private:
 
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
-    std::map<uint256, CAmount> mapDeltas GUARDED_BY(cs);
+    std::map<uint256, CAmount, std::less<uint256>, memusage::AccountingAllocator<std::pair<const uint256, CAmount>>> mapDeltas GUARDED_BY(cs);
 
     using Options = kernel::MemPoolOptions;
 
