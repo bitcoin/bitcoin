@@ -188,6 +188,7 @@ public:
         strSporkAddress = "SSZvS59ddqG87koeUPu1J8ivg5yJsQiWGN";    
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
         m_is_test_chain = false;
+        m_is_mockable_chain = false;
 
         checkpointData = {
             {
@@ -310,6 +311,8 @@ public:
         // privKey: cU52TqHDWJg6HoL3keZHBvrJgsCLsduRvDFkPyZ5EmeMwoEHshiT
         strSporkAddress = "TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX";
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
+        m_is_mockable_chain = false;
+
         checkpointData = {
             {
                 {360, uint256S("0x00000c04c5926f539074420b40088d4b099d748d07795df891ca391799b6e54c")},
@@ -409,7 +412,10 @@ public:
         // privKey: cPPpaK9LCXjGGXVJUqcrtEMVQw5tALMuN3WsVuPCWFf9tswYYDvY
         strSporkAddress = "TCSJVL68KFq9FdbfxB2KhTcWp6rHD7vePs";
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
+        m_is_mockable_chain = true;
        /* 
+        
+
         checkpointData = {
             {
                 {0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")},
