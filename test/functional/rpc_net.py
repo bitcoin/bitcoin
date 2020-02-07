@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC calls related to net.
@@ -45,6 +45,7 @@ class NetTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [["-minrelaytxfee=0.00001000"],["-minrelaytxfee=0.00000500"]]
+        self.supports_cli = False
 
     def run_test(self):
         self.log.info('Connect nodes both way')

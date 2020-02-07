@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,10 +16,6 @@ namespace signals2 {
 class connection;
 }
 } // namespace boost
-
-namespace interfaces {
-class Wallet;
-} // namespace interfaces
 
 /** General change type (added, updated, removed). */
 enum ChangeType
@@ -104,9 +100,6 @@ public:
      * Status bar alerts changed.
      */
     ADD_SIGNALS_DECL_WRAPPER(NotifyAlertChanged, void, );
-
-    /** A wallet has been loaded. */
-    ADD_SIGNALS_DECL_WRAPPER(LoadWallet, void, std::unique_ptr<interfaces::Wallet>& wallet);
 
     /**
      * Show progress e.g. for verifychain.

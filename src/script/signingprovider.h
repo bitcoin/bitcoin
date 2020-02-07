@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -72,7 +72,7 @@ protected:
     void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
 public:
-    mutable CCriticalSection cs_KeyStore;
+    mutable RecursiveMutex cs_KeyStore;
 
     virtual bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     virtual bool AddKey(const CKey &key) { return AddKeyPubKey(key, key.GetPubKey()); }

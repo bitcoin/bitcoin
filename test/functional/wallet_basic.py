@@ -15,6 +15,7 @@ from test_framework.util import (
     connect_nodes,
     wait_until,
 )
+from test_framework.wallet_util import test_address
 
 
 class WalletTest(BitcoinTestFramework):
@@ -24,6 +25,7 @@ class WalletTest(BitcoinTestFramework):
             "-acceptnonstdtxn=1",
         ]] * self.num_nodes
         self.setup_clean_chain = True
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -390,7 +392,7 @@ class WalletTest(BitcoinTestFramework):
             for label in [u'рыба', u'𝅘𝅥𝅯']:
                 addr = self.nodes[0].getnewaddress()
                 self.nodes[0].setlabel(addr, label)
-                assert_equal(self.nodes[0].getaddressinfo(addr)['label'], label)
+                test_address(self.nodes[0], addr, labels=[label])
                 assert label in self.nodes[0].listlabels()
         self.nodes[0].rpc.ensure_ascii = True  # restore to default
 

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -336,7 +336,7 @@ public:
         vout.assign(vAvail.size(), CTxOut());
         for (unsigned int i = 0; i < vAvail.size(); i++) {
             if (vAvail[i])
-                ::Unserialize(s, CTxOutCompressor(vout[i]));
+                ::Unserialize(s, Using<TxOutCompression>(vout[i]));
         }
         // coinbase height
         ::Unserialize(s, VARINT(nHeight, VarIntMode::NONNEGATIVE_SIGNED));

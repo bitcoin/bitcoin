@@ -78,7 +78,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
         # Peer 1, despite serving up a bunch of nonsense, should still be connected.
         self.log.info("Waiting for node to drop junk messages.")
-        node.p2p.sync_with_ping(timeout=320)
+        node.p2p.sync_with_ping(timeout=400)
         assert node.p2p.is_connected
 
         #
@@ -145,13 +145,13 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_magic_bytes(self):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
 
-        def swap_magic_bytes():
+        async def swap_magic_bytes():
             conn._on_data = lambda: None  # Need to ignore all incoming messages from now, since they come with "invalid" magic bytes
             conn.magic_bytes = b'\x00\x11\x22\x32'
 
         # Call .result() to block until the atomic swap is complete, otherwise
         # we might run into races later on
-        asyncio.run_coroutine_threadsafe(asyncio.coroutine(swap_magic_bytes)(), NetworkThread.network_event_loop).result()
+        asyncio.run_coroutine_threadsafe(swap_magic_bytes(), NetworkThread.network_event_loop).result()
 
         with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: INVALID MESSAGESTART ping']):
             conn.send_message(messages.msg_ping(nonce=0xff))

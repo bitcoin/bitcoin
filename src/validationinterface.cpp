@@ -1,15 +1,20 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <validationinterface.h>
 
+#include <chain.h>
+#include <consensus/validation.h>
+#include <logging.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <scheduler.h>
-#include <txmempool.h>
+#include <util/validation.h>
 
 #include <future>
+#include <unordered_map>
 #include <utility>
 
 #include <boost/signals2/signal.hpp>
@@ -46,11 +51,6 @@ struct MainSignalsInstance {
 
 static CMainSignals g_signals;
 
-// This map has to a separate global instead of a member of MainSignalsInstance,
-// because RegisterWithMempoolSignals is currently called before RegisterBackgroundSignalScheduler,
-// so MainSignalsInstance hasn't been created yet.
-static std::unordered_map<CTxMemPool*, boost::signals2::scoped_connection> g_connNotifyEntryRemoved;
-
 void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler) {
     assert(!m_internals);
     m_internals.reset(new MainSignalsInstance(&scheduler));
@@ -69,17 +69,6 @@ void CMainSignals::FlushBackgroundCallbacks() {
 size_t CMainSignals::CallbacksPending() {
     if (!m_internals) return 0;
     return m_internals->m_schedulerClient.CallbacksPending();
-}
-
-void CMainSignals::RegisterWithMempoolSignals(CTxMemPool& pool) {
-    g_connNotifyEntryRemoved.emplace(std::piecewise_construct,
-        std::forward_as_tuple(&pool),
-        std::forward_as_tuple(pool.NotifyEntryRemoved.connect(std::bind(&CMainSignals::MempoolEntryRemoved, this, std::placeholders::_1, std::placeholders::_2)))
-    );
-}
-
-void CMainSignals::UnregisterWithMempoolSignals(CTxMemPool& pool) {
-    g_connNotifyEntryRemoved.erase(&pool);
 }
 
 CMainSignals& GetMainSignals()
@@ -126,53 +115,89 @@ void SyncWithValidationInterfaceQueue() {
     promise.get_future().wait();
 }
 
-void CMainSignals::MempoolEntryRemoved(CTransactionRef ptx, MemPoolRemovalReason reason) {
-    if (reason != MemPoolRemovalReason::BLOCK && reason != MemPoolRemovalReason::CONFLICT) {
-        m_internals->m_schedulerClient.AddToProcessQueue([ptx, this] {
-            m_internals->TransactionRemovedFromMempool(ptx);
-        });
-    }
-}
+// Use a macro instead of a function for conditional logging to prevent
+// evaluating arguments when logging is not enabled.
+//
+// NOTE: The lambda captures all local variables by value.
+#define ENQUEUE_AND_LOG_EVENT(event, fmt, name, ...)           \
+    do {                                                       \
+        auto local_name = (name);                              \
+        LOG_EVENT("Enqueuing " fmt, local_name, __VA_ARGS__);  \
+        m_internals->m_schedulerClient.AddToProcessQueue([=] { \
+            LOG_EVENT(fmt, local_name, __VA_ARGS__);           \
+            event();                                           \
+        });                                                    \
+    } while (0)
+
+#define LOG_EVENT(fmt, ...) \
+    LogPrint(BCLog::VALIDATION, fmt "\n", __VA_ARGS__)
 
 void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
     // Dependencies exist that require UpdatedBlockTip events to be delivered in the order in which
     // the chain actually updates. One way to ensure this is for the caller to invoke this signal
     // in the same critical section where the chain is updated
 
-    m_internals->m_schedulerClient.AddToProcessQueue([pindexNew, pindexFork, fInitialDownload, this] {
+    auto event = [pindexNew, pindexFork, fInitialDownload, this] {
         m_internals->UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: new block hash=%s fork block hash=%s (in IBD=%s)", __func__,
+                          pindexNew->GetBlockHash().ToString(),
+                          pindexFork ? pindexFork->GetBlockHash().ToString() : "null",
+                          fInitialDownload);
 }
 
 void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx) {
-    m_internals->m_schedulerClient.AddToProcessQueue([ptx, this] {
+    auto event = [ptx, this] {
         m_internals->TransactionAddedToMempool(ptx);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s wtxid=%s", __func__,
+                          ptx->GetHash().ToString(),
+                          ptx->GetWitnessHash().ToString());
+}
+
+void CMainSignals::TransactionRemovedFromMempool(const CTransactionRef &ptx) {
+    auto event = [ptx, this] {
+        m_internals->TransactionRemovedFromMempool(ptx);
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s wtxid=%s", __func__,
+                          ptx->GetHash().ToString(),
+                          ptx->GetWitnessHash().ToString());
 }
 
 void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>>& pvtxConflicted) {
-    m_internals->m_schedulerClient.AddToProcessQueue([pblock, pindex, pvtxConflicted, this] {
+    auto event = [pblock, pindex, pvtxConflicted, this] {
         m_internals->BlockConnected(pblock, pindex, *pvtxConflicted);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s block height=%d", __func__,
+                          pblock->GetHash().ToString(),
+                          pindex->nHeight);
 }
 
 void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
-    m_internals->m_schedulerClient.AddToProcessQueue([pblock, pindex, this] {
+    auto event = [pblock, pindex, this] {
         m_internals->BlockDisconnected(pblock, pindex);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s block height=%d", __func__,
+                          pblock->GetHash().ToString(),
+                          pindex->nHeight);
 }
 
 void CMainSignals::ChainStateFlushed(const CBlockLocator &locator) {
-    m_internals->m_schedulerClient.AddToProcessQueue([locator, this] {
+    auto event = [locator, this] {
         m_internals->ChainStateFlushed(locator);
-    });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s", __func__,
+                          locator.IsNull() ? "null" : locator.vHave.front().ToString());
 }
 
 void CMainSignals::BlockChecked(const CBlock& block, const BlockValidationState& state) {
+    LOG_EVENT("%s: block hash=%s state=%s", __func__,
+              block.GetHash().ToString(), FormatStateMessage(state));
     m_internals->BlockChecked(block, state);
 }
 
 void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block) {
+    LOG_EVENT("%s: block hash=%s", __func__, block->GetHash().ToString());
     m_internals->NewPoWValidBlock(pindex, block);
 }

@@ -1401,7 +1401,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
         self.bootstrap_p2p(timeout=timeout)
 
-    def send_blocks(self, blocks, success=True, reject_reason=None, force_send=False, reconnect=False, timeout=60):
+    def send_blocks(self, blocks, success=True, reject_reason=None, force_send=False, reconnect=False, timeout=960):
         """Sends blocks to test node. Syncs and verifies that tip has advanced to most recent block.
 
         Call with success = False if the tip shouldn't advance to the most recent block."""

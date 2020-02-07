@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -501,7 +501,7 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
             }
             return;
         }
-        service = LookupNumeric(std::string(service_id+".onion").c_str(), Params().GetDefaultPort());
+        service = LookupNumeric(std::string(service_id+".onion"), Params().GetDefaultPort());
         LogPrintf("tor: Got service ID %s, advertising service %s\n", service_id, service.ToString());
         if (WriteBinaryFile(GetPrivateKeyFile(), private_key)) {
             LogPrint(BCLog::TOR, "tor: Cached service private key to %s\n", GetPrivateKeyFile().string());

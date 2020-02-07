@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -78,7 +78,7 @@ public:
     virtual void initParameterInteraction() = 0;
 
     //! Get warnings.
-    virtual std::string getWarnings(const std::string& type) = 0;
+    virtual std::string getWarnings() = 0;
 
     // Get log flags.
     virtual uint32_t getLogCategories() = 0;

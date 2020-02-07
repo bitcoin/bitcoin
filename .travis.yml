@@ -43,7 +43,6 @@ before_cache:
 stages:
   - lint
   - test
-  - extended-lint
 env:
   global:
     - CI_RETRY_EXE="travis_retry"
@@ -82,24 +81,18 @@ jobs:
       script:
         - set -o errexit; source ./ci/lint/06_script.sh
 
-    - stage: extended-lint
-      name: 'extended lint [runtime >= 60 seconds]'
-      env:
-      cache: false
-      language: python
-      python: '3.5'
-      install:
-        - set -o errexit; source ./ci/extended_lint/04_install.sh
-      before_script:
-        - set -o errexit; source ./ci/lint/05_before_script.sh
-      script:
-        - set -o errexit; source ./ci/extended_lint/06_script.sh
-
     - stage: test
-      name: 'ARM  [GOAL: install]  [unit tests, functional tests]'
+      name: 'ARM  [GOAL: install]  [buster]  [unit tests, functional tests]'
       arch: arm64
       env: >-
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
+        QEMU_USER_CMD=""  # Can run the tests natively without qemu
+
+    - stage: test
+      name: 'S390x  [GOAL: install]  [buster]  [unit tests, functional tests]'
+      arch: s390x
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_s390x.sh"
         QEMU_USER_CMD=""  # Can run the tests natively without qemu
 
     - stage: test
@@ -108,19 +101,14 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
 
     - stage: test
-      name: '32-bit + dash  [GOAL: install]  [gui]'
+      name: '32-bit + dash  [GOAL: install]  [CentOS 7]  [gui]'
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_i686.sh"
+        FILE_ENV="./ci/test/00_setup_env_i686_centos.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package and some depends packages] [unsigned char]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [trusty]  [no functional tests, no depends, only system libs]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_trusty.sh"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
@@ -134,6 +122,11 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_asan.sh"
 
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, valgrind]'
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_native_valgrind.sh"
+
+    - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
@@ -144,7 +137,7 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
 
     - stage: test
-      name: 'macOS 10.10  [GOAL: deploy] [no functional tests]'
+      name: 'macOS 10.12  [GOAL: deploy] [no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_mac.sh"
 
@@ -152,8 +145,8 @@ jobs:
       name: 'macOS 10.14 native [GOAL: install] [GUI] [no depends]'
       os: osx
       # Use the most recent version:
-      # Xcode 11, macOS 10.14, JDK 12.0.1
+      # Xcode 11.2.1, macOS 10.14, JDK 13.0.1, SDK 10.15
       # https://docs.travis-ci.com/user/reference/osx/#macos-version
-      osx_image: xcode11
+      osx_image: xcode11.2
       env: >-
         FILE_ENV="./ci/test/00_setup_env_mac_host.sh"

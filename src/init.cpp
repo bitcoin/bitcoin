@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -52,12 +52,17 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <util/validation.h>
+#include <util/asmap.h>
 #include <validation.h>
+#include <hash.h>
+
+
 #include <validationinterface.h>
 #include <walletinitinterface.h>
 
 #include <stdint.h>
 #include <stdio.h>
+#include <set>
 
 #ifndef WIN32
 #include <attributes.h>
@@ -96,6 +101,8 @@ static constexpr int DUMP_BANS_INTERVAL = 60 * 15;
 #endif
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
+
+static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 
 /**
  * The PID file facilities.
@@ -171,7 +178,7 @@ void Interrupt(NodeContext& node)
 void Shutdown(NodeContext& node)
 {
     LogPrintf("%s: In progress...\n", __func__);
-    static CCriticalSection cs_Shutdown;
+    static RecursiveMutex cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown)
         return;
@@ -196,8 +203,6 @@ void Shutdown(NodeContext& node)
     // using the other before destroying them.
     if (node.peer_logic) UnregisterValidationInterface(node.peer_logic.get());
     if (node.connman) node.connman->Stop();
-    if (g_txindex) g_txindex->Stop();
-    ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Stop(); });
 
     StopTorControl();
 
@@ -211,8 +216,6 @@ void Shutdown(NodeContext& node)
     node.peer_logic.reset();
     node.connman.reset();
     node.banman.reset();
-    g_txindex.reset();
-    DestroyAllBlockFilterIndexes();
 
     if (::mempool.IsLoaded() && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(::mempool);
@@ -244,6 +247,14 @@ void Shutdown(NodeContext& node)
     // After there are no more peers/RPC left to give us new data which may generate
     // CValidationInterface callbacks, flush them...
     GetMainSignals().FlushBackgroundCallbacks();
+
+    // Stop and delete all indexes only after flushing background callbacks.
+    if (g_txindex) {
+        g_txindex->Stop();
+        g_txindex.reset();
+    }
+    ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Stop(); });
+    DestroyAllBlockFilterIndexes();
 
     // Any future callbacks will be dropped. This should absolutely be safe - if
     // missing a callback results in an unrecoverable situation, unclean shutdown
@@ -281,7 +292,6 @@ void Shutdown(NodeContext& node)
     node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    GetMainSignals().UnregisterWithMempoolSignals(mempool);
     globalVerifyHandle.reset();
     ECC_Stop();
     if (node.mempool) node.mempool = nullptr;
@@ -426,7 +436,8 @@ void SetupServerArgs()
     gArgs.AddArg("-timeout=<n>", strprintf("Specify connection timeout in milliseconds (minimum: 1, default: %d)", DEFAULT_CONNECT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-peertimeout=<n>", strprintf("Specify p2p connection timeout in seconds. This option determines the amount of time a peer may be inactive before the connection to it is dropped. (minimum: 1, default: %d)", DEFAULT_PEER_CONNECT_TIMEOUT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-torcontrol=<ip>:<port>", strprintf("Tor control port to use if onion listening enabled (default: %s)", DEFAULT_TOR_CONTROL), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-    gArgs.AddArg("-torpassword=<pass>", "Tor control port password (default: empty)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-torpassword=<pass>", "Tor control port password (default: empty)", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-asmap=<file>", "Specify asn mapping used for bucketing of the peers. Path should be relative to the -datadir path.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
 #ifdef USE_UPNP
 #if USE_UPNP
     gArgs.AddArg("-upnp", "Use UPnP to map the listening port (default: 1 when listening and no -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -498,7 +509,7 @@ void SetupServerArgs()
     gArgs.AddArg("-logtimestamps", strprintf("Prepend debug output with timestamp (default: %u)", DEFAULT_LOGTIMESTAMPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-logthreadnames", strprintf("Prepend debug output with name of the originating thread (only available on platforms supporting thread_local) (default: %u)", DEFAULT_LOGTHREADNAMES), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-logtimemicros", strprintf("Add microsecond precision to debug timestamps (default: %u)", DEFAULT_LOGTIMEMICROS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    gArgs.AddArg("-mocktime=<n>", "Replace actual time with <n> seconds since epoch (default: 0)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-mocktime=<n>", "Replace actual time with " + UNIX_EPOCH_TIME + " (default: 0)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-maxsigcachesize=<n>", strprintf("Limit sum of signature cache and script execution cache sizes to <n> MiB (default: %u)", DEFAULT_MAX_SIG_CACHE_SIZE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-maxtipage=<n>", strprintf("Maximum tip age in seconds to consider node in initial block download (default: %u)", DEFAULT_MAX_TIP_AGE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-printpriority", strprintf("Log transaction fee per kB when mining blocks (default: %u)", DEFAULT_PRINTPRIORITY), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
@@ -517,7 +528,7 @@ void SetupServerArgs()
     gArgs.AddArg("-minrelaytxfee=<amt>", strprintf("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)",
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     gArgs.AddArg("-whitelistforcerelay", strprintf("Add 'forcerelay' permission to whitelisted inbound peers with default permissions. This will relay transactions even if the transactions were already in the mempool or violate local relay policy. (default: %d)", DEFAULT_WHITELISTFORCERELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
-    gArgs.AddArg("-whitelistrelay", strprintf("Add 'relay' permission to whitelisted inbound peers with default permissions. The will accept relayed transactions even when not relaying transactions (default: %d)", DEFAULT_WHITELISTRELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    gArgs.AddArg("-whitelistrelay", strprintf("Add 'relay' permission to whitelisted inbound peers with default permissions. This will accept relayed transactions even when not relaying transactions (default: %d)", DEFAULT_WHITELISTRELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
 
 
     gArgs.AddArg("-blockmaxweight=<n>", strprintf("Set maximum BIP141 block weight (default: %d)", DEFAULT_BLOCK_MAX_WEIGHT), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
@@ -526,15 +537,17 @@ void SetupServerArgs()
 
     gArgs.AddArg("-rest", strprintf("Accept public REST requests (default: %u)", DEFAULT_REST_ENABLE), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-rpcallowip=<ip>", "Allow JSON-RPC connections from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    gArgs.AddArg("-rpcauth=<userpw>", "Username and HMAC-SHA-256 hashed password for JSON-RPC connections. The field <userpw> comes in the format: <USERNAME>:<SALT>$<HASH>. A canonical python script is included in share/rpcauth. The client then connects normally using the rpcuser=<USERNAME>/rpcpassword=<PASSWORD> pair of arguments. This option can be specified multiple times", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    gArgs.AddArg("-rpcbind=<addr>[:port]", "Bind to given address to listen for JSON-RPC connections. Do not expose the RPC server to untrusted networks such as the public internet! This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost)", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::RPC);
+    gArgs.AddArg("-rpcauth=<userpw>", "Username and HMAC-SHA-256 hashed password for JSON-RPC connections. The field <userpw> comes in the format: <USERNAME>:<SALT>$<HASH>. A canonical python script is included in share/rpcauth. The client then connects normally using the rpcuser=<USERNAME>/rpcpassword=<PASSWORD> pair of arguments. This option can be specified multiple times", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::RPC);
+    gArgs.AddArg("-rpcbind=<addr>[:port]", "Bind to given address to listen for JSON-RPC connections. Do not expose the RPC server to untrusted networks such as the public internet! This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost)", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY | ArgsManager::SENSITIVE, OptionsCategory::RPC);
     gArgs.AddArg("-rpccookiefile=<loc>", "Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    gArgs.AddArg("-rpcpassword=<pw>", "Password for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    gArgs.AddArg("-rpcpassword=<pw>", "Password for JSON-RPC connections", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::RPC);
     gArgs.AddArg("-rpcport=<port>", strprintf("Listen for JSON-RPC connections on <port> (default: %u, testnet: %u, regtest: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), regtestBaseParams->RPCPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::RPC);
     gArgs.AddArg("-rpcserialversion", strprintf("Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)", DEFAULT_RPC_SERIALIZE_VERSION), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     gArgs.AddArg("-rpcthreads=<n>", strprintf("Set the number of threads to service RPC calls (default: %d)", DEFAULT_HTTP_THREADS), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    gArgs.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    gArgs.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::RPC);
+    gArgs.AddArg("-rpcwhitelist=<whitelist>", "Set a whitelist to filter incoming RPC calls for a specific user. The field <whitelist> comes in the format: <USERNAME>:<rpc 1>,<rpc 2>,...,<rpc n>. If multiple whitelists are set for a given user, they are set-intersected. See -rpcwhitelistdefault documentation for information on default whitelist behavior.", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    gArgs.AddArg("-rpcwhitelistdefault", "Sets default behavior for rpc whitelisting. Unless rpcwhitelistdefault is set to 0, if any -rpcwhitelist is set, the rpc server acts as if all rpc users are subject to empty-unless-otherwise-specified whitelists. If rpcwhitelistdefault is set to 1 and no -rpcwhitelist is set, rpc server acts as if all rpc users are subject to empty whitelists.", ArgsManager::ALLOW_BOOL, OptionsCategory::RPC);
     gArgs.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     gArgs.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
 
@@ -847,7 +860,7 @@ int nUserMaxConnections;
 int nFD;
 ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK | NODE_NETWORK_LIMITED);
 int64_t peer_connect_timeout;
-std::vector<BlockFilterType> g_enabled_filter_types;
+std::set<BlockFilterType> g_enabled_filter_types;
 
 } // namespace
 
@@ -875,8 +888,8 @@ bool AppInitBasicSetup()
     _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 #endif
 #ifdef WIN32
-    // Enable Data Execution Prevention (DEP)
-    SetProcessDEPPolicy(PROCESS_DEP_ENABLE);
+    // Enable heap terminate-on-corruption
+    HeapSetInformation(nullptr, HeapEnableTerminationOnCorruption, nullptr, 0);
 #endif
 
     if (!SetupNetworking())
@@ -935,13 +948,12 @@ bool AppInitParameterInteraction()
         g_enabled_filter_types = AllBlockFilterTypes();
     } else if (blockfilterindex_value != "0") {
         const std::vector<std::string> names = gArgs.GetArgs("-blockfilterindex");
-        g_enabled_filter_types.reserve(names.size());
         for (const auto& name : names) {
             BlockFilterType filter_type;
             if (!BlockFilterTypeByName(name, filter_type)) {
                 return InitError(strprintf(_("Unknown -blockfilterindex value %s.").translated, name));
             }
-            g_enabled_filter_types.push_back(filter_type);
+            g_enabled_filter_types.insert(filter_type);
         }
     }
 
@@ -1218,6 +1230,9 @@ bool AppInitMain(NodeContext& node)
         LogPrintf("Config file: %s (not found, skipping)\n", config_file_path.string());
     }
 
+    // Log the config arguments to debug.log
+    gArgs.LogArgs();
+
     LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
 
     // Warn about relative -datadir path.
@@ -1263,7 +1278,6 @@ bool AppInitMain(NodeContext& node)
     }, 60000);
 
     GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
-    GetMainSignals().RegisterWithMempoolSignals(mempool);
 
     // Create client interfaces for wallets that are supposed to be loaded
     // according to -wallet and -disablewallet options. This only constructs
@@ -1354,7 +1368,7 @@ bool AppInitMain(NodeContext& node)
     SetReachable(NET_ONION, false);
     if (proxyArg != "" && proxyArg != "0") {
         CService proxyAddr;
-        if (!Lookup(proxyArg.c_str(), proxyAddr, 9050, fNameLookup)) {
+        if (!Lookup(proxyArg, proxyAddr, 9050, fNameLookup)) {
             return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'").translated, proxyArg));
         }
 
@@ -1378,7 +1392,7 @@ bool AppInitMain(NodeContext& node)
             SetReachable(NET_ONION, false);
         } else {
             CService onionProxy;
-            if (!Lookup(onionArg.c_str(), onionProxy, 9050, fNameLookup)) {
+            if (!Lookup(onionArg, onionProxy, 9050, fNameLookup)) {
                 return InitError(strprintf(_("Invalid -onion address or hostname: '%s'").translated, onionArg));
             }
             proxyType addrOnion = proxyType(onionProxy, proxyRandomize);
@@ -1396,7 +1410,7 @@ bool AppInitMain(NodeContext& node)
 
     for (const std::string& strAddr : gArgs.GetArgs("-externalip")) {
         CService addrLocal;
-        if (Lookup(strAddr.c_str(), addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
+        if (Lookup(strAddr, addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
             AddLocal(addrLocal, LOCAL_MANUAL);
         else
             return InitError(ResolveErrMsg("externalip", strAddr));
@@ -1776,7 +1790,7 @@ bool AppInitMain(NodeContext& node)
 
     for (const std::string& strBind : gArgs.GetArgs("-bind")) {
         CService addrBind;
-        if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false)) {
+        if (!Lookup(strBind, addrBind, GetListenPort(), false)) {
             return InitError(ResolveErrMsg("bind", strBind));
         }
         connOptions.vBinds.push_back(addrBind);
@@ -1807,6 +1821,25 @@ bool AppInitMain(NodeContext& node)
     }
     if (!node.connman->Start(scheduler, connOptions)) {
         return false;
+    }
+
+    // Read asmap file if configured
+    if (gArgs.IsArgSet("-asmap")) {
+        std::string asmap_file = gArgs.GetArg("-asmap", "");
+        if (asmap_file.empty()) {
+            asmap_file = DEFAULT_ASMAP_FILENAME;
+        }
+        const fs::path asmap_path = GetDataDir() / asmap_file;
+        std::vector<bool> asmap = CAddrMan::DecodeAsmap(asmap_path);
+        if (asmap.size() == 0) {
+            InitError(strprintf(_("Could not find or parse specified asmap: '%s'").translated, asmap_path));
+            return false;
+        }
+        const uint256 asmap_version = SerializeHash(asmap);
+        node.connman->SetAsmap(std::move(asmap));
+        LogPrintf("Using asmap version %s for IP bucketing.\n", asmap_version.ToString());
+    } else {
+        LogPrintf("Using /16 prefix for IP bucketing.\n");
     }
 
     // ********************************************************* Step 13: finished

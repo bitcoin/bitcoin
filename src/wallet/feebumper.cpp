@@ -47,7 +47,8 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
 
     // check that original tx consists entirely of our inputs
     // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
-    if (!wallet.IsAllFromMe(*wtx.tx, ISMINE_SPENDABLE)) {
+    isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
+    if (!wallet.IsAllFromMe(*wtx.tx, filter)) {
         errors.push_back("Transaction contains inputs that don't belong to this wallet");
         return feebumper::Result::WALLET_ERROR;
     }
@@ -78,7 +79,8 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wt
     CFeeRate incrementalRelayFee = std::max(wallet.chain().relayIncrementalFee(), CFeeRate(WALLET_INCREMENTAL_RELAY_FEE));
 
     // Given old total fee and transaction size, calculate the old feeRate
-    CAmount old_fee = wtx.GetDebit(ISMINE_SPENDABLE) - wtx.tx->GetValueOut();
+    isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
+    CAmount old_fee = wtx.GetDebit(filter) - wtx.tx->GetValueOut();
     const int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
     CFeeRate nOldFeeRate(old_fee, txSize);
     // Min total fee is old fee + relay fee
@@ -108,12 +110,11 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wt
     return feebumper::Result::OK;
 }
 
-static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, CCoinControl& coin_control, CAmount& old_fee)
+static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, const CAmount old_fee, CCoinControl& coin_control)
 {
     // Get the fee rate of the original transaction. This is calculated from
     // the tx fee/vsize, so it may have been rounded down. Add 1 satoshi to the
     // result.
-    old_fee = wtx.GetDebit(ISMINE_SPENDABLE) - wtx.tx->GetValueOut();
     int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
     CFeeRate feerate(old_fee, txSize);
     feerate += CFeeRate(1);
@@ -196,7 +197,8 @@ Result CreateTotalBumpTransaction(const CWallet* wallet, const uint256& txid, co
     }
 
     // calculate the old fee and fee-rate
-    old_fee = wtx.GetDebit(ISMINE_SPENDABLE) - wtx.tx->GetValueOut();
+    isminefilter filter = wallet->GetLegacyScriptPubKeyMan() && wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
+    old_fee = wtx.GetDebit(filter) - wtx.tx->GetValueOut();
     CFeeRate nOldFeeRate(old_fee, txSize);
     // The wallet uses a conservative WALLET_INCREMENTAL_RELAY_FEE value to
     // future proof against changes to network wide policy for incremental relay
@@ -309,6 +311,9 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         }
     }
 
+    isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
+    old_fee = wtx.GetDebit(filter) - wtx.tx->GetValueOut();
+
     if (coin_control.m_feerate) {
         // The user provided a feeRate argument.
         // We calculate this here to avoid compiler warning on the cs_wallet lock
@@ -319,7 +324,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         }
     } else {
         // The user did not provide a feeRate argument
-        new_coin_control.m_feerate = EstimateFeeRate(wallet, wtx, new_coin_control, old_fee);
+        new_coin_control.m_feerate = EstimateFeeRate(wallet, wtx, old_fee, new_coin_control);
     }
 
     // Fill in required inputs we are double-spending(all of them)

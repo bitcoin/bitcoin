@@ -92,6 +92,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_option_feerate()
         self.test_address_reuse()
         self.test_option_subtract_fee_from_outputs()
+        self.test_subtract_fee_with_presets()
 
     def test_change_position(self):
         """Ensure setting changePosition in fundraw with an exact match is handled properly."""
@@ -740,6 +741,18 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # The total subtracted from the outputs is equal to the fee.
         assert_equal(share[0] + share[2] + share[3], result[0]['fee'])
+
+    def test_subtract_fee_with_presets(self):
+        self.log.info("Test fundrawtxn subtract fee from outputs with preset inputs that are sufficient")
+
+        addr = self.nodes[0].getnewaddress()
+        txid = self.nodes[0].sendtoaddress(addr, 10)
+        vout = find_vout_for_address(self.nodes[0], txid, addr)
+
+        rawtx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], [{self.nodes[0].getnewaddress(): 5}])
+        fundedtx = self.nodes[0].fundrawtransaction(rawtx, {'subtractFeeFromOutputs': [0]})
+        signedtx = self.nodes[0].signrawtransactionwithwallet(fundedtx['hex'])
+        self.nodes[0].sendrawtransaction(signedtx['hex'])
 
 if __name__ == '__main__':
     RawTransactionsTest().main()

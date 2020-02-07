@@ -25,7 +25,6 @@ $(package)_config_opts_debug = -debug
 $(package)_config_opts += -bindir $(build_prefix)/bin
 $(package)_config_opts += -c++std c++11
 $(package)_config_opts += -confirm-license
-$(package)_config_opts += -dbus-runtime
 $(package)_config_opts += -hostprefix $(build_prefix)
 $(package)_config_opts += -no-compile-examples
 $(package)_config_opts += -no-cups
@@ -40,12 +39,14 @@ $(package)_config_opts += -no-iconv
 $(package)_config_opts += -no-kms
 $(package)_config_opts += -no-linuxfb
 $(package)_config_opts += -no-libjpeg
+$(package)_config_opts += -no-libproxy
 $(package)_config_opts += -no-libudev
 $(package)_config_opts += -no-mtdev
 $(package)_config_opts += -no-openssl
 $(package)_config_opts += -no-openvg
 $(package)_config_opts += -no-reduce-relocations
 $(package)_config_opts += -no-qml-debug
+$(package)_config_opts += -no-sctp
 $(package)_config_opts += -no-securetransport
 $(package)_config_opts += -no-sql-db2
 $(package)_config_opts += -no-sql-ibase
@@ -56,12 +57,13 @@ $(package)_config_opts += -no-sql-odbc
 $(package)_config_opts += -no-sql-psql
 $(package)_config_opts += -no-sql-sqlite
 $(package)_config_opts += -no-sql-sqlite2
+$(package)_config_opts += -no-system-proxies
 $(package)_config_opts += -no-use-gold-linker
 $(package)_config_opts += -no-xinput2
 $(package)_config_opts += -nomake examples
 $(package)_config_opts += -nomake tests
 $(package)_config_opts += -opensource
-$(package)_config_opts += -optimized-qmake
+$(package)_config_opts += -optimized-tools
 $(package)_config_opts += -pch
 $(package)_config_opts += -pkg-config
 $(package)_config_opts += -prefix $(host_prefix)
@@ -80,9 +82,12 @@ $(package)_config_opts += -no-feature-dial
 $(package)_config_opts += -no-feature-filesystemwatcher
 $(package)_config_opts += -no-feature-fontcombobox
 $(package)_config_opts += -no-feature-ftp
+$(package)_config_opts += -no-feature-http
 $(package)_config_opts += -no-feature-image_heuristic_mask
 $(package)_config_opts += -no-feature-keysequenceedit
 $(package)_config_opts += -no-feature-lcdnumber
+$(package)_config_opts += -no-feature-networkdiskcache
+$(package)_config_opts += -no-feature-networkproxy
 $(package)_config_opts += -no-feature-pdf
 $(package)_config_opts += -no-feature-printdialog
 $(package)_config_opts += -no-feature-printer
@@ -90,6 +95,7 @@ $(package)_config_opts += -no-feature-printpreviewdialog
 $(package)_config_opts += -no-feature-printpreviewwidget
 $(package)_config_opts += -no-feature-regularexpression
 $(package)_config_opts += -no-feature-sessionmanager
+$(package)_config_opts += -no-feature-socks5
 $(package)_config_opts += -no-feature-sql
 $(package)_config_opts += -no-feature-statemachine
 $(package)_config_opts += -no-feature-syntaxhighlighter
@@ -105,14 +111,16 @@ $(package)_config_opts += -no-feature-vnc
 $(package)_config_opts += -no-feature-wizard
 $(package)_config_opts += -no-feature-xml
 
+$(package)_config_opts_darwin = -no-dbus
+$(package)_config_opts_darwin += -no-opengl
+
 ifneq ($(build_os),darwin)
-$(package)_config_opts_darwin = -xplatform macx-clang-linux
+$(package)_config_opts_darwin += -xplatform macx-clang-linux
 $(package)_config_opts_darwin += -device-option MAC_SDK_PATH=$(OSX_SDK)
 $(package)_config_opts_darwin += -device-option MAC_SDK_VERSION=$(OSX_SDK_VERSION)
 $(package)_config_opts_darwin += -device-option CROSS_COMPILE="$(host)-"
 $(package)_config_opts_darwin += -device-option MAC_MIN_VERSION=$(OSX_MIN_VERSION)
 $(package)_config_opts_darwin += -device-option MAC_TARGET=$(host)
-$(package)_config_opts_darwin += -device-option MAC_LD64_VERSION=$(LD64_VERSION)
 endif
 
 $(package)_config_opts_linux  = -qt-xkbcommon-x11
@@ -122,12 +130,20 @@ $(package)_config_opts_linux += -no-feature-xlib
 $(package)_config_opts_linux += -system-freetype
 $(package)_config_opts_linux += -fontconfig
 $(package)_config_opts_linux += -no-opengl
+$(package)_config_opts_linux += -dbus-runtime
 $(package)_config_opts_arm_linux += -platform linux-g++ -xplatform bitcoin-linux-g++
 $(package)_config_opts_i686_linux  = -xplatform linux-g++-32
 $(package)_config_opts_x86_64_linux = -xplatform linux-g++-64
 $(package)_config_opts_aarch64_linux = -xplatform linux-aarch64-gnu-g++
+$(package)_config_opts_powerpc64_linux = -platform linux-g++ -xplatform bitcoin-linux-g++
+$(package)_config_opts_powerpc64le_linux = -platform linux-g++ -xplatform bitcoin-linux-g++
 $(package)_config_opts_riscv64_linux = -platform linux-g++ -xplatform bitcoin-linux-g++
-$(package)_config_opts_mingw32  = -no-opengl -xplatform win32-g++ -device-option CROSS_COMPILE="$(host)-"
+$(package)_config_opts_s390x_linux = -platform linux-g++ -xplatform bitcoin-linux-g++
+
+$(package)_config_opts_mingw32 = -no-opengl
+$(package)_config_opts_mingw32 += -no-dbus
+$(package)_config_opts_mingw32 += -xplatform win32-g++
+$(package)_config_opts_mingw32 += -device-option CROSS_COMPILE="$(host)-"
 
 $(package)_config_opts_android = -xplatform android-clang
 $(package)_config_opts_android += -android-sdk $(ANDROID_SDK)
@@ -137,6 +153,7 @@ $(package)_config_opts_android += -device-option CROSS_COMPILE="$(host)-"
 $(package)_config_opts_android += -egl
 $(package)_config_opts_android += -qpa xcb
 $(package)_config_opts_android += -no-eglfs
+$(package)_config_opts_android += -no-dbus
 $(package)_config_opts_android += -opengl es2
 $(package)_config_opts_android += -qt-freetype
 $(package)_config_opts_android += -no-fontconfig

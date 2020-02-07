@@ -6,11 +6,11 @@
 #define BITCOIN_CUCKOOCACHE_H
 
 #include <array>
-#include <algorithm>
 #include <atomic>
-#include <cstring>
 #include <cmath>
+#include <cstring>
 #include <memory>
+#include <utility>
 #include <vector>
 
 

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,6 +35,8 @@
 
 #include <boost/signals2/signal.hpp>
 
+using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
+
 //! Explicitly unload and delete the wallet.
 //! Blocks the current thread after signaling the unload intent so that all
 //! wallet clients release the wallet.
@@ -48,6 +50,7 @@ bool HasWallets();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> GetWallet(const std::string& name);
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, std::string& error, std::vector<std::string>& warnings);
+std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet);
 
 enum class WalletCreationStatus {
     SUCCESS,
@@ -71,8 +74,6 @@ static const CAmount WALLET_INCREMENTAL_RELAY_FEE = 5000;
 static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 //! Default for -walletrejectlongchains
 static const bool DEFAULT_WALLET_REJECT_LONG_CHAINS = false;
-//! Default for -avoidpartialspends
-static const bool DEFAULT_AVOIDPARTIALSPENDS = false;
 //! -txconfirmtarget default
 static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 6;
 //! -walletrbf default
@@ -140,12 +141,12 @@ class ReserveDestination
 {
 protected:
     //! The wallet to reserve from
-    CWallet* pwallet;
-    LegacyScriptPubKeyMan* m_spk_man{nullptr};
+    CWallet* const pwallet;
+    //! The ScriptPubKeyMan to reserve from. Based on type when GetReservedDestination is called
+    ScriptPubKeyMan* m_spk_man{nullptr};
+    OutputType const type;
     //! The index of the address's key in the keypool
     int64_t nIndex{-1};
-    //! The public key for the address
-    CPubKey vchPubKey;
     //! The destination
     CTxDestination address;
     //! Whether this is from the internal (change output) keypool
@@ -153,10 +154,9 @@ protected:
 
 public:
     //! Construct a ReserveDestination object. This does NOT reserve an address yet
-    explicit ReserveDestination(CWallet* pwalletIn)
-    {
-        pwallet = pwalletIn;
-    }
+    explicit ReserveDestination(CWallet* pwallet, OutputType type)
+      : pwallet(pwallet)
+      , type(type) { }
 
     ReserveDestination(const ReserveDestination&) = delete;
     ReserveDestination& operator=(const ReserveDestination&) = delete;
@@ -168,7 +168,7 @@ public:
     }
 
     //! Reserve an address
-    bool GetReservedDestination(const OutputType type, CTxDestination& pubkey, bool internal);
+    bool GetReservedDestination(CTxDestination& pubkey, bool internal);
     //! Return reserved address
     void ReturnDestination();
     //! Keep the address. Do not return it's key to the keypool when this object goes out of scope
@@ -313,6 +313,13 @@ public:
     enum AmountType { DEBIT, CREDIT, IMMATURE_CREDIT, AVAILABLE_CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
     CAmount GetCachableAmount(AmountType type, const isminefilter& filter, bool recalculate = false) const;
     mutable CachableAmount m_amounts[AMOUNTTYPE_ENUM_ELEMENTS];
+    /**
+     * This flag is true if all m_amounts caches are empty. This is particularly
+     * useful in places where MarkDirty is conditionally called and the
+     * condition can be expensive and thus can be skipped if the flag is true.
+     * See MarkDestinationsDirty.
+     */
+    mutable bool m_is_cache_empty{true};
     mutable bool fChangeCached;
     mutable bool fInMempool;
     mutable CAmount nChangeCached;
@@ -439,6 +446,7 @@ public:
         m_amounts[IMMATURE_CREDIT].Reset();
         m_amounts[AVAILABLE_CREDIT].Reset();
         fChangeCached = false;
+        m_is_cache_empty = true;
     }
 
     void BindWallet(CWallet *pwalletIn)
@@ -584,6 +592,8 @@ struct CoinSelectionParams
     size_t change_spend_size = 0;
     CFeeRate effective_fee = CFeeRate(0);
     size_t tx_noinputs_size = 0;
+    //! Indicate that we are subtracting the fee from outputs
+    bool m_subtract_fee_outputs = false;
 
     CoinSelectionParams(bool use_bnb, size_t change_output_size, size_t change_spend_size, CFeeRate effective_fee, size_t tx_noinputs_size) : use_bnb(use_bnb), change_output_size(change_output_size), change_spend_size(change_spend_size), effective_fee(effective_fee), tx_noinputs_size(tx_noinputs_size) {}
     CoinSelectionParams() {}
@@ -596,16 +606,9 @@ class WalletRescanReserver; //forward declarations for ScanForWalletTransactions
 class CWallet final : public WalletStorage, private interfaces::Chain::Notifications
 {
 private:
-    CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
+    CKeyingMaterial vMasterKey GUARDED_BY(cs_wallet);
 
-    //! if fUseCrypto is true, mapKeys must be empty
-    //! if fUseCrypto is false, vMasterKey must be empty
-    std::atomic<bool> fUseCrypto;
 
-    //! keeps track of whether Unlock has run a thorough check before
-    bool fDecryptionThoroughlyChecked;
-
-    bool SetCrypted();
     bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool accept_no_keys = false);
 
     std::atomic<bool> fAbortRescan{false};
@@ -699,12 +702,19 @@ private:
      */
     int m_last_block_processed_height GUARDED_BY(cs_wallet) = -1;
 
+    std::map<OutputType, ScriptPubKeyMan*> m_external_spk_managers;
+    std::map<OutputType, ScriptPubKeyMan*> m_internal_spk_managers;
+
+    // Indexed by a unique identifier produced by each ScriptPubKeyMan using
+    // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
+    std::map<uint256, std::unique_ptr<ScriptPubKeyMan>> m_spk_managers;
+
 public:
     /*
      * Main wallet lock.
      * This lock protects all the fields added by CWallet.
      */
-    mutable CCriticalSection cs_wallet;
+    mutable RecursiveMutex cs_wallet;
 
     /** Get database handle used by this wallet. Ideally this function would
      * not be necessary.
@@ -735,9 +745,7 @@ public:
 
     /** Construct wallet with specified name and database implementation. */
     CWallet(interfaces::Chain* chain, const WalletLocation& location, std::unique_ptr<WalletDatabase> database)
-        : fUseCrypto(false),
-          fDecryptionThoroughlyChecked(false),
-          m_chain(chain),
+        : m_chain(chain),
           m_location(location),
           database(std::move(database))
     {
@@ -747,11 +755,9 @@ public:
     {
         // Should not have slots connected at this point.
         assert(NotifyUnload.empty());
-        delete encrypted_batch;
-        encrypted_batch = nullptr;
     }
 
-    bool IsCrypted() const { return fUseCrypto; }
+    bool IsCrypted() const;
     bool IsLocked() const override;
     bool Lock();
 
@@ -810,10 +816,9 @@ public:
 
     bool IsSpent(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    // Whether this or any UTXO with the same CTxDestination has been spent.
-    bool IsUsedDestination(const CTxDestination& dst) const;
-    bool IsUsedDestination(const uint256& hash, unsigned int n) const;
-    void SetUsedDestinationState(WalletBatch& batch, const uint256& hash, unsigned int n, bool used) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    // Whether this or any known UTXO with the same single key has been spent.
+    bool IsUsedDestination(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void SetUsedDestinationState(WalletBatch& batch, const uint256& hash, unsigned int n, bool used, std::set<CTxDestination>& tx_destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     std::vector<OutputGroup> GroupOutputs(const std::vector<COutput>& outputs, bool single_coin) const;
 
@@ -925,9 +930,9 @@ public:
      * Should be called after CreateTransaction unless you want to abort
      * broadcasting the transaction.
      *
-     * @param tx[in] The transaction to be broadcast.
-     * @param mapValue[in] key-values to be set on the transaction.
-     * @param orderForm[in] BIP 70 / BIP 21 order form details to be set on the transaction.
+     * @param[in] tx The transaction to be broadcast.
+     * @param[in] mapValue key-values to be set on the transaction.
+     * @param[in] orderForm BIP 70 / BIP 21 order form details to be set on the transaction.
      */
     void CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm);
 
@@ -972,6 +977,12 @@ public:
     std::map<CTxDestination, CAmount> GetAddressBalances(interfaces::Chain::Lock& locked_chain);
 
     std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
+
+    /**
+     * Marks all outputs in each one of the destinations dirty, so their cache is
+     * reset and does not return outdated information.
+     */
+    void MarkDestinationsDirty(const std::set<CTxDestination>& destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, std::string& error);
     bool GetNewChangeDestination(const OutputType type, CTxDestination& dest, std::string& error);
@@ -1128,21 +1139,33 @@ public:
         LogPrintf(("%s " + fmt).c_str(), GetDisplayName(), parameters...);
     };
 
-    ScriptPubKeyMan* GetScriptPubKeyMan() const;
-    const SigningProvider* GetSigningProvider() const;
-    LegacyScriptPubKeyMan* GetLegacyScriptPubKeyMan() const;
+    //! Returns all unique ScriptPubKeyMans in m_internal_spk_managers and m_external_spk_managers
+    std::set<ScriptPubKeyMan*> GetActiveScriptPubKeyMans() const;
 
-    // Temporary LegacyScriptPubKeyMan accessors and aliases.
-    friend class LegacyScriptPubKeyMan;
-    std::unique_ptr<LegacyScriptPubKeyMan> m_spk_man = MakeUnique<LegacyScriptPubKeyMan>(*this);
-    CCriticalSection& cs_KeyStore = m_spk_man->cs_KeyStore;
-    LegacyScriptPubKeyMan::KeyMap& mapKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapKeys;
-    LegacyScriptPubKeyMan::ScriptMap& mapScripts GUARDED_BY(cs_KeyStore) = m_spk_man->mapScripts;
-    LegacyScriptPubKeyMan::CryptedKeyMap& mapCryptedKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapCryptedKeys;
-    LegacyScriptPubKeyMan::WatchOnlySet& setWatchOnly GUARDED_BY(cs_KeyStore) = m_spk_man->setWatchOnly;
-    LegacyScriptPubKeyMan::WatchKeyMap& mapWatchKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapWatchKeys;
-    WalletBatch*& encrypted_batch GUARDED_BY(cs_wallet) = m_spk_man->encrypted_batch;
-    using CryptedKeyMap = LegacyScriptPubKeyMan::CryptedKeyMap;
+    //! Returns all unique ScriptPubKeyMans
+    std::set<ScriptPubKeyMan*> GetAllScriptPubKeyMans() const;
+
+    //! Get the ScriptPubKeyMan for the given OutputType and internal/external chain.
+    ScriptPubKeyMan* GetScriptPubKeyMan(const OutputType& type, bool internal) const;
+
+    //! Get the ScriptPubKeyMan for a script
+    ScriptPubKeyMan* GetScriptPubKeyMan(const CScript& script) const;
+    //! Get the ScriptPubKeyMan by id
+    ScriptPubKeyMan* GetScriptPubKeyMan(const uint256& id) const;
+
+    //! Get the SigningProvider for a script
+    std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script) const;
+    std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script, SignatureData& sigdata) const;
+
+    //! Get the LegacyScriptPubKeyMan which is used for all types, internal, and external.
+    LegacyScriptPubKeyMan* GetLegacyScriptPubKeyMan() const;
+    LegacyScriptPubKeyMan* GetOrCreateLegacyScriptPubKeyMan();
+
+    //! Make a LegacyScriptPubKeyMan and set it for all types, internal, and external.
+    void SetupLegacyScriptPubKeyMan();
+
+    const CKeyingMaterial& GetEncryptionKey() const override;
+    bool HasEncryptionKeys() const override;
 
     /** Get last block processed height */
     int GetLastBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
@@ -1158,6 +1181,9 @@ public:
         m_last_block_processed_height = block_height;
         m_last_block_processed = block_hash;
     };
+
+    //! Connect the signals from ScriptPubKeyMans to the signals in CWallet
+    void ConnectScriptPubKeyManNotifiers();
 };
 
 /**

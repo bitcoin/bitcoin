@@ -1,12 +1,14 @@
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <amount.h>
 #include <coins.h>
 #include <consensus/tx_verify.h>
 #include <node/psbt.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
+#include <tinyformat.h>
 
 #include <numeric>
 
@@ -30,13 +32,26 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
         // Check for a UTXO
         CTxOut utxo;
         if (psbtx.GetInputUTXO(utxo, i)) {
+            if (!MoneyRange(utxo.nValue) || !MoneyRange(in_amt + utxo.nValue)) {
+                result.SetInvalid(strprintf("PSBT is not valid. Input %u has invalid value", i));
+                return result;
+            }
             in_amt += utxo.nValue;
             input_analysis.has_utxo = true;
         } else {
+            if (input.non_witness_utxo && psbtx.tx->vin[i].prevout.n >= input.non_witness_utxo->vout.size()) {
+                result.SetInvalid(strprintf("PSBT is not valid. Input %u specifies invalid prevout", i));
+                return result;
+            }
             input_analysis.has_utxo = false;
             input_analysis.is_final = false;
             input_analysis.next = PSBTRole::UPDATER;
             calc_fee = false;
+        }
+
+        if (!utxo.IsNull() && utxo.scriptPubKey.IsUnspendable()) {
+            result.SetInvalid(strprintf("PSBT is not valid. Input %u spends unspendable output", i));
+            return result;
         }
 
         // Check if it is final
@@ -79,9 +94,16 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
         // Get the output amount
         CAmount out_amt = std::accumulate(psbtx.tx->vout.begin(), psbtx.tx->vout.end(), CAmount(0),
             [](CAmount a, const CTxOut& b) {
+                if (!MoneyRange(a) || !MoneyRange(b.nValue) || !MoneyRange(a + b.nValue)) {
+                    return CAmount(-1);
+                }
                 return a += b.nValue;
             }
         );
+        if (!MoneyRange(out_amt)) {
+            result.SetInvalid(strprintf("PSBT is not valid. Output amount invalid"));
+            return result;
+        }
 
         // Get the fee
         CAmount fee = in_amt - out_amt;

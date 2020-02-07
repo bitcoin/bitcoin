@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2018-2019 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import argparse
 import os
@@ -51,7 +54,7 @@ def build():
     os.chdir('gitian-builder')
     os.makedirs('inputs', exist_ok=True)
 
-    subprocess.check_call(['wget', '-O' 'osslsigncode-2.0.tar.gz' '-N', '-P', 'inputs', 'https://github.com/mtrojnar/osslsigncode/archive/2.0.tar.gz'])
+    subprocess.check_call(['wget', '-O', 'inputs/osslsigncode-2.0.tar.gz', 'https://github.com/mtrojnar/osslsigncode/archive/2.0.tar.gz'])
     subprocess.check_call(["echo '5a60e0a4b3e0b4d655317b2f12a810211c50242138322b16e7e01c6fbb89d92f inputs/osslsigncode-2.0.tar.gz' | sha256sum -c"], shell=True)
     subprocess.check_call(['make', '-C', '../bitcoin/depends', 'download', 'SOURCES_PATH=' + os.getcwd() + '/cache/common'])
 
@@ -206,7 +209,7 @@ def main():
     args.macos = 'm' in args.os
 
     # Disable for MacOS if no SDK found
-    if args.macos and not os.path.isfile('gitian-builder/inputs/MacOSX10.11.sdk.tar.gz'):
+    if args.macos and not os.path.isfile('gitian-builder/inputs/MacOSX10.14.sdk.tar.gz'):
         print('Cannot build for MacOS, SDK does not exist. Will build for other OSes')
         args.macos = False
 

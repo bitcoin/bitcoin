@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -129,14 +129,11 @@ CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 CBlockPolicyEstimator feeEstimator;
 CTxMemPool mempool(&feeEstimator);
 
-/** Constant stuff for coinbase transactions we create: */
-CScript COINBASE_FLAGS;
-
 // Internal stuff
 namespace {
     CBlockIndex* pindexBestInvalid = nullptr;
 
-    CCriticalSection cs_LastBlockFile;
+    RecursiveMutex cs_LastBlockFile;
     std::vector<CBlockFileInfo> vinfoBlockFile;
     int nLastBlockFile = 0;
     /** Global flag to indicate we should check to see if there are
@@ -183,7 +180,7 @@ std::unique_ptr<CBlockTreeDB> pblocktree;
 // See definition for documentation
 static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight);
 static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight);
-bool CheckInputs(const CTransaction& tx, TxValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks = nullptr);
+bool CheckInputScripts(const CTransaction& tx, TxValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks = nullptr);
 static FILE* OpenUndoFile(const FlatFilePos &pos, bool fReadOnly = false);
 static FlatFileSeq BlockFileSeq();
 static FlatFileSeq UndoFileSeq();
@@ -399,19 +396,19 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
 
     // pool.cs should be locked already, but go ahead and re-take the lock here
     // to enforce that mempool doesn't change between when we check the view
-    // and when we actually call through to CheckInputs
+    // and when we actually call through to CheckInputScripts
     LOCK(pool.cs);
 
     assert(!tx.IsCoinBase());
     for (const CTxIn& txin : tx.vin) {
         const Coin& coin = view.AccessCoin(txin.prevout);
 
-        // At this point we haven't actually checked if the coins are all
-        // available (or shouldn't assume we have, since CheckInputs does).
-        // So we just return failure if the inputs are not available here,
-        // and then only have to check equivalence for available inputs.
+        // AcceptToMemoryPoolWorker has already checked that the coins are
+        // available, so this shouldn't fail. If the inputs are not available
+        // here then return false.
         if (coin.IsSpent()) return false;
 
+        // Check equivalence for available inputs.
         const CTransactionRef& txFrom = pool.get(txin.prevout.hash);
         if (txFrom) {
             assert(txFrom->GetHash() == txin.prevout.hash);
@@ -424,8 +421,8 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
         }
     }
 
-    // Call CheckInputs() to cache signature and script validity against current tip consensus rules.
-    return CheckInputs(tx, state, view, flags, /* cacheSigStore = */ true, /* cacheFullSciptStore = */ true, txdata);
+    // Call CheckInputScripts() to cache signature and script validity against current tip consensus rules.
+    return CheckInputScripts(tx, state, view, flags, /* cacheSigStore = */ true, /* cacheFullSciptStore = */ true, txdata);
 }
 
 namespace {
@@ -909,20 +906,20 @@ bool MemPoolAccept::PolicyScriptChecks(ATMPArgs& args, Workspace& ws, Precompute
 
     constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
 
-    // Check against previous transactions
+    // Check input scripts and signatures.
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-    if (!CheckInputs(tx, state, m_view, scriptVerifyFlags, true, false, txdata)) {
+    if (!CheckInputScripts(tx, state, m_view, scriptVerifyFlags, true, false, txdata)) {
         // SCRIPT_VERIFY_CLEANSTACK requires SCRIPT_VERIFY_WITNESS, so we
         // need to turn both off, and compare against just turning off CLEANSTACK
         // to see if the failure is specifically due to witness validation.
-        TxValidationState state_dummy; // Want reported failures to be from first CheckInputs
-        if (!tx.HasWitness() && CheckInputs(tx, state_dummy, m_view, scriptVerifyFlags & ~(SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_CLEANSTACK), true, false, txdata) &&
-                !CheckInputs(tx, state_dummy, m_view, scriptVerifyFlags & ~SCRIPT_VERIFY_CLEANSTACK, true, false, txdata)) {
+        TxValidationState state_dummy; // Want reported failures to be from first CheckInputScripts
+        if (!tx.HasWitness() && CheckInputScripts(tx, state_dummy, m_view, scriptVerifyFlags & ~(SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_CLEANSTACK), true, false, txdata) &&
+                !CheckInputScripts(tx, state_dummy, m_view, scriptVerifyFlags & ~SCRIPT_VERIFY_CLEANSTACK, true, false, txdata)) {
             // Only the witness is missing, so the transaction itself may be fine.
             state.Invalid(TxValidationResult::TX_WITNESS_MUTATED,
                     state.GetRejectReason(), state.GetDebugMessage());
         }
-        return false; // state filled in by CheckInputs
+        return false; // state filled in by CheckInputScripts
     }
 
     return true;
@@ -953,7 +950,7 @@ bool MemPoolAccept::ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, Precomp
     // transactions into the mempool can be exploited as a DoS attack.
     unsigned int currentBlockScriptVerifyFlags = GetBlockScriptFlags(::ChainActive().Tip(), chainparams.GetConsensus());
     if (!CheckInputsFromMempoolAndCache(tx, state, m_view, m_pool, currentBlockScriptVerifyFlags, txdata)) {
-        return error("%s: BUG! PLEASE REPORT THIS! CheckInputs failed against latest-block but not STANDARD flags %s, %s",
+        return error("%s: BUG! PLEASE REPORT THIS! CheckInputScripts failed against latest-block but not STANDARD flags %s, %s",
                 __func__, hash.ToString(), FormatStateMessage(state));
     }
 
@@ -1395,10 +1392,14 @@ static void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip) E
     CheckForkWarningConditions();
 }
 
+// Called both upon regular invalid block discovery *and* InvalidateBlock
 void static InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (!pindexBestInvalid || pindexNew->nChainWork > pindexBestInvalid->nChainWork)
         pindexBestInvalid = pindexNew;
+    if (pindexBestHeader != nullptr && pindexBestHeader->GetAncestor(pindexNew->nHeight) == pindexNew) {
+        pindexBestHeader = ::ChainActive().Tip();
+    }
 
     LogPrintf("%s: invalid block=%s  height=%d  log2_work=%.8g  date=%s\n", __func__,
       pindexNew->GetBlockHash().ToString(), pindexNew->nHeight,
@@ -1411,6 +1412,8 @@ void static InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(c
     CheckForkWarningConditions();
 }
 
+// Same as InvalidChainFound, above, except not called directly from InvalidateBlock,
+// which does its own setBlockIndexCandidates manageent.
 void CChainState::InvalidBlockFound(CBlockIndex *pindex, const BlockValidationState &state) {
     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
         pindex->nStatus |= BLOCK_FAILED_VALID;
@@ -1469,8 +1472,10 @@ void InitScriptExecutionCache() {
 }
 
 /**
- * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
- * This does not modify the UTXO set.
+ * Check whether all of this transaction's input scripts succeed.
+ *
+ * This involves ECDSA signature checks so can be computationally intensive. This function should
+ * only be called after the cheap sanity checks in CheckTxInputs passed.
  *
  * If pvChecks is not nullptr, script checks are pushed onto it instead of being performed inline. Any
  * script checks which are not necessary (eg due to script execution cache hits) are, obviously,
@@ -1485,7 +1490,7 @@ void InitScriptExecutionCache() {
  *
  * Non-static (and re-declared) in src/test/txvalidationcache_tests.cpp
  */
-bool CheckInputs(const CTransaction& tx, TxValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool CheckInputScripts(const CTransaction& tx, TxValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (tx.IsCoinBase()) return true;
 
@@ -2132,11 +2137,11 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             TxValidationState tx_state;
-            if (fScriptChecks && !CheckInputs(tx, tx_state, view, flags, fCacheResults, fCacheResults, txdata[i], g_parallel_script_checks ? &vChecks : nullptr)) {
+            if (fScriptChecks && !CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txdata[i], g_parallel_script_checks ? &vChecks : nullptr)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                               tx_state.GetRejectReason(), tx_state.GetDebugMessage());
-                return error("ConnectBlock(): CheckInputs on %s failed with %s",
+                return error("ConnectBlock(): CheckInputScripts on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             }
             control.Add(vChecks);
@@ -2188,13 +2193,44 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     return true;
 }
 
+CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(const CTxMemPool& tx_pool)
+{
+    return this->GetCoinsCacheSizeState(
+        tx_pool,
+        nCoinCacheUsage,
+        gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+}
+
+CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(
+    const CTxMemPool& tx_pool,
+    size_t max_coins_cache_size_bytes,
+    size_t max_mempool_size_bytes)
+{
+    int64_t nMempoolUsage = tx_pool.DynamicMemoryUsage();
+    int64_t cacheSize = CoinsTip().DynamicMemoryUsage();
+    int64_t nTotalSpace =
+        max_coins_cache_size_bytes + std::max<int64_t>(max_mempool_size_bytes - nMempoolUsage, 0);
+
+    //! No need to periodic flush if at least this much space still available.
+    static constexpr int64_t MAX_BLOCK_COINSDB_USAGE_BYTES = 10 * 1024 * 1024;  // 10MB
+    int64_t large_threshold =
+        std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE_BYTES);
+
+    if (cacheSize > nTotalSpace) {
+        LogPrintf("Cache size (%s) exceeds total space (%s)\n", cacheSize, nTotalSpace);
+        return CoinsCacheSizeState::CRITICAL;
+    } else if (cacheSize > large_threshold) {
+        return CoinsCacheSizeState::LARGE;
+    }
+    return CoinsCacheSizeState::OK;
+}
+
 bool CChainState::FlushStateToDisk(
     const CChainParams& chainparams,
     BlockValidationState &state,
     FlushStateMode mode,
     int nManualPruneHeight)
 {
-    int64_t nMempoolUsage = mempool.DynamicMemoryUsage();
     LOCK(cs_main);
     assert(this->CanFlushToDisk());
     static int64_t nLastWrite = 0;
@@ -2209,6 +2245,7 @@ bool CChainState::FlushStateToDisk(
     {
         bool fFlushForPrune = false;
         bool fDoFullFlush = false;
+        CoinsCacheSizeState cache_state = GetCoinsCacheSizeState(::mempool);
         LOCK(cs_LastBlockFile);
         if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
             if (nManualPruneHeight > 0) {
@@ -2237,13 +2274,10 @@ bool CChainState::FlushStateToDisk(
         if (nLastFlush == 0) {
             nLastFlush = nNow;
         }
-        int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-        int64_t cacheSize = CoinsTip().DynamicMemoryUsage();
-        int64_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
         // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
-        bool fCacheLarge = mode == FlushStateMode::PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE * 1024 * 1024);
+        bool fCacheLarge = mode == FlushStateMode::PERIODIC && cache_state >= CoinsCacheSizeState::LARGE;
         // The cache is over the limit, we have to write now.
-        bool fCacheCritical = mode == FlushStateMode::IF_NEEDED && cacheSize > nTotalSpace;
+        bool fCacheCritical = mode == FlushStateMode::IF_NEEDED && cache_state >= CoinsCacheSizeState::CRITICAL;
         // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload after a crash.
         bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow > nLastWrite + (int64_t)DATABASE_WRITE_INTERVAL * 1000000;
         // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.

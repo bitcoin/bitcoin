@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,7 @@
 #include <consensus/params.h>
 #include <sync.h>
 
-extern CCriticalSection cs_main;
+extern RecursiveMutex cs_main;
 
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
@@ -33,6 +33,7 @@ public:
      * Overridden from CValidationInterface.
      */
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected, const std::vector<CTransactionRef>& vtxConflicted) override;
+    void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override;
     /**
      * Overridden from CValidationInterface.
      */

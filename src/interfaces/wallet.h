@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <psbt.h>
 #include <stdint.h>
 #include <string>
 #include <tuple>
@@ -81,10 +82,10 @@ public:
     virtual bool getNewDestination(const OutputType type, const std::string label, CTxDestination& dest) = 0;
 
     //! Get public key.
-    virtual bool getPubKey(const CKeyID& address, CPubKey& pub_key) = 0;
+    virtual bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) = 0;
 
     //! Get private key.
-    virtual bool getPrivKey(const CKeyID& address, CKey& key) = 0;
+    virtual bool getPrivKey(const CScript& script, const CKeyID& address, CKey& key) = 0;
 
     //! Return whether wallet has private key.
     virtual bool isSpendable(const CTxDestination& dest) = 0;
@@ -106,10 +107,6 @@ public:
 
     //! Get wallet address list.
     virtual std::vector<WalletAddress> getAddresses() = 0;
-
-    //! Add scripts to key store so old so software versions opening the wallet
-    //! database can detect payments to newer address types.
-    virtual void learnRelatedScripts(const CPubKey& key, OutputType type) = 0;
 
     //! Add dest data.
     virtual bool addDestData(const CTxDestination& dest, const std::string& key, const std::string& value) = 0;
@@ -193,6 +190,13 @@ public:
         WalletOrderForm& order_form,
         bool& in_mempool,
         int& num_blocks) = 0;
+
+    //! Fill PSBT.
+    virtual TransactionError fillPSBT(PartiallySignedTransaction& psbtx,
+        bool& complete,
+        int sighash_type = 1 /* SIGHASH_ALL */,
+        bool sign = true,
+        bool bip32derivs = false) = 0;
 
     //! Get balances.
     virtual WalletBalances getBalances() = 0;

@@ -83,17 +83,18 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
             "    \"addr\":\"host:port\",      (string) The IP address and port of the peer\n"
             "    \"addrbind\":\"ip:port\",    (string) Bind address of the connection to the peer\n"
             "    \"addrlocal\":\"ip:port\",   (string) Local address as reported by the peer\n"
+            "    \"mapped_as\":\"mapped_as\", (string) The AS in the BGP route to the peer used for diversifying peer selection\n"
             "    \"services\":\"xxxxxxxxxxxxxxxx\",   (string) The services offered\n"
             "    \"servicesnames\":[              (array) the services offered, in human-readable form\n"
             "        \"SERVICE_NAME\",         (string) the service name if it is recognised\n"
             "         ...\n"
             "     ],\n"
             "    \"relaytxes\":true|false,    (boolean) Whether peer has asked us to relay transactions to it\n"
-            "    \"lastsend\": ttt,           (numeric) The time in seconds since epoch (Jan 1 1970 GMT) of the last send\n"
-            "    \"lastrecv\": ttt,           (numeric) The time in seconds since epoch (Jan 1 1970 GMT) of the last receive\n"
+            "    \"lastsend\": ttt,           (numeric) The " + UNIX_EPOCH_TIME + " of the last send\n"
+            "    \"lastrecv\": ttt,           (numeric) The " + UNIX_EPOCH_TIME + " of the last receive\n"
             "    \"bytessent\": n,            (numeric) The total bytes sent\n"
             "    \"bytesrecv\": n,            (numeric) The total bytes received\n"
-            "    \"conntime\": ttt,           (numeric) The connection time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "    \"conntime\": ttt,           (numeric) The " + UNIX_EPOCH_TIME + " of the connection\n"
             "    \"timeoffset\": ttt,         (numeric) The time offset in seconds\n"
             "    \"pingtime\": n,             (numeric) ping time (if available)\n"
             "    \"minping\": n,              (numeric) minimum observed ping time (if any at all)\n"
@@ -152,6 +153,9 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
             obj.pushKV("addrlocal", stats.addrLocal);
         if (stats.addrBind.IsValid())
             obj.pushKV("addrbind", stats.addrBind.ToString());
+        if (stats.m_mapped_as != 0) {
+            obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
+        }
         obj.pushKV("services", strprintf("%016x", stats.nServices));
         obj.pushKV("servicesnames", GetServicesNames(stats.nServices));
         obj.pushKV("relaytxes", stats.fRelayTxes);
@@ -448,11 +452,11 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
                 "Returns an object containing various state info regarding P2P networking.\n",
                 {},
                 RPCResult{
-            "{\n"
+            "{                                        (json object)\n"
             "  \"version\": xxxxx,                      (numeric) the server version\n"
-            "  \"subversion\": \"/Satoshi:x.x.x/\",     (string) the server subversion string\n"
+            "  \"subversion\" : \"str\",                  (string) the server subversion string\n"
             "  \"protocolversion\": xxxxx,              (numeric) the protocol version\n"
-            "  \"localservices\": \"xxxxxxxxxxxxxxxx\", (string) the services we offer to the network\n"
+            "  \"localservices\" : \"hex\",               (string) the services we offer to the network\n"
             "  \"localservicesnames\": [                (array) the services we offer to the network, in human-readable form\n"
             "      \"SERVICE_NAME\",                    (string) the service name\n"
             "       ...\n"
@@ -462,26 +466,26 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
             "  \"connections\": xxxxx,                  (numeric) the number of connections\n"
             "  \"networkactive\": true|false,           (bool) whether p2p networking is enabled\n"
             "  \"networks\": [                          (array) information per network\n"
-            "  {\n"
-            "    \"name\": \"xxx\",                     (string) network (ipv4, ipv6 or onion)\n"
+            "  {                                      (json object)\n"
+            "    \"name\": \"str\",                       (string) network (ipv4, ipv6 or onion)\n"
             "    \"limited\": true|false,               (boolean) is the network limited using -onlynet?\n"
             "    \"reachable\": true|false,             (boolean) is the network reachable?\n"
-            "    \"proxy\": \"host:port\"               (string) the proxy that is used for this network, or empty if none\n"
-            "    \"proxy_randomize_credentials\": true|false,  (string) Whether randomized credentials are used\n"
-            "  }\n"
-            "  ,...\n"
+            "    \"proxy\" : \"str\"                      (string) (\"host:port\") the proxy that is used for this network, or empty if none\n"
+            "    \"proxy_randomize_credentials\" : true|false,  (bool) Whether randomized credentials are used\n"
+            "  },\n"
+            "  ...\n"
             "  ],\n"
             "  \"relayfee\": x.xxxxxxxx,                (numeric) minimum relay fee for transactions in " + CURRENCY_UNIT + "/kB\n"
             "  \"incrementalfee\": x.xxxxxxxx,          (numeric) minimum fee increment for mempool limiting or BIP 125 replacement in " + CURRENCY_UNIT + "/kB\n"
             "  \"localaddresses\": [                    (array) list of local addresses\n"
-            "  {\n"
-            "    \"address\": \"xxxx\",                 (string) network address\n"
+            "  {                                      (json object)\n"
+            "    \"address\" : \"xxxx\",                  (string) network address\n"
             "    \"port\": xxx,                         (numeric) network port\n"
             "    \"score\": xxx                         (numeric) relative score\n"
-            "  }\n"
-            "  ,...\n"
-            "  ]\n"
-            "  \"warnings\": \"...\"                    (string) any network and blockchain warnings\n"
+            "  },\n"
+            "  ...\n"
+            "  ],\n"
+            "  \"warnings\" : \"str\",                     (string) any network and blockchain warnings\n"
             "}\n"
                 },
                 RPCExamples{
@@ -522,7 +526,7 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
         }
     }
     obj.pushKV("localaddresses", localAddresses);
-    obj.pushKV("warnings",       GetWarnings("statusbar"));
+    obj.pushKV("warnings",       GetWarnings(false));
     return obj;
 }
 
@@ -534,7 +538,7 @@ static UniValue setban(const JSONRPCRequest& request)
                     {"subnet", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP/Subnet (see getpeerinfo for nodes IP) with an optional netmask (default is /32 = single IP)"},
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add an IP/Subnet to the list, 'remove' to remove an IP/Subnet from the list"},
                     {"bantime", RPCArg::Type::NUM, /* default */ "0", "time in seconds how long (or until when if [absolute] is set) the IP is banned (0 or empty means using the default time of 24h which can also be overwritten by the -bantime startup argument)"},
-                    {"absolute", RPCArg::Type::BOOL, /* default */ "false", "If set, the bantime must be an absolute timestamp in seconds since epoch (Jan 1 1970 GMT)"},
+                    {"absolute", RPCArg::Type::BOOL, /* default */ "false", "If set, the bantime must be an absolute timestamp expressed in " + UNIX_EPOCH_TIME},
                 },
                 RPCResults{},
                 RPCExamples{
@@ -562,11 +566,11 @@ static UniValue setban(const JSONRPCRequest& request)
 
     if (!isSubnet) {
         CNetAddr resolved;
-        LookupHost(request.params[0].get_str().c_str(), resolved, false);
+        LookupHost(request.params[0].get_str(), resolved, false);
         netAddr = resolved;
     }
     else
-        LookupSubNet(request.params[0].get_str().c_str(), subNet);
+        LookupSubNet(request.params[0].get_str(), subNet);
 
     if (! (isSubnet ? subNet.IsValid() : netAddr.IsValid()) )
         throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Error: Invalid IP/Subnet");
@@ -691,7 +695,7 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
                 RPCResult{
             "[\n"
             "  {\n"
-            "    \"time\": ttt,                (numeric) Timestamp in seconds since epoch (Jan 1 1970 GMT) keeping track of when the node was last seen\n"
+            "    \"time\": ttt,                (numeric) The " + UNIX_EPOCH_TIME + " of when the node was last seen\n"
             "    \"services\": n,              (numeric) The services offered\n"
             "    \"address\": \"host\",          (string) The address of the node\n"
             "    \"port\": n                   (numeric) The port of the node\n"

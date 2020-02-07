@@ -44,7 +44,8 @@ Release Process
 
 #### After branch-off (on the major release branch)
 
-- Update the versions and the link to the release notes draft in `doc/release-notes.md`.
+- Update the versions.
+- Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/17079) for an example) and provide a link to it in the release announcements where useful.
 
 #### Before final release
 
@@ -116,7 +117,7 @@ Ensure gitian-builder is up-to-date:
 
     pushd ./gitian-builder
     mkdir -p inputs
-    wget -O osslsigncode-2.0.tar.gz -P inputs https://github.com/mtrojnar/osslsigncode/archive/2.0.tar.gz
+    wget -O inputs/osslsigncode-2.0.tar.gz https://github.com/mtrojnar/osslsigncode/archive/2.0.tar.gz
     echo '5a60e0a4b3e0b4d655317b2f12a810211c50242138322b16e7e01c6fbb89d92f inputs/osslsigncode-2.0.tar.gz' | sha256sum -c
     popd
 
@@ -315,7 +316,7 @@ bitcoin.org (see below for bitcoin.org update instructions).
     instructions: https://github.com/bitcoin-dot-org/bitcoin.org/blob/master/docs/adding-events-release-notes-and-alerts.md#release-notes
 
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
-    as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
+    as update the OS download links.
 
 - Update other repositories and websites for new version
 
@@ -330,7 +331,12 @@ bitcoin.org (see below for bitcoin.org update instructions).
 
       - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin)
 
-      - Create a new branch for the major release "0.xx" (used to build the snap package)
+      - Push the flatpak to flathub, e.g. https://github.com/flathub/org.bitcoincore.bitcoin-qt/pull/2
+
+      - Push the latest version to master (if applicable), e.g. https://github.com/bitcoin-core/packaging/pull/32
+
+      - Create a new branch for the major release "0.xx" from master (used to build the snap package) and request the
+        track (if applicable), e.g. https://forum.snapcraft.io/t/track-request-for-bitcoin-core-snap/10112/7
 
       - Notify MarcoFalke so that he can start building the snap package
 
@@ -353,8 +359,6 @@ bitcoin.org (see below for bitcoin.org update instructions).
       - Archive the release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
 
       - Create a [new GitHub release](https://github.com/bitcoin/bitcoin/releases/new) with a link to the archived release notes
-
-      - Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/15555) for an example) and provide a link to it in the release announcements where useful
 
 - Announce the release:
 

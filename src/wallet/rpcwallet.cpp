@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -124,9 +124,13 @@ void EnsureWalletIsUnlocked(const CWallet* pwallet)
     }
 }
 
-LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet)
+// also_create should only be set to true only when the RPC is expected to add things to a blank wallet and make it no longer blank
+LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create)
 {
     LegacyScriptPubKeyMan* spk_man = wallet.GetLegacyScriptPubKeyMan();
+    if (!spk_man && also_create) {
+        spk_man = wallet.GetOrCreateLegacyScriptPubKeyMan();
+    }
     if (!spk_man) {
         throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
     }
@@ -560,7 +564,11 @@ static UniValue signmessage(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
     }
 
-    const SigningProvider* provider = pwallet->GetSigningProvider();
+    CScript script_pub_key = GetScriptForDestination(*pkhash);
+    std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(script_pub_key);
+    if (!provider) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
+    }
 
     CKey key;
     CKeyID keyID(*pkhash);
@@ -947,7 +955,7 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
     }
 
             RPCHelpMan{"addmultisigaddress",
-                "\nAdd a nrequired-to-sign multisignature address to the wallet. Requires a new wallet backup.\n"
+                "\nAdd an nrequired-to-sign multisignature address to the wallet. Requires a new wallet backup.\n"
                 "Each key is a Bitcoin address or hex-encoded public key.\n"
                 "This functionality is only intended for use with non-watchonly addresses.\n"
                 "See `importaddress` for watchonly p2sh address support.\n"
@@ -979,7 +987,7 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
 
     auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
     std::string label;
     if (!request.params[2].isNull())
@@ -994,7 +1002,7 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
         if (IsHex(keys_or_addrs[i].get_str()) && (keys_or_addrs[i].get_str().length() == 66 || keys_or_addrs[i].get_str().length() == 130)) {
             pubkeys.push_back(HexToPubKey(keys_or_addrs[i].get_str()));
         } else {
-            pubkeys.push_back(AddrToPubKey(&spk_man, keys_or_addrs[i].get_str()));
+            pubkeys.push_back(AddrToPubKey(spk_man, keys_or_addrs[i].get_str()));
         }
     }
 
@@ -1370,16 +1378,16 @@ static const std::string TransactionDescriptionString()
            "    \"blockhash\": \"hashvalue\",                  (string) The block hash containing the transaction.\n"
            "    \"blockheight\": n,                          (numeric) The block height containing the transaction.\n"
            "    \"blockindex\": n,                           (numeric) The index of the transaction in the block that includes it.\n"
-           "    \"blocktime\": xxx,                          (numeric) The block time in seconds since epoch (1 Jan 1970 GMT).\n"
+           "    \"blocktime\": xxx,                          (numeric) The block time expressed in " + UNIX_EPOCH_TIME + ".\n"
            "    \"txid\": \"transactionid\",                   (string) The transaction id.\n"
            "    \"walletconflicts\": [                       (array) Conflicting transaction ids.\n"
            "      \"txid\",                                  (string) The transaction id.\n"
            "      ...\n"
            "    ],\n"
-           "    \"time\": xxx,                               (numeric) The transaction time in seconds since epoch (midnight Jan 1 1970 GMT).\n"
-           "    \"timereceived\": xxx,                       (numeric) The time received in seconds since epoch (midnight Jan 1 1970 GMT).\n"
+           "    \"time\": xxx,                               (numeric) The transaction time expressed in " + UNIX_EPOCH_TIME + ".\n"
+           "    \"timereceived\": xxx,                       (numeric) The time received expressed in " + UNIX_EPOCH_TIME + ".\n"
            "    \"comment\": \"...\",                          (string) If a comment is associated with the transaction, only present if not empty.\n"
-           "    \"bip125-replaceable\": \"yes|no|unknown\",    (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
+           "    \"bip125-replaceable\" : \"str\",              (string) (\"yes|no|unknown\") Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
            "                                                     may be unknown for unconfirmed transactions not in the mempool\n";
 }
 
@@ -1527,11 +1535,12 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
             "                                                           (not guaranteed to work on pruned nodes)"},
                 },
                 RPCResult{
-            "{\n"
-            "  \"transactions\": [\n"
+            "{                             (json object)\n"
+            "  \"transactions\" : [          (json array)\n"
+            "  {                           (json object)\n"
             "    \"involvesWatchonly\": xxx, (bool) Only returns true if imported addresses were involved in transaction.\n"
-            "    \"address\":\"address\",    (string) The bitcoin address of the transaction.\n"
-            "    \"category\":               (string) The transaction category.\n"
+            "    \"address\" : \"str\",        (string) The bitcoin address of the transaction.\n"
+            "    \"category\" : \"str\",       (string) The transaction category.\n"
             "                \"send\"                  Transactions sent.\n"
             "                \"receive\"               Non-coinbase transactions received.\n"
             "                \"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
@@ -1543,15 +1552,16 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
             "    \"fee\": x.xxx,             (numeric) The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the 'send' category of transactions.\n"
             + TransactionDescriptionString()
             + "    \"abandoned\": xxx,         (bool) 'true' if the transaction has been abandoned (inputs are respendable). Only available for the 'send' category of transactions.\n"
-            "    \"comment\": \"...\",       (string) If a comment is associated with the transaction.\n"
             "    \"label\" : \"label\"       (string) A comment for the address/transaction, if any\n"
             "    \"to\": \"...\",            (string) If a comment to is associated with the transaction.\n"
+            "   },\n"
+            "   ...\n"
             "  ],\n"
-            "  \"removed\": [\n"
+            "  \"removed\": [              (json array)\n"
             "    <structure is the same as \"transactions\" above, only present if include_removed=true>\n"
             "    Note: transactions that were re-added in the active chain will appear as-is in this array, and may thus have a positive confirmation count.\n"
             "  ],\n"
-            "  \"lastblock\": \"lastblockhash\"     (string) The hash of the block (target_confirmations-1) from the best block on the main chain. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones\n"
+            "  \"lastblock\": \"hex\"        (string) The hash of the block (target_confirmations-1) from the best block on the main chain. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones\n"
             "}\n"
                 },
                 RPCExamples{
@@ -2424,10 +2434,10 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
             "  \"unconfirmed_balance\": xxx,        (numeric) DEPRECATED. Identical to getbalances().mine.untrusted_pending\n"
             "  \"immature_balance\": xxxxxx,        (numeric) DEPRECATED. Identical to getbalances().mine.immature\n"
             "  \"txcount\": xxxxxxx,                (numeric) the total number of transactions in the wallet\n"
-            "  \"keypoololdest\": xxxxxx,           (numeric) the timestamp (seconds since Unix epoch) of the oldest pre-generated key in the key pool\n"
+            "  \"keypoololdest\": xxxxxx,           (numeric) the " + UNIX_EPOCH_TIME + " of the oldest pre-generated key in the key pool\n"
             "  \"keypoolsize\": xxxx,               (numeric) how many new keys are pre-generated (only counts external keys)\n"
             "  \"keypoolsize_hd_internal\": xxxx,   (numeric) how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)\n"
-            "  \"unlocked_until\": ttt,             (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
+            "  \"unlocked_until\": ttt,             (numeric) the " + UNIX_EPOCH_TIME + " until which the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
             "  \"paytxfee\": x.xxxx,                (numeric) the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB\n"
             "  \"hdseedid\": \"<hash160>\"            (string, optional) the Hash160 of the HD seed (only present when HD is enabled)\n"
             "  \"private_keys_enabled\": true|false (boolean) false if privatekeys are disabled for this wallet (enforced watch-only wallet)\n"
@@ -2923,7 +2933,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
         CTxDestination address;
         const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
         bool fValidAddress = ExtractDestination(scriptPubKey, address);
-        bool reused = avoid_reuse && pwallet->IsUsedDestination(address);
+        bool reused = avoid_reuse && pwallet->IsUsedDestination(out.tx->GetHash(), out.i);
 
         if (destinations.size() && (!fValidAddress || !destinations.count(address)))
             continue;
@@ -2940,34 +2950,36 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 entry.pushKV("label", i->second.name);
             }
 
-            const SigningProvider* provider = pwallet->GetSigningProvider();
-            if (scriptPubKey.IsPayToScriptHash()) {
-                const CScriptID& hash = CScriptID(boost::get<ScriptHash>(address));
-                CScript redeemScript;
-                if (provider->GetCScript(hash, redeemScript)) {
-                    entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
-                    // Now check if the redeemScript is actually a P2WSH script
-                    CTxDestination witness_destination;
-                    if (redeemScript.IsPayToWitnessScriptHash()) {
-                        bool extracted = ExtractDestination(redeemScript, witness_destination);
-                        CHECK_NONFATAL(extracted);
-                        // Also return the witness script
-                        const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(witness_destination);
-                        CScriptID id;
-                        CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
-                        CScript witnessScript;
-                        if (provider->GetCScript(id, witnessScript)) {
-                            entry.pushKV("witnessScript", HexStr(witnessScript.begin(), witnessScript.end()));
+            std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(scriptPubKey);
+            if (provider) {
+                if (scriptPubKey.IsPayToScriptHash()) {
+                    const CScriptID& hash = CScriptID(boost::get<ScriptHash>(address));
+                    CScript redeemScript;
+                    if (provider->GetCScript(hash, redeemScript)) {
+                        entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
+                        // Now check if the redeemScript is actually a P2WSH script
+                        CTxDestination witness_destination;
+                        if (redeemScript.IsPayToWitnessScriptHash()) {
+                            bool extracted = ExtractDestination(redeemScript, witness_destination);
+                            CHECK_NONFATAL(extracted);
+                            // Also return the witness script
+                            const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(witness_destination);
+                            CScriptID id;
+                            CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
+                            CScript witnessScript;
+                            if (provider->GetCScript(id, witnessScript)) {
+                                entry.pushKV("witnessScript", HexStr(witnessScript.begin(), witnessScript.end()));
+                            }
                         }
                     }
-                }
-            } else if (scriptPubKey.IsPayToWitnessScriptHash()) {
-                const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(address);
-                CScriptID id;
-                CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
-                CScript witnessScript;
-                if (provider->GetCScript(id, witnessScript)) {
-                    entry.pushKV("witnessScript", HexStr(witnessScript.begin(), witnessScript.end()));
+                } else if (scriptPubKey.IsPayToWitnessScriptHash()) {
+                    const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(address);
+                    CScriptID id;
+                    CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
+                    CScript witnessScript;
+                    if (provider->GetCScript(id, witnessScript)) {
+                        entry.pushKV("witnessScript", HexStr(witnessScript.begin(), witnessScript.end()));
+                    }
                 }
             }
         }
@@ -2978,8 +2990,11 @@ static UniValue listunspent(const JSONRPCRequest& request)
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
         if (out.fSolvable) {
-            auto descriptor = InferDescriptor(scriptPubKey, *pwallet->GetLegacyScriptPubKeyMan());
-            entry.pushKV("desc", descriptor->ToString());
+            std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(scriptPubKey);
+            if (provider) {
+                auto descriptor = InferDescriptor(scriptPubKey, *provider);
+                entry.pushKV("desc", descriptor->ToString());
+            }
         }
         if (avoid_reuse) entry.pushKV("reused", reused);
         entry.pushKV("safe", out.fSafe);
@@ -3288,7 +3303,23 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
     // Parse the prevtxs array
     ParsePrevouts(request.params[1], nullptr, coins);
 
-    return SignTransaction(mtx, &*pwallet->GetLegacyScriptPubKeyMan(), coins, request.params[2]);
+    std::set<std::shared_ptr<SigningProvider>> providers;
+    for (const std::pair<COutPoint, Coin> coin_pair : coins) {
+        std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(coin_pair.second.out.scriptPubKey);
+        if (provider) {
+            providers.insert(std::move(provider));
+        }
+    }
+    if (providers.size() == 0) {
+        // When there are no available providers, use a dummy SigningProvider so we can check if the tx is complete
+        providers.insert(std::make_shared<SigningProvider>());
+    }
+
+    UniValue result(UniValue::VOBJ);
+    for (std::shared_ptr<SigningProvider> provider : providers) {
+        SignTransaction(mtx, provider.get(), coins, request.params[2], result);
+    }
+     return result;
 }
 
 static UniValue bumpfee(const JSONRPCRequest& request)
@@ -3340,10 +3371,11 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{\n"
-            "  \"txid\":    \"value\",   (string)  The id of the new transaction\n"
-            "  \"origfee\":  n,         (numeric) Fee of the replaced transaction\n"
-            "  \"fee\":      n,         (numeric) Fee of the new transaction\n"
-            "  \"errors\":  [ str... ] (json array of strings) Errors encountered during processing (may be empty)\n"
+            "  \"psbt\":    \"psbt\",    (string) The base64-encoded unsigned PSBT of the new transaction. Only returned when wallet private keys are disabled.\n"
+            "  \"txid\":    \"value\",   (string) The id of the new transaction. Only returned when wallet private keys are enabled.\n"
+            "  \"origfee\":  n,        (numeric) The fee of the replaced transaction.\n"
+            "  \"fee\":      n,        (numeric) The fee of the new transaction.\n"
+            "  \"errors\":  [ str... ] (json array of strings) Errors encountered during processing (may be empty).\n"
             "}\n"
                 },
                 RPCExamples{
@@ -3355,10 +3387,12 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
     uint256 hash(ParseHashV(request.params[0], "txid"));
 
+    CCoinControl coin_control;
+    coin_control.fAllowWatchOnly = pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     // optional parameters
     CAmount totalFee = 0;
-    CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = true;
+
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
@@ -3443,17 +3477,32 @@ static UniValue bumpfee(const JSONRPCRequest& request)
         }
     }
 
-    // sign bumped transaction
-    if (!feebumper::SignTransaction(*pwallet, mtx)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
-    }
-    // commit the bumped transaction
-    uint256 txid;
-    if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
-        throw JSONRPCError(RPC_WALLET_ERROR, errors[0]);
-    }
     UniValue result(UniValue::VOBJ);
-    result.pushKV("txid", txid.GetHex());
+
+    // If wallet private keys are enabled, return the new transaction id,
+    // otherwise return the base64-encoded unsigned PSBT of the new transaction.
+    if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        if (!feebumper::SignTransaction(*pwallet, mtx)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
+        }
+
+        uint256 txid;
+        if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
+            throw JSONRPCError(RPC_WALLET_ERROR, errors[0]);
+        }
+
+        result.pushKV("txid", txid.GetHex());
+    } else {
+        PartiallySignedTransaction psbtx(mtx);
+        bool complete = false;
+        const TransactionError err = FillPSBT(pwallet, psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
+        CHECK_NONFATAL(err == TransactionError::OK);
+        CHECK_NONFATAL(!complete);
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << psbtx;
+        result.pushKV("psbt", EncodeBase64(ssTx.str()));
+    }
+
     result.pushKV("origfee", ValueFromAmount(old_fee));
     result.pushKV("fee", ValueFromAmount(new_fee));
     UniValue result_errors(UniValue::VARR);
@@ -3653,12 +3702,13 @@ static UniValue DescribeWalletAddress(CWallet* pwallet, const CTxDestination& de
 {
     UniValue ret(UniValue::VOBJ);
     UniValue detail = DescribeAddress(dest);
-    const SigningProvider* provider = nullptr;
+    CScript script = GetScriptForDestination(dest);
+    std::unique_ptr<SigningProvider> provider = nullptr;
     if (pwallet) {
-        provider = pwallet->GetSigningProvider();
+        provider = pwallet->GetSigningProvider(script);
     }
     ret.pushKVs(detail);
-    ret.pushKVs(boost::apply_visitor(DescribeWalletAddressVisitor(provider), dest));
+    ret.pushKVs(boost::apply_visitor(DescribeWalletAddressVisitor(provider.get()), dest));
     return ret;
 }
 
@@ -3682,53 +3732,62 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
+    const std::string example_address = "\"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl\"";
+
             RPCHelpMan{"getaddressinfo",
-                "\nReturn information about the given bitcoin address. Some information requires the address\n"
-                "to be in the wallet.\n",
+                "\nReturn information about the given bitcoin address.\n"
+                "Some of the information will only be present if the address is in the active wallet.\n",
                 {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to get the information of."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address for which to get information."},
                 },
                 RPCResult{
             "{\n"
-            "  \"address\" : \"address\",        (string) The bitcoin address validated\n"
-            "  \"scriptPubKey\" : \"hex\",       (string) The hex-encoded scriptPubKey generated by the address\n"
-            "  \"ismine\" : true|false,        (boolean) If the address is yours or not\n"
-            "  \"iswatchonly\" : true|false,   (boolean) If the address is watchonly\n"
-            "  \"solvable\" : true|false,      (boolean) Whether we know how to spend coins sent to this address, ignoring the possible lack of private keys\n"
-            "  \"desc\" : \"desc\",            (string, optional) A descriptor for spending coins sent to this address (only when solvable)\n"
-            "  \"isscript\" : true|false,      (boolean) If the key is a script\n"
-            "  \"ischange\" : true|false,      (boolean) If the address was used for change output\n"
-            "  \"iswitness\" : true|false,     (boolean) If the address is a witness address\n"
-            "  \"witness_version\" : version   (numeric, optional) The version number of the witness program\n"
-            "  \"witness_program\" : \"hex\"     (string, optional) The hex value of the witness program\n"
-            "  \"script\" : \"type\"             (string, optional) The output script type. Only if \"isscript\" is true and the redeemscript is known. Possible types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata, witness_v0_keyhash, witness_v0_scripthash, witness_unknown\n"
-            "  \"hex\" : \"hex\",                (string, optional) The redeemscript for the p2sh address\n"
-            "  \"pubkeys\"                     (string, optional) Array of pubkeys associated with the known redeemscript (only if \"script\" is \"multisig\")\n"
+            "  \"address\" : \"address\",              (string) The bitcoin address validated.\n"
+            "  \"scriptPubKey\" : \"hex\",             (string) The hex-encoded scriptPubKey generated by the address.\n"
+            "  \"ismine\" : true|false,              (boolean) If the address is yours.\n"
+            "  \"iswatchonly\" : true|false,         (boolean) If the address is watchonly.\n"
+            "  \"solvable\" : true|false,            (boolean) If we know how to spend coins sent to this address, ignoring the possible lack of private keys.\n"
+            "  \"desc\" : \"desc\",                    (string, optional) A descriptor for spending coins sent to this address (only when solvable).\n"
+            "  \"isscript\" : true|false,            (boolean) If the key is a script.\n"
+            "  \"ischange\" : true|false,            (boolean) If the address was used for change output.\n"
+            "  \"iswitness\" : true|false,           (boolean) If the address is a witness address.\n"
+            "  \"witness_version\" : version         (numeric, optional) The version number of the witness program.\n"
+            "  \"witness_program\" : \"hex\"           (string, optional) The hex value of the witness program.\n"
+            "  \"script\" : \"type\"                   (string, optional) The output script type. Only if isscript is true and the redeemscript is known. Possible\n"
+            "                                                         types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata, witness_v0_keyhash,\n"
+            "                                                         witness_v0_scripthash, witness_unknown.\n"
+            "  \"hex\" : \"hex\",                      (string, optional) The redeemscript for the p2sh address.\n"
+            "  \"pubkeys\"                           (array, optional) Array of pubkeys associated with the known redeemscript (only if script is multisig).\n"
             "    [\n"
-            "      \"pubkey\"\n"
+            "      \"pubkey\" (string)\n"
             "      ,...\n"
             "    ]\n"
-            "  \"sigsrequired\" : xxxxx        (numeric, optional) Number of signatures required to spend multisig output (only if \"script\" is \"multisig\")\n"
-            "  \"pubkey\" : \"publickeyhex\",    (string, optional) The hex value of the raw public key, for single-key addresses (possibly embedded in P2SH or P2WSH)\n"
-            "  \"embedded\" : {...},           (object, optional) Information about the address embedded in P2SH or P2WSH, if relevant and known. It includes all getaddressinfo output fields for the embedded address, excluding metadata (\"timestamp\", \"hdkeypath\", \"hdseedid\") and relation to the wallet (\"ismine\", \"iswatchonly\").\n"
-            "  \"iscompressed\" : true|false,  (boolean, optional) If the pubkey is compressed\n"
-            "  \"label\" :  \"label\"         (string) The label associated with the address, \"\" is the default label\n"
-            "  \"timestamp\" : timestamp,      (number, optional) The creation time of the key if available in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  \"hdkeypath\" : \"keypath\"       (string, optional) The HD keypath if the key is HD and available\n"
-            "  \"hdseedid\" : \"<hash160>\"      (string, optional) The Hash160 of the HD seed\n"
-            "  \"hdmasterfingerprint\" : \"<hash160>\" (string, optional) The fingperint of the master key.\n"
-            "  \"labels\"                      (object) Array of labels associated with the address.\n"
+            "  \"sigsrequired\" : xxxxx              (numeric, optional) The number of signatures required to spend multisig output (only if script is multisig).\n"
+            "  \"pubkey\" : \"publickeyhex\",          (string, optional) The hex value of the raw public key for single-key addresses (possibly embedded in P2SH or P2WSH).\n"
+            "  \"embedded\" : {...},                 (object, optional) Information about the address embedded in P2SH or P2WSH, if relevant and known. Includes all\n"
+            "                                                         getaddressinfo output fields for the embedded address, excluding metadata (timestamp, hdkeypath,\n"
+            "                                                         hdseedid) and relation to the wallet (ismine, iswatchonly).\n"
+            "  \"iscompressed\" : true|false,        (boolean, optional) If the pubkey is compressed.\n"
+            "  \"label\" :  \"label\"                  (string) DEPRECATED. The label associated with the address. Defaults to \"\". Replaced by the labels array below.\n"
+            "  \"timestamp\" : timestamp,            (number, optional) The creation time of the key, if available, expressed in " + UNIX_EPOCH_TIME + ".\n"
+            "  \"hdkeypath\" : \"keypath\"             (string, optional) The HD keypath, if the key is HD and available.\n"
+            "  \"hdseedid\" : \"<hash160>\"            (string, optional) The Hash160 of the HD seed.\n"
+            "  \"hdmasterfingerprint\" : \"<hash160>\" (string, optional) The fingerprint of the master key.\n"
+            "  \"labels\"                            (array) Array of labels associated with the address. Currently limited to one label but returned\n"
+            "                                              as an array to keep the API stable if multiple labels are enabled in the future.\n"
             "    [\n"
-            "      { (json object of label data)\n"
-            "        \"name\": \"labelname\" (string) The label\n"
-            "        \"purpose\": \"string\" (string) Purpose of address (\"send\" for sending address, \"receive\" for receiving address)\n"
-            "      },...\n"
+            "      \"label name\" (string) The label name. Defaults to \"\".\n"
+            "      DEPRECATED, will be removed in 0.21. To re-enable, launch bitcoind with `-deprecatedrpc=labelspurpose`:\n"
+            "      {\n"
+            "        \"name\" : \"label name\" (string) The label name. Defaults to \"\".\n"
+            "        \"purpose\" : \"purpose\" (string) The purpose of the associated address (send or receive).\n"
+            "      }\n"
             "    ]\n"
             "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("getaddressinfo", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
-            + HelpExampleRpc("getaddressinfo", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+                    HelpExampleCli("getaddressinfo", example_address) +
+                    HelpExampleRpc("getaddressinfo", example_address)
                 },
             }.Check(request);
 
@@ -3736,7 +3795,6 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VOBJ);
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
-
     // Make sure the destination is valid
     if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
@@ -3747,24 +3805,34 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     CScript scriptPubKey = GetScriptForDestination(dest);
     ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
-    const SigningProvider* provider = pwallet->GetSigningProvider();
+
+    std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(scriptPubKey);
 
     isminetype mine = pwallet->IsMine(dest);
     ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
-    bool solvable = IsSolvable(*provider, scriptPubKey);
+
+    bool solvable = provider && IsSolvable(*provider, scriptPubKey);
     ret.pushKV("solvable", solvable);
+
     if (solvable) {
        ret.pushKV("desc", InferDescriptor(scriptPubKey, *provider)->ToString());
     }
+
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
+
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);
-    if (pwallet->mapAddressBook.count(dest)) {
+
+    // DEPRECATED: Return label field if existing. Currently only one label can
+    // be associated with an address, so the label should be equivalent to the
+    // value of the name key/value pair in the labels array below.
+    if ((pwallet->chain().rpcEnableDeprecated("label")) && (pwallet->mapAddressBook.count(dest))) {
         ret.pushKV("label", pwallet->mapAddressBook[dest].name);
     }
+
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
 
-    ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan();
+    ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
     if (spk_man) {
         if (const CKeyMetadata* meta = spk_man->GetMetadata(dest)) {
             ret.pushKV("timestamp", meta->nCreateTime);
@@ -3776,13 +3844,21 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         }
     }
 
-    // Currently only one label can be associated with an address, return an array
-    // so the API remains stable if we allow multiple labels to be associated with
-    // an address.
+    // Return a `labels` array containing the label associated with the address,
+    // equivalent to the `label` field above. Currently only one label can be
+    // associated with an address, but we return an array so the API remains
+    // stable if we allow multiple labels to be associated with an address in
+    // the future.
     UniValue labels(UniValue::VARR);
     std::map<CTxDestination, CAddressBookData>::iterator mi = pwallet->mapAddressBook.find(dest);
     if (mi != pwallet->mapAddressBook.end()) {
-        labels.push_back(AddressBookDataToJSON(mi->second, true));
+        // DEPRECATED: The previous behavior of returning an array containing a
+        // JSON object of `name` and `purpose` key/value pairs is deprecated.
+        if (pwallet->chain().rpcEnableDeprecated("labelspurpose")) {
+            labels.push_back(AddressBookDataToJSON(mi->second, true));
+        } else {
+            labels.push_back(mi->second.name);
+        }
     }
     ret.pushKV("labels", std::move(labels));
 
@@ -3932,7 +4008,7 @@ UniValue sethdseed(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet, true);
 
     if (pwallet->chain().isInitialBlockDownload()) {
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Cannot set a new HD seed while still in Initial Block Download");
@@ -3943,7 +4019,7 @@ UniValue sethdseed(const JSONRPCRequest& request)
     }
 
     auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
     // Do not do anything to non-HD wallets
     if (!pwallet->CanSupportFeature(FEATURE_HD)) {
@@ -4005,10 +4081,9 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
                     {"bip32derivs", RPCArg::Type::BOOL, /* default */ "false", "If true, includes the BIP 32 derivation paths for public keys if we know them"},
                 },
                 RPCResult{
-            "{\n"
-            "  \"psbt\" : \"value\",          (string) The base64-encoded partially signed transaction\n"
+            "{                            (json object)\n"
+            "  \"psbt\" : \"str\",            (string) The base64-encoded partially signed transaction\n"
             "  \"complete\" : true|false,   (boolean) If the transaction has a complete set of signatures\n"
-            "  ]\n"
             "}\n"
                 },
                 RPCExamples{

@@ -713,6 +713,29 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].nValue = nDustThreshold;
     BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
 
+    // Disallowed nVersion
+    t.nVersion = -1;
+    reason.clear();
+    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
+    BOOST_CHECK_EQUAL(reason, "version");
+
+    t.nVersion = 0;
+    reason.clear();
+    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
+    BOOST_CHECK_EQUAL(reason, "version");
+
+    t.nVersion = 3;
+    reason.clear();
+    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
+    BOOST_CHECK_EQUAL(reason, "version");
+
+    // Allowed nVersion
+    t.nVersion = 1;
+    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+
+    t.nVersion = 2;
+    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+
     // Check dust with odd relay fee to verify rounding:
     // nDustThreshold = 182 * 3702 / 1000
     dustRelayFee = CFeeRate(3702);
@@ -797,6 +820,18 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     reason.clear();
     BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
     BOOST_CHECK_EQUAL(reason, "scriptsig-size");
+
+    // Check bare multisig (standard if policy flag fIsBareMultisigStd is set)
+    fIsBareMultisigStd = true;
+    t.vout[0].scriptPubKey = GetScriptForMultisig(1, {key.GetPubKey()}); // simple 1-of-1
+    t.vin[0].scriptSig = CScript() << std::vector<unsigned char>(65, 0);
+    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+
+    fIsBareMultisigStd = false;
+    reason.clear();
+    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
+    BOOST_CHECK_EQUAL(reason, "bare-multisig");
+    fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

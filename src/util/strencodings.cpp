@@ -1,9 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/strencodings.h>
+#include <util/string.h>
 
 #include <tinyformat.h>
 
@@ -190,6 +191,12 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
 
 std::string DecodeBase64(const std::string& str, bool* pf_invalid)
 {
+    if (!ValidAsCString(str)) {
+        if (pf_invalid) {
+            *pf_invalid = true;
+        }
+        return {};
+    }
     std::vector<unsigned char> vchRet = DecodeBase64(str.c_str(), pf_invalid);
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
@@ -259,6 +266,12 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
 
 std::string DecodeBase32(const std::string& str, bool* pf_invalid)
 {
+    if (!ValidAsCString(str)) {
+        if (pf_invalid) {
+            *pf_invalid = true;
+        }
+        return {};
+    }
     std::vector<unsigned char> vchRet = DecodeBase32(str.c_str(), pf_invalid);
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
@@ -269,7 +282,7 @@ NODISCARD static bool ParsePrechecks(const std::string& str)
         return false;
     if (str.size() >= 1 && (IsSpace(str[0]) || IsSpace(str[str.size()-1]))) // No padding allowed
         return false;
-    if (str.size() != strlen(str.c_str())) // No embedded NUL characters allowed
+    if (!ValidAsCString(str)) // No embedded NUL characters allowed
         return false;
     return true;
 }

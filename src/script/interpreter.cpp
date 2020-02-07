@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1281,13 +1281,11 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
         return ss.GetHash();
     }
 
-    static const uint256 one(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
-
     // Check for invalid use of SIGHASH_SINGLE
     if ((nHashType & 0x1f) == SIGHASH_SINGLE) {
         if (nIn >= txTo.vout.size()) {
             //  nOut out of range
-            return one;
+            return UINT256_ONE();
         }
     }
 

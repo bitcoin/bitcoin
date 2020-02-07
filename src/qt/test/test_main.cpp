@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -36,6 +36,8 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 #endif
+
+const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 // This is all you need to run all the tests
 int main(int argc, char *argv[])

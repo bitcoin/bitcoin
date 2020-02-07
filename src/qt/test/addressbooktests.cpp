@@ -1,3 +1,7 @@
+// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include <qt/test/addressbooktests.h>
 #include <qt/test/util.h>
 #include <test/util/setup_common.h>
@@ -55,6 +59,7 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
 {
     TestChain100Setup test;
     std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), WalletLocation(), WalletDatabase::CreateMock());
+    wallet->SetupLegacyScriptPubKeyMan();
     bool firstRun;
     wallet->LoadWallet(firstRun);
 

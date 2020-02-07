@@ -125,7 +125,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
     }
 
-    EnsureLegacyScriptPubKeyMan(*wallet);
+    EnsureLegacyScriptPubKeyMan(*wallet, true);
 
     WalletRescanReserver reserver(pwallet);
     bool fRescan = true;
@@ -253,7 +253,7 @@ UniValue importaddress(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    EnsureLegacyScriptPubKeyMan(*pwallet);
+    EnsureLegacyScriptPubKeyMan(*pwallet, true);
 
     std::string strLabel;
     if (!request.params[1].isNull())
@@ -454,7 +454,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    EnsureLegacyScriptPubKeyMan(*wallet);
+    EnsureLegacyScriptPubKeyMan(*wallet, true);
 
     std::string strLabel;
     if (!request.params[1].isNull())
@@ -538,7 +538,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    EnsureLegacyScriptPubKeyMan(*wallet);
+    EnsureLegacyScriptPubKeyMan(*wallet, true);
 
     if (pwallet->chain().havePruned()) {
         // Exit early and print an error.
@@ -700,7 +700,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
 
     auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -751,8 +751,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
 
     auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
-    AssertLockHeld(spk_man.cs_wallet);
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -1286,7 +1285,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                                     {"scriptPubKey", RPCArg::Type::STR, RPCArg::Optional::NO, "Type of scriptPubKey (string for script, json for address). Should not be provided if using a descriptor",
                                         /* oneline_description */ "", {"\"<script>\" | { \"address\":\"<address>\" }", "string / json"}
                                     },
-                                    {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Creation time of the key in seconds since epoch (Jan 1 1970 GMT),\n"
+                                    {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Creation time of the key expressed in " + UNIX_EPOCH_TIME + ",\n"
         "                                                              or the string \"now\" to substitute the current synced blockchain time. The timestamp of the oldest\n"
         "                                                              key will determine how far back blockchain rescans need to begin for missing wallet transactions.\n"
         "                                                              \"now\" can be specified to bypass scanning, for keys which are known to never have been used, and\n"
@@ -1322,8 +1321,19 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                         "\"options\""},
                 },
                 RPCResult{
-            "\nResponse is an array with the same size as the input that has the execution result :\n"
-            "  [{\"success\": true}, {\"success\": true, \"warnings\": [\"Ignoring irrelevant private key\"]}, {\"success\": false, \"error\": {\"code\": -1, \"message\": \"Internal Server Error\"}}, ...]\n"
+            "[                              (json array) Response is an array with the same size as the input that has the execution result\n"
+            "  {                            (json object)\n"
+            "    \"success\" : true|false,    (boolean)\n"
+            "    \"warnings\" : [             (json array, optional)\n"
+            "      \"str\",                   (string)\n"
+            "      ...\n"
+            "    ],\n"
+            "    \"error\" : {                (json object, optional)\n"
+            "        ...                    JSONRPC error\n"
+            "    },\n"
+            "  },\n"
+            "  ...\n"
+            "]\n"
                 },
                 RPCExamples{
                     HelpExampleCli("importmulti", "'[{ \"scriptPubKey\": { \"address\": \"<my address>\" }, \"timestamp\":1455191478 }, "
@@ -1335,7 +1345,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
 
     RPCTypeCheck(mainRequest.params, {UniValue::VARR, UniValue::VOBJ});
 
-    EnsureLegacyScriptPubKeyMan(*wallet);
+    EnsureLegacyScriptPubKeyMan(*wallet, true);
 
     const UniValue& requests = mainRequest.params[0];
 

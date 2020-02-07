@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -343,7 +343,7 @@ static UniValue setmocktime(const JSONRPCRequest& request)
             RPCHelpMan{"setmocktime",
                 "\nSet the local time to given timestamp (-regtest only)\n",
                 {
-                    {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Unix seconds-since-epoch timestamp\n"
+                    {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, UNIX_EPOCH_TIME + "\n"
             "   Pass 0 to go back to using the system time."},
                 },
                 RPCResults{},

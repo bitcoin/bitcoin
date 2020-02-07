@@ -25,7 +25,7 @@ BITCOIN_QT_BIN=$(top_builddir)/src/qt/$(BITCOIN_GUI_NAME)$(EXEEXT)
 BITCOIN_CLI_BIN=$(top_builddir)/src/$(BITCOIN_CLI_NAME)$(EXEEXT)
 BITCOIN_TX_BIN=$(top_builddir)/src/$(BITCOIN_TX_NAME)$(EXEEXT)
 BITCOIN_WALLET_BIN=$(top_builddir)/src/$(BITCOIN_WALLET_TOOL_NAME)$(EXEEXT)
-BITCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win$(WINDOWS_BITS)-setup$(EXEEXT)
+BITCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win64-setup$(EXEEXT)
 
 empty :=
 space := $(empty) $(empty)
@@ -99,7 +99,7 @@ $(OSX_APP)/Contents/PkgInfo:
 
 $(OSX_APP)/Contents/Resources/empty.lproj:
 	$(MKDIR_P) $(@D)
-	@touch $@ 
+	@touch $@
 
 $(OSX_APP)/Contents/Info.plist: $(OSX_PLIST)
 	$(MKDIR_P) $(@D)
@@ -189,7 +189,16 @@ $(BITCOIN_WALLET_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
 if USE_LCOV
-LCOV_FILTER_PATTERN=-p "/usr/include/" -p "/usr/lib/" -p "src/leveldb/" -p "src/bench/" -p "src/univalue" -p "src/crypto/ctaes" -p "src/secp256k1"
+LCOV_FILTER_PATTERN = \
+	-p "/usr/include/" \
+	-p "/usr/lib/" \
+	-p "/usr/lib64/" \
+	-p "src/leveldb/" \
+	-p "src/bench/" \
+	-p "src/univalue" \
+	-p "src/crypto/ctaes" \
+	-p "src/secp256k1" \
+	-p "depends"
 
 baseline.info:
 	$(LCOV) -c -i -d $(abs_builddir)/src -o $@
@@ -321,4 +330,3 @@ clean-local: clean-docs
 	rm -rf coverage_percent.txt test_bitcoin.coverage/ total.coverage/ test/tmp/ cache/ $(OSX_APP)
 	rm -rf test/functional/__pycache__ test/functional/test_framework/__pycache__ test/cache share/rpcauth/__pycache__
 	rm -rf osx_volname dist/ dpi36.background.tiff dpi72.background.tiff
-

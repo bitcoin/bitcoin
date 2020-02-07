@@ -16,7 +16,7 @@ release cycle, overall merging, moderation and appointment of maintainers.
 
 If you're looking for somewhere to start contributing, check out the
 [good first issue](https://github.com/bitcoin/bitcoin/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-list.
+list or participate in a weekly [Bitcoin Core PR Review Club](https://bitcoincore.reviews/) meeting.
 
 Communication Channels
 ----------------------
@@ -88,10 +88,10 @@ the pull request affects. Valid areas as:
   - `refactor` for structural changes that do not change behavior
   - `rpc`, `rest` or `zmq` for changes to the RPC, REST or ZMQ APIs
   - `script` for changes to the scripts and tools
-  - `test` for changes to the bitcoin unit tests or QA tests
+  - `test`, `qa` or `ci` for changes to the unit tests, QA tests or CI code
   - `util` or `lib` for changes to the utils or libraries
   - `wallet` for changes to the wallet code
-  - `build` for changes to the GNU Autotools, reproducible builds or CI code
+  - `build` for changes to the GNU Autotools or reproducible builds
 
 Examples:
 

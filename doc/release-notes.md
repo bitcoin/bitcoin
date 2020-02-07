@@ -46,16 +46,15 @@ Compatibility
 ==============
 
 Bitcoin Core is supported and extensively tested on operating systems using
-the Linux kernel, macOS 10.10+, and Windows 7 and newer. It is not recommended
+the Linux kernel, macOS 10.12+, and Windows 7 and newer. It is not recommended
 to use Bitcoin Core on unsupported systems.
 
 Bitcoin Core should also work on most other Unix-like systems but is not
 as frequently tested on them.
 
-From Bitcoin Core 0.17.0 onwards, macOS versions earlier than 10.10 are no
-longer supported, as Bitcoin Core is now built using Qt 5.9.x which requires
-macOS 10.10+. Additionally, Bitcoin Core does not yet change appearance when
-macOS "dark mode" is activated.
+From Bitcoin Core 0.20.0 onwards, macOS versions earlier than 10.12 are no
+longer supported. Additionally, Bitcoin Core does not yet change appearance
+when macOS "dark mode" is activated.
 
 In addition to previously supported CPU platforms, this release's pre-compiled
 distribution provides binaries for the RISC-V platform.
@@ -69,11 +68,18 @@ Build System
 - OpenSSL is no longer used by Bitcoin Core. The last usage of the library
 was removed in #17265.
 
+- glibc 2.17 or greater is now required to run the release binaries. This
+retains compatibility with RHEL 7, CentOS 7, Debian 8 and Ubuntu 14.04 LTS.
+Further details can be found in #17538.
+
 New RPCs
 --------
 
 New settings
 ------------
+
+- RPC Whitelist system. It can give certain RPC users permissions to only some RPC calls.
+It can be set with two command line arguments (`rpcwhitelist` and `rpcwhitelistdefault`). (#12763)
 
 Updated settings
 ----------------
@@ -87,6 +93,8 @@ Low-level Changes section below.
 GUI changes
 -----------
 
+- The "Start Bitcoin Core on system login" option has been removed on macOS.
+
 Wallet
 ------
 
@@ -96,8 +104,19 @@ Wallet
 Low-level changes
 =================
 
+Command line
+------------
+
+Command line options prefixed with main/test/regtest network names like
+`-main.port=8333` `-test.server=1` previously were allowed but ignored. Now
+they trigger "Invalid parameter" errors on startup.
+
 Tests
 -----
+
+- It is now an error to use an unqualified `walletdir=path` setting in the config file if running on testnet or regtest
+  networks. The setting now needs to be qualified as `chain.walletdir=path` or placed in the appropriate `[chain]`
+  section. (#17447)
 
 - `-fallbackfee` was 0 (disabled) by default for the main chain, but 0.0002 by default for the test chains. Now it is 0
   by default for all chains. Testnet and regtest users will have to add `fallbackfee=0.0002` to their configuration if

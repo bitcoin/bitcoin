@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -114,7 +114,7 @@ inline ValidationState::~ValidationState() {};
 
 class TxValidationState : public ValidationState {
 private:
-    TxValidationResult m_result;
+    TxValidationResult m_result = TxValidationResult::TX_RESULT_UNSET;
 public:
     bool Invalid(TxValidationResult result,
                  const std::string &reject_reason="",
@@ -129,7 +129,7 @@ public:
 
 class BlockValidationState : public ValidationState {
 private:
-    BlockValidationResult m_result;
+    BlockValidationResult m_result = BlockValidationResult::BLOCK_RESULT_UNSET;
 public:
     bool Invalid(BlockValidationResult result,
                  const std::string &reject_reason="",

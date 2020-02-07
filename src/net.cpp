@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,7 @@
 #include <crypto/sha256.h>
 #include <netbase.h>
 #include <net_permissions.h>
+#include <random.h>
 #include <scheduler.h>
 #include <ui_interface.h>
 #include <util/strencodings.h>
@@ -84,7 +85,7 @@ static const uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL; // S
 bool fDiscover = true;
 bool fListen = true;
 bool g_relay_txes = !DEFAULT_BLOCKSONLY;
-CCriticalSection cs_mapLocalHost;
+RecursiveMutex cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
 static bool vfLimited[NET_MAX] GUARDED_BY(cs_mapLocalHost) = {};
 std::string strSubVersion;
@@ -409,7 +410,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             if (hSocket == INVALID_SOCKET) {
                 return nullptr;
             }
-            connected = ConnectThroughProxy(proxy, addrConnect.ToStringIP(), addrConnect.GetPort(), hSocket, nConnectTimeout, &proxyConnectionFailed);
+            connected = ConnectThroughProxy(proxy, addrConnect.ToStringIP(), addrConnect.GetPort(), hSocket, nConnectTimeout, proxyConnectionFailed);
         } else {
             // no proxy needed (none set for target network)
             hSocket = CreateSocket(addrConnect);
@@ -431,7 +432,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         std::string host;
         int port = default_port;
         SplitHostPort(std::string(pszDest), port, host);
-        connected = ConnectThroughProxy(proxy, host, port, hSocket, nConnectTimeout, nullptr);
+        bool proxyConnectionFailed;
+        connected = ConnectThroughProxy(proxy, host, port, hSocket, nConnectTimeout, proxyConnectionFailed);
     }
     if (!connected) {
         CloseSocket(hSocket);
@@ -444,6 +446,9 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     CAddress addr_bind = GetBindAddress(hSocket);
     CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", false, block_relay_only);
     pnode->AddRef();
+
+    // We're making a new connection, harvest entropy from the time (and our peer count)
+    RandAddEvent((uint32_t)id);
 
     return pnode;
 }
@@ -493,12 +498,13 @@ void CNode::SetAddrLocal(const CService& addrLocalIn) {
 
 #undef X
 #define X(name) stats.name = name
-void CNode::copyStats(CNodeStats &stats)
+void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
 {
     stats.nodeid = this->GetId();
     X(nServices);
     X(addr);
     X(addrBind);
+    stats.m_mapped_as = addr.GetMappedAS(m_asmap);
     if (m_tx_relay != nullptr) {
         LOCK(m_tx_relay->cs_filter);
         stats.fRelayTxes = m_tx_relay->fRelayTxes;
@@ -692,6 +698,9 @@ CNetMessage V1TransportDeserializer::GetMessage(const CMessageHeader::MessageSta
     msg.m_command = hdr.GetCommand();
     msg.m_message_size = hdr.nMessageSize;
     msg.m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+
+    // We just received a message off the wire, harvest entropy from the time (and the message checksum)
+    RandAddEvent(ReadLE32(hash.begin()));
 
     msg.m_valid_checksum = (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) == 0);
     if (!msg.m_valid_checksum) {
@@ -1017,6 +1026,9 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
     }
+
+    // We received a new connection, harvest entropy from the time (and our peer count)
+    RandAddEvent((uint32_t)id);
 }
 
 void CConnman::DisconnectNodes()
@@ -1599,7 +1611,7 @@ void CConnman::ThreadDNSAddressSeed()
                 continue;
             }
             unsigned int nMaxIPs = 256; // Limits number of IPs learned from a DNS seed
-            if (LookupHost(host.c_str(), vIPs, nMaxIPs, true)) {
+            if (LookupHost(host, vIPs, nMaxIPs, true)) {
                 for (const CNetAddr& ip : vIPs) {
                     int nOneDay = 24*3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()), requiredServiceBits);
@@ -1758,7 +1770,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     // but inbound and addnode peers do not use our outbound slots.  Inbound peers
                     // also have the added issue that they're attacker controlled and could be used
                     // to prevent us from connecting to particular hosts if we used them here.
-                    setConnected.insert(pnode->addr.GetGroup());
+                    setConnected.insert(pnode->addr.GetGroup(addrman.m_asmap));
                     if (pnode->m_tx_relay == nullptr) {
                         nOutboundBlockRelay++;
                     } else if (!pnode->fFeeler) {
@@ -1806,7 +1818,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
 
             // Require outbound connections, other than feelers, to be to distinct network groups
-            if (!fFeeler && setConnected.count(addr.GetGroup())) {
+            if (!fFeeler && setConnected.count(addr.GetGroup(addrman.m_asmap))) {
                 break;
             }
 
@@ -1897,7 +1909,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
     }
 
     for (const std::string& strAddNode : lAddresses) {
-        CService service(LookupNumeric(strAddNode.c_str(), Params().GetDefaultPort()));
+        CService service(LookupNumeric(strAddNode, Params().GetDefaultPort()));
         AddedNodeInfo addedNode{strAddNode, CService(), false, false};
         if (service.IsValid()) {
             // strAddNode is an IP:port
@@ -2491,7 +2503,7 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)
     vstats.reserve(vNodes.size());
     for (CNode* pnode : vNodes) {
         vstats.emplace_back();
-        pnode->copyStats(vstats.back());
+        pnode->copyStats(vstats.back(), addrman.m_asmap);
     }
 }
 
@@ -2778,7 +2790,7 @@ CSipHasher CConnman::GetDeterministicRandomizer(uint64_t id) const
 
 uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
 {
-    std::vector<unsigned char> vchNetGroup(ad.GetGroup());
+    std::vector<unsigned char> vchNetGroup(ad.GetGroup(addrman.m_asmap));
 
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
 }

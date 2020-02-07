@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -43,10 +43,9 @@ std::vector<fs::path> ListWalletDir();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::vector<std::string>& warnings);
 WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::vector<std::string>& warnings, std::shared_ptr<CWallet>& result);
+std::unique_ptr<interfaces::Handler> HandleLoadWallet(interfaces::Node::LoadWalletFn load_wallet);
 
 namespace interfaces {
-
-class Wallet;
 
 namespace {
 
@@ -68,7 +67,7 @@ public:
     std::string getNetwork() override { return Params().NetworkIDString(); }
     void initLogging() override { InitLogging(); }
     void initParameterInteraction() override { InitParameterInteraction(); }
-    std::string getWarnings(const std::string& type) override { return GetWarnings(type); }
+    std::string getWarnings() override { return GetWarnings(true); }
     uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
@@ -167,8 +166,8 @@ public:
     }
     int64_t getTotalBytesRecv() override { return m_context.connman ? m_context.connman->GetTotalBytesRecv() : 0; }
     int64_t getTotalBytesSent() override { return m_context.connman ? m_context.connman->GetTotalBytesSent() : 0; }
-    size_t getMempoolSize() override { return ::mempool.size(); }
-    size_t getMempoolDynamicUsage() override { return ::mempool.DynamicMemoryUsage(); }
+    size_t getMempoolSize() override { return m_context.mempool ? m_context.mempool->size() : 0; }
+    size_t getMempoolDynamicUsage() override { return m_context.mempool ? m_context.mempool->DynamicMemoryUsage() : 0; }
     bool getHeaderTip(int& height, int64_t& block_time) override
     {
         LOCK(::cs_main);
@@ -286,7 +285,7 @@ public:
     }
     std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) override
     {
-        return MakeHandler(::uiInterface.LoadWallet_connect([fn](std::unique_ptr<Wallet>& wallet) { fn(std::move(wallet)); }));
+        return HandleLoadWallet(std::move(fn));
     }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {

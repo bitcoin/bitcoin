@@ -78,6 +78,7 @@ class PruneTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 6
+        self.supports_cli = False
 
         # Create nodes 0 and 1 to mine.
         # Create node 2 to test pruning.
@@ -100,7 +101,7 @@ class PruneTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
-        self.prunedir = os.path.join(self.nodes[2].datadir, 'regtest', 'blocks', '')
+        self.prunedir = os.path.join(self.nodes[2].datadir, self.chain, 'blocks', '')
 
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[1], 2)
@@ -278,7 +279,7 @@ class PruneTest(BitcoinTestFramework):
             assert_equal(ret, node.getblockchaininfo()['pruneheight'])
 
         def has_block(index):
-            return os.path.isfile(os.path.join(self.nodes[node_number].datadir, "regtest", "blocks", "blk{:05}.dat".format(index)))
+            return os.path.isfile(os.path.join(self.nodes[node_number].datadir, self.chain, "blocks", "blk{:05}.dat".format(index)))
 
         # should not prune because chain tip of node 3 (995) < PruneAfterHeight (1000)
         assert_raises_rpc_error(-1, "Blockchain is too short for pruning", node.pruneblockchain, height(500))

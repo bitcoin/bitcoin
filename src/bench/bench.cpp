@@ -15,6 +15,9 @@
 #include <numeric>
 #include <regex>
 
+const RegTestingSetup* g_testing_setup = nullptr;
+const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
+
 void benchmark::ConsolePrinter::header()
 {
     std::cout << "# Benchmark, evals, iterations, total, min, max, median" << std::endl;
@@ -113,6 +116,8 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
 
     for (const auto& p : benchmarks()) {
         RegTestingSetup test{};
+        assert(g_testing_setup == nullptr);
+        g_testing_setup = &test;
         {
             LOCK(cs_main);
             assert(::ChainActive().Height() == 0);
@@ -121,6 +126,7 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
         }
 
         if (!std::regex_match(p.first, baseMatch, reFilter)) {
+             g_testing_setup = nullptr;
             continue;
         }
 
@@ -133,6 +139,7 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
             p.second.func(state);
         }
         printer.result(state);
+        g_testing_setup = nullptr;
     }
 
     printer.footer();

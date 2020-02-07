@@ -30,7 +30,7 @@ class KeypoolRestoreTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        wallet_path = os.path.join(self.nodes[1].datadir, "regtest", "wallets", "wallet.dat")
+        wallet_path = os.path.join(self.nodes[1].datadir, self.chain, "wallets", "wallet.dat")
         wallet_backup_path = os.path.join(self.nodes[1].datadir, "wallet.bak")
         self.nodes[0].generate(101)
 

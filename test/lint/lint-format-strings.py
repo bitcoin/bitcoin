@@ -17,12 +17,13 @@ FALSE_POSITIVES = [
     ("src/index/base.cpp", "FatalError(const char* fmt, const Args&... args)"),
     ("src/netbase.cpp", "LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args)"),
     ("src/util/system.cpp", "strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
+    ("src/validationinterface.cpp", "LogPrint(BCLog::VALIDATION, fmt \"\\n\", __VA_ARGS__)"),
     ("src/wallet/wallet.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),
     ("src/wallet/wallet.h", "LogPrintf((\"%s \" + fmt).c_str(), GetDisplayName(), parameters...)"),
+    ("src/wallet/scriptpubkeyman.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),
+    ("src/wallet/scriptpubkeyman.h", "LogPrintf((\"%s \" + fmt).c_str(), m_storage.GetDisplayName(), parameters...)"),
     ("src/logging.h", "LogPrintf(const char* fmt, const Args&... args)"),
     ("src/wallet/scriptpubkeyman.h", "WalletLogPrintf(const std::string& fmt, const Params&... parameters)"),
-    ("src/wallet/scriptpubkeyman.cpp", "WalletLogPrintf(fmt, parameters...)"),
-    ("src/wallet/scriptpubkeyman.cpp", "WalletLogPrintf(const std::string& fmt, const Params&... parameters)"),
 ]
 
 
