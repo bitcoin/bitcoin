@@ -123,21 +123,28 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if (!rlpReceiptLogsValue.isList()){
         return FormatSyscoinErrorMessage(state, "mint-receipt-rlp-logs-list", bMiner);
     }
-    if (rlpReceiptLogsValue.itemCount() != 3){
+    const size_t &itemCount = rlpReceiptLogsValue.itemCount();
+    // just sanity checks for bounds
+    if (itemCount < 1 || itemCount > 10){
         return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-logs-count", bMiner);
     }
     // look for TokenFreeze event and get the last parameter which should be the BridgeTransferID
     uint32_t nBridgeTransferID = 0;
-    for(uint32_t i = 0;i<3;i++){
+    for(uint32_t i = 0;i<itemCount;i++){
         dev::RLP rlpReceiptLogValue(rlpReceiptLogsValue[i]);
         if (!rlpReceiptLogValue.isList()){
             return FormatSyscoinErrorMessage(state, "mint-receipt-log-rlp-list", bMiner);
         }
-        if (rlpReceiptLogValue.itemCount() != 3){
+        // ensure this log has atleast the address to check against
+        if (rlpReceiptLogValue.itemCount() < 1){
             return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-count", bMiner);
         }
         const dev::Address &address160Log = rlpReceiptLogValue[0].toHash<dev::Address>(dev::RLP::VeryStrict);
         if(Params().GetConsensus().vchSYSXERC20Manager == address160Log.asBytes()){
+            // for mint log we should have exactly 3 entries in it, this event we control through our erc20manager contract
+            if (rlpReceiptLogValue.itemCount() != 3){
+                return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-count-bridgeid", bMiner);
+            }
             // check topic
             dev::RLP rlpReceiptLogTopicsValue(rlpReceiptLogValue[1]);
             if (!rlpReceiptLogTopicsValue.isList()){
