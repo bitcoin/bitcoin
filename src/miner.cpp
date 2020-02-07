@@ -160,26 +160,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     VeriBlock::getService<VeriBlock::UtilService>().addPopPayoutsIntoCoinbaseTx(coinbaseTx, *pindexPrev, chainparams.GetConsensus());
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
-
-    // VeriBlock: run the blockPopValidation to delete pop tramsactions if they are invalid
-    BlockValidationState state;
-    while (!VeriBlock::getService<VeriBlock::PopService>().blockPopValidation(*pblock, *pindexPrev, Params().GetConsensus(), state)) {
-        // If the blockPopValidation failes we have to clear transactions vector and fill it again 
-        resetBlock();
-        pblocktemplate->block.vtx.erase(pblocktemplate->block.vtx.begin() + 1, pblocktemplate->block.vtx.end());
-        pblocktemplate->vTxFees.clear();
-        pblocktemplate->vTxSigOpsCost.clear();
-        
-        pblocktemplate->vTxFees.push_back(-1); // updated at end
-        pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
-
-        nPackagesSelected = 0;
-        nDescendantsUpdated = 0;
-        nPopTx = 0;
-        addPackageTxs<VeriBlock::poptx_priority<ancestor_score>>(nPackagesSelected, nDescendantsUpdated);
-        addPackageTxs<ancestor_score>(nPackagesSelected, nDescendantsUpdated);
-    }
-
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
 
@@ -192,7 +172,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblock->nNonce         = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
-    state = BlockValidationState();
+    BlockValidationState state;
     if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }
