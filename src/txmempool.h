@@ -320,6 +320,7 @@ protected:
     uint64_t totalTxSize GUARDED_BY(cs);      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
     CAmount m_total_fee GUARDED_BY(cs);       //!< sum of all mempool tx's fees (NOT modified fee)
     uint64_t cachedInnerUsage GUARDED_BY(cs); //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
+    size_t m_allocation_counter GUARDED_BY(cs); //!< Accounting variable for AccountingAllocator-managed containers
 
     mutable int64_t lastRollingFeeUpdate GUARDED_BY(cs);
     mutable bool blockSinceLastRollingFeeBump GUARDED_BY(cs);
@@ -370,7 +371,8 @@ public:
                 boost::multi_index::identity<CTxMemPoolEntry>,
                 CompareTxMemPoolEntryByAncestorFee
             >
-        >
+        >,
+        memusage::AccountingAllocator<CTxMemPoolEntry>
     > indexed_transaction_set;
 
     /**
