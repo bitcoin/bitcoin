@@ -15,6 +15,7 @@ struct FlatFilePos
 {
     int nFile;
     unsigned int nPos;
+    int nSpan;
 
     ADD_SERIALIZE_METHODS;
 
@@ -22,24 +23,26 @@ struct FlatFilePos
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(VARINT(nFile, VarIntMode::NONNEGATIVE_SIGNED));
         READWRITE(VARINT(nPos));
+        READWRITE(VARINT(nSpan, VarIntMode::NONNEGATIVE_SIGNED));
     }
 
-    FlatFilePos() : nFile(-1), nPos(0) {}
+    FlatFilePos() : nFile(-1), nPos(0), nSpan(1) {}
 
-    FlatFilePos(int nFileIn, unsigned int nPosIn) :
+    FlatFilePos(int nFileIn, unsigned int nPosIn, int nSpan) :
         nFile(nFileIn),
-        nPos(nPosIn)
+        nPos(nPosIn),
+        nSpan(nSpan)
     {}
 
     friend bool operator==(const FlatFilePos &a, const FlatFilePos &b) {
-        return (a.nFile == b.nFile && a.nPos == b.nPos);
+        return (a.nFile == b.nFile && a.nPos == b.nPos && a.nSpan == b.nSpan);
     }
 
     friend bool operator!=(const FlatFilePos &a, const FlatFilePos &b) {
         return !(a == b);
     }
 
-    void SetNull() { nFile = -1; nPos = 0; }
+    void SetNull() { nFile = -1; nPos = 0; nSpan = 1; }
     bool IsNull() const { return (nFile == -1); }
 
     std::string ToString() const;

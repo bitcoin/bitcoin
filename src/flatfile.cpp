@@ -22,12 +22,12 @@ FlatFileSeq::FlatFileSeq(fs::path dir, const char* prefix, size_t chunk_size) :
 
 std::string FlatFilePos::ToString() const
 {
-    return strprintf("FlatFilePos(nFile=%i, nPos=%i)", nFile, nPos);
+    return strprintf("FlatFilePos(nFile=%i, nPos=%i, nSpan=%i)", nFile, nPos, nSpan);
 }
 
 fs::path FlatFileSeq::FileName(const FlatFilePos& pos) const
 {
-    return m_dir / strprintf("%s%05u.dat", m_prefix, pos.nFile);
+    return m_dir / strprintf("span%2dof%2d/%s%05u.dat", pos.nFile % pos.nSpan, pos.nSpan, m_prefix, pos.nFile);
 }
 
 FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only)
@@ -80,7 +80,7 @@ size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_
 
 bool FlatFileSeq::Flush(const FlatFilePos& pos, bool finalize)
 {
-    FILE* file = Open(FlatFilePos(pos.nFile, 0)); // Avoid fseek to nPos
+    FILE* file = Open(FlatFilePos(pos.nFile, 0, pos.nSpan)); // Avoid fseek to nPos
     if (!file) {
         return error("%s: failed to open file %d", __func__, pos.nFile);
     }

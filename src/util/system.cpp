@@ -731,7 +731,7 @@ const fs::path &GetBlocksDir()
     // Cache the path to avoid calling fs::create_directories on every call of
     // this function
     if (!path.empty()) return path;
-
+    
     if (gArgs.IsArgSet("-blocksdir")) {
         path = fs::system_complete(gArgs.GetArg("-blocksdir", ""));
         if (!fs::is_directory(path)) {
@@ -741,7 +741,7 @@ const fs::path &GetBlocksDir()
     } else {
         path = GetDataDir(false);
     }
-
+    
     path /= BaseParams().DataDir();
     path /= "blocks";
     fs::create_directories(path);
