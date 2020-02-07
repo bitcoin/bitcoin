@@ -11,6 +11,7 @@
 #include <chainparams.h>
 
 #include <grpc++/grpc++.h>
+#include <sync.h>
 
 #include "integration.grpc.pb.h"
 
@@ -19,6 +20,7 @@ namespace VeriBlock {
 class PopServiceImpl : public PopService
 {
 private:
+    std::mutex mutex;
     std::shared_ptr<VeriBlock::GrpcPopService::Stub> grpcPopService;
 
 public:
