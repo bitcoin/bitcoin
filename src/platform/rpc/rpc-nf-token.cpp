@@ -125,13 +125,14 @@ namespace Platform
 Lists all nftoken records on chain
 
 Arguments:
-1. "nfTokenProtocol"  (string, optional) The non-fungible token protocol symbol of the registered token record
+1. nfTokenProtocol    (string, optional) The non-fungible token protocol symbol of the registered token record
                       The protocol name must be valid and registered previously. If "*" is set, it will list NFTs for all protocols.
-2. "nfTokenOwnerAddr" (string, optional) The token owner address, it can be used in any operations with the token.
+2. nfTokenOwnerAddr   (string, optional) The token owner address, it can be used in any operations with the token.
                       The private key belonging to this address may be or may be not known in your wallet. If "*" is set, it will list NFTs for all addresses.
-3. height             (numeric, optional) If height is not specified, it defaults to the current chain-tip
-4. count              (numeric, optional, default=20) The number of transactions to return
-5. skipFromTip        (numeric, optional, default=0) The number of transactions to skip from tip
+3. count              (numeric, optional, default=20) The number of transactions to return
+4. skipFromTip        (numeric, optional, default=0) The number of transactions to skip from tip
+5. height             (numeric, optional) If height is not specified, it defaults to the current chain-tip
+                      To explicitly use the current tip height, set it to "*".
 6. regTxOnly          (boolean, optional, default=false) false for a detailed list, true for an array of transaction IDs
 
 Examples:
@@ -148,20 +149,20 @@ List the most recent 20 NFT records
 + R"(List the most recent 20 records of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address
 )"
 + HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc")")
- + R"(List the most recent 20 records of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address up to 5050st block
+ + R"(List the most recent 20 records of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address up to the most recent block
 )"
-+ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050)")
++ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 20 0)")
 + R"(List recent 100 records skipping 50 from the end of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address up to 5050st block
 )"
-+ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050 100 50)")
++ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 100 50 5050)")
 + R"(List recent 100 records skipping 50 from the end of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address up to 5050st block. List only registration tx IDs.
 )"
-+ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050 100 50 true)")
++ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 100 50 5050 true)")
 + R"(As JSON-RPC calls
 )"
 + HelpExampleRpc("nftoken", R"(list "*" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc")")
-+ HelpExampleRpc("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050)")
-+ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050 100 50)");
++ HelpExampleRpc("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 20 0)")
++ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 100 50 5050)");
 
         throw std::runtime_error(helpMessage);
     }
@@ -208,14 +209,15 @@ List the most recent 20 NFT records
             filterKeyId = ParsePubKeyIDFromAddress(params[2].get_str(), "nfTokenOwnerAddr");
         }
 
-        int height = (params.size() > 3) ? ParseInt32V(params[3], "height") : chainActive.Height();
+        static const int defaultTxsCount = 20;
+        static const int defaultSkipFromTip = 0;
+        int count = (params.size() > 3) ? ParseInt32V(params[3], "count") : defaultTxsCount;
+        int skipFromTip = (params.size() > 4) ? ParseInt32V(params[4], "skipFromTip") : defaultSkipFromTip;
+
+        int height = (params.size() > 5 && params[5].get_str() != "*") ? ParseInt32V(params[5], "height") : chainActive.Height();
         if (height < 0 || height > chainActive.Height())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
 
-        static const int defaultTxsCount = 20;
-        static const int defaultSkipFromTip = 0;
-        int count = (params.size() > 4) ? ParseInt32V(params[4], "count") : defaultTxsCount;
-        int skipFromTip = (params.size() > 5) ? ParseInt32V(params[5], "skipFromTip") : defaultSkipFromTip;
         bool regTxOnly = (params.size() > 6) ? ParseBoolV(params[6], "regTxOnly") : false;
 
         json_spirit::Array nftList;

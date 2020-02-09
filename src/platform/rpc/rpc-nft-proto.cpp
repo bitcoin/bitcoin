@@ -143,14 +143,15 @@ Examples:
         if (fHelp || params.empty() || params.size() > 5)
             ListNftProtocolsHelp();
 
-        int height = (params.size() > 1) ? ParseInt32V(params[1], "height") : chainActive.Height();
+        static const int defaultTxsCount = 20;
+        static const int defaultSkipFromTip = 0;
+        int count = (params.size() > 1) ? ParseInt32V(params[1], "count") : defaultTxsCount;
+        int skipFromTip = (params.size() > 2) ? ParseInt32V(params[2], "skipFromTip") : defaultSkipFromTip;
+
+        int height = (params.size() > 3 && params[3].get_str() != "*") ? ParseInt32V(params[3], "height") : chainActive.Height();
         if (height < 0 || height > chainActive.Height())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
 
-        static const int defaultTxsCount = 20;
-        static const int defaultSkipFromTip = 0;
-        int count = (params.size() > 2) ? ParseInt32V(params[2], "count") : defaultTxsCount;
-        int skipFromTip = (params.size() > 3) ? ParseInt32V(params[3], "skipFromTip") : defaultSkipFromTip;
         bool regTxOnly = (params.size() > 4) ? ParseBoolV(params[4], "regTxOnly") : false;
 
         json_spirit::Array protoList;
@@ -181,9 +182,10 @@ Examples:
 Lists all NFT protocol records on chain
 
 Arguments:
-1. height      (numeric, optional) If height is not specified, it defaults to the current chain-tip
-2. count       (numeric, optional, default=20) The number of transactions to return
-3. skipFromTip (numeric, optional, default=0) The number of transactions to skip from tip
+1. count       (numeric, optional, default=20) The number of transactions to return
+2. skipFromTip (numeric, optional, default=0) The number of transactions to skip from tip
+3. height      (numeric, optional) If height is not specified, it defaults to the current chain-tip.
+               To explicitly use the current tip height, set it to "*".
 4. regTxOnly   (boolean, optional, default=false) false for a detailed list, true for an array of transaction IDs
 
 Examples:
@@ -192,18 +194,18 @@ List the most recent 20 NFT protocol records
 + HelpExampleCli("nftproto", R"(list)")
 + R"(List the most recent 20 NFT protocol records up to 5050st block
 )"
-+ HelpExampleCli("nftproto", R"(list 5050)")
++ HelpExampleCli("nftproto", R"(list 20 0 5050)")
 + R"(List recent 100 records skipping 50 from the end up to 5050st block
 )"
-+ HelpExampleCli("nftproto", R"(list 5050 100 50)")
-+ R"(List recent 100 records skipping 50 from the end up to 5050st block. List only registration tx IDs.
++ HelpExampleCli("nftproto", R"(list 100 50 5050)")
++ R"(List recent 100 records skipping 50 from the end up to the most recent block. List only registration tx IDs.
 )"
-+ HelpExampleCli("nftoken", R"(list 5050 100 50 true)")
++ HelpExampleCli("nftproto", R"(list 100 50 * true)")
 + R"(As JSON-RPC calls
 )"
-+ HelpExampleRpc("nftoken", R"(list)")
-+ HelpExampleRpc("nftoken", R"(list 5050)")
-+ HelpExampleCli("nftoken", R"(list 5050 100 50)");
++ HelpExampleRpc("nftproto", R"(list)")
++ HelpExampleRpc("nftproto", R"(list 20 0 5050)")
++ HelpExampleCli("nftproto", R"(list 100 50 5050)");
 
         throw std::runtime_error(helpMessage);
     }
