@@ -17,6 +17,7 @@ Supporting RPCs are:
   (`regtest` only, since v0.19).
 - `utxoupdatepsbt` takes as input descriptors to add information to the psbt
   (since v0.19).
+- `createmultisig` and `addmultisigaddress` return descriptors as well (since v0.20)
 
 This document describes the language. For the specifics on usage, see the RPC
 documentation for the functions mentioned above.
