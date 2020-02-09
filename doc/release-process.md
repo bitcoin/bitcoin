@@ -268,7 +268,6 @@ The list of files should be:
 ```
 syscoin-${VERSION}-aarch64-linux-gnu.tar.gz
 syscoin-${VERSION}-arm-linux-gnueabihf.tar.gz
-syscoin-${VERSION}-i686-pc-linux-gnu.tar.gz
 syscoin-${VERSION}-riscv64-linux-gnu.tar.gz
 syscoin-${VERSION}-x86_64-linux-gnu.tar.gz
 syscoin-${VERSION}-osx64.tar.gz
