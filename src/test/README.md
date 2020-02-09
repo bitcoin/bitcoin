@@ -36,7 +36,7 @@ the `src/qt/test/test_main.cpp` file.
 `test_bitcoin` has some built-in command-line arguments; for
 example, to run just the `getarg_tests` verbosely:
 
-    test_bitcoin --log_level=all --run_test=getarg_tests -- DEBUG_LOG_OUT
+    src/test/test_bitcoin --log_level=all --run_test=getarg_tests -- DEBUG_LOG_OUT
 
 `log_level` controls the verbosity of the test framework, which logs when a
 test case is entered, for example. The `DEBUG_LOG_OUT` after the two dashes
@@ -45,7 +45,7 @@ redirects the debug log, which would normally go to a file in the test datadir
 
 ... or to run just the doubledash test:
 
-    test_bitcoin --run_test=getarg_tests/doubledash
+    src/test/test_bitcoin --run_test=getarg_tests/doubledash
 
 Run `test_bitcoin --help` for the full list.
 
