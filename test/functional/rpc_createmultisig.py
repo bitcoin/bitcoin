@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multisig RPCs"""
 
-from test_framework.descriptors import descsum_create
+from test_framework.descriptors import descsum_create, drop_origins
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
@@ -116,9 +116,20 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
     def do_multisig(self):
         node0, node1, node2 = self.nodes
 
+        # Construct the expected descriptor
+        desc = 'multi({},{})'.format(self.nsigs, ','.join(self.pub))
+        if self.output_type == 'legacy':
+            desc = 'sh({})'.format(desc)
+        elif self.output_type == 'p2sh-segwit':
+            desc = 'sh(wsh({}))'.format(desc)
+        elif self.output_type == 'bech32':
+            desc = 'wsh({})'.format(desc)
+        desc = descsum_create(desc)
+
         msig = node2.createmultisig(self.nsigs, self.pub, self.output_type)
         madd = msig["address"]
         mredeem = msig["redeemScript"]
+        assert_equal(desc, msig['descriptor'])
         if self.output_type == 'bech32':
             assert madd[0:4] == "bcrt"  # actually a bech32 address
 
@@ -126,6 +137,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         msigw = node1.addmultisigaddress(self.nsigs, self.pub, None, self.output_type)
         maddw = msigw["address"]
         mredeemw = msigw["redeemScript"]
+        assert_equal(desc, drop_origins(msigw['descriptor']))
         # addmultisigiaddress and createmultisig work the same
         assert maddw == madd
         assert mredeemw == mredeem
