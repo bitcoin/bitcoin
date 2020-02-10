@@ -31,3 +31,4 @@ ECCPoW was developed in GIST's Infonet lab. if you want to contact us, please go
 
 # Bitcoin-ECC
 ## [How to build the Bitocoin-ECC???](https://github.com/cryptoecc/bitcoin_ECC/blob/ecc-0.1.2/Build.md)
+## [What is the DeSecure Blockchain???](https://github.com/cryptoecc/introduction)
