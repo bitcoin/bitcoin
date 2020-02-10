@@ -1092,8 +1092,9 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
         newfromamount = 0;
     }
 	// "assetallocationsendmany [asset] [addressfrom] ( [{\"address\":\"address\",\"amount\":amount},...] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationsendmany" , guid + ",\"" + fromaddress + "\"," + inputs + ",\"" + witness + "\""));
-    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet", "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
+	r = CallExtRPC(node, "assetallocationsendmany" , guid + ",\"" + fromaddress + "\"," + inputs + ",\"" + witness + "\"");
+    printf("r str %s\n", r.write().c_str());
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet", "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 
 

@@ -1007,6 +1007,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         {
             return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
         }
+        if(!fJustCheck && bSanityCheck)
+            LogPrintf("txid %s asset %d nTotal %lld mapBalanceSenderCopy %lld\n", txHash.GetHex().c_str(), theAssetAllocation.assetAllocationTuple.nAsset, nTotal, mapBalanceSenderCopy);
         mapBalanceSenderCopy -= nTotal;
         if (mapBalanceSenderCopy < 0) {
             bool bNewConfict = false;

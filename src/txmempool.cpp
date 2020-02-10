@@ -546,11 +546,10 @@ bool CTxMemPool::existsConflicts(const CTransaction &tx)
     }
     return false;
 }
-bool CTxMemPool::removeConflicts(const CTransaction &tx)
+void CTxMemPool::removeConflicts(const CTransaction &tx)
 {
     // Remove transactions which depend on inputs of tx, recursively
     AssertLockHeld(cs);
-    bool bRemoved = false;
     for (const CTxIn &txin : tx.vin) {
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
@@ -559,6 +558,36 @@ bool CTxMemPool::removeConflicts(const CTransaction &tx)
             {
                 ClearPrioritisation(txConflict.GetHash());
                 removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+            }
+        }
+    }
+}
+bool CTxMemPool::removeSyscoinConflicts(const CTransaction &tx)
+{
+    // Remove transactions which depend on inputs of tx, recursively
+    AssertLockHeld(cs);
+    bool bRemoved = false;
+    txiter thisit = mapTx.find(tx.GetHash());
+    assert(thisit != mapTx.end());
+    for (const CTxIn &txin : tx.vin) {
+        auto itConflict = mapNextTx.find(txin.prevout);
+        if (itConflict != mapNextTx.end()) {
+            const CTransaction &txConflict = *itConflict->second;
+            if (txConflict != tx)
+            {
+                txiter conflictit = mapTx.find(txConflict.GetHash());
+                assert(conflictit != mapTx.end());
+                // if conflicting transaction was received after the transaction in question then remove conflicting tx
+                // otherwise the transaction is question is removed
+                // idea is to keep the oldest transaction in event of conflict
+                if(conflictit->GetTime() >= thisit->GetTime()){
+                    ClearPrioritisation(txConflict.GetHash());
+                    removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+                }
+                else {
+                    ClearPrioritisation(tx.GetHash());
+                    removeRecursive(tx, MemPoolRemovalReason::CONFLICT);
+                }
                 bRemoved = true;
             }
         }
