@@ -3318,6 +3318,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>இது ஒரு வெளியீட்டுக்கு முந்தைய சோதனை கட்டமைப்பாகும் - உங்கள் சொந்த ஆபத்தில் பயன்படுத்தவும் - மைனிங் அல்லது வணிக பயன்பாடுகளுக்கு பயன்படுத்த வேண்டாம்</translation>
     </message>
     <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation>இது பரிவர்த்தனைக் கட்டணம் ஆகும் அதன் வேறுபாடு தூசியை விட சிறியதாக இருந்தால் நீங்கள் அதை நிராகரிக்கலாம்.</translation>
+    </message>
+    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>கடைசி 100 தொகுதிகளில் %d எதிர்பாராத பதிப்பைக் கொண்டுள்ளன</translation>
     </message>

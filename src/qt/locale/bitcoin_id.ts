@@ -2765,12 +2765,56 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Buka sampai %1</translation>
     </message>
     <message>
+        <source>0/unconfirmed, %1</source>
+        <translation>0/belum dikonfirmasi, %1</translation>
+    </message>
+    <message>
+        <source>%1/unconfirmed</source>
+        <translation>%1/belum dikonfirmasi</translation>
+    </message>
+    <message>
+        <source>%1 confirmations</source>
+        <translation>%1 konfirmasi</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Tanggal</translation>
     </message>
     <message>
+        <source>Source</source>
+        <translation>Sumber</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation>tidak diketahui</translation>
+    </message>
+    <message>
+        <source>label</source>
+        <translation>label</translation>
+    </message>
+    <message>
+        <source>Credit</source>
+        <translation>Kredit</translation>
+    </message>
+    <message>
+        <source>not accepted</source>
+        <translation>tidak diterima</translation>
+    </message>
+    <message>
+        <source>Debit</source>
+        <translation>Debit</translation>
+    </message>
+    <message>
+        <source>Total debit</source>
+        <translation>Total debit</translation>
+    </message>
+    <message>
+        <source>Total credit</source>
+        <translation>Total kredit</translation>
     </message>
     <message>
         <source>Transaction fee</source>
@@ -2781,22 +2825,54 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Pesan</translation>
     </message>
     <message>
+        <source>Comment</source>
+        <translation>Komentar</translation>
+    </message>
+    <message>
+        <source>Transaction ID</source>
+        <translation>ID Transaksi</translation>
+    </message>
+    <message>
+        <source>Debug information</source>
+        <translation>Informasi debug</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>Transaksi</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>Jumlah</translation>
     </message>
-    </context>
+    <message>
+        <source>true</source>
+        <translation>benar</translation>
+    </message>
+    <message>
+        <source>false</source>
+        <translation>salah</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Jendela ini menampilkan deskripsi rinci dari transaksi tersebut</translation>
     </message>
-    </context>
+    <message>
+        <source>Details for %1</source>
+        <translation>Detail untuk %1</translation>
+    </message>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
         <translation>Tanggal</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>Tipe</translation>
     </message>
     <message>
         <source>Label</source>
@@ -2807,12 +2883,88 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Buka sampai %1</translation>
     </message>
     <message>
+        <source>Unconfirmed</source>
+        <translation>Belum dikonfirmasi</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>Diterima dengan</translation>
+    </message>
+    <message>
+        <source>Received from</source>
+        <translation>Diterima dari</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Dikirim ke</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(tidak ada label)</translation>
+    </message>
+    <message>
+        <source>Date and time that the transaction was received.</source>
+        <translation>Tanggal dan waktu transaksi telah diterima.</translation>
+    </message>
+    <message>
+        <source>Type of transaction.</source>
+        <translation>Tipe transaksi.</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>All</source>
+        <translation>Semua</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>Hari ini</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation>Minggu ini</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation>Bulan ini</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation>Bulan lalu</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation>Tahun ini</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>Diterima dengan</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Dikirim ke</translation>
+    </message>
+    <message>
+        <source>Other</source>
+        <translation>Lainnya</translation>
+    </message>
+    <message>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>Ketik alamat, id transaksi, atau label untuk menelusuri</translation>
+    </message>
+    <message>
+        <source>Min amount</source>
+        <translation>Jumlah min</translation>
+    </message>
+    <message>
+        <source>Abandon transaction</source>
+        <translation>Batalkan transaksi</translation>
+    </message>
+    <message>
+        <source>Increase transaction fee</source>
+        <translation>Tingkatkan biaya transaksi</translation>
+    </message>
     <message>
         <source>Copy address</source>
         <translation>Salin alamat</translation>
@@ -2830,6 +2982,22 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Salain ID Transaksi</translation>
     </message>
     <message>
+        <source>Copy full transaction details</source>
+        <translation>Salin detail transaksi</translation>
+    </message>
+    <message>
+        <source>Edit label</source>
+        <translation>Ubah label</translation>
+    </message>
+    <message>
+        <source>Show transaction details</source>
+        <translation>Lihat detail transaksi</translation>
+    </message>
+    <message>
+        <source>Export Transaction History</source>
+        <translation>Ekspor Riwayat Transaksi</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Berkas yang berformat(*.csv)</translation>
     </message>
@@ -2842,6 +3010,10 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Tanggal</translation>
     </message>
     <message>
+        <source>Type</source>
+        <translation>Tipe</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Label</translation>
     </message>
@@ -2850,8 +3022,16 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Alamat</translation>
     </message>
     <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation>Mengekspor Gagal</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>Ekspor Berhasil</translation>
     </message>
     </context>
 <context>
@@ -2874,6 +3054,26 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Kirim Koin</translation>
     </message>
     <message>
+        <source>Increasing transaction fee failed</source>
+        <translation>Gagal meningkatkan biaya transaksi</translation>
+    </message>
+    <message>
+        <source>Do you want to increase the fee?</source>
+        <translation>Apa Anda ingin meningkatkan biayanya?</translation>
+    </message>
+    <message>
+        <source>Current fee:</source>
+        <translation>Biaya saat ini:</translation>
+    </message>
+    <message>
+        <source>Increase:</source>
+        <translation>Tingkatkan:</translation>
+    </message>
+    <message>
+        <source>New fee:</source>
+        <translation>Biaya baru:</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>wallet default</translation>
     </message>
@@ -2888,7 +3088,19 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <source>Export the data in the current tab to a file</source>
         <translation>Ekspor data dalam tab sekarang ke sebuah berkas</translation>
     </message>
-    </context>
+    <message>
+        <source>Backup Failed</source>
+        <translation>Pencadangan Gagal</translation>
+    </message>
+    <message>
+        <source>Backup Successful</source>
+        <translation>Pencadangan Berhasil</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Batal</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -2924,12 +3136,20 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Tidak bisa cari blok pertama, atau blok pertama salah. Salah direktori untuk jaringan?</translation>
     </message>
     <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>Eror: Kapasitas penyimpanan penuh!</translation>
+    </message>
+    <message>
         <source>Not enough file descriptors available.</source>
         <translation>Deskripsi berkas tidak tersedia dengan cukup.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
         <translation>Blok-blok sedang diverifikasi...</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Eror: Kapasitas penyimpanan penuh untuk %s</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
