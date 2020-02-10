@@ -875,11 +875,6 @@ if test "x$use_thread_local" = xyes || { test "x$use_thread_local" = xauto && te
           dnl https://gist.github.com/jamesob/fe9a872051a88b2025b1aa37bfa98605
           AC_MSG_RESULT(no)
           ;;
-        *darwin*)
-          dnl TODO enable thread_local on later versions of Darwin where it is
-          dnl supported (per https://stackoverflow.com/a/29929949)
-          AC_MSG_RESULT(no)
-          ;;
         *freebsd*)
           dnl FreeBSD's implementation of thread_local is also buggy (per
           dnl https://groups.google.com/d/msg/bsdmailinglist/22ncTZAbDp4/Dii_pII5AwAJ)
