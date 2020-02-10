@@ -1,4 +1,9 @@
 # Bitcoin-Ecc
+
+## What is the ECCPoW?
+
+(Go to ECCPoW Repository)[https://github.com/cryptoecc/ECCPoW]
+
 ## Build
 
 **Install Xcode command line tool (for Mac)**
