@@ -30,4 +30,4 @@ ECCPoW was developed in GIST's Infonet lab. if you want to contact us, please go
 ![result](https://user-images.githubusercontent.com/25213941/57542325-4c0c4900-738c-11e9-9dd4-48582f05ad42.jpg)
 
 # Bitcoin-ECC
-## [How to build Bitocoin-ECC???](https://github.com/cryptoecc/bitcoin_ECC/blob/ecc-0.1.2/Build.md)
+## [How to build the Bitocoin-ECC???](https://github.com/cryptoecc/bitcoin_ECC/blob/ecc-0.1.2/Build.md)
