@@ -19,28 +19,14 @@ public:
     }
     CWitnessAddress() {
         SetNull();
-    }
-
-    CWitnessAddress(CWitnessAddress && other){
-        nVersion = std::move(other.nVersion);
-        vchWitnessProgram = std::move(other.vchWitnessProgram);
-    }
-    
+    } 
     
     CWitnessAddress& operator=(const CWitnessAddress& other) {
         this->nVersion = other.nVersion;
         this->vchWitnessProgram = other.vchWitnessProgram;
         return *this;
     }
-    CWitnessAddress& operator=(CWitnessAddress&& other){
-    
-       if (this != &other)
-       {
-          nVersion = std::move(other.nVersion);
-          vchWitnessProgram = std::move(other.vchWitnessProgram);
-       }
-       return *this;
-    }
+ 
     inline bool operator==(const CWitnessAddress& other) const {
         return this->nVersion == other.nVersion && this->vchWitnessProgram == other.vchWitnessProgram;
     }

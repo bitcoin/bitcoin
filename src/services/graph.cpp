@@ -15,10 +15,10 @@ bool CreateGraphFromVTX(const std::vector<CTransactionRef>& blockVtx, Graph &gra
 		if (!txRef)
 			continue;
 		const CTransaction &tx = *txRef;
-		if (IsAssetAllocationTx(tx))
+		if (IsAssetAllocationTx(tx.nVersion))
 		{
             CAssetAllocation allocation(tx);
-			if (!allocation.IsNull())
+			if (!allocation.assetAllocationTuple.IsNull())
 			{	
 				AddressMap::const_iterator it;
 				const CWitnessAddress &sender = allocation.assetAllocationTuple.witnessAddress;
