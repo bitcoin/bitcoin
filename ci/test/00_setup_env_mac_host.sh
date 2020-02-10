@@ -6,6 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
+export CONTAINER_NAME=ci_macos
 export HOST=x86_64-apple-darwin19
 export BREW_PACKAGES="automake berkeley-db4 libtool boost miniupnpc pkg-config qt qrencode python3 ccache zeromq"
 export PIP_PACKAGES="zmq"
