@@ -244,8 +244,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
             bSenderConflicted = true;
         }
     }
-    if(bSenderConflicted)
-        ResyncAssetAllocationStates();
 
     if(bFoundError){
         LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed: %s. vecToRemoveFromMempool size %d. Removed %d transactions and trying again...\n", FormatStateMessage(tx_state), vecToRemoveFromMempool.size(), txsToRemove.size());
