@@ -28,6 +28,9 @@
 #include <unordered_set>
 static const unsigned int MAX_SIZE = 0x02000000;
 
+/** Maximum amount of memory (in bytes) to allocate at once when deserializing vectors. */
+static const unsigned int MAX_VECTOR_ALLOCATE = 5000000;
+
 /**
  * Dummy data type to identify deserializing constructors.
  *
