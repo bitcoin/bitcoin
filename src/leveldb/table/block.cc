@@ -6,8 +6,10 @@
 
 #include "table/block.h"
 
-#include <vector>
 #include <algorithm>
+#include <cstdint>
+#include <vector>
+
 #include "leveldb/comparator.h"
 #include "table/format.h"
 #include "util/coding.h"
@@ -27,7 +29,7 @@ Block::Block(const BlockContents& contents)
   if (size_ < sizeof(uint32_t)) {
     size_ = 0;  // Error marker
   } else {
-    size_t max_restarts_allowed = (size_-sizeof(uint32_t)) / sizeof(uint32_t);
+    size_t max_restarts_allowed = (size_ - sizeof(uint32_t)) / sizeof(uint32_t);
     if (NumRestarts() > max_restarts_allowed) {
       // The size is too small for NumRestarts()
       size_ = 0;
@@ -48,27 +50,26 @@ Block::~Block() {
 // and the length of the value in "*shared", "*non_shared", and
 // "*value_length", respectively.  Will not dereference past "limit".
 //
-// If any errors are detected, returns NULL.  Otherwise, returns a
+// If any errors are detected, returns nullptr.  Otherwise, returns a
 // pointer to the key delta (just past the three decoded values).
 static inline const char* DecodeEntry(const char* p, const char* limit,
-                                      uint32_t* shared,
-                                      uint32_t* non_shared,
+                                      uint32_t* shared, uint32_t* non_shared,
                                       uint32_t* value_length) {
-  if (limit - p < 3) return NULL;
-  *shared = reinterpret_cast<const unsigned char*>(p)[0];
-  *non_shared = reinterpret_cast<const unsigned char*>(p)[1];
-  *value_length = reinterpret_cast<const unsigned char*>(p)[2];
+  if (limit - p < 3) return nullptr;
+  *shared = reinterpret_cast<const uint8_t*>(p)[0];
+  *non_shared = reinterpret_cast<const uint8_t*>(p)[1];
+  *value_length = reinterpret_cast<const uint8_t*>(p)[2];
   if ((*shared | *non_shared | *value_length) < 128) {
     // Fast path: all three values are encoded in one byte each
     p += 3;
   } else {
-    if ((p = GetVarint32Ptr(p, limit, shared)) == NULL) return NULL;
-    if ((p = GetVarint32Ptr(p, limit, non_shared)) == NULL) return NULL;
-    if ((p = GetVarint32Ptr(p, limit, value_length)) == NULL) return NULL;
+    if ((p = GetVarint32Ptr(p, limit, shared)) == nullptr) return nullptr;
+    if ((p = GetVarint32Ptr(p, limit, non_shared)) == nullptr) return nullptr;
+    if ((p = GetVarint32Ptr(p, limit, value_length)) == nullptr) return nullptr;
   }
 
   if (static_cast<uint32_t>(limit - p) < (*non_shared + *value_length)) {
-    return NULL;
+    return nullptr;
   }
   return p;
 }
@@ -76,9 +77,9 @@ static inline const char* DecodeEntry(const char* p, const char* limit,
 class Block::Iter : public Iterator {
  private:
   const Comparator* const comparator_;
-  const char* const data_;      // underlying block contents
-  uint32_t const restarts_;     // Offset of restart array (list of fixed32)
-  uint32_t const num_restarts_; // Number of uint32_t entries in restart array
+  const char* const data_;       // underlying block contents
+  uint32_t const restarts_;      // Offset of restart array (list of fixed32)
+  uint32_t const num_restarts_;  // Number of uint32_t entries in restart array
 
   // current_ is offset in data_ of current entry.  >= restarts_ if !Valid
   uint32_t current_;
@@ -112,9 +113,7 @@ class Block::Iter : public Iterator {
   }
 
  public:
-  Iter(const Comparator* comparator,
-       const char* data,
-       uint32_t restarts,
+  Iter(const Comparator* comparator, const char* data, uint32_t restarts,
        uint32_t num_restarts)
       : comparator_(comparator),
         data_(data),
@@ -125,23 +124,23 @@ class Block::Iter : public Iterator {
     assert(num_restarts_ > 0);
   }
 
-  virtual bool Valid() const { return current_ < restarts_; }
-  virtual Status status() const { return status_; }
-  virtual Slice key() const {
+  bool Valid() const override { return current_ < restarts_; }
+  Status status() const override { return status_; }
+  Slice key() const override {
     assert(Valid());
     return key_;
   }
-  virtual Slice value() const {
+  Slice value() const override {
     assert(Valid());
     return value_;
   }
 
-  virtual void Next() {
+  void Next() override {
     assert(Valid());
     ParseNextKey();
   }
 
-  virtual void Prev() {
+  void Prev() override {
     assert(Valid());
 
     // Scan backwards to a restart point before current_
@@ -162,7 +161,7 @@ class Block::Iter : public Iterator {
     } while (ParseNextKey() && NextEntryOffset() < original);
   }
 
-  virtual void Seek(const Slice& target) {
+  void Seek(const Slice& target) override {
     // Binary search in restart array to find the last restart point
     // with a key < target
     uint32_t left = 0;
@@ -171,10 +170,10 @@ class Block::Iter : public Iterator {
       uint32_t mid = (left + right + 1) / 2;
       uint32_t region_offset = GetRestartPoint(mid);
       uint32_t shared, non_shared, value_length;
-      const char* key_ptr = DecodeEntry(data_ + region_offset,
-                                        data_ + restarts_,
-                                        &shared, &non_shared, &value_length);
-      if (key_ptr == NULL || (shared != 0)) {
+      const char* key_ptr =
+          DecodeEntry(data_ + region_offset, data_ + restarts_, &shared,
+                      &non_shared, &value_length);
+      if (key_ptr == nullptr || (shared != 0)) {
         CorruptionError();
         return;
       }
@@ -202,12 +201,12 @@ class Block::Iter : public Iterator {
     }
   }
 
-  virtual void SeekToFirst() {
+  void SeekToFirst() override {
     SeekToRestartPoint(0);
     ParseNextKey();
   }
 
-  virtual void SeekToLast() {
+  void SeekToLast() override {
     SeekToRestartPoint(num_restarts_ - 1);
     while (ParseNextKey() && NextEntryOffset() < restarts_) {
       // Keep skipping
@@ -237,7 +236,7 @@ class Block::Iter : public Iterator {
     // Decode next entry
     uint32_t shared, non_shared, value_length;
     p = DecodeEntry(p, limit, &shared, &non_shared, &value_length);
-    if (p == NULL || key_.size() < shared) {
+    if (p == nullptr || key_.size() < shared) {
       CorruptionError();
       return false;
     } else {
@@ -253,7 +252,7 @@ class Block::Iter : public Iterator {
   }
 };
 
-Iterator* Block::NewIterator(const Comparator* cmp) {
+Iterator* Block::NewIterator(const Comparator* comparator) {
   if (size_ < sizeof(uint32_t)) {
     return NewErrorIterator(Status::Corruption("bad block contents"));
   }
@@ -261,7 +260,7 @@ Iterator* Block::NewIterator(const Comparator* cmp) {
   if (num_restarts == 0) {
     return NewEmptyIterator();
   } else {
-    return new Iter(cmp, data_, restart_offset_, num_restarts);
+    return new Iter(comparator, data_, restart_offset_, num_restarts);
   }
 }
 

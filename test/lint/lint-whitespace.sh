@@ -31,14 +31,14 @@ if [ -z "${TRAVIS_COMMIT_RANGE}" ]; then
 fi
 
 showdiff() {
-  if ! git diff -U0 "${TRAVIS_COMMIT_RANGE}" -- "." ":(exclude)depends/patches/" ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/" ":(exclude)src/qt/locale/"; then
+  if ! git diff -U0 "${TRAVIS_COMMIT_RANGE}" -- "." ":(exclude)depends/patches/" ":(exclude)src/leveldb/" ":(exclude)src/crc32c/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/" ":(exclude)src/qt/locale/"; then
     echo "Failed to get a diff"
     exit 1
   fi
 }
 
 showcodediff() {
-  if ! git diff -U0 "${TRAVIS_COMMIT_RANGE}" -- *.cpp *.h *.md *.py *.sh ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/" ":(exclude)src/qt/locale/"; then
+  if ! git diff -U0 "${TRAVIS_COMMIT_RANGE}" -- *.cpp *.h *.md *.py *.sh ":(exclude)src/leveldb/" ":(exclude)src/crc32c/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/" ":(exclude)src/qt/locale/"; then
     echo "Failed to get a diff"
     exit 1
   fi
