@@ -1,138 +1,33 @@
-# Bitcoin-Ecc
+# ECCPoW
 
-## What is the ECCPoW?
+## Why we made it?
 
-[Go to ECCPoW Repository](https://github.com/cryptoecc/ECCPoW)
+Today, mining modules investing heavily on state-of-the art ASIC miners appear. The bitcoin network is left with only handful of these modules. This shows the current bitcoin network is centralized, leading to that the immuntability of the blockchain lies.
 
-## Build
+So, We needs new time-variant PoW. Basically, ASICs are useful when crypto puzzles ar not changeable. To make ASICs useless, our solution way is to make crypto puzzles time-variant. We call our solution ECCPoW.
 
-**Install Xcode command line tool (for Mac)**
+## What is ECCPoW?
 
-```bash
-$ xcode-select -install
+![picture1](https://user-images.githubusercontent.com/25213941/57541109-3f3a2600-7389-11e9-9bf4-5170ded0eeaa.jpg)
 
-```
+- Development of Synthetic Function of SHA and LDPC Decoder
+- Parity Check Matrix (PCM) size and amount of required resources (mem, comp) can be changed.
+- PCM can change the value of each block by inputting the hash value of the previous block.
 
-**Install Packages (for Mac)**
+## Who made it?
 
-```bash
-$ brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python qt libevent qrencode librsvg
-```
+ECCPoW was developed in GIST's Infonet lab. if you want to contact us, please go to site(https://infonet.gist.ac.kr/)
 
+## Development Environment
 
-**Install Packages (For Ubuntu)**
-```bash
-$ apt install -y build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 ibssl-dev libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb-dev libdb++-dev
-```
+- OS : Window 10 (64 bit)
+- IDE : Visual Studio 2017(v141)
+- SDK : 10.0.17763.0
+- Programming language : C++
 
-**Clone SourceCode**
+## Testing
 
-```bash
-$ git clone https://github.com/cryptoecc/bitcoin_ECC.git
-$ git checkout ecc-0.1
-```
+![result](https://user-images.githubusercontent.com/25213941/57542325-4c0c4900-738c-11e9-9dd4-48582f05ad42.jpg)
 
-**Build BitcoinEcc**
-
-```bash
-$ cd bitcoin_ECC
-$ ./autogen.sh
-$ ./configure
-$ make -j8
-```
-
-**Run**
-
-```bash
-src/bitcoind \
--rpcuser=<user> \
--rpcpassword=<password> \
--txindex \
--rpcallowip=0.0.0.0/0 \
--rpcbind=0.0.0.0
-```
-
-
-### Docker
-
-#### Install Docker-CE
-
-**Macos**
-
-* [https://docs.docker.com/docker-for-mac/install/](https://docs.docker.com/docker-for-mac/install/) 
-* Download: [https://download.docker.com/mac/stable/Docker.dmg](https://download.docker.com/mac/stable/Docker.dmg)
-
-**Ubuntu**
-
-* [Get Docker CE for Ubuntu | Docker Documentation](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
-
-#### Create Docker Image
-
-**Clone SourceCode**
-
-```bash
-$ git clone https://github.com/cryptoecc/bitcoin_ECC.git
-$ git checkout ecc-0.1
-```
-
-**Create Docker Image**
-
-```bash
-$ cd bitcoin_ECC
-$ docker build -t bitcoin-ecc .
-```
-
-#### Run DockerContainer
-
-**Createe Volume**
-
-```bash
-# docker volume rm bitcoin-ecc-data
-$ docker volume create --name=bitcoin-ecc-data
-```
-
-**Mainnet**
-
-```bash
-$ docker run -d -v bitcoin-ecc-data:/root/.bitcoin --name=bitcoin-ecc-mainnet \
--p 9776:9776 \
--p 9777:9777 \
-bitcoin-ecc \
--rpcuser=rpc \
--rpcpassword=rpc
-
-$ docker logs bitcoin-ecc-mainnet
-```
-
-**Testnet**
-
-```bash
-$ docker run -d -v bitcoin-ecc-data:/root/.bitcoin --name=bitcoin-ecc-testnet \
--p 19776:19776 \
--p 19777:19777 \
-bitcoin-ecc \
--rpcuser=rpc \
--rpcpassword=rpc \
--testnet
-
-$ docker logs bitcoin-ecc-testnet
-```
-
-**Regtest**
-
-```bash
-$ docker run -d -v bitcoin-ecc-data:/root/.bitcoin --name=bitcoin-ecc-regtest \
--p 19887:19887 \
-bitcoin-ecc \
--rpcuser=rpc \
--rpcpassword=rpc \
--regtest
-
-$ docker logs bitcoin-ecc-regtest
-```
-
-**Add Node Option**
-
-```
--addnode=<ipaddr>
-```
+# Bitcoin-ECC
+## [How to build Bitocoin-ECC???](https://github.com/cryptoecc/bitcoin_ECC/blob/ecc-0.1.2/Build.md)
