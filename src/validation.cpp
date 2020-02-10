@@ -499,6 +499,7 @@ public:
         const bool m_test_accept;
         // SYSCOIN
         bool &m_duplicate;
+        std::string m_sender;
     };
     
     // Single transaction acceptance
@@ -681,6 +682,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                             {
                                 // add conflicting sender
                                 args.m_duplicate = true;
+                                args.m_sender = *actorSet.begin();
                                 break;
                             }
                             else
@@ -1033,17 +1035,38 @@ bool MemPoolAccept::ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, Precomp
                 __func__, hash.ToString(), FormatStateMessage(state));
     }
     // SYSCOIN
-    if (IsSyscoinTx(tx.nVersion) && !CheckSyscoinInputs(tx, hash, state, m_view, true, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), args.m_test_accept || args.m_bypass_limits)) {
-        // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
-        if(!args.m_test_accept && state.IsError()){
-            LogPrint(BCLog::SYS, "Double spend detected on tx %s! %s\n", hash.GetHex(), FormatStateMessage(state));
-            LOCK(cs_assetallocationmempoolremovetx);
-            vecToRemoveFromMempool.emplace_back(hash, ::ChainActive().Tip()->GetMedianTimePast());
+    if(IsSyscoinTx(tx.nVersion)){
+        if (!CheckSyscoinInputs(tx, hash, state, m_view, true, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), args.m_test_accept || args.m_bypass_limits)) {
+            if(!args.m_test_accept && state.IsError()){
+                LOCK(cs_assetallocationmempoolremovetx);
+                // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
+                LogPrint(BCLog::SYS, "Double spend detected on tx %s! %s\n", hash.GetHex(), FormatStateMessage(state));
+                vecToRemoveFromMempool.emplace_back(hash, ::ChainActive().Tip()->GetMedianTimePast());
+            }
+            else {
+                return false;
+            }
+        } 
+        // we still have duplicate inputs, even though its not a balance overflow we still need to tag it as a conflict
+        // otherwise we will have a p2p network split with messages and that stops us from detecting issues
+        // in this case issue would be we don't know which input will be mined (first one to miner). So the right payment may never get mined.
+        // Therefor we want to make sure the entire network hears about it so merchants can decide to not accept payments in real-time
+       else if(!args.m_test_accept && args.m_duplicate && !args.m_sender.empty()){
+            {
+                LOCK(cs_assetallocationconflicts);
+                // add conflicting sender if not already added
+                if(assetAllocationConflicts.find(args.m_sender) == assetAllocationConflicts.end())
+                {
+                    assetAllocationConflicts.insert(std::move(args.m_sender));
+                }
+            }
+            {
+                LOCK(cs_assetallocationmempoolremovetx);
+                // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
+                LogPrint(BCLog::SYS, "Double input spend detected on tx %s! %s\n", hash.GetHex(), FormatStateMessage(state));
+                vecToRemoveFromMempool.emplace_back(hash, ::ChainActive().Tip()->GetMedianTimePast());
+            }
         }
-        else
-            return false;
-    }else if(args.m_duplicate){
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
     }
     return true;
 }
@@ -2112,7 +2135,7 @@ static int64_t nBlocksTotal = 0;
  *  can fail if those validity checks fail (among other reasons). */
 // SYSCOIN
 bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                  CCoinsViewCache& view, const CChainParams& chainparams, std::unordered_set<std::string> &actorSet, bool fJustCheck)
+                  CCoinsViewCache& view, const CChainParams& chainparams, std::unordered_set<std::string> &actorSet, bool fJustCheck, CTransaction* txMissingInput, CTransaction* syscoinTxFailed)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2244,7 +2267,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         {
             CAmount txfee = 0;
             TxValidationState tx_state;
-            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
+            // SYSCOIN
+            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee, txMissingInput)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                             tx_state.GetRejectReason(), tx_state.GetDebugMessage());
@@ -2300,6 +2324,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             if(IsSyscoinTx(tx.nVersion)){
                 TxValidationState tx_state;
                 if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
+                    if(syscoinTxFailed != NULL)
+                        *syscoinTxFailed = tx;
                     // Any transaction validation failure in ConnectBlock is a block consensus failure
                     state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                                 tx_state.GetRejectReason(), tx_state.GetDebugMessage());
@@ -4145,8 +4171,8 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 
     return true;
 }
-
-bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)
+// SYSCOIN
+bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot, CTransaction* txMissingInput, CTransaction* syscoinTxFailed)
 {
     AssertLockHeld(cs_main);
     assert(pindexPrev && pindexPrev == ::ChainActive().Tip());
@@ -4167,7 +4193,7 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, FormatStateMessage(state));
     // SYSCOIN
-    if (!::ChainstateActive().ConnectBlock(block, state, &indexDummy, viewNew, chainparams, actorSet, true))
+    if (!::ChainstateActive().ConnectBlock(block, state, &indexDummy, viewNew, chainparams, actorSet, true, txMissingInput, syscoinTxFailed))
         return false;
     assert(state.IsValid());
 

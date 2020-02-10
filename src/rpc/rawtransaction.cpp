@@ -849,6 +849,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     AssertLockNotHeld(cs_main);
     const TransactionError err = BroadcastTransaction(*g_rpc_node, tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
     if (TransactionError::OK != err) {
+        LogPrintf("sendraw error %s\n", err_string.c_str());
         throw JSONRPCTransactionError(err, err_string);
     }
     #ifdef ENABLE_WALLET
