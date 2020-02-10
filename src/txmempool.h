@@ -555,7 +555,7 @@ private:
     std::set<uint256> m_unbroadcast_txids GUARDED_BY(cs);
 
 public:
-    indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
+    indirectmap<COutPoint, const CTransaction*, memusage::AccountingAllocator<std::pair<const COutPoint* const, const CTransaction*>>> mapNextTx GUARDED_BY(cs);
     std::map<uint256, CAmount, std::less<uint256>, memusage::AccountingAllocator<std::pair<const uint256, CAmount>>> mapDeltas GUARDED_BY(cs);
 
     /** Create a new CTxMemPool.
