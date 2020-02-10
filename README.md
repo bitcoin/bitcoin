@@ -2,7 +2,7 @@
 
 ## What is the ECCPoW?
 
-(Go to ECCPoW Repository)[https://github.com/cryptoecc/ECCPoW]
+[Go to ECCPoW Repository](https://github.com/cryptoecc/ECCPoW)
 
 ## Build
 
