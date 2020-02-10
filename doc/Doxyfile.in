@@ -861,7 +861,8 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = src/leveldb \
+EXCLUDE                = src/crc32c \
+                         src/leveldb \
                          src/json \
                          src/test \
                          src/qt/test
