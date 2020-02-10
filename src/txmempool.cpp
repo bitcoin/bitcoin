@@ -381,6 +381,7 @@ CTxMemPool::CTxMemPool(const Options& opts)
       m_allocation_counter{0},
       mapTx{memusage::AccountingAllocator<CTxMemPoolEntry>{m_allocation_counter}},
       vTxHashes{memusage::AccountingAllocator<std::pair<uint256, txiter>>{m_allocation_counter}},
+      mapNextTx{memusage::AccountingAllocator<std::pair<const COutPoint* const, const CTransaction*>>{m_allocation_counter}},
       mapDeltas{memusage::AccountingAllocator<std::pair<const uint256, CAmount>>{m_allocation_counter}},
       m_max_size_bytes{opts.max_size_bytes},
       m_expiry{opts.expiry},
@@ -962,7 +963,7 @@ void CCoinsViewMemPool::PackageAddTransaction(const CTransactionRef& tx)
 
 size_t CTxMemPool::DynamicMemoryUsage() const {
     LOCK(cs);
-    return m_allocation_counter + memusage::DynamicUsage(mapNextTx) + cachedInnerUsage;
+    return m_allocation_counter + cachedInnerUsage;
 }
 
 void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked) {
