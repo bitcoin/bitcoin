@@ -114,6 +114,7 @@ static const char *filenames[] = {
         "fail41.json",               // invalid unicode: unfinished UTF-8
         "fail42.json",               // valid json with garbage following a nul byte
         "fail44.json",               // unterminated string
+        "fail45.json",               // nested beyond max depth
         "fail3.json",
         "fail4.json",                // extra comma
         "fail5.json",
@@ -124,6 +125,7 @@ static const char *filenames[] = {
         "pass1.json",
         "pass2.json",
         "pass3.json",
+        "pass4.json",
         "round1.json",              // round-trip test
         "round2.json",              // unicode
         "round3.json",              // bare string
