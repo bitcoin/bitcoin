@@ -210,6 +210,9 @@ public:
       */
     virtual bool CanProvide(const CScript& script, SignatureData& sigdata) { return false; }
 
+    /** Creates new signatures and adds them to the transaction. Returns whether all inputs were signed */
+    virtual bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const { return false; }
+
     virtual uint256 GetID() const { return uint256(); }
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
@@ -349,6 +352,8 @@ public:
     std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script) const override;
 
     bool CanProvide(const CScript& script, SignatureData& sigdata) override;
+
+    bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const override;
 
     uint256 GetID() const override;
 
