@@ -93,6 +93,7 @@ UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, b
             auto& dmn = quorum->members[i];
             UniValue mo(UniValue::VOBJ);
             mo.push_back(Pair("proTxHash", dmn->proTxHash.ToString()));
+            mo.push_back(Pair("pubKeyOperator", dmn->pdmnState->pubKeyOperator.Get().ToString()));
             mo.push_back(Pair("valid", quorum->qc.validMembers[i]));
             if (quorum->qc.validMembers[i]) {
                 CBLSPublicKey pubKey = quorum->GetPubKeyShare(i);
