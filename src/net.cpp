@@ -1630,8 +1630,14 @@ void CConnman::ThreadDNSAddressSeed()
             }
         }
 
-        if (interruptNet) {
-            return;
+        if (interruptNet) return;
+
+        // hold off on querying seeds if p2p network deactivated
+        if (!fNetworkActive) {
+            LogPrintf("Waiting for network to be reactivated before querying DNS seeds.\n");
+            do {
+                if (!interruptNet.sleep_for(std::chrono::seconds{1})) return;
+            } while (!fNetworkActive);
         }
 
         LogPrintf("Loading addresses from DNS seed %s\n", seed);
