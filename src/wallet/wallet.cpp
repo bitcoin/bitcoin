@@ -2489,52 +2489,10 @@ TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& comp
     }
 
     // Fill in information from ScriptPubKeyMans
-    // Because each ScriptPubKeyMan may be able to fill more than one input, we need to keep track of each ScriptPubKeyMan that has filled this psbt.
-    // Each iteration, we may fill more inputs than the input that is specified in that iteration.
-    // We assume that each input is filled by only one ScriptPubKeyMan
-    std::set<uint256> visited_spk_mans;
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        const CTxIn& txin = psbtx.tx->vin[i];
-        PSBTInput& input = psbtx.inputs.at(i);
-
-        if (PSBTInputSigned(input)) {
-            continue;
-        }
-
-        // Get the scriptPubKey to know which ScriptPubKeyMan to use
-        CScript script;
-        if (!input.witness_utxo.IsNull()) {
-            script = input.witness_utxo.scriptPubKey;
-        } else if (input.non_witness_utxo) {
-            if (txin.prevout.n >= input.non_witness_utxo->vout.size()) {
-                return TransactionError::MISSING_INPUTS;
-            }
-            script = input.non_witness_utxo->vout[txin.prevout.n].scriptPubKey;
-        } else {
-            // There's no UTXO so we can just skip this now
-            continue;
-        }
-        SignatureData sigdata;
-        input.FillSignatureData(sigdata);
-        std::set<ScriptPubKeyMan*> spk_mans = GetScriptPubKeyMans(script, sigdata);
-        if (spk_mans.size() == 0) {
-            continue;
-        }
-
-        for (auto& spk_man : spk_mans) {
-            // If we've already been signed by this spk_man, skip it
-            if (visited_spk_mans.count(spk_man->GetID()) > 0) {
-                continue;
-            }
-
-            // Fill in the information from the spk_man
-            TransactionError res = spk_man->FillPSBT(psbtx, sighash_type, sign, bip32derivs);
-            if (res != TransactionError::OK) {
-                return res;
-            }
-
-            // Add this spk_man to visited_spk_mans so we can skip it later
-            visited_spk_mans.insert(spk_man->GetID());
+    for (ScriptPubKeyMan* spk_man : GetAllScriptPubKeyMans()) {
+        TransactionError res = spk_man->FillPSBT(psbtx, sighash_type, sign, bip32derivs);
+        if (res != TransactionError::OK) {
+            return res;
         }
     }
 
