@@ -118,17 +118,9 @@ public:
     }
     bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) override
     {
-        std::unique_ptr<SigningProvider> provider = m_wallet->GetSigningProvider(script);
+        std::unique_ptr<SigningProvider> provider = m_wallet->GetSolvingProvider(script);
         if (provider) {
             return provider->GetPubKey(address, pub_key);
-        }
-        return false;
-    }
-    bool getPrivKey(const CScript& script, const CKeyID& address, CKey& key) override
-    {
-        std::unique_ptr<SigningProvider> provider = m_wallet->GetSigningProvider(script);
-        if (provider) {
-            return provider->GetKey(address, key);
         }
         return false;
     }
