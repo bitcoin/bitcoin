@@ -2428,11 +2428,17 @@ bool CWallet::SignTransaction(CMutableTransaction& tx) const
 
 bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const
 {
-    // Sign the tx with ScriptPubKeyMans
-    // Because each ScriptPubKeyMan can sign more than one input, we need to keep track of each ScriptPubKeyMan that has signed this transaction.
-    // Each iteration, we may sign more txins than the txin that is specified in that iteration.
-    // We assume that each input is signed by only one ScriptPubKeyMan.
-    std::set<uint256> visited_spk_mans;
+    // Try to sign with all ScriptPubKeyMans
+    for (ScriptPubKeyMan* spk_man : GetAllScriptPubKeyMans()) {
+        // spk_man->SignTransaction will return true if the transaction is complete,
+        // so we can exit early and return true if that happens
+        if (spk_man->SignTransaction(tx, coins, sighash, input_errors)) {
+            return true;
+        }
+    }
+
+    // At this point, one input was not fully signed otherwise we would have exited already
+    // Find that input and figure out what went wrong.
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         // Get the prevout
         CTxIn& txin = tx.vin[i];
@@ -2444,32 +2450,9 @@ bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint,
 
         // Check if this input is complete
         SignatureData sigdata = DataFromTransaction(tx, i, coin->second.out);
-        if (sigdata.complete) {
-            continue;
-        }
-
-        // Input needs to be signed, find the right ScriptPubKeyMan
-        std::set<ScriptPubKeyMan*> spk_mans = GetScriptPubKeyMans(coin->second.out.scriptPubKey, sigdata);
-        if (spk_mans.size() == 0) {
+        if (!sigdata.complete) {
             input_errors[i] = "Unable to sign input, missing keys";
             continue;
-        }
-
-        for (auto& spk_man : spk_mans) {
-            // If we've already been signed by this spk_man, skip it
-            if (visited_spk_mans.count(spk_man->GetID()) > 0) {
-                continue;
-            }
-
-            // Sign the tx.
-            // spk_man->SignTransaction will return true if the transaction is complete,
-            // so we can exit early and return true if that happens.
-            if (spk_man->SignTransaction(tx, coins, sighash, input_errors)) {
-                return true;
-            }
-
-            // Add this spk_man to visited_spk_mans so we can skip it later
-            visited_spk_mans.insert(spk_man->GetID());
         }
     }
     return false;

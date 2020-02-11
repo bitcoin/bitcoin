@@ -1943,7 +1943,16 @@ bool DescriptorScriptPubKeyMan::CanProvide(const CScript& script, SignatureData&
 
 bool DescriptorScriptPubKeyMan::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const
 {
-    return false;
+    std::unique_ptr<FlatSigningProvider> keys = MakeUnique<FlatSigningProvider>();
+    for (const auto& coin_pair : coins) {
+        std::unique_ptr<FlatSigningProvider> coin_keys = GetSigningProvider(coin_pair.second.out.scriptPubKey, true);
+        if (!coin_keys) {
+            continue;
+        }
+        *keys = Merge(*keys, *coin_keys);
+    }
+
+    return ::SignTransaction(tx, keys.get(), coins, sighash, input_errors);
 }
 
 SigningResult DescriptorScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
