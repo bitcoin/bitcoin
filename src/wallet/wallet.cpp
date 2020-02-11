@@ -2481,7 +2481,6 @@ TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& comp
 {
     LOCK(cs_wallet);
     // Get all of the previous transactions
-    complete = true;
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
         const CTxIn& txin = psbtx.tx->vin[i];
         PSBTInput& input = psbtx.inputs.at(i);
@@ -2506,13 +2505,22 @@ TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& comp
                 input.non_witness_utxo = wtx.tx;
             }
         }
+    }
 
-        // Get the Sighash type
-        if (sign && input.sighash_type > 0 && input.sighash_type != sighash_type) {
-            return TransactionError::SIGHASH_MISMATCH;
+    // Fill in information from ScriptPubKeyMans
+    // Because each ScriptPubKeyMan may be able to fill more than one input, we need to keep track of each ScriptPubKeyMan that has filled this psbt.
+    // Each iteration, we may fill more inputs than the input that is specified in that iteration.
+    // We assume that each input is filled by only one ScriptPubKeyMan
+    std::set<uint256> visited_spk_mans;
+    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
+        const CTxIn& txin = psbtx.tx->vin[i];
+        PSBTInput& input = psbtx.inputs.at(i);
+
+        if (PSBTInputSigned(input)) {
+            continue;
         }
 
-        // Get the scriptPubKey to know which SigningProvider to use
+        // Get the scriptPubKey to know which ScriptPubKeyMan to use
         CScript script;
         if (!input.witness_utxo.IsNull()) {
             script = input.witness_utxo.scriptPubKey;
@@ -2523,27 +2531,36 @@ TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& comp
             script = input.non_witness_utxo->vout[txin.prevout.n].scriptPubKey;
         } else {
             // There's no UTXO so we can just skip this now
-            complete = false;
             continue;
         }
         SignatureData sigdata;
         input.FillSignatureData(sigdata);
-        std::unique_ptr<SigningProvider> provider = GetSigningProvider(script, sigdata);
-        if (!provider) {
-            complete = false;
+        std::set<ScriptPubKeyMan*> spk_mans = GetScriptPubKeyMans(script, sigdata);
+        if (spk_mans.size() == 0) {
             continue;
         }
 
-        complete &= SignPSBTInput(HidingSigningProvider(provider.get(), !sign, !bip32derivs), psbtx, i, sighash_type);
+        for (auto& spk_man : spk_mans) {
+            // If we've already been signed by this spk_man, skip it
+            if (visited_spk_mans.count(spk_man->GetID()) > 0) {
+                continue;
+            }
+
+            // Fill in the information from the spk_man
+            TransactionError res = spk_man->FillPSBT(psbtx, sighash_type, sign, bip32derivs);
+            if (res != TransactionError::OK) {
+                return res;
+            }
+
+            // Add this spk_man to visited_spk_mans so we can skip it later
+            visited_spk_mans.insert(spk_man->GetID());
+        }
     }
 
-    // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
-    for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
-        const CTxOut& out = psbtx.tx->vout.at(i);
-        std::unique_ptr<SigningProvider> provider = GetSigningProvider(out.scriptPubKey);
-        if (provider) {
-            UpdatePSBTOutput(HidingSigningProvider(provider.get(), true, !bip32derivs), psbtx, i);
-        }
+    // Complete if every input is now signed
+    complete = true;
+    for (const auto& input : psbtx.inputs) {
+        complete &= PSBTInputSigned(input);
     }
 
     return TransactionError::OK;
