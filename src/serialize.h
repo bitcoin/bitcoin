@@ -493,12 +493,13 @@ public:
 template<typename Formatter, typename T>
 static inline Wrapper<Formatter, T&> Using(T&& t) { return Wrapper<Formatter, T&>(t); }
 
-#define VARINT(obj, ...) Using<VarIntFormatter<__VA_ARGS__>>(obj)
+#define VARINT_MODE(obj, mode) Using<VarIntFormatter<mode>>(obj)
+#define VARINT(obj) Using<VarIntFormatter<VarIntMode::DEFAULT>>(obj)
 #define COMPACTSIZE(obj) CCompactSize(REF(obj))
 #define LIMITED_STRING(obj,n) LimitedString< n >(REF(obj))
 
 /** Serialization wrapper class for integers in VarInt format. */
-template<VarIntMode Mode=VarIntMode::DEFAULT>
+template<VarIntMode Mode>
 struct VarIntFormatter
 {
     template<typename Stream, typename I> void Ser(Stream &s, I v)
