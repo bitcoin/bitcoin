@@ -44,6 +44,7 @@
         <file alias="filesave">res/icons/filesave.png</file>
         <file alias="debugwindow">res/icons/debugwindow.png</file>
         <file alias="browse">res/icons/browse.png</file>
+        <file alias="about">res/icons/about.png</file>
         <file alias="about_qt">res/icons/about_qt.png</file>
         <file alias="verify">res/icons/verify.png</file>
         <file alias="hd_enabled">res/icons/hd_enabled.png</file>
