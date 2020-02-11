@@ -916,7 +916,8 @@ public:
      * calling CreateTransaction();
      */
     bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
-    bool SignTransaction(CMutableTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool SignTransaction(CMutableTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const;
 
     /**
      * Create a new transaction paying the recipients with a set of coins
@@ -1150,6 +1151,7 @@ public:
 
     //! Get the ScriptPubKeyMan for a script
     ScriptPubKeyMan* GetScriptPubKeyMan(const CScript& script) const;
+    ScriptPubKeyMan* GetScriptPubKeyMan(const CScript& script, SignatureData& sigdata) const;
     //! Get the ScriptPubKeyMan by id
     ScriptPubKeyMan* GetScriptPubKeyMan(const uint256& id) const;
 
