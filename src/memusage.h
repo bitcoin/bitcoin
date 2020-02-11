@@ -25,6 +25,64 @@ namespace memusage
 /** Compute the total memory used by allocating alloc bytes. */
 static size_t MallocUsage(size_t alloc);
 
+/** Wrapping allocator that accounts accurately.
+ *
+ * To use accounting, the AccountAllocator(size_t&) constructor must be used.
+ * Any containers using such an allocator, and containers moved constructed or
+ * assigned from such containers will then increment/decrement size_t when
+ * allocating/deallocating memory.
+ */
+template<typename T>
+class AccountingAllocator : public std::allocator<T>
+{
+    //! Pointer to accounting variable, if any.
+    size_t* m_allocated;
+
+    template<typename U> friend class AccountingAllocator;
+    typedef std::allocator<T> base;
+
+public:
+    //! Default constructor constructs a non-accounting allocator.
+    AccountingAllocator() noexcept : m_allocated(nullptr) {}
+
+    /** Construct an allocator that increments/decrements 'allocated' on allocate/free.
+     *
+     * In a multithreaded environment, the variable needs to be protected by the same
+     * lock as the container(s) that use this allocator. */
+    explicit AccountingAllocator(size_t& allocated) noexcept : m_allocated(&allocated) {}
+
+    //! A copy-constructed container will be non-accounting.
+    static AccountingAllocator select_on_container_copy_construction() { return AccountingAllocator(); }
+    //! A copy-assigned container will be non-accounting.
+    typedef std::false_type propagate_on_container_copy_assignment;
+    //! The accounting will follow a container as it's moved.
+    typedef std::true_type propagate_on_container_move_assignment;
+    //! The accounting will follow a container as it's swapped.
+    typedef std::true_type propagate_on_container_swap;
+
+    // Construct an allocator for a different data type, inheriting the accounting.
+    template <typename U> AccountingAllocator(AccountingAllocator<U>&& a) noexcept : base(std::move(a)), m_allocated(a.m_allocated) {}
+    template <typename U> AccountingAllocator(const AccountingAllocator<U>& a) noexcept : base(a), m_allocated(a.m_allocated) {}
+
+    typename base::value_type* allocate(std::size_t n, const void* hint = nullptr)
+    {
+        typename base::value_type* allocation = base::allocate(n, hint);
+        if (m_allocated) *m_allocated += MallocUsage(sizeof(typename base::value_type) * n);
+        return allocation;
+    }
+
+    void deallocate(typename base::value_type* p, std::size_t n)
+    {
+        base::deallocate(p, n);
+        if (m_allocated) *m_allocated -= MallocUsage(sizeof(typename base::value_type) * n);
+    }
+
+    template<typename U> struct rebind { typedef AccountingAllocator<U> other; };
+
+    friend bool operator==(const AccountingAllocator<T>& a, const AccountingAllocator<T>& b) noexcept { return a.m_allocated == b.m_allocated; }
+    friend bool operator!=(const AccountingAllocator<T>& a, const AccountingAllocator<T>& b) noexcept { return a.m_allocated != b.m_allocated; }
+};
+
 /** Dynamic memory usage for built-in types is zero. */
 static inline size_t DynamicUsage(const int8_t& v) { return 0; }
 static inline size_t DynamicUsage(const uint8_t& v) { return 0; }
