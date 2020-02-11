@@ -196,7 +196,7 @@ public:
         bool& complete,
         int sighash_type = 1 /* SIGHASH_ALL */,
         bool sign = true,
-        bool bip32derivs = false) = 0;
+        bool bip32derivs = false) const = 0;
 
     //! Get balances.
     virtual WalletBalances getBalances() = 0;

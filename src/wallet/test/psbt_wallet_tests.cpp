@@ -5,7 +5,6 @@
 #include <key_io.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
-#include <wallet/psbtwallet.h>
 #include <wallet/wallet.h>
 
 #include <boost/test/unit_test.hpp>
@@ -61,7 +60,7 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
 
     // Fill transaction with our data
     bool complete = true;
-    BOOST_REQUIRE_EQUAL(TransactionError::OK, FillPSBT(&m_wallet, psbtx, complete, SIGHASH_ALL, false, true));
+    BOOST_REQUIRE_EQUAL(TransactionError::OK, m_wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, false, true));
 
     // Get the final tx
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
