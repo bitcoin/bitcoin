@@ -6,9 +6,9 @@ $(package)_sha256_hash=3e35907bf376269a844df08e03cbb43e345c88125374f2228e03724b5
 $(package)_build_subdir=cctools
 $(package)_clang_version=6.0.1
 $(package)_clang_download_path=https://releases.llvm.org/$($(package)_clang_version)
-$(package)_clang_download_file=clang+llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-14.04.tar.xz
-$(package)_clang_file_name=clang-llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-14.04.tar.xz
-$(package)_clang_sha256_hash=fa5416553ca94a8c071a27134c094a5fb736fe1bd0ecc5ef2d9bc02754e1bef0
+$(package)_clang_download_file=clang+llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+$(package)_clang_file_name=clang-llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+$(package)_clang_sha256_hash=7ea204ecd78c39154d72dfc0d4a79f7cce1b2264da2551bb2eef10e266d54d91
 
 $(package)_libtapi_version=3efb201881e7a76a21e0554906cf306432539cef
 $(package)_libtapi_download_path=https://github.com/tpoechtrager/apple-libtapi/archive
