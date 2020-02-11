@@ -3622,8 +3622,6 @@ static UniValue AddressBookDataToJSON(const CAddressBookData& data, const bool v
 
 UniValue getaddressinfo(const JSONRPCRequest& request)
 {
-    const std::string example_address = "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"";
-
     RPCHelpMan{"getaddressinfo",
         "\nReturn information about the given dash address.\n"
         "Some of the information will only be present if the address is in the active wallet.\n",
@@ -3672,8 +3670,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             }
         },
         RPCExamples{
-            HelpExampleCli("getaddressinfo", example_address)
-    + HelpExampleRpc("getaddressinfo", example_address)
+            HelpExampleCli("getaddressinfo", EXAMPLE_ADDRESS)
+    + HelpExampleRpc("getaddressinfo", EXAMPLE_ADDRESS)
         },
     }.Check(request);
 
