@@ -229,6 +229,7 @@ RES_ICONS = \
   qt/res/icons/tx_input.png \
   qt/res/icons/tx_output.png \
   qt/res/icons/tx_mined.png \
+  qt/res/icons/about.png \
   qt/res/icons/about_qt.png \
   qt/res/icons/verify.png \
   qt/res/icons/fontbigger.png \
