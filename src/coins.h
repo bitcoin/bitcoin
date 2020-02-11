@@ -97,7 +97,6 @@ public:
  * - unspent, FRESH, DIRTY (e.g. a new coin created in the cache)
  * - unspent, not FRESH, DIRTY (e.g. a coin changed in the cache during a reorg)
  * - unspent, not FRESH, not DIRTY (e.g. an unspent coin fetched from the parent cache)
- * - spent, FRESH, not DIRTY (e.g. a spent coin fetched from the parent cache)
  * - spent, not FRESH, DIRTY (e.g. a coin is spent and spentness needs to be flushed to the parent)
  */
 struct CCoinsCacheEntry
