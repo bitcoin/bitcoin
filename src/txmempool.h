@@ -530,7 +530,7 @@ public:
             return a->GetTx().GetHash() < b->GetTx().GetHash();
         }
     };
-    typedef std::set<txiter, CompareIteratorByHash> setEntries;
+    typedef std::set<txiter, CompareIteratorByHash, memusage::AccountingAllocator<txiter>> setEntries;
 
     const setEntries & GetMemPoolParents(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     const setEntries & GetMemPoolChildren(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -541,6 +541,10 @@ private:
     struct TxLinks {
         setEntries parents;
         setEntries children;
+
+        TxLinks(size_t& allocation_counter) :
+            parents({}, CompareIteratorByHash(), memusage::AccountingAllocator<txiter>(allocation_counter)),
+            children({}, CompareIteratorByHash(), memusage::AccountingAllocator<txiter>(allocation_counter)) {}
     };
 
     typedef std::map<txiter, TxLinks, CompareIteratorByHash, memusage::AccountingAllocator<std::pair<const txiter, TxLinks>>> txlinksMap;

@@ -364,7 +364,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // Used by AcceptToMemoryPool(), which DOES do
     // all the appropriate checks.
     indexed_transaction_set::iterator newit = mapTx.insert(entry).first;
-    mapLinks.insert(make_pair(newit, TxLinks()));
+    mapLinks.emplace(newit, m_allocation_counter);
 
     // Update transaction for any feeDelta created by PrioritiseTransaction
     // TODO: refactor so that the fee delta is calculated before inserting
@@ -435,7 +435,6 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 
     totalTxSize -= it->GetTxSize();
     cachedInnerUsage -= it->DynamicMemoryUsage();
-    cachedInnerUsage -= memusage::DynamicUsage(mapLinks[it].parents) + memusage::DynamicUsage(mapLinks[it].children);
     mapLinks.erase(it);
     mapTx.erase(it);
     nTransactionsUpdated++;
@@ -640,8 +639,6 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         const CTransaction& tx = it->GetTx();
         txlinksMap::const_iterator linksiter = mapLinks.find(it);
         assert(linksiter != mapLinks.end());
-        const TxLinks &links = linksiter->second;
-        innerUsage += memusage::DynamicUsage(links.parents) + memusage::DynamicUsage(links.children);
         bool fDependsWait = false;
         setEntries setParentCheck;
         for (const CTxIn &txin : tx.vin) {
@@ -970,21 +967,19 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, bool validFeeEstimat
 
 void CTxMemPool::UpdateChild(txiter entry, txiter child, bool add)
 {
-    setEntries s;
-    if (add && mapLinks[entry].children.insert(child).second) {
-        cachedInnerUsage += memusage::IncrementalDynamicUsage(s);
-    } else if (!add && mapLinks[entry].children.erase(child)) {
-        cachedInnerUsage -= memusage::IncrementalDynamicUsage(s);
+    if (add) {
+        mapLinks.at(entry).children.emplace(child);
+    } else {
+        mapLinks.at(entry).children.erase(child);
     }
 }
 
 void CTxMemPool::UpdateParent(txiter entry, txiter parent, bool add)
 {
-    setEntries s;
-    if (add && mapLinks[entry].parents.insert(parent).second) {
-        cachedInnerUsage += memusage::IncrementalDynamicUsage(s);
-    } else if (!add && mapLinks[entry].parents.erase(parent)) {
-        cachedInnerUsage -= memusage::IncrementalDynamicUsage(s);
+    if (add) {
+        mapLinks.at(entry).parents.emplace(parent);
+    } else {
+        mapLinks.at(entry).parents.erase(parent);
     }
 }
 
