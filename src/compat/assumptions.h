@@ -59,7 +59,13 @@ static_assert(sizeof(size_t) == sizeof(void*), "Sizes of size_t and void* assume
 
 // Some important things we are NOT assuming (non-exhaustive list):
 // * We are NOT assuming a specific value for std::endian::native.
-// * We are NOT assuming a specific value for std::locale("").name().
+// * In bitcoin-qt we are NOT assuming a specific C locale (setlocale), but we
+//   do assume that the global C++ locale (std::locale) is set to the classic
+//   locale. This is verified at run-time by GUILocaleSanityCheck().
+//
+//   In bitcoind we assume that BOTH the C locale and C++ locale are set to the
+//   classic locale. This is verified at run-time by LocaleSanityCheck().
 // * We are NOT assuming a specific value for std::numeric_limits<char>::is_signed.
+
 
 #endif // BITCOIN_COMPAT_ASSUMPTIONS_H
