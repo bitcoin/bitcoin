@@ -3329,23 +3329,15 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
     // Parse the prevtxs array
     ParsePrevouts(request.params[1], nullptr, coins);
 
-    std::set<std::shared_ptr<SigningProvider>> providers;
-    for (const std::pair<COutPoint, Coin> coin_pair : coins) {
-        std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(coin_pair.second.out.scriptPubKey);
-        if (provider) {
-            providers.insert(std::move(provider));
-        }
-    }
-    if (providers.size() == 0) {
-        // When there are no available providers, use a dummy SigningProvider so we can check if the tx is complete
-        providers.insert(std::make_shared<SigningProvider>());
-    }
+    int nHashType = ParseSighashString(request.params[2]);
 
+    // Script verification errors
+    std::map<int, std::string> input_errors;
+
+    bool complete = pwallet->SignTransaction(mtx, coins, nHashType, input_errors);
     UniValue result(UniValue::VOBJ);
-    for (std::shared_ptr<SigningProvider> provider : providers) {
-        SignTransaction(mtx, provider.get(), coins, request.params[2], result);
-    }
-     return result;
+    SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
+    return result;
 }
 
 static UniValue bumpfee(const JSONRPCRequest& request)
