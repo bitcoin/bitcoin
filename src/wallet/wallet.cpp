@@ -2410,34 +2410,71 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     return res;
 }
 
-bool CWallet::SignTransaction(CMutableTransaction& tx)
+bool CWallet::SignTransaction(CMutableTransaction& tx) const
 {
     AssertLockHeld(cs_wallet);
 
-    // sign the new tx
-    int nIn = 0;
+    // Build coins map
+    std::map<COutPoint, Coin> coins;
     for (auto& input : tx.vin) {
         std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(input.prevout.hash);
         if(mi == mapWallet.end() || input.prevout.n >= mi->second.tx->vout.size()) {
             return false;
         }
-        const CScript& scriptPubKey = mi->second.tx->vout[input.prevout.n].scriptPubKey;
-        const CAmount& amount = mi->second.tx->vout[input.prevout.n].nValue;
-        SignatureData sigdata;
-
-        std::unique_ptr<SigningProvider> provider = GetSigningProvider(scriptPubKey);
-        if (!provider) {
-            // We don't know about this scriptpbuKey;
-            return false;
-        }
-
-        if (!ProduceSignature(*provider, MutableTransactionSignatureCreator(&tx, nIn, amount, SIGHASH_ALL), scriptPubKey, sigdata)) {
-            return false;
-        }
-        UpdateInput(input, sigdata);
-        nIn++;
+        const CWalletTx& wtx = mi->second;
+        coins[input.prevout] = Coin(wtx.tx->vout[input.prevout.n], wtx.m_confirm.block_height, wtx.IsCoinBase());
     }
-    return true;
+    std::map<int, std::string> input_errors;
+    return SignTransaction(tx, coins, SIGHASH_ALL, input_errors);
+}
+
+bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const
+{
+    // Sign the tx with ScriptPubKeyMans
+    // Because each ScriptPubKeyMan can sign more than one input, we need to keep track of each ScriptPubKeyMan that has signed this transaction.
+    // Each iteration, we may sign more txins than the txin that is specified in that iteration.
+    // We assume that each input is signed by only one ScriptPubKeyMan.
+    std::set<uint256> visited_spk_mans;
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        // Get the prevout
+        CTxIn& txin = tx.vin[i];
+        auto coin = coins.find(txin.prevout);
+        if (coin == coins.end() || coin->second.IsSpent()) {
+            input_errors[i] = "Input not found or already spent";
+            continue;
+        }
+
+        // Check if this input is complete
+        SignatureData sigdata = DataFromTransaction(tx, i, coin->second.out);
+        if (sigdata.complete) {
+            continue;
+        }
+
+        // Input needs to be signed, find the right ScriptPubKeyMan
+        std::set<ScriptPubKeyMan*> spk_mans = GetScriptPubKeyMans(coin->second.out.scriptPubKey, sigdata);
+        if (spk_mans.size() == 0) {
+            input_errors[i] = "Unable to sign input, missing keys";
+            continue;
+        }
+
+        for (auto& spk_man : spk_mans) {
+            // If we've already been signed by this spk_man, skip it
+            if (visited_spk_mans.count(spk_man->GetID()) > 0) {
+                continue;
+            }
+
+            // Sign the tx.
+            // spk_man->SignTransaction will return true if the transaction is complete,
+            // so we can exit early and return true if that happens.
+            if (spk_man->SignTransaction(tx, coins, sighash, input_errors)) {
+                return true;
+            }
+
+            // Add this spk_man to visited_spk_mans so we can skip it later
+            visited_spk_mans.insert(spk_man->GetID());
+        }
+    }
+    return false;
 }
 
 bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
@@ -4153,6 +4190,17 @@ ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(const OutputType& type, bool intern
         return nullptr;
     }
     return it->second;
+}
+
+std::set<ScriptPubKeyMan*> CWallet::GetScriptPubKeyMans(const CScript& script, SignatureData& sigdata) const
+{
+    std::set<ScriptPubKeyMan*> spk_mans;
+    for (const auto& spk_man_pair : m_spk_managers) {
+        if (spk_man_pair.second->CanProvide(script, sigdata)) {
+            spk_mans.insert(spk_man_pair.second.get());
+        }
+    }
+    return spk_mans;
 }
 
 ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(const CScript& script) const
