@@ -34,6 +34,13 @@ static void WaitForShutdown(NodeContext& node)
     Interrupt(node);
 }
 
+static bool LocaleSanityCheck() noexcept
+{
+    const std::locale current_cpp_locale;
+    const std::string current_c_locale{setlocale(LC_ALL, nullptr)};
+    return current_cpp_locale == std::locale::classic() && current_c_locale == "C";
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Start
@@ -115,6 +122,11 @@ static bool AppInit(int argc, char* argv[])
         if (!AppInitSanityChecks())
         {
             // InitError will have been called with detailed error, which ends up on console
+            return false;
+        }
+        if (!LocaleSanityCheck())
+        {
+            InitError("Locale sanity check failure. Aborting.");
             return false;
         }
         if (gArgs.GetBoolArg("-daemon", false))
