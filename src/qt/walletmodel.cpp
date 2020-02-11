@@ -81,12 +81,12 @@ void WalletModel::pollBalanceChanged()
         return;
     }
 
-    if(fForceCheckBalanceChanged || m_node.getNumBlocks() != cachedNumBlocks)
+    if(fForceCheckBalanceChanged || numBlocks != cachedNumBlocks)
     {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
-        cachedNumBlocks = m_node.getNumBlocks();
+        cachedNumBlocks = numBlocks;
 
         checkBalanceChanged(new_balances);
         if(transactionTableModel)
