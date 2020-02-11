@@ -1957,7 +1957,21 @@ bool DescriptorScriptPubKeyMan::SignTransaction(CMutableTransaction& tx, const s
 
 SigningResult DescriptorScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
 {
-    return SigningResult::SIGNING_FAILED;
+    std::unique_ptr<FlatSigningProvider> keys = GetSigningProvider(GetScriptForDestination(pkhash), true);
+    if (!keys) {
+        return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+    }
+
+    CKeyID key_id(pkhash);
+    CKey key;
+    if (!keys->GetKey(key_id, key)) {
+        return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+    }
+
+    if (!MessageSign(key, message, str_sig)) {
+        return SigningResult::SIGNING_FAILED;
+    }
+    return SigningResult::OK;
 }
 
 TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, int sighash_type, bool sign, bool bip32derivs) const
