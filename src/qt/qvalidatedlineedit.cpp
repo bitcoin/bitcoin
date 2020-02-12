@@ -28,7 +28,7 @@ void QValidatedLineEdit::setValid(bool _valid)
     }
     else
     {
-        setStyleSheet(STYLE_INVALID);
+        setStyleSheet("QValidatedLineEdit { " STYLE_INVALID "}");
     }
     this->valid = _valid;
 }
