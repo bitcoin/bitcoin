@@ -246,9 +246,22 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     connect(this, &BitcoinApplication::requestedShutdown, splash, &QWidget::close);
 }
 
+static void GUILocaleSanityCheck() noexcept
+{
+    // In bitcoin-qt we assume that the global C++ locale (std::locale) is the
+    // classic locale, but we do not make any assumptions about the C locale
+    // (setlocale).
+    const std::locale current_cpp_locale;
+    if (current_cpp_locale != std::locale::classic()) {
+        std::abort();
+    }
+}
+
 bool BitcoinApplication::baseInitialize()
 {
-    return m_node.baseInitialize();
+    const bool initialized = m_node.baseInitialize();
+    GUILocaleSanityCheck();
+    return initialized;
 }
 
 void BitcoinApplication::startThread()
