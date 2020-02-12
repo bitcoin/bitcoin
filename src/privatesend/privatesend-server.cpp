@@ -741,8 +741,17 @@ bool CPrivateSendServer::AddUserToExistingSession(const CPrivateSendAccept& dsa,
 // Returns true if either max size has been reached or if the mix timed out and min size was reached
 bool CPrivateSendServer::IsSessionReady()
 {
-    if ((int)vecSessionCollaterals.size() >= CPrivateSend::GetMaxPoolParticipants()) return true;
-    if (CPrivateSendServer::HasTimedOut() && (int)vecSessionCollaterals.size() >= CPrivateSend::GetMinPoolParticipants()) return true;
+    if (nState == POOL_STATE_QUEUE) {
+        if ((int)vecSessionCollaterals.size() >= CPrivateSend::GetMaxPoolParticipants()) {
+            return true;
+        }
+        if (CPrivateSendServer::HasTimedOut() && (int)vecSessionCollaterals.size() >= CPrivateSend::GetMinPoolParticipants()) {
+            return true;
+        }
+    }
+    if (nState == POOL_STATE_ACCEPTING_ENTRIES) {
+        return true;
+    }
     return false;
 }
 
