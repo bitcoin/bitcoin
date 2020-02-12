@@ -10,10 +10,8 @@ export LC_ALL=C
 # TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent snprintf with strprintf.
 KNOWN_VIOLATIONS=(
     "src/bitcoin-tx.cpp.*stoul"
-    "src/bitcoin-tx.cpp.*trim_right"
     "src/dbwrapper.cpp.*stoul"
     "src/dbwrapper.cpp:.*vsnprintf"
-    "src/httprpc.cpp.*trim"
     "src/rest.cpp:.*strtol"
     "src/statsd_client.cpp:.*snprintf"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
