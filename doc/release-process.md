@@ -203,7 +203,20 @@ Codesigner only: Sign the macOS binary:
     tar xf bitcoin-osx-unsigned.tar.gz
     ./detached-sig-create.sh -s "Key ID"
     Enter the keychain password and authorize the signature
-    Move signature-osx.tar.gz back to the gitian host
+
+Now a manual deterministic disk image (dmg) creation is required (gbuilt with `gitian-osx-signer.yml` while having the signatures.tar.gz file in the inputs)
+
+notarize the disk image:
+
+    xcrun altool --notarize-app --primary-bundle-id "org.bitcoinfoundation.Bitcoin-Qt" -u "<code-signer-apple-developer-account-username>" -p "<password>" --file bitcoin-${VERSION}-osx.dmg
+
+The notarization takes a few minutes. Check the status:
+
+    xcrun altool --notarization-info <RequestUUID-from-notarize-app-step> -u "<code-signer-apple-developer-account-username>" -p "<password>"
+
+Staple the notarization ticket onto the application
+
+    xcrun stapler staple dist/Bitcoin-Qt.app
 
 Codesigner only: Sign the windows binaries:
 
@@ -215,10 +228,12 @@ Codesigner only: Sign the windows binaries:
 Codesigner only: Commit the detached codesign payloads:
 
     cd ~/bitcoin-detached-sigs
-    checkout the appropriate branch for this release series
+    #checkout the appropriate branch for this release series
     rm -rf *
     tar xf signature-osx.tar.gz
     tar xf signature-win.tar.gz
+    #copy the notarization ticket
+    cp dist/Bitcoin-Qt.app/Contents/CodeResources osx/dist/Bitcoin-Qt.app/Contents/
     git add -a
     git commit -m "point to ${VERSION}"
     git tag -s v${VERSION} HEAD
