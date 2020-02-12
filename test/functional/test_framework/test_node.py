@@ -63,7 +63,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, extra_args_from_options, *, chain, rpchost, timewait, timeout_factor, bitcoind, bitcoin_cli, mocktime, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False):
+    def __init__(self, i, datadir, extra_args_from_options, *, chain, rpchost, timewait, timeout_factor, bitcoind, bitcoin_cli, mocktime, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -89,6 +89,7 @@ class TestNode():
         # Note that common args are set in the config file (see initialize_datadir)
         self.extra_args = extra_args
         self.extra_args_from_options = extra_args_from_options
+        self.version = version
         # Configuration for logging is set as command-line args rather than in the bitcoin.conf file.
         # This means that starting a bitcoind using the temp dir to debug a failed test won't
         # spam debug.log.
@@ -96,7 +97,6 @@ class TestNode():
             self.binary,
             "-datadir=" + self.datadir,
             "-logtimemicros",
-            "-logthreadnames",
             "-debug",
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
@@ -112,6 +112,9 @@ class TestNode():
             self.args = ["valgrind", "--suppressions={}".format(suppressions_file),
                          "--gen-suppressions=all", "--exit-on-first-error=yes",
                          "--error-exitcode=1", "--quiet"] + self.args
+
+        if self.version is None or self.version >= 19000000:
+            self.args.append("-logthreadnames")
 
         self.cli = TestNodeCLI(bitcoin_cli, self.datadir)
         self.use_cli = use_cli
@@ -325,7 +328,11 @@ class TestNode():
             return
         self.log.debug("Stopping node")
         try:
-            self.stop(wait=wait)
+            # Do not use wait argument when testing older nodes, e.g. in feature_backwards_compatibility.py
+            if self.version is None or self.version >= 180000:
+                self.stop(wait=wait)
+            else:
+                self.stop()
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
 
