@@ -106,6 +106,7 @@ void QValidatedLineEdit::checkValidity()
 void QValidatedLineEdit::setCheckValidator(const QValidator *v)
 {
     checkValidator = v;
+    checkValidity();
 }
 
 bool QValidatedLineEdit::isValid()
