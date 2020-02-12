@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_ECMULT_
-#define _SECP256K1_ECMULT_
+#ifndef SECP256K1_ECMULT_H
+#define SECP256K1_ECMULT_H
 
 #include "num.h"
 #include "group.h"
@@ -28,4 +28,4 @@ static int secp256k1_ecmult_context_is_built(const secp256k1_ecmult_context *ctx
 /** Double multiply: R = na*A + ng*G */
 static void secp256k1_ecmult(const secp256k1_ecmult_context *ctx, secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_scalar *na, const secp256k1_scalar *ng);
 
-#endif
+#endif /* SECP256K1_ECMULT_H */

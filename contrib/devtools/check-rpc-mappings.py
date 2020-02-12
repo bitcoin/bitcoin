@@ -68,7 +68,7 @@ def process_commands(fname):
                     else:
                         args = []
                     cmds.append(RPCCommand(name, args))
-    assert not in_rpcs, "Something went wrong with parsing the C++ file: update the regexps"
+    assert not in_rpcs and cmds, "Something went wrong with parsing the C++ file: update the regexps"
     return cmds
 
 def process_mapping(fname):
@@ -91,7 +91,7 @@ def process_mapping(fname):
                     idx = int(m.group(2))
                     argname = parse_string(m.group(3))
                     cmds.append((name, idx, argname))
-    assert not in_rpcs
+    assert not in_rpcs and cmds
     return cmds
 
 def main():

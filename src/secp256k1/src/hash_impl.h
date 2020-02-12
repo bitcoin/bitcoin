@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_HASH_IMPL_H_
-#define _SECP256K1_HASH_IMPL_H_
+#ifndef SECP256K1_HASH_IMPL_H
+#define SECP256K1_HASH_IMPL_H
 
 #include "hash.h"
 
@@ -278,4 +278,4 @@ static void secp256k1_rfc6979_hmac_sha256_finalize(secp256k1_rfc6979_hmac_sha256
 #undef Maj
 #undef Ch
 
-#endif
+#endif /* SECP256K1_HASH_IMPL_H */

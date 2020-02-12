@@ -453,7 +453,7 @@ class BitcoinTestFramework(object):
             self.disable_mocktime()
             for i in range(MAX_NODES):
                 os.remove(log_filename(self.options.cachedir, i, "debug.log"))
-                os.remove(log_filename(self.options.cachedir, i, "db.log"))
+                os.remove(log_filename(self.options.cachedir, i, "wallets/db.log"))
                 os.remove(log_filename(self.options.cachedir, i, "peers.dat"))
                 os.remove(log_filename(self.options.cachedir, i, "fee_estimates.dat"))
 

@@ -302,18 +302,16 @@ public:
 
         // Read from the beginning of the buffer
         unsigned int nReadPosNext = nReadPos + nSize;
-        if (nReadPosNext >= vch.size())
+        if (nReadPosNext > vch.size()) {
+            throw std::ios_base::failure("CDataStream::read(): end of data");
+        }
+        memcpy(pch, &vch[nReadPos], nSize);
+        if (nReadPosNext == vch.size())
         {
-            if (nReadPosNext > vch.size())
-            {
-                throw std::ios_base::failure("CDataStream::read(): end of data");
-            }
-            memcpy(pch, &vch[nReadPos], nSize);
             nReadPos = 0;
             vch.clear();
             return;
         }
-        memcpy(pch, &vch[nReadPos], nSize);
         nReadPos = nReadPosNext;
     }
 

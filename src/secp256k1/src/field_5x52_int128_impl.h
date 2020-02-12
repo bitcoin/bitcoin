@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_FIELD_INNER5X52_IMPL_H_
-#define _SECP256K1_FIELD_INNER5X52_IMPL_H_
+#ifndef SECP256K1_FIELD_INNER5X52_IMPL_H
+#define SECP256K1_FIELD_INNER5X52_IMPL_H
 
 #include <stdint.h>
 
@@ -274,4 +274,4 @@ SECP256K1_INLINE static void secp256k1_fe_sqr_inner(uint64_t *r, const uint64_t 
     /* [r4 r3 r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 }
 
-#endif
+#endif /* SECP256K1_FIELD_INNER5X52_IMPL_H */
