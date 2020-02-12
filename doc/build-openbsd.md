@@ -50,7 +50,10 @@ export BDB_PREFIX="$PWD/db4"
 
 ### Building Bitcoin Core
 
-**Important**: use `gmake`, not `make`. The non-GNU `make` will exit with a horrible error.
+**Important**: Use `gmake` (the non-GNU `make` will exit with an error).
+```shell
+setenv MAKE gmake
+```
 
 Preparation:
 ```bash
