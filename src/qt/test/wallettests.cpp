@@ -8,6 +8,7 @@
 #include "qt/sendcoinsdialog.h"
 #include "qt/sendcoinsentry.h"
 #include "qt/transactiontablemodel.h"
+#include "qt/transactionview.h"
 #include "qt/walletmodel.h"
 #include "test/test_dash.h"
 #include "validation.h"
@@ -18,7 +19,9 @@
 #include "qt/receiverequestdialog.h"
 
 #include <QAbstractButton>
+#include <QAction>
 #include <QApplication>
+#include <QCheckBox>
 #include <QPushButton>
 #include <QTimer>
 #include <QVBoxLayout>
@@ -28,14 +31,30 @@
 
 namespace
 {
-//! Press "Yes" button in modal send confirmation dialog.
-void ConfirmSend()
+//! Press "Ok" button in message box dialog.
+void ConfirmMessage(QString* text = nullptr)
 {
-    QTimer::singleShot(0, makeCallback([](Callback* callback) {
+    QTimer::singleShot(0, makeCallback([text](Callback* callback) {
+        for (QWidget* widget : QApplication::topLevelWidgets()) {
+            if (widget->inherits("QMessageBox")) {
+                QMessageBox* messageBox = qobject_cast<QMessageBox*>(widget);
+                if (text) *text = messageBox->text();
+                messageBox->defaultButton()->click();
+            }
+        }
+        delete callback;
+    }), SLOT(call()));
+}
+
+//! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
+void ConfirmSend(QString* text = nullptr, bool cancel = false)
+{
+    QTimer::singleShot(0, makeCallback([text, cancel](Callback* callback) {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("SendConfirmationDialog")) {
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
-                QAbstractButton* button = dialog->button(QMessageBox::Yes);
+                if (text) *text = dialog->text();
+                QAbstractButton* button = dialog->button(cancel ? QMessageBox::Cancel : QMessageBox::Yes);
                 button->setEnabled(true);
                 button->click();
             }
@@ -89,9 +108,11 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 //     src/qt/test/test_bitcoin-qt -platform cocoa    # macOS
 void TestGUI()
 {
-    // Set up wallet and chain with 101 blocks (1 mature block for spending).
+    // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
     TestChain100Setup test;
-    test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
+    for (int i = 0; i < 5; ++i) {
+        test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
+    }
     bitdb.MakeMock();
     std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test.dat"));
     CWallet wallet(std::move(dbw));
@@ -111,16 +132,18 @@ void TestGUI()
     // Create widgets for sending coins and listing transactions.
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
     SendCoinsDialog sendCoinsDialog(platformStyle.get());
+    TransactionView transactionView(platformStyle.get());
     OptionsModel optionsModel;
     WalletModel walletModel(platformStyle.get(), &wallet, &optionsModel);
     sendCoinsDialog.setModel(&walletModel);
+    transactionView.setModel(&walletModel);
 
     // Send two transactions, and verify they are added to transaction list.
     TransactionTableModel* transactionTableModel = walletModel.getTransactionTableModel();
-    QCOMPARE(transactionTableModel->rowCount({}), 101);
+    QCOMPARE(transactionTableModel->rowCount({}), 105);
     uint256 txid1 = SendCoins(wallet, sendCoinsDialog, CKeyID(), 5 * COIN);
     uint256 txid2 = SendCoins(wallet, sendCoinsDialog, CKeyID(), 10 * COIN);
-    QCOMPARE(transactionTableModel->rowCount({}), 103);
+    QCOMPARE(transactionTableModel->rowCount({}), 107);
     QVERIFY(FindTx(*transactionTableModel, txid1).isValid());
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());
 
