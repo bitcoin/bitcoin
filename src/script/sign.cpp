@@ -509,6 +509,9 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
             } else {
                 input_errors[i] = ScriptErrorString(serror);
             }
+        } else {
+            // If this input succeeds, make sure there is no error set for it
+            input_errors.erase(i);
         }
     }
     return input_errors.empty();
