@@ -42,7 +42,6 @@ KNOWN_VIOLATIONS=(
     "src/bitcoin-tx.cpp.*trim_right"
     "src/dbwrapper.cpp.*stoul"
     "src/dbwrapper.cpp:.*vsnprintf"
-    "src/httprpc.cpp.*trim"
     "src/node/blockstorage.cpp:.*atoi"
     "src/qt/rpcconsole.cpp:.*atoi"
     "src/rest.cpp:.*strtol"
