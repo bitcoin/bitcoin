@@ -258,6 +258,13 @@ Commit your signature for the signed macOS/Windows binaries:
 
 ### After 3 or more people have gitian-built and their results match:
 
+- macOS codesigner only: Create disk image notarization:
+Only one person handles notarization. Everyone else should skip to the next step. Requires an Apple Mac computer.
+
+```bash
+xcrun altool --notarize-app --primary-bundle-id "org.bitcoinfoundation.Bitcoin-Qt" -u "<code-signer-apple-developer-account-username>" -p "<password>" --file bitcoin-${VERSION}-osx.dmg
+```
+
 - Create `SHA256SUMS.asc` for the builds, and GPG-sign it:
 
 ```bash
