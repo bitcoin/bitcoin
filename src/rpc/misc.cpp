@@ -5,10 +5,12 @@
 
 #include <httpserver.h>
 #include <key_io.h>
+#include <node/context.h>
 #include <outputtype.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <scheduler.h>
 #include <script/descriptor.h>
 #include <util/check.h>
 #include <util/strencodings.h>
@@ -366,6 +368,36 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+static UniValue mockscheduler(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"mockscheduler",
+        "\nBump the scheduler into the future (-regtest only)\n",
+        {
+            {"delta_time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of seconds to forward the scheduler into the future." },
+        },
+        RPCResults{},
+        RPCExamples{""},
+    }.Check(request);
+
+    if (!Params().IsMockableChain()) {
+        throw std::runtime_error("mockscheduler is for regression testing (-regtest mode) only");
+    }
+
+    // check params are valid values
+    RPCTypeCheck(request.params, {UniValue::VNUM});
+    int64_t delta_seconds = request.params[0].get_int64();
+    if ((delta_seconds <= 0) || (delta_seconds > 3600)) {
+        throw std::runtime_error("delta_time must be between 1 and 3600 seconds (1 hr)");
+    }
+
+    // protect against null pointer dereference
+    CHECK_NONFATAL(g_rpc_node);
+    CHECK_NONFATAL(g_rpc_node->scheduler);
+    g_rpc_node->scheduler->MockForward(boost::chrono::seconds(delta_seconds));
+
+    return NullUniValue;
+}
+
 static UniValue RPCLockedMemoryInfo()
 {
     LockedPool::Stats stats = LockedPoolManager::Instance().stats();
@@ -570,6 +602,7 @@ static const CRPCCommand commands[] =
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
+    { "hidden",             "mockscheduler",          &mockscheduler,          {"delta_time"}},
     { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "echojson",               &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
 };
