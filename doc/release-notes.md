@@ -160,6 +160,7 @@ There are a few changes in existing RPC interfaces in this release:
 - individual Dash-specific fields which were used to display soft-fork progress in `getblockchaininfo` are replaced
  with the backported `statistics` object
 - `privatesend_balance` field is shown in all related RPC results regardless of the Lite Mode or PrivateSend state
+- added `pubKeyOperator` field for each masternode in `quorum info` RPC response
 
 There are also new RPC commands:
 - `getbestchainlock`
@@ -232,6 +233,9 @@ modules were reorganized in separate folders to make navigation through code a b
 
 See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.5...dashpay:v0.15.0.0).
 
+- [`15c6df583`](https://github.com/dashpay/dash/commit/15c6df583) Bring back "about" menu icon (#3329)
+- [`2c30818f7`](https://github.com/dashpay/dash/commit/2c30818f7) Add pubKeyOperator to `quorum info` rpc response (#3327)
+- [`2bbf78c1b`](https://github.com/dashpay/dash/commit/2bbf78c1b) Update release-notes.md
 - [`2c305d02d`](https://github.com/dashpay/dash/commit/2c305d02d) Update translations 2020-02-03 (#3322)
 - [`672e18e48`](https://github.com/dashpay/dash/commit/672e18e48) Only sync mempool from v0.15+ (proto 70216+) nodes (#3321)
 - [`829bde81e`](https://github.com/dashpay/dash/commit/829bde81e) Fix dark text on dark background in combobox dropdowns on windows (#3315)
@@ -464,6 +468,7 @@ Thanks to everyone who directly contributed to this release:
 - Alexander Block (codablock)
 - Amir Abrams (AmirAbrams)
 - -k (charlesrocket)
+- Cofresi
 - Nathan Marley (nmarley)
 - PastaPastaPasta
 - Riku (rikublock)
@@ -497,7 +502,7 @@ Dash Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
 
 These release are considered obsolete. Old release notes can be found here:
 
-- [v0.14.0.4](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.14.0.5.md) released December/08/2019
+- [v0.14.0.5](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.14.0.5.md) released December/08/2019
 - [v0.14.0.4](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.14.0.4.md) released November/22/2019
 - [v0.14.0.3](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.14.0.3.md) released August/15/2019
 - [v0.14.0.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.14.0.2.md) released July/4/2019
