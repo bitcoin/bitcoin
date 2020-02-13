@@ -13,6 +13,7 @@
 #include <script/standard.h>
 #include <serialize.h>
 #include <util/memory.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
@@ -313,7 +314,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
     }
     BOOST_CHECK(banman->IsBanned(addr1));
-    gArgs.ForceSetArg("-banscore", std::to_string(DEFAULT_BANSCORE_THRESHOLD));
+    gArgs.ForceSetArg("-banscore", ToString(DEFAULT_BANSCORE_THRESHOLD));
 
     bool dummy;
     peerLogic->FinalizeNode(dummyNode1.GetId(), dummy);

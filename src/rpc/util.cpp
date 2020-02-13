@@ -489,7 +489,7 @@ std::string RPCHelpMan::ToString() const
         if (i == 0) ret += "\nArguments:\n";
 
         // Push named argument name and description
-        sections.m_sections.emplace_back(std::to_string(i + 1) + ". " + arg.m_name, arg.ToDescriptionString());
+        sections.m_sections.emplace_back(::ToString(i + 1) + ". " + arg.m_name, arg.ToDescriptionString());
         sections.m_max_pad = std::max(sections.m_max_pad, sections.m_sections.back().m_left.size());
 
         // Recursively push nested args
