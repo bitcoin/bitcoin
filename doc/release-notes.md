@@ -233,6 +233,9 @@ modules were reorganized in separate folders to make navigation through code a b
 
 See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.5...dashpay:v0.15.0.0).
 
+- [`9d5c3d12e`](https://github.com/dashpay/dash/commit/9d5c3d12e) Try to actually accept newly created dstx-es into masternode's mempool (#3332)
+- [`f23e722da`](https://github.com/dashpay/dash/commit/f23e722da) Switch CLIENT_VERSION_IS_RELEASE to `true` for v0.15 (#3306)
+- [`b57f1dac8`](https://github.com/dashpay/dash/commit/b57f1dac8) Update release notes
 - [`15c6df583`](https://github.com/dashpay/dash/commit/15c6df583) Bring back "about" menu icon (#3329)
 - [`2c30818f7`](https://github.com/dashpay/dash/commit/2c30818f7) Add pubKeyOperator to `quorum info` rpc response (#3327)
 - [`2bbf78c1b`](https://github.com/dashpay/dash/commit/2bbf78c1b) Update release-notes.md
