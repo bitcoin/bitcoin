@@ -178,6 +178,7 @@ HOST_CXXFLAGS="$HOST_CFLAGS"
 # LDFLAGS
 case "$HOST" in
     *linux*)  HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$glibc_dynamic_linker -static-libstdc++" ;;
+    *mingw*)  HOST_LDFLAGS="-Wl,--no-insert-timestamp" ;;
 esac
 
 # Make $HOST-specific native binaries from depends available in $PATH
@@ -271,10 +272,14 @@ export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
         # for release
         case "$HOST" in
             *mingw*)
+                find "${DISTNAME}" -not -name "*.dbg" -print0 \
+                    | xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
                 find "${DISTNAME}" -not -name "*.dbg" \
                     | sort \
                     | zip -X@ "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}.zip" \
                     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}.zip" && exit 1 )
+                find "${DISTNAME}" -name "*.dbg" -print0 \
+                    | xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
                 find "${DISTNAME}" -name "*.dbg" \
                     | sort \
                     | zip -X@ "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}-debug.zip" \
