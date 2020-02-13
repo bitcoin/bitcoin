@@ -52,7 +52,7 @@ distribution provides binaries for the RISC-V platform.
 ### Wallet
 - #17643 Fix origfee return for bumpfee with feerate arg (instagibbs)
 - #16963 Fix `unique_ptr` usage in boost::signals2 (promag)
-- #17258 Fix issue with conflicted mempool tx in listsinceblock (adamjonas)
+- #17258 Fix issue with conflicted mempool tx in listsinceblock (adamjonas, mchrostowski)
 - #17924 Bug: IsUsedDestination shouldn't use key id as script id for ScriptHash (instagibbs)
 - #17621 IsUsedDestination should count any known single-key address (instagibbs)
 - #17843 Reset reused transactions cache (fjahr)
@@ -107,6 +107,7 @@ Thanks to everyone who directly contributed to this release:
 - Karl-Johan Alm
 - Luke Dashjr
 - MarcoFalke
+- Michael Chrostowski
 - Russell Yanofsky
 - Wladimir J. van der Laan
 
