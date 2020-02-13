@@ -35,7 +35,7 @@ private:
 
 public Q_SLOTS:
     void setText(const QString&);
-    void setValid(bool valid, bool with_warning=false);
+    void setValid(bool valid, bool with_warning=false, int error_pos=0);
     void setEnabled(bool enabled);
 
 Q_SIGNALS:
