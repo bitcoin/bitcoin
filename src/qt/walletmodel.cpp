@@ -79,12 +79,12 @@ void WalletModel::pollBalanceChanged()
         return;
     }
 
-    if(fForceCheckBalanceChanged || m_node.getNumBlocks() != cachedNumBlocks || node().privateSendOptions().getRounds() != cachedPrivateSendRounds)
+    if(fForceCheckBalanceChanged || numBlocks != cachedNumBlocks || node().privateSendOptions().getRounds() != cachedPrivateSendRounds)
     {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
-        cachedNumBlocks = m_node.getNumBlocks();
+        cachedNumBlocks = numBlocks;
         cachedPrivateSendRounds = node().privateSendOptions().getRounds();
 
         checkBalanceChanged(new_balances);
