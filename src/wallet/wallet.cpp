@@ -3227,6 +3227,8 @@ bool CWallet::GetNewDestination(const OutputType type, const std::string label, 
     if (spk_man) {
         spk_man->TopUp();
         result = spk_man->GetNewDestination(type, dest, error);
+    } else {
+        error = strprintf("Error: No %s addresses available.", FormatOutputType(type));
     }
     if (result) {
         SetAddressBook(dest, label, "receive");
