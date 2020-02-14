@@ -11,7 +11,7 @@ WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
       m_wallet(m_node.chain.get(), "", m_args, CreateMockWalletDatabase())
 {
     m_wallet.LoadWallet();
-    m_chain_notifications_handler = m_node.chain->handleNotifications({ &m_wallet, [](CWallet*) {} });
+    CWallet::AttachChain({ &m_wallet, [](CWallet*) {} });
     m_wallet_client->registerRpcs();
 }
 

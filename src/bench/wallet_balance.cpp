@@ -27,7 +27,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
         wallet.SetupDescriptorScriptPubKeyMans();
         if (wallet.LoadWallet() != DBErrors::LOAD_OK) assert(false);
     }
-    auto handler = test_setup->m_node.chain->handleNotifications({&wallet, [](CWallet*) {}});
+    CWallet::AttachChain({&wallet, [](CWallet*) {}});
 
     const std::optional<std::string> address_mine{add_mine ? std::optional<std::string>{getnewaddress(wallet)} : std::nullopt};
 

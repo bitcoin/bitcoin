@@ -23,7 +23,6 @@ struct WalletTestingSetup : public TestingSetup {
 
     std::unique_ptr<interfaces::WalletClient> m_wallet_client = interfaces::MakeWalletClient(*m_node.chain, *Assert(m_node.args));
     CWallet m_wallet;
-    std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
 };
 
 #endif // BITCOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
