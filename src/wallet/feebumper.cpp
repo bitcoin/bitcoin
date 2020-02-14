@@ -18,13 +18,14 @@
 //! mined, or conflicts with a mined transaction. Return a feebumper::Result.
 static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWalletTx& wtx, std::vector<std::string>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
-    if (wallet.HasWalletSpend(wtx.GetHash())) {
+    const auto wtx_hash = wtx.GetHash();
+    if (wallet.HasWalletSpend(wtx_hash)) {
         errors.push_back("Transaction has descendants in the wallet");
         return feebumper::Result::INVALID_PARAMETER;
     }
 
     {
-        if (wallet.chain().hasDescendantsInMempool(wtx.GetHash())) {
+        if (wallet.chain().hasDescendantsInMempool(wtx_hash)) {
             errors.push_back("Transaction has descendants in the mempool");
             return feebumper::Result::INVALID_PARAMETER;
         }
@@ -41,7 +42,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
     }
 
     if (wtx.mapValue.count("replaced_by_txid")) {
-        errors.push_back(strprintf("Cannot bump transaction %s which was already bumped by transaction %s", wtx.GetHash().ToString(), wtx.mapValue.at("replaced_by_txid")));
+        errors.push_back(strprintf("Cannot bump transaction %s which was already bumped by transaction %s", wtx_hash.ToString(), wtx.mapValue.at("replaced_by_txid")));
         return feebumper::Result::WALLET_ERROR;
     }
 
