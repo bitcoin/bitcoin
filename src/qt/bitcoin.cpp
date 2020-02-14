@@ -35,6 +35,7 @@
 #include <util/system.h>
 #include <util/threadnames.h>
 
+#include <clocale>
 #include <memory>
 
 #include <QApplication>
@@ -182,6 +183,36 @@ BitcoinApplication::BitcoinApplication(interfaces::Node& node):
     returnValue(0),
     platformStyle(nullptr)
 {
+    // Force the classic locale ("C") for the numeric locale category (LC_NUMERIC).
+    //
+    // Rationale:
+    //
+    // Perhaps surprisingly Qt runs setlocale(LC_ALL, "") on initialization. This
+    // installs the locale specified by the user's LC_ALL (or LC_*) environment
+    // variable as the new C locale.
+    //
+    // In contrast bitcoind does not opt-in to localization -- no call to
+    // setlocale(LC_ALL, "") is made and the environment variables LC_* are
+    // thus ignored.
+    //
+    // This results in an unfortunate situation where the bitcoind is guaranteed
+    // to be running with the classic locale ("C") whereas the locale of
+    // bitcoin-qt will vary depending on the user's environment variables.
+    //
+    // An example: Assuming the environment variable LC_ALL=de_DE then the
+    // call std::to_string(1.23) will return "1.230000" in bitcoind but
+    // "1,230000" in bitcoin-qt.
+    //
+    // From the Qt documentation:
+    // "On Unix/Linux Qt is configured to use the system locale settings by default.
+    //  This can cause a conflict when using POSIX functions, for instance, when
+    //  converting between data types such as floats and strings, since the notation
+    //  may differ between locales. To get around this problem, call the POSIX function
+    //  setlocale(LC_NUMERIC,"C") right after initializing QApplication, QGuiApplication
+    //  or QCoreApplication to reset the locale that is used for number formatting to
+    //  "C"-locale."
+    setlocale(LC_NUMERIC, "C");
+
     setQuitOnLastWindowClosed(false);
 }
 
