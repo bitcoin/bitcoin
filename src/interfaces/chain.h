@@ -89,8 +89,8 @@ public:
 //!   should be the consumer.
 //!
 //! * `guessVerificationProgress` and similar methods can go away if rescan
-//!   logic moves out of the wallet, and the wallet just requests scans from the
-//!   node (https://github.com/bitcoin/bitcoin/issues/11756)
+//!   logic is moved on the node side, and the wallet just requests scans from the
+//!   node (https://github.com/bitcoin/bitcoin/issues/11756#issuecomment-637038714).
 class Chain
 {
 public:
@@ -101,20 +101,8 @@ public:
     //! any blocks)
     virtual std::optional<int> getHeight() = 0;
 
-    //! Get block hash. Height must be valid or this function will abort.
-    virtual uint256 getBlockHash(int height) = 0;
-
-    //! Check that the block is available on disk (i.e. has not been
-    //! pruned), and contains transactions.
-    virtual bool haveBlockOnDisk(int height) = 0;
-
     //! Get locator for the current chain tip.
     virtual CBlockLocator getTipLocator() = 0;
-
-    //! Return height of the highest block on chain in common with the locator,
-    //! which will either be the original block used to create the locator,
-    //! or one of its ancestors.
-    virtual std::optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
 
     //! Check if transaction will be final given chain height current time.
     virtual bool checkFinalTx(const CTransaction& tx) = 0;
@@ -247,8 +235,45 @@ public:
         virtual void chainStateFlushed(const CBlockLocator& locator) {}
     };
 
-    //! Register handler for notifications.
-    virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) = 0;
+    using ScanFn = std::function<std::optional<uint256>(const uint256& start_hash, int start_height, const uint256& tip_hash, int tip_height)>;
+    using MempoolFn = std::function<void(std::vector<CTransactionRef>)>;
+
+    //! Register handler for notifications. Call @ref scan_fn to send existing
+    //! blocks and @ref mempool_fn to send existing transactions before sending
+    //! the first notifications about new blocks and transactions back to the
+    //! caller.
+    //!
+    //! @param[in] notifications callback object receiving notifications
+    //! @param[in] scan_fn       callback invoked before notifications are sent
+    //!                          to scan blocks after a specified location and
+    //!                          time. This should return the hash of the last
+    //!                          block scanned, and may be called more than once
+    //!                          if new blocks were connected during the scan.
+    //! @param[in] mempool_fn    callback invoked before notifications are sent
+    //!                          with snapshot of mempool transactions
+    //! @param[in] scan_locator  location of last block previously scanned.
+    //!                          scan_fn will be only be called for blocks after
+    //!                          this point. Can be null to scan from genesis.
+    //! @param[in] scan_time     minimum block timestamp for beginning the scan
+    //!                          scan_fn will only be called for blocks starting
+    //!                          from this timestamp
+    //! @param[out] tip          information about chain tip at the point where
+    //!                          notifications will begin
+    //!
+    //! @todo The handleNotifications interface should be simplified so callback
+    //! arguments @ref scan_fn and @ref mempool_fn are dropped and all arguments
+    //! except @ref notifications are optional. The @ref scan_fn argument will
+    //! be dropped when implementing
+    //! https://github.com/bitcoin/bitcoin/issues/11756, and the @ref mempool_fn
+    //! argument can be dropped by extending transactionAddedToMempool to accept
+    //! a span of transactions instead of just a single transaction.
+    virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications,
+        ScanFn scan_fn,
+        MempoolFn mempool_fn,
+        const CBlockLocator* scan_locator,
+        int64_t scan_time,
+        const FoundBlock& tip,
+        bool& missing_block_data) = 0;
 
     //! Wait for pending notifications to be processed unless block hash points to the current
     //! chain tip.
@@ -279,16 +304,6 @@ public:
     //! Write a setting to <datadir>/settings.json. Optionally just update the
     //! setting in memory and do not write the file.
     virtual bool updateRwSetting(const std::string& name, const util::SettingsValue& value, bool write=true) = 0;
-
-    //! Synchronously send transactionAddedToMempool notifications about all
-    //! current mempool transactions to the specified handler and return after
-    //! the last one is sent. These notifications aren't coordinated with async
-    //! notifications sent by handleNotifications, so out of date async
-    //! notifications from handleNotifications can arrive during and after
-    //! synchronous notifications from requestMempoolTransactions. Clients need
-    //! to be prepared to handle this by ignoring notifications about unknown
-    //! removed transactions and already added new transactions.
-    virtual void requestMempoolTransactions(Notifications& notifications) = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for
