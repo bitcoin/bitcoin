@@ -44,7 +44,7 @@ static int FileWriteStr(const std::string &str, FILE *fp)
 
 bool BCLog::Logger::StartLogging()
 {
-    StdLockGuard scoped_lock(m_cs);
+    StdUniqueLock scoped_lock(m_cs);
 
     assert(m_buffering);
     assert(m_fileout == nullptr);
@@ -70,9 +70,16 @@ bool BCLog::Logger::StartLogging()
 
         if (m_print_to_file) FileWriteStr(s, m_fileout);
         if (m_print_to_console) fwrite(s.data(), 1, s.size(), stdout);
-        for (const auto& cb : m_print_callbacks) {
-            cb(s);
+        scoped_lock.unlock();
+        {
+            StdUniqueLock callbacks_lock(m_callbacks_mutex);
+            for (auto cb : m_print_callbacks) {
+                callbacks_lock.unlock();
+                cb(s);
+                callbacks_lock.lock();
+            }
         }
+        scoped_lock.lock();
 
         m_msgs_before_open.pop_front();
     }
@@ -87,6 +94,7 @@ void BCLog::Logger::DisconnectTestLogger()
     m_buffering = true;
     if (m_fileout != nullptr) fclose(m_fileout);
     m_fileout = nullptr;
+    StdLockGuard callbacks_lock(m_callbacks_mutex);
     m_print_callbacks.clear();
 }
 
@@ -248,7 +256,7 @@ namespace BCLog {
 
 void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line)
 {
-    StdLockGuard scoped_lock(m_cs);
+    StdUniqueLock scoped_lock(m_cs);
     std::string str_prefixed = LogEscapeMessage(str);
 
     if (m_log_sourcelocations && m_started_new_line) {
@@ -274,9 +282,16 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
         fwrite(str_prefixed.data(), 1, str_prefixed.size(), stdout);
         fflush(stdout);
     }
-    for (const auto& cb : m_print_callbacks) {
-        cb(str_prefixed);
+    scoped_lock.unlock();
+    {
+        StdUniqueLock callbacks_lock(m_callbacks_mutex);
+        for (auto cb : m_print_callbacks) {
+            callbacks_lock.unlock();
+            cb(str_prefixed);
+            callbacks_lock.lock();
+        }
     }
+    scoped_lock.lock();
     if (m_print_to_file) {
         assert(m_fileout != nullptr);
 
