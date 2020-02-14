@@ -763,6 +763,13 @@ private:
 
     bool CreateTransactionInternal(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign);
 
+    /**
+     * Catch wallet up to current chain, scanning new blocks, updating the best
+     * block locator and m_last_block_processed, and registering for
+     * notifications about new blocks and transactions.
+     */
+    static bool AttachChain(const std::shared_ptr<CWallet>& wallet, interfaces::Chain& chain, bilingual_str& error, std::vector<bilingual_str>& warnings);
+
 public:
     /**
      * Main wallet lock.
