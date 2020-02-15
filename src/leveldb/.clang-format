@@ -1,0 +1,18 @@
+# Run manually to reformat a file:
+# clang-format -i --style=file <file>
+# find . -iname '*.cc' -o -iname '*.h' -o -iname '*.h.in' | xargs clang-format -i --style=file
+BasedOnStyle: Google
+DerivePointerAlignment: false
+
+# Public headers are in a different location in the internal Google repository.
+# Order them so that when imported to the authoritative repository they will be
+# in correct alphabetical order.
+IncludeCategories:
+  - Regex:           '^(<|"(benchmarks|db|helpers)/)'
+    Priority:        1
+  - Regex:           '^"(leveldb)/'
+    Priority:        2
+  - Regex:           '^(<|"(issues|port|table|third_party|util)/)'
+    Priority:        3
+  - Regex:           '.*'
+    Priority:        4

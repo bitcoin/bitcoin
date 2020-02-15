@@ -1,0 +1,86 @@
+--- cdrkit-1.1.11.old/genisoimage/tree.c	2008-10-21 19:57:47.000000000 -0400
++++ cdrkit-1.1.11/genisoimage/tree.c	2013-12-06 00:23:18.489622668 -0500
+@@ -1139,8 +1139,9 @@
+ scan_directory_tree(struct directory *this_dir, char *path, 
+ 						  struct directory_entry *de)
+ {
+-	DIR		*current_dir;
++        int             current_file;
+ 	char		whole_path[PATH_MAX];
++        struct dirent  **d_list;
+ 	struct dirent	*d_entry;
+ 	struct directory *parent;
+ 	int		dflag;
+@@ -1164,7 +1165,8 @@
+ 	this_dir->dir_flags |= DIR_WAS_SCANNED;
+ 
+ 	errno = 0;	/* Paranoia */
+-	current_dir = opendir(path);
++	//current_dir = opendir(path);
++        current_file = scandir(path, &d_list, NULL, alphasort);
+ 	d_entry = NULL;
+ 
+ 	/*
+@@ -1173,12 +1175,12 @@
+ 	 */
+ 	old_path = path;
+ 
+-	if (current_dir) {
++	if (current_file >= 0) {
+ 		errno = 0;
+-		d_entry = readdir(current_dir);
++		d_entry = d_list[0];
+ 	}
+ 
+-	if (!current_dir || !d_entry) {
++	if (current_file < 0 || !d_entry) {
+ 		int	ret = 1;
+ 
+ #ifdef	USE_LIBSCHILY
+@@ -1191,8 +1193,8 @@
+ 			de->isorec.flags[0] &= ~ISO_DIRECTORY;
+ 			ret = 0;
+ 		}
+-		if (current_dir)
+-			closedir(current_dir);
++		if(d_list)
++			free(d_list);
+ 		return (ret);
+ 	}
+ #ifdef	ABORT_DEEP_ISO_ONLY
+@@ -1208,7 +1210,7 @@
+ 			errmsgno(EX_BAD, "use Rock Ridge extensions via -R or -r,\n");
+ 			errmsgno(EX_BAD, "or allow deep ISO9660 directory nesting via -D.\n");
+ 		}
+-		closedir(current_dir);
++		free(d_list);
+ 		return (1);
+ 	}
+ #endif
+@@ -1250,13 +1252,13 @@
+ 		 * The first time through, skip this, since we already asked
+ 		 * for the first entry when we opened the directory.
+ 		 */
+-		if (dflag)
+-			d_entry = readdir(current_dir);
++		if (dflag && current_file >= 0)
++			d_entry = d_list[current_file];
+ 		dflag++;
+ 
+-		if (!d_entry)
++		if (current_file < 0)
+ 			break;
+-
++                current_file--;
+ 		/* OK, got a valid entry */
+ 
+ 		/* If we do not want all files, then pitch the backups. */
+@@ -1348,7 +1350,7 @@
+ 		insert_file_entry(this_dir, whole_path, d_entry->d_name);
+ #endif	/* APPLE_HYB */
+ 	}
+-	closedir(current_dir);
++	free(d_list);
+ 
+ #ifdef APPLE_HYB
+ 	/*

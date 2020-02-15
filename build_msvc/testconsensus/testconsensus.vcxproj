@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\common.init.vcxproj" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E78473E9-B850-456C-9120-276301E04C06}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="testconsensus.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
+      <Project>{2B384FA8-9EE1-4544-93CB-0D733C25E8CE}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_util\libbitcoin_util.vcxproj">
+      <Project>{B53A5535-EE9D-4C6F-9A26-F79EE3BC3754}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libsecp256k1\libsecp256k1.vcxproj">
+      <Project>{BB493552-3B8C-4A8C-BF69-A6E7A51D2EA6}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="..\common.vcxproj" />
+</Project>

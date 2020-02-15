@@ -1,0 +1,146 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Bitcoin
+Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
+ irc://#bitcoin@freenode.net
+Source: https://github.com/bitcoin/bitcoin
+
+Files: *
+Copyright: 2009-2020, Bitcoin Core Developers
+License: Expat
+Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
+         as well as the numerous contributors to the project.
+
+Files: debian/*
+Copyright: 2010-2011, Jonas Smedegaard <dr@jones.dk>
+           2011, Matt Corallo <matt@bluematt.me>
+License: GPL-2+
+
+Files: src/secp256k1/build-aux/m4/ax_jni_include_dir.m4
+Copyright: 2008 Don Anderson <dda@sleepycat.com>
+License: GNU-All-permissive-License
+
+Files: src/secp256k1/build-aux/m4/ax_prog_cc_for_build.m4
+Copyright: 2008 Paolo Bonzini <bonzini@gnu.org>
+License: GNU-All-permissive-License
+
+Files: src/qt/res/icons/add.png
+       src/qt/res/icons/address-book.png
+       src/qt/res/icons/chevron.png
+       src/qt/res/icons/edit.png
+       src/qt/res/icons/editcopy.png
+       src/qt/res/icons/editpaste.png
+       src/qt/res/icons/export.png
+       src/qt/res/icons/eye.png
+       src/qt/res/icons/history.png
+       src/qt/res/icons/lock_*.png
+       src/qt/res/icons/overview.png
+       src/qt/res/icons/receive.png
+       src/qt/res/icons/remove.png
+       src/qt/res/icons/send.png
+       src/qt/res/icons/synced.png
+       src/qt/res/icons/transaction*.png
+       src/qt/res/icons/tx_output.png
+       src/qt/res/icons/warning.png
+Copyright: Stephen Hutchings (and more)
+           http://typicons.com
+License: Expat
+Comment: Site: https://github.com/stephenhutchings/typicons.font
+
+Files: src/qt/res/icons/connect*.png
+       src/qt/res/src/connect-*.svg
+       src/qt/res/icons/network_disabled.png
+       src/qt/res/src/network_disabled.svg
+Copyright: Marco Falke
+           Luke Dashjr
+License: Expat
+Comment: Inspired by Stephen Hutchings' Typicons
+
+Files: src/qt/res/icons/tx_mined.png
+       src/qt/res/src/mine.svg
+       src/qt/res/icons/fontbigger.png
+       src/qt/res/icons/fontsmaller.png
+       src/qt/res/icons/hd_disabled.png
+       src/qt/res/src/hd_disabled.svg
+       src/qt/res/icons/hd_enabled.png
+       src/qt/res/src/hd_enabled.svg
+Copyright: Jonas Schnelli
+License: Expat
+
+Files: src/qt/res/icons/clock*.png
+       src/qt/res/icons/eye_*.png
+       src/qt/res/icons/tx_in*.png
+       src/qt/res/src/clock_*.svg
+       src/qt/res/src/tx_*.svg
+Copyright: Stephen Hutchings, Jonas Schnelli
+License: Expat
+Comment: Modifications of Stephen Hutchings' Typicons
+
+Files: src/qt/res/icons/bitcoin.*
+       share/pixmaps/bitcoin*
+       src/qt/res/src/bitcoin.svg
+Copyright: Bitboy, Jonas Schnelli
+License: public-domain
+Comment: Site: https://bitcointalk.org/?topic=1756.0
+
+Files: src/qt/res/icons/proxy.png
+       src/qt/res/src/proxy.svg
+Copyright: Cristian Mircea Messel
+License: public-domain
+
+
+License: Expat
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the
+ "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish,
+ distribute, sublicense, and/or sell copies of the Software, and to
+ permit persons to whom the Software is furnished to do so, subject to
+ the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included
+ in all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+License: GNU-All-permissive-License
+ Copying and distribution of this file, with or without modification, are
+ permitted in any medium without royalty provided the copyright notice
+ and this notice are preserved. This file is offered as-is, without any
+ warranty.
+
+License: GPL-2+
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+ Free Software Foundation; either version 2, or (at your option) any
+ later version.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+Comment:
+ On Debian systems the GNU General Public License (GPL) version 2 is
+ located in '/usr/share/common-licenses/GPL-2'.
+ .
+ You should have received a copy of the GNU General Public License along
+ with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+License: GPL-3+
+ Permission is granted to copy, distribute and/or modify this document
+ under the terms of the GNU General Public License, Version 3 or any
+ later version published by the Free Software Foundation.
+Comment:
+ On Debian systems the GNU General Public License (GPL) version 3 is
+ located in '/usr/share/common-licenses/GPL-3'.
+ .
+ You should have received a copy of the GNU General Public License along
+ with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+License: public-domain
+ This work is in the public domain.
