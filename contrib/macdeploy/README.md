@@ -92,19 +92,15 @@ created using these tools. The build process has been designed to avoid includin
 SDK's files in Gitian's outputs. All interim tarballs are fully deterministic and may be freely
 redistributed.
 
-`genisoimage` is used to create the initial DMG. It is not deterministic as-is, so it has been
-patched. A system `genisoimage` will work fine, but it will not be deterministic because
-the file-order will change between invocations. The patch can be seen here: [cdrkit-deterministic.patch](https://github.com/bitcoin/bitcoin/blob/master/depends/patches/native_cdrkit/cdrkit-deterministic.patch).
-No effort was made to fix this cleanly, so it likely leaks memory badly, however it's only used for
-a single invocation, so that's no real concern.
+[`xorrisofs`](https://www.gnu.org/software/xorriso/) is used to create the DMG.
 
-`genisoimage` cannot compress DMGs, so afterwards, the DMG tool from the
-`libdmg-hfsplus` project is used to compress it. There are several bugs in this tool and its
-maintainer has seemingly abandoned the project.
+`xorrisofs` cannot compress DMGs, so afterwards, the DMG tool from the
+`libdmg-hfsplus` project is used to compress it. There are several bugs in this
+tool and its maintainer has seemingly abandoned the project.
 
 The DMG tool has the ability to create DMGs from scratch as well, but this functionality is
 broken. Only the compression feature is currently used. Ideally, the creation could be fixed
-and `genisoimage` would no longer be necessary.
+and `xorrisofs` would no longer be necessary.
 
 Background images and other features can be added to DMG files by inserting a
 `.DS_Store` during creation.

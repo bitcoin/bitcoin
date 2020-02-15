@@ -7,6 +7,7 @@ architectures:
 - "amd64"
 packages:
 - "faketime"
+- "xorriso"
 remotes:
 - "url": "https://github.com/bitcoin-core/bitcoin-detached-sigs.git"
   "dir": "signature"
@@ -18,7 +19,7 @@ script: |
   WRAP_DIR=$HOME/wrapped
   mkdir -p ${WRAP_DIR}
   export PATH="$PWD":$PATH
-  FAKETIME_PROGS="dmg genisoimage"
+  FAKETIME_PROGS="dmg xorrisofs"
 
   # Create global faketime wrappers
   for prog in ${FAKETIME_PROGS}; do
@@ -36,5 +37,5 @@ script: |
   tar -xf ${UNSIGNED}
   OSX_VOLNAME="$(cat osx_volname)"
   ./detached-sig-apply.sh ${UNSIGNED} signature/osx
-  ${WRAP_DIR}/genisoimage -no-cache-inodes -D -l -probe -V "${OSX_VOLNAME}" -no-pad -r -dir-mode 0755 -apple -o uncompressed.dmg signed-app
+  ${WRAP_DIR}/xorrisofs -D -l -V "${OSX_VOLNAME}" -no-pad -r -dir-mode 0755 -o uncompressed.dmg signed-app
   ${WRAP_DIR}/dmg dmg uncompressed.dmg ${OUTDIR}/${SIGNED}
