@@ -1,8 +1,0 @@
-
-object
-unitester
-test_json
-no_nul
-
-*.trs
-*.log
