@@ -173,9 +173,11 @@ struct PubkeyProvider
 
 class OriginPubkeyProvider final : public PubkeyProvider
 {
+public:
     KeyOriginInfo m_origin;
     std::unique_ptr<PubkeyProvider> m_provider;
 
+private:
     std::string OriginString() const
     {
         return HexStr(std::begin(m_origin.fingerprint), std::end(m_origin.fingerprint)) + FormatHDKeypath(m_origin.path);
@@ -697,6 +699,11 @@ NODISCARD bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath&
     return true;
 }
 
+static bool IsHardened(const uint32_t& a)
+{
+    return a & 0x80000000UL;
+}
+
 /** Parse a public key that excludes origin information. */
 std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out, std::string& error)
 {
@@ -743,6 +750,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, boo
     }
     KeyPath path;
     DeriveType type = DeriveType::NO;
+    bool hardened = split.back() == MakeSpan("'").first(1) || split.back() == MakeSpan("h").first(1);
     if (split.back() == MakeSpan("*").first(1)) {
         split.pop_back();
         type = DeriveType::UNHARDENED;
@@ -754,6 +762,43 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, boo
     if (extkey.key.IsValid()) {
         extpubkey = extkey.Neuter();
         out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
+
+        if (!hardened && type != DeriveType::HARDENED && path.size() > 0) {
+            KeyOriginInfo last_hardened_info;
+            CKeyID extpubkeyid = extpubkey.pubkey.GetID();
+            std::copy(extpubkeyid.begin(), extpubkeyid.begin() + 4, last_hardened_info.fingerprint);
+
+            // Finds the last hardened element
+            // reverse_iterator::base() points to the next element, so the first unhardened step
+            KeyPath::iterator last_hard_it = std::find_if(path.rbegin(), path.rend(), IsHardened).base();
+
+            last_hardened_info.path.insert(last_hardened_info.path.end(), path.begin(), last_hard_it);
+
+            // Only continue with this last hardened stuff if there are actually hardened steps in path
+            if (!last_hardened_info.path.empty()) {
+                // Derive that last hardened key
+                extkey.DerivePath(extkey, last_hardened_info.path);
+                extpubkey = extkey.Neuter();
+                out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
+
+                // Shorten path to the unhardened stuff
+                if (last_hardened_info.path.size() < path.size()) {
+                    // At least one step is unhardened
+                    KeyPath new_path;
+                    new_path.insert(new_path.end(), last_hard_it, path.end());
+                    path = new_path;
+                } else {
+                    // All steps are hardened
+                    path.clear();
+                }
+
+                // Make a BIP32PubkeyProvider for the unhardened derivation
+                auto bip32prov = MakeUnique<BIP32PubkeyProvider>(extpubkey, std::move(path), type);
+
+                // Make an OriginPubkeyProvider for the hardened stuff
+                return MakeUnique<OriginPubkeyProvider>(std::move(last_hardened_info), std::move(bip32prov));
+            }
+        }
     }
     return MakeUnique<BIP32PubkeyProvider>(extpubkey, std::move(path), type);
 }
@@ -791,6 +836,15 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool per
     if (!ParseKeyPath(slash_split, info.path, error)) return nullptr;
     auto provider = ParsePubkeyInner(origin_split[1], permit_uncompressed, out, error);
     if (!provider) return nullptr;
+
+    // ParsePubkeyInner can return an OriginPubkeyProvider which we need to flatten with the one we are about to make
+    OriginPubkeyProvider* orig_provider = dynamic_cast<OriginPubkeyProvider*>(provider.get());
+    if (orig_provider) {
+        // Extend the info path with the path from provider
+        info.path.insert(info.path.end(), orig_provider->m_origin.path.begin(), orig_provider->m_origin.path.end());
+        provider = std::move(orig_provider->m_provider);
+    }
+
     return MakeUnique<OriginPubkeyProvider>(std::move(info), std::move(provider));
 }
 
