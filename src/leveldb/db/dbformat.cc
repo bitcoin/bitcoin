@@ -2,8 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include <stdio.h>
 #include "db/dbformat.h"
+
+#include <stdio.h>
+
+#include <sstream>
+
 #include "port/port.h"
 #include "util/coding.h"
 
@@ -21,26 +25,20 @@ void AppendInternalKey(std::string* result, const ParsedInternalKey& key) {
 }
 
 std::string ParsedInternalKey::DebugString() const {
-  char buf[50];
-  snprintf(buf, sizeof(buf), "' @ %llu : %d",
-           (unsigned long long) sequence,
-           int(type));
-  std::string result = "'";
-  result += EscapeString(user_key.ToString());
-  result += buf;
-  return result;
+  std::ostringstream ss;
+  ss << '\'' << EscapeString(user_key.ToString()) << "' @ " << sequence << " : "
+     << static_cast<int>(type);
+  return ss.str();
 }
 
 std::string InternalKey::DebugString() const {
-  std::string result;
   ParsedInternalKey parsed;
   if (ParseInternalKey(rep_, &parsed)) {
-    result = parsed.DebugString();
-  } else {
-    result = "(bad)";
-    result.append(EscapeString(rep_));
+    return parsed.DebugString();
   }
-  return result;
+  std::ostringstream ss;
+  ss << "(bad)" << EscapeString(rep_);
+  return ss.str();
 }
 
 const char* InternalKeyComparator::Name() const {
@@ -65,9 +63,8 @@ int InternalKeyComparator::Compare(const Slice& akey, const Slice& bkey) const {
   return r;
 }
 
-void InternalKeyComparator::FindShortestSeparator(
-      std::string* start,
-      const Slice& limit) const {
+void InternalKeyComparator::FindShortestSeparator(std::string* start,
+                                                  const Slice& limit) const {
   // Attempt to shorten the user portion of the key
   Slice user_start = ExtractUserKey(*start);
   Slice user_limit = ExtractUserKey(limit);
@@ -77,7 +74,8 @@ void InternalKeyComparator::FindShortestSeparator(
       user_comparator_->Compare(user_start, tmp) < 0) {
     // User key has become shorter physically, but larger logically.
     // Tack on the earliest possible number to the shortened user key.
-    PutFixed64(&tmp, PackSequenceAndType(kMaxSequenceNumber,kValueTypeForSeek));
+    PutFixed64(&tmp,
+               PackSequenceAndType(kMaxSequenceNumber, kValueTypeForSeek));
     assert(this->Compare(*start, tmp) < 0);
     assert(this->Compare(tmp, limit) < 0);
     start->swap(tmp);
@@ -92,15 +90,14 @@ void InternalKeyComparator::FindShortSuccessor(std::string* key) const {
       user_comparator_->Compare(user_key, tmp) < 0) {
     // User key has become shorter physically, but larger logically.
     // Tack on the earliest possible number to the shortened user key.
-    PutFixed64(&tmp, PackSequenceAndType(kMaxSequenceNumber,kValueTypeForSeek));
+    PutFixed64(&tmp,
+               PackSequenceAndType(kMaxSequenceNumber, kValueTypeForSeek));
     assert(this->Compare(*key, tmp) < 0);
     key->swap(tmp);
   }
 }
 
-const char* InternalFilterPolicy::Name() const {
-  return user_policy_->Name();
-}
+const char* InternalFilterPolicy::Name() const { return user_policy_->Name(); }
 
 void InternalFilterPolicy::CreateFilter(const Slice* keys, int n,
                                         std::string* dst) const {

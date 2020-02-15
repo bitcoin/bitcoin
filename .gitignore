@@ -90,7 +90,7 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 !depends/Makefile
-bitcoin-qt
+src/qt/bitcoin-qt
 Bitcoin-Qt.app
 background.tiff*
 
@@ -107,6 +107,9 @@ qrc_*.cpp
 # Mac specific
 .DS_Store
 build
+
+# Previous releases
+releases
 
 #lcov
 *.gcno

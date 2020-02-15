@@ -35,6 +35,7 @@ cache:
     - $TRAVIS_BUILD_DIR/depends/built
     - $TRAVIS_BUILD_DIR/depends/sdk-sources
     - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
+    - $TRAVIS_BUILD_DIR/releases/$HOST
     # macOS
     - $HOME/Library/Caches/Homebrew
     - /usr/local/Homebrew
@@ -88,12 +89,14 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
         QEMU_USER_CMD=""  # Can run the tests natively without qemu
 
-    - stage: test
-      name: 'S390x  [GOAL: install]  [buster]  [unit tests, functional tests]'
-      arch: s390x
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_s390x.sh"
-        QEMU_USER_CMD=""  # Can run the tests natively without qemu
+# s390 build was disabled temporarily because of disk space issues on the Travis VM
+#
+#    - stage: test
+#      name: 'S390x  [GOAL: install]  [buster]  [unit tests, functional tests]'
+#      arch: s390x
+#      env: >-
+#        FILE_ENV="./ci/test/00_setup_env_s390x.sh"
+#        QEMU_USER_CMD=""  # Can run the tests natively without qemu
 
     - stage: test
       name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
@@ -106,7 +109,7 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_i686_centos.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package and some depends packages] [unsigned char]'
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 

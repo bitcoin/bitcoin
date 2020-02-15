@@ -59,7 +59,7 @@ PKG_CONFIG="`which pkg-config` --static"
 # avoid ruining the cache. Sigh.
 export PKG_CONFIG_PATH=$depends_prefix/share/pkgconfig:$depends_prefix/lib/pkgconfig
 if test -z "@allow_host_packages@"; then
-  export PKGCONFIG_LIBDIR=
+  export PKG_CONFIG_LIBDIR=$depends_prefix/lib/pkgconfig
 fi
 
 CPPFLAGS="-I$depends_prefix/include/ $CPPFLAGS"
