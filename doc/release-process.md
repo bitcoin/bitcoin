@@ -328,6 +328,8 @@ bitcoin.org (see below for bitcoin.org update instructions).
 
   - Update packaging repo
 
+      - Notify luke-jr so that he can start building [the PPAs](https://launchpad.net/~luke-jr/+archive/ubuntu/bitcoincore)
+
       - Push the flatpak to flathub, e.g. https://github.com/flathub/org.bitcoincore.bitcoin-qt/pull/2
 
       - Push the latest version to master (if applicable), e.g. https://github.com/bitcoin-core/packaging/pull/32
