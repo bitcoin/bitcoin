@@ -1,0 +1,15 @@
+--- old/qtbase/src/tools/rcc/rcc.cpp
++++ new/qtbase/src/tools/rcc/rcc.cpp
+@@ -207,7 +207,11 @@ void RCCFileInfo::writeDataInfo(RCCResourceLibrary &lib)
+     if (lib.formatVersion() >= 2) {
+         // last modified time stamp
+         const QDateTime lastModified = m_fileInfo.lastModified();
+-        lib.writeNumber8(quint64(lastModified.isValid() ? lastModified.toMSecsSinceEpoch() : 0));
++        quint64 lastmod = quint64(lastModified.isValid() ? lastModified.toMSecsSinceEpoch() : 0);
++        static const quint64 sourceDate = 1000 * qgetenv("QT_RCC_SOURCE_DATE_OVERRIDE").toULongLong();
++        if (sourceDate != 0)
++            lastmod = sourceDate;
++        lib.writeNumber8(lastmod);
+         if (text || pass1)
+             lib.writeChar('\n');
+     }
