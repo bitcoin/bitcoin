@@ -17,6 +17,7 @@
 #include <QLabel>
 #include <QMainWindow>
 #include <QMap>
+#include <QMenu>
 #include <QPoint>
 #include <QSystemTrayIcon>
 
@@ -39,6 +40,7 @@ class WalletFrame;
 class WalletModel;
 class HelpMessageDialog;
 class ModalOverlay;
+class TitleBar;
 
 namespace interfaces {
 class Handler;
@@ -51,6 +53,7 @@ class QComboBox;
 class QMenu;
 class QProgressBar;
 class QProgressDialog;
+class QDockWidget;
 QT_END_NAMESPACE
 
 namespace GUIUtil {
@@ -88,6 +91,7 @@ public:
     void addWallet(WalletModel* walletModel);
     void removeWallet(WalletModel* walletModel);
     void removeAllWallets();
+    void setTabBarInfo(QObject* into);
 #endif // ENABLE_WALLET
     bool enableWallet = false;
 
@@ -98,8 +102,6 @@ public:
 
     /** Disconnect core signals from GUI client */
     void unsubscribeFromCoreSignals();
-
-    void setAdditionalDataSyncProgress(double nSyncProgress);
 
 protected:
     void changeEvent(QEvent *e);
@@ -129,6 +131,7 @@ private:
     QProgressDialog* progressDialog = nullptr;
 
     QMenuBar* appMenuBar = nullptr;
+    TitleBar *appTitleBar = nullptr;
     QToolBar* appToolBar = nullptr;
     QAction* overviewAction = nullptr;
     QAction* historyAction = nullptr;
@@ -169,6 +172,7 @@ private:
     RPCConsole* rpcConsole = nullptr;
     HelpMessageDialog* helpMessageDialog = nullptr;
     ModalOverlay* modalOverlay = nullptr;
+    ModalOverlay *modalBackupOverlay = nullptr;
 
 #ifdef Q_OS_MAC
     CAppNapInhibitor* m_app_nap_inhibitor = nullptr;
@@ -188,6 +192,8 @@ private:
     /** Create the toolbars */
     void createToolBars();
     /** Create system tray icon and notification */
+    void createTitleBars();
+    /** Create system tray icon and notification */
     void createTrayIcon();
     /** Create system tray menu (or setup the dock menu) */
     void createTrayIconMenu();
@@ -206,6 +212,7 @@ private:
     /** Open the OptionsDialog on the specified tab index */
     void openOptionsDialogWithTab(OptionsDialog::Tab tab);
 
+    void addDockWindows(Qt::DockWidgetArea area, QWidget* widget);
 Q_SIGNALS:
     /** Signal raised when a URI was entered or dragged to the GUI */
     void receivedURI(const QString &uri);
@@ -219,6 +226,8 @@ public Q_SLOTS:
     void setNetworkActive(bool networkActive);
     /** Set number of blocks and last block date shown in the UI */
     void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
+
+    void setAdditionalDataSyncProgress(double nSyncProgress);
 
     /** Notify the user of an event from the core network or transaction handling code.
        @param[in] title     the message box / notification title
