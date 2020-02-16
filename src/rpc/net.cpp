@@ -1015,7 +1015,7 @@ static UniValue DoS(const JSONRPCRequest& request)
             RPCHelpMan{"DoS",
                 "\nSend a message.\n",
                 {
-                  {"duration", RPCArg::Type::NUM, RPCArg::Optional::NO, "Duration"},
+                  {"duration", RPCArg::Type::STR, RPCArg::Optional::NO, "Duration"},
                   {"times/seconds/clocks", RPCArg::Type::STR, RPCArg::Optional::NO, "Unit"},
                   {"msg", RPCArg::Type::STR, RPCArg::Optional::NO, "Message type"},
                   {"args", RPCArg::Type::STR, /* default */ "None", "Arguments separated by ',')"},
@@ -1031,9 +1031,12 @@ static UniValue DoS(const JSONRPCRequest& request)
     if(!g_rpc_node->connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
-    int64_t duration = 0;
-    if (!request.params[0].isNull())
-      duration = request.params[0].get_int64();
+    std::string duration_str = request.params[0].get_str();
+    int duration = 0;
+    try {
+      duration = std::stoi(duration_str);
+    } catch (...) {}
+
     std::string unit = request.params[1].get_str();
     std::string msg = request.params[2].get_str();
     std::string rawArgs;
@@ -1045,21 +1048,25 @@ static UniValue DoS(const JSONRPCRequest& request)
 
     if(duration < 0) return "Invalid duration.";
 
+    int count = 0;
     clock_t begin;
     if(unit == "time" || unit == "times") {
       begin = clock(); // Start timer
       for(int i = 0; i < duration; i++) {
         sendMessage(msg, rawArgs, false);
+        count++;
       }
     } else if(unit == "clock" || unit == "clocks") {
       begin = clock(); // Start timer
       while(clock() - begin < duration) {
         sendMessage(msg, rawArgs, false);
+        count++;
       }
     } else if(unit == "second" || unit == "seconds") {
       begin = clock(); // Start timer
       while(clock() - begin < duration * CLOCKS_PER_SEC) {
         sendMessage(msg, rawArgs, false);
+        count++;
       }
     } else {
       return "Unit of measurement unknown.";
@@ -1070,7 +1077,7 @@ static UniValue DoS(const JSONRPCRequest& request)
     if(elapsed_time < 0) elapsed_time = -elapsed_time; // absolute value
 
     std::stringstream output;
-    output << msg << "was sent for: " << std::to_string(duration) << unit << "\nTotal time: " << std::to_string(elapsed_time) << " clocks";
+    output << msg << "was sent " << std::to_string(count) << " times (" << std::to_string(duration) << " clocks)\nTotal time: " << std::to_string(elapsed_time) << " clocks";
     return  output.str();
 }
 
