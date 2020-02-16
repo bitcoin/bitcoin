@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,9 +10,7 @@
 #include <fs.h>
 #include <serialize.h>
 #include <streams.h>
-#include <sync.h>
 #include <util/system.h>
-#include <version.h>
 
 #include <atomic>
 #include <map>
@@ -246,7 +244,7 @@ public:
     /* verifies the database environment */
     static bool VerifyEnvironment(const fs::path& file_path, std::string& errorStr);
     /* verifies the database file */
-    static bool VerifyDatabaseFile(const fs::path& file_path, std::string& warningStr, std::string& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc);
+    static bool VerifyDatabaseFile(const fs::path& file_path, std::vector<std::string>& warnings, std::string& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc);
 
     template <typename K, typename T>
     bool Read(const K& key, T& value)
@@ -397,17 +395,6 @@ public:
         int ret = activeTxn->abort();
         activeTxn = nullptr;
         return (ret == 0);
-    }
-
-    bool ReadVersion(int& nVersion)
-    {
-        nVersion = 0;
-        return Read(std::string("version"), nVersion);
-    }
-
-    bool WriteVersion(int nVersion)
-    {
-        return Write(std::string("version"), nVersion);
     }
 
     bool static Rewrite(BerkeleyDatabase& database, const char* pszSkip = nullptr);

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018 The Bitcoin Core developers
+# Copyright (c) 2018-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Check that it's not possible to start a second bitcoind instance using the same datadir or wallet."""
@@ -19,7 +19,7 @@ class FilelockTest(BitcoinTestFramework):
         self.nodes[0].wait_for_rpc_connection()
 
     def run_test(self):
-        datadir = os.path.join(self.nodes[0].datadir, 'regtest')
+        datadir = os.path.join(self.nodes[0].datadir, self.chain)
         self.log.info("Using datadir {}".format(datadir))
 
         self.log.info("Check that we can't start a second bitcoind instance using the same datadir")

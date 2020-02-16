@@ -4,19 +4,12 @@
 
 #include <bench/bench.h>
 #include <chainparams.h>
-#include <coins.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
-#include <miner.h>
-#include <policy/policy.h>
 #include <pow.h>
-#include <test/util.h>
 #include <txmempool.h>
 #include <validation.h>
-#include <validationinterface.h>
 
-#include <list>
-#include <vector>
 
 
 static void DuplicateInputs(benchmark::State& state)
@@ -29,7 +22,8 @@ static void DuplicateInputs(benchmark::State& state)
     CMutableTransaction coinbaseTx{};
     CMutableTransaction naughtyTx{};
 
-    CBlockIndex* pindexPrev = ::chainActive.Tip();
+    LOCK(cs_main);
+    CBlockIndex* pindexPrev = ::ChainActive().Tip();
     assert(pindexPrev != nullptr);
     block.nBits = GetNextWorkRequired(pindexPrev, &block, chainparams.GetConsensus());
     block.nNonce = 0;
@@ -60,7 +54,7 @@ static void DuplicateInputs(benchmark::State& state)
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
     while (state.KeepRunning()) {
-        CValidationState cvstate{};
+        BlockValidationState cvstate{};
         assert(!CheckBlock(block, cvstate, chainparams.GetConsensus(), false, false));
         assert(cvstate.GetRejectReason() == "bad-txns-inputs-duplicate");
     }

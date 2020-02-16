@@ -1,6 +1,10 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
 
 #include <sync.h>
 #include <tinyformat.h>
@@ -9,10 +13,8 @@
 #include <util/strencodings.h>
 #include <util/threadnames.h>
 
-#include <stdio.h>
 
 #include <map>
-#include <memory>
 #include <set>
 
 #ifdef DEBUG_LOCKCONTENTION
@@ -53,7 +55,7 @@ struct CLockLocation {
 
     std::string ToString() const
     {
-        return tfm::format(
+        return strprintf(
             "%s %s:%s%s (in thread %s)",
             mutexName, sourceFile, itostr(sourceLine), (fTry ? " (TRY)" : ""), m_thread_name);
     }
@@ -73,7 +75,7 @@ typedef std::set<std::pair<void*, void*> > InvLockOrders;
 struct LockData {
     // Very ugly hack: as the global constructs and destructors run single
     // threaded, we use this boolean to know whether LockData still exists,
-    // as DeleteLock can get called by global CCriticalSection destructors
+    // as DeleteLock can get called by global RecursiveMutex destructors
     // after LockData disappears.
     bool available;
     LockData() : available(true) {}
@@ -114,7 +116,7 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
         LogPrintf(" %s\n", i.second.ToString());
     }
     if (g_debug_lockorder_abort) {
-        fprintf(stderr, "Assertion failed: detected inconsistent lock order at %s:%i, details in debug log.\n", __FILE__, __LINE__);
+        tfm::format(std::cerr, "Assertion failed: detected inconsistent lock order at %s:%i, details in debug log.\n", __FILE__, __LINE__);
         abort();
     }
     throw std::logic_error("potential deadlock detected");
@@ -171,7 +173,7 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
     for (const std::pair<void*, CLockLocation>& i : g_lockstack)
         if (i.first == cs)
             return;
-    fprintf(stderr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
+    tfm::format(std::cerr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld());
     abort();
 }
 
@@ -179,7 +181,7 @@ void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLi
 {
     for (const std::pair<void*, CLockLocation>& i : g_lockstack) {
         if (i.first == cs) {
-            fprintf(stderr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
+            tfm::format(std::cerr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld());
             abort();
         }
     }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018 The Bitcoin Core developers
+# Copyright (c) 2018-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -10,7 +10,7 @@ export LC_ALL=C
 HEADER_ID_PREFIX="BITCOIN_"
 HEADER_ID_SUFFIX="_H"
 
-REGEXP_EXCLUDE_FILES_WITH_PREFIX="src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"
+REGEXP_EXCLUDE_FILES_WITH_PREFIX="src/(crypto/ctaes/|leveldb/|crc32c/|secp256k1/|test/fuzz/FuzzedDataProvider.h|tinyformat.h|univalue/)"
 
 EXIT_CODE=0
 for HEADER_FILE in $(git ls-files -- "*.h" | grep -vE "^${REGEXP_EXCLUDE_FILES_WITH_PREFIX}")

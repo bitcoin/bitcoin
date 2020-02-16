@@ -1,9 +1,17 @@
-alignment:move.h
-alignment:prevector.h
-bool:wallet/wallet.cpp
+# -fsanitize=undefined suppressions
+# =================================
 float-divide-by-zero:policy/fees.cpp
 float-divide-by-zero:validation.cpp
 float-divide-by-zero:wallet/wallet.cpp
+
+# -fsanitize=integer suppressions
+# ===============================
+# Unsigned integer overflow occurs when the result of an unsigned integer
+# computation cannot be represented in its type. Unlike signed integer overflow,
+# this is not undefined behavior, but it is often unintentional. The list below
+# contains files in which we expect unsigned integer overflows to occur. The
+# list is used to suppress -fsanitize=integer warnings when running our CI UBSan
+# job.
 unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
@@ -32,4 +40,46 @@ unsigned-integer-overflow:stl_bvector.h
 unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
-vptr:fs.cpp
+
+implicit-integer-sign-change:*/include/c++/*/bits/*.h
+implicit-integer-sign-change:*/new_allocator.h
+implicit-integer-sign-change:/usr/include/boost/date_time/format_date_parser.hpp
+implicit-integer-sign-change:arith_uint256.cpp
+implicit-integer-sign-change:bech32.cpp
+implicit-integer-sign-change:bloom.cpp
+implicit-integer-sign-change:chain.*
+implicit-integer-sign-change:coins.h
+implicit-integer-sign-change:compat/stdin.cpp
+implicit-integer-sign-change:compressor.h
+implicit-integer-sign-change:crypto/*
+implicit-integer-sign-change:key.cpp
+implicit-integer-sign-change:noui.cpp
+implicit-integer-sign-change:prevector.h
+implicit-integer-sign-change:protocol.cpp
+implicit-integer-sign-change:script/bitcoinconsensus.cpp
+implicit-integer-sign-change:script/interpreter.cpp
+implicit-integer-sign-change:serialize.h
+implicit-integer-sign-change:test/arith_uint256_tests.cpp
+implicit-integer-sign-change:test/coins_tests.cpp
+implicit-integer-sign-change:test/pow_tests.cpp
+implicit-integer-sign-change:test/prevector_tests.cpp
+implicit-integer-sign-change:test/sighash_tests.cpp
+implicit-integer-sign-change:test/streams_tests.cpp
+implicit-integer-sign-change:test/transaction_tests.cpp
+implicit-integer-sign-change:txmempool.cpp
+implicit-integer-sign-change:util/strencodings.*
+implicit-integer-sign-change:validation.cpp
+implicit-integer-sign-change:zmq/zmqpublishnotifier.cpp
+implicit-signed-integer-truncation,implicit-integer-sign-change:chain.h
+implicit-signed-integer-truncation,implicit-integer-sign-change:test/skiplist_tests.cpp
+implicit-signed-integer-truncation:chain.h
+implicit-signed-integer-truncation:crypto/*
+implicit-signed-integer-truncation:cuckoocache.h
+implicit-signed-integer-truncation:leveldb/*
+implicit-signed-integer-truncation:streams.h
+implicit-signed-integer-truncation:test/arith_uint256_tests.cpp
+implicit-signed-integer-truncation:test/skiplist_tests.cpp
+implicit-signed-integer-truncation:torcontrol.cpp
+implicit-unsigned-integer-truncation:crypto/*
+implicit-unsigned-integer-truncation:leveldb/*
+implicit-integer-sign-change:crc32c/*

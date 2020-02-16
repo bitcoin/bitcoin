@@ -1,6 +1,6 @@
 package=native_cdrkit
 $(package)_version=1.1.11
-$(package)_download_path=http://distro.ibiblio.org/fatdog/source/600/c
+$(package)_download_path=https://distro.ibiblio.org/fatdog/source/600/c
 $(package)_file_name=cdrkit-$($(package)_version).tar.bz2
 $(package)_sha256_hash=b50d64c214a65b1a79afe3a964c691931a4233e2ba605d793eb85d0ac3652564
 $(package)_patches=cdrkit-deterministic.patch

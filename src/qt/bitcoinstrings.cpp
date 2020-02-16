@@ -9,14 +9,13 @@
 #define UNUSED
 #endif
 static const char UNUSED *bitcoin_strings[] = {
-QT_TRANSLATE_NOOP("bitcoin-core", "Bitcoin Core"),
 QT_TRANSLATE_NOOP("bitcoin-core", "The %s developers"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "-maxtxfee is set very high! Fees this large could be paid on a single "
 "transaction."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Can't generate a change-address key. Private keys are disabled for this "
-"wallet."),
+"Can't generate a change-address key. No keys in the internal keypool and "
+"can't generate any keys."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot obtain a lock on data directory %s. %s is probably already running."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -88,9 +87,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: The network does not appear to fully agree! Some miners appear to "
 "be experiencing issues."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Warning: Unknown block versions being mined! It's possible unknown rules are "
-"in effect"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; "
 "if your balance or transactions are incorrect you should restore from a "
 "backup."),
@@ -124,25 +120,23 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet %s. Duplicate -wallet fi
 QT_TRANSLATE_NOOP("bitcoin-core", "Error opening block database"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error reading from database, shutting down."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error upgrading chainstate database"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Error"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: A fatal internal error occurred, see debug.log for details"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: Disk space is low for %s"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Error: Disk space is low!"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: Disk space is too low!"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Failed to listen on any port. Use -listen=0 if you want this."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Failed to rescan the wallet during initialization"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Importing..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Information"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Initialization sanity check failed. %s is shutting down."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Insufficient funds"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid -onion address or hostname: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid -proxy address or hostname: '%s'"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Invalid P2P permission: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -%s=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -discardfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -fallbackfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid netmask specified in -whitelist: '%s'"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Keypool ran out, please call keypoolrefill first"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Loading P2P addresses..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Loading banlist..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Loading block index..."),
@@ -150,6 +144,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Loading wallet..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Need to specify a port with -whitebind: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Not enough file descriptors available."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Prune cannot be configured with a negative value."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Prune mode is incompatible with -blockfilterindex."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Prune mode is incompatible with -txindex."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Pruning blockstore..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Reducing -maxconnections from %d to %d, because of system limitations."),
@@ -175,13 +170,16 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Transaction amounts must not be negative"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction fee and change calculation failed"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction has too long of a mempool chain"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction must have at least one recipient"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Transaction too large for fee policy"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction too large"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unable to bind to %s on this computer (bind returned error %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unable to bind to %s on this computer. %s is probably already running."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Unable to create the PID file '%s': %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unable to generate initial keys"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unable to generate keys"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unable to start HTTP server. See debug log for details."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Unknown -blockfilterindex value %s."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Unknown address type '%s'"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Unknown change type '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unknown network specified in -onlynet: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unsupported logging category %s=%s."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Upgrading UTXO database"),
@@ -189,9 +187,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Upgrading txindex database"),
 QT_TRANSLATE_NOOP("bitcoin-core", "User Agent comment (%s) contains unsafe characters."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Verifying wallet(s)..."),
-QT_TRANSLATE_NOOP("bitcoin-core", "Wallet %s resides outside wallet directory %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Wallet needed to be rewritten: restart %s to complete"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Warning"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Warning: unknown new rules activated (versionbit %i)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Zapping all transactions from wallet..."),
 };

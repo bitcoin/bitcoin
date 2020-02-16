@@ -5,10 +5,8 @@
 #include <chainparams.h>
 #include <index/txindex.h>
 #include <script/standard.h>
-#include <test/setup_common.h>
-#include <util/system.h>
+#include <test/util/setup_common.h>
 #include <util/time.h>
-#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -56,7 +54,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 
     // Check that new transactions in new blocks make it into the index.
     for (int i = 0; i < 10; i++) {
-        CScript coinbase_script_pub_key = GetScriptForDestination(coinbaseKey.GetPubKey().GetID());
+        CScript coinbase_script_pub_key = GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()));
         std::vector<CMutableTransaction> no_txns;
         const CBlock& block = CreateAndProcessBlock(no_txns, coinbase_script_pub_key);
         const CTransaction& txn = *block.vtx[0];

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,6 @@
 
 #include <qt/addressbookpage.h>
 #include <qt/askpassphrasedialog.h>
-#include <qt/bitcoingui.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
@@ -65,11 +64,13 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
 
+    connect(overviewPage, &OverviewPage::transactionClicked, this, &WalletView::transactionClicked);
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, &OverviewPage::transactionClicked, transactionView, static_cast<void (TransactionView::*)(const QModelIndex&)>(&TransactionView::focusTransaction));
 
     connect(overviewPage, &OverviewPage::outOfSyncWarningClicked, this, &WalletView::requestedSyncWarningInfo);
 
+    connect(sendCoinsPage, &SendCoinsDialog::coinsSent, this, &WalletView::coinsSent);
     // Highlight transaction after send
     connect(sendCoinsPage, &SendCoinsDialog::coinsSent, transactionView, static_cast<void (TransactionView::*)(const uint256&)>(&TransactionView::focusTransaction));
 
@@ -84,32 +85,6 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 
 WalletView::~WalletView()
 {
-}
-
-void WalletView::setBitcoinGUI(BitcoinGUI *gui)
-{
-    if (gui)
-    {
-        // Clicking on a transaction on the overview page simply sends you to transaction history page
-        connect(overviewPage, &OverviewPage::transactionClicked, gui, &BitcoinGUI::gotoHistoryPage);
-
-        // Navigate to transaction history page after send
-        connect(sendCoinsPage, &SendCoinsDialog::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
-
-        // Receive and report messages
-        connect(this, &WalletView::message, [gui](const QString &title, const QString &message, unsigned int style) {
-            gui->message(title, message, style);
-        });
-
-        // Pass through encryption status changed signals
-        connect(this, &WalletView::encryptionStatusChanged, gui, &BitcoinGUI::updateWalletStatus);
-
-        // Pass through transaction notifications
-        connect(this, &WalletView::incomingTransaction, gui, &BitcoinGUI::incomingTransaction);
-
-        // Connect HD enabled state signal
-        connect(this, &WalletView::hdEnabledStatusChanged, gui, &BitcoinGUI::updateWalletStatus);
-    }
 }
 
 void WalletView::setClientModel(ClientModel *_clientModel)
@@ -170,9 +145,9 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     QString type = ttm->index(start, TransactionTableModel::Type, parent).data().toString();
     QModelIndex index = ttm->index(start, 0, parent);
     QString address = ttm->data(index, TransactionTableModel::AddressRole).toString();
-    QString label = ttm->data(index, TransactionTableModel::LabelRole).toString();
+    QString label = GUIUtil::HtmlEscape(ttm->data(index, TransactionTableModel::LabelRole).toString());
 
-    Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label, walletModel->getWalletName());
+    Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label, GUIUtil::HtmlEscape(walletModel->getWalletName()));
 }
 
 void WalletView::gotoOverviewPage()
@@ -316,6 +291,7 @@ void WalletView::showProgress(const QString &title, int nProgress)
         if (progressDialog) {
             progressDialog->close();
             progressDialog->deleteLater();
+            progressDialog = nullptr;
         }
     } else if (progressDialog) {
         if (progressDialog->wasCanceled()) {

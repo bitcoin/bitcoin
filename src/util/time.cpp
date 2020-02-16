@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,6 +26,20 @@ int64_t GetTime()
     assert(now > 0);
     return now;
 }
+
+template <typename T>
+T GetTime()
+{
+    const std::chrono::seconds mocktime{nMockTime.load(std::memory_order_relaxed)};
+
+    return std::chrono::duration_cast<T>(
+        mocktime.count() ?
+            mocktime :
+            std::chrono::microseconds{GetTimeMicros()});
+}
+template std::chrono::seconds GetTime();
+template std::chrono::milliseconds GetTime();
+template std::chrono::microseconds GetTime();
 
 void SetMockTime(int64_t nMockTimeIn)
 {
@@ -96,4 +110,18 @@ std::string FormatISO8601Date(int64_t nTime) {
     gmtime_r(&time_val, &ts);
 #endif
     return strprintf("%04i-%02i-%02i", ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday);
+}
+
+int64_t ParseISO8601DateTime(const std::string& str)
+{
+    static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
+    static const std::locale loc(std::locale::classic(),
+        new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%SZ"));
+    std::istringstream iss(str);
+    iss.imbue(loc);
+    boost::posix_time::ptime ptime(boost::date_time::not_a_date_time);
+    iss >> ptime;
+    if (ptime.is_not_a_date_time() || epoch > ptime)
+        return 0;
+    return (ptime - epoch).total_seconds();
 }

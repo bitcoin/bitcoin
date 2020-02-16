@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -90,7 +90,8 @@ private:
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
 
-    QTimer *pollTimer;
+    //! A thread to interact with m_node asynchronously
+    QThread* const m_thread;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -110,7 +111,6 @@ Q_SIGNALS:
     void showProgress(const QString &title, int nProgress);
 
 public Q_SLOTS:
-    void updateTimer();
     void updateNumConnections(int numConnections);
     void updateNetworkActive(bool networkActive);
     void updateAlert();

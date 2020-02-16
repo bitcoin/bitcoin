@@ -5,9 +5,7 @@
 #ifndef BITCOIN_WALLET_PSBTWALLET_H
 #define BITCOIN_WALLET_PSBTWALLET_H
 
-#include <node/transaction.h>
 #include <psbt.h>
-#include <primitives/transaction.h>
 #include <wallet/wallet.h>
 
 /**
@@ -17,8 +15,8 @@
  * finalize.) Sets `error` and returns false if something goes wrong.
  *
  * @param[in]  pwallet pointer to a wallet
- * @param[in]  &psbtx reference to PartiallySignedTransaction to fill in
- * @param[out] &complete indicates whether the PSBT is now complete
+ * @param[in]  psbtx PartiallySignedTransaction to fill in
+ * @param[out] complete indicates whether the PSBT is now complete
  * @param[in]  sighash_type the sighash type to use when signing (if PSBT does not specify)
  * @param[in]  sign whether to sign or not
  * @param[in]  bip32derivs whether to fill in bip32 derivation information if available

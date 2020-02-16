@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,6 @@
 #include <compat/endian.h>
 
 #include <algorithm>
-#include <assert.h>
 #include <ios>
 #include <limits>
 #include <map>
@@ -25,6 +24,9 @@
 #include <span.h>
 
 static const unsigned int MAX_SIZE = 0x02000000;
+
+/** Maximum amount of memory (in bytes) to allocate at once when deserializing vectors. */
+static const unsigned int MAX_VECTOR_ALLOCATE = 5000000;
 
 /**
  * Dummy data type to identify deserializing constructors.
@@ -199,6 +201,52 @@ template<typename X> const X& ReadWriteAsHelper(const X& x) { return x; }
     void Unserialize(Stream& s) {                                     \
         SerializationOp(s, CSerActionUnserialize());                  \
     }
+
+/**
+ * Implement the Ser and Unser methods needed for implementing a formatter (see Using below).
+ *
+ * Both Ser and Unser are delegated to a single static method SerializationOps, which is polymorphic
+ * in the serialized/deserialized type (allowing it to be const when serializing, and non-const when
+ * deserializing).
+ *
+ * Example use:
+ *   struct FooFormatter {
+ *     FORMATTER_METHODS(Class, obj) { READWRITE(obj.val1, VARINT(obj.val2)); }
+ *   }
+ *   would define a class FooFormatter that defines a serialization of Class objects consisting
+ *   of serializing its val1 member using the default serialization, and its val2 member using
+ *   VARINT serialization. That FooFormatter can then be used in statements like
+ *   READWRITE(Using<FooFormatter>(obj.bla)).
+ */
+#define FORMATTER_METHODS(cls, obj) \
+    template<typename Stream> \
+    static void Ser(Stream& s, const cls& obj) { SerializationOps(obj, s, CSerActionSerialize()); } \
+    template<typename Stream> \
+    static void Unser(Stream& s, cls& obj) { SerializationOps(obj, s, CSerActionUnserialize()); } \
+    template<typename Stream, typename Type, typename Operation> \
+    static inline void SerializationOps(Type& obj, Stream& s, Operation ser_action) \
+
+/**
+ * Implement the Serialize and Unserialize methods by delegating to a single templated
+ * static method that takes the to-be-(de)serialized object as a parameter. This approach
+ * has the advantage that the constness of the object becomes a template parameter, and
+ * thus allows a single implementation that sees the object as const for serializing
+ * and non-const for deserializing, without casts.
+ */
+#define SERIALIZE_METHODS(cls, obj)                                                 \
+    template<typename Stream>                                                       \
+    void Serialize(Stream& s) const                                                 \
+    {                                                                               \
+        static_assert(std::is_same<const cls&, decltype(*this)>::value, "Serialize type mismatch"); \
+        Ser(s, *this);                                                              \
+    }                                                                               \
+    template<typename Stream>                                                       \
+    void Unserialize(Stream& s)                                                     \
+    {                                                                               \
+        static_assert(std::is_same<cls&, decltype(*this)>::value, "Unserialize type mismatch"); \
+        Unser(s, *this);                                                            \
+    }                                                                               \
+    FORMATTER_METHODS(cls, obj)
 
 #ifndef CHAR_EQUALS_INT8
 template<typename Stream> inline void Serialize(Stream& s, char a    ) { ser_writedata8(s, a); } // TODO Get rid of bare char
@@ -419,26 +467,49 @@ I ReadVarInt(Stream& is)
     }
 }
 
-#define VARINT(obj, ...) WrapVarInt<__VA_ARGS__>(REF(obj))
+/** Simple wrapper class to serialize objects using a formatter; used by Using(). */
+template<typename Formatter, typename T>
+class Wrapper
+{
+    static_assert(std::is_lvalue_reference<T>::value, "Wrapper needs an lvalue reference type T");
+protected:
+    T m_object;
+public:
+    explicit Wrapper(T obj) : m_object(obj) {}
+    template<typename Stream> void Serialize(Stream &s) const { Formatter().Ser(s, m_object); }
+    template<typename Stream> void Unserialize(Stream &s) { Formatter().Unser(s, m_object); }
+};
+
+/** Cause serialization/deserialization of an object to be done using a specified formatter class.
+ *
+ * To use this, you need a class Formatter that has public functions Ser(stream, const object&) for
+ * serialization, and Unser(stream, object&) for deserialization. Serialization routines (inside
+ * READWRITE, or directly with << and >> operators), can then use Using<Formatter>(object).
+ *
+ * This works by constructing a Wrapper<Formatter, T>-wrapped version of object, where T is
+ * const during serialization, and non-const during deserialization, which maintains const
+ * correctness.
+ */
+template<typename Formatter, typename T>
+static inline Wrapper<Formatter, T&> Using(T&& t) { return Wrapper<Formatter, T&>(t); }
+
+#define VARINT_MODE(obj, mode) Using<VarIntFormatter<mode>>(obj)
+#define VARINT(obj) Using<VarIntFormatter<VarIntMode::DEFAULT>>(obj)
 #define COMPACTSIZE(obj) CCompactSize(REF(obj))
 #define LIMITED_STRING(obj,n) LimitedString< n >(REF(obj))
 
-template<VarIntMode Mode, typename I>
-class CVarInt
+/** Serialization wrapper class for integers in VarInt format. */
+template<VarIntMode Mode>
+struct VarIntFormatter
 {
-protected:
-    I &n;
-public:
-    explicit CVarInt(I& nIn) : n(nIn) { }
-
-    template<typename Stream>
-    void Serialize(Stream &s) const {
-        WriteVarInt<Stream,Mode,I>(s, n);
+    template<typename Stream, typename I> void Ser(Stream &s, I v)
+    {
+        WriteVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s, v);
     }
 
-    template<typename Stream>
-    void Unserialize(Stream& s) {
-        n = ReadVarInt<Stream,Mode,I>(s);
+    template<typename Stream, typename I> void Unser(Stream& s, I& v)
+    {
+        v = ReadVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s);
     }
 };
 
@@ -523,11 +594,55 @@ public:
     }
 };
 
-template<VarIntMode Mode=VarIntMode::DEFAULT, typename I>
-CVarInt<Mode, I> WrapVarInt(I& n) { return CVarInt<Mode, I>{n}; }
-
 template<typename I>
 BigEndian<I> WrapBigEndian(I& n) { return BigEndian<I>(n); }
+
+/** Formatter to serialize/deserialize vector elements using another formatter
+ *
+ * Example:
+ *   struct X {
+ *     std::vector<uint64_t> v;
+ *     SERIALIZE_METHODS(X, obj) { READWRITE(Using<VectorFormatter<VarInt>>(obj.v)); }
+ *   };
+ * will define a struct that contains a vector of uint64_t, which is serialized
+ * as a vector of VarInt-encoded integers.
+ *
+ * V is not required to be an std::vector type. It works for any class that
+ * exposes a value_type, size, reserve, push_back, and const iterators.
+ */
+template<class Formatter>
+struct VectorFormatter
+{
+    template<typename Stream, typename V>
+    void Ser(Stream& s, const V& v)
+    {
+        WriteCompactSize(s, v.size());
+        for (const typename V::value_type& elem : v) {
+            s << Using<Formatter>(elem);
+        }
+    }
+
+    template<typename Stream, typename V>
+    void Unser(Stream& s, V& v)
+    {
+        v.clear();
+        size_t size = ReadCompactSize(s);
+        size_t allocated = 0;
+        while (allocated < size) {
+            // For DoS prevention, do not blindly allocate as much as the stream claims to contain.
+            // Instead, allocate in 5MiB batches, so that an attacker actually needs to provide
+            // X MiB of data to make us allocate X+5 Mib.
+            static_assert(sizeof(typename V::value_type) <= MAX_VECTOR_ALLOCATE, "Vector element size too large");
+            allocated = std::min(size, allocated + MAX_VECTOR_ALLOCATE / sizeof(typename V::value_type));
+            v.reserve(allocated);
+            while (v.size() < allocated) {
+                typename V::value_type val;
+                s >> Using<Formatter>(val);
+                v.push_back(std::move(val));
+            }
+        }
+    };
+};
 
 /**
  * Forward declarations
@@ -555,6 +670,7 @@ template<typename Stream, unsigned int N, typename T> inline void Unserialize(St
  * vectors of unsigned char are a special case and are intended to be serialized as a single opaque blob.
  */
 template<typename Stream, typename T, typename A> void Serialize_impl(Stream& os, const std::vector<T, A>& v, const unsigned char&);
+template<typename Stream, typename T, typename A> void Serialize_impl(Stream& os, const std::vector<T, A>& v, const bool&);
 template<typename Stream, typename T, typename A, typename V> void Serialize_impl(Stream& os, const std::vector<T, A>& v, const V&);
 template<typename Stream, typename T, typename A> inline void Serialize(Stream& os, const std::vector<T, A>& v);
 template<typename Stream, typename T, typename A> void Unserialize_impl(Stream& is, std::vector<T, A>& v, const unsigned char&);
@@ -608,6 +724,20 @@ inline void Unserialize(Stream& is, T&& a)
     a.Unserialize(is);
 }
 
+/** Default formatter. Serializes objects as themselves.
+ *
+ * The vector/prevector serialization code passes this to VectorFormatter
+ * to enable reusing that logic. It shouldn't be needed elsewhere.
+ */
+struct DefaultFormatter
+{
+    template<typename Stream, typename T>
+    static void Ser(Stream& s, const T& t) { Serialize(s, t); }
+
+    template<typename Stream, typename T>
+    static void Unser(Stream& s, T& t) { Unserialize(s, t); }
+};
+
 
 
 
@@ -648,9 +778,7 @@ void Serialize_impl(Stream& os, const prevector<N, T>& v, const unsigned char&)
 template<typename Stream, unsigned int N, typename T, typename V>
 void Serialize_impl(Stream& os, const prevector<N, T>& v, const V&)
 {
-    WriteCompactSize(os, v.size());
-    for (typename prevector<N, T>::const_iterator vi = v.begin(); vi != v.end(); ++vi)
-        ::Serialize(os, (*vi));
+    Serialize(os, Using<VectorFormatter<DefaultFormatter>>(v));
 }
 
 template<typename Stream, unsigned int N, typename T>
@@ -670,7 +798,7 @@ void Unserialize_impl(Stream& is, prevector<N, T>& v, const unsigned char&)
     while (i < nSize)
     {
         unsigned int blk = std::min(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
-        v.resize(i + blk);
+        v.resize_uninitialized(i + blk);
         is.read((char*)&v[i], blk * sizeof(T));
         i += blk;
     }
@@ -679,19 +807,7 @@ void Unserialize_impl(Stream& is, prevector<N, T>& v, const unsigned char&)
 template<typename Stream, unsigned int N, typename T, typename V>
 void Unserialize_impl(Stream& is, prevector<N, T>& v, const V&)
 {
-    v.clear();
-    unsigned int nSize = ReadCompactSize(is);
-    unsigned int i = 0;
-    unsigned int nMid = 0;
-    while (nMid < nSize)
-    {
-        nMid += 5000000 / sizeof(T);
-        if (nMid > nSize)
-            nMid = nSize;
-        v.resize(nMid);
-        for (; i < nMid; i++)
-            Unserialize(is, v[i]);
-    }
+    Unserialize(is, Using<VectorFormatter<DefaultFormatter>>(v));
 }
 
 template<typename Stream, unsigned int N, typename T>
@@ -713,12 +829,22 @@ void Serialize_impl(Stream& os, const std::vector<T, A>& v, const unsigned char&
         os.write((char*)v.data(), v.size() * sizeof(T));
 }
 
+template<typename Stream, typename T, typename A>
+void Serialize_impl(Stream& os, const std::vector<T, A>& v, const bool&)
+{
+    // A special case for std::vector<bool>, as dereferencing
+    // std::vector<bool>::const_iterator does not result in a const bool&
+    // due to std::vector's special casing for bool arguments.
+    WriteCompactSize(os, v.size());
+    for (bool elem : v) {
+        ::Serialize(os, elem);
+    }
+}
+
 template<typename Stream, typename T, typename A, typename V>
 void Serialize_impl(Stream& os, const std::vector<T, A>& v, const V&)
 {
-    WriteCompactSize(os, v.size());
-    for (typename std::vector<T, A>::const_iterator vi = v.begin(); vi != v.end(); ++vi)
-        ::Serialize(os, (*vi));
+    Serialize(os, Using<VectorFormatter<DefaultFormatter>>(v));
 }
 
 template<typename Stream, typename T, typename A>
@@ -747,19 +873,7 @@ void Unserialize_impl(Stream& is, std::vector<T, A>& v, const unsigned char&)
 template<typename Stream, typename T, typename A, typename V>
 void Unserialize_impl(Stream& is, std::vector<T, A>& v, const V&)
 {
-    v.clear();
-    unsigned int nSize = ReadCompactSize(is);
-    unsigned int i = 0;
-    unsigned int nMid = 0;
-    while (nMid < nSize)
-    {
-        nMid += 5000000 / sizeof(T);
-        if (nMid > nSize)
-            nMid = nSize;
-        v.resize(nMid);
-        for (; i < nMid; i++)
-            Unserialize(is, v[i]);
-    }
+    Unserialize(is, Using<VectorFormatter<DefaultFormatter>>(v));
 }
 
 template<typename Stream, typename T, typename A>

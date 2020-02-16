@@ -19,7 +19,7 @@ else
 LIBUNIVALUE = $(UNIVALUE_LIBS)
 endif
 
-BITCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
+BITCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
 BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
@@ -119,6 +119,7 @@ BITCOIN_CORE_H = \
   compat.h \
   compat/assumptions.h \
   compat/byteswap.h \
+  compat/cpuid.h \
   compat/endian.h \
   compat/sanity.h \
   compressor.h \
@@ -143,21 +144,26 @@ BITCOIN_CORE_H = \
   interfaces/wallet.h \
   key.h \
   key_io.h \
-  keystore.h \
   dbwrapper.h \
   limitedmap.h \
   logging.h \
+  logging/timer.h \
   memusage.h \
   merkleblock.h \
   miner.h \
   net.h \
+  net_permissions.h \
   net_processing.h \
+  net_types.h \
   netaddress.h \
   netbase.h \
   netmessagemaker.h \
   node/coin.h \
+  node/coinstats.h \
+  node/context.h \
   node/psbt.h \
   node/transaction.h \
+  node/utxo_snapshot.h \
   noui.h \
   optional.h \
   outputtype.h \
@@ -170,20 +176,23 @@ BITCOIN_CORE_H = \
   protocol.h \
   psbt.h \
   random.h \
+  randomenv.h \
   reverse_iterator.h \
   reverselock.h \
   rpc/blockchain.h \
   rpc/client.h \
   rpc/protocol.h \
-  rpc/server.h \
   rpc/rawtransaction_util.h \
   rpc/register.h \
+  rpc/request.h \
+  rpc/server.h \
   rpc/util.h \
   scheduler.h \
   script/descriptor.h \
-  script/ismine.h \
+  script/keyorigin.h \
   script/sigcache.h \
   script/sign.h \
+  script/signingprovider.h \
   script/standard.h \
   shutdown.h \
   streams.h \
@@ -201,18 +210,26 @@ BITCOIN_CORE_H = \
   txmempool.h \
   ui_interface.h \
   undo.h \
+  util/asmap.h \
   util/bip32.h \
   util/bytevectorhash.h \
+  util/check.h \
   util/error.h \
   util/fees.h \
+  util/spanparsing.h \
   util/system.h \
+  util/macros.h \
   util/memory.h \
   util/moneystr.h \
   util/rbf.h \
+  util/settings.h \
+  util/string.h \
   util/threadnames.h \
   util/time.h \
+  util/translation.h \
   util/url.h \
   util/validation.h \
+  util/vector.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -223,9 +240,11 @@ BITCOIN_CORE_H = \
   wallet/db.h \
   wallet/feebumper.h \
   wallet/fees.h \
+  wallet/ismine.h \
   wallet/load.h \
   wallet/psbtwallet.h \
   wallet/rpcwallet.h \
+  wallet/scriptpubkeyman.h \
   wallet/wallet.h \
   wallet/walletdb.h \
   wallet/wallettool.h \
@@ -273,6 +292,8 @@ libbitcoin_server_a_SOURCES = \
   net.cpp \
   net_processing.cpp \
   node/coin.cpp \
+  node/coinstats.cpp \
+  node/context.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
   noui.cpp \
@@ -307,7 +328,7 @@ libbitcoin_server_a_SOURCES += dummywallet.cpp
 endif
 
 if ENABLE_ZMQ
-libbitcoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
+libbitcoin_zmq_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
 libbitcoin_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
@@ -332,6 +353,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/psbtwallet.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
+  wallet/scriptpubkeyman.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
@@ -350,9 +372,13 @@ crypto_libbitcoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
+  crypto/chacha_poly_aead.h \
+  crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
   crypto/common.h \
+  crypto/hkdf_sha256_32.cpp \
+  crypto/hkdf_sha256_32.h \
   crypto/hmac_sha256.cpp \
   crypto/hmac_sha256.h \
   crypto/hmac_sha512.cpp \
@@ -443,10 +469,10 @@ libbitcoin_common_a_SOURCES = \
   core_write.cpp \
   key.cpp \
   key_io.cpp \
-  keystore.cpp \
   merkleblock.cpp \
   netaddress.cpp \
   netbase.cpp \
+  net_permissions.cpp \
   outputtype.cpp \
   policy/feerate.cpp \
   policy/policy.cpp \
@@ -456,8 +482,8 @@ libbitcoin_common_a_SOURCES = \
   rpc/util.cpp \
   scheduler.cpp \
   script/descriptor.cpp \
-  script/ismine.cpp \
   script/sign.cpp \
+  script/signingprovider.cpp \
   script/standard.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
@@ -472,6 +498,7 @@ libbitcoin_util_a_SOURCES = \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
+  compat/glibc_sanity_fdelt.cpp \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
@@ -479,10 +506,12 @@ libbitcoin_util_a_SOURCES = \
   interfaces/handler.cpp \
   logging.cpp \
   random.cpp \
-  rpc/protocol.cpp \
+  randomenv.cpp \
+  rpc/request.cpp \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
+  util/asmap.cpp \
   util/bip32.cpp \
   util/bytevectorhash.cpp \
   util/error.cpp \
@@ -490,8 +519,11 @@ libbitcoin_util_a_SOURCES = \
   util/system.cpp \
   util/moneystr.cpp \
   util/rbf.cpp \
+  util/settings.cpp \
   util/threadnames.cpp \
+  util/spanparsing.cpp \
   util/strencodings.cpp \
+  util/string.cpp \
   util/time.cpp \
   util/url.cpp \
   util/validation.cpp \
@@ -506,6 +538,8 @@ endif
 libbitcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_cli_a_SOURCES = \
+  compat/stdin.h \
+  compat/stdin.cpp \
   rpc/client.cpp \
   $(BITCOIN_CORE_H)
 
@@ -522,12 +556,9 @@ if TARGET_WINDOWS
 bitcoind_SOURCES += bitcoind-res.rc
 endif
 
-# Libraries below may be listed more than once to resolve circular dependencies (see
-# https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
 bitcoind_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
-  $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
@@ -539,7 +570,7 @@ bitcoind_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 # bitcoin-cli binary #
 bitcoin_cli_SOURCES = bitcoin-cli.cpp
@@ -557,7 +588,7 @@ bitcoin_cli_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-bitcoin_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+bitcoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
 #
 
 # bitcoin-tx binary #
@@ -578,7 +609,7 @@ bitcoin_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-bitcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+bitcoin_tx_LDADD += $(BOOST_LIBS)
 #
 
 # bitcoin-wallet binary #
@@ -605,13 +636,13 @@ bitcoin_wallet_LDADD = \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE)
 
-bitcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
+bitcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
 #
 
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_base_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+libbitcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
@@ -670,26 +701,28 @@ clean-local:
 	$(AM_V_GEN) $(WINDRES) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) -DWINDRES_PREPROC -i $< -o $@
 
 check-symbols: $(bin_PROGRAMS)
+if TARGET_DARWIN
+	@echo "Checking macOS dynamic libraries..."
+	$(AM_V_at) OTOOL=$(OTOOL) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
+endif
+
 if GLIBC_BACK_COMPAT
 	@echo "Checking glibc back compat..."
-	$(AM_V_at) READELF=$(READELF) CPPFILT=$(CPPFILT) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py < $(bin_PROGRAMS)
+	$(AM_V_at) READELF=$(READELF) CPPFILT=$(CPPFILT) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
 endif
 
 check-security: $(bin_PROGRAMS)
 if HARDEN
 	@echo "Checking binary security..."
-	$(AM_V_at) READELF=$(READELF) OBJDUMP=$(OBJDUMP) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py < $(bin_PROGRAMS)
-endif
-
-if ENABLE_BIP70
-%.pb.cc %.pb.h: %.proto
-	@test -f $(PROTOC)
-	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
+	$(AM_V_at) READELF=$(READELF) OBJDUMP=$(OBJDUMP) OTOOL=$(OTOOL) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py $(bin_PROGRAMS)
 endif
 
 if EMBEDDED_LEVELDB
+include Makefile.crc32c.include
 include Makefile.leveldb.include
 endif
+
+include Makefile.test_util.include
 
 if ENABLE_TESTS
 include Makefile.test.include

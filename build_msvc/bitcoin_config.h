@@ -1,3 +1,7 @@
+// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_BITCOIN_CONFIG_H
 #define BITCOIN_BITCOIN_CONFIG_H
 
@@ -14,7 +18,7 @@
 #define CLIENT_VERSION_MAJOR 0
 
 /* Minor version */
-#define CLIENT_VERSION_MINOR 18
+#define CLIENT_VERSION_MINOR 19
 
 /* Build revision */
 #define CLIENT_VERSION_REVISION 99
@@ -48,9 +52,6 @@
 
 /* define if the Boost::Filesystem library is available */
 #define HAVE_BOOST_FILESYSTEM /**/
-
-/* define if the Boost::PROGRAM_OPTIONS library is available */
-#define HAVE_BOOST_PROGRAM_OPTIONS /**/
 
 /* define if the Boost::System library is available */
 #define HAVE_BOOST_SYSTEM /**/
@@ -97,10 +98,6 @@
 /* Define to 1 if you have the declaration of `daemon', and to 0 if you don't.
    */
 #define HAVE_DECL_DAEMON 0
-
-/* Define to 1 if you have the declaration of `EVP_MD_CTX_new', and to 0 if
-   you don't. */
-//#define HAVE_DECL_EVP_MD_CTX_NEW 1
 
 /* Define to 1 if you have the declaration of `htobe16', and to 0 if you
    don't. */
@@ -182,75 +179,6 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
-
-/* Define to 1 if you have the `advapi32' library (-ladvapi32). */
-#define HAVE_LIBADVAPI32 1
-
-/* Define to 1 if you have the `comctl32' library (-lcomctl32). */
-#define HAVE_LIBCOMCTL32 1
-
-/* Define to 1 if you have the `comdlg32' library (-lcomdlg32). */
-#define HAVE_LIBCOMDLG32 1
-
-/* Define to 1 if you have the `crypt32' library (-lcrypt32). */
-#define HAVE_LIBCRYPT32 1
-
-/* Define to 1 if you have the `gdi32' library (-lgdi32). */
-#define HAVE_LIBGDI32 1
-
-/* Define to 1 if you have the `imm32' library (-limm32). */
-#define HAVE_LIBIMM32 1
-
-/* Define to 1 if you have the `iphlpapi' library (-liphlpapi). */
-#define HAVE_LIBIPHLPAPI 1
-
-/* Define to 1 if you have the `kernel32' library (-lkernel32). */
-#define HAVE_LIBKERNEL32 1
-
-/* Define to 1 if you have the `mingwthrd' library (-lmingwthrd). */
-#define HAVE_LIBMINGWTHRD 1
-
-/* Define to 1 if you have the `mswsock' library (-lmswsock). */
-#define HAVE_LIBMSWSOCK 1
-
-/* Define to 1 if you have the `ole32' library (-lole32). */
-#define HAVE_LIBOLE32 1
-
-/* Define to 1 if you have the `oleaut32' library (-loleaut32). */
-#define HAVE_LIBOLEAUT32 1
-
-/* Define to 1 if you have the `rpcrt4' library (-lrpcrt4). */
-#define HAVE_LIBRPCRT4 1
-
-/* Define to 1 if you have the `rt' library (-lrt). */
-/* #undef HAVE_LIBRT */
-
-/* Define to 1 if you have the `shell32' library (-lshell32). */
-#define HAVE_LIBSHELL32 1
-
-/* Define to 1 if you have the `shlwapi' library (-lshlwapi). */
-#define HAVE_LIBSHLWAPI 1
-
-/* Define to 1 if you have the `ssp' library (-lssp). */
-#define HAVE_LIBSSP 1
-
-/* Define to 1 if you have the `user32' library (-luser32). */
-#define HAVE_LIBUSER32 1
-
-/* Define to 1 if you have the `uuid' library (-luuid). */
-#define HAVE_LIBUUID 1
-
-/* Define to 1 if you have the `winmm' library (-lwinmm). */
-#define HAVE_LIBWINMM 1
-
-/* Define to 1 if you have the `winspool' library (-lwinspool). */
-#define HAVE_LIBWINSPOOL 1
-
-/* Define to 1 if you have the `ws2_32' library (-lws2_32). */
-#define HAVE_LIBWS2_32 1
-
-/* Define to 1 if you have the `z ' library (-lz ). */
-#define HAVE_LIBZ_ 1
 
 /* Define this symbol if you have malloc_info */
 /* #undef HAVE_MALLOC_INFO */
@@ -346,7 +274,7 @@
 #define PACKAGE_NAME "Bitcoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Bitcoin Core 0.17.99"
+#define PACKAGE_STRING "Bitcoin Core 0.19.99"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "bitcoin"
@@ -355,7 +283,7 @@
 #define PACKAGE_URL "https://bitcoincore.org/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.17.99"
+#define PACKAGE_VERSION "0.19.99"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
@@ -420,5 +348,15 @@
 
 /* Define for large files, on AIX-style hosts. */
 /* #undef _LARGE_FILES */
+
+/* Windows Universal Platform constraints */
+#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+/* Either a desktop application without API restrictions, or and older system
+   before these macros were defined. */
+
+/* ::wsystem is available */
+#define HAVE_SYSTEM 1
+
+#endif // !WINAPI_FAMILY || WINAPI_FAMILY_DESKTOP_APP
 
 #endif //BITCOIN_BITCOIN_CONFIG_H

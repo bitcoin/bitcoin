@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -108,7 +108,7 @@ class SendConfirmationDialog : public QMessageBox
     Q_OBJECT
 
 public:
-    SendConfirmationDialog(const QString &title, const QString &text, int secDelay = SEND_CONFIRM_DELAY, QWidget *parent = nullptr);
+    SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = SEND_CONFIRM_DELAY, const QString& confirmText = "Send", QWidget* parent = nullptr);
     int exec();
 
 private Q_SLOTS:
@@ -119,6 +119,7 @@ private:
     QAbstractButton *yesButton;
     QTimer countDownTimer;
     int secDelay;
+    QString confirmButtonText;
 };
 
 #endif // BITCOIN_QT_SENDCOINSDIALOG_H

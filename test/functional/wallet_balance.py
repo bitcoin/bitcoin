@@ -11,7 +11,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    connect_nodes_bi,
+    connect_nodes,
     sync_blocks,
 )
 
@@ -28,12 +28,17 @@ def create_transactions(node, address, amt, fees):
     for utxo in utxos:
         inputs.append({"txid": utxo["txid"], "vout": utxo["vout"]})
         ins_total += utxo['amount']
-        if ins_total + max(fees) > amt:
+        if ins_total >= amt + max(fees):
             break
+    # make sure there was enough utxos
+    assert ins_total >= amt + max(fees)
 
     txs = []
     for fee in fees:
-        outputs = {address: amt, node.getrawchangeaddress(): ins_total - amt - fee}
+        outputs = {address: amt}
+        # prevent 0 change output
+        if ins_total > amt + fee:
+            outputs[node.getrawchangeaddress()] = ins_total - amt - fee
         raw_tx = node.createrawtransaction(inputs, outputs, 0, True)
         raw_tx = node.signrawtransactionwithwallet(raw_tx)
         assert_equal(raw_tx['complete'], True)
@@ -59,13 +64,23 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].listunspent()), 0)
         assert_equal(len(self.nodes[1].listunspent()), 0)
 
-        self.log.info("Mining blocks ...")
+        self.log.info("Check that only node 0 is watching an address")
+        assert 'watchonly' in self.nodes[0].getbalances()
+        assert 'watchonly' not in self.nodes[1].getbalances()
 
+        self.log.info("Mining blocks ...")
         self.nodes[0].generate(1)
         self.sync_all()
         self.nodes[1].generate(1)
         self.nodes[1].generatetoaddress(101, ADDRESS_WATCHONLY)
         self.sync_all()
+
+        assert_equal(self.nodes[0].getbalances()['mine']['trusted'], 50)
+        assert_equal(self.nodes[0].getwalletinfo()['balance'], 50)
+        assert_equal(self.nodes[1].getbalances()['mine']['trusted'], 50)
+
+        assert_equal(self.nodes[0].getbalances()['watchonly']['immature'], 5000)
+        assert 'watchonly' not in self.nodes[1].getbalances()
 
         assert_equal(self.nodes[0].getbalance(), 50)
         assert_equal(self.nodes[1].getbalance(), 50)
@@ -94,22 +109,63 @@ class WalletTest(BitcoinTestFramework):
 
         self.log.info("Test getbalance and getunconfirmedbalance with unconfirmed inputs")
 
+        # Before `test_balance()`, we have had two nodes with a balance of 50
+        # each and then we:
+        #
+        # 1) Sent 40 from node A to node B with fee 0.01
+        # 2) Sent 60 from node B to node A with fee 0.01
+        #
+        # Then we check the balances:
+        #
+        # 1) As is
+        # 2) With transaction 2 from above with 2x the fee
+        #
+        # Prior to #16766, in this situation, the node would immediately report
+        # a balance of 30 on node B as unconfirmed and trusted.
+        #
+        # After #16766, we show that balance as unconfirmed.
+        #
+        # The balance is indeed "trusted" and "confirmed" insofar as removing
+        # the mempool transactions would return at least that much money. But
+        # the algorithm after #16766 marks it as unconfirmed because the 'taint'
+        # tracking of transaction trust for summing balances doesn't consider
+        # which inputs belong to a user. In this case, the change output in
+        # question could be "destroyed" by replace the 1st transaction above.
+        #
+        # The post #16766 behavior is correct; we shouldn't be treating those
+        # funds as confirmed. If you want to rely on that specific UTXO existing
+        # which has given you that balance, you cannot, as a third party
+        # spending the other input would destroy that unconfirmed.
+        #
+        # For example, if the test transactions were:
+        #
+        # 1) Sent 40 from node A to node B with fee 0.01
+        # 2) Sent 10 from node B to node A with fee 0.01
+        #
+        # Then our node would report a confirmed balance of 40 + 50 - 10 = 80
+        # BTC, which is more than would be available if transaction 1 were
+        # replaced.
+
+
         def test_balances(*, fee_node_1=0):
             # getbalance without any arguments includes unconfirmed transactions, but not untrusted transactions
             assert_equal(self.nodes[0].getbalance(), Decimal('9.99'))  # change from node 0's send
-            assert_equal(self.nodes[1].getbalance(), Decimal('30') - fee_node_1)  # change from node 1's send
+            assert_equal(self.nodes[1].getbalance(), Decimal('0'))  # node 1's send had an unsafe input
             # Same with minconf=0
             assert_equal(self.nodes[0].getbalance(minconf=0), Decimal('9.99'))
-            assert_equal(self.nodes[1].getbalance(minconf=0), Decimal('30') - fee_node_1)
+            assert_equal(self.nodes[1].getbalance(minconf=0), Decimal('0'))
             # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
             # TODO: fix getbalance tracking of coin spentness depth
             assert_equal(self.nodes[0].getbalance(minconf=1), Decimal('0'))
             assert_equal(self.nodes[1].getbalance(minconf=1), Decimal('0'))
             # getunconfirmedbalance
             assert_equal(self.nodes[0].getunconfirmedbalance(), Decimal('60'))  # output of node 1's spend
+            assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], Decimal('60'))
             assert_equal(self.nodes[0].getwalletinfo()["unconfirmed_balance"], Decimal('60'))
-            assert_equal(self.nodes[1].getunconfirmedbalance(), Decimal('0'))  # Doesn't include output of node 0's send since it was spent
-            assert_equal(self.nodes[1].getwalletinfo()["unconfirmed_balance"], Decimal('0'))
+
+            assert_equal(self.nodes[1].getunconfirmedbalance(), Decimal('30') - fee_node_1)  # Doesn't include output of node 0's send since it was spent
+            assert_equal(self.nodes[1].getbalances()['mine']['untrusted_pending'], Decimal('30') - fee_node_1)
+            assert_equal(self.nodes[1].getwalletinfo()["unconfirmed_balance"], Decimal('30') - fee_node_1)
 
         test_balances(fee_node_1=Decimal('0.01'))
 
@@ -185,13 +241,15 @@ class WalletTest(BitcoinTestFramework):
         self.log.info('Put txs back into mempool of node 1 (not node 0)')
         self.nodes[0].invalidateblock(block_reorg)
         self.nodes[1].invalidateblock(block_reorg)
+        self.sync_blocks()
+        self.nodes[0].syncwithvalidationinterfacequeue()
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
         self.nodes[0].generatetoaddress(1, ADDRESS_WATCHONLY)
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
 
         # Now confirm tx_orig
         self.restart_node(1, ['-persistmempool=0'])
-        connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes(self.nodes[0], 1)
         sync_blocks(self.nodes)
         self.nodes[1].sendrawtransaction(tx_orig)
         self.nodes[1].generatetoaddress(1, ADDRESS_WATCHONLY)

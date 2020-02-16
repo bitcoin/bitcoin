@@ -23,8 +23,6 @@ from test_framework.util import (
     wait_until,
 )
 
-MIN_BLOCKS_TO_KEEP = 288
-
 # Rescans start at the earliest block up to 2 hours before a key timestamp, so
 # the manual prune RPC avoids pruning blocks in the same window to be
 # compatible with pruning based on key creation time.
@@ -80,6 +78,7 @@ class PruneTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 6
+        self.supports_cli = False
 
         # Create nodes 0 and 1 to mine.
         # Create node 2 to test pruning.
@@ -94,6 +93,7 @@ class PruneTest(BitcoinTestFramework):
             ["-maxreceivebuffer=20000"],
             ["-prune=550"],
         ]
+        self.rpc_timeout = 120
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -101,7 +101,7 @@ class PruneTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
-        self.prunedir = os.path.join(self.nodes[2].datadir, 'regtest', 'blocks', '')
+        self.prunedir = os.path.join(self.nodes[2].datadir, self.chain, 'blocks', '')
 
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[1], 2)
@@ -206,6 +206,7 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Mine 220 more large blocks so we have requisite history")
 
         mine_large_blocks(self.nodes[0], 220)
+        self.sync_blocks(self.nodes[0:3], timeout=120)
 
         usage = calc_usage(self.prunedir)
         self.log.info("Usage should be below target: %d" % usage)
@@ -273,23 +274,12 @@ class PruneTest(BitcoinTestFramework):
             else:
                 return index
 
-        def prune(index, expected_ret=None):
+        def prune(index):
             ret = node.pruneblockchain(height=height(index))
-            # Check the return value. When use_timestamp is True, just check
-            # that the return value is less than or equal to the expected
-            # value, because when more than one block is generated per second,
-            # a timestamp will not be granular enough to uniquely identify an
-            # individual block.
-            if expected_ret is None:
-                expected_ret = index
-            if use_timestamp:
-                assert_greater_than(ret, 0)
-                assert_greater_than(expected_ret + 1, ret)
-            else:
-                assert_equal(ret, expected_ret)
+            assert_equal(ret, node.getblockchaininfo()['pruneheight'])
 
         def has_block(index):
-            return os.path.isfile(os.path.join(self.nodes[node_number].datadir, "regtest", "blocks", "blk{:05}.dat".format(index)))
+            return os.path.isfile(os.path.join(self.nodes[node_number].datadir, self.chain, "blocks", "blk{:05}.dat".format(index)))
 
         # should not prune because chain tip of node 3 (995) < PruneAfterHeight (1000)
         assert_raises_rpc_error(-1, "Blockchain is too short for pruning", node.pruneblockchain, height(500))
@@ -326,7 +316,7 @@ class PruneTest(BitcoinTestFramework):
         assert not has_block(1), "blk00001.dat is still there, should be pruned by now"
 
         # height=1000 should not prune anything more, because tip-288 is in blk00002.dat.
-        prune(1000, 1001 - MIN_BLOCKS_TO_KEEP)
+        prune(1000)
         assert has_block(2), "blk00002.dat is still there, should be pruned by now"
 
         # advance the tip so blk00002.dat and blk00003.dat can be pruned (the last 288 blocks should now be in blk00004.dat)

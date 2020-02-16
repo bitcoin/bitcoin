@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,19 +19,19 @@
 #include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>
+#include <optional.h>
 #include <sync.h>
-#include <util/threadnames.h>
 #include <tinyformat.h>
 #include <util/memory.h>
+#include <util/settings.h>
+#include <util/threadnames.h>
 #include <util/time.h>
 
-#include <atomic>
 #include <exception>
 #include <map>
 #include <set>
 #include <stdint.h>
 #include <string>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -41,18 +41,6 @@
 int64_t GetStartupTime();
 
 extern const char * const BITCOIN_CONF_FILENAME;
-
-/** Translate a message to the native language of the user. */
-const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
-
-/**
- * Translation function.
- * If no translation function is set, simply return the input.
- */
-inline std::string _(const char* psz)
-{
-    return G_TRANSLATION_FUN ? (G_TRANSLATION_FUN)(psz) : psz;
-}
 
 void SetupEnvironment();
 bool SetupNetworking();
@@ -85,12 +73,17 @@ fs::path GetDefaultDataDir();
 // The blocks directory is always net specific.
 const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
+// Return true if -datadir option points to a valid directory or is not specified.
+bool CheckDataDirOption();
+/** Tests only */
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
+#if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
+#endif
 
 /**
  * Most paths passed as configuration arguments are treated as relative to
@@ -138,27 +131,61 @@ struct SectionInfo
 
 class ArgsManager
 {
-protected:
-    friend class ArgsManagerHelper;
+public:
+    enum Flags {
+        // Boolean options can accept negation syntax -noOPTION or -noOPTION=1
+        ALLOW_BOOL = 0x01,
+        ALLOW_INT = 0x02,
+        ALLOW_STRING = 0x04,
+        ALLOW_ANY = ALLOW_BOOL | ALLOW_INT | ALLOW_STRING,
+        DEBUG_ONLY = 0x100,
+        /* Some options would cause cross-contamination if values for
+         * mainnet were used while running on regtest/testnet (or vice-versa).
+         * Setting them as NETWORK_ONLY ensures that sharing a config file
+         * between mainnet and regtest/testnet won't cause problems due to these
+         * parameters by accident. */
+        NETWORK_ONLY = 0x200,
+        // This argument's value is sensitive (such as a password).
+        SENSITIVE = 0x400,
+    };
 
+protected:
     struct Arg
     {
         std::string m_help_param;
         std::string m_help_text;
-        bool m_debug_only;
-
-        Arg(const std::string& help_param, const std::string& help_text, bool debug_only) : m_help_param(help_param), m_help_text(help_text), m_debug_only(debug_only) {};
+        unsigned int m_flags;
     };
 
-    mutable CCriticalSection cs_args;
-    std::map<std::string, std::vector<std::string>> m_override_args GUARDED_BY(cs_args);
-    std::map<std::string, std::vector<std::string>> m_config_args GUARDED_BY(cs_args);
+    mutable RecursiveMutex cs_args;
+    util::Settings m_settings GUARDED_BY(cs_args);
     std::string m_network GUARDED_BY(cs_args);
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
 
     NODISCARD bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
+
+    /**
+     * Returns true if settings values from the default section should be used,
+     * depending on the current network and whether the setting is
+     * network-specific.
+     */
+    bool UseDefaultSection(const std::string& arg) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    /**
+     * Get setting value.
+     *
+     * Result will be null if setting was unset, true if "-setting" argument was passed
+     * false if "-nosetting" argument was passed, and a string if a "-setting=value"
+     * argument was passed.
+     */
+    util::SettingsValue GetSetting(const std::string& arg) const;
+
+    /**
+     * Get list of setting values.
+     */
+    std::vector<util::SettingsValue> GetSettingsList(const std::string& arg) const;
 
 public:
     ArgsManager();
@@ -259,7 +286,7 @@ public:
     void ForceSetArg(const std::string& strArg, const std::string& strValue);
 
     /**
-     * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
+     * Returns the appropriate chain name from the program arguments.
      * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
      */
     std::string GetChainName() const;
@@ -267,7 +294,7 @@ public:
     /**
      * Add argument
      */
-    void AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat);
+    void AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat);
 
     /**
      * Add many hidden arguments
@@ -280,6 +307,7 @@ public:
     void ClearArgs() {
         LOCK(cs_args);
         m_available_args.clear();
+        m_network_only_args.clear();
     }
 
     /**
@@ -288,9 +316,23 @@ public:
     std::string GetHelpMessage() const;
 
     /**
-     * Check whether we know of this arg
+     * Return Flags for known arg.
+     * Return nullopt for unknown arg.
      */
-    bool IsArgKnown(const std::string& key) const;
+    Optional<unsigned int> GetArgFlags(const std::string& name) const;
+
+    /**
+     * Log the config file options and the command line arguments,
+     * useful for troubleshooting.
+     */
+    void LogArgs() const;
+
+private:
+    // Helper function for LogArgs().
+    void logArgsPrefix(
+        const std::string& prefix,
+        const std::string& section,
+        const std::map<std::string, std::vector<util::SettingsValue>>& args) const;
 };
 
 extern ArgsManager gArgs;
@@ -359,10 +401,8 @@ std::string CopyrightHolders(const std::string& strPrefix);
  * On platforms that support it, tell the kernel the calling thread is
  * CPU-intensive and non-interactive. See SCHED_BATCH in sched(7) for details.
  *
- * @return The return value of sched_setschedule(), or 1 on systems without
- * sched_setschedule().
  */
-int ScheduleBatchPriority();
+void ScheduleBatchPriority();
 
 namespace util {
 

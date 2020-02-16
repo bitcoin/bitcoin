@@ -19,9 +19,17 @@ from test_framework.authproxy import JSONRPCException
 class RpcMiscTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.supports_cli = False
 
     def run_test(self):
         node = self.nodes[0]
+
+        self.log.info("test CHECK_NONFATAL")
+        assert_raises_rpc_error(
+            -1,
+            "Internal bug detected: 'request.params.size() != 100'",
+            lambda: node.echo(*[0] * 100),
+        )
 
         self.log.info("test getmemoryinfo")
         memory = node.getmemoryinfo()['locked']
@@ -45,6 +53,14 @@ class RpcMiscTest(BitcoinTestFramework):
             assert_raises_rpc_error(-8, 'mallocinfo is only available when compiled with glibc 2.10+', node.getmemoryinfo, mode="mallocinfo")
 
         assert_raises_rpc_error(-8, "unknown mode foobar", node.getmemoryinfo, mode="foobar")
+
+        self.log.info("test logging")
+        assert_equal(node.logging()['qt'], True)
+        node.logging(exclude=['qt'])
+        assert_equal(node.logging()['qt'], False)
+        node.logging(include=['qt'])
+        assert_equal(node.logging()['qt'], True)
+
 
 if __name__ == '__main__':
     RpcMiscTest().main()

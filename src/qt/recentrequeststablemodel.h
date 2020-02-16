@@ -1,15 +1,17 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_RECENTREQUESTSTABLEMODEL_H
 #define BITCOIN_QT_RECENTREQUESTSTABLEMODEL_H
 
-#include <qt/walletmodel.h>
+#include <qt/sendcoinsrecipient.h>
 
 #include <QAbstractTableModel>
 #include <QStringList>
 #include <QDateTime>
+
+class WalletModel;
 
 class RecentRequestEntry
 {
@@ -43,7 +45,7 @@ class RecentRequestEntryLessThan
 public:
     RecentRequestEntryLessThan(int nColumn, Qt::SortOrder fOrder):
         column(nColumn), order(fOrder) {}
-    bool operator()(RecentRequestEntry &left, RecentRequestEntry &right) const;
+    bool operator()(const RecentRequestEntry& left, const RecentRequestEntry& right) const;
 
 private:
     int column;
@@ -76,7 +78,7 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-    QModelIndex index(int row, int column, const QModelIndex &parent) const;
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     Qt::ItemFlags flags(const QModelIndex &index) const;
     /*@}*/

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2012-2018 The Bitcoin Core developers
+# Copyright (c) 2012-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
@@ -76,10 +76,7 @@ f.write("""
 #endif
 """)
 f.write('static const char UNUSED *bitcoin_strings[] = {\n')
-f.write('QT_TRANSLATE_NOOP("bitcoin-core", "%s"),\n' % (os.getenv('PACKAGE_NAME'),))
 f.write('QT_TRANSLATE_NOOP("bitcoin-core", "%s"),\n' % (os.getenv('COPYRIGHT_HOLDERS'),))
-if os.getenv('COPYRIGHT_HOLDERS_SUBSTITUTION') != os.getenv('PACKAGE_NAME'):
-    f.write('QT_TRANSLATE_NOOP("bitcoin-core", "%s"),\n' % (os.getenv('COPYRIGHT_HOLDERS_SUBSTITUTION'),))
 messages.sort(key=operator.itemgetter(0))
 for (msgid, msgstr) in messages:
     if msgid != EMPTY:

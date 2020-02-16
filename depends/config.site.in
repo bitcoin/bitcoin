@@ -16,10 +16,10 @@ fi
 if test -z $with_qt_bindir && test -z "@no_qt@"; then
   with_qt_bindir=$depends_prefix/native/bin
 fi
-if test -z $with_protoc_bindir && test -z "@no_qt@"; then
-  with_protoc_bindir=$depends_prefix/native/bin
-fi
 
+if test -z $with_qrencode && test -n "@no_qr@"; then
+  with_qrencode=no
+fi
 
 if test -z $enable_wallet && test -n "@no_wallet@"; then
   enable_wallet=no
@@ -31,6 +31,10 @@ fi
 
 if test -z $with_gui && test -n "@no_qt@"; then
   with_gui=no
+fi
+
+if test -z $enable_zmq && test -n "@no_zmq@"; then
+  enable_zmq=no
 fi
 
 if test x@host_os@ = xdarwin; then
@@ -55,7 +59,7 @@ PKG_CONFIG="`which pkg-config` --static"
 # avoid ruining the cache. Sigh.
 export PKG_CONFIG_PATH=$depends_prefix/share/pkgconfig:$depends_prefix/lib/pkgconfig
 if test -z "@allow_host_packages@"; then
-  export PKGCONFIG_LIBDIR=
+  export PKG_CONFIG_LIBDIR=$depends_prefix/lib/pkgconfig
 fi
 
 CPPFLAGS="-I$depends_prefix/include/ $CPPFLAGS"

@@ -8,30 +8,20 @@
 #include <index/blockfilterindex.h>
 #include <miner.h>
 #include <pow.h>
-#include <test/setup_common.h>
 #include <script/standard.h>
+#include <test/util/blockfilter.h>
+#include <test/util/setup_common.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(blockfilter_index_tests)
 
-static bool ComputeFilter(BlockFilterType filter_type, const CBlockIndex* block_index,
-                          BlockFilter& filter)
-{
-    CBlock block;
-    if (!ReadBlockFromDisk(block, block_index->GetBlockPos(), Params().GetConsensus())) {
-        return false;
-    }
-
-    CBlockUndo block_undo;
-    if (block_index->nHeight > 0 && !UndoReadFromDisk(block_undo, block_index)) {
-        return false;
-    }
-
-    filter = BlockFilter(filter_type, block, block_undo);
-    return true;
-}
+struct BuildChainTestingSetup : public TestChain100Setup {
+    CBlock CreateBlock(const CBlockIndex* prev, const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey);
+    bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script_pub_key, size_t length, std::vector<std::shared_ptr<CBlock>>& chain);
+};
 
 static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex* block_index,
                                uint256& last_header)
@@ -67,12 +57,12 @@ static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex
     return true;
 }
 
-static CBlock CreateBlock(const CBlockIndex* prev,
-                          const std::vector<CMutableTransaction>& txns,
-                          const CScript& scriptPubKey)
+CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
+    const std::vector<CMutableTransaction>& txns,
+    const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
     CBlock& block = pblocktemplate->block;
     block.hashPrevBlock = prev->GetBlockHash();
     block.nTime = prev->nTime + 1;
@@ -91,8 +81,10 @@ static CBlock CreateBlock(const CBlockIndex* prev,
     return block;
 }
 
-static bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script_pub_key,
-                       size_t length, std::vector<std::shared_ptr<CBlock>>& chain)
+bool BuildChainTestingSetup::BuildChain(const CBlockIndex* pindex,
+    const CScript& coinbase_script_pub_key,
+    size_t length,
+    std::vector<std::shared_ptr<CBlock>>& chain)
 {
     std::vector<CMutableTransaction> no_txns;
 
@@ -101,8 +93,8 @@ static bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script
         block = std::make_shared<CBlock>(CreateBlock(pindex, no_txns, coinbase_script_pub_key));
         CBlockHeader header = block->GetBlockHeader();
 
-        CValidationState state;
-        if (!ProcessNewBlockHeaders({header}, state, Params(), &pindex, nullptr)) {
+        BlockValidationState state;
+        if (!ProcessNewBlockHeaders({header}, state, Params(), &pindex)) {
             return false;
         }
     }
@@ -110,7 +102,7 @@ static bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script
     return true;
 }
 
-BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
+BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
 {
     BlockFilterIndex filter_index(BlockFilterType::BASIC, 1 << 20, true);
 
@@ -125,9 +117,9 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
         std::vector<BlockFilter> filters;
         std::vector<uint256> filter_hashes;
 
-        for (const CBlockIndex* block_index = chainActive.Genesis();
+        for (const CBlockIndex* block_index = ::ChainActive().Genesis();
              block_index != nullptr;
-             block_index = chainActive.Next(block_index)) {
+             block_index = ::ChainActive().Next(block_index)) {
             BOOST_CHECK(!filter_index.LookupFilter(block_index, filter));
             BOOST_CHECK(!filter_index.LookupFilterHeader(block_index, filter_header));
             BOOST_CHECK(!filter_index.LookupFilterRange(block_index->nHeight, block_index, filters));
@@ -153,9 +145,9 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     {
         LOCK(cs_main);
         const CBlockIndex* block_index;
-        for (block_index = chainActive.Genesis();
+        for (block_index = ::ChainActive().Genesis();
              block_index != nullptr;
-             block_index = chainActive.Next(block_index)) {
+             block_index = ::ChainActive().Next(block_index)) {
             CheckFilterLookups(filter_index, block_index, last_header);
         }
     }
@@ -164,19 +156,25 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     const CBlockIndex* tip;
     {
         LOCK(cs_main);
-        tip = chainActive.Tip();
+        tip = ::ChainActive().Tip();
     }
-    CScript coinbase_script_pub_key = GetScriptForDestination(coinbaseKey.GetPubKey().GetID());
+    CKey coinbase_key_A, coinbase_key_B;
+    coinbase_key_A.MakeNewKey(true);
+    coinbase_key_B.MakeNewKey(true);
+    CScript coinbase_script_pub_key_A = GetScriptForDestination(PKHash(coinbase_key_A.GetPubKey()));
+    CScript coinbase_script_pub_key_B = GetScriptForDestination(PKHash(coinbase_key_B.GetPubKey()));
     std::vector<std::shared_ptr<CBlock>> chainA, chainB;
-    BOOST_REQUIRE(BuildChain(tip, coinbase_script_pub_key, 10, chainA));
-    BOOST_REQUIRE(BuildChain(tip, coinbase_script_pub_key, 10, chainB));
+    BOOST_REQUIRE(BuildChain(tip, coinbase_script_pub_key_A, 10, chainA));
+    BOOST_REQUIRE(BuildChain(tip, coinbase_script_pub_key_B, 10, chainB));
 
     // Check that new blocks on chain A get indexed.
     uint256 chainA_last_header = last_header;
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
         BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
-
+    }
+    for (size_t i = 0; i < 2; i++) {
+        const auto& block = chainA[i];
         const CBlockIndex* block_index;
         {
             LOCK(cs_main);
@@ -192,7 +190,9 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
         BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
-
+    }
+    for (size_t i = 0; i < 3; i++) {
+        const auto& block = chainB[i];
         const CBlockIndex* block_index;
         {
             LOCK(cs_main);
@@ -220,7 +220,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     // Reorg back to chain A.
      for (size_t i = 2; i < 4; i++) {
          const auto& block = chainA[i];
-        BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
+         BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
      }
 
      // Check that chain A and B blocks can be retrieved.
@@ -250,7 +250,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
 
     {
         LOCK(cs_main);
-        tip = chainActive.Tip();
+        tip = ::ChainActive().Tip();
     }
     BOOST_CHECK(filter_index.LookupFilterRange(0, tip, filters));
     BOOST_CHECK(filter_index.LookupFilterHashRange(0, tip, filter_hashes));
@@ -267,8 +267,6 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
 
 BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)
 {
-    SetDataDir("tempdir");
-
     BlockFilterIndex* filter_index;
 
     filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);

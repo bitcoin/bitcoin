@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -204,9 +204,8 @@ void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
 void OverviewPage::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
-    if(model)
-    {
-        // Show warning if this is a prerelease version
+    if (model) {
+        // Show warning, for example if this is a prerelease version
         connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
     }

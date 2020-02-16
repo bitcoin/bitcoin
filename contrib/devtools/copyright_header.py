@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2018 The Bitcoin Core developers
+# Copyright (c) 2016-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,6 +19,8 @@ EXCLUDE = [
     'src/qt/bitcoinstrings.cpp',
     'src/chainparamsseeds.h',
     # other external copyrights:
+    'src/reverse_iterator.h',
+    'src/test/fuzz/FuzzedDataProvider.h',
     'src/tinyformat.h',
     'test/functional/test_framework/bignum.py',
     # python init:
@@ -32,9 +34,10 @@ EXCLUDE_DIRS = [
     "src/leveldb/",
     "src/secp256k1/",
     "src/univalue/",
+    "src/crc32c/",
 ]
 
-INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.py']
+INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.mm', '*.py', '*.sh', '*.bash-completion']
 INCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in INCLUDE]))
 
 def applies_to_file(filename):
@@ -71,7 +74,7 @@ def get_filenames_to_examine(base_directory):
 ################################################################################
 
 
-COPYRIGHT_WITH_C = 'Copyright \(c\)'
+COPYRIGHT_WITH_C = r'Copyright \(c\)'
 COPYRIGHT_WITHOUT_C = 'Copyright'
 ANY_COPYRIGHT_STYLE = '(%s|%s)' % (COPYRIGHT_WITH_C, COPYRIGHT_WITHOUT_C)
 
@@ -85,23 +88,21 @@ ANY_COPYRIGHT_STYLE_OR_YEAR_STYLE = ("%s %s" % (ANY_COPYRIGHT_STYLE,
 ANY_COPYRIGHT_COMPILED = re.compile(ANY_COPYRIGHT_STYLE_OR_YEAR_STYLE)
 
 def compile_copyright_regex(copyright_style, year_style, name):
-    return re.compile('%s %s,? %s' % (copyright_style, year_style, name))
+    return re.compile(r'%s %s,? %s( +\*)?\n' % (copyright_style, year_style, name))
 
 EXPECTED_HOLDER_NAMES = [
-    "Satoshi Nakamoto\n",
-    "The Bitcoin Core developers\n",
-    "Bitcoin Core Developers\n",
-    "BitPay Inc\.\n",
-    "University of Illinois at Urbana-Champaign\.\n",
-    "Pieter Wuille\n",
-    "Wladimir J. van der Laan\n",
-    "Jeff Garzik\n",
-    "Jan-Klaas Kollhof\n",
-    "Sam Rushing\n",
-    "ArtForz -- public domain half-a-node\n",
-    "Intel Corporation",
-    "The Zcash developers",
-    "Jeremy Rubin",
+    r"Satoshi Nakamoto",
+    r"The Bitcoin Core developers",
+    r"BitPay Inc\.",
+    r"University of Illinois at Urbana-Champaign\.",
+    r"Pieter Wuille",
+    r"Wladimir J\. van der Laan",
+    r"Jeff Garzik",
+    r"Jan-Klaas Kollhof",
+    r"ArtForz -- public domain half-a-node",
+    r"Intel Corporation ?",
+    r"The Zcash developers",
+    r"Jeremy Rubin",
 ]
 
 DOMINANT_STYLE_COMPILED = {}
@@ -331,7 +332,7 @@ def write_file_lines(filename, file_lines):
 # update header years execution
 ################################################################################
 
-COPYRIGHT = 'Copyright \(c\)'
+COPYRIGHT = r'Copyright \(c\)'
 YEAR = "20[0-9][0-9]"
 YEAR_RANGE = '(%s)(-%s)?' % (YEAR, YEAR)
 HOLDER = 'The Bitcoin Core developers'
@@ -457,14 +458,14 @@ CPP_HEADER = '''
 def get_cpp_header_lines_to_insert(start_year, end_year):
     return reversed(get_header_lines(CPP_HEADER, start_year, end_year))
 
-PYTHON_HEADER = '''
+SCRIPT_HEADER = '''
 # Copyright (c) %s The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 
-def get_python_header_lines_to_insert(start_year, end_year):
-    return reversed(get_header_lines(PYTHON_HEADER, start_year, end_year))
+def get_script_header_lines_to_insert(start_year, end_year):
+    return reversed(get_header_lines(SCRIPT_HEADER, start_year, end_year))
 
 ################################################################################
 # query git for year of last change
@@ -493,17 +494,18 @@ def file_has_hashbang(file_lines):
         return False
     return file_lines[0][:2] == '#!'
 
-def insert_python_header(filename, file_lines, start_year, end_year):
+def insert_script_header(filename, file_lines, start_year, end_year):
     if file_has_hashbang(file_lines):
         insert_idx = 1
     else:
         insert_idx = 0
-    header_lines = get_python_header_lines_to_insert(start_year, end_year)
+    header_lines = get_script_header_lines_to_insert(start_year, end_year)
     for line in header_lines:
         file_lines.insert(insert_idx, line)
     write_file_lines(filename, file_lines)
 
 def insert_cpp_header(filename, file_lines, start_year, end_year):
+    file_lines.insert(0, '\n')
     header_lines = get_cpp_header_lines_to_insert(start_year, end_year)
     for line in header_lines:
         file_lines.insert(0, line)
@@ -515,8 +517,8 @@ def exec_insert_header(filename, style):
         sys.exit('*** %s already has a copyright by The Bitcoin Core developers'
                  % (filename))
     start_year, end_year = get_git_change_year_range(filename)
-    if style == 'python':
-        insert_python_header(filename, file_lines, start_year, end_year)
+    if style in ['python', 'shell']:
+        insert_script_header(filename, file_lines, start_year, end_year)
     else:
         insert_cpp_header(filename, file_lines, start_year, end_year)
 
@@ -557,11 +559,13 @@ def insert_cmd(argv):
     if not os.path.isfile(filename):
         sys.exit("*** bad filename: %s" % filename)
     _, extension = os.path.splitext(filename)
-    if extension not in ['.h', '.cpp', '.cc', '.c', '.py']:
+    if extension not in ['.h', '.cpp', '.cc', '.c', '.py', '.sh']:
         sys.exit("*** cannot insert for file extension %s" % extension)
 
     if extension == '.py':
         style = 'python'
+    elif extension == '.sh':
+        style = 'shell'
     else:
         style = 'cpp'
     exec_insert_header(filename, style)

@@ -5,7 +5,7 @@
 #include <bench/bench.h>
 
 #include <chainparams.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -14,6 +14,9 @@
 #include <iostream>
 #include <numeric>
 #include <regex>
+
+const RegTestingSetup* g_testing_setup = nullptr;
+const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 void benchmark::ConsolePrinter::header()
 {
@@ -112,14 +115,18 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
     printer.header();
 
     for (const auto& p : benchmarks()) {
-        TestingSetup test{CBaseChainParams::REGTEST};
+        RegTestingSetup test{};
+        assert(g_testing_setup == nullptr);
+        g_testing_setup = &test;
         {
-            assert(::chainActive.Height() == 0);
-            const bool witness_enabled{IsWitnessEnabled(::chainActive.Tip(), Params().GetConsensus())};
+            LOCK(cs_main);
+            assert(::ChainActive().Height() == 0);
+            const bool witness_enabled{IsWitnessEnabled(::ChainActive().Tip(), Params().GetConsensus())};
             assert(witness_enabled);
         }
 
         if (!std::regex_match(p.first, baseMatch, reFilter)) {
+             g_testing_setup = nullptr;
             continue;
         }
 
@@ -132,6 +139,7 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
             p.second.func(state);
         }
         printer.result(state);
+        g_testing_setup = nullptr;
     }
 
     printer.footer();

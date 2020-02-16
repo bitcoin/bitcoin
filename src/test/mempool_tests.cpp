@@ -5,14 +5,16 @@
 #include <policy/policy.h>
 #include <txmempool.h>
 #include <util/system.h>
+#include <util/time.h>
 
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
-#include <list>
 #include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(mempool_tests, TestingSetup)
+
+static constexpr auto REMOVAL_REASON_DUMMY = MemPoolRemovalReason::REPLACED;
 
 BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 {
@@ -59,13 +61,13 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 
     // Nothing in pool, remove should do nothing:
     unsigned int poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txParent));
+    testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
     BOOST_CHECK_EQUAL(testPool.size(), poolSize);
 
     // Just the parent:
     testPool.addUnchecked(entry.FromTx(txParent));
     poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txParent));
+    testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 1);
 
     // Parent, children, grandchildren:
@@ -77,18 +79,18 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     }
     // Remove Child[0], GrandChild[0] should be removed:
     poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txChild[0]));
+    testPool.removeRecursive(CTransaction(txChild[0]), REMOVAL_REASON_DUMMY);
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 2);
     // ... make sure grandchild and child are gone:
     poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txGrandChild[0]));
+    testPool.removeRecursive(CTransaction(txGrandChild[0]), REMOVAL_REASON_DUMMY);
     BOOST_CHECK_EQUAL(testPool.size(), poolSize);
     poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txChild[0]));
+    testPool.removeRecursive(CTransaction(txChild[0]), REMOVAL_REASON_DUMMY);
     BOOST_CHECK_EQUAL(testPool.size(), poolSize);
     // Remove parent, all children/grandchildren should go:
     poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txParent));
+    testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 5);
     BOOST_CHECK_EQUAL(testPool.size(), 0U);
 
@@ -101,7 +103,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     // Now remove the parent, as might happen if a block-re-org occurs but the parent cannot be
     // put into the mempool (maybe because it is non-standard):
     poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txParent));
+    testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 6);
     BOOST_CHECK_EQUAL(testPool.size(), 0U);
 }
@@ -283,11 +285,11 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     BOOST_CHECK_EQUAL(pool.size(), 10U);
 
     // Now try removing tx10 and verify the sort order returns to normal
-    pool.removeRecursive(pool.mapTx.find(tx10.GetHash())->GetTx());
+    pool.removeRecursive(pool.mapTx.find(tx10.GetHash())->GetTx(), REMOVAL_REASON_DUMMY);
     CheckSort<descendant_score>(pool, snapshotOrder);
 
-    pool.removeRecursive(pool.mapTx.find(tx9.GetHash())->GetTx());
-    pool.removeRecursive(pool.mapTx.find(tx8.GetHash())->GetTx());
+    pool.removeRecursive(pool.mapTx.find(tx9.GetHash())->GetTx(), REMOVAL_REASON_DUMMY);
+    pool.removeRecursive(pool.mapTx.find(tx8.GetHash())->GetTx(), REMOVAL_REASON_DUMMY);
 }
 
 BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
@@ -747,6 +749,43 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
     pool.GetTransactionAncestry(ty6->GetHash(), ancestors, descendants);
     BOOST_CHECK_EQUAL(ancestors, 9ULL);
     BOOST_CHECK_EQUAL(descendants, 6ULL);
+
+    /* Ancestors represented more than once ("diamond") */
+    //
+    // [ta].0 <- [tb].0 -----<------- [td].0
+    //            |                    |
+    //            \---1 <- [tc].0 --<--/
+    //
+    CTransactionRef ta, tb, tc, td;
+    ta = make_tx(/* output_values */ {10 * COIN});
+    tb = make_tx(/* output_values */ {5 * COIN, 3 * COIN}, /* inputs */  {ta});
+    tc = make_tx(/* output_values */ {2 * COIN}, /* inputs */ {tb}, /* input_indices */ {1});
+    td = make_tx(/* output_values */ {6 * COIN}, /* inputs */ {tb, tc}, /* input_indices */ {0, 0});
+    pool.clear();
+    pool.addUnchecked(entry.Fee(10000LL).FromTx(ta));
+    pool.addUnchecked(entry.Fee(10000LL).FromTx(tb));
+    pool.addUnchecked(entry.Fee(10000LL).FromTx(tc));
+    pool.addUnchecked(entry.Fee(10000LL).FromTx(td));
+
+    // Ancestors / descendants should be:
+    // transaction  ancestors           descendants
+    // ============ =================== ===========
+    // ta           1 (ta               4 (ta,tb,tc,td)
+    // tb           2 (ta,tb)           4 (ta,tb,tc,td)
+    // tc           3 (ta,tb,tc)        4 (ta,tb,tc,td)
+    // td           4 (ta,tb,tc,td)     4 (ta,tb,tc,td)
+    pool.GetTransactionAncestry(ta->GetHash(), ancestors, descendants);
+    BOOST_CHECK_EQUAL(ancestors, 1ULL);
+    BOOST_CHECK_EQUAL(descendants, 4ULL);
+    pool.GetTransactionAncestry(tb->GetHash(), ancestors, descendants);
+    BOOST_CHECK_EQUAL(ancestors, 2ULL);
+    BOOST_CHECK_EQUAL(descendants, 4ULL);
+    pool.GetTransactionAncestry(tc->GetHash(), ancestors, descendants);
+    BOOST_CHECK_EQUAL(ancestors, 3ULL);
+    BOOST_CHECK_EQUAL(descendants, 4ULL);
+    pool.GetTransactionAncestry(td->GetHash(), ancestors, descendants);
+    BOOST_CHECK_EQUAL(ancestors, 4ULL);
+    BOOST_CHECK_EQUAL(descendants, 4ULL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

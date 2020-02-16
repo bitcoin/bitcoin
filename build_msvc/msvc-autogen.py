@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
+# Copyright (c) 2016-2019 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import os
 import re
+import argparse
+from shutil import copyfile
 
 SOURCE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
+DEFAULT_PLATFORM_TOOLSET = R'v141'
 
 libs = [
     'libbitcoin_cli',
@@ -14,6 +20,8 @@ libs = [
     'libbitcoin_wallet_tool',
     'libbitcoin_wallet',
     'libbitcoin_zmq',
+    'bench_bitcoin',
+    'libtest_util',
 ]
 
 ignore_list = [
@@ -42,8 +50,21 @@ def parse_makefile(makefile):
                     lib_sources[current_lib] = []
                     break
 
+def set_common_properties(toolset):
+    with open(os.path.join(SOURCE_DIR, '../build_msvc/common.init.vcxproj'), 'r', encoding='utf-8') as rfile:
+        s = rfile.read()
+        s = re.sub('<PlatformToolset>.*?</PlatformToolset>', '<PlatformToolset>'+toolset+'</PlatformToolset>', s)
+    with open(os.path.join(SOURCE_DIR, '../build_msvc/common.init.vcxproj'), 'w', encoding='utf-8',newline='\n') as wfile:
+        wfile.write(s)
 
 def main():
+    parser = argparse.ArgumentParser(description='Bitcoin-core msbuild configuration initialiser.')
+    parser.add_argument('-toolset', nargs='?',help='Optionally sets the msbuild platform toolset, e.g. v142 for Visual Studio 2019.'
+         ' default is %s.'%DEFAULT_PLATFORM_TOOLSET)
+    args = parser.parse_args()
+    if args.toolset:
+        set_common_properties(args.toolset)
+
     for makefile_name in os.listdir(SOURCE_DIR):
         if 'Makefile' in makefile_name:
             parse_makefile(os.path.join(SOURCE_DIR, makefile_name))
@@ -58,7 +79,8 @@ def main():
             with open(vcxproj_filename, 'w', encoding='utf-8') as vcxproj_file:
                 vcxproj_file.write(vcxproj_in_file.read().replace(
                     '@SOURCE_FILES@\n', content))
-
+    copyfile(os.path.join(SOURCE_DIR,'../build_msvc/bitcoin_config.h'), os.path.join(SOURCE_DIR, 'config/bitcoin-config.h'))
+    copyfile(os.path.join(SOURCE_DIR,'../build_msvc/libsecp256k1_config.h'), os.path.join(SOURCE_DIR, 'secp256k1/src/libsecp256k1-config.h'))
 
 if __name__ == '__main__':
     main()

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,9 +7,7 @@
 #include <qt/receivecoinsdialog.h>
 #include <qt/forms/ui_receivecoinsdialog.h>
 
-#include <qt/addressbookpage.h>
 #include <qt/addresstablemodel.h>
-#include <qt/bitcoinunits.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/receiverequestdialog.h>
@@ -95,9 +93,9 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH, this);
 
         if (model->wallet().getDefaultAddressType() == OutputType::BECH32) {
-            ui->useLegacyAddress->setCheckState(Qt::Unchecked);
+            ui->useBech32->setCheckState(Qt::Checked);
         } else {
-            ui->useLegacyAddress->setCheckState(Qt::Checked);
+            ui->useBech32->setCheckState(Qt::Unchecked);
         }
 
         // Set the button to be enabled or disabled based on whether the wallet can give out new addresses.
@@ -150,7 +148,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     QString label = ui->reqLabel->text();
     /* Generate new receiving address */
     OutputType address_type;
-    if (!ui->useLegacyAddress->isChecked()) {
+    if (ui->useBech32->isChecked()) {
         address_type = OutputType::BECH32;
     } else {
         address_type = model->wallet().getDefaultAddressType();
@@ -256,7 +254,7 @@ void ReceiveCoinsDialog::copyColumnToClipboard(int column)
     if (!firstIndex.isValid()) {
         return;
     }
-    GUIUtil::setClipboard(model->getRecentRequestsTableModel()->data(firstIndex.child(firstIndex.row(), column), Qt::EditRole).toString());
+    GUIUtil::setClipboard(model->getRecentRequestsTableModel()->index(firstIndex.row(), column).data(Qt::EditRole).toString());
 }
 
 // context menu

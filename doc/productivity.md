@@ -10,6 +10,7 @@ Table of Contents
    * [Make use of your threads with `make -j`](#make-use-of-your-threads-with-make--j)
    * [Only build what you need](#only-build-what-you-need)
    * [Multiple working directories with `git worktrees`](#multiple-working-directories-with-git-worktrees)
+   * [Interactive "dummy rebases" for fixups and execs with `git merge-base`](#interactive-dummy-rebases-for-fixups-and-execs-with-git-merge-base)
 * [Writing code](#writing-code)
    * [Format C/C++/Protobuf diffs with `clang-format-diff.py`](#format-ccprotobuf-diffs-with-clang-format-diffpy)
    * [Format Python diffs with `yapf-diff.py`](#format-python-diffs-with-yapf-diffpy)
@@ -91,6 +92,21 @@ git worktree add -b my-shiny-new-branch ../living-at-my-new-working-directory ba
 To simply check out a commit-ish under a new working directory without disrupting your current working directory (useful for reviewing pull requests):
 ```sh
 git worktree add --checkout ../where-my-checkout-commit-ish-will-live my-checkout-commit-ish
+```
+
+### Interactive "dummy rebases" for fixups and execs with `git merge-base`
+
+When rebasing, we often want to do a "dummy rebase," whereby we are not rebasing over an updated master but rather over the last common commit with master. This might be useful for rearranging commits, `rebase --autosquash`ing, or `rebase --exec`ing without introducing conflicts that arise from an updated master. In these situations, we can use `git merge-base` to identify the last common commit with master, and rebase off of that.
+
+To squash in `git commit --fixup` commits without rebasing over an updated master, we can do the following:
+
+```sh
+git rebase -i --autosquash "$(git merge-base master HEAD)"
+```
+
+To execute `make check` on every commit since last diverged from master, but without rebasing over an updated master, we can do the following:
+```sh
+git rebase -i --exec "make check" "$(git merge-base master HEAD)"
 ```
 
 -----

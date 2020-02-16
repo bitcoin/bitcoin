@@ -1,15 +1,13 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/transactionrecord.h>
 
 #include <chain.h>
-#include <consensus/consensus.h>
 #include <interfaces/wallet.h>
 #include <key_io.h>
-#include <timedata.h>
-#include <validation.h>
+#include <wallet/ismine.h>
 
 #include <stdint.h>
 
@@ -95,10 +93,14 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
         if (fAllFromMe && fAllToMe)
         {
             // Payment to self
-            CAmount nChange = wtx.change;
+            std::string address;
+            for (auto it = wtx.txout_address.begin(); it != wtx.txout_address.end(); ++it) {
+                if (it != wtx.txout_address.begin()) address += ", ";
+                address += EncodeDestination(*it);
+            }
 
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
-                            -(nDebit - nChange), nCredit - nChange));
+            CAmount nChange = wtx.change;
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, address, -(nDebit - nChange), nCredit - nChange));
             parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }
         else if (fAllFromMe)

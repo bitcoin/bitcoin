@@ -6,25 +6,31 @@
 #define BITCOIN_RPC_UTIL_H
 
 #include <node/transaction.h>
+#include <outputtype.h>
+#include <protocol.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
+#include <rpc/request.h>
+#include <script/script.h>
+#include <script/sign.h>
 #include <script/standard.h>
 #include <univalue.h>
+#include <util/check.h>
 
 #include <string>
 #include <vector>
 
 #include <boost/variant.hpp>
 
-class CKeyStore;
+/**
+ * String used to describe UNIX epoch time in documentation, factored out to a
+ * constant for consistency.
+ */
+extern const std::string UNIX_EPOCH_TIME;
+
+class FillableSigningProvider;
 class CPubKey;
 class CScript;
-struct InitInterfaces;
-
-//! Pointers to interfaces that need to be accessible from RPC methods. Due to
-//! limitations of the RPC framework, there's currently no direct way to pass in
-//! state to RPC method implementations.
-extern InitInterfaces* g_rpc_interfaces;
 
 /** Wrapper for UniValue::VType, which includes typeAny:
  * Used to denote don't care type. */
@@ -69,8 +75,8 @@ extern std::string HelpExampleCli(const std::string& methodname, const std::stri
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
 
 CPubKey HexToPubKey(const std::string& hex_in);
-CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in);
-CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey>& pubkeys);
+CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string& addr_in);
+CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, FillableSigningProvider& keystore, CScript& script_out);
 
 UniValue DescribeAddress(const CTxDestination& dest);
 
@@ -81,7 +87,13 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr);
 UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string = "");
 
 //! Parse a JSON range specified as int64, or [int64, int64]
-std::pair<int64_t, int64_t> ParseRange(const UniValue& value);
+std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
+
+/** Evaluate a descriptor given as a string, or as a {"desc":...,"range":...} object, with default range of 1000. */
+std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider);
+
+/** Returns, given services flags, a list of humanly readable (known) network services */
+UniValue GetServicesNames(ServiceFlags services);
 
 struct RPCArg {
     enum class Type {
@@ -135,7 +147,7 @@ struct RPCArg {
           m_oneline_description{oneline_description},
           m_type_str{type_str}
     {
-        assert(type != Type::ARR && type != Type::OBJ);
+        CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ);
     }
 
     RPCArg(
@@ -154,7 +166,7 @@ struct RPCArg {
           m_oneline_description{oneline_description},
           m_type_str{type_str}
     {
-        assert(type == Type::ARR || type == Type::OBJ);
+        CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ);
     }
 
     bool IsOptional() const;
@@ -183,14 +195,14 @@ struct RPCResult {
     explicit RPCResult(std::string result)
         : m_cond{}, m_result{std::move(result)}
     {
-        assert(!m_result.empty());
+        CHECK_NONFATAL(!m_result.empty());
     }
 
     RPCResult(std::string cond, std::string result)
         : m_cond{std::move(cond)}, m_result{std::move(result)}
     {
-        assert(!m_cond.empty());
-        assert(!m_result.empty());
+        CHECK_NONFATAL(!m_cond.empty());
+        CHECK_NONFATAL(!m_result.empty());
     }
 };
 
@@ -220,7 +232,7 @@ struct RPCResults {
 
 struct RPCExamples {
     const std::string m_examples;
-    RPCExamples(
+    explicit RPCExamples(
         std::string examples)
         : m_examples(std::move(examples))
     {
@@ -236,6 +248,15 @@ public:
     std::string ToString() const;
     /** If the supplied number of args is neither too small nor too high */
     bool IsValidNumArgs(size_t num_args) const;
+    /**
+     * Check if the given request is valid according to this command or if
+     * the user is asking for help information, and throw help when appropriate.
+     */
+    inline void Check(const JSONRPCRequest& request) const {
+        if (request.fHelp || !IsValidNumArgs(request.params.size())) {
+            throw std::runtime_error(ToString());
+        }
+    }
 
 private:
     const std::string m_name;

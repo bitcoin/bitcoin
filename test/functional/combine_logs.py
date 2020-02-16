@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Combine logs from multiple bitcoin nodes as well as the test_framework log.
 
 This streams the combined log output to stdout. Use combine_logs.py > outputfile
@@ -76,9 +79,18 @@ def read_logs(tmp_dir):
     Delegates to generator function get_log_events() to provide individual log events
     for each of the input log files."""
 
+    # Find out what the folder is called that holds the debug.log file
+    glob = pathlib.Path(tmp_dir).glob('node0/**/debug.log')
+    path = next(glob, None)
+    if path:
+        assert next(glob, None) is None #  more than one debug.log, should never happen
+        chain = re.search(r'node0/(.+?)/debug\.log$', path.as_posix()).group(1)  # extract the chain name
+    else:
+        chain = 'regtest'  # fallback to regtest (should only happen when none exists)
+
     files = [("test", "%s/test_framework.log" % tmp_dir)]
     for i in itertools.count():
-        logfile = "{}/node{}/regtest/debug.log".format(tmp_dir, i)
+        logfile = "{}/node{}/{}/debug.log".format(tmp_dir, i, chain)
         if not os.path.isfile(logfile):
             break
         files.append(("node%d" % i, logfile))
@@ -164,25 +176,26 @@ def get_log_events(source, logfile):
 
 
 def print_logs_plain(log_events, colors):
-        """Renders the iterator of log events into text."""
-        for event in log_events:
-            lines = event.event.splitlines()
-            print("{0} {1: <5} {2} {3}".format(colors[event.source.rstrip()], event.source, lines[0], colors["reset"]))
-            if len(lines) > 1:
-                for line in lines[1:]:
-                    print("{0}{1}{2}".format(colors[event.source.rstrip()], line, colors["reset"]))
+    """Renders the iterator of log events into text."""
+    for event in log_events:
+        lines = event.event.splitlines()
+        print("{0} {1: <5} {2} {3}".format(colors[event.source.rstrip()], event.source, lines[0], colors["reset"]))
+        if len(lines) > 1:
+            for line in lines[1:]:
+                print("{0}{1}{2}".format(colors[event.source.rstrip()], line, colors["reset"]))
 
 
 def print_logs_html(log_events):
-        """Renders the iterator of log events into html."""
-        try:
-            import jinja2
-        except ImportError:
-            print("jinja2 not found. Try `pip install jinja2`")
-            sys.exit(1)
-        print(jinja2.Environment(loader=jinja2.FileSystemLoader('./'))
+    """Renders the iterator of log events into html."""
+    try:
+        import jinja2
+    except ImportError:
+        print("jinja2 not found. Try `pip install jinja2`")
+        sys.exit(1)
+    print(jinja2.Environment(loader=jinja2.FileSystemLoader('./'))
                     .get_template('combined_log_template.html')
                     .render(title="Combined Logs from testcase", log_events=[event._asdict() for event in log_events]))
+
 
 if __name__ == '__main__':
     main()

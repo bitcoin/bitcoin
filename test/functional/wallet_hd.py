@@ -10,7 +10,7 @@ import shutil
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    connect_nodes_bi,
+    connect_nodes,
     assert_raises_rpc_error
 )
 
@@ -20,6 +20,7 @@ class WalletHDTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [[], ['-keypool=0']]
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -67,11 +68,11 @@ class WalletHDTest(BitcoinTestFramework):
 
         self.log.info("Restore backup ...")
         self.stop_node(1)
-        # we need to delete the complete regtest directory
+        # we need to delete the complete chain directory
         # otherwise node1 would auto-recover all funds in flag the keypool keys as used
-        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "blocks"))
-        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "chainstate"))
-        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, "regtest", "wallets", "wallet.dat"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "blocks"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "chainstate"))
+        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, self.chain, "wallets", "wallet.dat"))
         self.start_node(1)
 
         # Assert that derivation is deterministic
@@ -82,7 +83,7 @@ class WalletHDTest(BitcoinTestFramework):
             assert_equal(hd_info_2["hdkeypath"], "m/0'/0'/"+str(i)+"'")
             assert_equal(hd_info_2["hdseedid"], masterkeyid)
         assert_equal(hd_add, hd_add_2)
-        connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes(self.nodes[0], 1)
         self.sync_all()
 
         # Needs rescan
@@ -92,11 +93,11 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Try a RPC based rescan
         self.stop_node(1)
-        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "blocks"))
-        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "chainstate"))
-        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, "regtest", "wallets", "wallet.dat"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "blocks"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "chainstate"))
+        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, self.chain, "wallets", "wallet.dat"))
         self.start_node(1, extra_args=self.extra_args[1])
-        connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes(self.nodes[0], 1)
         self.sync_all()
         # Wallet automatically scans blocks older than key on startup
         assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)

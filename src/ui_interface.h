@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,6 @@
 
 #include <functional>
 #include <memory>
-#include <stdint.h>
 #include <string>
 
 class CBlockIndex;
@@ -17,10 +16,6 @@ namespace signals2 {
 class connection;
 }
 } // namespace boost
-
-namespace interfaces {
-class Wallet;
-} // namespace interfaces
 
 /** General change type (added, updated, removed). */
 enum ChangeType
@@ -69,6 +64,9 @@ public:
         /** Force blocking, modal message box dialog (not just OS notification) */
         MODAL               = 0x10000000U,
 
+        /** Do not prepend error/warning prefix */
+        MSG_NOPREFIX        = 0x20000000U,
+
         /** Do not print contents of message to debug log */
         SECURE              = 0x40000000U,
 
@@ -102,9 +100,6 @@ public:
      * Status bar alerts changed.
      */
     ADD_SIGNALS_DECL_WRAPPER(NotifyAlertChanged, void, );
-
-    /** A wallet has been loaded. */
-    ADD_SIGNALS_DECL_WRAPPER(LoadWallet, void, std::unique_ptr<interfaces::Wallet>& wallet);
 
     /**
      * Show progress e.g. for verifychain.

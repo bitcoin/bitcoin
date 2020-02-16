@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2018 The Bitcoin Core developers
+# Copyright (c) 2016-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Wallet encryption"""
@@ -49,7 +49,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
         assert_equal(privkey, self.nodes[0].dumpprivkey(address))
 
         # Check that the timeout is right
-        time.sleep(2)
+        time.sleep(3)
         assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].dumpprivkey, address)
 
         # Test wrong passphrase

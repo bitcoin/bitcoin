@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -257,6 +257,19 @@ namespace GUIUtil
 
     // Fix known bugs in QProgressDialog class.
     void PolishProgressDialog(QProgressDialog* dialog);
+
+    /**
+     * Returns the distance in pixels appropriate for drawing a subsequent character after text.
+     *
+     * In Qt 5.12 and before the QFontMetrics::width() is used and it is deprecated since Qt 13.0.
+     * In Qt 5.11 the QFontMetrics::horizontalAdvance() was introduced.
+     */
+    int TextWidth(const QFontMetrics& fm, const QString& text);
+
+    /**
+     * Writes to debug.log short info about the used Qt and the host system.
+     */
+    void LogQtInfo();
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

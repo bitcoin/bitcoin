@@ -15,7 +15,6 @@ class CreateWalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1
-        self.supports_cli = True
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -92,9 +91,44 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getnewaddress)
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getrawchangeaddress)
         # Encrypt the wallet
-        w5.encryptwallet('pass')
+        assert_raises_rpc_error(-16, "Error: wallet does not contain private keys, nothing to encrypt.", w5.encryptwallet, 'pass')
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getnewaddress)
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getrawchangeaddress)
+
+        self.log.info('New blank and encrypted wallets can be created')
+        self.nodes[0].createwallet(wallet_name='wblank', disable_private_keys=False, blank=True, passphrase='thisisapassphrase')
+        wblank = node.get_wallet_rpc('wblank')
+        assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", wblank.signmessage, "needanargument", "test")
+        wblank.walletpassphrase('thisisapassphrase', 10)
+        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", wblank.getnewaddress)
+        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", wblank.getrawchangeaddress)
+
+        self.log.info('Test creating a new encrypted wallet.')
+        # Born encrypted wallet is created (has keys)
+        self.nodes[0].createwallet(wallet_name='w6', disable_private_keys=False, blank=False, passphrase='thisisapassphrase')
+        w6 = node.get_wallet_rpc('w6')
+        assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", w6.signmessage, "needanargument", "test")
+        w6.walletpassphrase('thisisapassphrase', 10)
+        w6.signmessage(w6.getnewaddress('', 'legacy'), "test")
+        w6.keypoolrefill(1)
+        # There should only be 1 key
+        walletinfo = w6.getwalletinfo()
+        assert_equal(walletinfo['keypoolsize'], 1)
+        assert_equal(walletinfo['keypoolsize_hd_internal'], 1)
+        # Allow empty passphrase, but there should be a warning
+        resp = self.nodes[0].createwallet(wallet_name='w7', disable_private_keys=False, blank=False, passphrase='')
+        assert_equal(resp['warning'], 'Empty string given as passphrase, wallet will not be encrypted.')
+        w7 = node.get_wallet_rpc('w7')
+        assert_raises_rpc_error(-15, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w7.walletpassphrase, '', 10)
+
+        self.log.info('Test making a wallet with avoid reuse flag')
+        self.nodes[0].createwallet('w8', False, False, '', True) # Use positional arguments to check for bug where avoid_reuse could not be set for wallets without needing them to be encrypted
+        w8 = node.get_wallet_rpc('w8')
+        assert_raises_rpc_error(-15, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w7.walletpassphrase, '', 10)
+        assert_equal(w8.getwalletinfo()["avoid_reuse"], True)
+
+        self.log.info('Using a passphrase with private keys disabled returns error')
+        assert_raises_rpc_error(-4, 'Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.', self.nodes[0].createwallet, wallet_name='w9', disable_private_keys=True, passphrase='thisisapassphrase')
 
 if __name__ == '__main__':
     CreateWalletTest().main()

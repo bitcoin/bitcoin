@@ -186,12 +186,15 @@ class ExampleTest(BitcoinTestFramework):
         self.log.info("Connect node2 and node1")
         connect_nodes(self.nodes[1], 2)
 
+        self.log.info("Wait for node2 to receive all the blocks from node1")
+        self.sync_all()
+
         self.log.info("Add P2P connection to node2")
         self.nodes[0].disconnect_p2ps()
 
         self.nodes[2].add_p2p_connection(BaseNode())
 
-        self.log.info("Wait for node2 reach current tip. Test that it has propagated all the blocks to us")
+        self.log.info("Test that node2 propagates all the blocks to us")
 
         getdata_request = msg_getdata()
         for block in blocks:

@@ -3,22 +3,18 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blockencodings.h>
-#include <consensus/merkle.h>
 #include <chainparams.h>
+#include <consensus/merkle.h>
 #include <pow.h>
-#include <random.h>
+#include <streams.h>
 
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
 std::vector<std::pair<uint256, CTransactionRef>> extra_txn;
 
-struct RegtestingSetup : public TestingSetup {
-    RegtestingSetup() : TestingSetup(CBaseChainParams::REGTEST) {}
-};
-
-BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegtestingSetup)
+BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegTestingSetup)
 
 static CBlock BuildBlockTestCase() {
     CBlock block;
@@ -85,7 +81,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
         BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2]->GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
 
         size_t poolSize = pool.size();
-        pool.removeRecursive(*block.vtx[2]);
+        pool.removeRecursive(*block.vtx[2], MemPoolRemovalReason::REPLACED);
         BOOST_CHECK_EQUAL(pool.size(), poolSize - 1);
 
         CBlock block2;

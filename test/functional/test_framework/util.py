@@ -7,23 +7,30 @@
 from base64 import b64encode
 from binascii import unhexlify
 from decimal import Decimal, ROUND_DOWN
-import hashlib
+from subprocess import CalledProcessError
 import inspect
 import json
 import logging
 import os
 import random
 import re
-from subprocess import CalledProcessError
 import time
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
+from io import BytesIO
 
 logger = logging.getLogger("TestFramework.utils")
 
 # Assert functions
 ##################
+
+def assert_approx(v, vexp, vspan=0.00001):
+    """Assert that `v` is within `vspan` of `vexp`"""
+    if v < vexp - vspan:
+        raise AssertionError("%s < [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
+    if v > vexp + vspan:
+        raise AssertionError("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
 
 def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
@@ -56,7 +63,9 @@ def assert_raises_message(exc, message, fun, *args, **kwds):
         raise AssertionError("Use assert_raises_rpc_error() to test RPC failures")
     except exc as e:
         if message is not None and message not in e.error['message']:
-            raise AssertionError("Expected substring not found:" + e.error['message'])
+            raise AssertionError(
+                "Expected substring not found in error message:\nsubstring: '{}'\nerror message: '{}'.".format(
+                    message, e.error['message']))
     except Exception as e:
         raise AssertionError("Unexpected exception raised: " + type(e).__name__)
     else:
@@ -116,7 +125,9 @@ def try_rpc(code, message, fun, *args, **kwds):
         if (code is not None) and (code != e.error["code"]):
             raise AssertionError("Unexpected JSONRPC error code %i" % e.error["code"])
         if (message is not None) and (message not in e.error['message']):
-            raise AssertionError("Expected substring not found:" + e.error['message'])
+            raise AssertionError(
+                "Expected substring not found in error message:\nsubstring: '{}'\nerror message: '{}'.".format(
+                    message, e.error['message']))
         return True
     except Exception as e:
         raise AssertionError("Unexpected exception raised: " + type(e).__name__)
@@ -179,15 +190,14 @@ def check_json_precision():
     if satoshis != 2000000000000003:
         raise RuntimeError("JSON encode/decode loses precision")
 
+def EncodeDecimal(o):
+    if isinstance(o, Decimal):
+        return str(o)
+    raise TypeError(repr(o) + " is not JSON serializable")
+
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
-def hash256(byte_str):
-    sha256 = hashlib.sha256()
-    sha256.update(byte_str)
-    sha256d = hashlib.sha256()
-    sha256d.update(sha256.digest())
-    return sha256d.digest()[::-1]
 
 def hex_str_to_bytes(hex_str):
     return unhexlify(hex_str.encode('ascii'))
@@ -216,7 +226,7 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=N
         time.sleep(0.05)
 
     # Print the cause of the timeout
-    predicate_source = inspect.getsourcelines(predicate)
+    predicate_source = "''''\n" + inspect.getsource(predicate) + "'''"
     logger.error("wait_until() failed. Predicate: {}".format(predicate_source))
     if attempt >= attempts:
         raise AssertionError("Predicate {} not true after {} attempts".format(predicate_source, attempts))
@@ -228,17 +238,18 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=N
 ############################################
 
 # The maximum number of nodes a single test can spawn
-MAX_NODES = 8
+MAX_NODES = 12
 # Don't assign rpc or p2p ports lower than this
-PORT_MIN = 11000
+PORT_MIN = int(os.getenv('TEST_RUNNER_PORT_MIN', default=11000))
 # The number of ports to "reserve" for p2p and rpc, each
 PORT_RANGE = 5000
+
 
 class PortSeed:
     # Must be initialized with a unique integer for each process
     n = None
 
-def get_rpc_proxy(url, node_number, timeout=None, coveragedir=None):
+def get_rpc_proxy(url, node_number, *, timeout=None, coveragedir=None):
     """
     Args:
         url (str): URL of the RPC server to call
@@ -246,6 +257,7 @@ def get_rpc_proxy(url, node_number, timeout=None, coveragedir=None):
 
     Kwargs:
         timeout (int): HTTP timeout in seconds
+        coveragedir (str): Directory
 
     Returns:
         AuthServiceProxy. convenience object for making RPC calls.
@@ -270,8 +282,8 @@ def p2p_port(n):
 def rpc_port(n):
     return PORT_MIN + PORT_RANGE + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
 
-def rpc_url(datadir, i, rpchost=None):
-    rpc_u, rpc_p = get_auth_cookie(datadir)
+def rpc_url(datadir, i, chain, rpchost):
+    rpc_u, rpc_p = get_auth_cookie(datadir, chain)
     host = '127.0.0.1'
     port = rpc_port(i)
     if rpchost:
@@ -285,20 +297,31 @@ def rpc_url(datadir, i, rpchost=None):
 # Node functions
 ################
 
-def initialize_datadir(dirname, n):
+def initialize_datadir(dirname, n, chain):
     datadir = get_datadir_path(dirname, n)
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
+    # Translate chain name to config name
+    if chain == 'testnet3':
+        chain_name_conf_arg = 'testnet'
+        chain_name_conf_section = 'test'
+    else:
+        chain_name_conf_arg = chain
+        chain_name_conf_section = chain
     with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
-        f.write("regtest=1\n")
-        f.write("[regtest]\n")
+        f.write("{}=1\n".format(chain_name_conf_arg))
+        f.write("[{}]\n".format(chain_name_conf_section))
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
+        f.write("fallbackfee=0.0002\n")
         f.write("server=1\n")
         f.write("keypool=1\n")
         f.write("discover=0\n")
+        f.write("dnsseed=0\n")
         f.write("listenonion=0\n")
         f.write("printtoconsole=0\n")
+        f.write("upnp=0\n")
+        f.write("shrinkdebugfile=0\n")
         os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
         os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     return datadir
@@ -311,7 +334,7 @@ def append_config(datadir, options):
         for option in options:
             f.write(option + "\n")
 
-def get_auth_cookie(datadir):
+def get_auth_cookie(datadir, chain):
     user = None
     password = None
     if os.path.isfile(os.path.join(datadir, "bitcoin.conf")):
@@ -324,7 +347,7 @@ def get_auth_cookie(datadir):
                     assert password is None  # Ensure that there is only one rpcpassword line
                     password = line.split("=")[1].strip("\n")
     try:
-        with open(os.path.join(datadir, "regtest", ".cookie"), 'r', encoding="ascii") as f:
+        with open(os.path.join(datadir, chain, ".cookie"), 'r', encoding="ascii") as f:
             userpass = f.read()
             split_userpass = userpass.split(':')
             user = split_userpass[0]
@@ -336,14 +359,14 @@ def get_auth_cookie(datadir):
     return user, password
 
 # If a cookie file exists in the given datadir, delete it.
-def delete_cookie_file(datadir):
-    if os.path.isfile(os.path.join(datadir, "regtest", ".cookie")):
+def delete_cookie_file(datadir, chain):
+    if os.path.isfile(os.path.join(datadir, chain, ".cookie")):
         logger.debug("Deleting leftover cookie file")
-        os.remove(os.path.join(datadir, "regtest", ".cookie"))
+        os.remove(os.path.join(datadir, chain, ".cookie"))
 
-def get_bip9_status(node, key):
-    info = node.getblockchaininfo()
-    return info['bip9_softforks'][key]
+def softfork_active(node, key):
+    """Return whether a softfork is active."""
+    return node.getblockchaininfo()['softforks'][key]['active']
 
 def set_node_times(nodes, t):
     for node in nodes:
@@ -369,10 +392,6 @@ def connect_nodes(from_connection, node_num):
     # poll until version handshake complete to avoid race conditions
     # with transaction relaying
     wait_until(lambda:  all(peer['version'] != 0 for peer in from_connection.getpeerinfo()))
-
-def connect_nodes_bi(nodes, a, b):
-    connect_nodes(nodes[a], b)
-    connect_nodes(nodes[b], a)
 
 def sync_blocks(rpc_connections, *, wait=1, timeout=60):
     """
@@ -515,14 +534,13 @@ def gen_return_txouts():
     for i in range(512):
         script_pubkey = script_pubkey + "01"
     # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
-    txouts = "81"
+    txouts = []
+    from .messages import CTxOut
+    txout = CTxOut()
+    txout.nValue = 0
+    txout.scriptPubKey = hex_str_to_bytes(script_pubkey)
     for k in range(128):
-        # add txout value
-        txouts = txouts + "0000000000000000"
-        # add length of script_pubkey
-        txouts = txouts + "fd0402"
-        # add script_pubkey
-        txouts = txouts + script_pubkey
+        txouts.append(txout)
     return txouts
 
 # Create a spend of each passed-in utxo, splicing in "txouts" to each raw
@@ -530,6 +548,7 @@ def gen_return_txouts():
 def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
     addr = node.getnewaddress()
     txids = []
+    from .messages import CTransaction
     for _ in range(num):
         t = utxos.pop()
         inputs = [{"txid": t["txid"], "vout": t["vout"]}]
@@ -537,9 +556,11 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
         change = t['amount'] - fee
         outputs[addr] = satoshi_round(change)
         rawtx = node.createrawtransaction(inputs, outputs)
-        newtx = rawtx[0:92]
-        newtx = newtx + txouts
-        newtx = newtx + rawtx[94:]
+        tx = CTransaction()
+        tx.deserialize(BytesIO(hex_str_to_bytes(rawtx)))
+        for txout in txouts:
+            tx.vout.append(txout)
+        newtx = tx.serialize().hex()
         signresult = node.signrawtransactionwithwallet(newtx, None, "NONE")
         txid = node.sendrawtransaction(signresult["hex"], 0)
         txids.append(txid)

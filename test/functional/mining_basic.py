@@ -27,7 +27,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    connect_nodes_bi,
+    connect_nodes,
 )
 from test_framework.script import CScriptNum
 
@@ -43,6 +43,7 @@ class MiningTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
+        self.supports_cli = False
 
     def mine_chain(self):
         self.log.info('Create some old blocks')
@@ -54,7 +55,7 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(mining_info['currentblocktx'], 0)
         assert_equal(mining_info['currentblockweight'], 4000)
         self.restart_node(0)
-        connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes(self.nodes[0], 1)
 
     def run_test(self):
         self.mine_chain()
@@ -69,7 +70,7 @@ class MiningTest(BitcoinTestFramework):
         self.log.info('getmininginfo')
         mining_info = node.getmininginfo()
         assert_equal(mining_info['blocks'], 200)
-        assert_equal(mining_info['chain'], 'regtest')
+        assert_equal(mining_info['chain'], self.chain)
         assert 'currentblocktx' not in mining_info
         assert 'currentblockweight' not in mining_info
         assert_equal(mining_info['difficulty'], Decimal('4.656542373906925E-10'))

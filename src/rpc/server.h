@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,13 +7,12 @@
 #define BITCOIN_RPC_SERVER_H
 
 #include <amount.h>
-#include <rpc/protocol.h>
-#include <uint256.h>
+#include <rpc/request.h>
 
-#include <list>
 #include <map>
 #include <stdint.h>
 #include <string>
+#include <functional>
 
 #include <univalue.h>
 
@@ -26,21 +25,6 @@ namespace RPCServer
     void OnStarted(std::function<void ()> slot);
     void OnStopped(std::function<void ()> slot);
 }
-
-class JSONRPCRequest
-{
-public:
-    UniValue id;
-    std::string strMethod;
-    UniValue params;
-    bool fHelp;
-    std::string URI;
-    std::string authUser;
-    std::string peerAddr;
-
-    JSONRPCRequest() : id(NullUniValue), params(NullUniValue), fHelp(false) {}
-    void parse(const UniValue& valRequest);
-};
 
 /** Query whether RPC is running */
 bool IsRPCRunning();

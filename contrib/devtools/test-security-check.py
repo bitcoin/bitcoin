@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The Bitcoin Core developers
+# Copyright (c) 2015-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
@@ -43,18 +43,6 @@ class TestSecurityChecks(unittest.TestCase):
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE']),
                 (0, ''))
 
-    def test_32bit_PE(self):
-        source = 'test1.c'
-        executable = 'test1.exe'
-        cc = 'i686-w64-mingw32-gcc'
-        write_testcode(source)
-
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--no-nxcompat','-Wl,--no-dynamicbase']),
-                (1, executable+': failed DYNAMIC_BASE NX'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--no-dynamicbase']),
-                (1, executable+': failed DYNAMIC_BASE'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase']),
-                (0, ''))
     def test_64bit_PE(self):
         source = 'test1.c'
         executable = 'test1.exe'

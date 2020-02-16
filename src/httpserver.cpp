@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +15,7 @@
 #include <sync.h>
 #include <ui_interface.h>
 
+#include <deque>
 #include <memory>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +23,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <signal.h>
 
 #include <event2/thread.h>
 #include <event2/buffer.h>
@@ -139,15 +139,15 @@ struct HTTPPathHandler
 //! libevent event loop
 static struct event_base* eventBase = nullptr;
 //! HTTP server
-struct evhttp* eventHTTP = nullptr;
+static struct evhttp* eventHTTP = nullptr;
 //! List of subnets to allow RPC connections from
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
 static WorkQueue<HTTPClosure>* workQueue = nullptr;
 //! Handlers for (sub)paths
-std::vector<HTTPPathHandler> pathHandlers;
+static std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
-std::vector<evhttp_bound_socket *> boundSockets;
+static std::vector<evhttp_bound_socket *> boundSockets;
 
 /** Check if a network address is allowed to access the HTTP server */
 static bool ClientAllowed(const CNetAddr& netaddr)
@@ -172,7 +172,7 @@ static bool InitHTTPAllowList()
     rpc_allow_subnets.push_back(CSubNet(localv6));         // always allow IPv6 localhost
     for (const std::string& strAllow : gArgs.GetArgs("-rpcallowip")) {
         CSubNet subnet;
-        LookupSubNet(strAllow.c_str(), subnet);
+        LookupSubNet(strAllow, subnet);
         if (!subnet.IsValid()) {
             uiInterface.ThreadSafeMessageBox(
                 strprintf("Invalid -rpcallowip subnet specification: %s. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).", strAllow),
@@ -324,7 +324,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
         evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
         if (bind_handle) {
             CNetAddr addr;
-            if (i->first.empty() || (LookupHost(i->first.c_str(), addr, false) && addr.IsBindAny())) {
+            if (i->first.empty() || (LookupHost(i->first, addr, false) && addr.IsBindAny())) {
                 LogPrintf("WARNING: the RPC server is not safe to expose to untrusted networks such as the public internet\n");
             }
             boundSockets.push_back(bind_handle);
@@ -420,7 +420,7 @@ bool UpdateHTTPServerLogging(bool enable) {
 #endif
 }
 
-std::thread threadHTTP;
+static std::thread threadHTTP;
 static std::vector<std::thread> g_thread_http_workers;
 
 void StartHTTPServer()

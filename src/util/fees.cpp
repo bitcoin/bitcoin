@@ -1,10 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/fees.h>
+
 #include <policy/fees.h>
 
+#include <map>
 #include <string>
 
 std::string StringForFeeReason(FeeReason reason) {
@@ -18,7 +21,6 @@ std::string StringForFeeReason(FeeReason reason) {
         {FeeReason::PAYTXFEE, "PayTxFee set"},
         {FeeReason::FALLBACK, "Fallback fee"},
         {FeeReason::REQUIRED, "Minimum Required Fee"},
-        {FeeReason::MAXTXFEE, "MaxTxFee limit"}
     };
     auto reason_string = fee_reason_strings.find(reason);
 
