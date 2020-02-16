@@ -2962,11 +2962,11 @@ UniValue ipremove(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-  { "z Researcher",          "iplist",                  iplist,                 {} },
-  { "z Researcher",          "ipdump",                  ipdump,                 {} },
-  { "z Researcher",          "ipclear",                 ipclear,                {} },
-  { "z Researcher",          "ipadd",                   ipadd,                  {"address"} },
-  { "z Researcher",          "ipremove",                ipremove,               {} },
+  { "z Researcher",          "iplist",                  &iplist,                 {} },
+  { "z Researcher",          "ipdump",                  &ipdump,                 {} },
+  { "z Researcher",          "ipclear",                 &ipclear,                {} },
+  { "z Researcher",          "ipadd",                   &ipadd,                  {"address"} },
+  { "z Researcher",          "ipremove",                &ipremove,               {} },
 };
 // clang-format on
 

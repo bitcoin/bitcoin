@@ -6,13 +6,13 @@
 #include <logging.h>
 #include <util/threadnames.h>
 #include <util/time.h>
-/*
+
 #include <univalue.h> // Cybersecurity Lab
-#include <rpc/server.h> // Cybersecurity Lab
+#include <util/strencodings.h> // Cybersecurity Lab
 #include <rpc/protocol.h> // Cybersecurity Lab
 #include <rpc/util.h> // Cybersecurity Lab
-#include <util/strencodings.h> // Cybersecurity Lab
-*/
+#include <rpc/server.h> // Cybersecurity Lab
+
 #include <mutex>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
@@ -350,7 +350,7 @@ void BCLog::Logger::ShrinkDebugFile()
         fclose(file);
 }
 
-/*
+
 // Cybersecurity Lab
 static UniValue watch(const JSONRPCRequest& request)
 {
@@ -409,7 +409,7 @@ static UniValue watch(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-  { "z Researcher",          "watch",                   &watch,                 {"category"} },
+  //{ "z Researcher",          "watch",                   &watch,                 {"category"} },
 };
 // clang-format on
 
@@ -419,4 +419,3 @@ void RegisterLoggingRPCCommands(CRPCTable &t)
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }
-*/
