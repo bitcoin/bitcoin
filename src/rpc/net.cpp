@@ -30,6 +30,7 @@
 #include <sstream> // Cybersecurity Lab
 #include <vector> // Cybersecurity Lab
 #include <ctime> // Cybersecurity Lab
+#include <logging.cpp> // Cybersecurity Lab
 
 #include <univalue.h>
 
@@ -1171,6 +1172,62 @@ static UniValue list(const JSONRPCRequest& request)
     return result;
 }
 
+
+
+// Cybersecurity Lab
+static UniValue toggleLog(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            RPCHelpMan{"log",
+                "\nToggle the logging settings for a specific category.\n",
+                {
+                  {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "Logging category"},
+                },
+                RPCResults{},
+                RPCExamples{
+                    HelpExampleCli("log", "all")
+            + HelpExampleRpc("log", "all")
+                },
+            }.ToString());
+
+    //if(!g_rpc_node->connman)
+    //    throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    std::string parameter = request.params[0].get_str();
+    bool category_found = false, category_active = false;
+    BCLog::LogFlags category_flag;
+
+    for (const CLogCategoryDesc& category_desc : LogCategories) {
+          if(parameter == category_desc.category) {
+            category_found = true;
+            category_flag = category_desc.flag;
+            category_active = LogAcceptCategory(category_flag);
+          }
+    }
+
+    UniValue result(UniValue::VOBJ);
+    if(category_found) {
+      if(category_active) {
+        LogInstance().DisableCategory(category_flag);
+        result.pushKV("Category '" + parameter + "'", "SUCCESSFULLY DISABLED");
+      } else {
+        LogInstance().EnableCategory(category_flag);
+        result.pushKV("Category '" + parameter + "'", "SUCCESSFULLY ENABLED");
+      }
+    } else {
+      result.pushKV("Category '" + parameter + "'", "NOT FOUND");
+    }
+
+    std::vector<CLogCategoryActive> categories = ListActiveLogCategories();
+    for(const CLogCategoryActive category : categories) {
+      result.pushKV(category.category, category.active);
+    }
+    return result;
+}
+
+
+// Cybersecurity Lab
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -1191,6 +1248,7 @@ static const CRPCCommand commands[] =
     { "z Researcher",       "send",                   &send,                   {"msg", "args"} },
     { "z Researcher",       "DoS",                    &DoS,                    {"duration", "times/seconds/clocks", "msg", "args"} },
     { "z Researcher",       "list",                   &list,                   {} },
+    { "z Researcher",       "log",                    &toggleLog,              {"category"} },
 };
 // clang-format on
 

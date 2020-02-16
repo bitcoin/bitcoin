@@ -7,12 +7,6 @@
 #include <util/threadnames.h>
 #include <util/time.h>
 
-#include <univalue.h> // Cybersecurity Lab
-#include <util/strencodings.h> // Cybersecurity Lab
-#include <rpc/protocol.h> // Cybersecurity Lab
-#include <rpc/util.h> // Cybersecurity Lab
-#include <rpc/server.h> // Cybersecurity Lab
-
 #include <mutex>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
@@ -348,74 +342,4 @@ void BCLog::Logger::ShrinkDebugFile()
     }
     else if (file != nullptr)
         fclose(file);
-}
-
-
-// Cybersecurity Lab
-static UniValue watch(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            RPCHelpMan{"watch",
-                  "\nToggle the logging settings for a specific category.\n",
-                  {
-                    {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "Logging category"},
-                  },
-                  RPCResults{},
-                  RPCExamples{
-                      HelpExampleCli("watch", "all")
-                              + HelpExampleRpc("watch", "all")
-                  },
-            }.ToString());
-
-    //if(!g_rpc_node->connman)
-    //    throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-
-    std::string parameter = request.params[0].get_str();
-    bool category_found = false, category_active = false;
-    BCLog::LogFlags category_flag;
-
-    for (const CLogCategoryDesc& category_desc : LogCategories) {
-          if(parameter == category_desc.category) {
-            category_found = true;
-            category_flag = category_desc.flag;
-            category_active = LogAcceptCategory(category_flag);
-          }
-    }
-
-    UniValue result(UniValue::VOBJ);
-    if(category_found) {
-      if(category_active) {
-        LogInstance().DisableCategory(category_flag);
-        result.pushKV("Category '" + parameter + "'", "SUCCESSFULLY DISABLED");
-      } else {
-        LogInstance().EnableCategory(category_flag);
-        result.pushKV("Category '" + parameter + "'", "SUCCESSFULLY ENABLED");
-      }
-    } else {
-      result.pushKV("Category '" + parameter + "'", "NOT FOUND");
-    }
-
-    std::vector<CLogCategoryActive> categories = ListActiveLogCategories();
-    for(const CLogCategoryActive category : categories) {
-      result.pushKV(category.category, category.active);
-    }
-    return result;
-}
-
-
-// Cybersecurity Lab
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-  //  --------------------- ------------------------  -----------------------  ----------
-  //{ "z Researcher",          "watch",                   &watch,                 {"category"} },
-};
-// clang-format on
-
-// Cybersecurity Lab
-void RegisterLoggingRPCCommands(CRPCTable &t)
-{
-    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
-        t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }
