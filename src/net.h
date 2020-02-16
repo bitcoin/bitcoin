@@ -23,6 +23,11 @@
 #include <sync.h>
 #include <uint256.h>
 #include <threadinterrupt.h>
+#include <univalue.h> // Cybersecurity Lab
+#include <rpc/server.h> // Cybersecurity Lab
+#include <rpc/protocol.h> // Cybersecurity Lab
+#include <rpc/util.h> // Cybersecurity Lab
+#include <netbase.h> // Cybersecurity Lab
 
 #include <atomic>
 #include <deque>
@@ -330,6 +335,37 @@ public:
         Variable intervals will result in privacy decrease.
     */
     int64_t PoissonNextSendInbound(int64_t now, int average_interval_seconds);
+
+
+    // Cybersecurity Lab
+    int ip_list() {
+      return addrman.size();
+    }
+    std::vector<CAddress> ip_dump() {
+      return addrman.GetAddr();
+    }
+    bool ip_clear() {
+      addrman.Clear();
+      return true;
+    }
+    bool ip_add(std::string ip, int port, std::string source = "250.1.2.1") {
+      CNetAddr src;
+      if(LookupHost(source.c_str(), src, false)) {
+        CService serv;
+        if(Lookup(ip.c_str(), serv, port, false)) {
+          CAddress addr = CAddress(serv, NODE_NONE);
+          return addrman.Add(addr, src);
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
+    bool ip_remove() {
+      return true;
+    }
+
 
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 

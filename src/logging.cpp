@@ -354,9 +354,7 @@ void BCLog::Logger::ShrinkDebugFile()
 // Cybersecurity Lab
 static UniValue updateLogCategory(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            RPCHelpMan{"log",
+        RPCHelpMan{"log",
                 "\nToggle the logging settings for a specific category.\n",
                 {
                   {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "Logging category"},
@@ -364,9 +362,9 @@ static UniValue updateLogCategory(const JSONRPCRequest& request)
                 RPCResults{},
                 RPCExamples{
                     HelpExampleCli("log", "all")
-            + HelpExampleRpc("log", "all")
+                            //+ HelpExampleRpc("log", "all")
                 },
-            }.ToString());
+        }.Check(request);
 
     //if(!g_rpc_node->connman)
     //    throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");

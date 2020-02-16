@@ -22,6 +22,8 @@ void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 
 /** Register logging RPC commands */
 void RegisterLoggingRPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
+/** Register IP control RPC commands */
+void RegisterNet2RPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
@@ -32,6 +34,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterRawTransactionRPCCommands(t);
 
     RegisterLoggingRPCCommands(t); // Cybersecurity Lab
+    RegisterNet2RPCCommands(t); // Cybersecurity Lab
 }
 
 #endif // BITCOIN_RPC_REGISTER_H
