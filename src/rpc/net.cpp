@@ -742,59 +742,11 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
     return ret;
 }
 
+
 // Cybersecurity Lab
-static UniValue send(const JSONRPCRequest& request)
+// Used by DoS and send
+static UniValue sendMessage(std::string msg, std::string rawArgs, bool printResult)
 {
-    if (request.fHelp || request.params.size() == 0 || request.params.size() > 2)
-        throw std::runtime_error(
-            RPCHelpMan{"send",
-                "\nSend a message.\n",
-                {
-                  {"msg", RPCArg::Type::STR, RPCArg::Optional::NO, "Message type"},
-                  {"args", RPCArg::Type::STR, /* default */ "None", "Arguments separated by ',')"},
-                },
-                RPCResults{},
-                RPCExamples{
-                    HelpExampleCli("send", "version") +
-                    HelpExampleCli("send", "verack") +
-                    HelpExampleCli("send", "addr") +
-                    HelpExampleCli("send", "inv") +
-                    HelpExampleCli("send", "getdata") +
-                    HelpExampleCli("send", "merkleblock") +
-                    HelpExampleCli("send", "getblocks") +
-                    HelpExampleCli("send", "getheaders") +
-                    HelpExampleCli("send", "tx") +
-                    HelpExampleCli("send", "headers") +
-                    HelpExampleCli("send", "block") +
-                    HelpExampleCli("send", "getaddr") +
-                    HelpExampleCli("send", "mempool") +
-                    HelpExampleCli("send", "ping") +
-                    HelpExampleCli("send", "pong") +
-                    HelpExampleCli("send", "notfound") +
-                    HelpExampleCli("send", "filterload") +
-                    HelpExampleCli("send", "filteradd") +
-                    HelpExampleCli("send", "filterclear") +
-                    HelpExampleCli("send", "sendheaders") +
-                    HelpExampleCli("send", "feefilter") +
-                    HelpExampleCli("send", "sendcmpct [true or false, Use CMPCT],[1 or 2, Protocol version]") +
-                    HelpExampleCli("send", "cmpctblock") +
-                    HelpExampleCli("send", "getblocktxn") +
-                    HelpExampleCli("send", "blocktxn") +
-                    HelpExampleCli("send", "[HEX CODE] [MESSAGE NAME]")
-                },
-            }.ToString());
-
-    if(!g_rpc_node->connman)
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-
-    std::string msg = request.params[0].get_str();
-    std::string rawArgs;
-    try {
-      rawArgs = request.params[1].get_str();
-    } catch(const std::exception& e) {
-      rawArgs = "None";
-    }
-
     std::vector<std::string> args;
     std::stringstream ss(rawArgs);
     std::string item;
@@ -1032,6 +984,7 @@ static UniValue send(const JSONRPCRequest& request)
         //CSerializedNetMsg netMsg2 = netMsg;
         //g_rpc_node->connman->PushMessage(pnode, netMsg2);
     });
+    if(!printResult) return "";
 
     // Timer end
     clock_t end = clock();
@@ -1051,6 +1004,129 @@ static UniValue send(const JSONRPCRequest& request)
     std::stringstream output;
     output << netMsg.command << " was sent:\n" << outputMessage << "\nRaw data: " << data << "\n\nThat took " << std::to_string(elapsed_time) << " clocks (internal).";
     return  output.str(); //NullUniValue;
+}
+
+
+// Cybersecurity Lab
+static UniValue DoS(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 3 || request.params.size() > 4)
+        throw std::runtime_error(
+            RPCHelpMan{"DoS",
+                "\nSend a message.\n",
+                {
+                  {"duration", RPCArg::Type::NUM, RPCArg::Optional::NO, "Duration"},
+                  {"times/seconds/clocks", RPCArg::Type::STR, RPCArg::Optional::NO, "Unit"},
+                  {"msg", RPCArg::Type::STR, RPCArg::Optional::NO, "Message type"},
+                  {"args", RPCArg::Type::STR, /* default */ "None", "Arguments separated by ',')"},
+                },
+                RPCResults{},
+                RPCExamples{
+                    HelpExampleCli("DoS", "100 times ping") +
+                    HelpExampleCli("DoS", "5 seconds sendcmpct true,2") +
+                    HelpExampleCli("DoS", "100 times [HEX CODE] [MESSAGE NAME]")
+                },
+            }.ToString());
+
+    if(!g_rpc_node->connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    int64_t duration = 0;
+    if (!request.params[0].isNull())
+      duration = request.params[0].get_int64();
+    std::string unit = request.params[1].get_str();
+    std::string msg = request.params[2].get_str();
+    std::string rawArgs;
+    try {
+      rawArgs = request.params[3].get_str();
+    } catch(const std::exception& e) {
+      rawArgs = "None";
+    }
+
+    if(duration < 0) return "Invalid duration.";
+
+    clock_t begin;
+    if(unit == "time" || unit == "times") {
+      begin = clock(); // Start timer
+      for(int i = 0; i < duration; i++) {
+        sendMessage(msg, rawArgs, false);
+      }
+    } else if(unit == "clock" || unit == "clocks") {
+      begin = clock(); // Start timer
+      while(clock() - begin < duration) {
+        sendMessage(msg, rawArgs, false);
+      }
+    } else if(unit == "second" || unit == "seconds") {
+      begin = clock(); // Start timer
+      while(clock() - begin < duration * CLOCKS_PER_SEC) {
+        sendMessage(msg, rawArgs, false);
+      }
+    } else {
+      return "Unit of measurement unknown.";
+    }
+
+    clock_t end = clock(); // End timer
+    int elapsed_time = end - begin;
+    if(elapsed_time < 0) elapsed_time = -elapsed_time; // absolute value
+
+    std::stringstream output;
+    output << msg << "was sent for: " << std::to_string(duration) << unit << "\nTotal time: " << std::to_string(elapsed_time) << " clocks";
+    return  output.str();
+}
+
+// Cybersecurity Lab
+static UniValue send(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() == 0 || request.params.size() > 2)
+        throw std::runtime_error(
+            RPCHelpMan{"send",
+                "\nSend a message.\n",
+                {
+                  {"msg", RPCArg::Type::STR, RPCArg::Optional::NO, "Message type"},
+                  {"args", RPCArg::Type::STR, /* default */ "None", "Arguments separated by ',')"},
+                },
+                RPCResults{},
+                RPCExamples{
+                    HelpExampleCli("send", "version") +
+                    HelpExampleCli("send", "verack") +
+                    HelpExampleCli("send", "addr") +
+                    HelpExampleCli("send", "inv") +
+                    HelpExampleCli("send", "getdata") +
+                    HelpExampleCli("send", "merkleblock") +
+                    HelpExampleCli("send", "getblocks") +
+                    HelpExampleCli("send", "getheaders") +
+                    HelpExampleCli("send", "tx") +
+                    HelpExampleCli("send", "headers") +
+                    HelpExampleCli("send", "block") +
+                    HelpExampleCli("send", "getaddr") +
+                    HelpExampleCli("send", "mempool") +
+                    HelpExampleCli("send", "ping") +
+                    HelpExampleCli("send", "pong") +
+                    HelpExampleCli("send", "notfound") +
+                    HelpExampleCli("send", "filterload") +
+                    HelpExampleCli("send", "filteradd") +
+                    HelpExampleCli("send", "filterclear") +
+                    HelpExampleCli("send", "sendheaders") +
+                    HelpExampleCli("send", "feefilter") +
+                    HelpExampleCli("send", "sendcmpct [true or false, Use CMPCT],[1 or 2, Protocol version]") +
+                    HelpExampleCli("send", "cmpctblock") +
+                    HelpExampleCli("send", "getblocktxn") +
+                    HelpExampleCli("send", "blocktxn") +
+                    HelpExampleCli("send", "[HEX CODE] [MESSAGE NAME]")
+                },
+            }.ToString());
+
+    if(!g_rpc_node->connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    std::string msg = request.params[0].get_str();
+    std::string rawArgs;
+    try {
+      rawArgs = request.params[1].get_str();
+    } catch(const std::exception& e) {
+      rawArgs = "None";
+    }
+    return sendMessage(msg, rawArgs, true);
 }
 
 // Cybersecurity Lab
@@ -1106,6 +1182,7 @@ static const CRPCCommand commands[] =
     { "network",            "setnetworkactive",       &setnetworkactive,       {"state"} },
     { "network",            "getnodeaddresses",       &getnodeaddresses,       {"count"} },
     { "z Researcher",       "send",                   &send,                   {"msg", "args"} },
+    { "z Researcher",       "DoS",                    &DoS,                    {"duration", "times/seconds/clocks", "msg", "args"} },
     { "z Researcher",       "list",                   &list,                   {} },
 };
 // clang-format on
