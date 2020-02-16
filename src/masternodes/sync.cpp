@@ -161,7 +161,6 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
 
     bool exitNodesLoop;
     connman.ForEachNode([this, &connman, &exitNodesLoop](CNode* pnode) {
-        if (exitNodesLoop) return;
 
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
 
@@ -173,14 +172,6 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
 
         // NORMAL NETWORK MODE - TESTNET/MAINNET
         {
-            if (netfulfilledman.HasFulfilledRequest(pnode->addr, "full-sync")) {
-                // We already fully synced from this node recently,
-                // disconnect to free this connection slot for another peer.
-                pnode->fDisconnect = true;
-                LogPrintf("CMasternodeSync::ProcessTick -- disconnecting from recently synced peer=%d\n", pnode->GetId());
-                return;
-            }
-
             // SPORK : ALWAYS ASK FOR SPORKS AS WE SYNC
             if (!netfulfilledman.HasFulfilledRequest(pnode->addr, "spork-sync")) {
                 // always get sporks first, only request once from each peer
