@@ -1077,7 +1077,7 @@ static UniValue DoS(const JSONRPCRequest& request)
     if(elapsed_time < 0) elapsed_time = -elapsed_time; // absolute value
 
     std::stringstream output;
-    output << msg << "was sent " << std::to_string(count) << " times (" << std::to_string(duration) << " clocks)\nTotal time: " << std::to_string(elapsed_time) << " clocks";
+    output << "(" << msg << ") was sent " << std::to_string(count) << " times (" << std::to_string(elapsed_time) << " clocks)\nTotal time: " << std::to_string(elapsed_time) << " clocks";
     return  output.str();
 }
 
