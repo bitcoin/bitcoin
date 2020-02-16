@@ -338,17 +338,17 @@ public:
 
 
     // Cybersecurity Lab
-    int ip_list() {
+    int iplist() {
       return addrman.size();
     }
-    std::vector<CAddress> ip_dump() {
+    std::vector<CAddress> ipdump() {
       return addrman.GetAddr();
     }
-    bool ip_clear() {
+    bool ipclear() {
       addrman.Clear();
       return true;
     }
-    bool ip_add(std::string ip, int port, std::string source = "250.1.2.1") {
+    bool ipadd(std::string ip, int port, std::string source = "250.1.2.1") {
       CNetAddr src;
       if(LookupHost(source.c_str(), src, false)) {
         CService serv;
@@ -362,7 +362,7 @@ public:
         return false;
       }
     }
-    bool ip_remove() {
+    bool ipremove() {
       return true;
     }
 

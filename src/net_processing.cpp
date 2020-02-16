@@ -27,6 +27,13 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
+#include <ctime> // Cybersecurity Lab
+#include <univalue.h> // Cybersecurity Lab
+#include <node/context.h> // Cybersecurity Lab
+#include <rpc/blockchain.h> // Cybersecurity Lab
+#include <rpc/server.h> // Cybersecurity Lab
+#include <rpc/protocol.h> // Cybersecurity Lab
+#include <rpc/util.h> // Cybersecurity Lab
 
 #include <memory>
 #include <typeinfo>
@@ -4132,3 +4139,225 @@ public:
     }
 };
 static CNetProcessingCleanup instance_of_cnetprocessingcleanup;
+
+
+// Cybersecurity Lab
+static UniValue listcmpct(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"listcmpct",
+                "\nGet the sendcmpct status of each peer.\n",
+                {},
+                RPCResult{
+            "[\n*\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("listcmpct", "")
+            + HelpExampleRpc("listcmpct", "")
+                },
+            }.Check(request);
+
+    if(!g_rpc_node->connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    std::vector<CNodeStats> vstats;
+    g_rpc_node->connman->GetNodeStats(vstats);
+
+    //LOCK(cs_main);
+    UniValue result(UniValue::VOBJ);
+
+    g_rpc_node->connman->ForEachNode([&result](CNode* pnode) {
+        result.pushKV("Address", pnode->addr.ToString());
+        result.pushKV("fProvidesHeaderAndIDs", State(pnode->GetId())->fProvidesHeaderAndIDs);
+        result.pushKV("fWantsCmpctWitness", State(pnode->GetId())->fWantsCmpctWitness);
+        result.pushKV("fPreferHeaderAndIDs", State(pnode->GetId())->fPreferHeaderAndIDs);
+        result.pushKV("fSupportsDesiredCmpctVersion", State(pnode->GetId())->fSupportsDesiredCmpctVersion);
+    });
+
+    /*for (const CNodeStats& stats : vstats) {
+        CNodeStateStats statestats;
+        bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
+        if (fStateStats) {
+            result.pushKV("Address", stats.addrName);
+            result.pushKV("fProvidesHeaderAndIDs", statestats.fProvidesHeaderAndIDs);
+            result.pushKV("fWantsCmpctWitness", statestats.fWantsCmpctWitness);
+            result.pushKV("fPreferHeaderAndIDs", statestats.fPreferHeaderAndIDs);
+            result.pushKV("fSupportsDesiredCmpctVersion", statestats.fSupportsDesiredCmpctVersion);
+        }
+    }*/
+
+    return result;
+}
+
+
+// Cybersecurity Lab
+static UniValue setcmpct(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"setcmpct",
+                "\nSet the sendcmpct status of each peer.\n",
+                {},
+                RPCResult{
+            "[\n*\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("setcmpct", "[true or false, Use CMPCT],[1 or 2, Protocol version]")
+                },
+            }.Check(request);
+
+    if(!g_rpc_node->connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    std::vector<CNodeStats> vstats;
+    g_rpc_node->connman->GetNodeStats(vstats);
+
+    //LOCK(cs_main);
+    UniValue result(UniValue::VOBJ);
+
+    /*
+        if (strCommand == NetMsgType::SENDCMPCT) {
+            bool fAnnounceUsingCMPCTBLOCK = false;
+            uint64_t nCMPCTBLOCKVersion = 0;
+            vRecv >> fAnnounceUsingCMPCTBLOCK >> nCMPCTBLOCKVersion;
+            if (nCMPCTBLOCKVersion == 1 || ((pfrom->GetLocalServices() & NODE_WITNESS) && nCMPCTBLOCKVersion == 2)) {
+                LOCK(cs_main);
+                // fProvidesHeaderAndIDs is used to "lock in" version of compact blocks we send (fWantsCmpctWitness)
+                if (!State(pfrom->GetId())->fProvidesHeaderAndIDs) {
+                    State(pfrom->GetId())->fProvidesHeaderAndIDs = true;
+                    State(pfrom->GetId())->fWantsCmpctWitness = nCMPCTBLOCKVersion == 2;
+                }
+                if (State(pfrom->GetId())->fWantsCmpctWitness == (nCMPCTBLOCKVersion == 2)) // ignore later version announces
+                    State(pfrom->GetId())->fPreferHeaderAndIDs = fAnnounceUsingCMPCTBLOCK;
+                if (!State(pfrom->GetId())->fSupportsDesiredCmpctVersion) {
+                    if (pfrom->GetLocalServices() & NODE_WITNESS)
+                        State(pfrom->GetId())->fSupportsDesiredCmpctVersion = (nCMPCTBLOCKVersion == 2);
+                    else
+                        State(pfrom->GetId())->fSupportsDesiredCmpctVersion = (nCMPCTBLOCKVersion == 1);
+                }
+            }
+            return true;
+        }
+    */
+    std::string rawArgs;
+    try {
+      rawArgs = request.params[0].get_str();
+    } catch(const std::exception& e) {
+      rawArgs = "None";
+    }
+
+    std::vector<std::string> args;
+    std::stringstream ss(rawArgs);
+    std::string item;
+    while (getline(ss, item, ',')) {
+        args.push_back(item);
+    }
+    if(args.size() != 2) {
+        result.pushKV("Error", "Invalid arguments, there needs to be two, separated by a comma. Try \"setcmpct true,1\"");
+        return result;
+    }
+
+    g_rpc_node->connman->ForEachNode([&result, &args](CNode* pnode) {
+        bool fAnnounceUsingCMPCTBLOCK = args[0] == "true";
+        uint64_t nCMPCTBLOCKVersion = args[1] == "1" ? 1 : 2;
+        if (nCMPCTBLOCKVersion == 1 || ((pnode->GetLocalServices() & NODE_WITNESS) && nCMPCTBLOCKVersion == 2)) {
+            LOCK(cs_main);
+            // fProvidesHeaderAndIDs is used to "lock in" version of compact blocks we send (fWantsCmpctWitness)
+            if (!State(pnode->GetId())->fProvidesHeaderAndIDs) {
+                State(pnode->GetId())->fProvidesHeaderAndIDs = true;
+                State(pnode->GetId())->fWantsCmpctWitness = nCMPCTBLOCKVersion == 2;
+            }
+            if (State(pnode->GetId())->fWantsCmpctWitness == (nCMPCTBLOCKVersion == 2)) // ignore later version announces
+                State(pnode->GetId())->fPreferHeaderAndIDs = fAnnounceUsingCMPCTBLOCK;
+            if (!State(pnode->GetId())->fSupportsDesiredCmpctVersion) {
+                if (pnode->GetLocalServices() & NODE_WITNESS)
+                    State(pnode->GetId())->fSupportsDesiredCmpctVersion = (nCMPCTBLOCKVersion == 2);
+                else
+                    State(pnode->GetId())->fSupportsDesiredCmpctVersion = (nCMPCTBLOCKVersion == 1);
+            }
+        }
+        result.pushKV(pnode->addr.ToString(), "Success");
+    });
+
+    return result;
+}
+
+// Cybersecurity Lab
+static UniValue listallstats(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"listallstats",
+                "\nGet node stats.\n",
+                {},
+                RPCResult{
+            "[\n*\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("listallstats", "")
+            + HelpExampleRpc("listallstats", "")
+                },
+            }.Check(request);
+
+    if(!g_rpc_node->connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    std::vector<CNodeStats> vstats;
+    g_rpc_node->connman->GetNodeStats(vstats);
+
+    //LOCK(cs_main);
+    UniValue result(UniValue::VOBJ);
+
+    g_rpc_node->connman->ForEachNode([&result](CNode* pnode) {
+        result.pushKV("Address", pnode->addr.ToString());
+        result.pushKV("fCurrentlyConnected", State(pnode->GetId())->fCurrentlyConnected);
+        result.pushKV("nMisbehavior", State(pnode->GetId())->nMisbehavior);
+        result.pushKV("fShouldBan", State(pnode->GetId())->fShouldBan);
+        result.pushKV("pindexBestKnownBlock", State(pnode->GetId())->pindexBestKnownBlock);
+        result.pushKV("hashLastUnknownBlock", State(pnode->GetId())->hashLastUnknownBlock.GetHex());
+        result.pushKV("pindexLastCommonBlock", State(pnode->GetId())->pindexLastCommonBlock);
+        result.pushKV("pindexBestHeaderSent", State(pnode->GetId())->pindexBestHeaderSent);
+        result.pushKV("nUnconnectingHeaders", State(pnode->GetId())->nUnconnectingHeaders);
+        result.pushKV("fSyncStarted", State(pnode->GetId())->fSyncStarted);
+        result.pushKV("nHeadersSyncTimeout", State(pnode->GetId())->nHeadersSyncTimeout);
+        result.pushKV("nStallingSince", State(pnode->GetId())->nStallingSince);
+        result.pushKV("nDownloadingSince", State(pnode->GetId())->nDownloadingSince);
+        result.pushKV("nBlocksInFlight", State(pnode->GetId())->nBlocksInFlight);
+        result.pushKV("nBlocksInFlightValidHeaders", State(pnode->GetId())->nBlocksInFlightValidHeaders);
+        result.pushKV("fPreferredDownload", State(pnode->GetId())->fPreferredDownload);
+        result.pushKV("fPreferHeaders", State(pnode->GetId())->fPreferHeaders);
+        result.pushKV("fPreferHeaderAndIDs", State(pnode->GetId())->fPreferHeaderAndIDs);
+        result.pushKV("fProvidesHeaderAndIDs", State(pnode->GetId())->fProvidesHeaderAndIDs);
+        result.pushKV("fHaveWitness", State(pnode->GetId())->fHaveWitness);
+        result.pushKV("fWantsCmpctWitness", State(pnode->GetId())->fWantsCmpctWitness);
+        result.pushKV("fSupportsDesiredCmpctVersion", State(pnode->GetId())->fSupportsDesiredCmpctVersion);
+        result.pushKV("m_last_block_announcement", State(pnode->GetId())->m_last_block_announcement);
+    });
+
+    /*for (const CNodeStats& stats : vstats) {
+        CNodeStateStats statestats;
+        bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
+        if (fStateStats) {
+            result.pushKV("IP", stats.addrName);
+            result.pushKV("fProvidesHeaderAndIDs", statestats.fProvidesHeaderAndIDs);
+            result.pushKV("fWantsCmpctWitness", statestats.fWantsCmpctWitness);
+            result.pushKV("fPreferHeaderAndIDs", statestats.fPreferHeaderAndIDs);
+            result.pushKV("fSupportsDesiredCmpctVersion", statestats.fSupportsDesiredCmpctVersion);
+        }
+    }*/
+
+    return result;
+}
+
+// Cybersecurity Lab
+// clang-format off
+static const CRPCCommand commands[] =
+{ //  category              name                      actor (function)         argNames
+  //  --------------------- ------------------------  -----------------------  ----------
+  { "z Researcher",          "listcmpct",              &listcmpct,                {} },
+  { "z Researcher",          "setcmpct",               &setcmpct,                 {} },
+  { "z Researcher",          "listallstats",           &listallstats,             {} },
+};
+// clang-format on
+
+// Cybersecurity Lab
+void RegisterNetProcessingRPCCommands(CRPCTable &t)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+        t.appendCommand(commands[vcidx].name, &commands[vcidx]);
+}

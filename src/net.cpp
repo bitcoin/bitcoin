@@ -2804,19 +2804,19 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
 
 
 // Cybersecurity Lab
-UniValue ip_list(const JSONRPCRequest& request)
+UniValue iplist(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
-            RPCHelpMan{"ip_list",
+            RPCHelpMan{"iplist",
                 "\nList number of entries in the IP table.\n",
                 {},
                 RPCResult{
             "[\n*\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("ip_list", "")
-            + HelpExampleRpc("ip_list", "")
+                    HelpExampleCli("iplist", "")
+            + HelpExampleRpc("iplist", "")
                 },
             }.ToString());
 
@@ -2824,32 +2824,32 @@ UniValue ip_list(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("IP Table Size", g_rpc_node->connman->ip_list());
+    result.pushKV("IP Table Size", g_rpc_node->connman->iplist());
     return result;
 }
 
 
 // Cybersecurity Lab
-UniValue ip_dump(const JSONRPCRequest& request)
+UniValue ipdump(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
-            RPCHelpMan{"ip_dump",
+            RPCHelpMan{"ipdump",
                 "\nList all the entries in the IP table.\n",
                 {},
                 RPCResult{
             "[\n*\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("ip_dump", "")
-            + HelpExampleRpc("ip_dump", "")
+                    HelpExampleCli("ipdump", "")
+            + HelpExampleRpc("ipdump", "")
                 },
             }.ToString());
 
     if(!g_rpc_node->connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
-    std::vector<CAddress> vAddr = g_rpc_node->connman->ip_dump();
+    std::vector<CAddress> vAddr = g_rpc_node->connman->ipdump();
 
     UniValue result(UniValue::VOBJ);
 
@@ -2862,19 +2862,19 @@ UniValue ip_dump(const JSONRPCRequest& request)
 
 
 // Cybersecurity Lab
-UniValue ip_clear(const JSONRPCRequest& request)
+UniValue ipclear(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
-            RPCHelpMan{"ip_clear",
+            RPCHelpMan{"ipclear",
                 "\nClear out the IP table.\n",
                 {},
                 RPCResult{
             "[\n*\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("ip_clear", "")
-            + HelpExampleRpc("ip_clear", "")
+                    HelpExampleCli("ipclear", "")
+            + HelpExampleRpc("ipclear", "")
                 },
             }.ToString());
 
@@ -2882,17 +2882,17 @@ UniValue ip_clear(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("IP Table Cleared", g_rpc_node->connman->ip_clear());
+    result.pushKV("IP Table Cleared", g_rpc_node->connman->ipclear());
     return result;
 }
 
 
 // Cybersecurity Lab
-UniValue ip_add(const JSONRPCRequest& request)
+UniValue ipadd(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            RPCHelpMan{"ip_add",
+            RPCHelpMan{"ipadd",
                 "\nAdd an entry to the IP table.\n",
                 {
                   {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP:Port"},
@@ -2901,8 +2901,8 @@ UniValue ip_add(const JSONRPCRequest& request)
             "[\n*\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("ip_add", "10.0.0.1:8333")
-            + HelpExampleRpc("ip_add", "10.0.0.1:8333")
+                    HelpExampleCli("ipadd", "10.0.0.1:8333")
+            + HelpExampleRpc("ipadd", "10.0.0.1:8333")
                 },
             }.ToString());
 
@@ -2926,26 +2926,26 @@ UniValue ip_add(const JSONRPCRequest& request)
       return result;
     }
 
-    //result.pushKV("IP Added", g_rpc_node->connman->ip_add());
-    result.pushKV(ipAddress + ":" + std::to_string(port), g_rpc_node->connman->ip_add(ipAddress, port, "250.1.2.1") ? "Successful" : "Failed");
+    //result.pushKV("IP Added", g_rpc_node->connman->ipadd());
+    result.pushKV(ipAddress + ":" + std::to_string(port), g_rpc_node->connman->ipadd(ipAddress, port, "250.1.2.1") ? "Successful" : "Failed");
     return result;
 }
 
 
 // Cybersecurity Lab
-UniValue ip_remove(const JSONRPCRequest& request)
+UniValue ipremove(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
-            RPCHelpMan{"ip_remove",
+            RPCHelpMan{"ipremove",
                 "\nRemove and entry from the IP table.\n",
                 {},
                 RPCResult{
             "[\n*\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("ip_remove", "")
-            + HelpExampleRpc("ip_remove", "")
+                    HelpExampleCli("ipremove", "")
+            + HelpExampleRpc("ipremove", "")
                 },
             }.ToString());
 
@@ -2953,7 +2953,7 @@ UniValue ip_remove(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("IP Removed", g_rpc_node->connman->ip_remove());
+    result.pushKV("IP Removed", g_rpc_node->connman->ipremove());
     return result;
 }
 
@@ -2962,11 +2962,11 @@ UniValue ip_remove(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-  { "z Researcher",          "ip_list",                  ip_list,                 {} },
-  { "z Researcher",          "ip_dump",                  ip_dump,                 {} },
-  { "z Researcher",          "ip_clear",                 ip_clear,                {} },
-  { "z Researcher",          "ip_add",                   ip_add,                  {"address"} },
-  { "z Researcher",          "ip_remove",                ip_remove,               {} },
+  { "z Researcher",          "iplist",                  iplist,                 {} },
+  { "z Researcher",          "ipdump",                  ipdump,                 {} },
+  { "z Researcher",          "ipclear",                 ipclear,                {} },
+  { "z Researcher",          "ipadd",                   ipadd,                  {"address"} },
+  { "z Researcher",          "ipremove",                ipremove,               {} },
 };
 // clang-format on
 

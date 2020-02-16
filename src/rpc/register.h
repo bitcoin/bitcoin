@@ -20,8 +20,10 @@ void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 /** Register raw transaction RPC commands */
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 
-/** Register logging RPC commands */
-void RegisterLoggingRPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
+/** Register Net Processing RPC commands */
+void RegisterNetProcessingRPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
+/** Register Logging RPC commands */
+//void RegisterLoggingRPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
 /** Register IP control RPC commands */
 void RegisterNet2RPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
 
@@ -33,7 +35,8 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterMiningRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
 
-    RegisterLoggingRPCCommands(t); // Cybersecurity Lab
+    RegisterNetProcessingRPCCommands(t); // Cybersecurity Lab
+    //RegisterLoggingRPCCommands(t); // Cybersecurity Lab
     RegisterNet2RPCCommands(t); // Cybersecurity Lab
 }
 

@@ -6,13 +6,13 @@
 #include <logging.h>
 #include <util/threadnames.h>
 #include <util/time.h>
-
+/*
 #include <univalue.h> // Cybersecurity Lab
 #include <rpc/server.h> // Cybersecurity Lab
 #include <rpc/protocol.h> // Cybersecurity Lab
 #include <rpc/util.h> // Cybersecurity Lab
 #include <util/strencodings.h> // Cybersecurity Lab
-
+*/
 #include <mutex>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
@@ -350,21 +350,23 @@ void BCLog::Logger::ShrinkDebugFile()
         fclose(file);
 }
 
-
+/*
 // Cybersecurity Lab
-static UniValue updateLogCategory(const JSONRPCRequest& request)
+static UniValue watch(const JSONRPCRequest& request)
 {
-        RPCHelpMan{"log",
-                "\nToggle the logging settings for a specific category.\n",
-                {
-                  {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "Logging category"},
-                },
-                RPCResults{},
-                RPCExamples{
-                    HelpExampleCli("log", "all")
-                            //+ HelpExampleRpc("log", "all")
-                },
-        }.Check(request);
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            RPCHelpMan{"watch",
+                  "\nToggle the logging settings for a specific category.\n",
+                  {
+                    {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "Logging category"},
+                  },
+                  RPCResults{},
+                  RPCExamples{
+                      HelpExampleCli("watch", "all")
+                              + HelpExampleRpc("watch", "all")
+                  },
+            }.ToString());
 
     //if(!g_rpc_node->connman)
     //    throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -407,7 +409,7 @@ static UniValue updateLogCategory(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-  { "z Researcher",       "log",                    &updateLogCategory,      {"category"} },
+  { "z Researcher",          "watch",                   &watch,                 {"category"} },
 };
 // clang-format on
 
@@ -417,3 +419,4 @@ void RegisterLoggingRPCCommands(CRPCTable &t)
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }
+*/
