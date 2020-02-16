@@ -3787,16 +3787,13 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
-    bool accepted_header = m_blockman.AcceptBlockHeader(block, state, chainparams, &pindex, block.IsProofOfStake());
-    CheckBlockIndex(chainparams.GetConsensus());
+    if (!m_blockman.AcceptBlockHeader(block, state, chainparams, &pindex, block.IsProofOfStake()))
+         return false;
 
-    if (!accepted_header)
-        return false;
-
-    // proof-of-stake: we should only accept blocks that can be connected to a prev block with validated PoS
-    if (fCheckPoS && pindex->pprev && !pindex->pprev->IsValid(BLOCK_VALID_TRANSACTIONS)) {
-        return error("%s: this block does not connect to any valid known block", __func__);
-    }
+    //! no need, we wont even get here unless checkblock/checkblockheader succeeds
+    // if (fCheckPoS && pindex->pprev && !pindex->pprev->IsValid(BLOCK_VALID_TRANSACTIONS)) {
+    //     return error("%s: this block does not connect to any valid known block", __func__);
+    // }
 
     // Try to process all requested blocks that we don't have, but only
     // process an unrequested block if it's new and has enough work to
@@ -3840,11 +3837,14 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
         return error("%s: %s", __func__, FormatStateMessage(state));
     }
 
-    // proof-of-stake: check PoS
-    if (fCheckPoS && !PoSContextualBlockChecks(block, state, pindex, false)) {
-        pindex->nStatus |= BLOCK_FAILED_VALID;
-        setDirtyBlockIndex.insert(pindex);
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-pos", "proof-of-stake is incorrect");
+    uint256 hashProofOfStake = uint256();
+    if (block.nNonce == 0) {
+        bool fValid = CheckProofOfStake(block, pindex->pprev, hashProofOfStake);
+        LogPrintf("hashProof = %s\n", hashProofOfStake.ToString().c_str());
+        if (!fValid) {
+            LogPrintf("WARNING: %s: check proof-of-stake failed for block %s\n", __func__, block.GetHash().ToString());
+            return false;
+        }
     }
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW

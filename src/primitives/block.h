@@ -107,7 +107,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITEAS(CBlockHeader, *this);
+        READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
         if (vtx.size() > 1 && vtx[1]->IsCoinStake())
             READWRITE(vchBlockSig);
