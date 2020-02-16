@@ -67,6 +67,7 @@ def fetchHeader():
 	line += 'CMPCTBLOCK_BYTESSENT,'
 	line += 'GETBLOCKTXN_BYTESSENT,'
 	line += 'BLOCKTXN_BYTESSENT,'
+	line += 'REJECT_BYTESSENT,'
 
 	line += 'VERSION_BYTESRECV,'
 	line += 'VERACK_BYTESRECV,'
@@ -93,6 +94,7 @@ def fetchHeader():
 	line += 'CMPCTBLOCK_BYTESRECV,'
 	line += 'GETBLOCKTXN_BYTESRECV,'
 	line += 'BLOCKTXN_BYTESRECV,'
+	line += 'REJECT_BYTESRECV,'
 	return line
 
 def fetch(now):
@@ -154,6 +156,7 @@ def fetch(now):
 		line += str(bytessent_per_msg["cmpctblock"] if "cmpctblock" in bytessent_per_msg else 0) + ','
 		line += str(bytessent_per_msg["getblocktxn"] if "getblocktxn" in bytessent_per_msg else 0) + ','
 		line += str(bytessent_per_msg["blocktxn"] if "blocktxn" in bytessent_per_msg else 0) + ','
+		line += str(bytessent_per_msg["reject"] if "reject" in bytessent_per_msg else 0) + ','
 
 		bytesrecv_per_msg = message["bytesrecv_per_msg"] if "bytesrecv_per_msg" in message else {}
 		line += str(bytesrecv_per_msg["version"] if "version" in bytesrecv_per_msg else 0) + ','
@@ -181,6 +184,7 @@ def fetch(now):
 		line += str(bytesrecv_per_msg["cmpctblock"] if "cmpctblock" in bytesrecv_per_msg else 0) + ','
 		line += str(bytesrecv_per_msg["getblocktxn"] if "getblocktxn" in bytesrecv_per_msg else 0) + ','
 		line += str(bytesrecv_per_msg["blocktxn"] if "blocktxn" in bytesrecv_per_msg else 0) + ','
+		line += str(bytesrecv_per_msg["reject"] if "reject" in bytesrecv_per_msg else 0) + ','
 		line += '\n'
 	return line
 

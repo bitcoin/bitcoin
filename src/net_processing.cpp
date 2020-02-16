@@ -985,6 +985,9 @@ void Misbehaving(NodeId pnode, int howmuch, const std::string& message) EXCLUSIV
     state->nMisbehavior += howmuch;
     int banscore = gArgs.GetArg("-banscore", DEFAULT_BANSCORE_THRESHOLD);
     std::string message_prefixed = message.empty() ? "" : (": " + message);
+
+    LogPrint(BCLog::RESEARCHER, "\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!n*** Node %d has been misbehaving! (\"%s\")! Misbehavior score = %d (%d added) (%d before ban)", pnode, message_prefixed, state->nMisbehavior, howmuch, banscore); // Cybersecurity Lab
+
     if (state->nMisbehavior >= banscore && state->nMisbehavior - howmuch < banscore)
     {
         LogPrint(BCLog::NET, "%s: %s peer=%d (%d -> %d) BAN THRESHOLD EXCEEDED%s\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior, message_prefixed);
@@ -1849,7 +1852,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
                 // nMinimumChainWork, even if a peer has a chain past our tip,
                 // as an anti-DoS measure.
                 if (IsOutboundDisconnectionCandidate(pfrom)) {
-                    LogPrintf("Disconnecting outbound peer %d -- headers chain has insufficient work\n", pfrom->GetId());
+                    LogPrintf("\nDisconnecting outbound peer %d -- headers chain has insufficient work\n", pfrom->GetId());
                     pfrom->fDisconnect = true;
                 }
             }
@@ -1938,9 +1941,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 bool static _ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
+
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
     {
-        LogPrintf("dropmessagestest DROPPING RECV MESSAGE\n");
+        LogPrintf("\ndropmessagestest DROPPING RECV MESSAGE\n");
         return true;
     }
 
@@ -2016,7 +2020,7 @@ bool static _ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataSt
         // Disconnect if we connected to ourself
         if (pfrom->fInbound && !connman->CheckIncomingNonce(nNonce))
         {
-            LogPrintf("connected to self at %s, disconnecting\n", pfrom->addr.ToString());
+            LogPrintf("\nconnected to self at %s, disconnecting\n", pfrom->addr.ToString());
             pfrom->fDisconnect = true;
             return true;
         }
@@ -2139,7 +2143,7 @@ bool static _ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataSt
             // Mark this node as currently connected, so we update its timestamp later.
             LOCK(cs_main);
             State(pfrom->GetId())->fCurrentlyConnected = true;
-            LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
+            LogPrintf("\nNew outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
                       pfrom->nVersion.load(), pfrom->nStartingHeight,
                       pfrom->GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom->addr.ToString()) : ""),
                       pfrom->m_tx_relay == nullptr ? "block-relay" : "full-relay");
@@ -2633,9 +2637,9 @@ bool static _ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataSt
                 // Never relay transactions that might result in being
                 // disconnected (or banned).
                 if (state.IsInvalid() && TxRelayMayResultInDisconnect(state)) {
-                    LogPrintf("Not relaying invalid transaction %s from whitelisted peer=%d (%s)\n", tx.GetHash().ToString(), pfrom->GetId(), FormatStateMessage(state));
+                    LogPrintf("\nNot relaying invalid transaction %s from whitelisted peer=%d (%s)\n", tx.GetHash().ToString(), pfrom->GetId(), FormatStateMessage(state));
                 } else {
-                    LogPrintf("Force relaying tx %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->GetId());
+                    LogPrintf("\nForce relaying tx %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->GetId());
                     RelayTransaction(tx.GetHash(), *connman);
                 }
             }
@@ -3297,37 +3301,37 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
   // Cybersecurity Lab: Tracking all message times
   int commandIndex = -1;
-  if(strCommand == NetMsgType::VERSION) commandIndex = 0;
-  else if(strCommand == NetMsgType::VERACK) commandIndex = 5;
-  else if(strCommand == NetMsgType::ADDR) commandIndex = 10;
-  else if(strCommand == NetMsgType::INV) commandIndex = 15;
-  else if(strCommand == NetMsgType::GETDATA) commandIndex = 20;
-  else if(strCommand == NetMsgType::MERKLEBLOCK) commandIndex = 25;
-  else if(strCommand == NetMsgType::GETBLOCKS) commandIndex = 30;
-  else if(strCommand == NetMsgType::GETHEADERS) commandIndex = 35;
-  else if(strCommand == NetMsgType::TX) commandIndex = 40;
-  else if(strCommand == NetMsgType::HEADERS) commandIndex = 45;
-  else if(strCommand == NetMsgType::BLOCK) commandIndex = 50;
-  else if(strCommand == NetMsgType::GETADDR) commandIndex = 55;
-  else if(strCommand == NetMsgType::MEMPOOL) commandIndex = 60;
-  else if(strCommand == NetMsgType::PING) commandIndex = 65;
-  else if(strCommand == NetMsgType::PONG) commandIndex = 70;
-  else if(strCommand == NetMsgType::NOTFOUND) commandIndex = 75;
-  else if (strCommand == NetMsgType::FILTERLOAD) commandIndex = 80;
-  else if(strCommand == NetMsgType::FILTERADD) commandIndex = 85;
-  else if(strCommand == NetMsgType::FILTERCLEAR) commandIndex = 90;
-  else if(strCommand == NetMsgType::SENDHEADERS) commandIndex = 95;
-  else if(strCommand == NetMsgType::FEEFILTER) commandIndex = 100;
-  else if(strCommand == NetMsgType::SENDCMPCT) commandIndex = 105;
-  else if(strCommand == NetMsgType::CMPCTBLOCK) commandIndex = 110;
-  else if(strCommand == NetMsgType::GETBLOCKTXN) commandIndex = 115;
-  else if(strCommand == NetMsgType::BLOCKTXN) commandIndex = 120;
-  else commandIndex = 125;
+  if(strCommand == "version") commandIndex = 0;
+  else if(strCommand == "verack") commandIndex = 5;
+  else if(strCommand == "addr") commandIndex = 10;
+  else if(strCommand == "inv") commandIndex = 15;
+  else if(strCommand == "getdata") commandIndex = 20;
+  else if(strCommand == "merkleblock") commandIndex = 25;
+  else if(strCommand == "getblocks") commandIndex = 30;
+  else if(strCommand == "getheaders") commandIndex = 35;
+  else if(strCommand == "tx") commandIndex = 40;
+  else if(strCommand == "headers") commandIndex = 45;
+  else if(strCommand == "block") commandIndex = 50;
+  else if(strCommand == "getaddr") commandIndex = 55;
+  else if(strCommand == "mempool") commandIndex = 60;
+  else if(strCommand == "ping") commandIndex = 65;
+  else if(strCommand == "pong") commandIndex = 70;
+  else if(strCommand == "notfound") commandIndex = 75;
+  else if (strCommand == "filterload") commandIndex = 80;
+  else if(strCommand == "filteradd") commandIndex = 85;
+  else if(strCommand == "filterclear") commandIndex = 90;
+  else if(strCommand == "sendheaders") commandIndex = 95;
+  else if(strCommand == "feefilter") commandIndex = 100;
+  else if(strCommand == "sendcmpct") commandIndex = 105;
+  else if(strCommand == "cmpctblock") commandIndex = 110;
+  else if(strCommand == "getblocktxn") commandIndex = 115;
+  else if(strCommand == "blocktxn") commandIndex = 120;
+  else if(strCommand == "reject") commandIndex = 125;
+  else commandIndex = 130;
 
   if(elapsed_time == -1) elapsed_time = 0; // So that the results dont reset from the value
   if(vRecvSize == -1) vRecvSize = 0;
 
-////////////////////////////////////////////
   (connman->timePerMessage)[commandIndex]++;
 
   // Avg, max of elapsed time
@@ -3338,7 +3342,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
   (connman->timePerMessage)[commandIndex + 3] += vRecvSize;
   if(vRecvSize > (connman->timePerMessage)[commandIndex + 4]) (connman->timePerMessage)[commandIndex + 4] = vRecvSize;
 
-  LogPrint(BCLog::NET, "\n*** Message *** id=%d addr=%s *** cmd=%s *** cycles=%f *** bytes=%f", pfrom->GetId(), pfrom->addr.ToString(), strCommand, elapsed_time, vRecvSize); // Cybersecurity Lab
+  LogPrint(BCLog::RESEARCHER, "\n*** Message ** addr=%s ** cmd=%s ** cycles=%f ** bytes=%f", pfrom->addr.ToString(), strCommand, elapsed_time, vRecvSize); // Cybersecurity Lab
   return result;
 }
 
@@ -3350,12 +3354,12 @@ bool PeerLogicValidation::CheckIfBanned(CNode* pnode)
     if (state.fShouldBan) {
         state.fShouldBan = false;
         if (pnode->HasPermission(PF_NOBAN))
-            LogPrintf("Warning: not punishing whitelisted peer %s!\n", pnode->addr.ToString());
+            LogPrintf("\nWarning: not punishing whitelisted peer %s!\n", pnode->addr.ToString());
         else if (pnode->m_manual_connection)
-            LogPrintf("Warning: not punishing manually-connected peer %s!\n", pnode->addr.ToString());
+            LogPrintf("\nWarning: not punishing manually-connected peer %s!\n", pnode->addr.ToString());
         else if (pnode->addr.IsLocal()) {
             // Disconnect but don't ban _this_ local node
-            LogPrintf("Warning: disconnecting but not banning local peer %s!\n", pnode->addr.ToString());
+            LogPrintf("\nWarning: disconnecting but not banning local peer %s!\n", pnode->addr.ToString());
             pnode->fDisconnect = true;
         } else {
             // Disconnect and ban all nodes sharing the address
@@ -3506,7 +3510,7 @@ void PeerLogicValidation::ConsiderEviction(CNode *pto, int64_t time_in_seconds)
             // message to give the peer a chance to update us.
             if (state.m_chain_sync.m_sent_getheaders) {
                 // They've run out of time to catch up!
-                LogPrintf("Disconnecting outbound peer %d for old chain, best known block = %s\n", pto->GetId(), state.pindexBestKnownBlock != nullptr ? state.pindexBestKnownBlock->GetBlockHash().ToString() : "<none>");
+                LogPrintf("\nDisconnecting outbound peer %d for old chain, best known block = %s\n", pto->GetId(), state.pindexBestKnownBlock != nullptr ? state.pindexBestKnownBlock->GetBlockHash().ToString() : "<none>");
                 pto->fDisconnect = true;
             } else {
                 assert(state.m_chain_sync.m_work_header);
@@ -3598,7 +3602,7 @@ void PeerLogicValidation::CheckForStaleTipAndEvictPeers(const Consensus::Params 
         // Check whether our tip is stale, and if so, allow using an extra
         // outbound peer
         if (!fImporting && !fReindex && connman->GetNetworkActive() && connman->GetUseAddrmanOutgoing() && TipMayBeStale(consensusParams)) {
-            LogPrintf("Potential stale tip detected, will try using extra outbound peer (last tip update: %d seconds ago)\n", time_in_seconds - g_last_tip_update);
+            LogPrintf("\nPotential stale tip detected, will try using extra outbound peer (last tip update: %d seconds ago)\n", time_in_seconds - g_last_tip_update);
             connman->SetTryNewOutboundPeer(true);
         } else if (connman->GetTryNewOutboundPeer()) {
             connman->SetTryNewOutboundPeer(false);
@@ -4028,7 +4032,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             // Stalling only triggers when the block download window cannot move. During normal steady state,
             // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
             // should only happen during initial block download.
-            LogPrintf("Peer=%d is stalling block download, disconnecting\n", pto->GetId());
+            LogPrintf("\nPeer=%d is stalling block download, disconnecting\n", pto->GetId());
             pto->fDisconnect = true;
             return true;
         }
@@ -4041,7 +4045,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
             int nOtherPeersWithValidatedDownloads = nPeersWithValidatedDownloads - (state.nBlocksInFlightValidHeaders > 0);
             if (nNow > state.nDownloadingSince + consensusParams.nPowTargetSpacing * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
-                LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->GetId());
+                LogPrintf("\nTimeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->GetId());
                 pto->fDisconnect = true;
                 return true;
             }
@@ -4057,11 +4061,11 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     // disconnect our sync peer for stalling; we have bigger
                     // problems if we can't get any outbound peers.
                     if (!pto->HasPermission(PF_NOBAN)) {
-                        LogPrintf("Timeout downloading headers from peer=%d, disconnecting\n", pto->GetId());
+                        LogPrintf("\nTimeout downloading headers from peer=%d, disconnecting\n", pto->GetId());
                         pto->fDisconnect = true;
                         return true;
                     } else {
-                        LogPrintf("Timeout downloading headers from whitelisted peer=%d, not disconnecting\n", pto->GetId());
+                        LogPrintf("\nTimeout downloading headers from whitelisted peer=%d, not disconnecting\n", pto->GetId());
                         // Reset the headers sync state so that we have a
                         // chance to try downloading from a different peer.
                         // Note: this will also result in at least one more

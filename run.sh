@@ -7,10 +7,10 @@ fi
 
 if [ -d "/media/sf_Bitcoin" ]
 then
-    src/bitcoind -datadir=/media/sf_Bitcoin/ # Virtual machine shared folder
+    src/bitcoind -datadir=/media/sf_Bitcoin/ -debug=researcher # Virtual machine shared folder
 elif [ -d "../blocks" ]
 then
-    src/bitcoind -datadir=.. # Super computer shared folder
+    src/bitcoind -datadir=.. -debug=researcher # Super computer shared folder
 else
-    src/bitcoind -datadir=/media/sim/BITCOIN/
+    src/bitcoind -datadir=/media/sim/BITCOIN/ -debug=researcher
 fi

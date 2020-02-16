@@ -454,6 +454,9 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", false, block_relay_only);
     pnode->AddRef();
 
+    LogPrint(BCLog::RESEARCHER, "\n*** Connected *** addr=%s\n", pnode->GetAddrName()); // Cybersecurity Lab
+
+
     // We're making a new connection, harvest entropy from the time (and our peer count)
     RandAddEvent((uint32_t)id);
 
@@ -462,6 +465,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
 
 void CNode::CloseSocketDisconnect()
 {
+    LogPrint(BCLog::RESEARCHER, "\n*** Disconnecting *** addr=%s\n", GetAddrName()); // Cybersecurity Lab
     fDisconnect = true;
     LOCK(cs_hSocket);
     if (hSocket != INVALID_SOCKET)
@@ -2982,19 +2986,17 @@ UniValue getmsginfo(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VOBJ);
 
-    std::vector<std::string> messageNames{"VERSION", "VERACK", "ADDR", "INV", "GETDATA", "MERKLEBLOCK", "GETBLOCKS", "GETHEADERS", "TX", "HEADERS", "BLOCK", "GETADDR", "MEMPOOL", "PING", "PONG", "NOTFOUND", "FILTERLOAD", "FILTERADD", "FILTERCLEAR", "SENDHEADERS", "FEEFILTER", "SENDCMPCT", "CMPCTBLOCK", "GETBLOCKTXN", "BLOCKTXN", "[UNDOCUMENTED]"};
+    std::vector<std::string> messageNames{"VERSION", "VERACK", "ADDR", "INV", "GETDATA", "MERKLEBLOCK", "GETBLOCKS", "GETHEADERS", "TX", "HEADERS", "BLOCK", "GETADDR", "MEMPOOL", "PING", "PONG", "NOTFOUND", "FILTERLOAD", "FILTERADD", "FILTERCLEAR", "SENDHEADERS", "FEEFILTER", "SENDCMPCT", "CMPCTBLOCK", "GETBLOCKTXN", "BLOCKTXN", "REJECT", "[UNDOCUMENTED]"};
 
-    std::vector<int> sumTimePerMessage(26 * 5); // Alternating variables
-    std::vector<int> maxTimePerMessage(26 * 5); // Alternating variables
+    std::vector<int> sumTimePerMessage(27 * 5); // Alternating variables
+    std::vector<int> maxTimePerMessage(27 * 5); // Alternating variables
 
-    //g_rpc_node->connman->ForEachNode([&result, &sumTimePerMessage, &maxTimePerMessage](CNode* pnode) {
-    for(int i = 0; i < 26 * 5; i++) {
+    for(int i = 0; i < 27 * 5; i++) {
       sumTimePerMessage[i] = (g_rpc_node->connman->timePerMessage)[i];
       if((g_rpc_node->connman->timePerMessage)[i] > maxTimePerMessage[i]) maxTimePerMessage[i] = (g_rpc_node->connman->timePerMessage)[i];
     }
-    //});
     result.pushKV("CLOCKS PER SECOND", std::to_string(CLOCKS_PER_SEC));
-    for(int i = 0, j = 0; i < 26 * 5; i += 5, j++) {
+    for(int i = 0, j = 0; i < 27 * 5; i += 5, j++) {
         double avgseconds = 0, avgbytes = 0;
         int sumseconds = 0, sumbytes = 0, maxseconds = 0, maxbytes = 0;
         if(sumTimePerMessage[i] != 0) { // If the number of messages is not zero (avoid divide by zero)
