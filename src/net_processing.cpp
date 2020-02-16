@@ -1931,7 +1931,11 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
     }
 }
 
-bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
+// Header for the masked ProcessMessage
+bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc);
+
+// Read ProcessMessage
+bool static _ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
@@ -3268,6 +3272,74 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     // Ignore unknown commands for extensibility
     LogPrint(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->GetId());
     return true;
+}
+
+
+// Masked proces
+// Wrapper to time message processing, overrides ProcessMessage
+bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
+{
+  int vRecvSize = vRecv.size();
+  // Timer start
+  clock_t begin = clock();
+
+  // Execute the real ProcessMessage protocol
+  bool result = _ProcessMessage(pfrom, strCommand, vRecv, nTimeReceived, chainparams, connman, banman, interruptMsgProc);
+
+  // Timer end
+  clock_t end = clock();
+  int elapsed_time = end - begin;
+  if(elapsed_time < 0) elapsed_time = -elapsed_time; // absolute value
+
+
+
+
+
+  // Cybersecurity Lab: Tracking all message times
+  int commandIndex = -1;
+  if(strCommand == NetMsgType::VERSION) commandIndex = 0;
+  else if(strCommand == NetMsgType::VERACK) commandIndex = 5;
+  else if(strCommand == NetMsgType::ADDR) commandIndex = 10;
+  else if(strCommand == NetMsgType::INV) commandIndex = 15;
+  else if(strCommand == NetMsgType::GETDATA) commandIndex = 20;
+  else if(strCommand == NetMsgType::MERKLEBLOCK) commandIndex = 25;
+  else if(strCommand == NetMsgType::GETBLOCKS) commandIndex = 30;
+  else if(strCommand == NetMsgType::GETHEADERS) commandIndex = 35;
+  else if(strCommand == NetMsgType::TX) commandIndex = 40;
+  else if(strCommand == NetMsgType::HEADERS) commandIndex = 45;
+  else if(strCommand == NetMsgType::BLOCK) commandIndex = 50;
+  else if(strCommand == NetMsgType::GETADDR) commandIndex = 55;
+  else if(strCommand == NetMsgType::MEMPOOL) commandIndex = 60;
+  else if(strCommand == NetMsgType::PING) commandIndex = 65;
+  else if(strCommand == NetMsgType::PONG) commandIndex = 70;
+  else if(strCommand == NetMsgType::NOTFOUND) commandIndex = 75;
+  else if (strCommand == NetMsgType::FILTERLOAD) commandIndex = 80;
+  else if(strCommand == NetMsgType::FILTERADD) commandIndex = 85;
+  else if(strCommand == NetMsgType::FILTERCLEAR) commandIndex = 90;
+  else if(strCommand == NetMsgType::SENDHEADERS) commandIndex = 95;
+  else if(strCommand == NetMsgType::FEEFILTER) commandIndex = 100;
+  else if(strCommand == NetMsgType::SENDCMPCT) commandIndex = 105;
+  else if(strCommand == NetMsgType::CMPCTBLOCK) commandIndex = 110;
+  else if(strCommand == NetMsgType::GETBLOCKTXN) commandIndex = 115;
+  else if(strCommand == NetMsgType::BLOCKTXN) commandIndex = 120;
+  else commandIndex = 125;
+
+  if(elapsed_time == -1) elapsed_time = 0; // So that the results dont reset from the value
+  if(vRecvSize == -1) vRecvSize = 0;
+
+////////////////////////////////////////////
+  (connman->timePerMessage)[commandIndex]++;
+
+  // Avg, max of elapsed time
+  (connman->timePerMessage)[commandIndex + 1] += elapsed_time;
+  if(elapsed_time > (connman->timePerMessage)[commandIndex + 2]) (connman->timePerMessage)[commandIndex + 2] = elapsed_time;
+
+  // Avg, max of number of bytes
+  (connman->timePerMessage)[commandIndex + 3] += vRecvSize;
+  if(vRecvSize > (connman->timePerMessage)[commandIndex + 4]) (connman->timePerMessage)[commandIndex + 4] = vRecvSize;
+
+  LogPrint(BCLog::NET, "\n*** Message *** id=%d addr=%s *** cmd=%s *** cycles=%f *** bytes=%f", pfrom->GetId(), pfrom->addr.ToString(), strCommand, elapsed_time, vRecvSize); // Cybersecurity Lab
+  return result;
 }
 
 bool PeerLogicValidation::CheckIfBanned(CNode* pnode)

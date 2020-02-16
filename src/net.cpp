@@ -2957,6 +2957,64 @@ UniValue ipremove(const JSONRPCRequest& request)
     return result;
 }
 
+
+// Cybersecurity Lab
+UniValue getmsginfo(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            RPCHelpMan{"getmsginfo",
+                "\nList out the computer message info.\n",
+                {},
+                RPCResult{
+            "{\n"
+            "  \"x.x.x.x\": 0,\n"
+            "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("getmsginfo", "")
+            + HelpExampleRpc("getmsginfo", "")
+                },
+            }.ToString());
+
+    if(!g_rpc_node->connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    UniValue result(UniValue::VOBJ);
+
+    std::vector<std::string> messageNames{"VERSION", "VERACK", "ADDR", "INV", "GETDATA", "MERKLEBLOCK", "GETBLOCKS", "GETHEADERS", "TX", "HEADERS", "BLOCK", "GETADDR", "MEMPOOL", "PING", "PONG", "NOTFOUND", "FILTERLOAD", "FILTERADD", "FILTERCLEAR", "SENDHEADERS", "FEEFILTER", "SENDCMPCT", "CMPCTBLOCK", "GETBLOCKTXN", "BLOCKTXN", "[UNDOCUMENTED]"};
+
+    std::vector<int> sumTimePerMessage(26 * 5); // Alternating variables
+    std::vector<int> maxTimePerMessage(26 * 5); // Alternating variables
+
+    //g_rpc_node->connman->ForEachNode([&result, &sumTimePerMessage, &maxTimePerMessage](CNode* pnode) {
+    for(int i = 0; i < 26 * 5; i++) {
+      sumTimePerMessage[i] = (g_rpc_node->connman->timePerMessage)[i];
+      if((g_rpc_node->connman->timePerMessage)[i] > maxTimePerMessage[i]) maxTimePerMessage[i] = (g_rpc_node->connman->timePerMessage)[i];
+    }
+    //});
+    result.pushKV("CLOCKS PER SECOND", std::to_string(CLOCKS_PER_SEC));
+    for(int i = 0, j = 0; i < 26 * 5; i += 5, j++) {
+        double avgseconds = 0, avgbytes = 0;
+        int sumseconds = 0, sumbytes = 0, maxseconds = 0, maxbytes = 0;
+        if(sumTimePerMessage[i] != 0) { // If the number of messages is not zero (avoid divide by zero)
+          avgseconds = (double)sumTimePerMessage[i + 1] / (double)sumTimePerMessage[i];
+          avgbytes = (double)sumTimePerMessage[i + 3] / (double)sumTimePerMessage[i];
+          sumseconds = sumTimePerMessage[i + 1];
+          sumbytes = sumTimePerMessage[i + 3];
+        }
+        maxseconds = sumTimePerMessage[i + 2];
+        maxbytes = sumTimePerMessage[i + 4];
+        result.pushKV(messageNames[j], std::to_string(sumTimePerMessage[i]) + " msgs => (" +
+          "[" + std::to_string(sumseconds) + ", " + std::to_string(avgseconds) + ", " + std::to_string(maxseconds) + "] clcs" +
+          ", [" + std::to_string(sumbytes) + ", " + std::to_string(avgbytes) + ", " + std::to_string(maxbytes) + "] byts");
+    }
+
+    return result;
+}
+
+
+
 // Cybersecurity Lab
 // clang-format off
 static const CRPCCommand commands[] =
@@ -2967,6 +3025,7 @@ static const CRPCCommand commands[] =
   { "z Researcher",          "ipclear",                 &ipclear,                {} },
   { "z Researcher",          "ipadd",                   &ipadd,                  {"address"} },
   { "z Researcher",          "ipremove",                &ipremove,               {} },
+  { "z Researcher",          "getmsginfo",              &getmsginfo,             {} },
 };
 // clang-format on
 

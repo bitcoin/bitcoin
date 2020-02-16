@@ -366,6 +366,9 @@ public:
       return true;
     }
 
+    // Cybersecurity Lab: Used to track node data, initialize all to -1
+    std::vector<int> timePerMessage{std::vector<int>(26 * 5)}; // Alternating variables
+
 
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
