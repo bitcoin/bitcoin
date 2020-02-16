@@ -13,7 +13,7 @@ elif os.path.exists('../blocks'):
 	datadir = '..' # Super computer shared folder
 
 def bitcoin(cmd):
-	return os.popen(f'bitcoin-cli -datadir={datadir} {cmd}').read()
+	return os.popen(f'src/bitcoin-cli -datadir={datadir} {cmd}').read()
 
 
 def console(width):

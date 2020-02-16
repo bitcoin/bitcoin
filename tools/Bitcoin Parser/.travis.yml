@@ -1,0 +1,25 @@
+sudo: required
+
+language:
+  - python
+
+python:
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+
+before_install:
+  - ./travis.sh
+
+install:
+  - pip install -r requirements.txt
+  - pip install coveralls
+
+script: 
+  - coverage run --append --include='blockchain_parser/*' --omit='*/tests/*' setup.py test
+
+after_success:
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then
+          coveralls;
+    fi
