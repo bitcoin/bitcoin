@@ -34,6 +34,10 @@ static_assert(MINIUPNPC_API_VERSION >= 10, "miniUPnPc API version >= 10 assumed"
 #ifdef USE_UPNP
 static CThreadInterrupt g_upnp_interrupt;
 static std::thread g_upnp_thread;
+
+using namespace std::chrono_literals;
+static constexpr auto PORT_MAPPING_REANNOUNCE_PERIOD{20min};
+
 static void ThreadMapPort()
 {
     std::string port = strprintf("%u", GetListenPort());
@@ -84,7 +88,7 @@ static void ThreadMapPort()
             } else {
                 LogPrintf("UPnP Port Mapping successful.\n");
             }
-        } while (g_upnp_interrupt.sleep_for(std::chrono::minutes(20)));
+        } while (g_upnp_interrupt.sleep_for(PORT_MAPPING_REANNOUNCE_PERIOD));
 
         r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", 0);
         LogPrintf("UPNP_DeletePortMapping() returned: %d\n", r);
