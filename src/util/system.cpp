@@ -63,6 +63,7 @@
 #include <malloc.h>
 #endif
 
+#include <boost/algorithm/string/replace.hpp>
 #include <thread>
 // SYSCOIN only features
 #include <boost/algorithm/string.hpp>
@@ -1724,6 +1725,15 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 
     LogPrintf("SHGetSpecialFolderPathW() failed, could not obtain requested path.\n");
     return fs::path("");
+}
+#endif
+
+#ifndef WIN32
+std::string ShellEscape(const std::string& arg)
+{
+    std::string escaped = arg;
+    boost::replace_all(escaped, "'", "'\"'\"'");
+    return "'" + escaped + "'";
 }
 #endif
 
