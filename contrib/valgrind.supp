@@ -33,13 +33,6 @@
 }
 {
    Suppress libdb warning
-   Memcheck:Param
-   pwrite64(buf)
-   fun:pwrite
-   fun:__os_io
-}
-{
-   Suppress libdb warning
    Memcheck:Cond
    fun:__log_putr.isra.1
 }
@@ -49,7 +42,6 @@
    pwrite64(buf)
    fun:pwrite
    fun:__os_io
-   obj:*/libdb_cxx-*.so
 }
 {
    Suppress uninitialized bytes warning in compat code
@@ -175,14 +167,6 @@
    fun:malloc
    ...
    fun:secp256k1_context_create
-}
-{
-   Suppress BCLog::Logger::StartLogging() still reachable memory warning
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:malloc
-   ...
-   fun:_ZN5BCLog6Logger12StartLoggingEv
 }
 {
    Suppress BCLog::Logger::StartLogging() still reachable memory warning
