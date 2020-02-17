@@ -26,6 +26,21 @@
    obj:*/ld-*.so
 }
 {
+   Suppress libstdc++ dl_new_object warning (qt tests)
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_dl_new_object
+}
+{
+   Suppress libstdc++ dl_load_cache_lookup warning (qt tests)
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:strdup
+   fun:_dl_load_cache_lookup
+}
+{
    Suppress libdb warning - https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=662917
    Memcheck:Cond
    obj:*/libdb_cxx-*.so
@@ -38,8 +53,14 @@
 }
 {
    Suppress libdb warning
+   Memcheck:Cond
+   fun:__log_putr.isra.2
+}
+{
+   Suppress libdb warning
    Memcheck:Param
    pwrite64(buf)
+   ...
    fun:pwrite
    fun:__os_io
 }
@@ -69,6 +90,20 @@
    fun:_Z8ShutdownR11NodeContext
 }
 {
+   Suppress bdb leak
+   Memcheck:Leak
+   fun:malloc
+   fun:__os_malloc
+   fun:__env_alloc
+   fun:__memp_alloc
+   fun:__memp_fopen
+   fun:__env_mpool
+   fun:__fop_inmem_create
+   fun:__fop_file_setup
+   fun:__db_open
+   fun:__db_open_pp
+}
+{
    Ignore GUI warning
    Memcheck:Leak
    ...
@@ -96,6 +131,14 @@
    fun:_Znwm
    ...
    fun:_ZN7leveldb6DBImpl14BackgroundCallEv
+}
+{
+   Suppress leveldb dbwrapper boost leak
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_ZN7leveldb3Env7DefaultEv
+   fun:_ZN7leveldb7OptionsC1Ev
 }
 {
    Suppress leveldb leak
@@ -149,9 +192,6 @@
    fun:_Znwm
    ...
    fun:_M_construct_aux<char*>
-   fun:_M_construct<char*>
-   fun:basic_string
-   fun:path
 }
 {
    Suppress LogInstance still reachable memory warning
@@ -180,4 +220,69 @@
    Suppress rest_blockhash_by_height Conditional jump or move depends on uninitialised value(s)
    Memcheck:Cond
    fun:_ZL24rest_blockhash_by_heightP11HTTPRequestRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+}
+{
+   Suppress libglib warning
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.5800.3
+}
+{
+   Suppress libqt5core warning
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libQt5Core.so.5.11.3
+}
+{
+   Suppress libdbus-1 warning
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libdbus-1.so.3.19.11
+}
+{
+   Suppress libqminimal warning
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/qt5/plugins/platforms/libqminimal.so
+}
+{
+   Suppress libqt5test warning
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN14QLayoutPrivate16createWidgetItemEPK7QLayoutP7QWidget
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libQt5Test.so.5.11.3
+}
+{
+   Suppress WALLET_FLAG_CAVEATS warning
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_Z11UINT256_ONEv
+}
+{
+   Suppress libqt5widgets warning
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_ZNK20QPlatformIntegration13accessibilityEv
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5.11.3
+}
+{
+   Suppress libqt5dbus-5.11.3 warning
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libQt5DBus.so.5.11.3
+}
+{
+   Suppress qt PlatformDrag warning
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_ZN13QPlatformDragC1Ev
 }
