@@ -175,6 +175,7 @@ BASE_SCRIPTS = [
     'wallet_balance.py',
     'feature_nulldummy.py',
     'mempool_accept.py',
+    'mempool_expiry.py',
     'wallet_import_rescan.py',
     'wallet_import_with_label.py',
     'rpc_bind.py --ipv4',
