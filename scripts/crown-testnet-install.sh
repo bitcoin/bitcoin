@@ -7,7 +7,7 @@
 #
 # Setup crown server or update existing one
 
-LATEST_RELEASE="0.13.9.1"
+LATEST_RELEASE="0.13.9.3"
 
 systemnode=false
 masternode=false
@@ -240,8 +240,8 @@ install_package() {
     sudo chmod +x $dir/crownwatch.sh
     sudo cp -f $dir/crownwatch.sh /usr/local/bin
     if [ -n "$bootstrap" ]; then
-	    echo "Unzipping snapshot (which will take a few seconds) and removing old blockchain"
-	    rm -rf ~/.crown/testnet3/{blocks,chainstate}
+        echo "Unzipping snapshot (which will take a few seconds) and removing old blockchain"
+        rm -rf ~/.crown/testnet3/{blocks,chainstate,platform,budget-v2.dat,db.log,fee_estimates.dat,ixcache.dat,mncache.dat,mnpayments.dat,peers.dat,sncache.dat,snpayments.dat}
         unzip -od ~/.crown/testnet3 $dir/testnet.zip
     fi
     sudo rm -rf $dir
@@ -259,6 +259,7 @@ configure_conf() {
     PW=$(< /dev/urandom tr -dc a-zA-Z0-9 | head -c32;echo;)
     echo "daemon=1" > .crown/crown.conf 
     echo "testnet=1" >> .crown/crown.conf 
+    echo "logips=1" >> .crown/crown.conf 
     echo "rpcallowip=127.0.0.1" >> .crown/crown.conf 
     echo "rpcuser=crowncoinrpc">> .crown/crown.conf 
     echo "rpcpassword="$PW >> .crown/crown.conf 
@@ -272,6 +273,16 @@ configure_conf() {
         echo "masternode=1" >>.crown/crown.conf
         echo "masternodeprivkey="$privkey >>.crown/crown.conf
     fi
+    echo "addnode=92.60.46.22" >>.crown/crown.conf
+    echo "addnode=92.60.46.23" >>.crown/crown.conf
+    echo "addnode=92.60.46.24" >>.crown/crown.conf
+    echo "addnode=92.60.46.25" >>.crown/crown.conf
+    echo "addnode=92.60.46.26" >>.crown/crown.conf
+    echo "addnode=92.60.46.27" >>.crown/crown.conf
+    echo "addnode=92.60.46.28" >>.crown/crown.conf
+    echo "addnode=92.60.46.29" >>.crown/crown.conf
+    echo "addnode=92.60.46.30" >>.crown/crown.conf
+    echo "addnode=92.60.46.31" >>.crown/crown.conf
     echo "This is the config file:"
     cat .crown/crown.conf
     echo
