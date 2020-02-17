@@ -199,3 +199,27 @@ const std::vector<std::string> &getAllNetMessageTypes()
 {
     return allNetMessageTypesVec;
 }
+
+std::string serviceFlagToStr(const uint64_t mask, const int bit)
+{
+    switch (ServiceFlags(mask)) {
+    case NODE_NONE: abort();  // impossible
+    case NODE_NETWORK:         return "NETWORK";
+    case NODE_GETUTXO:         return "GETUTXO";
+    case NODE_BLOOM:           return "BLOOM";
+    case NODE_WITNESS:         return "WITNESS";
+    case NODE_NETWORK_LIMITED: return "NETWORK_LIMITED";
+    // Not using default, so we get warned when a case is missing
+    }
+
+    std::ostringstream stream;
+    stream.imbue(std::locale::classic());
+    stream << "UNKNOWN[";
+    if (bit < 8) {
+        stream << mask;
+    } else {
+        stream << "2^" << bit;
+    }
+    stream << "]";
+    return stream.str();
+}
