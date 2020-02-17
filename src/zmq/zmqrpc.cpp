@@ -21,9 +21,9 @@ UniValue getzmqnotifications(const JSONRPCRequest& request)
                 RPCResult{
             "[\n"
             "  {                        (json object)\n"
-            "    \"type\": \"pubhashtx\",   (string) Type of notification\n"
-            "    \"address\": \"...\",      (string) Address of the publisher\n"
-            "    \"hwm\": n                 (numeric) Outbound message high water mark\n"
+            "    \"type\" : \"pubhashtx\",   (string) Type of notification\n"
+            "    \"address\" : \"...\",      (string) Address of the publisher\n"
+            "    \"hwm\" : n                 (numeric) Outbound message high water mark\n"
             "  },\n"
             "  ...\n"
             "]\n"
