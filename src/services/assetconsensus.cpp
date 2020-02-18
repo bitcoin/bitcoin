@@ -369,10 +369,8 @@ void SetZDAGConflict(const uint256 &txHash, const std::string &fSyscoinSender){
 }
 void AddZDAGTx(const CTransactionRef &zdagTx, const AssetBalanceMap &mapAssetAllocationBalances) {
     const uint256 &txHash = zdagTx->GetHash();
-    LogPrintf("AddZDAGTx tx %s mapAssetAllocationBalances size %d\n", txHash.GetHex(), mapAssetAllocationBalances.size());
     LOCK(cs_assetallocationmempoolbalance);
     for(const auto &assetAllocationBalance: mapAssetAllocationBalances){
-        LogPrintf("AddZDAGTx actor %s amount %lld\n", assetAllocationBalance.first, assetAllocationBalance.second);
         #if __cplusplus > 201402 
         auto result = mempoolMapAssetBalances.try_emplace(assetAllocationBalance.first,  std::move(assetAllocationBalance.second));
         #else
@@ -397,34 +395,33 @@ void RemoveZDAGTx(const CTransactionRef &zdagTx) {
     ActorSet actorSet;
     GetActorsFromSyscoinTx(zdagTx, true, false, actorSet);
     const uint256& zdagTxhash = zdagTx->GetHash();
-    for(const auto& actor: actorSet)
+    const std::string &sender = *actorSet.begin();
     {
-        {
-            LOCK(cs_assetallocationarrival);
-            ArrivalTimesVec& arrivalTimes = arrivalTimesVec[actor];
+        LOCK(cs_assetallocationarrival);
+        auto arrivalTimesIt = arrivalTimesVec.find(sender);
+        if(arrivalTimesIt != arrivalTimesVec.end()){
+            ArrivalTimesVec& arrivalTimes = arrivalTimesIt->second;
             auto it = std::find( arrivalTimes.begin(), arrivalTimes.end(), zdagTxhash);
             if(it != arrivalTimes.end()){
                 arrivalTimes.erase(it);
             }
             if(arrivalTimes.empty())
             {
-                arrivalTimesVec.erase(actor);
+                arrivalTimesVec.erase(arrivalTimesIt);
                 {
                     LOCK(cs_assetallocationmempoolbalance);
-                    mempoolMapAssetBalances.erase(actor);
+                    mempoolMapAssetBalances.erase(sender);
                 }
                 {
                     LOCK(cs_assetallocationconflicts);
-                    assetAllocationConflicts.erase(actor);
+                    assetAllocationConflicts.erase(sender);
                 }
             }
         }
     }
     {
         LOCK(cs_assetallocationmempoolremovetx);
-        LogPrintf("RemoveZDAGTx removing %s from setToRemoveFromMempool size before %d\n", zdagTxhash.GetHex(), setToRemoveFromMempool.size());
         setToRemoveFromMempool.erase(zdagTxhash);
-        LogPrintf("RemoveZDAGTx removing %s from setToRemoveFromMempool size after %d\n", zdagTxhash.GetHex(), setToRemoveFromMempool.size());
     }
     
 }
@@ -897,8 +894,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         {
             return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
         }
-        if(!fJustCheck && bSanityCheck)
-            LogPrintf("txid %s asset %d nTotal %lld mapBalanceSenderCopy %lld sender %s\n", txHash.GetHex().c_str(), theAssetAllocation.assetAllocationTuple.nAsset, nTotal, mapBalanceSenderCopy, senderTupleStr);
         mapBalanceSenderCopy -= nTotal;
         if (mapBalanceSenderCopy < 0) {
             return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bSanityCheck);

@@ -461,7 +461,10 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sen
     sender = *actorSetSender.begin();
     {
         LOCK(cs_assetallocationarrival);
-        const ArrivalTimesVec& arrivalTimes = arrivalTimesVec[sender];
+        auto arrivalTimesIt = arrivalTimesVec.find(sender);
+        if(arrivalTimesIt == arrivalTimesVec.end())
+            return ZDAG_MAJOR_CONFLICT;
+        const ArrivalTimesVec& arrivalTimes = arrivalTimesIt->second;
         // its in mempool and its an asset tx, it should exist in arrival times or it wasn't put in due to a conflict
         if(arrivalTimes.empty() || std::find( arrivalTimes.begin(), arrivalTimes.end(), lookForTxHash) == arrivalTimes.end())
             return ZDAG_MAJOR_CONFLICT;

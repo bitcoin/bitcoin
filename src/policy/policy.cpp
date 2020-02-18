@@ -11,7 +11,6 @@
 #include <coins.h>
 // SYSCOIN
 #include <services/assetconsensus.h>
-#include <util/rbf.h>
 CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {
     // "Dust" is defined in terms of dustRelayFee,
@@ -89,8 +88,6 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
         reason = "version";
         return false;
     }
-    // SYSCOIN
-    const bool &isRBF = SignalsOptInRBF(tx);
     // Extremely large transactions with lots of inputs can cost the network
     // almost as much to process as they cost the sender in fees, because
     // computing signature hashes is O(ninputs*txsize). Limiting transactions
@@ -99,13 +96,6 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
     if (sz > MAX_STANDARD_TX_WEIGHT) {
         reason = "tx-size";
         return false;
-    }
-    if(!isRBF && tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND)
-    {
-        if(tx.vin.size() > 3){
-            reason = "systx-too-many-vins";
-            return false;
-        }
     }
     for (const CTxIn& txin : tx.vin)
     {
@@ -139,11 +129,6 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
             if (!isSysTx && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
             {
                 reason = "scriptpubkey";
-                return false;
-            }
-            // RBF opt-in is not zdag-eable so only enforce this size on non RBF zdag transfers
-            else if(!isRBF && tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND && tx.vout.size() > 5 && txout.scriptPubKey.size() > 200){
-                reason = "systx-too-many-vouts";
                 return false;
             }
             nDataOut++;
