@@ -65,11 +65,11 @@ std::vector<std::pair<uint256, int64_t> >  vecTPSTestReceivedTimesMempool;
 int64_t nTPSTestingStartTime = 0;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern RecursiveMutex cs_assetallocationconflicts;
-extern std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool;
+extern ArrivalTimesSet setToRemoveFromMempool;
 extern RecursiveMutex cs_assetallocationmempoolremovetx;
 extern RecursiveMutex cs_assetallocationarrival;
 extern RecursiveMutex cs_setethstatus;
-extern ArrivalTimesVecImpl arrivalTimesVec;
+extern ArrivalTimesSetImpl arrivalTimesSet;
 std::vector<CInv> vInvToSend;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 #if defined(NDEBUG)
@@ -835,17 +835,18 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx",
                  strprintf("Could not get sender of zdag tx %s",
                         hash.ToString()));
-        if (!CheckSyscoinInputs(tx, hash, state, ws.mapAssetAllocationBalances, m_view, true, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), args.m_test_accept || args.m_bypass_limits)) {
+        TxValidationState tx_state;
+        if (!CheckSyscoinInputs(tx, hash, tx_state, ws.mapAssetAllocationBalances, m_view, true, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), args.m_test_accept || args.m_bypass_limits)) {
             // if already set as duplicate means this is the first time we saw this conflict otherwise we need to check against the sender later
             if(!duplicate){
                 // if reason is "assetallocation-insufficient-balance" then we should allow it to succeed the first time an error happens
-                if(state.GetRejectReason() == "assetallocation-insufficient-balance"){
+                if(tx_state.GetRejectReason() == "assetallocation-insufficient-balance"){
                     bool arrivalTimeExists = false;
                     {
                         LOCK(cs_assetallocationarrival);
                         // ensure there are previous tx for this sender so we can reject if this is the first tx for this sender in mempool
-                        auto arrivalTimesIt = arrivalTimesVec.find(sender);
-                        if(arrivalTimesIt != arrivalTimesVec.end())
+                        auto arrivalTimesIt = arrivalTimesSet.find(sender);
+                        if(arrivalTimesIt != arrivalTimesSet.end())
                             arrivalTimeExists = !arrivalTimesIt->second.empty();
                     }
                     {
