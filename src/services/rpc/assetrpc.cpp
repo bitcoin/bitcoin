@@ -432,7 +432,7 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sen
         const CTransactionRef &txRef = mempool.get(lookForTxHash);
         if (!txRef)
             return ZDAG_NOT_FOUND;
-        if(!IsAssetAllocationTx(txRef->nVersion))
+        if(txRef->nVersion != SYSCOIN_TX_VERSION_ALLOCATION_SEND)
             return ZDAG_NOT_FOUND;
         // the zdag tx or any others from this sender should be under MTU of IP packet
         if(GetSerializeSize(txRef, PROTOCOL_VERSION) > 1100){

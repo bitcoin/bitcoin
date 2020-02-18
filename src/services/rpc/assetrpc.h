@@ -5,7 +5,6 @@
 #ifndef SYSCOIN_SERVICES_RPC_ASSETRPC_H
 #define SYSCOIN_SERVICES_RPC_ASSETRPC_H
 #include <string>
-class CUniValue;
 class COutPoint;
 class CWitnessAddress;
 unsigned int addressunspent(const std::string& strAddressFrom, COutPoint& outpoint);
