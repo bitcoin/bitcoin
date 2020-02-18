@@ -194,7 +194,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     tx = txIn;
     const bool& isSyscoinTx = IsZdagTx(tx.nVersion);
     tx.vin.clear();
-    if(!outPointLastSender.IsNull() && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
+    if(!outPointLastSender.IsNull()){
         const Coin& coin = view.AccessCoin(outPointLastSender);
         if(!coin.IsSpent()){
             txIn.vin.emplace_back(CTxIn(outPointLastSender, coin.out.scriptPubKey));
@@ -503,7 +503,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     scriptData << OP_RETURN << data;
     CRecipient fee;
     CreateFeeRecipient(scriptData, fee);
-    if(!fUnitTest && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
+    if(!fUnitTest){
         // 500 SYS fee for new asset
         fee.nAmount += 500*COIN;
     }
@@ -1087,11 +1087,6 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_MISC_ERROR, "Geth is not synced, please wait until it syncs up and try again");
     }
 
-    int nBlocksLeftToEnable = (Params().GetConsensus().nBridgeStartBlock+500) - ::ChainActive().Tip()->nHeight;
-    if(!fUnitTest && nBlocksLeftToEnable > 0)
-    {
-        throw JSONRPCError(RPC_MISC_ERROR, "Bridge is not enabled yet. Blocks left to enable: " + itostr(nBlocksLeftToEnable));
-    }
     const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress); 
     strAddress = witnessAddress.ToString();  	
     vector<CRecipient> vecSend;
