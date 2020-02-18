@@ -22,7 +22,7 @@ extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
-extern ArrivalTimesMapImpl arrivalTimesMap; 
+extern ArrivalTimesVecImpl arrivalTimesVec; 
 extern RecursiveMutex cs_assetallocationarrival;
 extern AssetPrevTxMap mapAssetPrevTxSender;
 extern AssetPrevTxMap mapSenderLockedOutPoints;
@@ -904,24 +904,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
-	vecSend.push_back(fee);
-    // create outputs for first receiver for zdag graph enforcement through CPFP
-    // if receivers are more than 5 we don't really care to send dust it is a batch payment likely
-    if(receivers.size() < 5){
-        const UniValue& receiver = receivers[0];
-        if (!receiver.isObject())
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address'\" or \"amount\"}");
-
-        const UniValue &receiverObj = receiver.get_obj();
-        const std::string &toStr = find_value(receiverObj, "address").get_str();
-        if(toStr != "burn"){
-            // create a dust output and send to the recipient for further relay
-            CRecipient recipient = {GetScriptForDestination(DecodeDestination(toStr)), 0, false};
-            recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
-            vecSend.push_back(recipient);
-        }
-    }
-	
+	vecSend.push_back(fee);	
     if(!lockedOutpoint.IsNull()){
         // this will let syscointxfund try to select this outpoint as the input
         mapSenderLockedOutPoints[strAddress] = lockedOutpoint;

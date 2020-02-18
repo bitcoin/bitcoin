@@ -28,8 +28,8 @@
 #include <masternodepayments.h>
 #include <masternodesync.h>
 #include <services/assetconsensus.h>
-#include <services/graph.h>
-extern std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
+extern std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool;
+extern RecursiveMutex cs_assetallocationmempoolremovetx;
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
@@ -94,13 +94,16 @@ void BlockAssembler::resetBlock()
 Optional<int64_t> BlockAssembler::m_last_block_num_txs{nullopt};
 Optional<int64_t> BlockAssembler::m_last_block_weight{nullopt};
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, std::vector<uint256> &txsToRemove)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, std::unordered_set<uint256, SaltedTxidHasher> &txsToRemove)
 {    
-    // we should skip vecToRemoveFromMempool instead of letting input check below deal with it because zdag state will be inconsistent in the later case
-    // that is meant as a sanity and fallback incase vecToRemoveFromMempool misses it for some reason
-    txsToRemove.reserve(txsToRemove.size() + vecToRemoveFromMempool.size());
-    for(auto it: vecToRemoveFromMempool){
-        txsToRemove.push_back(it.first);
+    {
+        LOCK(cs_assetallocationmempoolremovetx);
+        // we should skip setToRemoveFromMempool instead of letting input check below deal with it because zdag state will be inconsistent in the later case
+        // that is meant as a sanity and fallback incase setToRemoveFromMempool misses
+        txsToRemove.reserve(txsToRemove.size() + setToRemoveFromMempool.size());
+        for(const auto& txid: setToRemoveFromMempool){
+            txsToRemove.insert(txid);
+        }
     }
     int64_t nTimeStart = GetTimeMicros();
 
@@ -239,26 +242,17 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         // Either way miner should remove it if its invalid. If not allocation tx just remove and try again (so blocks keep moving)
         if(!syscoinTxFailed.IsNull()) {
             LogPrintf("CreateNewBlock(): TestBlockValidity syscoinTxFailed\n");
-            std::vector<vertex_descriptor> vertices;	
-            IndexMap mapTxIndex;	
-            if (CreateGraphFromVTX(pblock->vtx, graph, vertices, mapTxIndex)) {	
-                std::vector<int> conflictedIndexes;	
-                GraphRemoveCycles(pblock->vtx, conflictedIndexes, graph, vertices, mapTxIndex);	
-                if(!conflictedIndexes.empty()){
-                    LogPrintf("CreateNewBlock(): TestBlockValidity GraphRemoveCycles %d\n", conflictedIndexes.size());
-                    for(auto& index: conflictedIndexes){
-                        txsToRemove.emplace_back(pblock->vtx[index].GetHash());
-                    }
-                } else {
-                    DAGTopologicalSort(pblock->vtx, graph, mapTxIndex);	
-                }
-            }  
-                
-            
+            // loop through all txs of block in order, find first one that matches sender, then continue to ensure the first sender is earliest by time, if not remove
+            // if not found another one also remove
+            // if order is all correct just remove syscoinTxFailed as the culprit transaction if syscoinTxFailed is not the same as the case above where sender wasn't found in another tx
+            txsToRemove.insert(syscoinTxFailed.GetHash());
         }
     }
     if(bFoundError){
-        LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed: %s. vecToRemoveFromMempool size %d. Removed %d transactions and trying again...\n", FormatStateMessage(state), vecToRemoveFromMempool.size(), txsToRemove.size());
+        {
+            LOCK(cs_assetallocationmempoolremovetx);
+            LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed: %s. setToRemoveFromMempool size %d. Removed %d transactions and trying again...\n", FormatStateMessage(state), setToRemoveFromMempool.size(), txsToRemove.size());
+        }
         return CreateNewBlock(scriptPubKeyIn, txsToRemove);
     }
     txsToRemove.clear();
@@ -296,7 +290,7 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 // - transaction finality (locktime)
 // - premature witness (in case segwit transactions are added to mempool before
 //   segwit activation)
-bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package, std::vector<uint256> &txsToRemove)
+bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package, std::unordered_set<uint256, SaltedTxidHasher> &txsToRemove)
 {
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
@@ -304,7 +298,7 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
         if (!fIncludeWitness && it->GetTx().HasWitness())
             return false;
          // SYSCOIN
-        if(std::find(txsToRemove.begin(), txsToRemove.end(), it->GetTx().GetHash()) != txsToRemove.end())
+        if(txsToRemove.count(it->GetTx().GetHash()) > 0)
             return false;           
     }
     return true;
@@ -392,7 +386,7 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, std::vector<uint256> &txsToRemove)
+void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, std::unordered_set<uint256, SaltedTxidHasher> &txsToRemove)
 {
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
