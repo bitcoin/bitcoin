@@ -17,6 +17,7 @@ export COMMIT_RANGE
 # check with -r to not have to fetch all the remotes.
 test/lint/git-subtree-check.sh src/crypto/ctaes
 test/lint/git-subtree-check.sh src/secp256k1
+test/lint/git-subtree-check.sh src/minisketch
 test/lint/git-subtree-check.sh src/univalue
 test/lint/git-subtree-check.sh src/leveldb
 test/lint/git-subtree-check.sh src/crc32c
