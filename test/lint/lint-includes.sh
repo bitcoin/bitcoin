@@ -9,7 +9,7 @@
 # Check includes: Check for duplicate includes. Enforce bracket syntax includes.
 
 export LC_ALL=C
-IGNORE_REGEXP="/(leveldb|secp256k1|univalue|crc32c)/"
+IGNORE_REGEXP="/(leveldb|secp256k1|minisketch|univalue|crc32c)/"
 
 # cd to root folder of git repo for git ls-files to work properly
 cd "$(dirname $0)/../.." || exit 1
