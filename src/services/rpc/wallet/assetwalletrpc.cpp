@@ -192,7 +192,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     FeeCalculation fee_calc;
     CCoinControl coin_control;
     tx = txIn;
-    const bool& isSyscoinTx = IsSyscoinTx(tx.nVersion);
+    const bool& isSyscoinTx = IsZdagTx(tx.nVersion);
     tx.vin.clear();
     if(!outPointLastSender.IsNull() && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
         const Coin& coin = view.AccessCoin(outPointLastSender);
@@ -221,7 +221,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
                 continue;
             }
         }
-        // disable RBF for syscoin tx's, should use CPFP
+        // disable RBF for syscoin zdag tx's, should use CPFP
         if(isSyscoinTx)
             vin.nSequence = CTxIn::SEQUENCE_FINAL - 1;
         tx.vin.emplace_back(vin);
