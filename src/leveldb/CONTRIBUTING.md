@@ -1,7 +1,7 @@
 # Contributing
 
 We'd love to accept your code patches! However, before we can take them, we
-have to jump a couple of legal hurdles.
+have to jump through a couple of legal hurdles.
 
 ## Contributor License Agreements
 
