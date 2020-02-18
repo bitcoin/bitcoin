@@ -640,11 +640,19 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
 			{
                 return FormatSyscoinErrorMessage(state, "assetallocation-empty", bSanityCheck);
 			}
+            if(theAssetAllocation.listSendingAllocationAmounts.size() > 1)
+			{
+                return FormatSyscoinErrorMessage(state, "assetallocation-too-many-receivers", bSanityCheck);
+			}
             break;            
 		case SYSCOIN_TX_VERSION_ALLOCATION_LOCK:
 			if (theAssetAllocation.lockedOutpoint.IsNull())
 			{
                 return FormatSyscoinErrorMessage(state, "assetallocation-missing-lockpoint", bSanityCheck);
+			}
+            if(!theAssetAllocation.listSendingAllocationAmounts.empty())
+			{
+                return FormatSyscoinErrorMessage(state, "assetallocation-too-many-receivers", bSanityCheck);
 			}
 			break;
         default:
