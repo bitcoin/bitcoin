@@ -16,7 +16,7 @@
 #include <validationinterface.h>
 #include <utility> // std::unique
 extern AssetBalanceMap mempoolMapAssetBalances;
-extern ArrivalTimesVecImpl arrivalTimesVec;
+extern ArrivalTimesSetImpl arrivalTimesSet;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern RecursiveMutex cs_assetallocationmempoolbalance;
 extern RecursiveMutex cs_assetallocationarrival;
@@ -28,7 +28,7 @@ std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 AssetPrevTxMap mapSenderLockedOutPoints;
 AssetPrevTxMap mapAssetPrevTxSender;
 RecursiveMutex cs_assetallocationmempoolremovetx;
-std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool GUARDED_BY(cs_assetallocationmempoolremovetx);
+ArrivalTimesSet setToRemoveFromMempool GUARDED_BY(cs_assetallocationmempoolremovetx);
 extern RecursiveMutex cs_setethstatus;
 extern bool AbortNode(const std::string& strMessage, const std::string& userMessage = "", unsigned int prefix = 0);
 using namespace std;
@@ -382,8 +382,8 @@ void AddZDAGTx(const CTransactionRef &zdagTx, const AssetBalanceMap &mapAssetAll
         }   
         {
             LOCK(cs_assetallocationarrival);
-            ArrivalTimesVec& arrivalTimes = arrivalTimesVec[std::move(assetAllocationBalance.first)];
-            arrivalTimes.emplace_back(txHash);
+            ArrivalTimesSet& arrivalTimes = arrivalTimesSet[std::move(assetAllocationBalance.first)];
+            arrivalTimes.insert(txHash);
         }
     }
     
@@ -392,22 +392,18 @@ void AddZDAGTx(const CTransactionRef &zdagTx, const AssetBalanceMap &mapAssetAll
 void RemoveZDAGTx(const CTransactionRef &zdagTx) {
     if(!IsAssetAllocationTx(zdagTx->nVersion))
         return;
-    ActorSet actorSet;
-    GetActorsFromSyscoinTx(zdagTx, true, false, actorSet);
+    const std::string &sender = GetSenderOfZdagTx(*zdagTx);
+    if(sender.empty())
+        return;
     const uint256& zdagTxhash = zdagTx->GetHash();
-    const std::string &sender = *actorSet.begin();
     {
         LOCK(cs_assetallocationarrival);
-        auto arrivalTimesIt = arrivalTimesVec.find(sender);
-        if(arrivalTimesIt != arrivalTimesVec.end()){
-            ArrivalTimesVec& arrivalTimes = arrivalTimesIt->second;
-            auto it = std::find( arrivalTimes.begin(), arrivalTimes.end(), zdagTxhash);
-            if(it != arrivalTimes.end()){
-                arrivalTimes.erase(it);
-            }
-            if(arrivalTimes.empty())
+        auto arrivalTimesIt = arrivalTimesSet.find(sender);
+        if(arrivalTimesIt != arrivalTimesSet.end()){
+            arrivalTimesIt->second.erase(zdagTxhash);
+            if(arrivalTimesIt->second.empty())
             {
-                arrivalTimesVec.erase(arrivalTimesIt);
+                arrivalTimesSet.erase(arrivalTimesIt);
                 {
                     LOCK(cs_assetallocationmempoolbalance);
                     mempoolMapAssetBalances.erase(sender);

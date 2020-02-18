@@ -26,10 +26,10 @@ RecursiveMutex cs_assetallocationconflicts;
 RecursiveMutex cs_setethstatus;
 using namespace std;
 AssetBalanceMap mempoolMapAssetBalances GUARDED_BY(cs_assetallocationmempoolbalance);
-ArrivalTimesVecImpl arrivalTimesVec GUARDED_BY(cs_assetallocationarrival);
+ArrivalTimesSetImpl arrivalTimesSet GUARDED_BY(cs_assetallocationarrival);
 std::unordered_set<std::string> assetAllocationConflicts GUARDED_BY(cs_assetallocationconflicts);
 extern RecursiveMutex cs_assetallocationmempoolremovetx;
-extern std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool;
+extern ArrivalTimesSetImpl setToRemoveFromMempool;
 string CWitnessAddress::ToString() const {
     if (vchWitnessProgram.size() <= 4 && stringFromVch(vchWitnessProgram) == "burn")
         return "burn";
@@ -733,15 +733,12 @@ void CAssetAllocationDBEntry::SerializationOp(Stream& s, Operation ser_action) {
             READWRITE(lockedOutpoint);
     }
 }
-bool GetSenderOfZdagTx(const CTransaction &tx, std::string& senderStr){
+std::string GetSenderOfZdagTx(const CTransaction &tx){
     if(!IsAssetAllocationTx(tx.nVersion))
-        return false;
+        return "";
     CAssetAllocation theAssetAllocation(tx);
     if(theAssetAllocation.assetAllocationTuple.IsNull()){
-        return false;
+        return "";
     }
-    ActorSet actorSet;
-    GetActorsFromAssetAllocationTx(theAssetAllocation, tx.nVersion, true, false, actorSet);
-    senderStr = *actorSet.begin();
-    return true;
+    return theAssetAllocation.assetAllocationTuple.ToString();
 }

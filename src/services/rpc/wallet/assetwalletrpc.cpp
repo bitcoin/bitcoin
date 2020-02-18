@@ -22,7 +22,7 @@ extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
-extern ArrivalTimesVecImpl arrivalTimesVec; 
+extern ArrivalTimesSetImpl arrivalTimesSet; 
 extern RecursiveMutex cs_assetallocationarrival;
 extern AssetPrevTxMap mapAssetPrevTxSender;
 extern AssetPrevTxMap mapSenderLockedOutPoints;

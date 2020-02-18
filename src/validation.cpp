@@ -675,7 +675,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                     // if not RBF then allow first dbl-spend to be relayed, ZDAG by default isn't RBF enabled because it shouldn't be replaceable and because of checks below
                     // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because zdag isn't RBF.
                     if(!args.m_test_accept && IsAssetAllocation){
-                        if(!GetSenderOfZdagTx(tx, sender)){
+                        sender = GetSenderOfZdagTx(tx);
+                        if(sender.empty()){
                             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                         }
                         {
@@ -831,10 +832,14 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // SYSCOIN
     std::string strSender;
     if(IsSyscoinTx(tx.nVersion)){
-        if(sender.empty() && IsAssetAllocation && !GetSenderOfZdagTx(tx, sender))
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx",
+        if(sender.empty() && IsAssetAllocation){
+            sender = GetSenderOfZdagTx(tx);
+            if(sender.empty()){
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx",
                  strprintf("Could not get sender of zdag tx %s",
                         hash.ToString()));
+            }
+        }
         TxValidationState tx_state;
         if (!CheckSyscoinInputs(tx, hash, tx_state, ws.mapAssetAllocationBalances, m_view, true, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), args.m_test_accept || args.m_bypass_limits)) {
             // if already set as duplicate means this is the first time we saw this conflict otherwise we need to check against the sender later
