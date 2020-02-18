@@ -85,7 +85,6 @@ private:
 struct TestingSetup : public BasicTestingSetup {
     NodeContext m_node;
     boost::thread_group threadGroup;
-    CScheduler scheduler;
 
     explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();
