@@ -433,7 +433,7 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sen
         if (!txRef)
             return ZDAG_NOT_FOUND;
         if(!IsAssetAllocationTx(txRef->nVersion))
-            return ZDAG_STATUS_OK;
+            return ZDAG_NOT_FOUND;
         // the zdag tx or any others from this sender should be under MTU of IP packet
         if(GetSerializeSize(txRef, PROTOCOL_VERSION) > 1100){
             return ZDAG_WARNING_RBF;
