@@ -862,7 +862,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             }
         } 
     } 
-    LogPrintf("CalculateMemPoolAncestors with search for parents\n");
     if (!m_pool.CalculateMemPoolAncestors(*entry, setAncestors, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants, m_limit_descendant_size, errString, true, duplicate, sender)) {
         setAncestors.clear();
         // If CalculateMemPoolAncestors fails second time, we want the original error string.
