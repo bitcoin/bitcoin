@@ -688,7 +688,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-asset", bSanityCheck);
     }   
     CAmount mapBalanceSenderCopy;
-    if(fJustCheck && !bSanityCheck){
+    const bool & isZdagTx = IsZdagTx(tx.nVersion);
+    if(fJustCheck && !bSanityCheck && isZdagTx){
         LOCK(cs_assetallocationmempoolbalance); 
         #if __cplusplus > 201402 
         auto result = mempoolMapAssetBalances.try_emplace(senderTupleStr,  std::move(storedSenderAllocationRef.nBalance));
@@ -945,7 +946,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         }
                     
     }
-    else if(!bSanityCheck && IsZdagTx(tx.nVersion)){
+    else if(!bSanityCheck && isZdagTx){
         #if __cplusplus > 201402 
         auto resultBalance = mapAssetAllocationBalances.try_emplace(senderTupleStr,  std::move(mapBalanceSenderCopy));
         #else
