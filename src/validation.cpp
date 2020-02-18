@@ -550,15 +550,15 @@ private:
 
     // Compare a package's feerate against minimum allowed.
     // SYSCOIN
-    bool CheckFeeRate(size_t package_size, CAmount package_fee, TxValidationState& state, const bool& IsAssetAllocation)
+    bool CheckFeeRate(size_t package_size, CAmount package_fee, TxValidationState& state, const bool& IsZdagTx)
     {
         CAmount mempoolRejectFee = m_pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(package_size);
         if (mempoolRejectFee > 0 && package_fee < mempoolRejectFee) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
         }
         // SYSCOIN
-        if (package_fee < ::minRelayTxFee.GetFee(IsAssetAllocation? package_size*2: package_size)) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met", strprintf("%d < %d", package_fee, ::minRelayTxFee.GetFee(IsAssetAllocation? package_size*2: package_size)));
+        if (package_fee < ::minRelayTxFee.GetFee(IsZdagTx? package_size*2: package_size)) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met", strprintf("%d < %d", package_fee, ::minRelayTxFee.GetFee(IsZdagTx? package_size*2: package_size)));
         }
         return true;
     }
@@ -641,7 +641,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     
     // SYSCOIN
     // Check for conflicts with in-memory transactions
-    const bool& IsAssetAllocation = IsAssetAllocationTx(tx.nVersion);
+    const bool& IsZTx = IsZdagTx(tx.nVersion);
     for (const CTxIn &txin : tx.vin)
     {
         const CTransaction* ptxConflicting = m_pool.GetConflictTx(txin.prevout);
@@ -674,7 +674,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 if (fReplacementOptOut) {
                     // if not RBF then allow first dbl-spend to be relayed, ZDAG by default isn't RBF enabled because it shouldn't be replaceable and because of checks below
                     // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because zdag isn't RBF.
-                    if(!args.m_test_accept && IsAssetAllocation){
+                    if(!args.m_test_accept && IsZTx){
                         sender = GetSenderOfZdagTx(tx);
                         if(sender.empty()){
                             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
@@ -784,7 +784,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // No transactions are allowed below minRelayTxFee except from disconnected
     // blocks
-    if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state, IsAssetAllocation)) return false;
+    if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state, IsZTx)) return false;
 
     if (nAbsurdFee && nFees > nAbsurdFee)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD,
@@ -832,7 +832,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // SYSCOIN
     std::string strSender;
     if(IsSyscoinTx(tx.nVersion)){
-        if(sender.empty() && IsAssetAllocation){
+        if(sender.empty() && IsZTx){
             sender = GetSenderOfZdagTx(tx);
             if(sender.empty()){
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx",

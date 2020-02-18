@@ -390,7 +390,7 @@ void AddZDAGTx(const CTransactionRef &zdagTx, const AssetBalanceMap &mapAssetAll
 }
 // remove arrival time/mempool balances upon mempool removal, as well as any conflicts if arrival times vector is empty for the sender of this tx
 void RemoveZDAGTx(const CTransactionRef &zdagTx) {
-    if(!IsAssetAllocationTx(zdagTx->nVersion))
+    if(!IsZdagTx(zdagTx->nVersion))
         return;
     const std::string &sender = GetSenderOfZdagTx(*zdagTx);
     if(sender.empty())
@@ -945,7 +945,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         }
                     
     }
-    else if(!bSanityCheck){
+    else if(!bSanityCheck && IsZdagTx(tx.nVersion)){
         #if __cplusplus > 201402 
         auto resultBalance = mapAssetAllocationBalances.try_emplace(senderTupleStr,  std::move(mapBalanceSenderCopy));
         #else

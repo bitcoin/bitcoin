@@ -734,8 +734,6 @@ void CAssetAllocationDBEntry::SerializationOp(Stream& s, Operation ser_action) {
     }
 }
 std::string GetSenderOfZdagTx(const CTransaction &tx){
-    if(!IsAssetAllocationTx(tx.nVersion))
-        return "";
     CAssetAllocation theAssetAllocation(tx);
     if(theAssetAllocation.assetAllocationTuple.IsNull()){
         return "";
