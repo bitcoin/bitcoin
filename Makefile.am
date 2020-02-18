@@ -206,6 +206,7 @@ LCOV_FILTER_PATTERN = \
 	-p "src/bench/" \
 	-p "src/univalue" \
 	-p "src/crypto/ctaes" \
+	-p "src/minisketch" \
 	-p "src/secp256k1" \
 	-p "depends"
 
