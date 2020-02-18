@@ -25,7 +25,9 @@ extern std::unordered_set<std::string> assetAllocationConflicts;
 extern RecursiveMutex cs_assetallocationconflicts;
 extern RecursiveMutex cs_assetallocationarrival;
 extern RecursiveMutex cs_setethstatus;
-extern ArrivalTimesMapImpl arrivalTimesMap;
+extern ArrivalTimesVecImpl arrivalTimesVec;
+extern RecursiveMutex cs_assetallocationmempoolremovetx;
+extern std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 extern std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
@@ -420,68 +422,8 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
 		oAssetAllocation.clear();
     return oAssetAllocation;
 }
-UniValue listassetindexallocations(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"listassetindexallocations",
-        "\nReturn a list of asset allocations an address is associated with.\n",
-        {
-            {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to find assets associated with."}
-        },
-        RPCResult{
-            "[\n"
-            "  {\n"
-            "    \"asset_allocation\":   (string) The unique key for this allocation\n"
-            "    \"asset_guid\":         (string) The guid of the asset\n"
-            "    \"symbol\":             (string) The asset symbol\n"
-            "    \"address\":            (string) The address of the owner of this allocation\n"
-            "    \"balance\":            (numeric) The current balance\n"
-            "    \"balance_zdag\":       (numeric) The zdag balance\n"
-            "    \"locked_outpoint\":    (string) The locked UTXO if applicable for this allocation\n"
-            "  },\n"
-            "  ...\n"
-            "]\n"
-        },
-        RPCExamples{
-            HelpExampleCli("listassetindexallocations", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
-            + HelpExampleRpc("listassetindexallocations", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
-        }
-    }.Check(request);
-    if(!fAssetIndex){
-        throw JSONRPCError(RPC_MISC_ERROR, "You must reindex syscoin with -assetindex enabled");
-    }       
-
-
-    string strAddressFrom = params[0].get_str();
-
-    const CWitnessAddress &witnessAddress = DescribeWitnessAddress(strAddressFrom);
-
-    UniValue oAssetAllocation(UniValue::VOBJ);
-    UniValue oRes(UniValue::VARR);
-    std::vector<uint32_t> assetGuids;
-    passetallocationdb->ReadAssetsByAddress(witnessAddress, assetGuids);
-    
-
-    for(const uint32_t& guid: assetGuids){
-        UniValue oAssetAllocation(UniValue::VOBJ);
-        const CAssetAllocationTuple assetAllocationTuple(guid, witnessAddress);
-        CAssetAllocationDBEntry txPos;
-        if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
-            continue;
-        CAsset theAsset;
-        if (!GetAsset(guid, theAsset))
-           continue;
-
-        if(BuildAssetAllocationJson(txPos, theAsset, oAssetAllocation)){
-            oRes.push_back(oAssetAllocation);
-        }
-    }
-    return oRes;
-}
 // recursive procedure to loop through all arrival times and related arrival times to find all senders
-int CheckActorsInTransactionGraph(const uint256& lookForTxHash, ActorSet& actorSet, std::set<uint256> &setTXIDs){
-    if(setTXIDs.find(lookForTxHash) != setTXIDs.end())
-        return ZDAG_STATUS_OK;
-    setTXIDs.emplace(lookForTxHash);
+int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sender){
     ActorSet actorSetSender;
     {
         LOCK(cs_main);
@@ -514,45 +456,31 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, ActorSet& actorS
             // check if any ancestor inputs are dbl spent, reject if so
             if(mempool.existsConflicts(*ancestorTxRef))
                 return ZDAG_MAJOR_CONFLICT;
-            const uint256& ancestorTxHash = it->GetSharedTx()->GetHash();
-            if(IsAssetAllocationTx(ancestorTxRef->nVersion)){
-                if(setTXIDs.find(ancestorTxHash) == setTXIDs.end()){
-                    setTXIDs.emplace(ancestorTxHash);  
-                    GetActorsFromSyscoinTx(ancestorTxRef, true, false, actorSet);
-                }
-            }
         }  
     }  
-    std::string actorToCheck = *actorSetSender.begin();
-    
-    const ArrivalTimesMap& arrivalTimes = arrivalTimesMap[actorToCheck];
-	if(arrivalTimes.empty())
-		return ZDAG_STATUS_OK;
-    for(const auto &arrivalTime: arrivalTimes){
-        int status = CheckActorsInTransactionGraph(arrivalTime.first, actorSet, setTXIDs);
-        if(status != ZDAG_STATUS_OK){
-            return status;
-        }
+    sender = *actorSetSender.begin();
+    {
+        LOCK(cs_assetallocationarrival);
+        const ArrivalTimesVec& arrivalTimes = arrivalTimesVec[sender];
+        // its in mempool and its an asset tx, it should exist in arrival times or it wasn't put in due to a conflict
+        if(arrivalTimes.empty() || std::find( arrivalTimes.begin(), arrivalTimes.end(), lookForTxHash) == arrivalTimes.end())
+            return ZDAG_MAJOR_CONFLICT;
+
     }
-    actorSet.emplace(actorToCheck);
     return ZDAG_STATUS_OK;
 }
 int VerifyTransactionGraph(const uint256& lookForTxHash) {
-    ActorSet actorSet;
-    std::set<uint256> setTXID;
-    int status = CheckActorsInTransactionGraph(lookForTxHash, actorSet, setTXID);
+    std::string sender;    
+    int status = CheckActorsInTransactionGraph(lookForTxHash, sender);
     if(status != ZDAG_STATUS_OK){
         return status;
     }
     {
         LOCK(cs_assetallocationconflicts);
-        // check all involved senders to ensure they are not flagged
-        for(const auto& actor: actorSet){
-            auto it = assetAllocationConflicts.find(actor);
-            if (it != assetAllocationConflicts.end()){
-                LogPrint(BCLog::SYS, "VerifyTransactionGraph: Actor Conflict %s\n", actor);
-                return ZDAG_MAJOR_CONFLICT;
-            }
+        auto it = assetAllocationConflicts.find(sender);
+        if (it != assetAllocationConflicts.end()){
+            LogPrint(BCLog::SYS, "VerifyTransactionGraph: Actor Conflict %s\n", sender);
+            return ZDAG_MAJOR_CONFLICT;
         }
     }
 	return ZDAG_STATUS_OK;
@@ -982,140 +910,6 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     res.__pushKV("index", nIndex);    
     return res;
 }
-UniValue listassetindex(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"listassetindex",
-    "\nScan through asset index and return paged results of historical asset transactions. Requires assetindex config parameter enabled and optional assetindexpagesize which is 25 by default.\n",
-    {
-        {"page", RPCArg::Type::NUM, "0", "Return specific page number of transactions. Lower page number means more recent transactions."},
-        {"options", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json object with options to filter results", 
-            {
-                {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset GUID to filter."},
-                {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to filter.  Leave empty to scan globally through asset"}
-            }
-        }
-    }, 
-
-    	
-    RPCResult{        
-            "If address option was omitted and transactions for asset is requested"
-            "[\n"
-            "  {\n"
-            "    \"txtype\":       (string) The asset transaction type. One of 'assetactivate', 'assetupdate', or 'assettransfer'\n"
-            "    \"asset_guid\":   (numeric) The asset guid\n"
-            "    \"symbol\":       (string) The asset symbol\n"
-            "    \"txid\":         (string) The transaction id that created this asset\n"
-            "    \"height\":       (numeric) The height at which the transaction was confirmed\n"
-            "    \"public_value\":  (string) The public value attached to this asset. Only returned value was changed.\n"
-            "    \"sender\":        (string) The address that controls this asset\n"
-            "    \"contract\":     (string) The ethereum contract address. Only returned if value was changed.\n"
-            "    \"balance\":      (numeric) The current balance. Only exists if supply was changed.\n"
-            "    \"update_flag\":  (numeric) The flag in decimal. Only exists if value was changed.\n"
-            "    \"total_supply\": (numeric) The total supply of this asset. Only exists for 'assetactivate' txtype.\n"
-            "    \"max_supply\":   (numeric) The maximum supply of this asset. Only exists for 'assetactivate' txtype.\n"
-            "    \"precision\":    (numeric) The precision of this asset. Only exists for 'assetactivate' txtype.\n"
-            "    \"blockhash\":    (string) Block hash that confirmed this transaction. Empty if not confirmed.\n"   
-            "  },\n"
-            "  ...\n"
-            "]\n"
-            "If address is included and transactions for asset allocation is requested"
-            "[\n"
-            "  {\n"
-            "    \"txtype\":            (string) The asset allocation transaction type. One of 'assetsend', 'assetallocationsend', 'assetallocationburntoethereum', 'assetallocationburntoethereum', 'assetallocationburntosyscoin', 'assetallocationmint', or 'assetallocationlock'\n"
-            "    \"asset_allocation\":  (string) The unique key for this allocation\n"
-            "    \"asset_guid\":        (numeric) The asset guid\n"
-            "    \"symbol\":            (string) The asset symbol\n"
-            "    \"txid\":              (string) The transaction id that created this asset\n"
-            "    \"height\":            (numeric) The height at which the transaction was confirmed\n"
-            "    \"sender\":            (string) The address that controls this asset allocation\n"
-            "    \"allocations\" : [    (array of json objects)\n"
-            "      {\n"
-            "        \"address\": \"address\",    (string) The address of the receiver\n"
-            "        \"amount\" : n,              (numeric) The amount of the transaction\n"
-            "      },\n"
-            "      ...\n"
-            "    ]\n"           
-            "    \"total\":             (numeric) The total amount of asset sent.\n"
-            "    \"blockhash\":         (string) Block hash that confirmed this transaction. Empty if not confirmed.\n"
-            "    \"ethereum_destination\":   (string) Destination ethereum address for moving over the bridge from sys to eth. Only exists for 'assetallocationburntoethereum' txtype.\n"
-            "    \"ethereum_contract\":      (string) Destination ethereum smart contract for moving over the bridge from sys to eth. Only exists for 'assetallocationburntoethereum' txtype.\n"
-            "    \"locked_outpoint\":        (string) The txid+output index pair locking this asset allocation to an outpoint for future transactions. Only exists for 'assetallocationlock' txtype.\n"  
-            "  },\n"
-            "  ...\n"
-            "]\n"            
-    },
-    RPCExamples{
-        HelpExampleCli("listassetindex", "0 '{\"asset_guid\":92922}'")
-        + HelpExampleCli("listassetindex", "2 '{\"asset_guid\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
-        + HelpExampleRpc("listassetindex", "0, '{\"asset_guid\":92922}'")
-        + HelpExampleRpc("listassetindex", "2, '{\"asset_guid\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
-    }
-}.Check(request);
-    if(!fAssetIndex){
-        throw JSONRPCError(RPC_MISC_ERROR, "You must start syscoin with -assetindex enabled");
-    }
-    UniValue options;
-    uint32_t page = params[0].get_uint();
-   
-    options = params[1];
-    
-    UniValue oRes(UniValue::VARR);
-    if (!passetindexdb->ScanAssetIndex(page, options, oRes))
-        throw JSONRPCError(RPC_MISC_ERROR, "Scan failed");
-    return oRes;
-}
-UniValue listassetindexassets(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"listassetindexassets",
-        "\nReturn a list of assets an address is associated with.\n",
-        {
-            {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to find assets associated with."}
-        },
-        RPCResult{
-            "[\n"
-            "  {\n"
-            "    \"asset_guid\":   (numeric) The asset guid\n"
-            "    \"symbol\":       (string) The asset symbol\n"
-            "    \"txid\":         (string) The transaction id that created this asset\n"
-            "    \"public_value\":  (string) The public value attached to this asset\n"
-            "    \"address\":      (string) The address that controls this asset\n"
-            "    \"contract\":     (string) The ethereum contract address\n"
-            "    \"balance\":      (numeric) The current balance\n"
-            "    \"total_supply\": (numeric) The total supply of this asset\n"
-            "    \"max_supply\":   (numeric) The maximum supply of this asset\n"
-            "    \"update_flag\":  (numeric) The flag in decimal \n"
-            "    \"precision\":    (numeric) The precision of this asset \n"
-            "  },\n"
-            "  ...\n"
-            "]\n"
-        },
-        RPCExamples{
-            HelpExampleCli("listassetindexassets", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
-            + HelpExampleRpc("listassetindexassets", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
-        }
-    }.Check(request);
-    if(!fAssetIndex){
-        throw JSONRPCError(RPC_MISC_ERROR, "You must reindex syscoin with -assetindex enabled");
-    }  
-
-    UniValue oRes(UniValue::VARR);
-    std::vector<uint32_t> assetGuids;
-    const CWitnessAddress &witnessAddress = DescribeWitnessAddress(params[0].get_str());
-    passetdb->ReadAssetsByAddress(witnessAddress, assetGuids);
-    
-    for(const uint32_t& guid: assetGuids){
-        UniValue oAsset(UniValue::VOBJ);
-        CAsset theAsset;
-        if (!GetAsset(guid, theAsset))
-           continue;
-
-        // equality: catch case where asset is transferred
-        if(theAsset.witnessAddress == witnessAddress && BuildAssetJson(theAsset, oAsset)){
-            oRes.push_back(oAsset);
-        }
-    }
-    return oRes;
-}
 UniValue syscoinstopgeth(const JSONRPCRequest& request) {
     RPCHelpMan{"syscoinstopgeth",
     "\nStops Geth and the relayer from running.\n",
@@ -1495,9 +1289,6 @@ static const CRPCCommand commands[] =
     { "syscoin",            "assetallocationverifyzdag",        &assetallocationverifyzdag,     {"txid"} },
     { "syscoin",            "listassetallocations",             &listassetallocations,          {"count","from","options"} },
     { "syscoin",            "listassetallocationmempoolbalances",             &listassetallocationmempoolbalances,          {"count","from","options"} },
-    { "syscoin",            "listassetindex",                   &listassetindex,                {"page","options"} },
-    { "syscoin",            "listassetindexassets",             &listassetindexassets,          {"address"} },
-    { "syscoin",            "listassetindexallocations",        &listassetindexallocations,     {"address"} },
     { "syscoin",            "tpstestinfo",                      &tpstestinfo,                   {} },
     { "syscoin",            "tpstestadd",                       &tpstestadd,                    {"starttime","rawtxs"} },
     { "syscoin",            "tpstestsetenabled",                &tpstestsetenabled,             {"enabled"} },

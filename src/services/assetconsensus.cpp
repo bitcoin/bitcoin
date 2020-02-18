@@ -16,7 +16,7 @@
 #include <validationinterface.h>
 #include <utility> // std::unique
 extern AssetBalanceMap mempoolMapAssetBalances;
-extern ArrivalTimesMapImpl arrivalTimesMap;
+extern ArrivalTimesVecImpl arrivalTimesVec;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern RecursiveMutex cs_assetallocationmempoolbalance;
 extern RecursiveMutex cs_assetallocationarrival;
@@ -27,8 +27,8 @@ std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 AssetPrevTxMap mapSenderLockedOutPoints;
 AssetPrevTxMap mapAssetPrevTxSender;
-std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
 RecursiveMutex cs_assetallocationmempoolremovetx;
+std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool GUARDED_BY(cs_assetallocationmempoolremovetx);
 extern RecursiveMutex cs_setethstatus;
 extern bool AbortNode(const std::string& strMessage, const std::string& userMessage = "", unsigned int prefix = 0);
 using namespace std;
@@ -40,22 +40,22 @@ bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string error
             return state.Invalid(bConsensus? TxValidationResult::TX_CONSENSUS: TxValidationResult::TX_CONFLICT, errorMessage);
         }  
 }
-bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const int64_t& nTime, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
+bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
     // unserialize mint object from txn, check for valid
     CMintSyscoin mintSyscoin(tx);
     CAsset dbAsset;
     if(mintSyscoin.IsNull())
     {
-        return FormatSyscoinErrorMessage(state, "mint-unserialize", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-unserialize", bSanityCheck);
     } 
     if(mintSyscoin.assetAllocationTuple.IsNull())
     {
-        return FormatSyscoinErrorMessage(state, "mint-asset", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-asset", bSanityCheck);
     } 
     if(!GetAsset(mintSyscoin.assetAllocationTuple.nAsset, dbAsset)) 
     {
-        return FormatSyscoinErrorMessage(state, "mint-non-existing-asset", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-non-existing-asset", bSanityCheck);
     }
     
    
@@ -73,7 +73,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             if(ethTxRootShouldExist){
                 // we always want to pass state.Invalid() for txroot missing errors here meaning we flag the block as invalid and dos ban the sender maybe
                 // the check in contextualcheckblock that does this prevents us from getting a block that's invalid flagged as error so it won't propagate the block, but if block does arrive we should dos ban peer and invalidate the block itself from connect block
-                return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bMiner);
+                return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
             }
         }
     }  
@@ -81,17 +81,17 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(ethTxRootShouldExist){
         // time must be between 1 week and 1 hour old to be accepted
         if(nTime < txRootDB.nTimestamp) {
-            return FormatSyscoinErrorMessage(state, "invalid-timestamp", bMiner);
+            return FormatSyscoinErrorMessage(state, "invalid-timestamp", bSanityCheck);
         }
         // 3 hr on testnet and 1 week on mainnet
         else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? 10800: 604800)) {
-            return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", bMiner);
+            return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", bSanityCheck);
         } 
         
         // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
         // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
         else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? 600: 3600)) {
-            return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", bMiner);
+            return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", bSanityCheck);
         }
     }
     
@@ -110,54 +110,54 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::RLP rlpReceiptValue(&vchReceiptValue);
     
     if (!rlpReceiptValue.isList()){
-        return FormatSyscoinErrorMessage(state, "mint-invalid-tx-receipt", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-invalid-tx-receipt", bSanityCheck);
     }
     if (rlpReceiptValue.itemCount() != 4){
-        return FormatSyscoinErrorMessage(state, "mint-invalid-tx-receipt-count", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-invalid-tx-receipt-count", bSanityCheck);
     }
     const uint64_t &nStatus = rlpReceiptValue[0].toInt<uint64_t>(dev::RLP::VeryStrict);
     if (nStatus != 1){
-        return FormatSyscoinErrorMessage(state, "mint-invalid-tx-receipt-status", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-invalid-tx-receipt-status", bSanityCheck);
     } 
     dev::RLP rlpReceiptLogsValue(rlpReceiptValue[3]);
     if (!rlpReceiptLogsValue.isList()){
-        return FormatSyscoinErrorMessage(state, "mint-receipt-rlp-logs-list", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-receipt-rlp-logs-list", bSanityCheck);
     }
     const size_t &itemCount = rlpReceiptLogsValue.itemCount();
     // just sanity checks for bounds
     if (itemCount < 1 || itemCount > 10){
-        return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-logs-count", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-logs-count", bSanityCheck);
     }
     // look for TokenFreeze event and get the last parameter which should be the BridgeTransferID
     uint32_t nBridgeTransferID = 0;
     for(uint32_t i = 0;i<itemCount;i++){
         dev::RLP rlpReceiptLogValue(rlpReceiptLogsValue[i]);
         if (!rlpReceiptLogValue.isList()){
-            return FormatSyscoinErrorMessage(state, "mint-receipt-log-rlp-list", bMiner);
+            return FormatSyscoinErrorMessage(state, "mint-receipt-log-rlp-list", bSanityCheck);
         }
         // ensure this log has atleast the address to check against
         if (rlpReceiptLogValue.itemCount() < 1){
-            return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-count", bMiner);
+            return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-count", bSanityCheck);
         }
         const dev::Address &address160Log = rlpReceiptLogValue[0].toHash<dev::Address>(dev::RLP::VeryStrict);
         if(Params().GetConsensus().vchSYSXERC20Manager == address160Log.asBytes()){
             // for mint log we should have exactly 3 entries in it, this event we control through our erc20manager contract
             if (rlpReceiptLogValue.itemCount() != 3){
-                return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-count-bridgeid", bMiner);
+                return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-count-bridgeid", bSanityCheck);
             }
             // check topic
             dev::RLP rlpReceiptLogTopicsValue(rlpReceiptLogValue[1]);
             if (!rlpReceiptLogTopicsValue.isList()){
-                return FormatSyscoinErrorMessage(state, "mint-receipt-log-topics-rlp-list", bMiner);
+                return FormatSyscoinErrorMessage(state, "mint-receipt-log-topics-rlp-list", bSanityCheck);
             }
             if (rlpReceiptLogTopicsValue.itemCount() != 1){
-                return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-topics-count", bMiner);
+                return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-topics-count", bSanityCheck);
             }
             // topic hash matches with TokenFreeze signature
             if(Params().GetConsensus().vchTokenFreezeMethod == rlpReceiptLogTopicsValue[0].toBytes(dev::RLP::VeryStrict)){
                 const std::vector<unsigned char> &dataValue = rlpReceiptLogValue[2].toBytes(dev::RLP::VeryStrict);
                 if(dataValue.size() < 96){
-                     return FormatSyscoinErrorMessage(state, "mint-receipt-log-data-invalid-size", bMiner);
+                     return FormatSyscoinErrorMessage(state, "mint-receipt-log-data-invalid-size", bSanityCheck);
                 }
                 // get last data field which should be our BridgeTransferID
                 const std::vector<unsigned char> bridgeIdValue(dataValue.begin()+64, dataValue.end());
@@ -169,7 +169,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         }
     }
     if(nBridgeTransferID == 0){
-        return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-bridge-id", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-bridge-id", bSanityCheck);
     }
  
     // check transaction spv proofs
@@ -177,11 +177,11 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::RLP rlpReceiptRoot(&mintSyscoin.vchReceiptRoot);
 
     if(!txRootDB.vchTxRoot.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != txRootDB.vchTxRoot){
-        return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bSanityCheck);
     }
 
     if(!txRootDB.vchReceiptRoot.empty() && rlpReceiptRoot.toBytes(dev::RLP::VeryStrict) != txRootDB.vchReceiptRoot){
-        return FormatSyscoinErrorMessage(state, "mint-mismatching-receiptroot", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-mismatching-receiptroot", bSanityCheck);
     } 
     
     
@@ -204,36 +204,36 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     const std::vector<unsigned char> &vchHash = hash.asBytes();
     // ensure eth tx not already spent
     if(pethereumtxmintdb->ExistsKey(vchHash)){
-        return FormatSyscoinErrorMessage(state, "mint-exists", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-exists", bSanityCheck);
     } 
     // add the key to flush to db later
     vecMintKeys.emplace_back(std::make_pair(std::make_pair(vchHash, nBridgeTransferID), txHash));
     
     // verify receipt proof
     if(!VerifyProof(&vchTxPath, rlpReceiptValue, rlpReceiptParentNodes, rlpReceiptRoot)){
-        return FormatSyscoinErrorMessage(state, "mint-verify-receipt-proof", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-verify-receipt-proof", bSanityCheck);
     } 
     // verify transaction proof
     if(!VerifyProof(&vchTxPath, rlpTxValue, rlpTxParentNodes, rlpTxRoot)){
-        return FormatSyscoinErrorMessage(state, "mint-verify-tx-proof", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-verify-tx-proof", bSanityCheck);
     } 
     if (!rlpTxValue.isList()){
-        return FormatSyscoinErrorMessage(state, "mint-tx-rlp-list", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-tx-rlp-list", bSanityCheck);
     }
     if (rlpTxValue.itemCount() < 6){
-        return FormatSyscoinErrorMessage(state, "mint-tx-itemcount", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-tx-itemcount", bSanityCheck);
     }        
     if (!rlpTxValue[5].isData()){
-        return FormatSyscoinErrorMessage(state, "mint-tx-array", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-tx-array", bSanityCheck);
     }        
     if (rlpTxValue[3].isEmpty()){
-        return FormatSyscoinErrorMessage(state, "mint-tx-invalid-receiver", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-tx-invalid-receiver", bSanityCheck);
     }                       
     const dev::Address &address160 = rlpTxValue[3].toHash<dev::Address>(dev::RLP::VeryStrict);
 
     // ensure ERC20Manager is in the "to" field for the contract, meaning the function was called on this contract for freezing supply
     if(Params().GetConsensus().vchSYSXERC20Manager != address160.asBytes()){
-        return FormatSyscoinErrorMessage(state, "mint-invalid-contract-manager", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-invalid-contract-manager", bSanityCheck);
     }
     
     CAmount outputAmount;
@@ -242,25 +242,25 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     CWitnessAddress witnessAddress;
     std::vector<unsigned char> vchERC20ContractAddress;
     if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, dbAsset.vchContract, outputAmount, nAsset, dbAsset.nPrecision, witnessAddress)){
-        return FormatSyscoinErrorMessage(state, "mint-invalid-tx-data", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-invalid-tx-data", bSanityCheck);
     }
     if(!fUnitTest){
         if(witnessAddress != mintSyscoin.assetAllocationTuple.witnessAddress){
-            return FormatSyscoinErrorMessage(state, "mint-mismatch-witness-address", bMiner);
+            return FormatSyscoinErrorMessage(state, "mint-mismatch-witness-address", bSanityCheck);
         }   
         if(nAsset != dbAsset.nAsset){
-            return FormatSyscoinErrorMessage(state, "mint-mismatch-asset", bMiner);
+            return FormatSyscoinErrorMessage(state, "mint-mismatch-asset", bSanityCheck);
         }
     }
     if(outputAmount != mintSyscoin.nValueAsset){
-        return FormatSyscoinErrorMessage(state, "mint-mismatch-value", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-mismatch-value", bSanityCheck);
     }  
     if(outputAmount <= 0){
-        return FormatSyscoinErrorMessage(state, "mint-burn-value", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-burn-value", bSanityCheck);
     }  
     const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
     #if __cplusplus > 201402 
-    auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+    auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
     #else
     auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
     #endif
@@ -268,7 +268,11 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     // sender as burn	
     const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, burnWitness);	
     const std::string &senderTupleStr = senderAllocationTuple.ToString();	
+    #if __cplusplus > 201402 
+    auto result2 = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
+    #else
     auto result2 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));	
+    #endif
     auto mapSenderAssetAllocation = result2.first;	
     const bool &mapSenderAssetAllocationNotFound = result2.second;	
     if(mapSenderAssetAllocationNotFound){	
@@ -295,176 +299,133 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     mapAssetAllocation->second.nBalance += mintSyscoin.nValueAsset;
     mapSenderAssetAllocation->second.nBalance -= mintSyscoin.nValueAsset;
     if(mapSenderAssetAllocation->second.nBalance < 0){	
-        return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bMiner);
+        return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bSanityCheck);
     }    	
     if(mapSenderAssetAllocation->second.nBalance == 0)	
         mapSenderAssetAllocation->second.SetNull();        
     if (!AssetRange(mapAssetAllocation->second.nBalance))
     {
-        return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
+        return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bSanityCheck);
     }
     
     if (!AssetRange(mintSyscoin.nValueAsset))
     {
-        return FormatSyscoinErrorMessage(state, "mint-amount-out-of-range", bMiner);
+        return FormatSyscoinErrorMessage(state, "mint-amount-out-of-range", bSanityCheck);
     }
-
-    if(!fJustCheck && !bSanity && !bMiner)     
-        return passetallocationdb->WriteMintIndex(tx, txHash, mintSyscoin, nHeight, blockhash);         
-                                
+                      
     return true;
 }
-bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const bool &bSanity)
+bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, AssetBalanceMap &mapAssetAllocationBalances, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const bool &bSanityCheck)
 {
-    AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
     EthereumMintTxVec vecMintKeys;
     std::vector<COutPoint> vecLockedOutpoints;
-    ActorSet actorSet;
-    const bool &ret = CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, nTime, uint256(), bSanity, false, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints);
-    if(fJustCheck){
-        LOCK(cs_assetallocationarrival);
-        for (const std::string& actor: actorSet){
-            ArrivalTimesMap &arrivalTimes = arrivalTimesMap[std::move(actor)];
-            arrivalTimes.emplace_back(txHash, std::make_pair(::ChainActive().Tip()->GetMedianTimePast(), GetTimeMicros()));
-        }
-    }
-    return ret;
+    AssetAllocationMap mapAssetAllocations;
+    return CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, nTime, uint256(), bSanityCheck, mapAssetAllocations, mapAssetAllocationBalances, mapAssets, vecMintKeys, vecLockedOutpoints);
 }
-void RemoveDoubleSpendFromMempool(const CTransactionRef & txRef) EXCLUSIVE_LOCKS_REQUIRED(cs_main, mempool.cs){
-    if(txRef){
-        const CTransaction &tx = *txRef;
-        mempool.removeConflicts(tx);
-        mempool.removeRecursive(tx, MemPoolRemovalReason::SYSCOINCONSENSUS);
-        mempool.ClearPrioritisation(tx.GetHash());
-    }
-}
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetAllocationMap &mapAssetAllocations, AssetBalanceMap &mapAssetAllocationBalances, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
 {
     bool good = true;
-    const bool &isBlock = !blockHash.IsNull();  
-    // fJustCheck inplace of bSanity to preserve global structures from being changed during test calls, fJustCheck is actually passed in as false because we want to check in PoW mode if block isn't null
-    const bool bSanityInternal = !isBlock? bSanity: fJustCheck; 
-    const bool bJustCheckInternal = !isBlock? fJustCheck: false;
     try{
         if (IsAssetAllocationTx(tx.nVersion))
         {
-            // remove any txid's that are confirming from vecToRemoveFromMempool
-            if(nHeight > 0 && isBlock && vecToRemoveFromMempool.size() > 0 && !fJustCheck){
-                auto it = std::find_if( vecToRemoveFromMempool.begin(), vecToRemoveFromMempool.end(),
-                    [&txHash](const std::pair<uint256, uint32_t>& element){ return element.first == txHash;} );
-                if(it != vecToRemoveFromMempool.end()){
-                    vecToRemoveFromMempool.erase(it);
-                }
-            }
             CAssetAllocation theAssetAllocation(tx);
             if(theAssetAllocation.assetAllocationTuple.IsNull()){
-                return FormatSyscoinErrorMessage(state, "assetallocation-unserialize", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-unserialize", bSanityCheck);
             }
-            if(nHeight > 0)
-                GetActorsFromAssetAllocationTx(theAssetAllocation, tx.nVersion, false, false, actorSet);
-            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, bJustCheckInternal, nHeight, blockHash, mapAssetAllocations, vecLockedOutpoints, bSanityInternal, bMiner);
+            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, fJustCheck, nHeight, blockHash, mapAssetAllocations, mapAssetAllocationBalances, vecLockedOutpoints, bSanityCheck);
         }
         else if (IsAssetTx(tx.nVersion))
         {
-            good = CheckAssetInputs(tx, txHash, state, inputs, bJustCheckInternal, nHeight, blockHash, mapAssets, mapAssetAllocations, bSanityInternal, bMiner);
+            good = CheckAssetInputs(tx, txHash, state, inputs, fJustCheck, nHeight, blockHash, mapAssets, mapAssetAllocations, bSanityCheck);
         } 
         else if(IsSyscoinMintTx(tx.nVersion))
         {
             if(nHeight < Params().GetConsensus().nBridgeStartBlock){
-                FormatSyscoinErrorMessage(state, "mint-disabled", bMiner);
+                FormatSyscoinErrorMessage(state, "mint-disabled", bSanityCheck);
                 good = false;
             }
             else{
-                good = CheckSyscoinMint(ibd, tx, txHash, state, bJustCheckInternal, bSanityInternal, bMiner, nHeight, nTime, blockHash, mapAssets, mapAssetAllocations, vecMintKeys);
+                good = CheckSyscoinMint(ibd, tx, txHash, state, fJustCheck, bSanityCheck, nHeight, nTime, blockHash, mapAssets, mapAssetAllocations, vecMintKeys);
             }
         }
     } catch (...) {
-        return FormatSyscoinErrorMessage(state, "checksyscoininputs-exception", bMiner);
+        return FormatSyscoinErrorMessage(state, "checksyscoininputs-exception", bSanityCheck);
     }
     return good;
 }
-
-void ResyncAssetAllocationStates(){ 
-    int count = 0;
-     {
-        vector<string> vecToRemoveMempoolBalances;
-        LOCK2(cs_main, ::mempool.cs);
-        LOCK(cs_assetallocationmempoolbalance);
-        LOCK(cs_assetallocationarrival);
-        ActorSet actorSet;
-        for (auto&indexObj : mempoolMapAssetBalances) {
-            vector<uint256> vecToRemoveArrivalTimes;
-            actorSet.insert(indexObj.first);
-        }
-        count = ResetAssetAllocations(actorSet);
-
-    }   
-    if(count > 0)
-        LogPrint(BCLog::SYS,"ResyncAssetAllocationStates removed %d expired asset allocation transactions from mempool balances\n", count);
-
-}
-int ResetAssetAllocations(const ActorSet &actorSet) {
-    int count = 0;
-    for(const auto& actor: actorSet){
-        count += ResetAssetAllocation(actor);
-    }
-    return count;
-}
-int ResetAssetAllocation(const std::string &senderStr) {
-    LOCK2(cs_main, ::mempool.cs); 
-    int count = 0;
-    bool removeAllConflicts = true;
+void SetZDAGConflict(const uint256 &txHash, const std::string &fSyscoinSender){
     {
-        LOCK(cs_assetallocationarrival);
-        // remove the conflict once we revert since it is assumed to be resolved on POW
-        auto arrivalTimes = arrivalTimesMap.find(senderStr);
-        
-        if(arrivalTimes != arrivalTimesMap.end()){
-            std::vector<uint256> vecToRemoveArrivalTimes;
-            auto arrivalTimeIt = arrivalTimes->second.begin();
-	        while (arrivalTimeIt != arrivalTimes->second.end()){
-                const uint256& txHash = arrivalTimeIt->first;
-                // if mempool doesn't have tx or its been 30 mins we can remove it safely
-                const CTransactionRef &txRef = mempool.get(txHash);
-                if(txRef && ((::ChainActive().Tip()->GetMedianTimePast()) - arrivalTimeIt->second.first) <= 1800){
-                    removeAllConflicts = false;
-                    ++arrivalTimeIt;
-                }
-                else{
-                    count++;
-                    arrivalTimes->second.erase(arrivalTimeIt);
-                    // remove any matches from vecToRemoveFromMempool for this txid
-                    if(txRef){
-                        auto it = std::find_if( vecToRemoveFromMempool.begin(), vecToRemoveFromMempool.end(),
-                            [&txHash](const std::pair<uint256, uint32_t>& element){ return element.first == txHash;} );
-                        if(it != vecToRemoveFromMempool.end()){
-                            RemoveDoubleSpendFromMempool(txRef);
-                            vecToRemoveFromMempool.erase(it);
-                        }
-                    }
-                }
-            }
-            if(arrivalTimes->second.size() <= 0)
-                removeAllConflicts = true;
+        LOCK(cs_assetallocationconflicts);
+        // add conflicting sender
+        assetAllocationConflicts.insert(fSyscoinSender);
+    }
+    {
+        LOCK(cs_assetallocationmempoolremovetx);
+        // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
+        LogPrint(BCLog::SYS, "Double spend detected on tx %s!\n", txHash.GetHex());
+        setToRemoveFromMempool.insert(txHash);
+    }
+}
+void AddZDAGTx(const CTransactionRef &zdagTx, const AssetBalanceMap &mapAssetAllocationBalances) {
+    const uint256 &txHash = zdagTx->GetHash();
+    LogPrintf("AddZDAGTx tx %s mapAssetAllocationBalances size %d\n", txHash.GetHex(), mapAssetAllocationBalances.size());
+    LOCK(cs_assetallocationmempoolbalance);
+    for(const auto &assetAllocationBalance: mapAssetAllocationBalances){
+        LogPrintf("AddZDAGTx actor %s amount %lld\n", assetAllocationBalance.first, assetAllocationBalance.second);
+        #if __cplusplus > 201402 
+        auto result = mempoolMapAssetBalances.try_emplace(assetAllocationBalance.first,  std::move(assetAllocationBalance.second));
+        #else
+        auto result = mempoolMapAssetBalances.emplace(std::piecewise_construct,  std::forward_as_tuple(assetAllocationBalance.first),  std::forward_as_tuple(assetAllocationBalance.second));        
+        #endif
+        // if found, update it
+        if(!result.second){
+            result.first->second = std::move(assetAllocationBalance.second);
+        }   
+        {
+            LOCK(cs_assetallocationarrival);
+            ArrivalTimesVec& arrivalTimes = arrivalTimesVec[std::move(assetAllocationBalance.first)];
+            arrivalTimes.emplace_back(txHash);
         }
     }
-    if(removeAllConflicts)
+    
+}
+// remove arrival time/mempool balances upon mempool removal, as well as any conflicts if arrival times vector is empty for the sender of this tx
+void RemoveZDAGTx(const CTransactionRef &zdagTx) {
+    if(!IsAssetAllocationTx(zdagTx->nVersion))
+        return;
+    ActorSet actorSet;
+    GetActorsFromSyscoinTx(zdagTx, true, false, actorSet);
+    const uint256& zdagTxhash = zdagTx->GetHash();
+    for(const auto& actor: actorSet)
     {
         {
-             LOCK(cs_assetallocationarrival);
-             arrivalTimesMap.erase(senderStr);
+            LOCK(cs_assetallocationarrival);
+            ArrivalTimesVec& arrivalTimes = arrivalTimesVec[actor];
+            auto it = std::find( arrivalTimes.begin(), arrivalTimes.end(), zdagTxhash);
+            if(it != arrivalTimes.end()){
+                arrivalTimes.erase(it);
+            }
+            if(arrivalTimes.empty())
+            {
+                arrivalTimesVec.erase(actor);
+                {
+                    LOCK(cs_assetallocationmempoolbalance);
+                    mempoolMapAssetBalances.erase(actor);
+                }
+                {
+                    LOCK(cs_assetallocationconflicts);
+                    assetAllocationConflicts.erase(actor);
+                }
+            }
         }
-        LOCK(cs_assetallocationmempoolbalance);
-        mempoolMapAssetBalances.erase(senderStr);
-       
-        LOCK(cs_assetallocationconflicts);
-        unordered_set<string>::const_iterator it = assetAllocationConflicts.find(senderStr);
-        if (it != assetAllocationConflicts.end()) {
-            assetAllocationConflicts.erase(it);
-        }  
     }
-    return count;
+    {
+        LOCK(cs_assetallocationmempoolremovetx);
+        LogPrintf("RemoveZDAGTx removing %s from setToRemoveFromMempool size before %d\n", zdagTxhash.GetHex(), setToRemoveFromMempool.size());
+        setToRemoveFromMempool.erase(zdagTxhash);
+        LogPrintf("RemoveZDAGTx removing %s from setToRemoveFromMempool size after %d\n", zdagTxhash.GetHex(), setToRemoveFromMempool.size());
+    }
     
 }
 bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys){
@@ -490,7 +451,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
     // recver
     const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
     #if __cplusplus > 201402 
-    auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+    auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
     #else
     auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
     #endif
@@ -511,7 +472,11 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
     // sender	
     const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, burnWitness);	
     const std::string &senderTupleStr = senderAllocationTuple.ToString();	
-    auto result2 =  mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));	
+    #if __cplusplus > 201402 
+    auto result2 = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
+    #else
+    auto result2 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+    #endif
     auto mapSenderAssetAllocation = result2.first;	
     const bool& mapSenderAssetAllocationNotFound = result2.second;	
     if(mapSenderAssetAllocationNotFound){	
@@ -532,27 +497,6 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
     }       
     else if(storedReceiverAllocationRef.nBalance == 0){
         storedReceiverAllocationRef.SetNull();
-    }
-    if(fAssetIndex){
-        const uint256& txid = tx.GetHash();
-        if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), mintSyscoin.assetAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(std::make_pair(false, mintSyscoin.assetAllocationTuple.nAsset))){
-                if(!passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint asset allocation from asset allocation index\n");
-                    return false;
-                }
-                if(!passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple.nAsset, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint asset allocation from asset index\n");
-                    return false;
-                }
-                if(!passetindexdb->EraseIndexTXID(senderAllocationTuple, txid)){	
-                    LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint sender asset allocation from asset allocation index\n");	
-                }	
-                if(!passetindexdb->EraseIndexTXID(senderAllocationTuple.nAsset, txid)){	
-                    LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint sender asset allocation from asset index\n");	
-                } 
-            }
-        }      
     }
     return true; 
 }
@@ -585,7 +529,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
         const std::string &receiverTupleStr = receiverAllocationTuple.ToString();
         CAssetAllocationDBEntry receiverAllocation;
         #if __cplusplus > 201402 
-        auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+        auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
         #else
         auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
         #endif
@@ -612,39 +556,11 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
         }
         else if(storedReceiverAllocationRef.nBalance == 0){
             storedReceiverAllocationRef.SetNull();  
-        }
-        if(fAssetIndex){
-            if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), receiverAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-                if(passetindexdb->Exists(std::make_pair(false, receiverAllocationTuple.nAsset))){
-                    if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){
-                        LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase receiver allocation from asset allocation index\n");
-                        return false;
-                    }
-                    if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){
-                        LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase receiver allocation from asset index\n");
-                        return false;
-                    }
-                } 
-            }
-        }                                       
-    }
-    if(fAssetIndex){
-        if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAssetAllocation.assetAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(std::make_pair(false, theAssetAllocation.assetAllocationTuple.nAsset))){
-                if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase sender allocation from asset allocation index\n");
-                    return false;
-                }
-                if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase sender allocation from asset index\n");
-                    return false;
-                }
-            }
-        }     
+        }                                      
     }
     return true; 
 }
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys, ActorSet &actorSet)
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
     if(tx.IsCoinBase())
         return true;
@@ -661,7 +577,6 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
                 LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not decode asset allocation\n");
                 return false;
             }
-            GetActorsFromAssetAllocationTx(theAssetAllocation, tx.nVersion, false, false, actorSet);
             if(!DisconnectAssetAllocation(tx, txHash, theAssetAllocation, view, mapAssetAllocations))
                 return false;       
         }
@@ -694,13 +609,13 @@ CAmount FindBurnAmountFromTx(const CTransaction& tx){
     return 0;
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, const CAssetAllocation &theAssetAllocation, TxValidationState &state, const CCoinsViewCache &inputs,
-        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, const bool &bSanityCheck, const bool &bMiner) {
+        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, AssetBalanceMap &mapAssetAllocationBalances, std::vector<COutPoint> &vecLockedOutpoints, const bool &bSanityCheck) {
     if (passetallocationdb == nullptr)
         return false;
     if (!bSanityCheck)
-        LogPrint(BCLog::SYS,"*** ASSET ALLOCATION %d %d %s %s bSanity=%d bMiner=%d\n", nHeight,
+        LogPrint(BCLog::SYS,"*** ASSET ALLOCATION %d %d %s %s bSanityCheck=%d\n", nHeight,
             ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
-            fJustCheck ? "JUSTCHECK" : "BLOCK", bSanityCheck? 1: 0, bMiner? 1: 0);
+            fJustCheck ? "JUSTCHECK" : "BLOCK", bSanityCheck? 1: 0);
             
 
     string retError = "";
@@ -710,15 +625,15 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         case SYSCOIN_TX_VERSION_ALLOCATION_SEND:
             if (theAssetAllocation.listSendingAllocationAmounts.empty())
             {
-                return FormatSyscoinErrorMessage(state, "assetallocation-empty", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-empty", bSanityCheck);
             }
             if (theAssetAllocation.listSendingAllocationAmounts.size() > 250)
             {
-                return FormatSyscoinErrorMessage(state, "assetallocation-too-many-receivers", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-too-many-receivers", bSanityCheck);
             }
 			if (!theAssetAllocation.lockedOutpoint.IsNull())
 			{
-                return FormatSyscoinErrorMessage(state, "assetallocation-cannot-include-lockpoint", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-cannot-include-lockpoint", bSanityCheck);
 			}
             break; 
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
@@ -726,21 +641,21 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
 			if (!theAssetAllocation.lockedOutpoint.IsNull())
 			{
-                return FormatSyscoinErrorMessage(state, "assetallocation-cannot-include-lockpoint", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-cannot-include-lockpoint", bSanityCheck);
 			}
             if(theAssetAllocation.listSendingAllocationAmounts.empty())
 			{
-                return FormatSyscoinErrorMessage(state, "assetallocation-empty", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-empty", bSanityCheck);
 			}
             break;            
 		case SYSCOIN_TX_VERSION_ALLOCATION_LOCK:
 			if (theAssetAllocation.lockedOutpoint.IsNull())
 			{
-                return FormatSyscoinErrorMessage(state, "assetallocation-missing-lockpoint", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-missing-lockpoint", bSanityCheck);
 			}
 			break;
         default:
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-op", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-op", bSanityCheck);
         }
     }
 
@@ -752,7 +667,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
     if(fJustCheck){
         if (!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, dbAssetAllocation))
         {
-            return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-allocation", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-allocation", bSanityCheck);
         }     
     }
     else{
@@ -768,7 +683,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         if(mapAssetAllocationNotFound){
             if (!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, dbAssetAllocation))
             {
-                return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-allocation", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-allocation", bSanityCheck);
             }
             mapAssetAllocation->second = std::move(dbAssetAllocation);             
         }
@@ -777,11 +692,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
     
     if (!GetAsset(storedSenderAllocationRef.assetAllocationTuple.nAsset, dbAsset))
     {
-        return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-asset", bMiner);
+        return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-asset", bSanityCheck);
     }   
-    AssetBalanceMap::iterator mapBalanceSender;
     CAmount mapBalanceSenderCopy;
-    bool mapSenderMempoolBalanceNotFound = false;
     if(fJustCheck && !bSanityCheck){
         LOCK(cs_assetallocationmempoolbalance); 
         #if __cplusplus > 201402 
@@ -789,10 +702,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         #else
         auto result =  mempoolMapAssetBalances.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(storedSenderAllocationRef.nBalance))); 
         #endif
-        
-        mapBalanceSender = result.first;
-        mapSenderMempoolBalanceNotFound = result.second;
-        mapBalanceSenderCopy = mapBalanceSender->second;
+        mapBalanceSenderCopy = result.first->second;
     }
     else
         mapBalanceSenderCopy = storedSenderAllocationRef.nBalance;
@@ -801,13 +711,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         const uint32_t &nBurnAsset = theAssetAllocation.assetAllocationTuple.nAsset;
         if(!fUnitTest && nBurnAsset != Params().GetConsensus().nSYSXAsset)
         {
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bSanityCheck);
         }
         const CAssetAllocationTuple receiverAllocationTuple(nBurnAsset, theAssetAllocation.listSendingAllocationAmounts[0].first);
         const string& receiverTupleStr = receiverAllocationTuple.ToString();     
         if (!FindAssetOwnerInTx(inputs, tx, receiverAllocationTuple.witnessAddress))
         {
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bSanityCheck);
         }
         // ensure lockedOutpoint is cleared on PoW, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
 		if (!bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
@@ -818,48 +728,36 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         const int &nOut = GetSyscoinDataOutput(tx);
         if(nOut < 0)
         {
-            return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
         }
         const CAmount &nBurnAmount = tx.vout[nOut].nValue;
         if(nBurnAmount <= 0)
         {
-            return FormatSyscoinErrorMessage(state, "assetallocation-positive-burn-amount", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-positive-burn-amount", bSanityCheck);
         }
         if(nBurnAmount != theAssetAllocation.listSendingAllocationAmounts[0].second)
         {
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
         }  
         if(user1 != burnWitness)
         {
-            return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-address", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-address", bSanityCheck);
         }
 
         if (nBurnAmount <= 0 || nBurnAmount > dbAsset.nMaxSupply)
         {
-            return FormatSyscoinErrorMessage(state, "assetallocation-amount-out-of-range", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-amount-out-of-range", bSanityCheck);
         }        
        
         mapBalanceSenderCopy -= nBurnAmount;
-        if (mapBalanceSenderCopy < 0) {
-            bool bNewConfict = false;
-            if(!mapSenderMempoolBalanceNotFound && fJustCheck && !bSanityCheck && !bMiner){
-                LOCK(cs_assetallocationconflicts);
-                // flag as a new conflict if not found
-                // conflict signals dbl spend detection logic
-                if(assetAllocationConflicts.find(receiverTupleStr) == assetAllocationConflicts.end()){
-                    assetAllocationConflicts.insert(std::move(receiverTupleStr));
-                    bNewConfict = true;
-                }
-                else
-                     return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance-conflicting", false, false);
-            }          
-            return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bMiner || bNewConfict);
+        if (mapBalanceSenderCopy < 0) {         
+            return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bSanityCheck);
         }
         if (!fJustCheck) {   
             #if __cplusplus > 201402 
             auto resultReceiver = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
             #else
-            auto resultReceiver = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+            auto resultReceiver = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr), std::forward_as_tuple(std::move(emptyAllocation)));
             #endif 
             
             auto mapAssetAllocationReceiver = resultReceiver.first;
@@ -875,7 +773,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             mapAssetAllocationReceiver->second.nBalance += nBurnAmount; 
             if (!AssetRange(mapAssetAllocationReceiver->second.nBalance))
             {
-                return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
+                return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bSanityCheck);
             }             
         } 
     }          
@@ -886,7 +784,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
             if(!fUnitTest && nBurnAsset != Params().GetConsensus().nSYSXAsset)
             {
-                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bSanityCheck);
             } 
                     
         } else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
@@ -897,29 +795,29 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             CWitnessAddress burnWitnessAddress;
             uint8_t nPrecision;
             if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchEthAddress, nPrecision, vchEthContract)){
-                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-transaction", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-transaction", bSanityCheck);
             }
             if(dbAsset.nPrecision != nPrecision)
             {
-                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-precision", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-precision", bSanityCheck);
             }
             if(dbAsset.vchContract.empty() || dbAsset.vchContract != vchEthContract)
             {
-                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-contract", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-contract", bSanityCheck);
             }        
         }
        
         if(theAssetAllocation.listSendingAllocationAmounts[0].first != burnWitness)
         {
-            return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-address", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-address", bSanityCheck);
         } 
         if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, storedSenderAllocationRef.lockedOutpoint))
         {     
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bSanityCheck);
         }       
         if (nBurnAmount <= 0 || (dbAsset.nTotalSupply > 0 && nBurnAmount > dbAsset.nTotalSupply))
         {
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
         }        
   		// ensure lockedOutpoint is cleared on PoW, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
 		if (!bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
@@ -929,24 +827,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
 		}      
         if(dbAsset.vchContract.empty())
         {
-            return FormatSyscoinErrorMessage(state, "assetallocation-missing-contract", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-missing-contract", bSanityCheck);
         } 
        
         mapBalanceSenderCopy -= nBurnAmount;
         if (mapBalanceSenderCopy < 0) {
-            bool bNewConfict = false;
-            if(!mapSenderMempoolBalanceNotFound && fJustCheck && !bSanityCheck && !bMiner){
-                LOCK(cs_assetallocationconflicts);
-                // flag as a new conflict if not found
-                // conflict signals dbl spend detection logic
-                if(assetAllocationConflicts.find(senderTupleStr) == assetAllocationConflicts.end()){
-                    assetAllocationConflicts.insert(std::move(senderTupleStr));
-                    bNewConfict = true;
-                }
-                else
-                     return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance-conflicting", false, false);
-            }
-            return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bMiner || bNewConfict);
+            return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bSanityCheck);
         }
         const CAssetAllocationTuple receiverAllocationTuple(nBurnAsset,  burnWitness);
         const string& receiverTupleStr = receiverAllocationTuple.ToString(); 
@@ -970,7 +856,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             mapAssetAllocationReceiver->second.nBalance += nBurnAmount;
             if (!AssetRange(mapAssetAllocationReceiver->second.nBalance))
             {
-                return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
+                return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bSanityCheck);
             }                                 
         }
     }
@@ -978,7 +864,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
 	{
 		if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, storedSenderAllocationRef.lockedOutpoint))
 		{             
-			return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner);
+			return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bSanityCheck);
 		}
         if (!bSanityCheck && !fJustCheck){
     		storedSenderAllocationRef.lockedOutpoint = theAssetAllocation.lockedOutpoint;
@@ -990,7 +876,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
 	{
         if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, storedSenderAllocationRef.lockedOutpoint))
         {     
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner);
+            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bSanityCheck);
         }
 		// ensure lockedOutpoint is cleared on PoW if it was set once a send happens, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
 		if (!bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
@@ -1004,69 +890,34 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             nTotal += amountTuple.second;
             if (amountTuple.second <= 0)
             {
-                return FormatSyscoinErrorMessage(state, "assetallocation-negative-amount", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-negative-amount", bSanityCheck);
             }           
         }
         if (!AssetRange(nTotal))
         {
-            return FormatSyscoinErrorMessage(state, "amount-out-of-range", bMiner);
+            return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
         }
+        if(!fJustCheck && bSanityCheck)
+            LogPrintf("txid %s asset %d nTotal %lld mapBalanceSenderCopy %lld sender %s\n", txHash.GetHex().c_str(), theAssetAllocation.assetAllocationTuple.nAsset, nTotal, mapBalanceSenderCopy, senderTupleStr);
         mapBalanceSenderCopy -= nTotal;
         if (mapBalanceSenderCopy < 0) {
-            bool bNewConfict = false;
-            // ensure this isn't the first tx for this sender in mempool and that if it is the second or more and its a new conflict then flag it with state error so it propagates across network
-            if(!mapSenderMempoolBalanceNotFound && fJustCheck && !bSanityCheck && !bMiner){
-                LOCK(cs_assetallocationconflicts);
-                // flag as a new conflict if not found
-                // conflict signals dbl spend detection logic
-                if(assetAllocationConflicts.find(senderTupleStr) == assetAllocationConflicts.end()){
-                    assetAllocationConflicts.insert(std::move(senderTupleStr));
-                    bNewConfict = true;
-                }
-                else
-                     return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance-conflicting", false, false);
-            }
-            return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bMiner || bNewConfict);
+            return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bSanityCheck);
         }
                
         for (unsigned int i = 0;i<theAssetAllocation.listSendingAllocationAmounts.size();i++) {
             const auto& amountTuple = theAssetAllocation.listSendingAllocationAmounts[i];
             if (amountTuple.first == theAssetAllocation.assetAllocationTuple.witnessAddress) {   
-                return FormatSyscoinErrorMessage(state, "assetallocation-send-to-yourself", bMiner);
+                return FormatSyscoinErrorMessage(state, "assetallocation-send-to-yourself", bSanityCheck);
             }
-
-            const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
-            const string &receiverTupleStr = receiverAllocationTuple.ToString();
-            AssetBalanceMap::iterator mapBalanceReceiver;
-            AssetAllocationMap::iterator mapBalanceReceiverBlock;            
-            if(fJustCheck && !bSanityCheck){
-                
-                LOCK(cs_assetallocationmempoolbalance);
+            if (!fJustCheck) {  
+                const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
+                const string &receiverTupleStr = receiverAllocationTuple.ToString();
                 #if __cplusplus > 201402 
-                auto result1 = mempoolMapAssetBalances.try_emplace(receiverTupleStr,  0);
-                #else
-                auto result1 = mempoolMapAssetBalances.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(0));
-                #endif 
-                auto mapBalanceReceiver = result1.first;
-                const bool& mapAssetAllocationReceiverNotFound = result1.second;
-                if(mapAssetAllocationReceiverNotFound){
-                    CAssetAllocationDBEntry receiverAllocation;
-                    GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
-                    mapBalanceReceiver->second = receiverAllocation.nBalance;
-                }
-                mapBalanceReceiver->second += amountTuple.second;
-                if (!AssetRange(mapBalanceReceiver->second))
-                {
-                    return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
-                }
-            }  
-            else{     
-                #if __cplusplus > 201402 
-                auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+                auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
                 #else
                 auto result1 =  mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
                 #endif       
-               
+                
                 auto mapBalanceReceiverBlock = result1.first;
                 const bool& mapAssetAllocationReceiverBlockNotFound = result1.second;
                 if(mapAssetAllocationReceiverBlockNotFound){
@@ -1080,10 +931,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                 mapBalanceReceiverBlock->second.nBalance += amountTuple.second;
                 if (!AssetRange(mapBalanceReceiverBlock->second.nBalance))
                 {
-                    return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
+                    return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bSanityCheck);
                 }
             }
-        }   
+        }
+        
     }
     // write assetallocation  
     // asset sends are the only ones confirming without PoW
@@ -1092,11 +944,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         if(storedSenderAllocationRef.nBalance == 0)
             storedSenderAllocationRef.SetNull();    
 
-        if(!bMiner && nHeight > 0) {   
-            // send notification on pow, for zdag transactions this is the second notification meaning the zdag tx has been confirmed
-            if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, dbAsset, nHeight, blockhash)){
-                return FormatSyscoinErrorMessage(state, "assetallocation-index", bMiner);
-            } 
+        if(!bSanityCheck && nHeight > 0) {   
             LogPrint(BCLog::SYS,"CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
                 assetAllocationFromTx(tx.nVersion).c_str(),
                 senderTupleStr.c_str(),
@@ -1107,17 +955,15 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                     
     }
     else if(!bSanityCheck){
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND){
-            // send a real time notification on zdag, send another when pow happens (above)
-            if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, dbAsset, nHeight, blockhash)){
-                return FormatSyscoinErrorMessage(state, "assetallocation-index", bMiner);
-            }
-        }
-        
-        {
-            LOCK(cs_assetallocationmempoolbalance);
-            mapBalanceSender->second = std::move(mapBalanceSenderCopy);
-        }
+        #if __cplusplus > 201402 
+        auto resultBalance = mapAssetAllocationBalances.try_emplace(senderTupleStr,  std::move(mapBalanceSenderCopy));
+        #else
+        auto resultBalance = mapAssetAllocationBalances.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(mapBalanceSenderCopy));
+        #endif
+        // if found, update it
+        if(!resultBalance.second){
+            resultBalance.first->second = std::move(mapBalanceSenderCopy);
+        } 
     }    
     return true;
 }
@@ -1152,7 +998,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
         const std::string &receiverTupleStr = receiverAllocationTuple.ToString();
         CAssetAllocationDBEntry receiverAllocation;
         #if __cplusplus > 201402 
-        auto result = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+        auto result = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
         #else
         auto result = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
         #endif 
@@ -1177,37 +1023,8 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
 
         if(storedReceiverAllocationRef.nBalance == 0){
             storedReceiverAllocationRef.SetNull();       
-        }
-        
-        if(fAssetIndex){
-            if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), receiverAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-                if(passetindexdb->Exists(std::make_pair(false, receiverAllocationTuple.nAsset))){
-                    if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){
-                        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase receiver allocation from asset allocation index\n");
-                        return false;
-                    }
-                    if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){
-                        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase receiver allocation from asset index\n");
-                        return false;
-                    }
-                }
-            }
-        }                                             
-    }     
-    if(fAssetIndex){
-        if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAssetAllocation.assetAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(std::make_pair(false, theAssetAllocation.assetAllocationTuple.nAsset))){
-                if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase sender allocation from asset allocation index\n");
-                    return false;
-                }
-                if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase sender allocation from asset index\n");
-                    return false;
-                }
-            }
-        }     
-    }          
+        }                                            
+    }             
     return true;  
 }
 bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets){
@@ -1243,14 +1060,6 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
             LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Asset cannot be negative: Balance %lld, Supply: %lld\n",storedSenderRef.nBalance, storedSenderRef.nTotalSupply);
             return false;
         }                                          
-    } 
-    if(fAssetIndex){
-        if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAsset.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
-                LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not erase asset update from asset index\n");
-                return false;
-            }
-        }
     }         
     return true;  
 }
@@ -1279,15 +1088,7 @@ bool DisconnectAssetTransfer(const CTransaction &tx, const uint256& txid, AssetM
     CAsset& storedSenderRef = mapAsset->second; 
     // theAsset.witnessAddress  is enforced to be the sender of the transfer which was the owner at the time of transfer
     // so set it back to reverse the transfer
-    storedSenderRef.witnessAddress = theAsset.witnessAddress;   
-    if(fAssetIndex){
-        if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAsset.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
-                LogPrint(BCLog::SYS,"DisconnectAssetTransfer: Could not erase asset update from asset index\n");
-                return false;
-            }
-        }
-    }         
+    storedSenderRef.witnessAddress = theAsset.witnessAddress;            
     return true;  
 }
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets){
@@ -1299,22 +1100,14 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
         return false;
     }
     #if __cplusplus > 201402 
-    mapAssets.try_emplace(theAsset.nAsset,  std::move(emptyAsset));
+    mapAssets.try_emplace(std::move(theAsset.nAsset),  std::move(emptyAsset));
     #else
-    mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif
-    if(fAssetIndex){
-        if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAsset.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
-                LogPrint(BCLog::SYS,"DisconnectAssetActivate: Could not erase asset activate from asset index\n");
-                return false;
-            }
-        }    
-    }     
+    mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(std::move(theAsset.nAsset)),  std::forward_as_tuple(std::move(emptyAsset)));
+    #endif   
     return true;  
 }
 bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state, const CCoinsViewCache &inputs,
-        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, const bool &bSanityCheck, const bool &bMiner) {
+        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, const bool &bSanityCheck) {
     if (passetdb == nullptr)
         return false;
     if (!bSanityCheck)
@@ -1330,7 +1123,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     int nDataOut;
     if(!GetSyscoinData(tx, vchData, nDataOut) || (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND && !theAsset.UnserializeFromData(vchData)) || (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND && !theAssetAllocation.UnserializeFromData(vchData)))
     {
-        return FormatSyscoinErrorMessage(state, "asset-unserialize", bMiner);
+        return FormatSyscoinErrorMessage(state, "asset-unserialize", bSanityCheck);
     }
     
 
@@ -1339,91 +1132,91 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND) {
             if (theAsset.vchPubData.size() > MAX_VALUE_LENGTH)
             {
-                return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
             }
         }
         switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
             if(!fUnitTest && nHeight >= Params().GetConsensus().nBridgeStartBlock && tx.vout[nDataOut].nValue < 500*COIN)
             {
-                return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
             if (theAsset.nAsset <= SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
             {
-                return FormatSyscoinErrorMessage(state, "asset-guid-invalid", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-guid-invalid", bSanityCheck);
             }
             if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH)
             {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }  
             if (theAsset.nPrecision > 8)
             {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             }
             if (theAsset.strSymbol.size() > 8 || theAsset.strSymbol.size() < 1)
             {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
             if (!AssetRange(theAsset.nMaxSupply, theAsset.nPrecision))
             {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
             }
             if (theAsset.nBalance > theAsset.nMaxSupply)
             {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bSanityCheck);
             }
             if (!theAsset.witnessAddress.IsValid())
             {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-address", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-address", bSanityCheck);
             }
             if(theAsset.nUpdateFlags > ASSET_UPDATE_ALL){
-                return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
             } 
             if(!theAsset.witnessAddressTransfer.IsNull())   {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-transfer-address", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-transfer-address", bSanityCheck);
             }      
             break;
 
         case SYSCOIN_TX_VERSION_ASSET_UPDATE:
             if (theAsset.nBalance < 0){
-                return FormatSyscoinErrorMessage(state, "asset-invalid-balance", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-balance", bSanityCheck);
             }
             if (!theAssetAllocation.assetAllocationTuple.IsNull())
             {
-                return FormatSyscoinErrorMessage(state, "asset-allocations-not-empty", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-allocations-not-empty", bSanityCheck);
             }
             if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH)
             {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }  
             if(theAsset.nUpdateFlags > ASSET_UPDATE_ALL){
-                return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
             }  
             if(!theAsset.witnessAddressTransfer.IsNull())   {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-transfer-address", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-transfer-address", bSanityCheck);
             }           
             break;
             
         case SYSCOIN_TX_VERSION_ASSET_SEND:
             if (theAssetAllocation.listSendingAllocationAmounts.empty())
             {
-                return FormatSyscoinErrorMessage(state, "asset-missing-allocations", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-missing-allocations", bSanityCheck);
             }
             if (theAssetAllocation.listSendingAllocationAmounts.size() > 250)
             {
-                return FormatSyscoinErrorMessage(state, "asset-too-many-receivers", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-too-many-receivers", bSanityCheck);
             }
             if(!theAsset.witnessAddressTransfer.IsNull())   {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-transfer-address", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-transfer-address", bSanityCheck);
             }  
             break;
         case SYSCOIN_TX_VERSION_ASSET_TRANSFER:
             if(theAsset.witnessAddressTransfer.IsNull())   {
-                return FormatSyscoinErrorMessage(state, "asset-missing-transfer-address", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-missing-transfer-address", bSanityCheck);
             }  
             break;
         default:
-            return FormatSyscoinErrorMessage(state, "asset-invalid-op", bMiner);
+            return FormatSyscoinErrorMessage(state, "asset-invalid-op", bSanityCheck);
         }
     }
 
@@ -1440,14 +1233,14 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     {
         if (!GetAsset(nAsset, dbAsset)){
             if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-                return FormatSyscoinErrorMessage(state, "asset-non-existing-asset", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-non-existing-asset", bSanityCheck);
             }
             else
                 mapAsset->second = std::move(theAsset);      
         }
         else{
             if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
-                return FormatSyscoinErrorMessage(state, "asset-already-existing-asset", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-already-existing-asset", bSanityCheck);
             }
             mapAsset->second = std::move(dbAsset);      
         }
@@ -1456,15 +1249,15 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_TRANSFER) {
         if (theAsset.nAsset != storedSenderAssetRef.nAsset || storedSenderAssetRef.witnessAddress != theAsset.witnessAddress || !FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
         {
-            return FormatSyscoinErrorMessage(state, "asset-invalid-sender", bMiner);
+            return FormatSyscoinErrorMessage(state, "asset-invalid-sender", bSanityCheck);
         } 
 		if(theAsset.nPrecision != storedSenderAssetRef.nPrecision)
 		{
-            return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bMiner);
+            return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
 		}
         if(theAsset.strSymbol != storedSenderAssetRef.strSymbol)
         {
-            return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bMiner);
+            return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
         }     
         storedSenderAssetRef.witnessAddress = theAsset.witnessAddressTransfer;   
         // sanity to ensure transfer field is never set on the actual asset in db  
@@ -1474,39 +1267,39 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE) {
         if (theAsset.nAsset != storedSenderAssetRef.nAsset || storedSenderAssetRef.witnessAddress != theAsset.witnessAddress || !FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
         {
-            return FormatSyscoinErrorMessage(state, "asset-invalid-sender", bMiner);
+            return FormatSyscoinErrorMessage(state, "asset-invalid-sender", bSanityCheck);
         }
 		if (theAsset.nPrecision != storedSenderAssetRef.nPrecision)
 		{
-            return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bMiner);
+            return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
 		}
         if(theAsset.strSymbol != storedSenderAssetRef.strSymbol)
         {
-            return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bMiner);
+            return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
         }         
         if (theAsset.nBalance > 0 && !(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_SUPPLY))
         {
-            return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bMiner);
+            return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
         }          
         // increase total supply
         storedSenderAssetRef.nTotalSupply += theAsset.nBalance;
         storedSenderAssetRef.nBalance += theAsset.nBalance;
         if (theAsset.nBalance < 0 || (theAsset.nBalance > 0 && !AssetRange(theAsset.nBalance, storedSenderAssetRef.nPrecision)))
         {
-            return FormatSyscoinErrorMessage(state, "amount-out-of-range", bMiner);
+            return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
         }
         if (storedSenderAssetRef.nTotalSupply > 0 && !AssetRange(storedSenderAssetRef.nTotalSupply, storedSenderAssetRef.nPrecision))
         {
-            return FormatSyscoinErrorMessage(state, "asset-amount-out-of-range", bMiner);
+            return FormatSyscoinErrorMessage(state, "asset-amount-out-of-range", bSanityCheck);
         }
         if (storedSenderAssetRef.nTotalSupply > storedSenderAssetRef.nMaxSupply)
         {
-            return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bMiner);
+            return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
         }
 		if (!theAsset.vchPubData.empty()) {
 			if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_DATA))
 			{
-				return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bMiner);
+				return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
 			}
 			storedSenderAssetRef.vchPubData = theAsset.vchPubData;
 		}
@@ -1514,7 +1307,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
 		if (!theAsset.vchContract.empty() && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_TRANSFER) {
 			if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
 			{
-				return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bMiner);
+				return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
 			}
 			storedSenderAssetRef.vchContract = theAsset.vchContract;
 		}
@@ -1525,7 +1318,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         }
         else if (theAsset.nUpdateFlags != storedSenderAssetRef.nUpdateFlags) {
 			if (theAsset.nUpdateFlags > 0 && !(storedSenderAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN))) {
-				return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bMiner);
+				return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
 			}
 			storedSenderAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
         } 
@@ -1533,7 +1326,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
         if (storedSenderAssetRef.nAsset != theAssetAllocation.assetAllocationTuple.nAsset || storedSenderAssetRef.witnessAddress != theAssetAllocation.assetAllocationTuple.witnessAddress || !FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
         {
-             return FormatSyscoinErrorMessage(state, "asset-invalid-sender", bMiner);
+             return FormatSyscoinErrorMessage(state, "asset-invalid-sender", bSanityCheck);
         }
 
         // check balance is sufficient on sender
@@ -1542,15 +1335,15 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             nTotal += amountTuple.second;
             if (amountTuple.second <= 0)
             {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-amount", bMiner);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-amount", bSanityCheck);
             }
         }
         if (!AssetRange(nTotal))
         {
-            return FormatSyscoinErrorMessage(state, "amount-out-of-range", bMiner);
+            return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
         }
         if (storedSenderAssetRef.nBalance < nTotal) {
-            return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bMiner);
+            return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bSanityCheck);
         }
         for (const auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
             if (!bSanityCheck) {
@@ -1558,7 +1351,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
                 const string& receiverTupleStr = receiverAllocationTuple.ToString();
                 #if __cplusplus > 201402 
-                auto result = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+                auto result = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
                 #else
                 auto result = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
                 #endif 
@@ -1578,23 +1371,18 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 mapAssetAllocation->second.nBalance += amountTuple.second;
                 if (!AssetRange(mapAssetAllocation->second.nBalance))
                 {
-                    return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
+                    return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bSanityCheck);
                 }                                       
                 // adjust sender balance
                 storedSenderAssetRef.nBalance -= amountTuple.second;                              
             }
         }
-        if (!bSanityCheck && !fJustCheck && !bMiner){
-            if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, storedSenderAssetRef, nHeight, blockhash)){
-                return FormatSyscoinErrorMessage(state, "assetallocation-index", bMiner);
-            } 
-        } 
     }
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE)
     {
         if (!FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
         {
-             return FormatSyscoinErrorMessage(state, "asset-invalid-sender", bMiner);
+             return FormatSyscoinErrorMessage(state, "asset-invalid-sender", bSanityCheck);
         }          
         // starting supply is the supplied balance upon init
         storedSenderAssetRef.nTotalSupply = storedSenderAssetRef.nBalance;
@@ -1603,10 +1391,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     storedSenderAssetRef.nHeight = nHeight;
     storedSenderAssetRef.txHash = txHash;
     // write asset, if asset send, only write on pow since asset -> asset allocation is not 0-conf compatible
-    if (!bSanityCheck && !fJustCheck && !bMiner && nHeight > 0) {
-        if(!passetdb->WriteAssetIndex(tx, txHash, storedSenderAssetRef, nHeight, blockhash)){
-            return FormatSyscoinErrorMessage(state, "asset-index", bMiner);
-        }
+    if (!bSanityCheck && !fJustCheck && nHeight > 0) {
         LogPrint(BCLog::SYS,"CONNECTED ASSET: tx=%s symbol=%d hash=%s height=%d fJustCheck=%d\n",
                 assetFromTx(tx.nVersion).c_str(),
                 nAsset,

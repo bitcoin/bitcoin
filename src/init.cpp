@@ -101,10 +101,10 @@
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
 std::string exePath = "";
 extern AssetBalanceMap mempoolMapAssetBalances;
-extern ArrivalTimesMapImpl arrivalTimesMap; 
+extern ArrivalTimesVecImpl arrivalTimesVec; 
 extern RecursiveMutex cs_assetallocationmempoolbalance;
 extern RecursiveMutex cs_assetallocationarrival;
-extern std::vector<std::pair<uint256, uint32_t> >  vecToRemoveFromMempool;
+extern std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool;
 extern RecursiveMutex cs_assetallocationmempoolremovetx;
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
@@ -314,14 +314,13 @@ void Shutdown(NodeContext& node)
     // up with our current chain to avoid any strange pruning edge cases and make
     // next startup faster by avoiding rescan.
     // SYSCOIN
-    arrivalTimesMap.clear();
+    arrivalTimesVec.clear();
     FlushSyscoinDBs();
     passetdb.reset();
     passetallocationdb.reset();
     passetallocationmempooldb.reset();
     pethereumtxrootsdb.reset();
     pethereumtxmintdb.reset();
-    passetindexdb.reset();
     pblockindexdb.reset();
 	plockedoutpointsdb.reset();
     {
@@ -480,9 +479,6 @@ void SetupServerArgs()
     gArgs.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-masternodeprivkey=<n>", "Set the masternode private key", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-assetindex=<n>", strprintf("Index Syscoin Assets for historical information (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-assetindexpagesize=<n>", strprintf("Page size of results for Asset index, should match the paging mechanism of the consuming client. (10-1000, default: 25). Used in conjunction with -assetindex=1."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-assetindexguids=<guid>", strprintf("Whitelist Assets to index, comma separated. Used in conjunction with -assetindex=1. Leave empty for all."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sysxasset=<n>", strprintf("SYSX Asset Guid specified when running unit tests (default: %u)", defaultChainParams->GetConsensus().nSYSXAsset), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-tpstest", strprintf("TPSTest for unittest. Leave false"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -551,8 +547,6 @@ void SetupServerArgs()
     gArgs.AddArg("-zmqpubwalletstatus=<address>", "Enable publish wallet status (when wallet loads and is ready) in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubethstatus=<address>", "Enable publish Ethereum status updates in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubnetworkstatus=<address>", "Enable publish network updates when a peer is connected or disconnected in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
-    gArgs.AddArg("-zmqpubassetallocation=<address>", "Enable publish raw asset allocation payload in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
-    gArgs.AddArg("-zmqpubassetrecord=<address>", "Enable publish raw asset payload in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubwalletrawtx=<address>", "Enable publish all wallet related transactions in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubhashblock=<address>", "Enable publish hash block in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubhashtx=<address>", "Enable publish hash transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
@@ -569,8 +563,6 @@ void SetupServerArgs()
     hidden_args.emplace_back("-zmqpubwalletstatus=<address>");
     hidden_args.emplace_back("-zmqpubethstatus=<address>");
     hidden_args.emplace_back("-zmqpubnetworkstatus=<address>");
-    hidden_args.emplace_back("-zmqpubassetallocation=<address>");
-    hidden_args.emplace_back("-zmqpubassetrecord=<address>");
     hidden_args.emplace_back("-zmqpubwalletrawtx=<address>");
     hidden_args.emplace_back("-zmqpubhashblock=<address>");
     hidden_args.emplace_back("-zmqpubhashtx=<address>");
@@ -1626,7 +1618,6 @@ bool AppInitMain(NodeContext& node)
                 passetallocationmempooldb.reset();
                 pethereumtxrootsdb.reset();
                 pethereumtxmintdb.reset();
-                passetindexdb.reset();
                 pblockindexdb.reset();
 				plockedoutpointsdb.reset();
 				plockedoutpointsdb.reset(new CLockedOutpointsDB(nCoinDBCache * 16, false, fReset));
@@ -1639,19 +1630,16 @@ bool AppInitMain(NodeContext& node)
                 }
                 {
                     LOCK(cs_assetallocationarrival);
-                    passetallocationmempooldb->ReadAssetAllocationMempoolArrivalTimes(arrivalTimesMap);
+                    passetallocationmempooldb->ReadAssetAllocationMempoolArrivalTimes(arrivalTimesVec);
                 }
                 {
                     LOCK(cs_assetallocationmempoolremovetx);
-                    passetallocationmempooldb->ReadAssetAllocationMempoolToRemoveVector(vecToRemoveFromMempool);
+                    passetallocationmempooldb->ReadAssetAllocationMempoolToRemoveVector(setToRemoveFromMempool);
                 }           
                 // we don't need to ever reset the txroots db because it is an external chain not related to syscoin chain
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));
                 pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset || fReindexChainState));
                 pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReset || fReindexChainState));
-                fAssetIndex = gArgs.GetBoolArg("-assetindex", false);
-                if(fAssetIndex)
-                    passetindexdb.reset(new CAssetIndexDB(nCoinDBCache*16, false, fReset));
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
@@ -1915,26 +1903,11 @@ bool AppInitMain(NodeContext& node)
     fGethSynced = fUnitTest;
     
     fTPSTest = gArgs.GetBoolArg("-tpstest", false);
-    fZMQAssetAllocation = gArgs.IsArgSet("-zmqpubassetallocation");
-    fZMQAsset = gArgs.IsArgSet("-zmqpubassetrecord");
     fZMQWalletStatus = gArgs.IsArgSet("-zmqpubwalletstatus");
     fZMQEthStatus = gArgs.IsArgSet("-zmqpubethstatus");
     fZMQNetworkStatus = gArgs.IsArgSet("-zmqpubnetworkstatus");
     fZMQWalletRawTx = gArgs.IsArgSet("-zmqpubwalletrawtx");
 
-    fAssetIndexPageSize = gArgs.GetArg("-assetindexpagesize", 25);
-    if(fAssetIndexPageSize < 10 || fAssetIndexPageSize > 1000){
-        return InitError(_("Asset index page size is invalid, must be between 10 and 1000.").translated);
-    }
-    if (gArgs.IsArgSet("-assetindexguids")) {
-        const std::vector<std::string> &assetguidsStr = gArgs.GetArgs("-assetindexguids");
-        for(const std::string& guidStr: assetguidsStr){
-            uint32_t guid;
-            if(!ParseUInt32(guidStr, &guid))
-                return InitError(_("Could not parse Asset GUID").translated);
-            fAssetIndexGuids.push_back(guid);
-        }
-    }
      //lite mode disables all masternode functionality
     fLiteMode = gArgs.GetBoolArg("-litemode", false);
 

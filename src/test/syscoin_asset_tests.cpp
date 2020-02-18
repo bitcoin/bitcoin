@@ -22,7 +22,6 @@
 using namespace std;
 extern UniValue read_json(const std::string& jsondata);
 BOOST_FIXTURE_TEST_SUITE(syscoin_asset_tests, BasicSyscoinTestingSetup)
-
 BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 {
 	tfm::format(std::cout,"Running generate_big_assetdata...\n");
@@ -241,109 +240,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_auxfees)
 	}
     BOOST_CHECK(!foundAuxFee);
 }
-BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
-{
-    UniValue r;
-    tfm::format(std::cout,"Running generate_asset_address_spend...\n");
-    GenerateBlocks(5);
-    GenerateBlocks(5, "node2");
-    GenerateBlocks(5, "node3");
-    // fund asset+allocation on addresses and try to spend from those addresses it should be disallowed
-    string creatoraddress = GetNewFundedAddress("node3");
-    string useraddress = GetNewFundedAddress("node3");
-
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getbalance"));
-    std::string resBalance = r.write();
-    CAmount nAmount = AmountFromValue(resBalance) - 3*COIN; // 3 coins for fees
-    std::string strAmount = ValueFromAmount(nAmount).write();
-    CAmount nAmountHalf = nAmount/2;
-    std::string strAmountHalf = ValueFromAmount(nAmountHalf).write();
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
-	std::string newaddress = r.get_str();
-    CallExtRPC("node3", "sendtoaddress" , "\"" + creatoraddress + "\"," + strAmountHalf, false);
-    CallExtRPC("node3","sendtoaddress" , "\"" + useraddress + "\"," + strAmountHalf, false);
-    GenerateBlocks(5, "node3");
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "addressbalance", "\"" + creatoraddress + "\""));
-    CAmount nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
-    BOOST_CHECK_EQUAL(nAmountBalance, nAmountHalf);
-
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "addressbalance", "\"" + useraddress + "\""));
-    nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
-    BOOST_CHECK_EQUAL(nAmountBalance, nAmountHalf);
-
-    string assetguid = AssetNew("node3", creatoraddress, "pubdata", "0x931d387731bbbc988b312206c74f77d004d6b84b");
-
-    AssetSend("node3", assetguid, "[{\"address\":\"" + useraddress + "\",\"amount\":0.5}]");
- 
-    // try to send coins and see it doesn't go through because balances are the same
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "addressbalance", "\"" + creatoraddress + "\""));
-    nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
-    
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
-	newaddress = r.get_str();
-
-
-    CallExtRPC("node3", "sendtoaddress" , "\"" + useraddress + "\"," + strAmountHalf, false);
-    GenerateBlocks(5, "node3");
-
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "addressbalance", "\"" + creatoraddress + "\""));
-    CAmount nAmountBalanceAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
-    BOOST_CHECK_EQUAL(nAmountBalance, nAmountBalanceAfter);
-
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "addressbalance", "\"" + useraddress + "\""));
-    nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
-    
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
-	newaddress = r.get_str();
-
-    CallExtRPC("node3", "sendtoaddress" , "\"" + creatoraddress + "\"," + strAmountHalf, false);
-    GenerateBlocks(5, "node3");
-
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "addressbalance", "\"" + useraddress + "\""));
-    nAmountBalanceAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
-    BOOST_CHECK_EQUAL(nAmountBalance, nAmountBalanceAfter);
-
-    // clear the allocation so we can send the sys again from useraddress
-    AssetAllocationTransfer(false, "node3", assetguid, useraddress, "[{\"address\":\"" + creatoraddress + "\",\"amount\":0.5}]");
-
-    // try again and this time should pass
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "addressbalance", "\"" + useraddress + "\""));
-    nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
-    
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
-	newaddress = r.get_str();
-
-    CallExtRPC("node3", "sendtoaddress" , "\"" + creatoraddress + "\"," + strAmountHalf, false);
-    GenerateBlocks(5, "node3");
-
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "addressbalance", "\"" + useraddress + "\""));
-    nAmountBalanceAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
-    // would have completely spent funds from this address to pay the creatoraddress
-    BOOST_CHECK_EQUAL(0, nAmountBalanceAfter);
-
-    // sendfrom should work on creatoraddress because we use create a manual raw tx sourced from creatoraddress which doesn't hit the auto-selection wallet algorithm
-
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "addressbalance", "\"" + creatoraddress + "\""));
-    nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
-    
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
-	newaddress = r.get_str();
-
-
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "sendfrom" , "\""  + creatoraddress + "\",\"" + useraddress + "\"," + strAmountHalf));
-    string hex_str = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "signrawtransactionwithwallet" , "\"" + hex_str + "\""));
-    hex_str = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "sendrawtransaction" , "\"" + hex_str + "\""));
-   
-    GenerateBlocks(5, "node3");
-
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "addressbalance", "\"" + creatoraddress + "\""));
-    nAmountBalanceAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
-    // now creator address should be down about half the coins (half coins + fees in sendfrom) since it got all of the them in the previous sendtoaddress that worked
-    BOOST_CHECK((nAmountBalance - nAmountHalf) > nAmountBalanceAfter);
-    BOOST_CHECK((nAmountBalance - nAmountHalf - nAmountBalanceAfter) < 0.001*COIN);
-}
 
 BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
 {
@@ -453,6 +349,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
     blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
     BOOST_CHECK(blocksArray.empty());
 }
+
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 {
 
@@ -544,13 +441,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     tfm::format(std::cout,"sending assets with assetsend...\n");
     // PHASE 5:  SEND ASSETS TO NEW ALLOCATIONS
     for(int i =0;i<numAssets;i++){
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassetindexassets" , "\"" +  vecFundedAddresses[i] + "\""));
-        UniValue indexArray = r.get_array();
-        BOOST_CHECK_EQUAL(indexArray.size(), 1);
-        uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_uint();
         uint32_t nAssetStored;
         ParseUInt32(vecAssets[i], &nAssetStored);
-        BOOST_CHECK_EQUAL(nAsset, nAssetStored);
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetsendmany" ,  vecAssets[i] + ",[{\"address\":\"" + vecFundedAddresses[i] + "\",\"amount\":250}],\"''\""));
 
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet", "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
@@ -693,25 +585,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     const int64_t &endblock = GetTimeMicros();
     tfm::format(std::cout,"elapsed time in block creation: %lld\n", endblock-startblock);
     tfm::format(std::cout,"elapsed time in seconds: %lld\n", end-start);
-    tfm::format(std::cout,"checking indexes...\n");
-    unfoundedAccountIndex = 0;
-    for(int i =0;i<numAssets;i++){
-        uint32_t nAssetStored;
-        ParseUInt32(vecAssets[i], &nAssetStored);
-        for (int j = 0; j < numberOfAssetSendsPerBlock; j++) {
-            BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassetindexallocations" , "\"" + unfundedAccounts[unfoundedAccountIndex++] + "\""));
-            UniValue indexArray = r.get_array();
-            BOOST_CHECK_EQUAL(indexArray.size(), numAssets);       
-            if(unfoundedAccountIndex >= unfundedAccounts.size())
-                unfoundedAccountIndex = 0;
-        }
-
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassetindexassets" , "\"" + vecFundedAddresses[i] + "\""));
-        UniValue indexArray = r.get_array();
-        BOOST_CHECK_EQUAL(indexArray.size(), 1);
-        uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_uint();
-        BOOST_CHECK_EQUAL(nAsset, nAssetStored);
-    }
 }/*
 BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
 {
@@ -850,37 +723,189 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_within_block)
     AssetSend("node1", assetguid, "[{\"address\":\"" + useraddress2 + "\",\"amount\":2.0}]");
     // From W2 send 1 SPT to W1 - Wait for Confirm
     AssetAllocationTransfer(false, "node2", assetguid, useraddress2, "[{\"address\":\"" + useraddress1 + "\",\"amount\":1.0}]");
-
     // From W2 send 1 SPT to W1 - DO NOT WAIT FOR CONFIRM
     AssetAllocationTransfer(true, "node2", assetguid, useraddress2, "[{\"address\":\"" + useraddress1 + "\",\"amount\":1.0}]");
     MilliSleep(500);
-    // From W1 send 2 SPT to W2 within same Block
-    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":2.0}]");
+    // From W1 send 1 SPT to W2 within same Block
+    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":1.0}]");
+    GenerateBlocks(1);
 
-    GenerateBlocks(5, "node1");
-    // useraddress1 should be empty
-    BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress1 + "\""), runtime_error);
+    // useraddress1 should have 1
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""));
+    UniValue balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "1.00000000");
 
     // useraddress2 should have 2
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""));
-    UniValue balance = find_value(r.get_obj(), "balance");
-    BOOST_CHECK_EQUAL(balance.getValStr(), "2.00000000");
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "1.00000000");
 
-    // useraddress1 should be empty
-    BOOST_CHECK_THROW(r = CallExtRPC("node2", "assetallocationinfo",  assetguid + ",\"" + useraddress1 + "\""), runtime_error);
+    // useraddress1 should have 1
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""));
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "1.00000000");
 
     // useraddress2 should have 2
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""));
     balance = find_value(r.get_obj(), "balance");
-    BOOST_CHECK_EQUAL(balance.getValStr(), "2.00000000");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "1.00000000");
 
-    // useraddress1 should be empty
-    BOOST_CHECK_THROW(r = CallExtRPC("node3", "assetallocationinfo",  assetguid + ",\"" + useraddress1 + "\""), runtime_error);
+
+    // useraddress1 should have 1
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""));
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "1.00000000");
 
     // useraddress2 should have 2
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""));
     balance = find_value(r.get_obj(), "balance");
-    BOOST_CHECK_EQUAL(balance.getValStr(), "2.00000000");    
+    BOOST_CHECK_EQUAL(balance.getValStr(), "1.00000000"); 
+}
+
+BOOST_AUTO_TEST_CASE(generate_syscoin_asset_zdag_dependency)
+{
+    UniValue r;
+    tfm::format(std::cout,"Running generate_syscoin_asset_zdag_dependency...\n");
+    GenerateBlocks(5);
+    GenerateBlocks(5, "node2");
+    GenerateBlocks(5, "node3");
+
+    string creatoraddress = GetNewFundedAddress("node1");
+
+    string useraddress2 = GetNewFundedAddress("node2");
+    string useraddress3 = GetNewFundedAddress("node2");
+    string useraddress1 = GetNewFundedAddress("node1");
+    CallExtRPC("node1","sendtoaddress" , "\"" + useraddress2 + "\",1", false);
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "dumpprivkey", "\"" + useraddress1 + "\""));
+	string useraddress1privkey = r.get_str();
+	useraddress1privkey.erase(std::remove(useraddress1privkey.begin(), useraddress1privkey.end(), '\n'), useraddress1privkey.end());
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "importprivkey", "\"" + useraddress1privkey + "\""));
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "dumpprivkey", "\"" + useraddress2 + "\""));
+	string useraddress2privkey = r.get_str();
+	useraddress2privkey.erase(std::remove(useraddress2privkey.begin(), useraddress2privkey.end(), '\n'), useraddress2privkey.end());
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "importprivkey", "\"" + useraddress2privkey + "\""));
+    GenerateBlocks(1, "node1");
+    GenerateBlocks(1, "node2");
+
+    string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa", "8", "10", "100");
+    AssetSend("node1", assetguid, "[{\"address\":\"" + useraddress1 + "\",\"amount\":2.0}]");
+    // Send from address 2 to address 1, send away from address 1 and back to 1, and then send all from address 1 to 3, the idea is.. if its out of chronological order some txs wont get mined
+    // but they all should be mined and miner code should preserve order even if priority of transactions change
+    string txid1 = AssetAllocationTransfer(false, "node2", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":1.5}]");
+    //printf("txid1 %s\n", txid1.c_str());
+    string txid2 = AssetAllocationTransfer(true, "node2", assetguid, useraddress2, "[{\"address\":\"" + useraddress1 + "\",\"amount\":0.5}]");
+    //printf("txid2 %s\n", txid2.c_str());
+    string txid3 = AssetAllocationTransfer(true, "node2", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.5}]");
+    //printf("txid3 %s\n", txid3.c_str());
+    MilliSleep(100);
+    // we hope that this gets pushed ahead to the queue by increasing fees, this will validate the block but txid2/txid3 will be discarded erroneously
+    // we want txid2/txid3 to get mined and txid4 to get mined after like choronological order of mempool acceptance
+    string txid4 = AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "[{\"address\":\"" + useraddress3 + "\",\"amount\":1.0}]");
+    //printf("txid4 %s\n", txid4.c_str());
+    GenerateBlocks(1);
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress1 + "\""));
+    UniValue balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.50000000");
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress3 + "\""));
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "1.00000000");
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""));
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.50000000");
+}
+
+BOOST_AUTO_TEST_CASE(generate_syscoin_asset_zdag_dependency1)
+{
+    UniValue r;
+    tfm::format(std::cout,"Running generate_syscoin_asset_zdag_dependency1...\n");
+    GenerateBlocks(5);
+    GenerateBlocks(5, "node2");
+    GenerateBlocks(5, "node3");
+
+
+    string b11a = GetNewFundedAddress("node1");
+    string b11b = GetNewFundedAddress("node1");
+    string b21 = GetNewFundedAddress("node2");
+    string b41 = GetNewFundedAddress("node2");
+    string b10b = GetNewFundedAddress("node2");
+    string b10a = GetNewFundedAddress("node2");
+    string b224 = GetNewFundedAddress("node2");
+    CallExtRPC("node3","sendtoaddress" , "\"" + b11a + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b11b + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b21 + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b41 + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b10b + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b10a + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b224 + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b11a + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b11b + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b21 + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b41 + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b10b + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b10a + "\",1", false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + b224 + "\",1", false);
+    string creatoraddress = GetNewFundedAddress("node1");
+
+    GenerateBlocks(5, "node1");
+    GenerateBlocks(5, "node2");
+
+    string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa", "8", "10", "100");
+    AssetSend("node1", assetguid, "[{\"address\":\"" + b10a + "\",\"amount\":0.5},{\"address\":\"" + b41 + "\",\"amount\":0.5},{\"address\":\"" + b11a + "\",\"amount\":1.0},{\"address\":\"" + b11b + "\",\"amount\":0.6},{\"address\":\"" + b10b + "\",\"amount\":1.1}]");
+
+    string b10a_to_b224 = AssetAllocationTransfer(true, "node2", assetguid, b10a, "[{\"address\":\"" + b224 + "\",\"amount\":0.5}]");
+    //printf("b10a_to_b224 %s\n", b10a_to_b224.c_str());
+    MilliSleep(250);
+    string b41_to_b10b = AssetAllocationTransfer(true, "node2", assetguid, b41, "[{\"address\":\"" + b10b + "\",\"amount\":0.5}]");
+    //printf("b41_to_b10b %s\n", b41_to_b10b.c_str());
+    MilliSleep(250);
+    string b11a_to_b10b = AssetAllocationTransfer(true, "node1", assetguid, b11a, "[{\"address\":\"" + b10b + "\",\"amount\":0.5}]");
+    //printf("b11a_to_b10b %s\n", b11a_to_b10b.c_str());
+    MilliSleep(250);
+    string b11a_to_b11b = AssetAllocationTransfer(true, "node1", assetguid, b11a, "[{\"address\":\"" + b11b + "\",\"amount\":0.5}]");
+    //printf("b11a_to_b11b %s\n", b11a_to_b11b.c_str());
+    MilliSleep(250);
+    string b10b_to_b224 = AssetAllocationTransfer(true, "node2", assetguid, b10b, "[{\"address\":\"" + b224 + "\",\"amount\":0.5}]");
+    //printf("b10b_to_b224 %s\n", b10b_to_b224.c_str());
+    MilliSleep(250);
+    string b10b_to_b21 = AssetAllocationTransfer(true, "node2", assetguid, b10b, "[{\"address\":\"" + b21 + "\",\"amount\":0.6}]");
+    //printf("b10b_to_b21 %s\n", b10b_to_b21.c_str());
+    MilliSleep(400);
+    string b11b_to_b21 = AssetAllocationTransfer(true, "node1", assetguid, b11b, "[{\"address\":\"" + b21 + "\",\"amount\":0.6}]");
+    //printf("b11b_to_b21 %s\n", b11b_to_b21.c_str());
+
+    MilliSleep(250);
+   
+
+    GenerateBlocks(1);
+
+
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + b224 + "\""));
+    UniValue balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "1.00000000");
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + b21 + "\""));
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "1.20000000");
+
+    BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + b10a + "\""), runtime_error);
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + b10b + "\""));
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "1.00000000");
+
+    BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + b41 + "\""), runtime_error);
+
+    BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + b11a + "\""), runtime_error);
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + b11b + "\""));
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.50000000");
+   
 }
 // a = 1, a->b(0.4), a->c(0.2), burn a(0.4) (a=0, b=0.4, c=0.2 and burn=0.4)
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag)
@@ -961,18 +986,28 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag1)
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""));
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "decoderawtransaction" , "\"" +  hexStr + "\""));
     string txid1 = find_value(r.get_obj(), "txid").get_str();
-    
-    string txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress3 + "\",\"amount\":0.2}]");
-    string txid3 = AssetAllocationTransfer(true, "node1", assetguid, useraddress3, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.2}]");
-    GenerateBlocks(5, "node1");
-    // should be balance 0 and thus deleted
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress1 + "\""));
+    // this will with CPFP try to build ontop of the above transaction which was relayed but is part of the conflict structure setToRemoveFromMempool
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationsendmany" , assetguid + ",\"" + useraddress1 + "\",[{\"address\":\"" + useraddress3 + "\",\"amount\":0.2}],\"''\""));
 
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
+    hexStr = find_value(r.get_obj(), "hex").get_str();
+    // shouldn't allow to build ontop of an invalid sys tx
+    BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);
+
+    MilliSleep(500);
+
+    GenerateBlocks(2, "node1");
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress1 + "\""));
     UniValue balance = find_value(r.get_obj(), "balance_zdag");
     BOOST_CHECK_EQUAL(balance.getValStr(), "0.20000000");
 
-    BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress3 + "\""), runtime_error);
+    BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""), runtime_error);
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress3 + "\""));
+    balance = find_value(r.get_obj(), "balance_zdag");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.20000000");
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.20000000");
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"burn\""));
     balance = find_value(r.get_obj(), "balance_zdag");
@@ -981,13 +1016,9 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag1)
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag" , "\"" + burntxid + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
-    // txid1 and txid2 should still be in mempool but will be conflicting
+    // txid1 should still be in mempool but will be conflicting
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag" , "\"" + txid1 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag" , "\"" + txid2 + "\""));
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag" , "\"" + txid3 + "\""));
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
 }
 // a = 1, b = 0.2, c = 0.1, a->b (0.2), b->a(0.2),  a->c(0.2), c->a(0.2), burn a(0.5), burn a(0.5), b->c(0.2), burn c(0.3) (a=0, b=0, c=0 and burn=1.3)
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag2)
@@ -1015,7 +1046,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag2)
 
     string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa", "8", "3");
 
-    AssetSend("node1", assetguid, "[{\"address\":\"" + useraddress1 + "\",\"amount\":1.0},{\"address\":\"" + useraddress2 + "\",\"amount\":0.2},{\"address\":\"" + useraddress3 + "\",\"amount\":0.1}]");
+    AssetSend("node1", assetguid, "[{\"address\":\"" + useraddress1 + "\",\"amount\":1.5},{\"address\":\"" + useraddress2 + "\",\"amount\":0.4},{\"address\":\"" + useraddress3 + "\",\"amount\":0.5}]");
    
     AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.2}]");
 
@@ -1043,14 +1074,28 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag2)
 
     GenerateBlocks(5, "node1");
 
-    BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress1 + "\""), runtime_error);
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress1 + "\""));
+    UniValue balance = find_value(r.get_obj(), "balance_zdag");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.50000000");
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.50000000");
 
-    BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""), runtime_error);
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""));
+    balance = find_value(r.get_obj(), "balance_zdag");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.20000000");
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.20000000");
 
-    BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress3 + "\""), runtime_error);
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress3 + "\""));
+    balance = find_value(r.get_obj(), "balance_zdag");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.40000000");
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.40000000");
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo", assetguid + ",\"burn\""));
-    UniValue balance = find_value(r.get_obj(), "balance");
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "1.30000000");
+    balance = find_value(r.get_obj(), "balance_zdag");
     BOOST_CHECK_EQUAL(balance.getValStr(), "1.30000000");
 }
 
@@ -1085,8 +1130,6 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag3)
     BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);
     string txid1 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.1}]");
     string txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "[{\"address\":\"" + useraddress3 + "\",\"amount\":0.1}]");
-    
-
     GenerateBlocks(5, "node1");
     
     // no zdag tx found after block
@@ -1116,19 +1159,20 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag3)
     txid1 = AssetAllocationTransfer(true, "node1", assetguid, useraddress3, "[{\"address\":\"" + useraddress1 + "\",\"amount\":0.1}]");
     txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.05}]");
 
+    // sender useraddress2 was involved in the double-spend so these senders should be OK
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid1 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid2 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
-    
+ 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress1 + "\""));
     balance = find_value(r.get_obj(), "balance_zdag");
-    BOOST_CHECK_EQUAL(balance.getValStr(), "0.95000000");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.75000000");
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""));
     balance = find_value(r.get_obj(), "balance_zdag");
-    BOOST_CHECK_EQUAL(balance.getValStr(), "0.05000000");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.00000000");
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress3 + "\""));
     balance = find_value(r.get_obj(), "balance_zdag");
@@ -1196,22 +1240,22 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     // txid1 depends on double spend so it is conflicted
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid1 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
-    // because txid2 depends on txid1 which depends on a double spend, it is also conflicted
+    // because we only can send pow balance, any other sender is not affected by major conflict
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid2 + "\""));
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
     
    
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "assetallocationverifyzdag", "\"" + txid1 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "assetallocationverifyzdag", "\"" + txid2 + "\""));
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "assetallocationverifyzdag", "\"" + txid1 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "assetallocationverifyzdag", "\"" + txid2 + "\""));
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
     // the burn txid should be received on all nodes and it should be in conflict
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + burntxid + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
@@ -1242,18 +1286,18 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     assetHex = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "decoderawtransaction" , "\"" + assetHex + "\""));
     string assettxid2 = find_value(r.get_obj(), "txid").get_str();
-    // send on node2 where it would have had a conflicting output for this sender since it double spent
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "sendrawtransaction" , "\"" +  assetHex + "\""));
+    // on node2 it would have had a conflicting output for this sender since it double spent so we can't send
+    BOOST_CHECK_THROW(r = CallExtRPC("node2", "sendrawtransaction" , "\"" +  assetHex + "\""), runtime_error);
     MilliSleep(100);
-    // status should be conflicting because sender conflict status hasn't cleared even after a block should be invalid-sender during the graph check
+    // can't find because it wasn't sent
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + assettxid2 + "\""));
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
     
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "assetallocationverifyzdag", "\"" + assettxid2 + "\""));
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "assetallocationverifyzdag", "\"" + assettxid2 + "\""));
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
   
     tfm::format(std::cout,"Setting time ahead 300 seconds...\n");
     SleepFor(300 * 1000, 0);
@@ -1279,7 +1323,9 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid2 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
-
+    string creatoraddress2 = GetNewFundedAddress("node2");
+    // give time for mempool to get tx and then clear conflict via expire
+    AssetNew("node2", creatoraddress2, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa");
     // asset xfer on node3 ensure it doesn't link against previous tx but this time should be ok
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "assetallocationsendmany" , assetguid + ",\"" + useraddress1 + "\",[{\"address\":\"" + useraddress2 + "\",\"amount\":0.01}],\"''\""));
 
@@ -1288,9 +1334,10 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "decoderawtransaction" , "\"" + assetHex + "\""));
     string assettxid3 = find_value(r.get_obj(), "txid").get_str();
     // send on node2 where it would have had a conflicting output for this sender since it double spent
+    // but now should be cleared due to the 300 second expiry and assetnew previously would have triggered expiry code
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "sendrawtransaction" , "\"" +  assetHex + "\""));
     MilliSleep(500);
-    // status should be ok since timeout should clear output linking
+    // status should be ok since timeout should clear bad status
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + assettxid3 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
     
@@ -1299,8 +1346,6 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "assetallocationverifyzdag", "\"" + assettxid3 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
-
-
 }
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_same_input)
 {
@@ -1359,6 +1404,151 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_same_input)
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
     GenerateBlocks(5);
 } 
+BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_same_input_no_overflow)
+{
+    UniValue r;
+    tfm::format(std::cout,"Running generate_burn_syscoin_asset_zdag_dbl_spend_same_input_no_overflow...\n");
+    GenerateBlocks(5);
+    GenerateBlocks(5, "node2");
+    GenerateBlocks(5, "node3");
+
+    string creatoraddress = GetNewFundedAddress("node1");
+
+    string useraddress1 = GetNewFundedAddress("node1");
+    string useraddress2 = GetNewFundedAddress("node1");
+    string useraddress3 = GetNewFundedAddress("node1");
+    CallExtRPC("node1", "sendtoaddress" , "\"" + useraddress1 + "\",\"1\"", false);
+    CallExtRPC("node1", "sendtoaddress" , "\"" + useraddress1 + "\",\"1\"", false);
+    CallExtRPC("node1", "sendtoaddress" , "\"" + creatoraddress + "\",\"1\"", false);
+    GenerateBlocks(5, "node1");
+       
+    string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa");
+    
+    AssetSend("node1", assetguid, "[{\"address\":\"" + useraddress1 + "\",\"amount\":1.0}]");
+    AssetAllocationTransfer(false, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.1}]");
+    // burn and transfer at same time for use same input but don't overflow balance, it should flag the sender in conflict even though balance doesn't overflow, 
+    // there is no gaurantee the tx will get mined in order so raise it up as issue
+    // burn only 0.4
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationburn" , assetguid + ",\"" + useraddress1 + "\",0.4,\"0x931d387731bbbc988b312206c74f77d004d6b84b\""));
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
+    string burnHex = find_value(r.get_obj(), "hex").get_str();
+
+    // asset xfer only 0.4 (together its 0.8 (< 0.9 available) but still using same input it should flag it as a conflict)
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationsendmany" , assetguid + ",\"" + useraddress1 + "\",[{\"address\":\"" + useraddress2 + "\",\"amount\":0.4}],\"''\""));
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
+    string assetHex = find_value(r.get_obj(), "hex").get_str();
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "sendrawtransaction" , "\"" + assetHex + "\""));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "decoderawtransaction" , "\"" + assetHex + "\"" + ",true"));
+	string txid1 = find_value(r.get_obj(), "txid").get_str();
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node2","sendrawtransaction" , "\"" + burnHex + "\""));
+
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "decoderawtransaction" , "\"" + burnHex + "\"" + ",true"));
+	string txid2 = find_value(r.get_obj(), "txid").get_str();
+    
+    MilliSleep(500);
+    // check just sender, burn marks as major issue on zdag
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid1 + "\""));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+    
+    // check just sender, burn marks as major issue on zdag
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "assetallocationverifyzdag", "\"" + txid2 + "\""));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+
+    // check just sender, burn marks as major issue on zdag
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "assetallocationverifyzdag", "\"" + txid1 + "\""));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+    GenerateBlocks(5);
+} 
+// same as last but try to build a sys tx ontop of the bad sys tx
+BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_same_input_no_overflow1)
+{
+    UniValue r;
+    tfm::format(std::cout,"Running generate_burn_syscoin_asset_zdag_dbl_spend_same_input_no_overflow1...\n");
+    GenerateBlocks(5);
+    GenerateBlocks(5, "node2");
+    GenerateBlocks(5, "node3");
+
+    string creatoraddress = GetNewFundedAddress("node1");
+
+    string useraddress2 = GetNewFundedAddress("node1");
+    string useraddress3 = GetNewFundedAddress("node1");
+    string useraddress1 = GetNewFundedAddress("node1");
+    CallExtRPC("node2", "sendtoaddress" , "\"" + useraddress1 + "\",\"1\"", false);
+    CallExtRPC("node2", "sendtoaddress" , "\"" + useraddress1 + "\",\"1\"", false);
+
+
+    GenerateBlocks(5, "node1");
+    GenerateBlocks(5, "node2");
+
+    string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa", "8", "5");
+
+    AssetSend("node1", assetguid, "[{\"address\":\"" + useraddress1 + "\",\"amount\":1.0},{\"address\":\"" + useraddress3 + "\",\"amount\":0.2}]");
+
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationburn" , assetguid + ",\"" + useraddress1 + "\",0.6,\"0x931d387731bbbc988b312206c74f77d004d6b84b\""));
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
+    string burnHex = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "decoderawtransaction" , "\"" + burnHex + "\""));
+    string burntxid = find_value(r.get_obj(), "txid").get_str();
+    // send with dup input and no balance overflow
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationsendmany" , assetguid + ",\"" + useraddress1 + "\",[{\"address\":\"" + useraddress2 + "\",\"amount\":0.2}],\"''\""));
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
+    string assetHex = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "decoderawtransaction" , "\"" + assetHex + "\""));
+    string txid1 = find_value(r.get_obj(), "txid").get_str();
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node2","sendrawtransaction" , "\"" + burnHex + "\""));
+    MilliSleep(500);
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "sendrawtransaction" , "\"" +  assetHex + "\""));
+    MilliSleep(500);
+
+    // now we will with try to build ontop of the burn transaction which was relayed but is part of the conflict structure setToRemoveFromMempool
+    
+    // should not allow to build on top on node3 because node2 had assetHex first and burnHex second, thus it will complain because of setToRemoveFromMempool
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "assetallocationsendmany" , assetguid + ",\"" + useraddress1 + "\",[{\"address\":\"" + useraddress3 + "\",\"amount\":0.2}],\"''\""));
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
+    string hexStr = find_value(r.get_obj(), "hex").get_str();
+    // shouldn't allow to build ontop of an invalid sys tx
+    BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);
+
+    
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationsendmany" , assetguid + ",\"" + useraddress1 + "\",[{\"address\":\"" + useraddress3 + "\",\"amount\":0.2}],\"''\""));
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
+    hexStr = find_value(r.get_obj(), "hex").get_str();
+    // should allow to build ontop of burn tx because node1 has assetHex as a conflict, and burn is OK
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""));
+
+
+    GenerateBlocks(2, "node1");
+    // even though there is no balance overflow, it should deduct the balances for transactions above
+    // even though only one will get mined
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress1 + "\""));
+    UniValue balance = find_value(r.get_obj(), "balance_zdag");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.20000000");
+
+    BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress2 + "\""), runtime_error);
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"" + useraddress3 + "\""));
+    balance = find_value(r.get_obj(), "balance_zdag");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.40000000");
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  assetguid + ",\"burn\""));
+    balance = find_value(r.get_obj(), "balance_zdag");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.60000000");
+
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag" , "\"" + burntxid + "\""));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+    // txid1 should still be in mempool but will be conflicting
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag" , "\"" + txid1 + "\""));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+}
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
 {
     UniValue r;
@@ -1483,6 +1673,10 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
     tfm::format(std::cout, "Setting time ahead 300 seconds...\n");
     SleepFor(300 * 1000, 0);
+    MilliSleep(250);
+    // allow mempool expiry to work
+    AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
+    MilliSleep(250);
     // after confirm we shouldn't have any txs to check
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + dblspendtx + "\""));
     // could be not found or status ok , status ok if node1 wallet accepting to mempool again because it detected unconfirmed transactions
@@ -1861,17 +2055,17 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid0 + "\""));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
 
-	// send using zdag
+	// send using zdag, balance wont go up only down within block
 	string txid1 = AssetAllocationTransfer(true, "node1", guid, newaddress1, "[{\"address\":\"" + newaddress2 + "\",\"amount\":0.12}]");
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  guid + ",\"" + newaddress2 + "\""));
 	balance = find_value(r.get_obj(), "balance_zdag");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.23 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.11 * COIN);
 	MilliSleep(500);
 	// second send
 	string txid2 = AssetAllocationTransfer(true, "node1", guid, newaddress1, "[{\"address\":\"" + newaddress2 + "\",\"amount\":0.13}]");
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  guid + ",\"" + newaddress2 + "\""));
 	balance = find_value(r.get_obj(), "balance_zdag");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.36 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.11 * COIN);
 
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid0 + "\""));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
@@ -1896,8 +2090,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid2 + "\""));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
-    
+    // now balance adjusts after block
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  guid + ",\"" + newaddress2 + "\""));
+	balance = find_value(r.get_obj(), "balance_zdag");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.36 * COIN);
 }
+
 BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
 {
 	UniValue assetInvalidatedResults, assetNowResults, assetValidatedResults;
