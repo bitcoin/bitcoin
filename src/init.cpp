@@ -1392,6 +1392,9 @@ bool AppInitMain(NodeContext& node)
     assert(!node.scheduler);
     node.scheduler = MakeUnique<CScheduler>();
 
+    assert(!node.scheduler);
+    node.scheduler = MakeUnique<CScheduler>();
+
     // Start the lightweight task scheduler thread
     CScheduler::Function serviceLoop = [&node]{ node.scheduler->serviceQueue(); };
     threadGroup.create_thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
