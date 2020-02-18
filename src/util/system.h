@@ -43,8 +43,6 @@ extern bool fUnitTest;
 extern bool bGethTestnet;
 extern bool fTPSTest;
 extern bool fTPSTestEnabled;
-extern bool fZMQAssetAllocation;
-extern bool fZMQAsset;
 extern bool fZMQWalletStatus;
 extern bool fZMQEthStatus;
 extern bool fZMQNetworkStatus;
@@ -58,9 +56,6 @@ extern bool fLoaded;
 extern bool bb;
 extern pid_t gethPID;
 extern pid_t relayerPID;
-extern bool fAssetIndex;
-extern int fAssetIndexPageSize;
-extern std::vector<uint32_t> fAssetIndexGuids; 
 extern std::vector<JSONRPCRequest> vecTPSRawTransactions;
 typedef struct {
     // Values from /proc/meminfo, in KiB or converted to MiB.

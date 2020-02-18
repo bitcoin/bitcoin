@@ -137,7 +137,7 @@ void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, b
 {
 	string dataDir = LookupURLLocal(dataDirIn);
 	boost::filesystem::path fpath = boost::filesystem::system_complete("./syscoind");
-	string nodePath = fpath.string() + string(" -server -rpcuser=u -rpcpassword=p -unittest -tpstest -assetindex -daemon -server -debug=0");
+	string nodePath = fpath.string() + string(" -server -rpcuser=u -rpcpassword=p -unittest -tpstest -daemon -server -debug=0");
 	nodePath += string(" -datadir=") + dataDir;
 	if (regTest)
 		nodePath += string(" -regtest");
@@ -787,15 +787,6 @@ string AssetAllocationMint(const string& node, const string& asset, const string
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "in_active_chain").get_bool(), true);*/
     return hex_str;
 }
-bool FindAssetGUIDFromAssetIndexResults(const UniValue& results, std::string guid){
-	UniValue arrayVal = results.get_array();
-	for(unsigned i = 0;i<arrayVal.size();i++){
-		UniValue r = arrayVal[i];
-		if(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid)
-			return true;
-	}
-	return false;
-}
 	
 string AssetNew(const string& node, const string& address, string pubdata, string contract, const string& precision, const string& supply, const string& maxsupply, const string& updateflags, const string& witness, const string& symbol, const string& auxfees, bool bRegtest)
 {
@@ -850,8 +841,6 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 
 	BOOST_CHECK(update_flags == paramUpdateFlags);
 
-	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexassets", "\"" + address + "\""));
-	BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 	GenerateBlocks(1, node, bRegtest);
 
 
@@ -870,8 +859,6 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
         int paramUpdateFlags;
 		ParseInt32(updateflags, &paramUpdateFlags);
         BOOST_CHECK(update_flags == paramUpdateFlags);
-		BOOST_CHECK_NO_THROW(r = CallExtRPC(otherNode1, "listassetindexassets", "\""+ address + "\""));
-		BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 	}
 	if (!otherNode2.empty())
 	{
@@ -889,8 +876,6 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
         int paramUpdateFlags;
 		ParseInt32(updateflags, &paramUpdateFlags);
         BOOST_CHECK(update_flags == paramUpdateFlags);
-		BOOST_CHECK_NO_THROW(r = CallExtRPC(otherNode2, "listassetindexassets", "\"" + address + "\""));
-		BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 	}
 	return guid;
 }
@@ -969,8 +954,6 @@ string AssetUpdate(const string& node, const string& guid, const string& pubdata
 		totalsupply = find_value(r.get_obj(), "total_supply");
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
 
-		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexassets", "\"" + oldaddress + "\"" ));
-		BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 		GenerateBlocks(6, node);
 		if (!otherNode1.empty())
 		{
@@ -983,8 +966,6 @@ string AssetUpdate(const string& node, const string& guid, const string& pubdata
 		
 			totalsupply = find_value(r.get_obj(), "total_supply");
 			BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
-			BOOST_CHECK_NO_THROW(r = CallExtRPC(otherNode1, "listassetindexassets", "\"" + oldaddress + "\"" ));
-			BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 		}
 		if (!otherNode2.empty())
 		{
@@ -996,8 +977,6 @@ string AssetUpdate(const string& node, const string& guid, const string& pubdata
 			BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_uint(), newflags);
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "contract").get_str(), newcontract);
-			BOOST_CHECK_NO_THROW(r = CallExtRPC(otherNode2, "listassetindexassets", "\"" + oldaddress + "\"" ));
-			BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 		}
 	}
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "decoderawtransaction", "\"" + hex_str + "\",true"));
@@ -1029,13 +1008,6 @@ void AssetTransfer(const string& node, const string &tonode, const string& guid,
 		BOOST_CHECK_NO_THROW(r = CallExtRPC(tonode, "assetinfo" , guid));
 		BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == toaddress);
 	}
-
-	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexassets" , "\"" + toaddress + "\"", bRegtest));
-	BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
-	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexassets" , "\"" + oldaddress + "\"" , bRegtest));
-	BOOST_CHECK(!FindAssetGUIDFromAssetIndexResults(r, guid));
-
-
 }
 string AssetAllocationTransfer(const bool usezdag, const string& node, const string& guid, const string& fromaddress, const string& inputs, const string& witness) {
 
@@ -1093,7 +1065,8 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
     }
 	// "assetallocationsendmany [asset] [addressfrom] ( [{\"address\":\"address\",\"amount\":amount},...] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationsendmany" , guid + ",\"" + fromaddress + "\"," + inputs + ",\"" + witness + "\""));
-    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet", "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
+	
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet", "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 
 
@@ -1125,20 +1098,6 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
     else if(!usezdag){
         BOOST_CHECK_THROW(r = CallExtRPC(node, "assetallocationinfo" , guid + ",\"" + fromaddress + "\""), runtime_error);
 	
-		for (unsigned int idx = 0; idx < receivers.size(); idx++) {
-			const UniValue& receiver = receivers[idx];
-			BOOST_CHECK(receiver.isObject());
-		
-			UniValue receiverObj = receiver.get_obj();
-			string strAddress = find_value(receiverObj, "address").get_str();
-			
-			BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexallocations" , "\"" + strAddress + "\"" ));
-			BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
-		}
-		if(newfromamount > 0){
-			BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexallocations", "\"" +fromaddress + "\""  ));
-			BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
-		}	
 	}
 
 	return txid;
@@ -1291,25 +1250,6 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txtype").get_str(), "assetsend");
 	if (!theAssetAllocation.listSendingAllocationAmounts.empty())
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "allocations").get_array().size(), theAssetAllocation.listSendingAllocationAmounts.size());
-	
-	if(confirm){
-		for (unsigned int idx = 0; idx < receivers.size(); idx++) {
-			const UniValue& receiver = receivers[idx];
-			BOOST_CHECK(receiver.isObject());
-		
-			UniValue receiverObj = receiver.get_obj();
-			string strAddress = find_value(receiverObj, "address").get_str();
-			
-			BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexallocations" , "\"" + strAddress + "\"" ));
-			BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
-
-
-		}
-		if(newfromamount > 0){
-			BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexassets" , "\"" + fromAddress + "\"" ));
-			BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
-		}
-	}
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "decoderawtransaction" , "\"" + hex_str + "\",true"));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 	return txid;

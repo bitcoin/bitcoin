@@ -30,6 +30,7 @@
 #include <boost/signals2/signal.hpp>
 
 class CBlockIndex;
+typedef std::unordered_map<std::string, CAmount> AssetBalanceMap;
 extern RecursiveMutex cs_main;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
@@ -291,8 +292,7 @@ public:
         double f2 = a_size * b_mod_fee;
 
         if (f1 == f2) {
-            // SYSCOIN
-            return a.GetTime() < b.GetTime();
+            return a.GetTx().GetHash() < b.GetTx().GetHash();
         }
         return f1 > f2;
     }
@@ -587,14 +587,16 @@ public:
     // Note that addUnchecked is ONLY called from ATMP outside of tests
     // and any other callers may break wallet's in-mempool tracking (due to
     // lack of CValidationInterface::TransactionAddedToMempool callbacks).
+    // SYSCOIN
     void addUnchecked(const CTxMemPoolEntry& entry, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors, bool validFeeEstimate, const bool &fSyscoinDuplicate, const std::string & fSyscoinSender, const AssetBalanceMap &mapAssetAllocationBalances) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     void addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
-
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     // SYSCOIN
     bool existsConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool removeSyscoinConflicts(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void clear();
     void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
@@ -652,8 +654,11 @@ public:
      *  errString = populated with error reason if any limits are hit
      *  fSearchForParents = whether to search a tx's vin for in-mempool parents, or
      *    look up parents from mapLinks. Must be true for entries not in the mempool
+     *  fSyscoinDuplicate = whether it is a duplicate input, not rbf but the first-seen duplicate
+     *  input transaction found so let it relay for double-spend detection, however ensure we don't attach a parent to it
      */
-    bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry, setEntries& setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+     // SYSCOIN
+    bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry, setEntries& setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, bool fSearchForParents = true, const bool &fSyscoinDuplicate = false, const std::string &fSyscoinSender = "") const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Populate setDescendants with all in-mempool descendants of hash.
      *  Assumes that setDescendants includes all in-mempool descendants of anything

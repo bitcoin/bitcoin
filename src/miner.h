@@ -88,8 +88,7 @@ struct CompareTxIterByAncestorCount {
     {
         if (a->GetCountWithAncestors() != b->GetCountWithAncestors())
             return a->GetCountWithAncestors() < b->GetCountWithAncestors();
-        // SYSCOIN
-        return a->GetTime() < b->GetTime();
+        return CTxMemPool::CompareIteratorByHash()(a, b);
     }
 };
 
@@ -127,7 +126,7 @@ struct update_for_parent_inclusion
     CTxMemPool::txiter iter;
 };
 // SYSCOIN
-static std::vector<uint256> DEFAULT_VEC;
+static std::unordered_set<uint256, SaltedTxidHasher> DEFAULT_SET;
 /** Generate a new block, without valid proof-of-work */
 class BlockAssembler
 {
@@ -166,7 +165,7 @@ public:
     explicit BlockAssembler(const CTxMemPool& mempool, const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, std::vector<uint256> &txsToRemove=DEFAULT_VEC);
+    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, std::unordered_set<uint256, SaltedTxidHasher> &txsToRemove=DEFAULT_SET);
 
     static Optional<int64_t> m_last_block_num_txs;
     static Optional<int64_t> m_last_block_weight;
@@ -182,7 +181,7 @@ private:
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
       * statistics from the package selection (for logging statistics). */
-    void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, std::vector<uint256> &txsToRemove=DEFAULT_VEC) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
+    void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, std::unordered_set<uint256, SaltedTxidHasher> &txsToRemove=DEFAULT_SET) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */
@@ -193,7 +192,7 @@ private:
       * locktime, premature-witness, serialized size (if necessary)
       * These checks should always succeed, and they're here
       * only as an extra check in case of suboptimal node configuration */
-    bool TestPackageTransactions(const CTxMemPool::setEntries& package, std::vector<uint256> &txsToRemove=DEFAULT_VEC);
+    bool TestPackageTransactions(const CTxMemPool::setEntries& package, std::unordered_set<uint256, SaltedTxidHasher> &txsToRemove=DEFAULT_SET);
     /** Return true if given transaction from mapTx has already been evaluated,
       * or if the transaction's cached data in mapTx is incorrect. */
     bool SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set& mapModifiedTx, CTxMemPool::setEntries& failedTx) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);

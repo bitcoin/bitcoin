@@ -18,7 +18,9 @@
 #include <util/moneystr.h>
 #include <util/time.h>
 #include <validationinterface.h>
-
+// SYSCOIN
+#include <services/assetconsensus.h>
+extern std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
@@ -149,11 +151,10 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
     }
 }
 
-bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntries &setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string &errString, bool fSearchForParents /* = true */) const
+bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntries &setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string &errString, bool fSearchForParents /* = true */, const bool &fSyscoinDuplicate /* = false */, const std::string &fSyscoinSender /*  = "" */) const
 {
     setEntries parentHashes;
     const CTransaction &tx = entry.GetTx();
-
     if (fSearchForParents) {
         // Get parents of this transaction that are in the mempool
         // GetMemPoolParents() is only valid for entries in the mempool, so we
@@ -352,8 +353,14 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 {
     nTransactionsUpdated += n;
 }
-
+// SYSCOIN
 void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate)
+{
+    AssetBalanceMap mapAssetAllocationBalances;
+    addUnchecked(entry, setAncestors, validFeeEstimate, false, "", mapAssetAllocationBalances);
+}
+// SYSCOIN
+void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate, const bool &fSyscoinDuplicate, const std::string& fSyscoinSender, const AssetBalanceMap &mapAssetAllocationBalances)
 {
     NotifyEntryAdded(entry.GetSharedTx());
     // Add to memory pool without checking anything.
@@ -381,6 +388,12 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
         setParentTransactions.insert(tx.vin[i].prevout.hash);
+    }
+    // SYSCOIN
+    if(!fSyscoinDuplicate){
+        AddZDAGTx(MakeTransactionRef(tx), mapAssetAllocationBalances);
+    } else {
+        SetZDAGConflict(tx.GetHash(), fSyscoinSender);
     }
     // Don't bother worrying about child transactions of this one.
     // Normal case of a new transaction arriving is that there can't be any
@@ -415,6 +428,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     const uint256 hash = it->GetTx().GetHash();
     for (const CTxIn& txin : it->GetTx().vin)
         mapNextTx.erase(txin.prevout);
+        
 
     if (vTxHashes.size() > 1) {
         vTxHashes[it->vTxHashesIdx] = std::move(vTxHashes.back());
@@ -432,6 +446,8 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     mapTx.erase(it);
     nTransactionsUpdated++;
     if (minerPolicyEstimator) {minerPolicyEstimator->removeTx(hash, false);}
+    // SYSCOIN
+    RemoveZDAGTx(ptx);
 }
 
 // Calculates descendants of entry that are not already in setDescendants, and adds to
@@ -546,11 +562,10 @@ bool CTxMemPool::existsConflicts(const CTransaction &tx)
     }
     return false;
 }
-bool CTxMemPool::removeConflicts(const CTransaction &tx)
+void CTxMemPool::removeConflicts(const CTransaction &tx)
 {
     // Remove transactions which depend on inputs of tx, recursively
     AssertLockHeld(cs);
-    bool bRemoved = false;
     for (const CTxIn &txin : tx.vin) {
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
@@ -559,6 +574,36 @@ bool CTxMemPool::removeConflicts(const CTransaction &tx)
             {
                 ClearPrioritisation(txConflict.GetHash());
                 removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+            }
+        }
+    }
+}
+bool CTxMemPool::removeSyscoinConflicts(const CTransaction &tx)
+{
+    // Remove transactions which depend on inputs of tx, recursively
+    AssertLockHeld(cs);
+    bool bRemoved = false;
+    txiter thisit = mapTx.find(tx.GetHash());
+    assert(thisit != mapTx.end());
+    for (const CTxIn &txin : tx.vin) {
+        auto itConflict = mapNextTx.find(txin.prevout);
+        if (itConflict != mapNextTx.end()) {
+            const CTransaction &txConflict = *itConflict->second;
+            if (txConflict != tx)
+            {
+                txiter conflictit = mapTx.find(txConflict.GetHash());
+                assert(conflictit != mapTx.end());
+                // if conflicting transaction was received after the transaction in question then remove conflicting tx
+                // otherwise the transaction is question is removed
+                // idea is to keep the oldest transaction in event of conflict
+                if(conflictit->GetTime() >= thisit->GetTime()){
+                    ClearPrioritisation(txConflict.GetHash());
+                    removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+                }
+                else {
+                    ClearPrioritisation(tx.GetHash());
+                    removeRecursive(tx, MemPoolRemovalReason::CONFLICT);
+                }
                 bRemoved = true;
             }
         }
@@ -953,6 +998,16 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
         toremove.insert(mapTx.project<0>(it));
         it++;
+    }
+    // SYSCOIN expire zdag conflicts after 300 seconds
+    const std::chrono::seconds timeZdagConflicts = std::chrono::seconds(GetTime()) - std::chrono::seconds(300);
+    for(const auto& toRemove: setToRemoveFromMempool){
+        txiter mempoolTxToRemove = mapTx.find(toRemove);
+        if (mempoolTxToRemove != mapTx.end()) {
+            if(mempoolTxToRemove->GetTime() <= timeZdagConflicts){
+                toremove.insert(mapTx.project<0>(mempoolTxToRemove));
+            }
+        }
     }
     setEntries stage;
     for (txiter removeit : toremove) {
