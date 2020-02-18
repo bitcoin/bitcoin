@@ -98,7 +98,7 @@ pushd "$TARGET" || exit 1
           exit 1
         fi
 
-        git clone https://github.com/bitcoin/bitcoin "$tag"
+        git clone https://github.com/syscoin/syscoin "$tag"
         pushd "$tag" || exit 1
         {
           git checkout "$tag"
@@ -120,9 +120,9 @@ pushd "$TARGET" || exit 1
           make
           # Move binaries, so they're in the same place as in the release download:
           mkdir bin
-          mv src/bitcoind src/bitcoin-cli src/bitcoin-tx bin
+          mv src/syscoind src/syscoin-cli src/syscoin-tx bin
           if [ "$FUNCTIONAL_TESTS" -eq "0" ]; then
-            mv src/qt/bitcoin-qt bin
+            mv src/qt/syscoin-qt bin
           fi
         }
         popd || exit 1
@@ -133,15 +133,15 @@ pushd "$TARGET" || exit 1
       else
         mkdir "$tag"
         if [[ "$tag" =~ v(.*)(rc[0-9]+)$ ]]; then
-            BIN_PATH="bin/bitcoin-core-${BASH_REMATCH[1]}/test.${BASH_REMATCH[2]}"
+            BIN_PATH="bin/syscoin-core-${BASH_REMATCH[1]}/test.${BASH_REMATCH[2]}"
         else
-            BIN_PATH="bin/bitcoin-core-${tag:1}"
+            BIN_PATH="bin/syscoin-core-${tag:1}"
         fi
-        URL="https://bitcoin.org/$BIN_PATH/bitcoin-${tag:1}-$PLATFORM.tar.gz"
+        URL="https://syscoin.org/$BIN_PATH/syscoin-${tag:1}-$PLATFORM.tar.gz"
         echo "Fetching: $URL"
         curl -O $URL
-        tar -zxf "bitcoin-${tag:1}-$PLATFORM.tar.gz" -C "$tag" --strip-components=1 "bitcoin-${tag:1}"
-        rm "bitcoin-${tag:1}-$PLATFORM.tar.gz"
+        tar -zxf "syscoin-${tag:1}-$PLATFORM.tar.gz" -C "$tag" --strip-components=1 "syscoin-${tag:1}"
+        rm "syscoin-${tag:1}-$PLATFORM.tar.gz"
       fi
     fi
   done
