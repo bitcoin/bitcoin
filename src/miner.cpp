@@ -28,7 +28,7 @@
 #include <masternodepayments.h>
 #include <masternodesync.h>
 #include <services/assetconsensus.h>
-extern std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool;
+extern ArrivalTimesSet setToRemoveFromMempool;
 extern RecursiveMutex cs_assetallocationmempoolremovetx;
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {

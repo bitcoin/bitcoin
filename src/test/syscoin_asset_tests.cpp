@@ -2102,7 +2102,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
     tfm::format(std::cout,"Setting time ahead 300 seconds...\n");
     // trigger expiry of txs -- zdag balances should all match (no more zdag txs, fall back to db balance so string checks after reindex pass)
     SleepFor(300 * 1000, 0);
-    AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
+    string creatoraddress2 = GetNewFundedAddress("node2");
+    // give time for mempool to get tx and then clear conflict via expire
+    AssetNew("node2", creatoraddress2, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa");
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getblockcount"));
 	string strBeforeBlockCount = itostr(r.get_int());
 

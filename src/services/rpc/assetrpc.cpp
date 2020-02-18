@@ -25,9 +25,9 @@ extern std::unordered_set<std::string> assetAllocationConflicts;
 extern RecursiveMutex cs_assetallocationconflicts;
 extern RecursiveMutex cs_assetallocationarrival;
 extern RecursiveMutex cs_setethstatus;
-extern ArrivalTimesVecImpl arrivalTimesVec;
+extern ArrivalTimesSetImpl arrivalTimesSet;
 extern RecursiveMutex cs_assetallocationmempoolremovetx;
-extern std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool;
+extern ArrivalTimesSet setToRemoveFromMempool;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 extern std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
@@ -442,8 +442,11 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sen
         if(mempool.existsConflicts(*txRef))
             return ZDAG_MAJOR_CONFLICT;        
 
-        // get actors for this transaction, irrelevant to ancestors in case the double spend is happening on the same utxo
-        GetActorsFromSyscoinTx(txRef, true, false, actorSetSender);
+        // get sender
+        sender = GetSenderOfZdagTx(*txRef);
+        if(sender.empty())
+            return ZDAG_MAJOR_CONFLICT;
+
         // check this transaction isn't RBF enabled
         RBFTransactionState rbfState = IsRBFOptIn(*txRef, mempool, setAncestors);
         if (rbfState == RBFTransactionState::UNKNOWN) {
@@ -457,16 +460,15 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sen
             if(mempool.existsConflicts(*ancestorTxRef))
                 return ZDAG_MAJOR_CONFLICT;
         }  
-    }  
-    sender = *actorSetSender.begin();
+    } 
     {
         LOCK(cs_assetallocationarrival);
-        auto arrivalTimesIt = arrivalTimesVec.find(sender);
-        if(arrivalTimesIt == arrivalTimesVec.end())
+        auto arrivalTimesIt = arrivalTimesSet.find(sender);
+        if(arrivalTimesIt == arrivalTimesSet.end())
             return ZDAG_MAJOR_CONFLICT;
-        const ArrivalTimesVec& arrivalTimes = arrivalTimesIt->second;
+        const ArrivalTimesSet& arrivalTimes = arrivalTimesIt->second;
         // its in mempool and its an asset tx, it should exist in arrival times or it wasn't put in due to a conflict
-        if(arrivalTimes.empty() || std::find( arrivalTimes.begin(), arrivalTimes.end(), lookForTxHash) == arrivalTimes.end())
+        if(arrivalTimes.find(lookForTxHash) == arrivalTimes.end())
             return ZDAG_MAJOR_CONFLICT;
 
     }

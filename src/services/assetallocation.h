@@ -71,12 +71,11 @@ public:
 		return (nAsset == 0 && witnessAddress.IsNull());
 	}
 };
-
-typedef std::vector<uint256> ArrivalTimesVec;
-typedef std::unordered_map<std::string, ArrivalTimesVec> ArrivalTimesVecImpl;
+typedef std::unordered_set<uint256, SaltedTxidHasher> ArrivalTimesSet;
+typedef std::unordered_map<std::string, ArrivalTimesSet> ArrivalTimesSetImpl;
 typedef std::vector<std::pair<CWitnessAddress, CAmount > > RangeAmountTuples;
 typedef std::unordered_set<std::string> ActorSet;
-static ArrivalTimesVec emptyArrivalTimes;
+static ArrivalTimesSet emptyArrivalTimes;
 static const int ONE_YEAR_IN_BLOCKS = 525600;
 static const int ONE_HOUR_IN_BLOCKS = 60;
 static const int ONE_MONTH_IN_BLOCKS = 43800;
@@ -183,16 +182,16 @@ public:
     bool ReadAssetAllocationMempoolBalances(AssetBalanceMap &valueMap) {
         return Read(std::string("assetallocationtxbalance"), valueMap);
     }
-    bool WriteAssetAllocationMempoolArrivalTimes(const ArrivalTimesVecImpl &valueMap) {
+    bool WriteAssetAllocationMempoolArrivalTimes(const ArrivalTimesSetImpl &valueMap) {
         return Write(std::string("assetallocationtxarrival"), valueMap, true);
     }
-    bool ReadAssetAllocationMempoolArrivalTimes(ArrivalTimesVecImpl &valueMap) {
+    bool ReadAssetAllocationMempoolArrivalTimes(ArrivalTimesSetImpl &valueMap) {
         return Read(std::string("assetallocationtxarrival"), valueMap);
     }
-	bool WriteAssetAllocationMempoolToRemoveVector(const std::unordered_set<uint256, SaltedTxidHasher>  &valueMap) {
+	bool WriteAssetAllocationMempoolToRemoveSet(const ArrivalTimesSet  &valueMap) {
         return Write(std::string("assetallocationtxmempool"), valueMap, true);
     }
-    bool ReadAssetAllocationMempoolToRemoveVector(std::unordered_set<uint256, SaltedTxidHasher>  &valueMap) {
+    bool ReadAssetAllocationMempoolToRemoveSet(ArrivalTimesSet  &valueMap) {
         return Read(std::string("assetallocationtxmempool"), valueMap);
     } 	  
     bool ScanAssetAllocationMempoolBalances(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
@@ -209,5 +208,5 @@ void GetActorsFromAssetTx(const CAsset& theAsset, const CAssetAllocation& theAss
 void GetActorsFromAssetAllocationTx(const CAssetAllocation &theAssetAllocation, int nVersion, bool bJustSender, bool bGetAddress, ActorSet& actorSet);
 void GetActorsFromMintTx(const CMintSyscoin& theMintSyscoin, bool bJustSender, bool bGetAddress, ActorSet& actorSet);
 bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry);
-bool GetSenderOfZdagTx(const CTransaction &tx, std::string& senderStr);
+std::string GetSenderOfZdagTx(const CTransaction &tx);
 #endif // SYSCOIN_SERVICES_ASSETALLOCATION_H

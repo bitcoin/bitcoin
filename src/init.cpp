@@ -101,10 +101,10 @@
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
 std::string exePath = "";
 extern AssetBalanceMap mempoolMapAssetBalances;
-extern ArrivalTimesVecImpl arrivalTimesVec; 
+extern ArrivalTimesSetImpl arrivalTimesSet; 
 extern RecursiveMutex cs_assetallocationmempoolbalance;
 extern RecursiveMutex cs_assetallocationarrival;
-extern std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool;
+extern ArrivalTimesSet setToRemoveFromMempool;
 extern RecursiveMutex cs_assetallocationmempoolremovetx;
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
@@ -313,7 +313,7 @@ void Shutdown(NodeContext& node)
     // up with our current chain to avoid any strange pruning edge cases and make
     // next startup faster by avoiding rescan.
     // SYSCOIN
-    arrivalTimesVec.clear();
+    arrivalTimesSet.clear();
     FlushSyscoinDBs();
     passetdb.reset();
     passetallocationdb.reset();
@@ -1633,11 +1633,11 @@ bool AppInitMain(NodeContext& node)
                 }
                 {
                     LOCK(cs_assetallocationarrival);
-                    passetallocationmempooldb->ReadAssetAllocationMempoolArrivalTimes(arrivalTimesVec);
+                    passetallocationmempooldb->ReadAssetAllocationMempoolArrivalTimes(arrivalTimesSet);
                 }
                 {
                     LOCK(cs_assetallocationmempoolremovetx);
-                    passetallocationmempooldb->ReadAssetAllocationMempoolToRemoveVector(setToRemoveFromMempool);
+                    passetallocationmempooldb->ReadAssetAllocationMempoolToRemoveSet(setToRemoveFromMempool);
                 }           
                 // we don't need to ever reset the txroots db because it is an external chain not related to syscoin chain
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));

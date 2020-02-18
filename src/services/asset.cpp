@@ -20,10 +20,10 @@ extern UniValue DescribeAddress(const CTxDestination& dest);
 extern CAmount AmountFromValue(const UniValue& value);
 extern UniValue convertaddress(const JSONRPCRequest& request);
 extern AssetBalanceMap mempoolMapAssetBalances;
-extern ArrivalTimesVecImpl arrivalTimesVec;
+extern ArrivalTimesSetImpl arrivalTimesSet;
 extern RecursiveMutex cs_assetallocationmempoolbalance;
 extern RecursiveMutex cs_assetallocationarrival;
-extern std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool;
+extern ArrivalTimesSet setToRemoveFromMempool;
 extern RecursiveMutex cs_assetallocationmempoolremovetx;
 
 std::unique_ptr<CAssetDB> passetdb;
@@ -320,17 +320,17 @@ bool FlushSyscoinDBs() {
             }
             {
                 LOCK(cs_assetallocationarrival);
-                LogPrintf("Flushing Asset Allocation Arrival Times...size %d\n", arrivalTimesVec.size());
-                if(!passetallocationmempooldb->WriteAssetAllocationMempoolArrivalTimes(arrivalTimesVec)){
+                LogPrintf("Flushing Asset Allocation Arrival Times...size %d\n", arrivalTimesSet.size());
+                if(!passetallocationmempooldb->WriteAssetAllocationMempoolArrivalTimes(arrivalTimesSet)){
                     LogPrintf("Failed to write to asset allocation mempool arrival time database!\n");
                     ret = false; 
                 }
-                arrivalTimesVec.clear();
+                arrivalTimesSet.clear();
             }
             {
                 LOCK(cs_assetallocationmempoolremovetx);
                 LogPrintf("Flushing Asset Allocation Mempool Removal Transactions...size %d\n", setToRemoveFromMempool.size());
-                if(!passetallocationmempooldb->WriteAssetAllocationMempoolToRemoveVector(setToRemoveFromMempool)){
+                if(!passetallocationmempooldb->WriteAssetAllocationMempoolToRemoveSet(setToRemoveFromMempool)){
                     LogPrintf("Failed to write to asset allocation mempool to remove database!\n");
                     ret = false; 
                 }
