@@ -16,7 +16,7 @@
 #include <validationinterface.h>
 #include <utility> // std::unique
 extern AssetBalanceMap mempoolMapAssetBalances;
-extern ArrivalTimesMapImpl arrivalTimesMap;
+extern ArrivalTimesVecImpl arrivalTimesVec;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern RecursiveMutex cs_assetallocationmempoolbalance;
 extern RecursiveMutex cs_assetallocationarrival;
@@ -27,8 +27,8 @@ std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 AssetPrevTxMap mapSenderLockedOutPoints;
 AssetPrevTxMap mapAssetPrevTxSender;
-std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
 RecursiveMutex cs_assetallocationmempoolremovetx;
+std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool GUARDED_BY(cs_assetallocationmempoolremovetx);
 extern RecursiveMutex cs_setethstatus;
 extern bool AbortNode(const std::string& strMessage, const std::string& userMessage = "", unsigned int prefix = 0);
 using namespace std;
@@ -260,7 +260,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }  
     const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
     #if __cplusplus > 201402 
-    auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+    auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
     #else
     auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
     #endif
@@ -268,7 +268,11 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     // sender as burn	
     const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, burnWitness);	
     const std::string &senderTupleStr = senderAllocationTuple.ToString();	
+    #if __cplusplus > 201402 
+    auto result2 = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
+    #else
     auto result2 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));	
+    #endif
     auto mapSenderAssetAllocation = result2.first;	
     const bool &mapSenderAssetAllocationNotFound = result2.second;	
     if(mapSenderAssetAllocationNotFound){	
@@ -308,58 +312,28 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     {
         return FormatSyscoinErrorMessage(state, "mint-amount-out-of-range", bSanityCheck);
     }
-
-    if(!fJustCheck && !bSanityCheck)     
-        return passetallocationdb->WriteMintIndex(tx, txHash, mintSyscoin, nHeight, blockhash);         
-                                
+                      
     return true;
 }
-bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const bool &bSanityCheck)
+bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, AssetBalanceMap &mapAssetAllocationBalances, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const bool &bSanityCheck)
 {
-    AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
     EthereumMintTxVec vecMintKeys;
     std::vector<COutPoint> vecLockedOutpoints;
-    ActorSet actorSet;
-    const bool &ret = CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, nTime, uint256(), bSanityCheck, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints);
-    if(fJustCheck){
-        LOCK(cs_assetallocationarrival);
-        for (const std::string& actor: actorSet){
-            ArrivalTimesMap &arrivalTimes = arrivalTimesMap[std::move(actor)];
-            arrivalTimes.emplace_back(txHash, std::make_pair(::ChainActive().Tip()->GetMedianTimePast(), GetTimeMicros()));
-        }
-    }
-    return ret;
+    AssetAllocationMap mapAssetAllocations;
+    return CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, nTime, uint256(), bSanityCheck, mapAssetAllocations, mapAssetAllocationBalances, mapAssets, vecMintKeys, vecLockedOutpoints);
 }
-void RemoveDoubleSpendFromMempool(const CTransactionRef & txRef) EXCLUSIVE_LOCKS_REQUIRED(cs_main, mempool.cs){
-    if(txRef){
-        const CTransaction &tx = *txRef;
-        mempool.removeConflicts(tx);
-        mempool.removeRecursive(tx, MemPoolRemovalReason::SYSCOINCONSENSUS);
-        mempool.ClearPrioritisation(tx.GetHash());
-    }
-}
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetAllocationMap &mapAssetAllocations, AssetBalanceMap &mapAssetAllocationBalances, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
 {
     bool good = true;
     try{
         if (IsAssetAllocationTx(tx.nVersion))
         {
-            // remove any txid's that are confirming from vecToRemoveFromMempool
-            if(nHeight > 0 && vecToRemoveFromMempool.size() > 0 && !fJustCheck && !bSanityCheck){
-                auto it = std::find_if( vecToRemoveFromMempool.begin(), vecToRemoveFromMempool.end(),
-                    [&txHash](const std::pair<uint256, uint32_t>& element){ return element.first == txHash;} );
-                if(it != vecToRemoveFromMempool.end()){
-                    vecToRemoveFromMempool.erase(it);
-                }
-            }
             CAssetAllocation theAssetAllocation(tx);
             if(theAssetAllocation.assetAllocationTuple.IsNull()){
                 return FormatSyscoinErrorMessage(state, "assetallocation-unserialize", bSanityCheck);
             }
-            if(nHeight > 0)
-                GetActorsFromAssetAllocationTx(theAssetAllocation, tx.nVersion, false, false, actorSet);
-            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, fJustCheck, nHeight, blockHash, mapAssetAllocations, vecLockedOutpoints, bSanityCheck);
+            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, fJustCheck, nHeight, blockHash, mapAssetAllocations, mapAssetAllocationBalances, vecLockedOutpoints, bSanityCheck);
         }
         else if (IsAssetTx(tx.nVersion))
         {
@@ -380,87 +354,78 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
     }
     return good;
 }
-
-void ResyncAssetAllocationStates(){ 
-    int count = 0;
-     {
-        vector<string> vecToRemoveMempoolBalances;
-        LOCK2(cs_main, ::mempool.cs);
-        LOCK(cs_assetallocationmempoolbalance);
-        LOCK(cs_assetallocationarrival);
-        ActorSet actorSet;
-        for (auto&indexObj : mempoolMapAssetBalances) {
-            vector<uint256> vecToRemoveArrivalTimes;
-            actorSet.insert(indexObj.first);
-        }
-        count = ResetAssetAllocations(actorSet);
-
-    }   
-    if(count > 0)
-        LogPrint(BCLog::SYS,"ResyncAssetAllocationStates removed %d expired asset allocation transactions from mempool balances\n", count);
-
-}
-int ResetAssetAllocations(const ActorSet &actorSet) {
-    int count = 0;
-    for(const auto& actor: actorSet){
-        count += ResetAssetAllocation(actor);
-    }
-    return count;
-}
-int ResetAssetAllocation(const std::string &senderStr) {
-    LOCK2(cs_main, ::mempool.cs); 
-    int count = 0;
-    bool removeAllConflicts = true;
+void SetZDAGConflict(const uint256 &txHash, const std::string &fSyscoinSender){
     {
-        LOCK(cs_assetallocationarrival);
-        // remove the conflict once we revert since it is assumed to be resolved on POW
-        auto arrivalTimes = arrivalTimesMap.find(senderStr);
-        
-        if(arrivalTimes != arrivalTimesMap.end()){
-            std::vector<uint256> vecToRemoveArrivalTimes;
-            auto arrivalTimeIt = arrivalTimes->second.begin();
-	        while (arrivalTimeIt != arrivalTimes->second.end()){
-                const uint256& txHash = arrivalTimeIt->first;
-                // if mempool doesn't have tx or its been 30 mins we can remove it safely
-                const CTransactionRef &txRef = mempool.get(txHash);
-                if(txRef && ((::ChainActive().Tip()->GetMedianTimePast()) - arrivalTimeIt->second.first) <= 1800){
-                    removeAllConflicts = false;
-                    ++arrivalTimeIt;
-                }
-                else{
-                    count++;
-                    arrivalTimes->second.erase(arrivalTimeIt);
-                    // remove any matches from vecToRemoveFromMempool for this txid
-                    if(txRef){
-                        auto it = std::find_if( vecToRemoveFromMempool.begin(), vecToRemoveFromMempool.end(),
-                            [&txHash](const std::pair<uint256, uint32_t>& element){ return element.first == txHash;} );
-                        if(it != vecToRemoveFromMempool.end()){
-                            RemoveDoubleSpendFromMempool(txRef);
-                            vecToRemoveFromMempool.erase(it);
-                        }
-                    }
-                }
-            }
-            if(arrivalTimes->second.size() <= 0)
-                removeAllConflicts = true;
+        LOCK(cs_assetallocationconflicts);
+        // add conflicting sender
+        assetAllocationConflicts.insert(fSyscoinSender);
+    }
+    {
+        LOCK(cs_assetallocationmempoolremovetx);
+        // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
+        LogPrint(BCLog::SYS, "Double spend detected on tx %s!\n", txHash.GetHex());
+        setToRemoveFromMempool.insert(txHash);
+    }
+}
+void AddZDAGTx(const CTransactionRef &zdagTx, const AssetBalanceMap &mapAssetAllocationBalances) {
+    const uint256 &txHash = zdagTx->GetHash();
+    LogPrintf("AddZDAGTx tx %s mapAssetAllocationBalances size %d\n", txHash.GetHex(), mapAssetAllocationBalances.size());
+    LOCK(cs_assetallocationmempoolbalance);
+    for(const auto &assetAllocationBalance: mapAssetAllocationBalances){
+        LogPrintf("AddZDAGTx actor %s amount %lld\n", assetAllocationBalance.first, assetAllocationBalance.second);
+        #if __cplusplus > 201402 
+        auto result = mempoolMapAssetBalances.try_emplace(assetAllocationBalance.first,  std::move(assetAllocationBalance.second));
+        #else
+        auto result = mempoolMapAssetBalances.emplace(std::piecewise_construct,  std::forward_as_tuple(assetAllocationBalance.first),  std::forward_as_tuple(assetAllocationBalance.second));        
+        #endif
+        // if found, update it
+        if(!result.second){
+            result.first->second = std::move(assetAllocationBalance.second);
+        }   
+        {
+            LOCK(cs_assetallocationarrival);
+            ArrivalTimesVec& arrivalTimes = arrivalTimesVec[std::move(assetAllocationBalance.first)];
+            arrivalTimes.emplace_back(txHash);
         }
     }
-    if(removeAllConflicts)
+    
+}
+// remove arrival time/mempool balances upon mempool removal, as well as any conflicts if arrival times vector is empty for the sender of this tx
+void RemoveZDAGTx(const CTransactionRef &zdagTx) {
+    if(!IsAssetAllocationTx(zdagTx->nVersion))
+        return;
+    ActorSet actorSet;
+    GetActorsFromSyscoinTx(zdagTx, true, false, actorSet);
+    const uint256& zdagTxhash = zdagTx->GetHash();
+    for(const auto& actor: actorSet)
     {
         {
-             LOCK(cs_assetallocationarrival);
-             arrivalTimesMap.erase(senderStr);
+            LOCK(cs_assetallocationarrival);
+            ArrivalTimesVec& arrivalTimes = arrivalTimesVec[actor];
+            auto it = std::find( arrivalTimes.begin(), arrivalTimes.end(), zdagTxhash);
+            if(it != arrivalTimes.end()){
+                arrivalTimes.erase(it);
+            }
+            if(arrivalTimes.empty())
+            {
+                arrivalTimesVec.erase(actor);
+                {
+                    LOCK(cs_assetallocationmempoolbalance);
+                    mempoolMapAssetBalances.erase(actor);
+                }
+                {
+                    LOCK(cs_assetallocationconflicts);
+                    assetAllocationConflicts.erase(actor);
+                }
+            }
         }
-        LOCK(cs_assetallocationmempoolbalance);
-        mempoolMapAssetBalances.erase(senderStr);
-       
-        LOCK(cs_assetallocationconflicts);
-        unordered_set<string>::const_iterator it = assetAllocationConflicts.find(senderStr);
-        if (it != assetAllocationConflicts.end()) {
-            assetAllocationConflicts.erase(it);
-        }  
     }
-    return count;
+    {
+        LOCK(cs_assetallocationmempoolremovetx);
+        LogPrintf("RemoveZDAGTx removing %s from setToRemoveFromMempool size before %d\n", zdagTxhash.GetHex(), setToRemoveFromMempool.size());
+        setToRemoveFromMempool.erase(zdagTxhash);
+        LogPrintf("RemoveZDAGTx removing %s from setToRemoveFromMempool size after %d\n", zdagTxhash.GetHex(), setToRemoveFromMempool.size());
+    }
     
 }
 bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys){
@@ -486,7 +451,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
     // recver
     const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
     #if __cplusplus > 201402 
-    auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+    auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
     #else
     auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
     #endif
@@ -507,7 +472,11 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
     // sender	
     const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, burnWitness);	
     const std::string &senderTupleStr = senderAllocationTuple.ToString();	
-    auto result2 =  mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));	
+    #if __cplusplus > 201402 
+    auto result2 = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
+    #else
+    auto result2 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+    #endif
     auto mapSenderAssetAllocation = result2.first;	
     const bool& mapSenderAssetAllocationNotFound = result2.second;	
     if(mapSenderAssetAllocationNotFound){	
@@ -528,27 +497,6 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
     }       
     else if(storedReceiverAllocationRef.nBalance == 0){
         storedReceiverAllocationRef.SetNull();
-    }
-    if(fAssetIndex){
-        const uint256& txid = tx.GetHash();
-        if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), mintSyscoin.assetAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(std::make_pair(false, mintSyscoin.assetAllocationTuple.nAsset))){
-                if(!passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint asset allocation from asset allocation index\n");
-                    return false;
-                }
-                if(!passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple.nAsset, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint asset allocation from asset index\n");
-                    return false;
-                }
-                if(!passetindexdb->EraseIndexTXID(senderAllocationTuple, txid)){	
-                    LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint sender asset allocation from asset allocation index\n");	
-                }	
-                if(!passetindexdb->EraseIndexTXID(senderAllocationTuple.nAsset, txid)){	
-                    LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint sender asset allocation from asset index\n");	
-                } 
-            }
-        }      
     }
     return true; 
 }
@@ -581,7 +529,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
         const std::string &receiverTupleStr = receiverAllocationTuple.ToString();
         CAssetAllocationDBEntry receiverAllocation;
         #if __cplusplus > 201402 
-        auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+        auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
         #else
         auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
         #endif
@@ -608,39 +556,11 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
         }
         else if(storedReceiverAllocationRef.nBalance == 0){
             storedReceiverAllocationRef.SetNull();  
-        }
-        if(fAssetIndex){
-            if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), receiverAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-                if(passetindexdb->Exists(std::make_pair(false, receiverAllocationTuple.nAsset))){
-                    if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){
-                        LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase receiver allocation from asset allocation index\n");
-                        return false;
-                    }
-                    if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){
-                        LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase receiver allocation from asset index\n");
-                        return false;
-                    }
-                } 
-            }
-        }                                       
-    }
-    if(fAssetIndex){
-        if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAssetAllocation.assetAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(std::make_pair(false, theAssetAllocation.assetAllocationTuple.nAsset))){
-                if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase sender allocation from asset allocation index\n");
-                    return false;
-                }
-                if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase sender allocation from asset index\n");
-                    return false;
-                }
-            }
-        }     
+        }                                      
     }
     return true; 
 }
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys, ActorSet &actorSet)
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
     if(tx.IsCoinBase())
         return true;
@@ -657,7 +577,6 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
                 LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not decode asset allocation\n");
                 return false;
             }
-            GetActorsFromAssetAllocationTx(theAssetAllocation, tx.nVersion, false, false, actorSet);
             if(!DisconnectAssetAllocation(tx, txHash, theAssetAllocation, view, mapAssetAllocations))
                 return false;       
         }
@@ -690,7 +609,7 @@ CAmount FindBurnAmountFromTx(const CTransaction& tx){
     return 0;
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, const CAssetAllocation &theAssetAllocation, TxValidationState &state, const CCoinsViewCache &inputs,
-        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, const bool &bSanityCheck) {
+        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, AssetBalanceMap &mapAssetAllocationBalances, std::vector<COutPoint> &vecLockedOutpoints, const bool &bSanityCheck) {
     if (passetallocationdb == nullptr)
         return false;
     if (!bSanityCheck)
@@ -775,9 +694,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
     {
         return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-asset", bSanityCheck);
     }   
-    AssetBalanceMap::iterator mapBalanceSender;
     CAmount mapBalanceSenderCopy;
-    bool mapSenderMempoolBalanceNotFound = false;
     if(fJustCheck && !bSanityCheck){
         LOCK(cs_assetallocationmempoolbalance); 
         #if __cplusplus > 201402 
@@ -785,10 +702,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         #else
         auto result =  mempoolMapAssetBalances.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(storedSenderAllocationRef.nBalance))); 
         #endif
-        
-        mapBalanceSender = result.first;
-        mapSenderMempoolBalanceNotFound = result.second;
-        mapBalanceSenderCopy = mapBalanceSender->second;
+        mapBalanceSenderCopy = result.first->second;
     }
     else
         mapBalanceSenderCopy = storedSenderAllocationRef.nBalance;
@@ -836,26 +750,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         }        
        
         mapBalanceSenderCopy -= nBurnAmount;
-        if (mapBalanceSenderCopy < 0) {
-            bool bNewConfict = false;
-            if(!mapSenderMempoolBalanceNotFound && fJustCheck && !bSanityCheck){
-                LOCK(cs_assetallocationconflicts);
-                // flag as a new conflict if not found
-                // conflict signals dbl spend detection logic
-                if(assetAllocationConflicts.find(receiverTupleStr) == assetAllocationConflicts.end()){
-                    assetAllocationConflicts.insert(std::move(receiverTupleStr));
-                    bNewConfict = true;
-                }
-                else
-                     return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance-conflicting", false, false);
-            }          
-            return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bSanityCheck || bNewConfict);
+        if (mapBalanceSenderCopy < 0) {         
+            return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bSanityCheck);
         }
         if (!fJustCheck) {   
             #if __cplusplus > 201402 
             auto resultReceiver = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
             #else
-            auto resultReceiver = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+            auto resultReceiver = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr), std::forward_as_tuple(std::move(emptyAllocation)));
             #endif 
             
             auto mapAssetAllocationReceiver = resultReceiver.first;
@@ -930,19 +832,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
        
         mapBalanceSenderCopy -= nBurnAmount;
         if (mapBalanceSenderCopy < 0) {
-            bool bNewConfict = false;
-            if(!mapSenderMempoolBalanceNotFound && fJustCheck && !bSanityCheck){
-                LOCK(cs_assetallocationconflicts);
-                // flag as a new conflict if not found
-                // conflict signals dbl spend detection logic
-                if(assetAllocationConflicts.find(senderTupleStr) == assetAllocationConflicts.end()){
-                    assetAllocationConflicts.insert(std::move(senderTupleStr));
-                    bNewConfict = true;
-                }
-                else
-                     return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance-conflicting", false, false);
-            }
-            return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bSanityCheck || bNewConfict);
+            return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bSanityCheck);
         }
         const CAssetAllocationTuple receiverAllocationTuple(nBurnAsset,  burnWitness);
         const string& receiverTupleStr = receiverAllocationTuple.ToString(); 
@@ -1008,23 +898,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
         }
         if(!fJustCheck && bSanityCheck)
-            LogPrintf("txid %s asset %d nTotal %lld mapBalanceSenderCopy %lld\n", txHash.GetHex().c_str(), theAssetAllocation.assetAllocationTuple.nAsset, nTotal, mapBalanceSenderCopy);
+            LogPrintf("txid %s asset %d nTotal %lld mapBalanceSenderCopy %lld sender %s\n", txHash.GetHex().c_str(), theAssetAllocation.assetAllocationTuple.nAsset, nTotal, mapBalanceSenderCopy, senderTupleStr);
         mapBalanceSenderCopy -= nTotal;
         if (mapBalanceSenderCopy < 0) {
-            bool bNewConfict = false;
-            // ensure this isn't the first tx for this sender in mempool and that if it is the second or more and its a new conflict then flag it with state error so it propagates across network
-            if(!mapSenderMempoolBalanceNotFound && fJustCheck && !bSanityCheck){
-                LOCK(cs_assetallocationconflicts);
-                // flag as a new conflict if not found
-                // conflict signals dbl spend detection logic
-                if(assetAllocationConflicts.find(senderTupleStr) == assetAllocationConflicts.end()){
-                    assetAllocationConflicts.insert(std::move(senderTupleStr));
-                    bNewConfict = true;
-                }
-                else
-                     return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance-conflicting", false, false);
-            }
-            return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bSanityCheck || bNewConfict);
+            return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bSanityCheck);
         }
                
         for (unsigned int i = 0;i<theAssetAllocation.listSendingAllocationAmounts.size();i++) {
@@ -1032,39 +909,15 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             if (amountTuple.first == theAssetAllocation.assetAllocationTuple.witnessAddress) {   
                 return FormatSyscoinErrorMessage(state, "assetallocation-send-to-yourself", bSanityCheck);
             }
-
-            const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
-            const string &receiverTupleStr = receiverAllocationTuple.ToString();
-            AssetBalanceMap::iterator mapBalanceReceiver;
-            AssetAllocationMap::iterator mapBalanceReceiverBlock;            
-            if(fJustCheck && !bSanityCheck){
-                
-                LOCK(cs_assetallocationmempoolbalance);
+            if (!fJustCheck) {  
+                const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
+                const string &receiverTupleStr = receiverAllocationTuple.ToString();
                 #if __cplusplus > 201402 
-                auto result1 = mempoolMapAssetBalances.try_emplace(receiverTupleStr,  0);
-                #else
-                auto result1 = mempoolMapAssetBalances.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(0));
-                #endif 
-                auto mapBalanceReceiver = result1.first;
-                const bool& mapAssetAllocationReceiverNotFound = result1.second;
-                if(mapAssetAllocationReceiverNotFound){
-                    CAssetAllocationDBEntry receiverAllocation;
-                    GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
-                    mapBalanceReceiver->second = receiverAllocation.nBalance;
-                }
-                mapBalanceReceiver->second += amountTuple.second;
-                if (!AssetRange(mapBalanceReceiver->second))
-                {
-                    return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bSanityCheck);
-                }
-            }  
-            else{     
-                #if __cplusplus > 201402 
-                auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+                auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
                 #else
                 auto result1 =  mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
                 #endif       
-               
+                
                 auto mapBalanceReceiverBlock = result1.first;
                 const bool& mapAssetAllocationReceiverBlockNotFound = result1.second;
                 if(mapAssetAllocationReceiverBlockNotFound){
@@ -1081,7 +934,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                     return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bSanityCheck);
                 }
             }
-        }   
+        }
+        
     }
     // write assetallocation  
     // asset sends are the only ones confirming without PoW
@@ -1091,10 +945,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             storedSenderAllocationRef.SetNull();    
 
         if(!bSanityCheck && nHeight > 0) {   
-            // send notification on pow, for zdag transactions this is the second notification meaning the zdag tx has been confirmed
-            if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, dbAsset, nHeight, blockhash)){
-                return FormatSyscoinErrorMessage(state, "assetallocation-index", bSanityCheck);
-            } 
             LogPrint(BCLog::SYS,"CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
                 assetAllocationFromTx(tx.nVersion).c_str(),
                 senderTupleStr.c_str(),
@@ -1105,17 +955,15 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                     
     }
     else if(!bSanityCheck){
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND){
-            // send a real time notification on zdag, send another when pow happens (above)
-            if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, dbAsset, nHeight, blockhash)){
-                return FormatSyscoinErrorMessage(state, "assetallocation-index", bSanityCheck);
-            }
-        }
-        
-        {
-            LOCK(cs_assetallocationmempoolbalance);
-            mapBalanceSender->second = std::move(mapBalanceSenderCopy);
-        }
+        #if __cplusplus > 201402 
+        auto resultBalance = mapAssetAllocationBalances.try_emplace(senderTupleStr,  std::move(mapBalanceSenderCopy));
+        #else
+        auto resultBalance = mapAssetAllocationBalances.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(mapBalanceSenderCopy));
+        #endif
+        // if found, update it
+        if(!resultBalance.second){
+            resultBalance.first->second = std::move(mapBalanceSenderCopy);
+        } 
     }    
     return true;
 }
@@ -1150,7 +998,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
         const std::string &receiverTupleStr = receiverAllocationTuple.ToString();
         CAssetAllocationDBEntry receiverAllocation;
         #if __cplusplus > 201402 
-        auto result = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+        auto result = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
         #else
         auto result = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
         #endif 
@@ -1175,37 +1023,8 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
 
         if(storedReceiverAllocationRef.nBalance == 0){
             storedReceiverAllocationRef.SetNull();       
-        }
-        
-        if(fAssetIndex){
-            if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), receiverAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-                if(passetindexdb->Exists(std::make_pair(false, receiverAllocationTuple.nAsset))){
-                    if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){
-                        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase receiver allocation from asset allocation index\n");
-                        return false;
-                    }
-                    if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){
-                        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase receiver allocation from asset index\n");
-                        return false;
-                    }
-                }
-            }
-        }                                             
-    }     
-    if(fAssetIndex){
-        if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAssetAllocation.assetAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(std::make_pair(false, theAssetAllocation.assetAllocationTuple.nAsset))){
-                if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase sender allocation from asset allocation index\n");
-                    return false;
-                }
-                if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase sender allocation from asset index\n");
-                    return false;
-                }
-            }
-        }     
-    }          
+        }                                            
+    }             
     return true;  
 }
 bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets){
@@ -1241,14 +1060,6 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
             LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Asset cannot be negative: Balance %lld, Supply: %lld\n",storedSenderRef.nBalance, storedSenderRef.nTotalSupply);
             return false;
         }                                          
-    } 
-    if(fAssetIndex){
-        if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAsset.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
-                LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not erase asset update from asset index\n");
-                return false;
-            }
-        }
     }         
     return true;  
 }
@@ -1277,15 +1088,7 @@ bool DisconnectAssetTransfer(const CTransaction &tx, const uint256& txid, AssetM
     CAsset& storedSenderRef = mapAsset->second; 
     // theAsset.witnessAddress  is enforced to be the sender of the transfer which was the owner at the time of transfer
     // so set it back to reverse the transfer
-    storedSenderRef.witnessAddress = theAsset.witnessAddress;   
-    if(fAssetIndex){
-        if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAsset.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
-                LogPrint(BCLog::SYS,"DisconnectAssetTransfer: Could not erase asset update from asset index\n");
-                return false;
-            }
-        }
-    }         
+    storedSenderRef.witnessAddress = theAsset.witnessAddress;            
     return true;  
 }
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets){
@@ -1297,18 +1100,10 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
         return false;
     }
     #if __cplusplus > 201402 
-    mapAssets.try_emplace(theAsset.nAsset,  std::move(emptyAsset));
+    mapAssets.try_emplace(std::move(theAsset.nAsset),  std::move(emptyAsset));
     #else
-    mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif
-    if(fAssetIndex){
-        if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAsset.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
-                LogPrint(BCLog::SYS,"DisconnectAssetActivate: Could not erase asset activate from asset index\n");
-                return false;
-            }
-        }    
-    }     
+    mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(std::move(theAsset.nAsset)),  std::forward_as_tuple(std::move(emptyAsset)));
+    #endif   
     return true;  
 }
 bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state, const CCoinsViewCache &inputs,
@@ -1556,7 +1351,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
                 const string& receiverTupleStr = receiverAllocationTuple.ToString();
                 #if __cplusplus > 201402 
-                auto result = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+                auto result = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
                 #else
                 auto result = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
                 #endif 
@@ -1582,11 +1377,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 storedSenderAssetRef.nBalance -= amountTuple.second;                              
             }
         }
-        if (!bSanityCheck && !fJustCheck){
-            if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, storedSenderAssetRef, nHeight, blockhash)){
-                return FormatSyscoinErrorMessage(state, "assetallocation-index", bSanityCheck);
-            } 
-        } 
     }
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE)
     {
@@ -1602,9 +1392,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     storedSenderAssetRef.txHash = txHash;
     // write asset, if asset send, only write on pow since asset -> asset allocation is not 0-conf compatible
     if (!bSanityCheck && !fJustCheck && nHeight > 0) {
-        if(!passetdb->WriteAssetIndex(tx, txHash, storedSenderAssetRef, nHeight, blockhash)){
-            return FormatSyscoinErrorMessage(state, "asset-index", bSanityCheck);
-        }
         LogPrint(BCLog::SYS,"CONNECTED ASSET: tx=%s symbol=%d hash=%s height=%d fJustCheck=%d\n",
                 assetFromTx(tx.nVersion).c_str(),
                 nAsset,

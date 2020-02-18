@@ -59,17 +59,17 @@
 #include <masternodeman.h>
 #include <masternodepayments.h>
 #include <services/assetconsensus.h>
+#include <services/assetallocation.h>
 #include <algorithm> // std::unique
 std::vector<std::pair<uint256, int64_t> >  vecTPSTestReceivedTimesMempool;
 int64_t nTPSTestingStartTime = 0;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern RecursiveMutex cs_assetallocationconflicts;
-extern std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
+extern std::unordered_set<uint256, SaltedTxidHasher> setToRemoveFromMempool;
 extern RecursiveMutex cs_assetallocationmempoolremovetx;
 extern RecursiveMutex cs_assetallocationarrival;
 extern RecursiveMutex cs_setethstatus;
-extern ArrivalTimesMapImpl arrivalTimesMap;
-extern void RemoveDoubleSpendFromMempool(const CTransactionRef & txRef);
+extern ArrivalTimesVecImpl arrivalTimesVec;
 std::vector<CInv> vInvToSend;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 #if defined(NDEBUG)
@@ -497,9 +497,6 @@ public:
          */
         std::vector<COutPoint>& m_coins_to_uncache;
         const bool m_test_accept;
-        // SYSCOIN
-        bool &m_duplicate;
-        std::string m_sender;
     };
     
     // Single transaction acceptance
@@ -510,7 +507,8 @@ private:
     // All the intermediate state that gets passed between the various levels
     // of checking a given transaction.
     struct Workspace {
-        Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {}
+        //
+        Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {m_duplicate = false; m_sender = "";}
         std::set<uint256> m_conflicts;
         CTxMemPool::setEntries m_all_conflicting;
         CTxMemPool::setEntries m_ancestors;
@@ -523,6 +521,10 @@ private:
 
         const CTransactionRef& m_ptx;
         const uint256& m_hash;
+        // SYSCOIN
+        bool m_duplicate;
+        std::string m_sender;
+        AssetBalanceMap mapAssetAllocationBalances;
     };
 
     // Run the policy checks on a given transaction, excluding any script checks.
@@ -597,6 +599,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     CAmount& nModifiedFees = ws.m_modified_fees;
     CAmount& nConflictingFees = ws.m_conflicting_fees;
     size_t& nConflictingSize = ws.m_conflicting_size;
+    // SYSCOIN
+    std::string &sender = ws.m_sender;
+    bool & duplicate = ws.m_duplicate;
 
     if (nTPSTestingStartTime > 0)
     {
@@ -667,33 +672,30 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 }
                 
                 if (fReplacementOptOut) {
+                    // if not RBF then allow first dbl-spend to be relayed, ZDAG by default isn't RBF enabled because it shouldn't be replaceable and because of checks below
+                    // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because zdag isn't RBF.
                     if(!args.m_test_accept && IsAssetAllocation){
-                        CAssetAllocation theAssetAlloction(tx);
-                        if(theAssetAlloction.assetAllocationTuple.IsNull()){
+                        if(!GetSenderOfZdagTx(tx, sender)){
                             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                         }
-                        ActorSet actorSet;
-                        GetActorsFromAssetAllocationTx(theAssetAlloction, tx.nVersion, true, false, actorSet);
-                        if(actorSet.size() == 1)
                         {
                             LOCK(cs_assetallocationconflicts);
                             // only do this the first time, relay the first double spend and fall back to normal policy to not relay and potentially ban on other double spends
-                            if(assetAllocationConflicts.find(*actorSet.begin()) == assetAllocationConflicts.end())
+                            if(assetAllocationConflicts.find(sender) == assetAllocationConflicts.end())
                             {
                                 // add conflicting sender
-                                args.m_duplicate = true;
-                                args.m_sender = *actorSet.begin();
+                                duplicate = true;
                                 break;
                             }
                             else
                                 return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                         }
-                        else
-                            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                     }
                     else
                         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                 }
+                // regardless of RBF flag this tx as per BTC policy but JFYI we don't want to limit asset allocation txs to use NON-RBF,
+                // its still valid to send asset allocations with RBF for normal use-case, just that verifyzdag will flag it as a warning and shouldn't be accepted at point-of-sale
                 setConflicts.insert(ptxConflicting->GetHash());
             }
         }
@@ -789,6 +791,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     const CTxMemPool::setEntries setIterConflicting = m_pool.GetIterSet(setConflicts);
     // Calculate in-mempool ancestors, up to a limit.
+    // SYSCOIN, if RBF or syscoin asset dbl-spend first-seen duplicate
     if (setConflicts.size() == 1) {
         // In general, when we receive an RBF transaction with mempool conflicts, we want to know whether we
         // would meet the chain limits after the conflicts have been removed. However, there isn't a practical
@@ -825,7 +828,42 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     std::string errString;
-    if (!m_pool.CalculateMemPoolAncestors(*entry, setAncestors, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants, m_limit_descendant_size, errString)) {
+    // SYSCOIN
+    std::string strSender;
+    if(IsSyscoinTx(tx.nVersion)){
+        if(sender.empty() && IsAssetAllocation && !GetSenderOfZdagTx(tx, sender))
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx",
+                 strprintf("Could not get sender of zdag tx %s",
+                        hash.ToString()));
+        if (!CheckSyscoinInputs(tx, hash, state, ws.mapAssetAllocationBalances, m_view, true, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), args.m_test_accept || args.m_bypass_limits)) {
+            // if already set as duplicate means this is the first time we saw this conflict otherwise we need to check against the sender later
+            if(!duplicate){
+                // if reason is "assetallocation-insufficient-balance" then we should allow it to succeed the first time an error happens
+                if(state.GetRejectReason() == "assetallocation-insufficient-balance"){
+                    bool arrivalTimeExists = false;
+                    {
+                        LOCK(cs_assetallocationarrival);
+                        // ensure there are previous tx for this sender so we can reject if this is the first tx for this sender in mempool
+                        ArrivalTimesVec& arrivalTimes = arrivalTimesVec[sender];
+                        arrivalTimeExists = !arrivalTimes.empty();
+                    }
+                    {
+                        LOCK(cs_assetallocationconflicts);
+                        if(arrivalTimeExists && assetAllocationConflicts.find(sender) == assetAllocationConflicts.end()){
+                            duplicate = true;
+                        }   
+                    }
+                }
+            }
+            // if still not duplicate then just reject
+            if(!duplicate){
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx",
+                    FormatStateMessage(state)); 
+            }
+        } 
+    } 
+    LogPrintf("CalculateMemPoolAncestors with search for parents\n");
+    if (!m_pool.CalculateMemPoolAncestors(*entry, setAncestors, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants, m_limit_descendant_size, errString, true, duplicate, sender)) {
         setAncestors.clear();
         // If CalculateMemPoolAncestors fails second time, we want the original error string.
         std::string dummy_err_string;
@@ -841,7 +879,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // outputs - one for each counterparty. For more info on the uses for
         // this, see https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/016518.html
         if (nSize >  EXTRA_DESCENDANT_TX_SIZE_LIMIT ||
-                !m_pool.CalculateMemPoolAncestors(*entry, setAncestors, 2, m_limit_ancestor_size, m_limit_descendants + 1, m_limit_descendant_size + EXTRA_DESCENDANT_TX_SIZE_LIMIT, dummy_err_string)) {
+                !m_pool.CalculateMemPoolAncestors(*entry, setAncestors, 2, m_limit_ancestor_size, m_limit_descendants + 1, m_limit_descendant_size + EXTRA_DESCENDANT_TX_SIZE_LIMIT, dummy_err_string, true, duplicate, sender)) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", errString);
         }
     }
@@ -860,7 +898,19 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                         hash.ToString(),
                         hashAncestor.ToString()));
         }
+        // SYSCOIN
+        // if ancestor had a dup input (non-rbf, first-seen sys tx dbl spend) or sys balance overflow (first-seen tx dbl spend), don't allow to build on top of it
+        {
+            LOCK(cs_assetallocationmempoolremovetx);
+            if(setToRemoveFromMempool.count(hashAncestor) > 0){
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-spends-conflicting-asset-tx",
+                    strprintf("%s spends conflicting transaction %s",
+                        hash.ToString(),
+                        hashAncestor.ToString()));
+            }
+        }
     }
+
 
     // Check if it's economically rational to mine this transaction rather
     // than the ones it replaces.
@@ -1013,7 +1063,6 @@ bool MemPoolAccept::ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, Precomp
 
     TxValidationState &state = args.m_state;
     const CChainParams& chainparams = args.m_chainparams;
-
     // Check again against the current block tip's script verification
     // flags to cache our script execution flags. This is, of course,
     // useless if the next block has different script flags from the
@@ -1034,40 +1083,6 @@ bool MemPoolAccept::ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, Precomp
         return error("%s: BUG! PLEASE REPORT THIS! CheckInputScripts failed against latest-block but not STANDARD flags %s, %s",
                 __func__, hash.ToString(), FormatStateMessage(state));
     }
-    // SYSCOIN
-    if(IsSyscoinTx(tx.nVersion)){
-        if (!CheckSyscoinInputs(tx, hash, state, m_view, true, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), args.m_test_accept || args.m_bypass_limits)) {
-            if(!args.m_test_accept && state.IsError()){
-                LOCK(cs_assetallocationmempoolremovetx);
-                // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
-                LogPrint(BCLog::SYS, "Double spend detected on tx %s! %s\n", hash.GetHex(), FormatStateMessage(state));
-                vecToRemoveFromMempool.emplace_back(hash, ::ChainActive().Tip()->GetMedianTimePast());
-            }
-            else {
-                return false;
-            }
-        } 
-        // we still have duplicate inputs, even though its not a balance overflow we still need to tag it as a conflict
-        // otherwise we will have a p2p network split with messages and that stops us from detecting issues
-        // in this case issue would be we don't know which input will be mined (first one to miner). So the right payment may never get mined.
-        // Therefor we want to make sure the entire network hears about it so merchants can decide to not accept payments in real-time
-       else if(!args.m_test_accept && args.m_duplicate && !args.m_sender.empty()){
-            {
-                LOCK(cs_assetallocationconflicts);
-                // add conflicting sender if not already added
-                if(assetAllocationConflicts.find(args.m_sender) == assetAllocationConflicts.end())
-                {
-                    assetAllocationConflicts.insert(std::move(args.m_sender));
-                }
-            }
-            {
-                LOCK(cs_assetallocationmempoolremovetx);
-                // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
-                LogPrint(BCLog::SYS, "Double input spend detected on tx %s! %s\n", hash.GetHex(), FormatStateMessage(state));
-                vecToRemoveFromMempool.emplace_back(hash, ::ChainActive().Tip()->GetMedianTimePast());
-            }
-        }
-    }
     return true;
 }
 
@@ -1085,7 +1100,9 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     const size_t& nConflictingSize = ws.m_conflicting_size;
     const bool fReplacementTransaction = ws.m_replacement_transaction;
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
-
+    // SYSCOIN
+    const bool& duplicate = ws.m_duplicate;
+    const std::string& sender = ws.m_sender;
     // Remove conflicting transactions from the mempool
     for (CTxMemPool::txiter it : allConflicting)
     {
@@ -1106,10 +1123,10 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     // - the transaction is not dependent on any other transactions in the mempool
     // SYSCOIN
     // - the transaction does not have a duplicate input from an asset allocation transaction
-    bool validForFeeEstimation = !args.m_duplicate && !fReplacementTransaction && !bypass_limits && IsCurrentForFeeEstimation() && m_pool.HasNoInputsOf(tx);
+    bool validForFeeEstimation = !duplicate && !fReplacementTransaction && !bypass_limits && IsCurrentForFeeEstimation() && m_pool.HasNoInputsOf(tx);
 
     // Store transaction in memory
-    m_pool.addUnchecked(*entry, setAncestors, validForFeeEstimation);
+    m_pool.addUnchecked(*entry, setAncestors, validForFeeEstimation, duplicate, sender, ws.mapAssetAllocationBalances);
 
     // trim mempool and check if tx was trimmed
     if (!bypass_limits) {
@@ -1158,9 +1175,7 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
                         bool bypass_limits, const CAmount nAbsurdFee, bool test_accept) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::vector<COutPoint> coins_to_uncache;
-    // SYSCOIN
-    bool bDuplicate = false;
-    MemPoolAccept::ATMPArgs args { chainparams, state, nAcceptTime, plTxnReplaced, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept, bDuplicate };
+    MemPoolAccept::ATMPArgs args { chainparams, state, nAcceptTime, plTxnReplaced, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept };
     bool res = MemPoolAccept(pool).AcceptSingleTransaction(tx, args);
     if (!res) {
         // Remove coins that were not present in the coins cache before calling ATMPW;
@@ -1892,8 +1907,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
-// SYSCOIN
-DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, std::unordered_set<std::string> &actorSet)
+DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
 {
     AssetMap mapAssets;
     AssetAllocationMap mapAssetAllocations;
@@ -1952,40 +1966,16 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
         // SYSCOIN
-        if(passetdb != nullptr && !DisconnectSyscoinTransaction(tx, hash, pindex, view, mapAssets, mapAssetAllocations, vecMintKeys, actorSet))
+        if(passetdb != nullptr && !DisconnectSyscoinTransaction(tx, hash, pindex, view, mapAssets, mapAssetAllocations, vecMintKeys))
             fClean = false;
     } 
     // SYSCOIN 
     if(passetdb != nullptr){
-        if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !passetindexdb->FlushErase(vecTXIDs) || !pblockindexdb->FlushErase(vecTXIDs) || !plockedoutpointsdb->FlushErase(vecOutpoints) || !pethereumtxmintdb->FlushErase(vecMintKeys)){
+        if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !pblockindexdb->FlushErase(vecTXIDs) || !plockedoutpointsdb->FlushErase(vecOutpoints) || !pethereumtxmintdb->FlushErase(vecMintKeys)){
             error("DisconnectBlock(): Error flushing to asset dbs on disconnect");
             return DISCONNECT_FAILED;
         }
     }
-    
-    auto vecToRemoveFromMempoolIt = vecToRemoveFromMempool.begin();
-    std::vector<CTransactionRef> vecTxRef;
-    while (vecToRemoveFromMempoolIt != vecToRemoveFromMempool.end()){
-        if(pindex->GetMedianTimePast() <= vecToRemoveFromMempoolIt->second){
-            const CTransactionRef & txRef = mempool.get(vecToRemoveFromMempoolIt->first);
-            if(txRef)
-                vecTxRef.emplace_back(txRef);
-            vecToRemoveFromMempool.erase(vecToRemoveFromMempoolIt);
-        }
-        else
-            ++vecToRemoveFromMempoolIt;
-    }
-    for(const auto& txRef: vecTxRef){
-        if(!txRef || !IsAssetAllocationTx(txRef->nVersion))
-            continue;
-        CAssetAllocation theAssetAllocation(*txRef);
-        if(!theAssetAllocation.assetAllocationTuple.IsNull()){
-            ActorSet actorSet;
-            GetActorsFromAssetAllocationTx(theAssetAllocation, txRef->nVersion, false, false, actorSet);
-            RemoveDoubleSpendFromMempool(txRef);
-            ResetAssetAllocations(actorSet);
-        }
-    } 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
 
@@ -2135,7 +2125,7 @@ static int64_t nBlocksTotal = 0;
  *  can fail if those validity checks fail (among other reasons). */
 // SYSCOIN
 bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                  CCoinsViewCache& view, const CChainParams& chainparams, std::unordered_set<std::string> &actorSet, bool fJustCheck, CTransaction* txMissingInput, CTransaction* syscoinTxFailed)
+                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck, CTransaction* txMissingInput, CTransaction* syscoinTxFailed)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2323,7 +2313,9 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             // SYSCOIN
             if(IsSyscoinTx(tx.nVersion)){
                 TxValidationState tx_state;
-                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
+                // just temp var not used in !fJustCheck mode
+                AssetBalanceMap mapAssetAllocationBalances;
+                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssetAllocations, mapAssetAllocationBalances, mapAssets, vecMintKeys, vecLockedOutpoints)){
                     if(syscoinTxFailed != NULL)
                         *syscoinTxFailed = tx;
                     // Any transaction validation failure in ConnectBlock is a block consensus failure
@@ -2666,9 +2658,6 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
   */
 bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams& chainparams, DisconnectedBlockTransactions *disconnectpool)
 {
-    // SYSCOIN
-
-    ActorSet actorSet;
     CBlockIndex *pindexDelete = m_chain.Tip();
     assert(pindexDelete);
     // Read block from disk.
@@ -2681,7 +2670,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     {
         CCoinsViewCache view(&CoinsTip());
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
-        if (DisconnectBlock(block, pindexDelete, view, actorSet) != DISCONNECT_OK)
+        if (DisconnectBlock(block, pindexDelete, view) != DISCONNECT_OK)
             return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         bool flushed = view.Flush();
         assert(flushed);
@@ -2707,8 +2696,6 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     m_chain.SetTip(pindexDelete->pprev);
 
     UpdateTip(pindexDelete->pprev, chainparams);
-    // SYSCOIN
-    ResetAssetAllocations(actorSet);
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     GetMainSignals().BlockDisconnected(pblock, pindexDelete);
@@ -2813,11 +2800,9 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     int64_t nTime2 = GetTimeMicros(); nTimeReadFromDisk += nTime2 - nTime1;
     int64_t nTime3;
     LogPrint(BCLog::BENCH, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
-    // SYSCOIN
-    ActorSet actorSet;
     {
         CCoinsViewCache view(&CoinsTip());
-        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, actorSet);
+        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
@@ -2842,37 +2827,6 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     // Update m_chain & related variables.
     m_chain.SetTip(pindexNew);
     UpdateTip(pindexNew, chainparams);
-    // SYSCOIN remove allocations from our internal zdag maps if inputs of the txs related to each sender of this block are not in mempool anymore which includes conflicting txs like double spends
-    ResetAssetAllocations(actorSet);
-    // find entry less than 300 seconds old out of vector to remove from mempool as part of zdag dbl spend relay logic
-    if(vecToRemoveFromMempool.size() > 0){
-        LOCK(cs_assetallocationmempoolremovetx);
-        const uint32_t &nDelay = 300;
-        auto vecToRemoveFromMempoolIt = vecToRemoveFromMempool.begin();
-        std::vector<CTransactionRef> vecTxRef;
-        while (vecToRemoveFromMempoolIt != vecToRemoveFromMempool.end()){
-            const CTransactionRef & txRef = mempool.get(vecToRemoveFromMempoolIt->first);
-            if(!txRef || (pindexNew->GetMedianTimePast() > (vecToRemoveFromMempoolIt->second+nDelay)) ){
-                if(txRef)
-                    vecTxRef.emplace_back(txRef);
-                vecToRemoveFromMempool.erase(vecToRemoveFromMempoolIt);
-            }
-            else{
-                break;
-            }
-        }
-        for(const auto& txRef: vecTxRef){
-            if(!txRef || !IsAssetAllocationTx(txRef->nVersion))
-                continue;
-            CAssetAllocation theAssetAllocation(*txRef);
-            if(!theAssetAllocation.assetAllocationTuple.IsNull()){
-                ActorSet actorSet;
-                GetActorsFromAssetAllocationTx(theAssetAllocation, txRef->nVersion, false, false, actorSet);
-                RemoveDoubleSpendFromMempool(txRef);
-                ResetAssetAllocations(actorSet);
-            }
-        }
-    } 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
     LogPrint(BCLog::BENCH, "  - Connect postprocess: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime5) * MILLI, nTimePostConnect * MICRO, nTimePostConnect * MILLI / nBlocksTotal);
     LogPrint(BCLog::BENCH, "- Connect block: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime1) * MILLI, nTimeTotal * MICRO, nTimeTotal * MILLI / nBlocksTotal);
@@ -4176,8 +4130,6 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
 {
     AssertLockHeld(cs_main);
     assert(pindexPrev && pindexPrev == ::ChainActive().Tip());
-    // SYSCOIN
-    ActorSet actorSet;
     CCoinsViewCache viewNew(&::ChainstateActive().CoinsTip());
     uint256 block_hash(block.GetHash());
     CBlockIndex indexDummy(block);
@@ -4193,7 +4145,7 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, FormatStateMessage(state));
     // SYSCOIN
-    if (!::ChainstateActive().ConnectBlock(block, state, &indexDummy, viewNew, chainparams, actorSet, true, txMissingInput, syscoinTxFailed))
+    if (!::ChainstateActive().ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true, txMissingInput, syscoinTxFailed))
         return false;
     assert(state.IsValid());
 
@@ -4623,9 +4575,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
         // check level 3: check for inconsistencies during memory-only disconnect of tip blocks
         if (nCheckLevel >= 3 && (coins.DynamicMemoryUsage() + ::ChainstateActive().CoinsTip().DynamicMemoryUsage()) <= nCoinCacheUsage) {
             assert(coins.GetBestBlock() == pindex->GetBlockHash());
-            // SYSCOIN
-            ActorSet actorSet;
-            DisconnectResult res = ::ChainstateActive().DisconnectBlock(block, pindex, coins, actorSet);
+            DisconnectResult res = ::ChainstateActive().DisconnectBlock(block, pindex, coins);
             if (res == DISCONNECT_FAILED) {
                 return error("VerifyDB(): *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
             }
@@ -4658,11 +4608,9 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             uiInterface.ShowProgress(_("Verifying blocks...").translated, percentageDone, false);
             pindex = ::ChainActive().Next(pindex);
             CBlock block;
-            // SYSCOIN
-            ActorSet actorSet;
             if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
                 return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-            if (!::ChainstateActive().ConnectBlock(block, state, pindex, coins, chainparams, actorSet))
+            if (!::ChainstateActive().ConnectBlock(block, state, pindex, coins, chainparams))
                 return error("VerifyDB(): *** found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
         }
     }
@@ -4734,8 +4682,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
                 return error("RollbackBlock(): ReadBlockFromDisk() failed at %d, hash=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
             }
             LogPrintf("Rolling back %s (%i)\n", pindexOld->GetBlockHash().ToString(), pindexOld->nHeight);
-            // SYSCOIN
-            DisconnectResult res = DisconnectBlock(block, pindexOld, cache, actorSet);
+            DisconnectResult res = DisconnectBlock(block, pindexOld, cache);
             if (res == DISCONNECT_FAILED) {
                 return error("RollbackBlock(): DisconnectBlock failed at %d, hash=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
             }
@@ -4758,8 +4705,6 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
-     // SYSCOIN
-    ResetAssetAllocations(actorSet);   
     uiInterface.ShowProgress("", 100, false);
     return true;
 }

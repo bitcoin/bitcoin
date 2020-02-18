@@ -225,8 +225,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "tpstestsetenabled", 0, "enabled" },
     { "syscoinsetethstatus", 1, "highestBlock" },
     { "syscoinsetethheaders", 0, "headers" },
-    { "listassetindex", 0, "page" },
-    { "listassetindex", 1, "options" },
 };
 // clang-format on
 

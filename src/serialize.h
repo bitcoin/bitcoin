@@ -25,6 +25,7 @@
 // SYSCOIN
 #include <list>
 #include <unordered_map>
+#include <unordered_set>
 static const unsigned int MAX_SIZE = 0x02000000;
 
 /**
@@ -700,6 +701,11 @@ template<typename Stream, typename T> void Unserialize(Stream& os, std::unique_p
 
 // SYSCOIN
 /**
+ * unordered_set
+ */
+template<typename Stream, typename K, typename T, typename Pred, typename A> void Serialize(Stream& os,  const std::unordered_set<K, Pred, A>& m);
+template<typename Stream, typename K, typename T, typename Pred, typename A> void Unserialize(Stream& is, std::unordered_set<K, Pred, A>& m);
+/**
  * list
  */
 template<typename Stream, typename K, typename A> void Serialize(Stream& os, const std::list<K, A>& m);
@@ -972,6 +978,30 @@ void Unserialize(Stream& is, std::set<K, Pred, A>& m)
 }
 
 // SYSCOIN
+/**
+ * unordered_set
+ */
+template<typename Stream, typename K, typename Pred, typename A>
+void Serialize(Stream& os, const std::unordered_set<K, Pred, A>& m)
+{
+    WriteCompactSize(os, m.size());
+    for (typename std::unordered_set<K, Pred, A>::const_iterator it = m.begin(); it != m.end(); ++it)
+        Serialize(os, (*it));
+}
+
+template<typename Stream, typename K, typename Pred, typename A>
+void Unserialize(Stream& is, std::unordered_set<K, Pred, A>& m)
+{
+    m.clear();
+    unsigned int nSize = ReadCompactSize(is);
+    typename std::unordered_set<K, Pred, A>::iterator it = m.begin();
+    for (unsigned int i = 0; i < nSize; i++)
+    {
+        K key;
+        Unserialize(is, key);
+        it = m.insert(it, key);
+    }
+}
 /**
  * list
  */

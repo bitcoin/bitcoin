@@ -63,8 +63,6 @@ Currently, the following notifications are supported:
     -zmqpubrawblock=address
     -zmqpubrawtx=address
     -zmqpubrawmempooltx=address
-    -zmqpubassetallocation=address
-    -zmqpubassetrecord=address
     -pubwalletstatus=address
     -pubethstatus=address
     -pubnetworkstatus=address
