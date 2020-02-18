@@ -159,6 +159,7 @@ BOOST_AUTO_TEST_CASE(mockforward)
 
     int counter{0};
     CScheduler::Function dummy = [&counter]{counter++;};
+    std::thread scheduler_thread([&]() { scheduler.serviceQueue(); });
 
     // schedule jobs for 2, 5 & 8 minutes into the future
     int64_t min_in_milli = 60*1000;
@@ -170,8 +171,6 @@ BOOST_AUTO_TEST_CASE(mockforward)
     boost::chrono::system_clock::time_point first, last;
     size_t num_tasks = scheduler.getQueueInfo(first, last);
     BOOST_CHECK_EQUAL(num_tasks, 3ul);
-
-    std::thread scheduler_thread([&]() { scheduler.serviceQueue(); });
 
     // bump the scheduler forward 5 minutes
     scheduler.MockForward(boost::chrono::seconds(5*60));
