@@ -92,6 +92,7 @@ src/qt/syscoin-qt.includes
 Makefile
 !depends/Makefile
 src/qt/syscoin-qt
+src/syscoin-qt
 Syscoin-Qt.app
 background.tiff*
 
