@@ -1614,9 +1614,9 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx22, tx24));
     MilliSleep(500);
     
-    // not a zdag transaction but still gives status ok
+    // not a zdag transaction
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + tx24 + "\""));
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + tx15 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
