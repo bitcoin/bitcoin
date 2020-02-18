@@ -154,7 +154,7 @@ static UniValue generatetodescriptor(const JSONRPCRequest& request)
             {"maxtries", RPCArg::Type::NUM, /* default */ "1000000", "How many iterations to try."},
         },
         RPCResult{
-            "[ blockhashes ]     (array) hashes of blocks generated\n"},
+            "[ blockhashes ]     (json array) hashes of blocks generated\n"},
         RPCExamples{
             "\nGenerate 11 blocks to mydesc\n" + HelpExampleCli("generatetodescriptor", "11 \"mydesc\"")},
     }
@@ -196,7 +196,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
                     {"maxtries", RPCArg::Type::NUM, /* default */ "1000000", "How many iterations to try."},
                 },
                 RPCResult{
-            "[ blockhashes ]     (array) hashes of blocks generated\n"
+            "[ blockhashes ]     (json array) hashes of blocks generated\n"
                 },
                 RPCExamples{
             "\nGenerate 11 blocks to myaddress\n"
@@ -231,14 +231,14 @@ static UniValue getmininginfo(const JSONRPCRequest& request)
                 {},
                 RPCResult{
                     "{\n"
-                    "  \"blocks\": nnn,             (numeric) The current block\n"
-                    "  \"currentblockweight\": nnn, (numeric, optional) The block weight of the last assembled block (only present if a block was ever assembled)\n"
-                    "  \"currentblocktx\": nnn,     (numeric, optional) The number of block transactions of the last assembled block (only present if a block was ever assembled)\n"
-                    "  \"difficulty\": xxx.xxxxx    (numeric) The current difficulty\n"
-                    "  \"networkhashps\": nnn,      (numeric) The network hashes per second\n"
-                    "  \"pooledtx\": n              (numeric) The size of the mempool\n"
-                    "  \"chain\": \"xxxx\",           (string) current network name (main, test, regtest)\n"
-                    "  \"warnings\": \"...\"          (string) any network and blockchain warnings\n"
+                    "  \"blocks\" : nnn,             (numeric) The current block\n"
+                    "  \"currentblockweight\" : nnn, (numeric, optional) The block weight of the last assembled block (only present if a block was ever assembled)\n"
+                    "  \"currentblocktx\" : nnn,     (numeric, optional) The number of block transactions of the last assembled block (only present if a block was ever assembled)\n"
+                    "  \"difficulty\" : xxx.xxxxx    (numeric) The current difficulty\n"
+                    "  \"networkhashps\" : nnn,      (numeric) The network hashes per second\n"
+                    "  \"pooledtx\" : n              (numeric) The size of the mempool\n"
+                    "  \"chain\" : \"xxxx\",           (string) current network name (main, test, regtest)\n"
+                    "  \"warnings\" : \"...\"          (string) any network and blockchain warnings\n"
                     "}\n"
                 },
                 RPCExamples{
@@ -365,16 +365,16 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             "  },\n"
             "  \"vbrequired\" : n,                 (numeric) bit mask of versionbits the server requires set in submissions\n"
             "  \"previousblockhash\" : \"xxxx\",     (string) The hash of current highest block\n"
-            "  \"transactions\" : [                (array) contents of non-coinbase transactions that should be included in the next block\n"
+            "  \"transactions\" : [                (json array) contents of non-coinbase transactions that should be included in the next block\n"
             "      {\n"
             "         \"data\" : \"xxxx\",             (string) transaction data encoded in hexadecimal (byte-for-byte)\n"
             "         \"txid\" : \"xxxx\",             (string) transaction id encoded in little-endian hexadecimal\n"
             "         \"hash\" : \"xxxx\",             (string) hash encoded in little-endian hexadecimal (including witness data)\n"
-            "         \"depends\" : [                (array) array of numbers \n"
+            "         \"depends\" : [                (json array) array of numbers \n"
             "             n                          (numeric) transactions before this one (by 1-based index in 'transactions' list) that must be present in the final block if this one is\n"
             "             ,...\n"
             "         ],\n"
-            "         \"fee\": n,                    (numeric) difference in value between transaction inputs and outputs (in satoshis); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one\n"
+            "         \"fee\" : n,                    (numeric) difference in value between transaction inputs and outputs (in satoshis); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one\n"
             "         \"sigops\" : n,                (numeric) total SigOps cost, as counted for purposes of block limits; if key is not present, sigop cost is unknown and clients MUST NOT assume it is zero\n"
             "         \"weight\" : n,                (numeric) total transaction weight, as counted for purposes of block limits\n"
             "      }\n"
@@ -850,7 +850,7 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
                 RPCResult{
             "{\n"
             "  \"feerate\" : x.x,     (numeric, optional) estimate fee rate in " + CURRENCY_UNIT + "/kB\n"
-            "  \"errors\": [ str... ] (json array of strings, optional) Errors encountered during processing\n"
+            "  \"errors\" : [ str... ] (json array of strings, optional) Errors encountered during processing\n"
             "  \"blocks\" : n         (numeric) block number where estimate was found\n"
             "}\n"
             "\n"
@@ -924,7 +924,7 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
             "      \"fail\" : {              (json object, optional) information about the highest range of feerates to fail to meet the threshold\n"
             "        ...\n"
             "      },\n"
-            "      \"errors\":  [            (json array, optional) Errors encountered during processing\n"
+            "      \"errors\" :  [            (json array, optional) Errors encountered during processing\n"
             "        \"str\",                (string)\n"
             "        ...\n"
             "      ],\n"
