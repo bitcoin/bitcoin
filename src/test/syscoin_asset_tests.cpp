@@ -349,7 +349,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
     blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
     BOOST_CHECK(blocksArray.empty());
 }
-
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 {
 
@@ -585,6 +584,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     const int64_t &endblock = GetTimeMicros();
     tfm::format(std::cout,"elapsed time in block creation: %lld\n", endblock-startblock);
     tfm::format(std::cout,"elapsed time in seconds: %lld\n", end-start);
+
 }/*
 BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
 {
@@ -1098,7 +1098,6 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag2)
     balance = find_value(r.get_obj(), "balance_zdag");
     BOOST_CHECK_EQUAL(balance.getValStr(), "1.30000000");
 }
-
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag3)
 {
     UniValue r;
@@ -2100,7 +2099,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
 	UniValue r;
 	tfm::format(std::cout,"Running generate_asset_consistency_check...\n");
 	GenerateBlocks(5);
-
+    tfm::format(std::cout,"Setting time ahead 300 seconds...\n");
+    // trigger expiry of txs -- zdag balances should all match (no more zdag txs, fall back to db balance so string checks after reindex pass)
+    SleepFor(300 * 1000, 0);
+    AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getblockcount"));
 	string strBeforeBlockCount = itostr(r.get_int());
 
@@ -2157,15 +2159,15 @@ BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
 	BOOST_CHECK(assetValidatedResults.write() == assetNowResults.write());
 
 	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallExtRPC("node1", "listassetallocations" , itostr(INT_MAX) + ",0"));
-    string first = assetAllocationsValidatedResults.write();
-    string second = assetAllocationsNowResults.write();
+    std::string first = assetAllocationsValidatedResults.write();
+    const std::string &second = assetAllocationsNowResults.write();
 	BOOST_CHECK(first == second);
 	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallExtRPC("node2", "listassetallocations" , itostr(INT_MAX) + ",0"));
     first = assetAllocationsValidatedResults.write();
-	BOOST_CHECK_EQUAL(first.compare(second), 0);
+	BOOST_CHECK(first == second);
 	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallExtRPC("node3", "listassetallocations" , itostr(INT_MAX) + ",0"));
     first = assetAllocationsValidatedResults.write();
-	BOOST_CHECK_EQUAL(first.compare(second), 0);
+	BOOST_CHECK(first == second);
 }
 
 BOOST_AUTO_TEST_SUITE_END ()

@@ -844,8 +844,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                     {
                         LOCK(cs_assetallocationarrival);
                         // ensure there are previous tx for this sender so we can reject if this is the first tx for this sender in mempool
-                        ArrivalTimesVec& arrivalTimes = arrivalTimesVec[sender];
-                        arrivalTimeExists = !arrivalTimes.empty();
+                        auto arrivalTimesIt = arrivalTimesVec.find(sender);
+                        if(arrivalTimesIt != arrivalTimesVec.end())
+                            arrivalTimeExists = !arrivalTimesIt->second.empty();
                     }
                     {
                         LOCK(cs_assetallocationconflicts);
@@ -3834,7 +3835,6 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
     // SYSCOIN
-    TxValidationState tx_state;
     for (const auto& txRef : block.vtx)
     {
         if(IsSyscoinMintTx(txRef->nVersion)){
@@ -3851,7 +3851,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
                     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
                         if(ethTxRootShouldExist){
                             // we always want to pass state.Error() for txroot missing errors here meaning we don't want to flag the block as invalid, we want to retry as this is based on eventual consistency
-                            return state.Error(strprintf("%s: %s - %s", __func__, "mint-txroot-missing", FormatStateMessage(tx_state)));
+                            return state.Error(strprintf("%s: %s - %d", __func__, "mint-txroot-missing", mintSyscoin.nBlockNumber));
                         }
                     }
                 }  
@@ -3859,15 +3859,15 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
                     const int64_t &nTime = pindexPrev->GetMedianTimePast();
                     // time must be between 1 week and 1 hour old to be accepted
                     if(nTime < txRootDB.nTimestamp) {
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "invalid-timestamp", FormatStateMessage(tx_state));
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "invalid-timestamp", "Time must be in the present or future, not passed");
                     }
                     else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? 10800: 604800)) {
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-blockheight-too-old", FormatStateMessage(tx_state));
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-blockheight-too-old", "Time must be between 1 week and 1 hour old");
                     }
                     // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
                     // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
                     else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? 600: 3600)) {
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-insufficient-confirmations", FormatStateMessage(tx_state));
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-insufficient-confirmations", "Time must be between 1 week and 1 hour old");
                     }
                 } 
             }
