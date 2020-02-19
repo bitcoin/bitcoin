@@ -146,7 +146,6 @@ def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', t),
             '-runs=1',
-            '-detect_leaks=0',
             corpus_path,
         ]
         if use_valgrind:
