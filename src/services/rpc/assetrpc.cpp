@@ -424,10 +424,10 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
 }
 // recursive procedure to loop through all arrival times and related arrival times to find all senders
 int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sender){
+    LOCK(cs_main);
+    LOCK(mempool.cs);
     ActorSet actorSetSender;
     {
-        LOCK(cs_main);
-        LOCK(mempool.cs);
         CTxMemPool::setEntries setAncestors;
         const CTransactionRef &txRef = mempool.get(lookForTxHash);
         if (!txRef)
@@ -470,7 +470,21 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sen
         // its in mempool and its an asset tx, it should exist in arrival times or it wasn't put in due to a conflict
         if(arrivalTimes.find(lookForTxHash) == arrivalTimes.end())
             return ZDAG_MAJOR_CONFLICT;
-
+        // ensure non of the neighbouring sender tx's are not RBF either
+        for(const auto& arrivalTime: arrivalTimes){
+            // already checked this one
+            if(arrivalTime == lookForTxHash)
+                continue;
+            const CTransactionRef &txRefArrival = mempool.get(arrivalTime);
+            if (!txRefArrival)
+                return ZDAG_NOT_FOUND;
+            RBFTransactionState rbfState = IsRBFOptIn(*txRefArrival, mempool);
+            if (rbfState == RBFTransactionState::UNKNOWN) {
+                return ZDAG_NOT_FOUND;
+            } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {
+                return ZDAG_WARNING_RBF;
+            }         
+        }
     }
     return ZDAG_STATUS_OK;
 }
