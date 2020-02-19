@@ -12,7 +12,7 @@ export NO_DEPENDS=1
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=true
-export FUZZ_TESTS_CONFIG="--valgrind"
+export FUZZ_TESTS_CONFIG="--exclude integer,parse_iso8601 --valgrind"
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer CC=clang-8 CXX=clang++-8"
 # Use clang-8, instead of default clang on bionic, which is clang-6 and does not come with libfuzzer on aarch64
