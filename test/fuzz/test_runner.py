@@ -47,6 +47,7 @@ FUZZERS_MISSING_CORPORA = [
     "tx_out",
 ]
 
+
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
@@ -65,6 +66,11 @@ def main():
         '--valgrind',
         action='store_true',
         help='If true, run fuzzing binaries under the valgrind memory error detector',
+    )
+    parser.add_argument(
+        '-x',
+        '--exclude',
+        help="A comma-separated list of targets to exclude",
     )
     parser.add_argument(
         'seed_dir',
@@ -100,7 +106,7 @@ def main():
         logging.error("No fuzz targets found")
         sys.exit(1)
 
-    logging.info("Fuzz targets found: {}".format(test_list_all))
+    logging.debug("{} fuzz target(s) found: {}".format(len(test_list_all), " ".join(sorted(test_list_all))))
 
     args.target = args.target or test_list_all  # By default run all
     test_list_error = list(set(args.target).difference(set(test_list_all)))
@@ -109,7 +115,15 @@ def main():
     test_list_selection = list(set(test_list_all).intersection(set(args.target)))
     if not test_list_selection:
         logging.error("No fuzz targets selected")
-    logging.info("Fuzz targets selected: {}".format(test_list_selection))
+    if args.exclude:
+        for excluded_target in args.exclude.split(","):
+            if excluded_target not in test_list_selection:
+                logging.error("Target \"{}\" not found in current target list.".format(excluded_target))
+                continue
+            test_list_selection.remove(excluded_target)
+    test_list_selection.sort()
+
+    logging.info("{} of {} detected fuzz target(s) selected: {}".format(len(test_list_selection), len(test_list_all), " ".join(test_list_selection)))
 
     try:
         help_output = subprocess.run(
