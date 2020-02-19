@@ -32,6 +32,7 @@
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
+#include <wallet/external_signer_scriptpubkeyman.h>
 
 #include <algorithm>
 #include <assert.h>
@@ -4366,8 +4367,17 @@ void CWallet::ConnectScriptPubKeyManNotifiers()
 
 void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
 {
-    auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
-    m_spk_managers[id] = std::move(spk_manager);
+    if (IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
+#ifdef ENABLE_EXTERNAL_SIGNER
+        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, desc));
+        m_spk_managers[id] = std::move(spk_manager);
+#else
+        throw std::runtime_error(std::string(__func__) + ": Wallets with external signers require Boost::System library.");
+#endif
+    } else {
+        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
+        m_spk_managers[id] = std::move(spk_manager);
+    }
 }
 
 void CWallet::SetupDescriptorScriptPubKeyMans()
