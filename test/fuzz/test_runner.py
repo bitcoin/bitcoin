@@ -65,7 +65,12 @@ def main():
     parser.add_argument(
         '--valgrind',
         action='store_true',
-        help='If true, run fuzzing binaries under the valgrind memory error detector. Valgrind 3.14 or later required.',
+        help='If true, run fuzzing binaries under the valgrind memory error detector',
+    )
+    parser.add_argument(
+        '-x',
+        '--exclude',
+        help="A comma-separated list of targets to exclude",
     )
     parser.add_argument(
         '-x',
@@ -163,7 +168,7 @@ def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
             corpus_path,
         ]
         if use_valgrind:
-            args = ['valgrind', '--quiet', '--error-exitcode=1', '--exit-on-first-error=yes'] + args
+            args = ['valgrind', '--quiet', '--error-exitcode=1'] + args
         logging.debug('Run {} with args {}'.format(t, args))
         result = subprocess.run(args, stderr=subprocess.PIPE, universal_newlines=True)
         output = result.stderr
