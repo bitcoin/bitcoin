@@ -168,7 +168,15 @@ def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
         result = subprocess.run(args, stderr=subprocess.PIPE, universal_newlines=True)
         output = result.stderr
         logging.debug('Output: {}'.format(output))
-        result.check_returncode()
+        try:
+            result.check_returncode()
+        except subprocess.CalledProcessError as e:
+            if e.stdout:
+                logging.info(e.stdout)
+            if e.stderr:
+                logging.info(e.stderr)
+            logging.info("Target \"{}\" failed with exit code {}: {}".format(t, e.returncode, " ".join(args)))
+            sys.exit(1)
         if not export_coverage:
             continue
         for l in output.splitlines():
