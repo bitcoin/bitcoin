@@ -123,5 +123,16 @@ class SignerTest(BitcoinTestFramework):
         assert_equal(address_info['ismine'], True)
         assert_equal(address_info['hdkeypath'], "m/44'/1'/0'/0/0")
 
+        self.log.info('Test signerdisplayaddress')
+        result = hww.signerdisplayaddress(address1)
+        assert_equal(result, {"address": address1})
+
+        # Handle error thrown by script
+        self.set_mock_result(self.nodes[1], "2")
+        assert_raises_rpc_error(-1, 'RunCommandParseJSON error',
+            hww.signerdisplayaddress, address1
+        )
+        self.clear_mock_result(self.nodes[1])
+
 if __name__ == '__main__':
     SignerTest().main()

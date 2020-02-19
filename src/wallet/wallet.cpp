@@ -3587,6 +3587,25 @@ ExternalSigner CWallet::GetExternalSigner()
 }
 #endif
 
+bool CWallet::DisplayAddress(const CTxDestination& dest)
+{
+#ifdef ENABLE_EXTERNAL_SIGNER
+    CScript scriptPubKey = GetScriptForDestination(dest);
+    const auto spk_man = GetScriptPubKeyMan(scriptPubKey);
+    if (spk_man == nullptr) {
+        return false;
+    }
+    auto signer_spk_man = dynamic_cast<ExternalSignerScriptPubKeyMan*>(spk_man);
+    if (signer_spk_man == nullptr) {
+        return false;
+    }
+    ExternalSigner signer = GetExternalSigner(); // TODO: move signer in spk_man
+    return signer_spk_man->DisplayAddress(scriptPubKey, signer);
+#else
+    return false;
+#endif
+}
+
 void CWallet::LockCoin(const COutPoint& output)
 {
     AssertLockHeld(cs_wallet);

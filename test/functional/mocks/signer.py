@@ -37,6 +37,20 @@ def getdescriptors(args):
     }))
 
 
+def displayaddress(args):
+    # Several descriptor formats are acceptable, so allowing for potential
+    # changes to InferDescriptor:
+    if args.fingerprint != "00000001":
+        return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
+
+    expected_desc = [
+        "wpkh([00000001/84'/1'/0'/0/0]02c97dc3f4420402e01a113984311bf4a1b8de376cac0bdcfaf1b3ac81f13433c7)#0yneg42r"
+    ]
+    if args.desc not in expected_desc:
+        return sys.stdout.write(json.dumps({"error": "Unexpected descriptor", "desc": args.desc}))
+
+    return sys.stdout.write(json.dumps({"address": "bcrt1qm90ugl4d48jv8n6e5t9ln6t9zlpm5th68x4f8g"}))
+
 parser = argparse.ArgumentParser(prog='./signer.py', description='External signer mock')
 parser.add_argument('--fingerprint')
 parser.add_argument('--chain', default='main')
@@ -50,6 +64,10 @@ parser_enumerate.set_defaults(func=enumerate)
 parser_getdescriptors = subparsers.add_parser('getdescriptors')
 parser_getdescriptors.set_defaults(func=getdescriptors)
 parser_getdescriptors.add_argument('--account', metavar='account')
+
+parser_displayaddress = subparsers.add_parser('displayaddress', help='display address on signer')
+parser_displayaddress.add_argument('--desc', metavar='desc')
+parser_displayaddress.set_defaults(func=displayaddress)
 
 args = parser.parse_args()
 

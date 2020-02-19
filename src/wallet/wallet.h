@@ -842,6 +842,9 @@ public:
 #ifdef ENABLE_EXTERNAL_SIGNER
     ExternalSigner GetExternalSigner() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 #endif
+    /** Display address on an external signer. Returns false if external signer support is not compiled */
+    bool DisplayAddress(const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     bool IsLockedCoin(uint256 hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void LockCoin(const COutPoint& output) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void UnlockCoin(const COutPoint& output) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
