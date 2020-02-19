@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
-#include <txmempool.h>
-#include <validation.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
+#include <txmempool.h>
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -85,12 +85,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     // This is contingent not only on the dynamic memory usage of the Coins
     // that we're adding (COIN_SIZE bytes per), but also on how much memory the
     // cacheCoins (unordered_map) preallocates.
-    //
-    // I came up with the count by examining the printed memory usage of the
-    // CCoinsCacheView, so it's sort of arbitrary - but it shouldn't change
-    // unless we somehow change the way the cacheCoins map allocates memory.
-    //
-    constexpr int COINS_UNTIL_CRITICAL = is_64_bit ? 4 : 5;
+    constexpr int COINS_UNTIL_CRITICAL{3};
 
     for (int i{0}; i < COINS_UNTIL_CRITICAL; ++i) {
         COutPoint res = add_coin(view);
@@ -101,17 +96,14 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
             CoinsCacheSizeState::OK);
     }
 
-    // Adding an additional coin will push us over the edge to CRITICAL.
-    add_coin(view);
-    print_view_mem_usage(view);
-
-    auto size_state = chainstate.GetCoinsCacheSizeState(
-        tx_pool, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 0);
-
-    if (!is_64_bit && size_state == CoinsCacheSizeState::LARGE) {
-        // On 32 bit hosts, we may hit LARGE before CRITICAL.
+    // Adding some additional coins will push us over the edge to CRITICAL.
+    for (int i{0}; i < 4; ++i) {
         add_coin(view);
         print_view_mem_usage(view);
+        if (chainstate.GetCoinsCacheSizeState(tx_pool, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 0) ==
+            CoinsCacheSizeState::CRITICAL) {
+            break;
+        }
     }
 
     BOOST_CHECK_EQUAL(
