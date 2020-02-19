@@ -2808,6 +2808,68 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
 
 
 // Cybersecurity Lab
+UniValue connect(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 2)
+        throw std::runtime_error(
+            RPCHelpMan{"connect",
+                "\nAdd an entry to the IP table.\n",
+                {
+                  {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP Address"},
+                  {"port", RPCArg::Type::STR, RPCArg::Optional::NO, "Port"},
+                },
+                RPCResult{
+            "[\n*\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("connect", "10.0.0.1 8333")
+            + HelpExampleRpc("connect", "10.0.0.1 8333")
+                },
+            }.ToString());
+
+    if(!g_rpc_node->connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+
+    UniValue result(UniValue::VOBJ);
+
+    std::string ipAddress = request.params[0].get_str();
+    std::string portStr = request.params[1].get_str();
+
+    int port = 8333;
+    try {
+      port = std::stoi(portStr);
+    } catch(...) {
+      result.pushKV("Invalid port", port);
+      return result;
+    }
+
+    CNode *pnode = g_rpc_node->connman->ipconnect(ipAddress, port);
+
+    if(!pnode) {
+      result.pushKV(ipAddress + ":" + std::to_string(port), "Failed");
+      return result;
+    } else {
+      result.pushKV(ipAddress + ":" + std::to_string(port), "Successful");
+    }
+
+    bool fOneShot = false;
+    bool fFeeler = false;
+    bool manual_connection = false;
+
+    if (fOneShot)
+        pnode->fOneShot = true;
+    if (fFeeler)
+        pnode->fFeeler = true;
+    if (manual_connection)
+        pnode->m_manual_connection = true;
+
+    //vNodes.push_back(pnode);
+
+    return result;
+}
+
+// Cybersecurity Lab
 UniValue iplist(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
@@ -2894,19 +2956,20 @@ UniValue ipclear(const JSONRPCRequest& request)
 // Cybersecurity Lab
 UniValue ipadd(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
             RPCHelpMan{"ipadd",
                 "\nAdd an entry to the IP table.\n",
                 {
-                  {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP:Port"},
+                  {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP Address"},
+                  {"port", RPCArg::Type::STR, RPCArg::Optional::NO, "Port"},
                 },
                 RPCResult{
             "[\n*\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("ipadd", "10.0.0.1:8333")
-            + HelpExampleRpc("ipadd", "10.0.0.1:8333")
+                    HelpExampleCli("ipadd", "10.0.0.1 8333")
+            + HelpExampleRpc("ipadd", "10.0.0.1 8333")
                 },
             }.ToString());
 
@@ -2915,14 +2978,10 @@ UniValue ipadd(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VOBJ);
 
-    std::string rawAddr = request.params[0].get_str();
-    std::stringstream ss(rawAddr);
-    std::string ipAddress;
-    std::string portStr;
-    // TODO: Split by the last colon, not the first
-    getline(ss, ipAddress, ':'); // Split the assignment into IP:Port
-    getline(ss, portStr, ':');
-    int port = 0;
+    std::string ipAddress = request.params[0].get_str();
+    std::string portStr = request.params[1].get_str();
+
+    int port = 8333;
     try {
       port = std::stoi(portStr);
     } catch(...) {
@@ -2930,8 +2989,7 @@ UniValue ipadd(const JSONRPCRequest& request)
       return result;
     }
 
-    //result.pushKV("IP Added", g_rpc_node->connman->ipadd());
-    result.pushKV(ipAddress + ":" + std::to_string(port), g_rpc_node->connman->ipadd(ipAddress, port, "250.1.2.1") ? "Successful" : "Failed");
+    result.pushKV(ipAddress + ":" + std::to_string(port), g_rpc_node->connman->ipadd(ipAddress, port, "0.0.0.0") ? "Successful" : "Failed");
     return result;
 }
 
@@ -2939,17 +2997,20 @@ UniValue ipadd(const JSONRPCRequest& request)
 // Cybersecurity Lab
 UniValue ipremove(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 0)
+    if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
             RPCHelpMan{"ipremove",
-                "\nRemove and entry from the IP table.\n",
-                {},
+                "\nRemove an entry from the IP table.\n",
+                {
+                  {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP Address"},
+                  {"port", RPCArg::Type::STR, RPCArg::Optional::NO, "Port"},
+                },
                 RPCResult{
             "[\n*\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("ipremove", "")
-            + HelpExampleRpc("ipremove", "")
+                    HelpExampleCli("ipremove", "10.0.0.1 8333")
+            + HelpExampleRpc("ipremove", "10.0.0.1 8333")
                 },
             }.ToString());
 
@@ -2957,7 +3018,19 @@ UniValue ipremove(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("IP Removed", g_rpc_node->connman->ipremove());
+
+    std::string ipAddress = request.params[0].get_str();
+    std::string portStr = request.params[1].get_str();
+
+    int port = 8333;
+    try {
+      port = std::stoi(portStr);
+    } catch(...) {
+      result.pushKV("Invalid port", port);
+      return result;
+    }
+
+    result.pushKV(ipAddress + ":" + std::to_string(port), g_rpc_node->connman->ipremove(ipAddress, port, "0.0.0.0") ? "Successful" : "Failed");
     return result;
 }
 
@@ -3022,11 +3095,12 @@ UniValue getmsginfo(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
+  { "z Researcher",          "connect",                 &connect,                {"address", "port"} },
   { "z Researcher",          "iplist",                  &iplist,                 {} },
   { "z Researcher",          "ipdump",                  &ipdump,                 {} },
   { "z Researcher",          "ipclear",                 &ipclear,                {} },
-  { "z Researcher",          "ipadd",                   &ipadd,                  {"address"} },
-  { "z Researcher",          "ipremove",                &ipremove,               {} },
+  { "z Researcher",          "ipadd",                   &ipadd,                  {"address", "port"} },
+  { "z Researcher",          "ipremove",                &ipremove,               {"address", "port"} },
   { "z Researcher",          "getmsginfo",              &getmsginfo,             {} },
 };
 // clang-format on

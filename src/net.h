@@ -338,6 +338,30 @@ public:
 
 
     // Cybersecurity Lab
+    CNode* ipconnect(std::string ip, int port, std::string source = "250.1.2.1") {
+      CNetAddr src;
+      if(LookupHost(source.c_str(), src, false)) {
+        CService serv;
+        if(Lookup(ip.c_str(), serv, port, false)) {
+          CAddress addrConnect = CAddress(serv, NODE_NONE);
+
+          char* source_c = const_cast<char*>(source.c_str());
+
+          bool fCountFailure = false;
+          bool manual_connection = true;
+          bool block_relay_only = false;
+
+          CNode* pnode = ConnectNode(addrConnect, source_c, fCountFailure, manual_connection, block_relay_only);
+          if (!pnode) return nullptr;
+          return pnode;
+
+        } else {
+          return nullptr;
+        }
+      } else {
+        return nullptr;
+      }
+    }
     int iplist() {
       return addrman.size();
     }
@@ -362,8 +386,8 @@ public:
         return false;
       }
     }
-    bool ipremove() {
-      return true;
+    bool ipremove(std::string ip, int port, std::string source = "250.1.2.1") {
+      return false;
     }
 
     // Cybersecurity Lab: Used to track node data, initialize all to -1
