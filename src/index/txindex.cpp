@@ -137,7 +137,7 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
     }
 
     int64_t count = 0;
-    LogPrintf("Upgrading txindex database... [0%%]\n");
+    LogPrintf("\nUpgrading txindex database... [0%%]\n");
     uiInterface.ShowProgress(_("Upgrading txindex database").translated, 0, true);
     int report_done = 0;
     const size_t batch_size = 1 << 24; // 16 MiB
@@ -177,7 +177,7 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
 
             uiInterface.ShowProgress(_("Upgrading txindex database").translated, percentage_done, true);
             if (report_done < percentage_done/10) {
-                LogPrintf("Upgrading txindex database... [%d%%]\n", percentage_done);
+                LogPrintf("\nUpgrading txindex database... [%d%%]\n", percentage_done);
                 report_done = percentage_done/10;
             }
         }
@@ -214,13 +214,13 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
                                  begin_key, key);
 
     if (interrupted) {
-        LogPrintf("[CANCELLED].\n");
+        LogPrintf("\n[CANCELLED].\n");
         return false;
     }
 
     uiInterface.ShowProgress("", 100, false);
 
-    LogPrintf("[DONE].\n");
+    LogPrintf("\n[DONE].\n");
     return true;
 }
 

@@ -202,7 +202,7 @@ static util::SettingsValue InterpretOption(std::string& section, std::string& ke
         key.erase(0, 2);
         // Double negatives like -nofoo=0 are supported (but discouraged)
         if (!InterpretBool(value)) {
-            LogPrintf("Warning: parsed potentially confusing double-negative -%s=%s\n", key, value);
+            LogPrintf("\nWarning: parsed potentially confusing double-negative -%s=%s\n", key, value);
             return true;
         }
         return false;
@@ -723,7 +723,7 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
             m_settings.ro_config[section][key].push_back(value);
         } else {
             if (ignore_invalid_keys) {
-                LogPrintf("Ignoring unknown configuration value %s\n", option.first);
+                LogPrintf("\nIgnoring unknown configuration value %s\n", option.first);
             } else {
                 error = strprintf("Invalid configuration value %s", option.first);
                 return false;
@@ -789,7 +789,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
                     if (!ReadConfigStream(conf_file_stream, conf_file_name, error, ignore_invalid_keys)) {
                         return false;
                     }
-                    LogPrintf("Included configuration file %s\n", conf_file_name);
+                    LogPrintf("\nIncluded configuration file %s\n", conf_file_name);
                 } else {
                     error = "Failed to include configuration file " + conf_file_name;
                     return false;
@@ -873,7 +873,7 @@ void ArgsManager::logArgsPrefix(
             Optional<unsigned int> flags = GetArgFlags('-' + arg.first);
             if (flags) {
                 std::string value_str = (*flags & SENSITIVE) ? "****" : value.write();
-                LogPrintf("%s %s%s=%s\n", prefix, section_str, arg.first, value_str);
+                LogPrintf("\n%s %s%s=%s\n", prefix, section_str, arg.first, value_str);
             }
         }
     }
@@ -921,29 +921,29 @@ bool TryCreateDirectories(const fs::path& p)
 bool FileCommit(FILE *file)
 {
     if (fflush(file) != 0) { // harmless if redundantly called
-        LogPrintf("%s: fflush failed: %d\n", __func__, errno);
+        LogPrintf("\n%s: fflush failed: %d\n", __func__, errno);
         return false;
     }
 #ifdef WIN32
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
     if (FlushFileBuffers(hFile) == 0) {
-        LogPrintf("%s: FlushFileBuffers failed: %d\n", __func__, GetLastError());
+        LogPrintf("\n%s: FlushFileBuffers failed: %d\n", __func__, GetLastError());
         return false;
     }
 #else
     #if defined(__linux__) || defined(__NetBSD__)
     if (fdatasync(fileno(file)) != 0 && errno != EINVAL) { // Ignore EINVAL for filesystems that don't support sync
-        LogPrintf("%s: fdatasync failed: %d\n", __func__, errno);
+        LogPrintf("\n%s: fdatasync failed: %d\n", __func__, errno);
         return false;
     }
     #elif defined(MAC_OSX) && defined(F_FULLFSYNC)
     if (fcntl(fileno(file), F_FULLFSYNC, 0) == -1) { // Manpage says "value other than -1" is returned on success
-        LogPrintf("%s: fcntl F_FULLFSYNC failed: %d\n", __func__, errno);
+        LogPrintf("\n%s: fcntl F_FULLFSYNC failed: %d\n", __func__, errno);
         return false;
     }
     #else
     if (fsync(fileno(file)) != 0 && errno != EINVAL) {
-        LogPrintf("%s: fsync failed: %d\n", __func__, errno);
+        LogPrintf("\n%s: fsync failed: %d\n", __func__, errno);
         return false;
     }
     #endif
@@ -1043,7 +1043,7 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
         return fs::path(pszPath);
     }
 
-    LogPrintf("SHGetSpecialFolderPathW() failed, could not obtain requested path.\n");
+    LogPrintf("\nSHGetSpecialFolderPathW() failed, could not obtain requested path.\n");
     return fs::path("");
 }
 #endif
@@ -1067,7 +1067,7 @@ void runCommand(const std::string& strCommand)
     int nErr = ::_wsystem(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().from_bytes(strCommand).c_str());
 #endif
     if (nErr)
-        LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
+        LogPrintf("\nrunCommand error: system(%s) returned %d\n", strCommand, nErr);
 }
 #endif
 
@@ -1156,7 +1156,7 @@ void ScheduleBatchPriority()
 #ifdef SCHED_BATCH
     const static sched_param param{};
     if (pthread_setschedparam(pthread_self(), SCHED_BATCH, &param) != 0) {
-        LogPrintf("Failed to pthread_setschedparam: %s\n", strerror(errno));
+        LogPrintf("\nFailed to pthread_setschedparam: %s\n", strerror(errno));
     }
 #endif
 }

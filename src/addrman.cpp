@@ -630,12 +630,12 @@ std::vector<bool> CAddrMan::DecodeAsmap(fs::path path)
     FILE *filestr = fsbridge::fopen(path, "rb");
     CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
     if (file.IsNull()) {
-        LogPrintf("Failed to open asmap file from disk.\n");
+        LogPrintf("\nFailed to open asmap file from disk.\n");
         return bits;
     }
     fseek(filestr, 0, SEEK_END);
     int length = ftell(filestr);
-    LogPrintf("Opened asmap file %s (%d bytes) from disk.\n", path, length);
+    LogPrintf("\nOpened asmap file %s (%d bytes) from disk.\n", path, length);
     fseek(filestr, 0, SEEK_SET);
     char cur_byte;
     for (int i = 0; i < length; ++i) {

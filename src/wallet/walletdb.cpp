@@ -446,7 +446,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         Dbc* pcursor = m_batch.GetCursor();
         if (!pcursor)
         {
-            pwallet->WalletLogPrintf("Error getting wallet database cursor\n");
+            pwallet->WalletLogPrintf("\nError getting wallet database cursor\n");
             return DBErrors::CORRUPT;
         }
 
@@ -460,7 +460,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
                 break;
             else if (ret != 0)
             {
-                pwallet->WalletLogPrintf("Error reading next record from wallet database\n");
+                pwallet->WalletLogPrintf("\nError reading next record from wallet database\n");
                 return DBErrors::CORRUPT;
             }
 
@@ -484,7 +484,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
                 }
             }
             if (!strErr.empty())
-                pwallet->WalletLogPrintf("%s\n", strErr);
+                pwallet->WalletLogPrintf("\n%s\n", strErr);
         }
         pcursor->close();
     }
@@ -508,9 +508,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     m_batch.Read(DBKeys::VERSION, last_client);
 
     int wallet_version = pwallet->GetVersion();
-    pwallet->WalletLogPrintf("Wallet File Version = %d\n", wallet_version > 0 ? wallet_version : last_client);
+    pwallet->WalletLogPrintf("\nWallet File Version = %d\n", wallet_version > 0 ? wallet_version : last_client);
 
-    pwallet->WalletLogPrintf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total. Unknown wallet records: %u\n",
+    pwallet->WalletLogPrintf("\nKeys: %u plaintext, %u encrypted, %u w/ metadata, %u total. Unknown wallet records: %u\n",
            wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys, wss.m_unknown_records);
 
     // nTimeFirstKey is only reliable if all keys have metadata
@@ -561,7 +561,7 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::vector<CW
         Dbc* pcursor = m_batch.GetCursor();
         if (!pcursor)
         {
-            LogPrintf("Error getting wallet database cursor\n");
+            LogPrintf("\nError getting wallet database cursor\n");
             return DBErrors::CORRUPT;
         }
 
@@ -575,7 +575,7 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::vector<CW
                 break;
             else if (ret != 0)
             {
-                LogPrintf("Error reading next record from wallet database\n");
+                LogPrintf("\nError reading next record from wallet database\n");
                 return DBErrors::CORRUPT;
             }
 
@@ -721,7 +721,7 @@ bool WalletBatch::RecoverKeysOnlyFilter(void *callbackData, CDataStream ssKey, C
     }
     if (!fReadOK)
     {
-        LogPrintf("WARNING: WalletBatch::Recover skipping %s: %s\n", strType, strErr);
+        LogPrintf("\nWARNING: WalletBatch::Recover skipping %s: %s\n", strType, strErr);
         return false;
     }
 

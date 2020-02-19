@@ -21,7 +21,7 @@ static void FatalError(const char* fmt, const Args&... args)
 {
     std::string strMessage = tfm::format(fmt, args...);
     SetMiscWarning(strMessage);
-    LogPrintf("*** %s\n", strMessage);
+    LogPrintf("\n*** %s\n", strMessage);
     uiInterface.ThreadSafeMessageBox(
         "Error: A fatal internal error occurred, see debug.log for details",
         "", CClientUIInterface::MSG_ERROR);
@@ -123,7 +123,7 @@ void BaseIndex::ThreadSync()
 
             int64_t current_time = GetTime();
             if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
-                LogPrintf("Syncing %s with block chain from height %d\n",
+                LogPrintf("\nSyncing %s with block chain from height %d\n",
                           GetName(), pindex->nHeight);
                 last_log_time = current_time;
             }
@@ -150,9 +150,9 @@ void BaseIndex::ThreadSync()
     }
 
     if (pindex) {
-        LogPrintf("%s is enabled at height %d\n", GetName(), pindex->nHeight);
+        LogPrintf("\n%s is enabled at height %d\n", GetName(), pindex->nHeight);
     } else {
-        LogPrintf("%s is enabled\n", GetName());
+        LogPrintf("\n%s is enabled\n", GetName());
     }
 }
 
@@ -209,7 +209,7 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
         // in the ValidationInterface queue backlog even after the sync thread has caught up to the
         // new chain tip. In this unlikely event, log a warning and let the queue clear.
         if (best_block_index->GetAncestor(pindex->nHeight - 1) != pindex->pprev) {
-            LogPrintf("%s: WARNING: Block %s does not connect to an ancestor of " /* Continued */
+            LogPrintf("\n%s: WARNING: Block %s does not connect to an ancestor of " /* Continued */
                       "known best chain (tip=%s); not updating index\n",
                       __func__, pindex->GetBlockHash().ToString(),
                       best_block_index->GetBlockHash().ToString());
@@ -257,7 +257,7 @@ void BaseIndex::ChainStateFlushed(const CBlockLocator& locator)
     // event, log a warning and let the queue clear.
     const CBlockIndex* best_block_index = m_best_block_index.load();
     if (best_block_index->GetAncestor(locator_tip_index->nHeight) != locator_tip_index) {
-        LogPrintf("%s: WARNING: Locator contains block (hash=%s) not on known best " /* Continued */
+        LogPrintf("\n%s: WARNING: Locator contains block (hash=%s) not on known best " /* Continued */
                   "chain (tip=%s); not writing index locator\n",
                   __func__, locator_tip_hash.ToString(),
                   best_block_index->GetBlockHash().ToString());
@@ -289,7 +289,7 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain()
         }
     }
 
-    LogPrintf("%s: %s is catching up on block notifications\n", __func__, GetName());
+    LogPrintf("\n%s: %s is catching up on block notifications\n", __func__, GetName());
     SyncWithValidationInterfaceQueue();
     return true;
 }

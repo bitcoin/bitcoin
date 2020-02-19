@@ -98,7 +98,7 @@ bool BCLog::Logger::EnableCategory(const std::string& str)
     if (!GetLogCategory(flag, str)) {
         if (str == "db") {
             // DEPRECATION: Added in 0.20, should start returning an error in 0.21
-            LogPrintf("Warning: logging category 'db' is deprecated, use 'walletdb' instead\n");
+            LogPrintf("\nWarning: logging category 'db' is deprecated, use 'walletdb' instead\n");
             EnableCategory(BCLog::WALLETDB);
             return true;
         }
@@ -327,7 +327,7 @@ void BCLog::Logger::ShrinkDebugFile()
         // Restart the file with some of the end
         std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
         if (fseek(file, -((long)vch.size()), SEEK_END)) {
-            LogPrintf("Failed to shrink debug log file: fseek(...) failed\n");
+            LogPrintf("\nFailed to shrink debug log file: fseek(...) failed\n");
             fclose(file);
             return;
         }

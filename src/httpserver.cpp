@@ -267,7 +267,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         if (workQueue->Enqueue(item.get()))
             item.release(); /* if true, queue took ownership */
         else {
-            LogPrintf("WARNING: request rejected because http work queue depth exceeded, it can be increased with the -rpcworkqueue= setting\n");
+            LogPrintf("\nWARNING: request rejected because http work queue depth exceeded, it can be increased with the -rpcworkqueue= setting\n");
             item->req->WriteReply(HTTP_INTERNAL, "Work queue depth exceeded");
         }
     } else {
@@ -304,10 +304,10 @@ static bool HTTPBindAddresses(struct evhttp* http)
         endpoints.push_back(std::make_pair("::1", http_port));
         endpoints.push_back(std::make_pair("127.0.0.1", http_port));
         if (gArgs.IsArgSet("-rpcallowip")) {
-            LogPrintf("WARNING: option -rpcallowip was specified without -rpcbind; this doesn't usually make sense\n");
+            LogPrintf("\nWARNING: option -rpcallowip was specified without -rpcbind; this doesn't usually make sense\n");
         }
         if (gArgs.IsArgSet("-rpcbind")) {
-            LogPrintf("WARNING: option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect\n");
+            LogPrintf("\nWARNING: option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect\n");
         }
     } else if (gArgs.IsArgSet("-rpcbind")) { // Specific bind address
         for (const std::string& strRPCBind : gArgs.GetArgs("-rpcbind")) {
@@ -325,11 +325,11 @@ static bool HTTPBindAddresses(struct evhttp* http)
         if (bind_handle) {
             CNetAddr addr;
             if (i->first.empty() || (LookupHost(i->first, addr, false) && addr.IsBindAny())) {
-                LogPrintf("WARNING: the RPC server is not safe to expose to untrusted networks such as the public internet\n");
+                LogPrintf("\nWARNING: the RPC server is not safe to expose to untrusted networks such as the public internet\n");
             }
             boundSockets.push_back(bind_handle);
         } else {
-            LogPrintf("Binding RPC on address %s port %i failed.\n", i->first, i->second);
+            LogPrintf("\nBinding RPC on address %s port %i failed.\n", i->first, i->second);
         }
     }
     return !boundSockets.empty();
@@ -350,7 +350,7 @@ static void libevent_log_cb(int severity, const char *msg)
 # define EVENT_LOG_WARN _EVENT_LOG_WARN
 #endif
     if (severity >= EVENT_LOG_WARN) // Log warn messages and higher without debug category
-        LogPrintf("libevent: %s\n", msg);
+        LogPrintf("\nlibevent: %s\n", msg);
     else
         LogPrint(BCLog::LIBEVENT, "libevent: %s\n", msg);
 }
@@ -381,7 +381,7 @@ bool InitHTTPServer()
     raii_evhttp http_ctr = obtain_evhttp(base_ctr.get());
     struct evhttp* http = http_ctr.get();
     if (!http) {
-        LogPrintf("couldn't create evhttp. Exiting.\n");
+        LogPrintf("\ncouldn't create evhttp. Exiting.\n");
         return false;
     }
 
@@ -391,13 +391,13 @@ bool InitHTTPServer()
     evhttp_set_gencb(http, http_request_cb, nullptr);
 
     if (!HTTPBindAddresses(http)) {
-        LogPrintf("Unable to bind any endpoint for RPC server\n");
+        LogPrintf("\nUnable to bind any endpoint for RPC server\n");
         return false;
     }
 
     LogPrint(BCLog::HTTP, "Initialized HTTP server\n");
     int workQueueDepth = std::max((long)gArgs.GetArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
-    LogPrintf("HTTP: creating work queue of depth %d\n", workQueueDepth);
+    LogPrintf("\nHTTP: creating work queue of depth %d\n", workQueueDepth);
 
     workQueue = new WorkQueue<HTTPClosure>(workQueueDepth);
     // transfer ownership to eventBase/HTTP via .release()
@@ -427,7 +427,7 @@ void StartHTTPServer()
 {
     LogPrint(BCLog::HTTP, "Starting HTTP server\n");
     int rpcThreads = std::max((long)gArgs.GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
-    LogPrintf("HTTP: starting %d worker threads\n", rpcThreads);
+    LogPrintf("\nHTTP: starting %d worker threads\n", rpcThreads);
     threadHTTP = std::thread(ThreadHTTP, eventBase);
 
     for (int i = 0; i < rpcThreads; i++) {
@@ -518,7 +518,7 @@ HTTPRequest::~HTTPRequest()
 {
     if (!replySent) {
         // Keep track of whether reply was sent to avoid request leaks
-        LogPrintf("%s: Unhandled request\n", __func__);
+        LogPrintf("\n%s: Unhandled request\n", __func__);
         WriteReply(HTTP_INTERNAL, "Unhandled request");
     }
     // evhttpd cleans up the request, as long as a reply was sent.

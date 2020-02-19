@@ -549,7 +549,7 @@ public:
             LOCK(cs);
             int err;
             if ((err=Check_()))
-                LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
+                LogPrintf("\nADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
         }
 #endif
     }

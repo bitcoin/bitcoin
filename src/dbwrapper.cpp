@@ -63,7 +63,7 @@ public:
 
                 assert(p <= limit);
                 base[std::min(bufsize - 1, (int)(p - base))] = '\0';
-                LogPrintf("leveldb: %s", base);  /* Continued */
+                LogPrintf("\nleveldb: %s", base);  /* Continued */
                 if (base != buffer) {
                     delete[] base;
                 }
@@ -129,21 +129,21 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
         options.env = penv;
     } else {
         if (fWipe) {
-            LogPrintf("Wiping LevelDB in %s\n", path.string());
+            LogPrintf("\nWiping LevelDB in %s\n", path.string());
             leveldb::Status result = leveldb::DestroyDB(path.string(), options);
             dbwrapper_private::HandleError(result);
         }
         TryCreateDirectories(path);
-        LogPrintf("Opening LevelDB in %s\n", path.string());
+        LogPrintf("\nOpening LevelDB in %s\n", path.string());
     }
     leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
     dbwrapper_private::HandleError(status);
-    LogPrintf("Opened LevelDB successfully\n");
+    LogPrintf("\nOpened LevelDB successfully\n");
 
     if (gArgs.GetBoolArg("-forcecompactdb", false)) {
-        LogPrintf("Starting database compaction of %s\n", path.string());
+        LogPrintf("\nStarting database compaction of %s\n", path.string());
         pdb->CompactRange(nullptr, nullptr);
-        LogPrintf("Finished database compaction of %s\n", path.string());
+        LogPrintf("\nFinished database compaction of %s\n", path.string());
     }
 
     // The base-case obfuscation key, which is a noop.
@@ -160,10 +160,10 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
         Write(OBFUSCATE_KEY_KEY, new_key);
         obfuscate_key = new_key;
 
-        LogPrintf("Wrote new obfuscate key for %s: %s\n", path.string(), HexStr(obfuscate_key));
+        LogPrintf("\nWrote new obfuscate key for %s: %s\n", path.string(), HexStr(obfuscate_key));
     }
 
-    LogPrintf("Using obfuscation key for %s: %s\n", path.string(), HexStr(obfuscate_key));
+    LogPrintf("\nUsing obfuscation key for %s: %s\n", path.string(), HexStr(obfuscate_key));
 }
 
 CDBWrapper::~CDBWrapper()
@@ -245,8 +245,8 @@ void HandleError(const leveldb::Status& status)
     if (status.ok())
         return;
     const std::string errmsg = "Fatal LevelDB error: " + status.ToString();
-    LogPrintf("%s\n", errmsg);
-    LogPrintf("You can use -debug=leveldb to get more complete diagnostic messages\n");
+    LogPrintf("\n%s\n", errmsg);
+    LogPrintf("\nYou can use -debug=leveldb to get more complete diagnostic messages\n");
     throw dbwrapper_error(errmsg);
 }
 

@@ -87,7 +87,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
     fs::path filepath_tmp = GetAuthCookieFile(true);
     file.open(filepath_tmp);
     if (!file.is_open()) {
-        LogPrintf("Unable to open cookie authentication file %s for writing\n", filepath_tmp.string());
+        LogPrintf("\nUnable to open cookie authentication file %s for writing\n", filepath_tmp.string());
         return false;
     }
     file << cookie;
@@ -95,10 +95,10 @@ bool GenerateAuthCookie(std::string *cookie_out)
 
     fs::path filepath = GetAuthCookieFile(false);
     if (!RenameOver(filepath_tmp, filepath)) {
-        LogPrintf("Unable to rename cookie authentication file %s to %s\n", filepath_tmp.string(), filepath.string());
+        LogPrintf("\nUnable to rename cookie authentication file %s to %s\n", filepath_tmp.string(), filepath.string());
         return false;
     }
-    LogPrintf("Generated RPC authentication cookie %s\n", filepath.string());
+    LogPrintf("\nGenerated RPC authentication cookie %s\n", filepath.string());
 
     if (cookie_out)
         *cookie_out = cookie;
@@ -126,7 +126,7 @@ void DeleteAuthCookie()
     try {
         fs::remove(GetAuthCookieFile());
     } catch (const fs::filesystem_error& e) {
-        LogPrintf("%s: Unable to remove random auth cookie file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
+        LogPrintf("\n%s: Unable to remove random auth cookie file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
     }
 }
 

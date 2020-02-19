@@ -169,7 +169,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
     JSONRPCRequest jreq;
     jreq.peerAddr = req->GetPeer().ToString();
     if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
-        LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
+        LogPrintf("\nThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
 
         /* Deter brute-forcing
            If this results in a DoS the user really
@@ -193,7 +193,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         std::string strReply;
         bool user_has_whitelist = g_rpc_whitelist.count(jreq.authUser);
         if (!user_has_whitelist && g_rpc_whitelist_default) {
-            LogPrintf("RPC User %s not allowed to call any methods\n", jreq.authUser);
+            LogPrintf("\nRPC User %s not allowed to call any methods\n", jreq.authUser);
             req->WriteReply(HTTP_FORBIDDEN);
             return false;
 
@@ -201,7 +201,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         } else if (valRequest.isObject()) {
             jreq.parse(valRequest);
             if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].count(jreq.strMethod)) {
-                LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, jreq.strMethod);
+                LogPrintf("\nRPC User %s not allowed to call method %s\n", jreq.authUser, jreq.strMethod);
                 req->WriteReply(HTTP_FORBIDDEN);
                 return false;
             }
@@ -221,7 +221,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
                         // Parse method
                         std::string strMethod = find_value(request, "method").get_str();
                         if (!g_rpc_whitelist[jreq.authUser].count(strMethod)) {
-                            LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, strMethod);
+                            LogPrintf("\nRPC User %s not allowed to call method %s\n", jreq.authUser, strMethod);
                             req->WriteReply(HTTP_FORBIDDEN);
                             return false;
                         }
@@ -249,7 +249,7 @@ static bool InitRPCAuthentication()
 {
     if (gArgs.GetArg("-rpcpassword", "") == "")
     {
-        LogPrintf("No rpcpassword set - using random cookie authentication.\n");
+        LogPrintf("\nNo rpcpassword set - using random cookie authentication.\n");
         if (!GenerateAuthCookie(&strRPCUserColonPass)) {
             uiInterface.ThreadSafeMessageBox(
                 _("Error: A fatal internal error occurred, see debug.log for details").translated, // Same message as AbortNode
@@ -257,12 +257,12 @@ static bool InitRPCAuthentication()
             return false;
         }
     } else {
-        LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
+        LogPrintf("\nConfig options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
     if (gArgs.GetArg("-rpcauth","") != "")
     {
-        LogPrintf("Using rpcauth authentication.\n");
+        LogPrintf("\nUsing rpcauth authentication.\n");
     }
 
     g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", gArgs.IsArgSet("-rpcwhitelist"));

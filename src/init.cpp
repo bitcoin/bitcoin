@@ -176,7 +176,7 @@ void Interrupt(NodeContext& node)
 
 void Shutdown(NodeContext& node)
 {
-    LogPrintf("%s: In progress...\n", __func__);
+    LogPrintf("\n%s: In progress...\n", __func__);
     static RecursiveMutex cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown)
@@ -228,7 +228,7 @@ void Shutdown(NodeContext& node)
         if (!est_fileout.IsNull())
             ::feeEstimator.Write(est_fileout);
         else
-            LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
+            LogPrintf("\n%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
         fFeeEstimatesInitialized = false;
     }
 
@@ -283,10 +283,10 @@ void Shutdown(NodeContext& node)
 
     try {
         if (!fs::remove(GetPidFile())) {
-            LogPrintf("%s: Unable to remove PID file: File does not exist\n", __func__);
+            LogPrintf("\n%s: Unable to remove PID file: File does not exist\n", __func__);
         }
     } catch (const fs::filesystem_error& e) {
-        LogPrintf("%s: Unable to remove PID file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
+        LogPrintf("\n%s: Unable to remove PID file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
     }
     node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
@@ -295,7 +295,7 @@ void Shutdown(NodeContext& node)
     ECC_Stop();
     if (node.mempool) node.mempool = nullptr;
     node.scheduler.reset();
-    LogPrintf("%s: done\n", __func__);
+    LogPrintf("\n%s: done\n", __func__);
 }
 
 /**
@@ -638,7 +638,7 @@ static void CleanupBlockRevFiles()
     // Glob all blk?????.dat and rev?????.dat files from the blocks directory.
     // Remove the rev files immediately and insert the blk file paths into an
     // ordered map keyed by block file index.
-    LogPrintf("Removing unusable blk?????.dat and rev?????.dat files for -reindex with -prune\n");
+    LogPrintf("\nRemoving unusable blk?????.dat and rev?????.dat files for -reindex with -prune\n");
     fs::path blocksdir = GetBlocksDir();
     for (fs::directory_iterator it(blocksdir); it != fs::directory_iterator(); it++) {
         if (fs::is_regular_file(*it) &&
@@ -685,13 +685,13 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
             FILE *file = OpenBlockFile(pos, true);
             if (!file)
                 break; // This error is logged in OpenBlockFile
-            LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
+            LogPrintf("\nReindexing block file blk%05u.dat...\n", (unsigned int)nFile);
             LoadExternalBlockFile(chainparams, file, &pos);
             nFile++;
         }
         pblocktree->WriteReindexing(false);
         fReindex = false;
-        LogPrintf("Reindexing finished\n");
+        LogPrintf("\nReindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
         LoadGenesisBlock(chainparams);
     }
@@ -700,23 +700,23 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     for (const fs::path& path : vImportFiles) {
         FILE *file = fsbridge::fopen(path, "rb");
         if (file) {
-            LogPrintf("Importing blocks file %s...\n", path.string());
+            LogPrintf("\nImporting blocks file %s...\n", path.string());
             LoadExternalBlockFile(chainparams, file);
         } else {
-            LogPrintf("Warning: Could not open blocks file %s\n", path.string());
+            LogPrintf("\nWarning: Could not open blocks file %s\n", path.string());
         }
     }
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     BlockValidationState state;
     if (!ActivateBestChain(state, chainparams)) {
-        LogPrintf("Failed to connect best block (%s)\n", FormatStateMessage(state));
+        LogPrintf("\nFailed to connect best block (%s)\n", FormatStateMessage(state));
         StartShutdown();
         return;
     }
 
     if (gArgs.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
-        LogPrintf("Stopping after block import\n");
+        LogPrintf("\nStopping after block import\n");
         StartShutdown();
         return;
     }
@@ -770,60 +770,60 @@ void InitParameterInteraction()
     // even when -connect or -proxy is specified
     if (gArgs.IsArgSet("-bind")) {
         if (gArgs.SoftSetBoolArg("-listen", true))
-            LogPrintf("%s: parameter interaction: -bind set -> setting -listen=1\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -bind set -> setting -listen=1\n", __func__);
     }
     if (gArgs.IsArgSet("-whitebind")) {
         if (gArgs.SoftSetBoolArg("-listen", true))
-            LogPrintf("%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
     }
 
     if (gArgs.IsArgSet("-connect")) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
         if (gArgs.SoftSetBoolArg("-dnsseed", false))
-            LogPrintf("%s: parameter interaction: -connect set -> setting -dnsseed=0\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -connect set -> setting -dnsseed=0\n", __func__);
         if (gArgs.SoftSetBoolArg("-listen", false))
-            LogPrintf("%s: parameter interaction: -connect set -> setting -listen=0\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -connect set -> setting -listen=0\n", __func__);
     }
 
     if (gArgs.IsArgSet("-proxy")) {
         // to protect privacy, do not listen by default if a default proxy server is specified
         if (gArgs.SoftSetBoolArg("-listen", false))
-            LogPrintf("%s: parameter interaction: -proxy set -> setting -listen=0\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -proxy set -> setting -listen=0\n", __func__);
         // to protect privacy, do not use UPNP when a proxy is set. The user may still specify -listen=1
         // to listen locally, so don't rely on this happening through -listen below.
         if (gArgs.SoftSetBoolArg("-upnp", false))
-            LogPrintf("%s: parameter interaction: -proxy set -> setting -upnp=0\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -proxy set -> setting -upnp=0\n", __func__);
         // to protect privacy, do not discover addresses by default
         if (gArgs.SoftSetBoolArg("-discover", false))
-            LogPrintf("%s: parameter interaction: -proxy set -> setting -discover=0\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -proxy set -> setting -discover=0\n", __func__);
     }
 
     if (!gArgs.GetBoolArg("-listen", DEFAULT_LISTEN)) {
         // do not map ports or try to retrieve public IP when not listening (pointless)
         if (gArgs.SoftSetBoolArg("-upnp", false))
-            LogPrintf("%s: parameter interaction: -listen=0 -> setting -upnp=0\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -listen=0 -> setting -upnp=0\n", __func__);
         if (gArgs.SoftSetBoolArg("-discover", false))
-            LogPrintf("%s: parameter interaction: -listen=0 -> setting -discover=0\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -listen=0 -> setting -discover=0\n", __func__);
         if (gArgs.SoftSetBoolArg("-listenonion", false))
-            LogPrintf("%s: parameter interaction: -listen=0 -> setting -listenonion=0\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -listen=0 -> setting -listenonion=0\n", __func__);
     }
 
     if (gArgs.IsArgSet("-externalip")) {
         // if an explicit public IP is specified, do not try to find others
         if (gArgs.SoftSetBoolArg("-discover", false))
-            LogPrintf("%s: parameter interaction: -externalip set -> setting -discover=0\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -externalip set -> setting -discover=0\n", __func__);
     }
 
     // disable whitelistrelay in blocksonly mode
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
         if (gArgs.SoftSetBoolArg("-whitelistrelay", false))
-            LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -whitelistrelay=0\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -blocksonly=1 -> setting -whitelistrelay=0\n", __func__);
     }
 
     // Forcing relay from whitelisted hosts implies we will accept relays from them in the first place.
     if (gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) {
         if (gArgs.SoftSetBoolArg("-whitelistrelay", true))
-            LogPrintf("%s: parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n", __func__);
+            LogPrintf("\n%s: parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n", __func__);
     }
 }
 
@@ -871,7 +871,7 @@ std::set<BlockFilterType> g_enabled_filter_types;
     // Since LogPrintf may itself allocate memory, set the handler directly
     // to terminate first.
     std::set_new_handler(std::terminate);
-    LogPrintf("Error: Out of memory. Terminating.\n");
+    LogPrintf("\nError: Out of memory. Terminating.\n");
 
     // The log was successful, terminate now.
     std::terminate();
@@ -1025,9 +1025,9 @@ bool AppInitParameterInteraction()
 
     hashAssumeValid = uint256S(gArgs.GetArg("-assumevalid", chainparams.GetConsensus().defaultAssumeValid.GetHex()));
     if (!hashAssumeValid.IsNull())
-        LogPrintf("Assuming ancestors of block %s have valid signatures.\n", hashAssumeValid.GetHex());
+        LogPrintf("\nAssuming ancestors of block %s have valid signatures.\n", hashAssumeValid.GetHex());
     else
-        LogPrintf("Validating signatures for all blocks.\n");
+        LogPrintf("\nValidating signatures for all blocks.\n");
 
     if (gArgs.IsArgSet("-minimumchainwork")) {
         const std::string minChainWorkStr = gArgs.GetArg("-minimumchainwork", "");
@@ -1038,9 +1038,9 @@ bool AppInitParameterInteraction()
     } else {
         nMinimumChainWork = UintToArith256(chainparams.GetConsensus().nMinimumChainWork);
     }
-    LogPrintf("Setting nMinimumChainWork=%s\n", nMinimumChainWork.GetHex());
+    LogPrintf("\nSetting nMinimumChainWork=%s\n", nMinimumChainWork.GetHex());
     if (nMinimumChainWork < UintToArith256(chainparams.GetConsensus().nMinimumChainWork)) {
-        LogPrintf("Warning: nMinimumChainWork set below default value of %s\n", chainparams.GetConsensus().nMinimumChainWork.GetHex());
+        LogPrintf("\nWarning: nMinimumChainWork set below default value of %s\n", chainparams.GetConsensus().nMinimumChainWork.GetHex());
     }
 
     // mempool limits
@@ -1065,14 +1065,14 @@ bool AppInitParameterInteraction()
     }
     nPruneTarget = (uint64_t) nPruneArg * 1024 * 1024;
     if (nPruneArg == 1) {  // manual pruning: -prune=1
-        LogPrintf("Block pruning enabled.  Use RPC call pruneblockchain(height) to manually prune block and undo files.\n");
+        LogPrintf("\nBlock pruning enabled.  Use RPC call pruneblockchain(height) to manually prune block and undo files.\n");
         nPruneTarget = std::numeric_limits<uint64_t>::max();
         fPruneMode = true;
     } else if (nPruneTarget) {
         if (nPruneTarget < MIN_DISK_SPACE_FOR_BLOCK_FILES) {
             return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number.").translated, MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
         }
-        LogPrintf("Prune configured to target %u MiB on disk for block and undo files.\n", nPruneTarget / 1024 / 1024);
+        LogPrintf("\nPrune configured to target %u MiB on disk for block and undo files.\n", nPruneTarget / 1024 / 1024);
         fPruneMode = true;
     }
 
@@ -1096,7 +1096,7 @@ bool AppInitParameterInteraction()
     } else if (incrementalRelayFee > ::minRelayTxFee) {
         // Allow only setting incrementalRelayFee to control both
         ::minRelayTxFee = incrementalRelayFee;
-        LogPrintf("Increasing minrelaytxfee to %s to match incrementalrelayfee\n",::minRelayTxFee.ToString());
+        LogPrintf("\nIncreasing minrelaytxfee to %s to match incrementalrelayfee\n",::minRelayTxFee.ToString());
     }
 
     // Sanity check argument for min fee for including tx in block
@@ -1166,7 +1166,7 @@ bool AppInitSanityChecks()
 
     // Initialize elliptic curve code
     std::string sha256_algo = SHA256AutoDetect();
-    LogPrintf("Using the '%s' SHA256 implementation\n", sha256_algo);
+    LogPrintf("\nUsing the '%s' SHA256 implementation\n", sha256_algo);
     RandomInit();
     ECC_Start();
     globalVerifyHandle.reset(new ECCVerifyHandle());
@@ -1214,30 +1214,30 @@ bool AppInitMain(NodeContext& node)
     }
 
     if (!LogInstance().m_log_timestamps)
-        LogPrintf("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
-    LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
-    LogPrintf("Using data directory %s\n", GetDataDir().string());
+        LogPrintf("\nStartup time: %s\n", FormatISO8601DateTime(GetTime()));
+    LogPrintf("\nDefault data directory %s\n", GetDefaultDataDir().string());
+    LogPrintf("\nUsing data directory %s\n", GetDataDir().string());
 
     // Only log conf file usage message if conf file actually exists.
     fs::path config_file_path = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
     if (fs::exists(config_file_path)) {
-        LogPrintf("Config file: %s\n", config_file_path.string());
+        LogPrintf("\nConfig file: %s\n", config_file_path.string());
     } else if (gArgs.IsArgSet("-conf")) {
         // Warn if no conf file exists at path provided by user
         InitWarning(strprintf(_("The specified config file %s does not exist\n").translated, config_file_path.string()));
     } else {
         // Not categorizing as "Warning" because it's the default behavior
-        LogPrintf("Config file: %s (not found, skipping)\n", config_file_path.string());
+        LogPrintf("\nConfig file: %s (not found, skipping)\n", config_file_path.string());
     }
 
     // Log the config arguments to debug.log
     gArgs.LogArgs();
 
-    LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
+    LogPrintf("\nUsing at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
 
     // Warn about relative -datadir path.
     if (gArgs.IsArgSet("-datadir") && !fs::path(gArgs.GetArg("-datadir", "")).is_absolute()) {
-        LogPrintf("Warning: relative datadir option '%s' specified, which will be interpreted relative to the " /* Continued */
+        LogPrintf("\nWarning: relative datadir option '%s' specified, which will be interpreted relative to the " /* Continued */
                   "current working directory '%s'. This is fragile, because if bitcoin is started in the future "
                   "from a different location, it will be unable to locate the current data files. There could "
                   "also be data loss if bitcoin is started while in a temporary directory.\n",
@@ -1260,7 +1260,7 @@ bool AppInitMain(NodeContext& node)
     // Number of script-checking threads <= MAX_SCRIPTCHECK_THREADS
     script_threads = std::min(script_threads, MAX_SCRIPTCHECK_THREADS);
 
-    LogPrintf("Script verification uses %d additional threads\n", script_threads);
+    LogPrintf("\nScript verification uses %d additional threads\n", script_threads);
     if (script_threads >= 1) {
         g_parallel_script_checks = true;
         for (int i = 0; i < script_threads; ++i) {
@@ -1458,17 +1458,17 @@ bool AppInitMain(NodeContext& node)
     nTotalCache -= nCoinDBCache;
     nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
     int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-    LogPrintf("Cache configuration:\n");
-    LogPrintf("* Using %.1f MiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
+    LogPrintf("\nCache configuration:\n");
+    LogPrintf("\n* Using %.1f MiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
     if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-        LogPrintf("* Using %.1f MiB for transaction index database\n", nTxIndexCache * (1.0 / 1024 / 1024));
+        LogPrintf("\n* Using %.1f MiB for transaction index database\n", nTxIndexCache * (1.0 / 1024 / 1024));
     }
     for (BlockFilterType filter_type : g_enabled_filter_types) {
-        LogPrintf("* Using %.1f MiB for %s block filter index database\n",
+        LogPrintf("\n* Using %.1f MiB for %s block filter index database\n",
                   filter_index_cache * (1.0 / 1024 / 1024), BlockFilterTypeName(filter_type));
     }
-    LogPrintf("* Using %.1f MiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
-    LogPrintf("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
+    LogPrintf("\n* Using %.1f MiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
+    LogPrintf("\n* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
 
     bool fLoaded = false;
     while (!fLoaded && !ShutdownRequested()) {
@@ -1575,7 +1575,7 @@ bool AppInitMain(NodeContext& node)
                     assert(::ChainActive().Tip() != nullptr);
                 }
             } catch (const std::exception& e) {
-                LogPrintf("%s\n", e.what());
+                LogPrintf("\n%s\n", e.what());
                 strLoadError = _("Error opening block database").translated;
                 break;
             }
@@ -1596,7 +1596,7 @@ bool AppInitMain(NodeContext& node)
                 if (!is_coinsview_empty) {
                     uiInterface.InitMessage(_("Verifying blocks...").translated);
                     if (fHavePruned && gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
-                        LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
+                        LogPrintf("\nPrune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
                             MIN_BLOCKS_TO_KEEP);
                     }
 
@@ -1616,13 +1616,13 @@ bool AppInitMain(NodeContext& node)
                     }
                 }
             } catch (const std::exception& e) {
-                LogPrintf("%s\n", e.what());
+                LogPrintf("\n%s\n", e.what());
                 strLoadError = _("Error opening block database").translated;
                 break;
             }
 
             fLoaded = true;
-            LogPrintf(" block index %15dms\n", GetTimeMillis() - load_block_index_start_time);
+            LogPrintf("\n block index %15dms\n", GetTimeMillis() - load_block_index_start_time);
         } while(false);
 
         if (!fLoaded && !ShutdownRequested()) {
@@ -1636,7 +1636,7 @@ bool AppInitMain(NodeContext& node)
                     fReindex = true;
                     AbortShutdown();
                 } else {
-                    LogPrintf("Aborted block database rebuild. Exiting.\n");
+                    LogPrintf("\nAborted block database rebuild. Exiting.\n");
                     return false;
                 }
             } else {
@@ -1649,7 +1649,7 @@ bool AppInitMain(NodeContext& node)
     // requested to kill the GUI during the last operation. If so, exit.
     // As the program has not fully started yet, Shutdown() is possibly overkill.
     if (ShutdownRequested()) {
-        LogPrintf("Shutdown requested. Exiting.\n");
+        LogPrintf("\nShutdown requested. Exiting.\n");
         return false;
     }
 
@@ -1688,7 +1688,7 @@ bool AppInitMain(NodeContext& node)
     // if pruning, unset the service bit and perform the initial blockstore prune
     // after any wallet rescanning has taken place.
     if (fPruneMode) {
-        LogPrintf("Unsetting NODE_NETWORK on prune mode\n");
+        LogPrintf("\nUnsetting NODE_NETWORK on prune mode\n");
         nLocalServices = ServiceFlags(nLocalServices & ~NODE_NETWORK);
         if (!fReindex) {
             uiInterface.InitMessage(_("Pruning blockstore...").translated);
@@ -1757,10 +1757,10 @@ bool AppInitMain(NodeContext& node)
     //// debug print
     {
         LOCK(cs_main);
-        LogPrintf("block tree size = %u\n", ::BlockIndex().size());
+        LogPrintf("\nblock tree size = %u\n", ::BlockIndex().size());
         chain_active_height = ::ChainActive().Height();
     }
-    LogPrintf("nBestHeight = %d\n", chain_active_height);
+    LogPrintf("\nnBestHeight = %d\n", chain_active_height);
 
     if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
         StartTorControl();
@@ -1840,9 +1840,9 @@ bool AppInitMain(NodeContext& node)
         }
         const uint256 asmap_version = SerializeHash(asmap);
         node.connman->SetAsmap(std::move(asmap));
-        LogPrintf("Using asmap version %s for IP bucketing.\n", asmap_version.ToString());
+        LogPrintf("\nUsing asmap version %s for IP bucketing.\n", asmap_version.ToString());
     } else {
-        LogPrintf("Using /16 prefix for IP bucketing.\n");
+        LogPrintf("\nUsing /16 prefix for IP bucketing.\n");
     }
 
     // ********************************************************* Step 13: finished

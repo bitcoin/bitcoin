@@ -136,7 +136,7 @@ void BerkeleyEnvironment::Close()
 
     int ret = dbenv->close(0);
     if (ret != 0)
-        LogPrintf("BerkeleyEnvironment::Close: Error %d closing database environment: %s\n", ret, DbEnv::strerror(ret));
+        LogPrintf("\nBerkeleyEnvironment::Close: Error %d closing database environment: %s\n", ret, DbEnv::strerror(ret));
     if (!fMockDb)
         DbEnv((u_int32_t)0).remove(strPath.c_str(), 0);
 
@@ -173,14 +173,14 @@ bool BerkeleyEnvironment::Open(bool retry)
     fs::path pathIn = strPath;
     TryCreateDirectories(pathIn);
     if (!LockDirectory(pathIn, ".walletlock")) {
-        LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of bitcoin may be using it.\n", strPath);
+        LogPrintf("\nCannot obtain a lock on wallet directory %s. Another instance of bitcoin may be using it.\n", strPath);
         return false;
     }
 
     fs::path pathLogDir = pathIn / "database";
     TryCreateDirectories(pathLogDir);
     fs::path pathErrorFile = pathIn / "db.log";
-    LogPrintf("BerkeleyEnvironment::Open: LogDir=%s ErrorFile=%s\n", pathLogDir.string(), pathErrorFile.string());
+    LogPrintf("\nBerkeleyEnvironment::Open: LogDir=%s ErrorFile=%s\n", pathLogDir.string(), pathErrorFile.string());
 
     unsigned int nEnvFlags = 0;
     if (gArgs.GetBoolArg("-privdb", DEFAULT_WALLET_PRIVDB))
@@ -207,10 +207,10 @@ bool BerkeleyEnvironment::Open(bool retry)
                              nEnvFlags,
                          S_IRUSR | S_IWUSR);
     if (ret != 0) {
-        LogPrintf("BerkeleyEnvironment::Open: Error %d opening database environment: %s\n", ret, DbEnv::strerror(ret));
+        LogPrintf("\nBerkeleyEnvironment::Open: Error %d opening database environment: %s\n", ret, DbEnv::strerror(ret));
         int ret2 = dbenv->close(0);
         if (ret2 != 0) {
-            LogPrintf("BerkeleyEnvironment::Open: Error %d closing failed database environment: %s\n", ret2, DbEnv::strerror(ret2));
+            LogPrintf("\nBerkeleyEnvironment::Open: Error %d closing failed database environment: %s\n", ret2, DbEnv::strerror(ret2));
         }
         Reset();
         if (retry) {
@@ -218,7 +218,7 @@ bool BerkeleyEnvironment::Open(bool retry)
             fs::path pathDatabaseBak = pathIn / strprintf("database.%d.bak", GetTime());
             try {
                 fs::rename(pathLogDir, pathDatabaseBak);
-                LogPrintf("Moved old %s to %s. Retrying.\n", pathLogDir.string(), pathDatabaseBak.string());
+                LogPrintf("\nMoved old %s to %s. Retrying.\n", pathLogDir.string(), pathDatabaseBak.string());
             } catch (const fs::filesystem_error&) {
                 // failure is ok (well, not really, but it's not worse than what we started with)
             }
@@ -342,10 +342,10 @@ bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, boo
     int result = env->dbenv->dbrename(nullptr, filename.c_str(), nullptr,
                                        newFilename.c_str(), DB_AUTO_COMMIT);
     if (result == 0)
-        LogPrintf("Renamed %s to %s\n", filename, newFilename);
+        LogPrintf("\nRenamed %s to %s\n", filename, newFilename);
     else
     {
-        LogPrintf("Failed to rename %s to %s\n", filename, newFilename);
+        LogPrintf("\nFailed to rename %s to %s\n", filename, newFilename);
         return false;
     }
 
@@ -353,10 +353,10 @@ bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, boo
     bool fSuccess = env->Salvage(newFilename, true, salvagedData);
     if (salvagedData.empty())
     {
-        LogPrintf("Salvage(aggressive) found no records in %s.\n", newFilename);
+        LogPrintf("\nSalvage(aggressive) found no records in %s.\n", newFilename);
         return false;
     }
-    LogPrintf("Salvage(aggressive) found %u records\n", salvagedData.size());
+    LogPrintf("\nSalvage(aggressive) found %u records\n", salvagedData.size());
 
     std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
     int ret = pdbCopy->open(nullptr,               // Txn pointer
@@ -366,7 +366,7 @@ bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, boo
                             DB_CREATE,          // Flags
                             0);
     if (ret > 0) {
-        LogPrintf("Cannot create database file %s\n", filename);
+        LogPrintf("\nCannot create database file %s\n", filename);
         pdbCopy->close(0);
         return false;
     }
@@ -399,8 +399,8 @@ bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, std::string& er
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, walletFile);
     fs::path walletDir = env->Directory();
 
-    LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(nullptr, nullptr, nullptr));
-    LogPrintf("Using wallet %s\n", file_path.string());
+    LogPrintf("\nUsing BerkeleyDB version %s\n", DbEnv::version(nullptr, nullptr, nullptr));
+    LogPrintf("\nUsing wallet %s\n", file_path.string());
 
     if (!env->Open(true /* retry */)) {
         errorStr = strprintf(_("Error initializing wallet database environment %s!").translated, walletDir);
@@ -457,14 +457,14 @@ bool BerkeleyEnvironment::Salvage(const std::string& strFile, bool fAggressive, 
     Db db(dbenv.get(), 0);
     int result = db.verify(strFile.c_str(), nullptr, &strDump, flags);
     if (result == DB_VERIFY_BAD) {
-        LogPrintf("BerkeleyEnvironment::Salvage: Database salvage found errors, all data may not be recoverable.\n");
+        LogPrintf("\nBerkeleyEnvironment::Salvage: Database salvage found errors, all data may not be recoverable.\n");
         if (!fAggressive) {
-            LogPrintf("BerkeleyEnvironment::Salvage: Rerun with aggressive mode to ignore errors and continue.\n");
+            LogPrintf("\nBerkeleyEnvironment::Salvage: Rerun with aggressive mode to ignore errors and continue.\n");
             return false;
         }
     }
     if (result != 0 && result != DB_VERIFY_BAD) {
-        LogPrintf("BerkeleyEnvironment::Salvage: Database salvage failed with result %d.\n", result);
+        LogPrintf("\nBerkeleyEnvironment::Salvage: Database salvage failed with result %d.\n", result);
         return false;
     }
 
@@ -488,7 +488,7 @@ bool BerkeleyEnvironment::Salvage(const std::string& strFile, bool fAggressive, 
                 break;
             getline(strDump, valueHex);
             if (valueHex == DATA_END) {
-                LogPrintf("BerkeleyEnvironment::Salvage: WARNING: Number of keys in data does not match number of values.\n");
+                LogPrintf("\nBerkeleyEnvironment::Salvage: WARNING: Number of keys in data does not match number of values.\n");
                 break;
             }
             vResult.push_back(make_pair(ParseHex(keyHex), ParseHex(valueHex)));
@@ -496,7 +496,7 @@ bool BerkeleyEnvironment::Salvage(const std::string& strFile, bool fAggressive, 
     }
 
     if (keyHex != DATA_END) {
-        LogPrintf("BerkeleyEnvironment::Salvage: WARNING: Unexpected end of file while reading salvage output.\n");
+        LogPrintf("\nBerkeleyEnvironment::Salvage: WARNING: Unexpected end of file while reading salvage output.\n");
         return false;
     }
 
@@ -689,7 +689,7 @@ bool BerkeleyBatch::Rewrite(BerkeleyDatabase& database, const char* pszSkip)
                 env->mapFileUseCount.erase(strFile);
 
                 bool fSuccess = true;
-                LogPrintf("BerkeleyBatch::Rewrite: Rewriting %s...\n", strFile);
+                LogPrintf("\nBerkeleyBatch::Rewrite: Rewriting %s...\n", strFile);
                 std::string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
                     BerkeleyBatch db(database, "r");
@@ -702,7 +702,7 @@ bool BerkeleyBatch::Rewrite(BerkeleyDatabase& database, const char* pszSkip)
                                             DB_CREATE,          // Flags
                                             0);
                     if (ret > 0) {
-                        LogPrintf("BerkeleyBatch::Rewrite: Can't create database file %s\n", strFileRes);
+                        LogPrintf("\nBerkeleyBatch::Rewrite: Can't create database file %s\n", strFileRes);
                         fSuccess = false;
                     }
 
@@ -752,7 +752,7 @@ bool BerkeleyBatch::Rewrite(BerkeleyDatabase& database, const char* pszSkip)
                         fSuccess = false;
                 }
                 if (!fSuccess)
-                    LogPrintf("BerkeleyBatch::Rewrite: Failed to rewrite database file %s\n", strFileRes);
+                    LogPrintf("\nBerkeleyBatch::Rewrite: Failed to rewrite database file %s\n", strFileRes);
                 return fSuccess;
             }
         }
@@ -874,15 +874,15 @@ bool BerkeleyDatabase::Backup(const std::string& strDest)
 
                 try {
                     if (fs::equivalent(pathSrc, pathDest)) {
-                        LogPrintf("cannot backup to wallet source file %s\n", pathDest.string());
+                        LogPrintf("\ncannot backup to wallet source file %s\n", pathDest.string());
                         return false;
                     }
 
                     fs::copy_file(pathSrc, pathDest, fs::copy_option::overwrite_if_exists);
-                    LogPrintf("copied %s to %s\n", strFile, pathDest.string());
+                    LogPrintf("\ncopied %s to %s\n", strFile, pathDest.string());
                     return true;
                 } catch (const fs::filesystem_error& e) {
-                    LogPrintf("error copying %s to %s - %s\n", strFile, pathDest.string(), fsbridge::get_filesystem_error_message(e));
+                    LogPrintf("\nerror copying %s to %s - %s\n", strFile, pathDest.string(), fsbridge::get_filesystem_error_message(e));
                     return false;
                 }
             }

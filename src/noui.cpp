@@ -43,7 +43,7 @@ bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& ca
     }
 
     if (!fSecure) {
-        LogPrintf("%s%s\n", strCaption, message);
+        LogPrintf("\n%s%s\n", strCaption, message);
     }
     tfm::format(std::cerr, "%s%s\n", strCaption, message);
     return false;
@@ -56,7 +56,7 @@ bool noui_ThreadSafeQuestion(const std::string& /* ignored interactive message *
 
 void noui_InitMessage(const std::string& message)
 {
-    LogPrintf("init message: %s\n", message);
+    LogPrintf("\ninit message: %s\n", message);
 }
 
 void noui_connect()
@@ -68,19 +68,19 @@ void noui_connect()
 
 bool noui_ThreadSafeMessageBoxRedirect(const std::string& message, const std::string& caption, unsigned int style)
 {
-    LogPrintf("%s: %s\n", caption, message);
+    LogPrintf("\n%s: %s\n", caption, message);
     return false;
 }
 
 bool noui_ThreadSafeQuestionRedirect(const std::string& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
 {
-    LogPrintf("%s: %s\n", caption, message);
+    LogPrintf("\n%s: %s\n", caption, message);
     return false;
 }
 
 void noui_InitMessageRedirect(const std::string& message)
 {
-    LogPrintf("init message: %s\n", message);
+    LogPrintf("\ninit message: %s\n", message);
 }
 
 void noui_test_redirect()

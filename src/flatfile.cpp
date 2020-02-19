@@ -41,11 +41,11 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only)
     if (!file && !read_only)
         file = fsbridge::fopen(path, "wb+");
     if (!file) {
-        LogPrintf("Unable to open file %s\n", path.string());
+        LogPrintf("\nUnable to open file %s\n", path.string());
         return nullptr;
     }
     if (pos.nPos && fseek(file, pos.nPos, SEEK_SET)) {
-        LogPrintf("Unable to seek to position %u of %s\n", pos.nPos, path.string());
+        LogPrintf("\nUnable to seek to position %u of %s\n", pos.nPos, path.string());
         fclose(file);
         return nullptr;
     }
@@ -66,7 +66,7 @@ size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_
         if (CheckDiskSpace(m_dir, inc_size)) {
             FILE *file = Open(pos);
             if (file) {
-                LogPrintf("Pre-allocating up to position 0x%x in %s%05u.dat\n", new_size, m_prefix, pos.nFile);
+                LogPrintf("\nPre-allocating up to position 0x%x in %s%05u.dat\n", new_size, m_prefix, pos.nFile);
                 AllocateFileRange(file, pos.nPos, inc_size);
                 fclose(file);
                 return inc_size;

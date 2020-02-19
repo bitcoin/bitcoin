@@ -261,7 +261,7 @@ Result CreateTotalBumpTransaction(const CWallet* wallet, const uint256& txid, co
     // If the output would become dust, discard it (converting the dust to fee)
     poutput->nValue -= nDelta;
     if (poutput->nValue <= GetDustThreshold(*poutput, GetDiscardRate(*wallet))) {
-        wallet->WalletLogPrintf("Bumping fee and discarding dust output\n");
+        wallet->WalletLogPrintf("\nBumping fee and discarding dust output\n");
         new_fee += poutput->nValue;
         mtx.vout.erase(mtx.vout.begin() + nOutput);
     }

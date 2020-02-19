@@ -33,7 +33,7 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
         gArgs.ForceSetArg("-walletdir", canonical_wallet_dir.string());
     }
 
-    LogPrintf("Using wallet directory %s\n", GetWalletDir().string());
+    LogPrintf("\nUsing wallet directory %s\n", GetWalletDir().string());
 
     chain.initMessage(_("Verifying wallet(s)...").translated);
 

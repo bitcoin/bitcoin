@@ -631,10 +631,10 @@ UniValue importwallet(const JSONRPCRequest& request)
             CHECK_NONFATAL(key.VerifyPubKey(pubkey));
             CKeyID keyid = pubkey.GetID();
 
-            pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(PKHash(keyid)));
+            pwallet->WalletLogPrintf("\nImporting %s...\n", EncodeDestination(PKHash(keyid)));
 
             if (!pwallet->ImportPrivKeys({{keyid, key}}, time)) {
-                pwallet->WalletLogPrintf("Error importing key for %s\n", EncodeDestination(PKHash(keyid)));
+                pwallet->WalletLogPrintf("\nError importing key for %s\n", EncodeDestination(PKHash(keyid)));
                 fGood = false;
                 continue;
             }
@@ -651,7 +651,7 @@ UniValue importwallet(const JSONRPCRequest& request)
             int64_t time = script_pair.second;
 
             if (!pwallet->ImportScripts({script}, time)) {
-                pwallet->WalletLogPrintf("Error importing script %s\n", HexStr(script));
+                pwallet->WalletLogPrintf("\nError importing script %s\n", HexStr(script));
                 fGood = false;
                 continue;
             }
