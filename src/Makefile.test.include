@@ -222,7 +222,8 @@ SYSCOIN_TESTS += \
   wallet/test/wallet_crypto_tests.cpp \
   wallet/test/coinselector_tests.cpp \
   wallet/test/init_tests.cpp \
-  wallet/test/ismine_tests.cpp
+  wallet/test/ismine_tests.cpp \
+  wallet/test/scriptpubkeyman_tests.cpp
 
 SYSCOIN_TEST_SUITE += \
   wallet/test/wallet_test_fixture.cpp \
