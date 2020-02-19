@@ -272,6 +272,13 @@ def run_once(*, fuzz_pool, corpus, test_list, build_dir, use_valgrind):
                 logging.info(e.stdout)
             if e.stderr:
                 logging.info(e.stderr)
+            logging.info("Target \"{}\" failed with exit code {}: {}".format(t, e.returncode, " ".join(args)))
+            sys.exit(1)
+        except subprocess.CalledProcessError as e:
+            if e.stdout:
+                logging.info(e.stdout)
+            if e.stderr:
+                logging.info(e.stderr)
             logging.info("Target \"{}\" failed with exit code {}".format(" ".join(result.args), e.returncode))
             sys.exit(1)
 
