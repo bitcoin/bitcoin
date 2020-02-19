@@ -48,3 +48,18 @@ ExternalSigner ExternalSignerScriptPubKeyMan::GetExternalSigner() {
 #endif
 
 }
+
+bool ExternalSignerScriptPubKeyMan::DisplayAddress(const CScript scriptPubKey, const ExternalSigner &signer) const
+{
+#ifdef ENABLE_EXTERNAL_SIGNER
+    // TODO: avoid the need to infer a descriptor from inside a descriptor wallet
+    auto provider = GetSolvingProvider(scriptPubKey);
+    auto descriptor = InferDescriptor(scriptPubKey, *provider);
+
+    signer.displayAddress(descriptor->ToString());
+    // TODO inspect result
+    return true;
+#else
+    return false;
+#endif
+}
