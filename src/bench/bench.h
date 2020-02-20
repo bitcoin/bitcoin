@@ -46,7 +46,7 @@ class BenchRunner
 public:
     BenchRunner(std::string name, BenchFunction func);
 
-    static void RunAll(const std::string& filter, bool is_list_only);
+    static void RunAll(const std::string& filter, bool is_list_only, const std::vector<double>& asymptote);
 };
 }
 // BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo("foo");

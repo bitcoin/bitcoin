@@ -17,6 +17,20 @@ static void SetupBenchArgs()
 
     gArgs.AddArg("-list", "List benchmarks without executing them. Can be combined with -scaling and -filter", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-filter=<regex>", strprintf("Regular expression filter to select benchmark by name (default: %s)", DEFAULT_BENCH_FILTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-asymptote=n1,n2,n3,...", strprintf("Test asymptotic growth of the runtime of an algorithm, if supported by the benchmark"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+}
+
+// parses a comma separated list like "10,20,30,50"
+static std::vector<double> parseAsymptote(const std::string& str) {
+    std::stringstream ss(str);
+    std::vector<double> numbers;
+    double d;
+    char c;
+    while (ss >> d) {
+        numbers.push_back(d);
+        ss >> c;
+    }
+    return numbers;
 }
 
 int main(int argc, char** argv)
@@ -36,9 +50,9 @@ int main(int argc, char** argv)
 
     std::string regex_filter = gArgs.GetArg("-filter", DEFAULT_BENCH_FILTER);
     bool is_list_only = gArgs.GetBoolArg("-list", false);
+    std::vector<double> asymptote = parseAsymptote(gArgs.GetArg("-asymptote", ""));
 
-
-    benchmark::BenchRunner::RunAll(regex_filter, is_list_only);
+    benchmark::BenchRunner::RunAll(regex_filter, is_list_only, asymptote);
 
     return EXIT_SUCCESS;
 }

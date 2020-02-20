@@ -1494,6 +1494,10 @@ void IterationLogic::showResult(std::string const& errorMessage) const {
             columns.emplace_back(11, 1, "relative", "%", d);
         }
 
+        if (mBench.complexityN() > 0) {
+            columns.emplace_back(14, 0, "complexityN", "", mBench.complexityN());
+        }
+
         columns.emplace_back(22, 2, "ns/" + mBench.unit(), "", 1e9 * rMedian / mBench.batch());
         columns.emplace_back(22, 2, mBench.unit() + "/s", "", rMedian <= 0.0 ? 0.0 : mBench.batch() / rMedian);
 

@@ -24,7 +24,7 @@ benchmark::BenchRunner::BenchRunner(std::string name, benchmark::BenchFunction f
     benchmarks().insert(std::make_pair(name, func));
 }
 
-void benchmark::BenchRunner::RunAll(const std::string& filter, bool is_list_only)
+void benchmark::BenchRunner::RunAll(const std::string& filter, bool is_list_only, const std::vector<double>& asymptote)
 {
     std::regex reFilter(filter);
     std::smatch baseMatch;
@@ -52,7 +52,15 @@ void benchmark::BenchRunner::RunAll(const std::string& filter, bool is_list_only
 
         Bench bench;
         bench.name(p.first);
-        p.second(bench);
+        if (asymptote.empty()) {
+            p.second(bench);
+        } else {
+            for (auto n : asymptote) {
+                bench.complexityN(n);
+                p.second(bench);
+            }
+            std::cout << bench.complexityBigO() << std::endl;
+        }
         benchmarkResults.push_back(bench.results().back());
         g_testing_setup = nullptr;
     }

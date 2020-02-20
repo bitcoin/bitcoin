@@ -27,6 +27,11 @@ struct Available {
 
 static void ComplexMemPool(benchmark::Bench& bench)
 {
+    int childTxs = 800;
+    if (bench.complexityN() > 1) {
+        childTxs = static_cast<int>(bench.complexityN());
+    }
+
     FastRandomContext det_rand{true};
     std::vector<Available> available_coins;
     std::vector<CTransactionRef> ordered_coins;
@@ -45,7 +50,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
         ordered_coins.emplace_back(MakeTransactionRef(tx));
         available_coins.emplace_back(ordered_coins.back(), tx_counter++);
     }
-    for (auto x = 0; x < 800 && !available_coins.empty(); ++x) {
+    for (auto x = 0; x < childTxs && !available_coins.empty(); ++x) {
         CMutableTransaction tx = CMutableTransaction();
         size_t n_ancestors = det_rand.randrange(10)+1;
         for (size_t ancestor = 0; ancestor < n_ancestors && !available_coins.empty(); ++ancestor){
