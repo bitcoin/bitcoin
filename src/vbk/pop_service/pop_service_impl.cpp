@@ -130,6 +130,51 @@ void PopServiceImpl::addPayloads(std::string blockHash, const int& nHeight, cons
     }
 }
 
+void PopServiceImpl::addPayloads(const CBlockIndex & blockIndex, const CBlock & block)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    AddPayloadsDataRequest request;
+
+    auto* index = new BlockIndex();
+    index->set_height(blockIndex.nHeight);
+    index->set_hash(blockIndex.GetBlockHash().ToString());
+    request.set_allocated_blockindex(index);
+
+    for (const auto & tx : block.vtx) {
+        if (!isPopTx(*tx)) {
+            continue;
+        }
+
+        Publications publications;
+        PopTxType type;
+        ScriptError serror;
+        assert(parsePopTx(tx, &serror, &publications, nullptr, &type) && "scriptSig of pop tx is invalid in addPayloads");
+
+        // skip non-publication transactions
+        if (type != PopTxType::PUBLICATIONS) {
+            continue;
+        }
+
+        // insert payloads
+        request.add_altpublications(publications.atv.data(), publications.atv.size());
+        for (const auto& vtb : publications.vtbs) {
+            request.add_veriblockpublications(vtb.data(), vtb.size());
+        }
+    }
+
+    EmptyReply reply;
+    ClientContext context;
+    Status status = grpcPopService->AddPayloads(&context, request, &reply);
+    if (!status.ok()) {
+        throw PopServiceException(status);
+    }
+}
+
+void PopServiceImpl::removePayloads(const CBlockIndex & block)
+{
+    removePayloads(block.GetBlockHash().ToString(), block.nHeight);
+}
+
 void PopServiceImpl::removePayloads(std::string blockHash, const int& nHeight)
 {
     std::unique_lock<std::mutex> lock(mutex);
@@ -155,9 +200,6 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
     SaveBlockPopTxRequest request;
     EmptyReply reply;
 
-    AddPayloadsDataRequest payloads;
-
-
     auto* b1 = new AltChainBlock();
     BlockToProtoAltChainBlock(block, nHeight, *b1);
     request.set_allocated_containingblock(b1);
@@ -177,12 +219,6 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
         // skip all non-publications txes
         if (type != PopTxType::PUBLICATIONS) {
             continue;
-        }
-
-        // insert payloads
-        payloads.add_altpublications(publications.atv.data(), publications.atv.size());
-        for (const auto& vtb : publications.vtbs) {
-            payloads.add_veriblockpublications(vtb.data(), vtb.size());
         }
 
         // Fill the proto objects with pop data
@@ -212,18 +248,6 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
     }
 
     if (request.popdata_size() != 0) {
-        // first, addPayloads
-        {
-            auto* index = new BlockIndex();
-            index->set_height(nHeight);
-            index->set_hash(block.GetHash().ToString());
-            payloads.set_allocated_blockindex(index);
-            ClientContext context;
-            Status status = grpcPopService->AddPayloads(&context, payloads, &reply);
-            if (!status.ok()) {
-                throw PopServiceException(status);
-            }
-        }
         // then, save pop txes to database
         {
             ClientContext context;

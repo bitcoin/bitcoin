@@ -52,7 +52,11 @@ struct PopService {
     virtual bool determineATVPlausibilityWithBTCRules(AltchainId altChainIdentifier, const CBlockHeader& popEndorsementHeader, const Consensus::Params& params, TxValidationState& state) = 0;
 
     virtual void addPayloads(std::string blockHash, const int& nHeight, const Publications& publications) = 0;
+    virtual void addPayloads(const CBlockIndex & blockIndex, const CBlock & block) = 0;
+
+    virtual void removePayloads(const CBlockIndex & block) = 0;
     virtual void removePayloads(std::string blockHash, const int& blockHeight) = 0;
+
     virtual void setConfig() = 0;
 };
 } // namespace VeriBlock

@@ -54,8 +54,8 @@ struct BlockValidationFixture : public TestChain100Setup {
             return VeriBlock::EvalScriptImpl(tx->vin[0].scriptSig, stack, serror, pub, ctx, type, false);
         });
         When(Method(pop_impl_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
-        Fake(Method(pop_impl_mock, addPayloads));
-        Fake(Method(pop_impl_mock, removePayloads));
+        Fake(OverloadedMethod(pop_impl_mock, addPayloads, void(std::string, const int&, const VeriBlock::Publications&)));
+        Fake(OverloadedMethod(pop_impl_mock, removePayloads, void(std::string, const int&)));
         Fake(Method(pop_impl_mock, updateContext));
         Fake(Method(pop_impl_mock, clearTemporaryPayloads));
 
