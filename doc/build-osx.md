@@ -23,6 +23,8 @@ Then install [Homebrew](https://brew.sh).
 brew install automake libtool pkg-config libnatpmp
 ```
 
+If you run into issues, check [Homebrew's troubleshooting page](https://docs.brew.sh/Troubleshooting).
+
 If you want to build the disk image with `make deploy` (.dmg / optional), you need RSVG:
 ```shell
 brew install librsvg
