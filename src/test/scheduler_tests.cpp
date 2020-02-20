@@ -176,8 +176,8 @@ BOOST_AUTO_TEST_CASE(mockforward)
     // bump the scheduler forward 5 minutes
     scheduler.MockForward(boost::chrono::seconds(5*60));
 
-    // ensure scheduler has chance to process all tasks queued for before 1 ms from now.
-    scheduler.scheduleFromNow([&scheduler]{ scheduler.stop(false); }, 1);
+    // ensure scheduler has chance to process all tasks queued for before 10 ms from now.
+    scheduler.scheduleFromNow([&scheduler] { scheduler.stop(false); }, 10);
     scheduler_thread.join();
 
     // check that the queue only has one job remaining
