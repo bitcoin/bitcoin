@@ -118,9 +118,9 @@ public:
 
         int init_level = 1;
         genesis = CreateGenesisBlock(1558627231, 399, init_level, 1, 50 * COIN);
-        printf("\nmainnet with level = %d\n",init_level);
-        printf("set is constructed from %d to %d with step 2\n",ldpc_level_table[init_level].from, ldpc_level_table[init_level].to);
-        printf("n : %d\t wc : %d\t wr : %d\n", ldpc_level_table[init_level].n, ldpc_level_table[init_level].wc, ldpc_level_table[init_level].wr);
+        //printf("\nmainnet with level = %d\n",init_level);
+        //printf("set is constructed from %d to %d with step 2\n",ldpc_level_table[init_level].from, ldpc_level_table[init_level].to);
+        //printf("n : %d\t wc : %d\t wr : %d\n", ldpc_level_table[init_level].n, ldpc_level_table[init_level].wc, ldpc_level_table[init_level].wr);
 #if GENESIS
 
         /* How to connect init_level with nbits?
@@ -143,11 +143,12 @@ public:
             assert(genesis.nNonce);
         }
         delete ldpc;
-        std::cout << "mainnet n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
+        //std::cout << "mainnet n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
 #endif
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("b77abb03a0a8a4f23a7380bf655af8312c4769c64fcbf335a08d598b13368f22"));
-        assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
+        assert(consensus.hashGenesisBlock == uint256S("0ccc07b781737bf3c901307dd92ed0548215b745b38daee5fdbb4f042dc4885c"));
+        assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));        
+	base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
@@ -167,7 +168,7 @@ public:
 
         checkpointData = {
             {
-                { 0, uint256S("3ed33a90a761ef8486a4b7b41842fe3d6a35a31d5094373f271bcaec197ed100")},
+                { 0, uint256S("0ccc07b781737bf3c901307dd92ed0548215b745b38daee5fdbb4f042dc4885c")},
             }
         };
 
@@ -179,7 +180,7 @@ public:
         };
 
         /* disable fallback fee on mainnet */
-        m_fallback_fee_enabled = true;
+        m_fallback_fee_enabled = false;
     }
 };
 
@@ -234,9 +235,9 @@ public:
 
         int init_level = 40;
         genesis = CreateGenesisBlock(1560518777, 47471, init_level, 1, 50 * COIN);
-        printf("\ntestnet with level = %d\n",init_level);
-        printf("set is constructed from %d to %d with step 2\n",ldpc_level_table[init_level].from, ldpc_level_table[init_level].to);
-        printf("n : %d\t wc : %d\t wr : %d\n", ldpc_level_table[init_level].n, ldpc_level_table[init_level].wc, ldpc_level_table[init_level].wr);
+        //printf("\ntestnet with level = %d\n",init_level);
+        //printf("set is constructed from %d to %d with step 2\n",ldpc_level_table[init_level].from, ldpc_level_table[init_level].to);
+        //printf("n : %d\t wc : %d\t wr : %d\n", ldpc_level_table[init_level].n, ldpc_level_table[init_level].wc, ldpc_level_table[init_level].wr);
 
 #if GENESIS
         LDPC *ldpc = new LDPC;
@@ -256,7 +257,7 @@ public:
         }
         delete ldpc;
 
-        std::cout << "testnet n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
+        //std::cout << "testnet n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
 #endif
 
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -357,9 +358,9 @@ public:
 
         int init_level = 30;
         genesis = CreateGenesisBlock(1560519259, 746, init_level, 1, 50 * COIN);
-        printf("\nregtest with level = %d\n",init_level);
-        printf("set is constructed from %d to %d with step 2\n",ldpc_level_table[init_level].from, ldpc_level_table[init_level].to);
-        printf("n : %d\t wc : %d\t wr : %d\n", ldpc_level_table[init_level].n, ldpc_level_table[init_level].wc, ldpc_level_table[init_level].wr);
+        //printf("\nregtest with level = %d\n",init_level);
+        //printf("set is constructed from %d to %d with step 2\n",ldpc_level_table[init_level].from, ldpc_level_table[init_level].to);
+        //printf("n : %d\t wc : %d\t wr : %d\n", ldpc_level_table[init_level].n, ldpc_level_table[init_level].wc, ldpc_level_table[init_level].wr);
 
 #if GENESIS
         LDPC *ldpc = new LDPC;
@@ -378,7 +379,7 @@ public:
             assert(genesis.nNonce);
         }
         delete ldpc;
-        std::cout << "regtest n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
+        //std::cout << "regtest n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
 #endif
 
         consensus.hashGenesisBlock = genesis.GetHash();
