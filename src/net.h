@@ -28,6 +28,7 @@
 #include <rpc/protocol.h> // Cybersecurity Lab
 #include <rpc/util.h> // Cybersecurity Lab
 #include <netbase.h> // Cybersecurity Lab
+#include <sync.h> // Cybersecurity Lab for LOCK(cs)
 
 #include <atomic>
 #include <deque>
@@ -362,9 +363,6 @@ public:
         return nullptr;
       }
     }
-    int iplist() {
-      return addrman.size();
-    }
     std::vector<CAddress> ipdump() {
       return addrman.GetAddr();
     }
@@ -388,6 +386,45 @@ public:
     }
     bool ipremove(std::string ip, int port, std::string source = "250.1.2.1") {
       return false;
+    }
+    // Cybersecurity Lab
+    void bucketinfo(UniValue &result) {
+        LOCK(cs); // This data is guarded by CS
+        result.pushKV("Number of new buckets", ADDRMAN_NEW_BUCKET_COUNT);
+        result.pushKV("Number of tried buckets", ADDRMAN_TRIED_BUCKET_COUNT);
+        result.pushKV("Number of entries for each bucket", ADDRMAN_BUCKET_SIZE);
+
+        result.pushKV("Number of total addresses", addrman.size());
+        result.pushKV("Number of (unique) new entries", std::to_string(addrman.nNew) + " out of " + std::to_string(ADDRMAN_BUCKET_SIZE * ADDRMAN_NEW_BUCKET_COUNT));
+        result.pushKV("Number of tried entries", std::to_string(addrman.nTried) + " out of " + std::to_string(ADDRMAN_BUCKET_SIZE * ADDRMAN_TRIED_BUCKET_COUNT));
+
+
+        //result.pushKV("Secret key to randomize bucket select with", nKey);
+    }
+    void bucketlist(UniValue &result, std::string bucketType) {
+      LOCK(cs); // This data is guarded by CS
+      if(bucketType == "new" || bucketType == "all") {
+        for (int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; n++) {
+            for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
+                if(addrman.vvNew[n][i] == -1) continue;
+                int addressID = addrman.vvNew[n][i];
+                CAddrInfo address = addrman.mapInfo[addressID];
+                double changeOfConnecting = address.GetChance();
+                result.pushKV("New, Bucket " + std::to_string(n + 1) + ", Entry " + std::to_string(i + 1) + ", ID " + std::to_string(addressID) + ", Chance " + std::to_string(changeOfConnecting), address.ToString());
+            }
+        }
+      }
+      if(bucketType == "tried" || bucketType == "all") {
+        for (int n = 0; n < ADDRMAN_TRIED_BUCKET_COUNT; n++) {
+            for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
+                if(addrman.vvTried[n][i] == -1) continue;
+                int addressID = addrman.vvTried[n][i];
+                CAddrInfo address = addrman.mapInfo[addressID];
+                double changeOfConnecting = address.GetChance();
+                result.pushKV("Tried, Bucket " + std::to_string(n + 1) + ", Entry " + std::to_string(i + 1) + ", ID " + std::to_string(addressID) + ", Chance " + std::to_string(changeOfConnecting), address.ToString());
+            }
+        }
+      }
     }
 
     // Cybersecurity Lab: Used to track node data, initialize all to -1
@@ -484,6 +521,8 @@ private:
     mutable RecursiveMutex cs_vNodes;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
+
+    mutable RecursiveMutex cs;
 
     /**
      * Services this instance offers.

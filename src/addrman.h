@@ -177,11 +177,14 @@ static const int64_t ADDRMAN_TEST_WINDOW = 40*60; // 40 minutes
 class CAddrMan
 {
 friend class CAddrManTest;
-protected:
+// Cybersecurity Lab
+public:
+//protected:
     //! critical section to protect the inner data structures
     mutable RecursiveMutex cs;
 
-private:
+// Cybersecurity Lab
+// private:
     //! last used nId
     int nIdCount GUARDED_BY(cs);
 
@@ -212,7 +215,8 @@ private:
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
 
-protected:
+// Cybersecurity Lab
+//protected:
     //! secret key to randomize bucket select with
     uint256 nKey;
 
@@ -549,7 +553,7 @@ public:
             LOCK(cs);
             int err;
             if ((err=Check_()))
-                LogPrintf("\nADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
+                LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
         }
 #endif
     }

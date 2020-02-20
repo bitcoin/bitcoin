@@ -38,7 +38,7 @@ def console(width):
 		if(cmd in commands):
 			cmd = commands[cmd]
 			print('    >   ' + cmd)
-		elif cmd.endswith('*'): # Infinite loop
+		elif str(cmd).endswith('*'): # Infinite loop
 			cmd = str(cmd[:-1])
 			print(cmd)
 			while True:

@@ -9,6 +9,14 @@
 #include <serialize.h>
 #include <logging.h>
 
+#include <univalue.h> // Cybersecurity Lab
+#include <node/context.h> // Cybersecurity Lab
+#include <rpc/blockchain.h> // Cybersecurity Lab
+#include <rpc/protocol.h> // Cybersecurity Lab
+#include <rpc/server.h> // Cybersecurity Lab
+#include <rpc/util.h> // Cybersecurity Lab
+#include <util/strencodings.h> // Cybersecurity Lab for ARRAYLEN
+
 int CAddrInfo::GetTriedBucket(const uint256& nKey, const std::vector<bool> &asmap) const
 {
     uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetKey()).GetCheapHash();

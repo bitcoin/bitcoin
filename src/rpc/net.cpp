@@ -1177,7 +1177,7 @@ static UniValue list(const JSONRPCRequest& request)
 // Cybersecurity Lab
 static UniValue toggleLog(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             RPCHelpMan{"log",
                 "\nToggle the logging settings for a specific category.\n",
@@ -1194,7 +1194,7 @@ static UniValue toggleLog(const JSONRPCRequest& request)
     //if(!g_rpc_node->connman)
     //    throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
-    std::string parameter = request.params[0].get_str();
+    std::string parameter = request.params.size() == 0 ? "all" : request.params[0].get_str();
     bool category_found = false, category_active = false;
     BCLog::LogFlags category_flag;
 

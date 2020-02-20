@@ -20,7 +20,7 @@ void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 /** Register raw transaction RPC commands */
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 
-/** Register Net Processing RPC commands */
+/** Register net processing RPC commands */
 void RegisterNetProcessingRPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
 /** Register IP control RPC commands */
 void RegisterNet2RPCCommands(CRPCTable &tableRPC); // Cybersecurity Lab
