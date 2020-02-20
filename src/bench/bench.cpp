@@ -57,14 +57,14 @@ void benchmark::BenchRunner::RunAll(const std::string& filter, bool is_list_only
         g_testing_setup = nullptr;
     }
 
-    // Generate legacy CSV data to "benchmarkresults.csv"
-    std::ofstream fout("benchmarkresults.csv");
-
-    // Base58CheckEncode, 5, 320000, 2.70232, 1.68246e-06, 1.69408e-06, 1.69268e-06
-    if (fout.is_open()) {
-        templates::generate("# Benchmark, evals, iterations, total, min, max, median\n"
-                            "{{#result}}{{name}}, {{epochs}}, {{average(iterations)}}, {{sumProduct(iterations, elapsed)}}, {{minimum(elapsed)}}, {{maximum(elapsed)}}, {{median(elapsed)}}\n"
-                            "{{/result}}",
-            benchmarkResults, fout);
+    if (!benchmarkResults.empty()) {
+        // Generate legacy CSV data to "benchmarkresults.csv"
+        std::ofstream fout("benchmarkresults.csv");
+        if (fout.is_open()) {
+            templates::generate("# Benchmark, evals, iterations, total, min, max, median\n"
+                                "{{#result}}{{name}}, {{epochs}}, {{average(iterations)}}, {{sumProduct(iterations, elapsed)}}, {{minimum(elapsed)}}, {{maximum(elapsed)}}, {{median(elapsed)}}\n"
+                                "{{/result}}",
+                benchmarkResults, fout);
+        }
     }
 }
