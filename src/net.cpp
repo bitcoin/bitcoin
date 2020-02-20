@@ -3063,85 +3063,6 @@ UniValue getmsginfo(const JSONRPCRequest& request)
     return result;
 }
 
-/*
-
-int CAddrMan::Check_()
-{
-    std::set<int> setTried;
-    std::map<int, int> mapNew;
-
-    if (vRandom.size() != (size_t)(nTried + nNew))
-        return -7;
-
-    for (const auto& entry : mapInfo) {
-        int n = entry.first;
-        const CAddrInfo& info = entry.second;
-        if (info.fInTried) {
-            if (!info.nLastSuccess)
-                return -1;
-            if (info.nRefCount)
-                return -2;
-            setTried.insert(n);
-        } else {
-            if (info.nRefCount < 0 || info.nRefCount > ADDRMAN_NEW_BUCKETS_PER_ADDRESS)
-                return -3;
-            if (!info.nRefCount)
-                return -4;
-            mapNew[n] = info.nRefCount;
-        }
-        if (mapAddr[info] != n)
-            return -5;
-        if (info.nRandomPos < 0 || (size_t)info.nRandomPos >= vRandom.size() || vRandom[info.nRandomPos] != n)
-            return -14;
-        if (info.nLastTry < 0)
-            return -6;
-        if (info.nLastSuccess < 0)
-            return -8;
-    }
-
-    if (setTried.size() != (size_t)nTried)
-        return -9;
-    if (mapNew.size() != (size_t)nNew)
-        return -10;
-
-    for (int n = 0; n < ADDRMAN_TRIED_BUCKET_COUNT; n++) {
-        for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
-             if (vvTried[n][i] != -1) {
-                 if (!setTried.count(vvTried[n][i]))
-                     return -11;
-                 if (mapInfo[vvTried[n][i]].GetTriedBucket(nKey, m_asmap) != n)
-                     return -17;
-                 if (mapInfo[vvTried[n][i]].GetBucketPosition(nKey, false, n) != i)
-                     return -18;
-                 setTried.erase(vvTried[n][i]);
-             }
-        }
-    }
-
-    for (int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; n++) {
-        for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
-            if (vvNew[n][i] != -1) {
-                if (!mapNew.count(vvNew[n][i]))
-                    return -12;
-                if (mapInfo[vvNew[n][i]].GetBucketPosition(nKey, true, n) != i)
-                    return -19;
-                if (--mapNew[vvNew[n][i]] == 0)
-                    mapNew.erase(vvNew[n][i]);
-            }
-        }
-    }
-
-    if (setTried.size())
-        return -13;
-    if (mapNew.size())
-        return -15;
-    if (nKey.IsNull())
-        return -16;
-
-    return 0;
-}
-*/
-
 // Cybersecurity Lab
 UniValue bucketinfo(const JSONRPCRequest& request)
 {
@@ -3180,7 +3101,7 @@ UniValue bucketlist(const JSONRPCRequest& request)
             RPCHelpMan{"bucketlist",
                 "\nAdd an entry to the IP table.\n",
                 {
-                  {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP Address"},
+                  {"new/tried/all", RPCArg::Type::STR, RPCArg::Optional::NO, "Which bucket category to list"},
                 },
                 RPCResult{
             "[\n*\n"
