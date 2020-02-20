@@ -122,6 +122,9 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         info = wallet.getwalletinfo()
         assert info['private_keys_enabled']
         assert info['keypoolsize'] > 0
+        # Use addmultisigaddress (see #18075)
+        address_18075 = wallet.addmultisigaddress(1, ["0296b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52", "037211a824f55b505228e4c3d5194c1fcfaa15a456abdf37f9b9d97a4040afc073"], "", "legacy")["address"]
+        assert wallet.getaddressinfo(address_18075)["solvable"]
 
         # w1_v18: regular wallet, created with v0.18
         node_v18.createwallet(wallet_name="w1_v18")
@@ -319,7 +322,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         hdkeypath = info["hdkeypath"]
         pubkey = info["pubkey"]
 
-        # Copy the wallet to the last Bitcoin Core version and open it:
+        # Copy the 0.17 wallet to the last Bitcoin Core version and open it:
         node_v17.unloadwallet("u1_v17")
         shutil.copytree(
             os.path.join(node_v17_wallets_dir, "u1_v17"),
@@ -330,6 +333,15 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         info = wallet.getaddressinfo(address)
         descriptor = "wpkh([" + info["hdmasterfingerprint"] + hdkeypath[1:] + "]" + pubkey + ")"
         assert_equal(info["desc"], descsum_create(descriptor))
+
+        # Copy the 0.19 wallet to the last Bitcoin Core version and open it:
+        shutil.copytree(
+            os.path.join(node_v19_wallets_dir, "w1_v19"),
+            os.path.join(node_master_wallets_dir, "w1_v19")
+        )
+        node_master.loadwallet("w1_v19")
+        wallet = node_master.get_wallet_rpc("w1_v19")
+        assert wallet.getaddressinfo(address_18075)["solvable"]
 
 if __name__ == '__main__':
     BackwardsCompatibilityTest().main()

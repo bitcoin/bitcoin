@@ -70,7 +70,15 @@ bool HaveKeys(const std::vector<valtype>& pubkeys, const LegacyScriptPubKeyMan& 
     return true;
 }
 
-IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& scriptPubKey, IsMineSigVersion sigversion)
+//! Recursively solve script and return spendable/watchonly/invalid status.
+//!
+//! @param keystore            legacy key and script store
+//! @param script              script to solve
+//! @param sigversion          script type (top-level / redeemscript / witnessscript)
+//! @param recurse_scripthash  whether to recurse into nested p2sh and p2wsh
+//!                            scripts or simply treat any script that has been
+//!                            stored in the keystore as spendable
+IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& scriptPubKey, IsMineSigVersion sigversion, bool recurse_scripthash=true)
 {
     IsMineResult ret = IsMineResult::NO;
 
@@ -129,7 +137,7 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
         CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            ret = std::max(ret, IsMineInner(keystore, subscript, IsMineSigVersion::P2SH));
+            ret = std::max(ret, recurse_scripthash ? IsMineInner(keystore, subscript, IsMineSigVersion::P2SH) : IsMineResult::SPENDABLE);
         }
         break;
     }
@@ -147,7 +155,7 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
         CScriptID scriptID = CScriptID(hash);
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            ret = std::max(ret, IsMineInner(keystore, subscript, IsMineSigVersion::WITNESS_V0));
+            ret = std::max(ret, recurse_scripthash ? IsMineInner(keystore, subscript, IsMineSigVersion::WITNESS_V0) : IsMineResult::SPENDABLE);
         }
         break;
     }
@@ -476,11 +484,11 @@ std::unique_ptr<SigningProvider> LegacyScriptPubKeyMan::GetSigningProvider(const
 
 bool LegacyScriptPubKeyMan::CanProvide(const CScript& script, SignatureData& sigdata)
 {
-    if (IsMine(script) != ISMINE_NO) {
-        // If it IsMine, we can always provide in some way
-        return true;
-    } else if (HaveCScript(CScriptID(script))) {
-        // We can still provide some stuff if we have the script, but IsMine failed because we don't have keys
+    IsMineResult ismine = IsMineInner(*this, script, IsMineSigVersion::TOP, /* recurse_scripthash= */ false);
+    if (ismine == IsMineResult::SPENDABLE || ismine == IsMineResult::WATCH_ONLY) {
+        // If ismine, it means we recognize keys or script ids in the script, or
+        // are watching the script itself, and we can at least provide metadata
+        // or solving information, even if not able to sign fully.
         return true;
     } else {
         // If, given the stuff in sigdata, we could make a valid sigature, then we can provide for this script
