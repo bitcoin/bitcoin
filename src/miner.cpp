@@ -85,6 +85,7 @@ void BlockAssembler::resetBlock()
 
     // These counters do not include coinbase tx
     nBlockTx = 0;
+    nPopTx = 0;
     nFees = 0;
 }
 
