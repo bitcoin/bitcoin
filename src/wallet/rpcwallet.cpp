@@ -3775,8 +3775,6 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    const std::string example_address = "\"sys1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl\"";
-
             RPCHelpMan{"getaddressinfo",
                 "\nReturn information about the given syscoin address.\n"
                 "Some of the information will only be present if the address is in the active wallet.\n",
@@ -3829,8 +3827,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("getaddressinfo", example_address) +
-                    HelpExampleRpc("getaddressinfo", example_address)
+                    HelpExampleCli("getaddressinfo", EXAMPLE_ADDRESS) +
+                    HelpExampleRpc("getaddressinfo", EXAMPLE_ADDRESS)
                 },
             }.Check(request);
 
