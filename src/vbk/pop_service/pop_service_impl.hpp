@@ -51,8 +51,10 @@ public:
     bool determineATVPlausibilityWithBTCRules(AltchainId altChainIdentifier, const CBlockHeader& popEndorsementHeader, const Consensus::Params& params, TxValidationState& state) override;
 
     void addPayloads(std::string blockHash, const int& nHeight, const Publications& publications) override;
+    void addPayloads(const CBlockIndex & blockIndex, const CBlock & block) override;
 
-    void removePayloads(std::string blockHash, const int& nHeight) override;
+    void removePayloads(const CBlockIndex & blockIndex) override;
+    void removePayloads(std::string blockHash, const int& blockHeight) override;
 
     void setConfig() override;
 

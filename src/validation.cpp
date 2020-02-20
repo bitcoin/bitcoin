@@ -2494,6 +2494,8 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
         }
     }
 
+    VeriBlock::getService<VeriBlock::PopService>().removePayloads(*pindexDelete);
+
     m_chain.SetTip(pindexDelete->pprev);
 
     UpdateTip(pindexDelete->pprev, chainparams);
@@ -2620,6 +2622,9 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     // Remove conflicting transactions from the mempool.;
     mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
     disconnectpool.removeForBlock(blockConnecting.vtx);
+
+    VeriBlock::getService<VeriBlock::PopService>().addPayloads(*pindexNew, blockConnecting);
+
     // Update m_chain & related variables.
     m_chain.SetTip(pindexNew);
     UpdateTip(pindexNew, chainparams);
