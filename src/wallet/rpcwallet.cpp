@@ -505,8 +505,8 @@ static UniValue listaddressgroupings(const JSONRPCRequest& request)
             addressInfo.push_back(EncodeDestination(address));
             addressInfo.push_back(ValueFromAmount(balances[address]));
             {
-                if (pwallet->mapAddressBook.find(address) != pwallet->mapAddressBook.end()) {
-                    addressInfo.push_back(pwallet->mapAddressBook.find(address)->second.name);
+                if (pwallet->m_address_book.find(address) != pwallet->m_address_book.end()) {
+                    addressInfo.push_back(pwallet->m_address_book.find(address)->second.name);
                 }
             }
             jsonGrouping.push_back(addressInfo);
@@ -1098,13 +1098,13 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, const CWalle
     UniValue ret(UniValue::VARR);
     std::map<std::string, tallyitem> label_tally;
 
-    // Create mapAddressBook iterator
+    // Create m_address_book iterator
     // If we aren't filtering, go from begin() to end()
-    auto start = pwallet->mapAddressBook.begin();
-    auto end = pwallet->mapAddressBook.end();
+    auto start = pwallet->m_address_book.begin();
+    auto end = pwallet->m_address_book.end();
     // If we are filtering, find() the applicable entry
     if (has_filtered_address) {
-        start = pwallet->mapAddressBook.find(filtered_address);
+        start = pwallet->m_address_book.find(filtered_address);
         if (start != end) {
             end = std::next(start);
         }
@@ -1313,8 +1313,8 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWalle
             MaybePushAddress(entry, s.destination);
             entry.pushKV("category", "send");
             entry.pushKV("amount", ValueFromAmount(-s.amount));
-            if (pwallet->mapAddressBook.count(s.destination)) {
-                entry.pushKV("label", pwallet->mapAddressBook.at(s.destination).name);
+            if (pwallet->m_address_book.count(s.destination)) {
+                entry.pushKV("label", pwallet->m_address_book.at(s.destination).name);
             }
             entry.pushKV("vout", s.vout);
             entry.pushKV("fee", ValueFromAmount(-nFee));
@@ -1330,8 +1330,8 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWalle
         for (const COutputEntry& r : listReceived)
         {
             std::string label;
-            if (pwallet->mapAddressBook.count(r.destination)) {
-                label = pwallet->mapAddressBook.at(r.destination).name;
+            if (pwallet->m_address_book.count(r.destination)) {
+                label = pwallet->m_address_book.at(r.destination).name;
             }
             if (filter_label && label != *filter_label) {
                 continue;
@@ -1355,7 +1355,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWalle
                 entry.pushKV("category", "receive");
             }
             entry.pushKV("amount", ValueFromAmount(r.amount));
-            if (pwallet->mapAddressBook.count(r.destination)) {
+            if (pwallet->m_address_book.count(r.destination)) {
                 entry.pushKV("label", label);
             }
             entry.pushKV("vout", r.vout);
@@ -2955,8 +2955,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
         if (fValidAddress) {
             entry.pushKV("address", EncodeDestination(address));
 
-            auto i = pwallet->mapAddressBook.find(address);
-            if (i != pwallet->mapAddressBook.end()) {
+            auto i = pwallet->m_address_book.find(address);
+            if (i != pwallet->m_address_book.end()) {
                 entry.pushKV("label", i->second.name);
             }
 
@@ -3814,8 +3814,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     // DEPRECATED: Return label field if existing. Currently only one label can
     // be associated with an address, so the label should be equivalent to the
     // value of the name key/value pair in the labels array below.
-    if ((pwallet->chain().rpcEnableDeprecated("label")) && (pwallet->mapAddressBook.count(dest))) {
-        ret.pushKV("label", pwallet->mapAddressBook.at(dest).name);
+    if ((pwallet->chain().rpcEnableDeprecated("label")) && (pwallet->m_address_book.count(dest))) {
+        ret.pushKV("label", pwallet->m_address_book.at(dest).name);
     }
 
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
@@ -3838,8 +3838,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     // stable if we allow multiple labels to be associated with an address in
     // the future.
     UniValue labels(UniValue::VARR);
-    std::map<CTxDestination, CAddressBookData>::const_iterator mi = pwallet->mapAddressBook.find(dest);
-    if (mi != pwallet->mapAddressBook.end()) {
+    std::map<CTxDestination, CAddressBookData>::const_iterator mi = pwallet->m_address_book.find(dest);
+    if (mi != pwallet->m_address_book.end()) {
         // DEPRECATED: The previous behavior of returning an array containing a
         // JSON object of `name` and `purpose` key/value pairs is deprecated.
         if (pwallet->chain().rpcEnableDeprecated("labelspurpose")) {
@@ -3889,10 +3889,10 @@ static UniValue getaddressesbylabel(const JSONRPCRequest& request)
     // Find all addresses that have the given label
     UniValue ret(UniValue::VOBJ);
     std::set<std::string> addresses;
-    for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
+    for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->m_address_book) {
         if (item.second.name == label) {
             std::string address = EncodeDestination(item.first);
-            // CWallet::mapAddressBook is not expected to contain duplicate
+            // CWallet::m_address_book is not expected to contain duplicate
             // address strings, but build a separate set as a precaution just in
             // case it does.
             bool unique = addresses.emplace(address).second;
@@ -3953,7 +3953,7 @@ static UniValue listlabels(const JSONRPCRequest& request)
 
     // Add to a set to sort by label name, then insert into Univalue array
     std::set<std::string> label_set;
-    for (const std::pair<const CTxDestination, CAddressBookData>& entry : pwallet->mapAddressBook) {
+    for (const std::pair<const CTxDestination, CAddressBookData>& entry : pwallet->m_address_book) {
         if (purpose.empty() || entry.second.purpose == purpose) {
             label_set.insert(entry.second.name);
         }
