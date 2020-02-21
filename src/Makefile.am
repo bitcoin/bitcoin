@@ -215,6 +215,7 @@ BITCOIN_CORE_H = \
   util/check.h \
   util/error.h \
   util/fees.h \
+  util/golombrice.h \
   util/spanparsing.h \
   util/system.h \
   util/macros.h \
