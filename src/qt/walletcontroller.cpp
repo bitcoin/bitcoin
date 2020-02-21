@@ -260,6 +260,9 @@ void CreateWalletActivity::createWallet()
     if (m_create_wallet_dialog->isDescriptorWalletChecked()) {
         flags |= WALLET_FLAG_DESCRIPTORS;
     }
+    if (m_create_wallet_dialog->isExternalSignerChecked()) {
+        flags |= WALLET_FLAG_EXTERNAL_SIGNER;
+    }
 
     QTimer::singleShot(500, worker(), [this, name, flags] {
         std::unique_ptr<interfaces::Wallet> wallet = node().walletClient().createWallet(name, m_passphrase, flags, m_error_message, m_warning_message);

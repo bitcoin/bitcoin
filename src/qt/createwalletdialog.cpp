@@ -27,14 +27,39 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
     });
 
     connect(ui->encrypt_wallet_checkbox, &QCheckBox::toggled, [this](bool checked) {
-        // Disable the disable_privkeys_checkbox when isEncryptWalletChecked is
+        // Disable the disable_privkeys_checkbox and external_signer_checkbox when isEncryptWalletChecked is
         // set to true, enable it when isEncryptWalletChecked is false.
         ui->disable_privkeys_checkbox->setEnabled(!checked);
+        ui->external_signer_checkbox->setEnabled(!checked);
 
         // When the disable_privkeys_checkbox is disabled, uncheck it.
         if (!ui->disable_privkeys_checkbox->isEnabled()) {
             ui->disable_privkeys_checkbox->setChecked(false);
         }
+
+        // When the external_signer_checkbox box is disabled, uncheck it.
+        if (!ui->external_signer_checkbox->isEnabled()) {
+            ui->external_signer_checkbox->setChecked(false);
+        }
+
+    });
+
+    connect(ui->external_signer_checkbox, &QCheckBox::toggled, [this](bool checked) {
+        ui->encrypt_wallet_checkbox->setEnabled(!checked);
+        ui->blank_wallet_checkbox->setEnabled(!checked);
+        ui->disable_privkeys_checkbox->setEnabled(!checked);
+        ui->descriptor_checkbox->setEnabled(!checked);
+
+        // The external signer checkbox is only enabled when a device is detected.
+        // In that case it is checked by default. Toggling it restores the other
+        // options to their default.
+        ui->descriptor_checkbox->setChecked(checked);
+        ui->encrypt_wallet_checkbox->setChecked(false);
+        ui->disable_privkeys_checkbox->setChecked(checked);
+        // The blank check box is ambiguous. This flag is always true for a
+        // watch-only wallet, even though we immedidately fetch keys from the
+        // external signer.
+        ui->blank_wallet_checkbox->setChecked(checked);
     });
 
     connect(ui->disable_privkeys_checkbox, &QCheckBox::toggled, [this](bool checked) {
@@ -63,11 +88,22 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
         ui->descriptor_checkbox->setToolTip(tr("Compiled without sqlite support (required for descriptor wallets)"));
         ui->descriptor_checkbox->setEnabled(false);
         ui->descriptor_checkbox->setChecked(false);
+        ui->external_signer_checkbox->setEnabled(false);
+        ui->external_signer_checkbox->setChecked(false);
 #endif
+
 #ifndef USE_BDB
         ui->descriptor_checkbox->setEnabled(false);
         ui->descriptor_checkbox->setChecked(true);
 #endif
+
+#ifndef ENABLE_EXTERNAL_SIGNER
+        //: "External signing" means using devices such as hardware wallets.
+        ui->external_signer_checkbox->setToolTip(tr("Compiled without external signing support (required for external signing)"));
+        ui->external_signer_checkbox->setEnabled(false);
+        ui->external_signer_checkbox->setChecked(false);
+#endif
+
 }
 
 CreateWalletDialog::~CreateWalletDialog()
@@ -98,4 +134,9 @@ bool CreateWalletDialog::isMakeBlankWalletChecked() const
 bool CreateWalletDialog::isDescriptorWalletChecked() const
 {
     return ui->descriptor_checkbox->isChecked();
+}
+
+bool CreateWalletDialog::isExternalSignerChecked() const
+{
+    return ui->external_signer_checkbox->isChecked();
 }
