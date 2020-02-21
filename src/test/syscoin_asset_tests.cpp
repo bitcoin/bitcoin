@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     tfm::format(std::cout,"elapsed time in block creation: %lld\n", endblock-startblock);
     tfm::format(std::cout,"elapsed time in seconds: %lld\n", end-start);
 
-}/*
+}
 BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
 {
     UniValue r;
@@ -604,9 +604,9 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
     int height = 5596513;
     string newaddress = GetNewFundedAddress("node1");
     string amount = "11";
-    string assetguid = AssetNew("node1", newaddress, "pubdata", "0xe3d9cCBaEDAbd8fD4401AAb7752F6f224A7EF1C8");
-    AssetAllocationMint("node1", assetguid, newaddress, amount, height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes);
-    
+    string assetguid = AssetNew("node1", newaddress, "pubdata", "0xe3d9cCBaEDAbd8fD4401AAb7752F6f224A7EF1C8", "8", "1000", "10000");
+    AssetSend("node1", assetguid, "[{\"address\":\"burn\",\"amount\":110}]");
+    string txid1 = AssetAllocationMint("node1", assetguid, newaddress, amount, height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes);
     // try to mint again
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationmint" , assetguid + ",\"" + newaddress + "\"," + amount + "," + itostr(height) + ",\"" + spv_tx_value + "\",\"a0" + spv_tx_root + "\",\"" + spv_tx_parent_nodes + "\",\"" + spv_tx_path + "\",\"" + spv_receipt_value + "\",\"a0" + spv_receipt_root + "\",\"" + spv_receipt_parent_nodes +  "\",\"''\""));
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\""  + find_value(r.get_obj(), "hex").get_str() + "\""));
@@ -617,6 +617,30 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
     // increase time by 1 week and assetallocationmint should throw
 	SleepFor(604800 * 1000);
 	BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationmint" , assetguid + ",\"" + newaddress + "\"," + amount + "," + itostr(height) + ",\"" + spv_tx_value + "\",\"a0" + spv_tx_root + "\",\"" + spv_tx_parent_nodes + "\",\"" + spv_tx_path + "\",\"" + spv_receipt_value + "\",\"a0" + spv_receipt_root + "\",\"" + spv_receipt_parent_nodes +  "\",\"''\""), runtime_error);
+}
+/*BOOST_AUTO_TEST_CASE(generate_assetallocationmint_linked)
+{
+    UniValue r;
+    tfm::format(std::cout,"Running generate_assetallocationmint_linked...\n");  
+    // txid 0xae3df53837f66b9fe06359646d92394fd9f567b9e3749c7febea5971c6e14620 on rinkeby
+    // remove a0 RLP encoding header because when geth gets the tx root from relayer and pushes to syscoin, it does not include the RLP header
+	std::string spv_tx_root = "f18ad7a19f08efbedbcbf0eefea94bf2d523dbbf1fd3714908db02129d901cd3";
+	std::string spv_tx_parent_nodes = "f9025bf851a0766aa7492d2ae288a54aca97778392bf5613d2915d90dde26464b48d5be8da3580808080808080a0093a0a6203d65f7e44887c52ace8f8a2192709a3a6bc0543d8a2b37f5cc646268080808080808080f8b180a065e039f5f3af69df62b366f4eb7a97ff4e1c7d86848ec55771cec5a8699959c2a012abac8fbc8a63519c678d7cc92d5efad164996d11a8a301071ede0bd2ec19d9a0a013abe590ec132a63e580e2ea0a18d1886480a889974798ab33028678c8cf72a0c6dbae6978c357521d177ddd94b3468d33707df73986369a1f4c037bacf9945ca012f8fdd16c30ad5d71514c0ec6e703888211ae468cffc5aabf4339e18a1deb198080808080808080808080f9015220b9014ef9014b8204d5843b9aca008307a12094443d9a14fb6ba2a45465bec3767186f404ccea2580b8e45f959b69000000000000000000000000000000000000000000000000000000004190ab0000000000000000000000000000000000000000000000000000000000752cbd74000000000000000000000000e3d9ccbaedabd8fd4401aab7752f6f224a7ef1c8000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000150073c237a0171e48890a824abbda619de705c0c21f00000000000000000000002ba00f68add3f6a7f77623f6da12e8f70c14f71bd3fdcbb1b831b3e076d8d8e24e1da0624dbf368d261761e92980ef2e152edb64b62c859e35b05f95f8a06e9c543d34";
+	std::string spv_tx_value = "f9014b8204d5843b9aca008307a12094443d9a14fb6ba2a45465bec3767186f404ccea2580b8e45f959b69000000000000000000000000000000000000000000000000000000004190ab0000000000000000000000000000000000000000000000000000000000752cbd74000000000000000000000000e3d9ccbaedabd8fd4401aab7752f6f224a7ef1c8000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000150073c237a0171e48890a824abbda619de705c0c21f00000000000000000000002ba00f68add3f6a7f77623f6da12e8f70c14f71bd3fdcbb1b831b3e076d8d8e24e1da0624dbf368d261761e92980ef2e152edb64b62c859e35b05f95f8a06e9c543d34";
+    std::string spv_tx_path = "03";
+    
+    // remove a0 RLP header from spv_receipt_root as well
+    std::string spv_receipt_root = "a6c0bf9f924ef1cfc4d0b010b2312276807ab5bca40d28c6dd98b21d29de51f0";
+    std::string spv_receipt_parent_nodes = "f903f0f851a0c6024de1de1393e3ce892ea58a0e013dc6b881c26f22f5c4d78de7ebddf0d54080808080808080a0640ecd1152922fee801514f1d52d67a4c932d4cfce07b5704cf3fe06b04e797f8080808080808080f8b180a090a37ae3593541d04e8f18a913f2a67c08b97d437a807497871c0ab5acc96292a0e4ca2f77e9b824594cf0f104a8289216a1f17756c0e17ae00e8b6f1763ec7d3fa09529ccfee51cba8bdc2a77fd39f5588a15d6c5796bffdbc6149962ce43c99308a01cd036c395d623cc975c1222a51856aaf80ece64d59ef3eacca3b73462cbb2d9a05d0de9048ae4214f2af0ee374e0a0024a64b2bdac08b3bd2f53dfee85e23ed068080808080808080808080f902e720b902e3f902e00183043a62b901000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021000008000000000000000000000a000000000004000000000000200000000000000000000000000000000000000100000000000000000000000000000010040000000000000000000010000000000000000000000000000000000000001000000000020000000000000000000000000000000000000000008000000000000000000000000002000000000000020000000000000000000000000000000000000000000010000100000000800000000000000000000000000080000000000000000000f901d5f89b94e3d9ccbaedabd8fd4401aab7752f6f224a7ef1c8f863a0ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3efa0000000000000000000000000b0ea8c9ee8aa87efd28a12de8c034f947c144053a0000000000000000000000000443d9a14fb6ba2a45465bec3767186f404ccea25a0000000000000000000000000000000000000000000000000000000004190ab00f89b94e3d9ccbaedabd8fd4401aab7752f6f224a7ef1c8f863a08c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925a0000000000000000000000000b0ea8c9ee8aa87efd28a12de8c034f947c144053a0000000000000000000000000443d9a14fb6ba2a45465bec3767186f404ccea25a00000000000000000000000000000000000000000000000000000000000000000f89994443d9a14fb6ba2a45465bec3767186f404ccea25e1a0aabab1db49e504b5156edf3f99042aeecb9607a08f392589571cd49743aaba8db860000000000000000000000000b0ea8c9ee8aa87efd28a12de8c034f947c144053000000000000000000000000000000000000000000000000000000004190ab000000000000000000000000000000000000000000000000000000000000000003";
+    std::string spv_receipt_value = "f902e00183043a62b901000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021000008000000000000000000000a000000000004000000000000200000000000000000000000000000000000000100000000000000000000000000000010040000000000000000000010000000000000000000000000000000000000001000000000020000000000000000000000000000000000000000008000000000000000000000000002000000000000020000000000000000000000000000000000000000000010000100000000800000000000000000000000000080000000000000000000f901d5f89b94e3d9ccbaedabd8fd4401aab7752f6f224a7ef1c8f863a0ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3efa0000000000000000000000000b0ea8c9ee8aa87efd28a12de8c034f947c144053a0000000000000000000000000443d9a14fb6ba2a45465bec3767186f404ccea25a0000000000000000000000000000000000000000000000000000000004190ab00f89b94e3d9ccbaedabd8fd4401aab7752f6f224a7ef1c8f863a08c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925a0000000000000000000000000b0ea8c9ee8aa87efd28a12de8c034f947c144053a0000000000000000000000000443d9a14fb6ba2a45465bec3767186f404ccea25a00000000000000000000000000000000000000000000000000000000000000000f89994443d9a14fb6ba2a45465bec3767186f404ccea25e1a0aabab1db49e504b5156edf3f99042aeecb9607a08f392589571cd49743aaba8db860000000000000000000000000b0ea8c9ee8aa87efd28a12de8c034f947c144053000000000000000000000000000000000000000000000000000000004190ab000000000000000000000000000000000000000000000000000000000000000003";
+    int height = 5596513;
+    string newaddress = GetNewFundedAddress("node1");
+    string amount = "11";
+    string assetguid = AssetNew("node1", newaddress, "pubdata", "0xe3d9cCBaEDAbd8fD4401AAb7752F6f224A7EF1C8", "8", "1000", "10000");
+    AssetSend("node1", assetguid, "[{\"address\":\"burn\",\"amount\":110}]");
+    string txid1 = AssetAllocationMint("node1", assetguid, newaddress, amount, height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes, "''", false);
+    
+    string txid3 = BurnAssetAllocation("node1", assetguid, useraddress, amount, false, "''");
 }*/
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
 {
@@ -2091,7 +2115,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 	balance = find_value(r.get_obj(), "balance_zdag");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.36 * COIN);
 }
-
 BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
 {
 	UniValue assetInvalidatedResults, assetNowResults, assetValidatedResults;
@@ -2107,7 +2130,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
     AssetNew("node2", creatoraddress2, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa");
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getblockcount"));
 	string strBeforeBlockCount = itostr(r.get_int());
-
 	// first check around disconnect/connect by invalidating and revalidating an early block
 	BOOST_CHECK_NO_THROW(assetNowResults = CallExtRPC("node1", "listassets" , itostr(INT_MAX) + ",0"));
 	BOOST_CHECK_NO_THROW(assetAllocationsNowResults = CallExtRPC("node1", "listassetallocations" , itostr(INT_MAX) + ",0"));
@@ -2138,7 +2160,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
 	string nowResStr = assetNowResults.write();
 	BOOST_CHECK(validatedResStr == nowResStr);
 	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallExtRPC("node1", "listassetallocations" , itostr(INT_MAX) + ",0"));
-	BOOST_CHECK(assetAllocationsValidatedResults.write() == assetAllocationsNowResults.write());	
+	BOOST_CHECK(assetAllocationsValidatedResults.write() == assetAllocationsNowResults.write());
 	// try to check after reindex
 	StopNode("node1");
 	StartNode("node1", true, "", true);

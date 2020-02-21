@@ -835,7 +835,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         if(sender.empty() && IsZTx){
             sender = GetSenderOfZdagTx(tx);
             if(sender.empty()){
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx",
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx-no-sender",
                  strprintf("Could not get sender of zdag tx %s",
                         hash.ToString()));
             }
@@ -865,7 +865,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             // if still not duplicate then just reject
             if(!duplicate){
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx",
-                    FormatStateMessage(state)); 
+                    FormatStateMessage(tx_state)); 
             }
         } 
     } 
