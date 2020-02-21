@@ -734,7 +734,7 @@ string SyscoinBurn(const string& node, const string& address, const string& asse
 	string txid = find_value(r.get_obj(), "txid").get_str();
 	return txid;
 }
-string AssetAllocationMint(const string& node, const string& asset, const string& address, const string& amount, int height, const string& tx_hex, const string& txroot_hex, const string& txmerkleproof_hex, const string& txmerkleproofpath_hex, const string& receipt_hex, const string& receiptroot_hex, const string& receiptmerkleproof_hex, const string& witness)
+string AssetAllocationMint(const string& node, const string& asset, const string& address, const string& amount, int height, const string& tx_hex, const string& txroot_hex, const string& txmerkleproof_hex, const string& txmerkleproofpath_hex, const string& receipt_hex, const string& receiptroot_hex, const string& receiptmerkleproof_hex, const string& witness, bool confirm)
 {
     string otherNode1, otherNode2;
     GetOtherNodes(node, otherNode1, otherNode2);
@@ -776,16 +776,19 @@ string AssetAllocationMint(const string& node, const string& asset, const string
     string hex_str = find_value(r.get_obj(), "hex").get_str();
    
     BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "sendrawtransaction", "\"" +  hex_str + "\""));  
-    GenerateBlocks(5, node);
-    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationbalance",  asset + ",\"" + address + "\""));
-    CAmount nAmountAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
-    // account for fees
-    BOOST_CHECK_EQUAL(nAmountBefore+AmountFromValue(amount) , nAmountAfter);
-
+    if(confirm){
+		GenerateBlocks(5, node);
+		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationbalance",  asset + ",\"" + address + "\""));
+		CAmount nAmountAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
+		// account for fees
+		BOOST_CHECK_EQUAL(nAmountBefore+AmountFromValue(amount) , nAmountAfter);
+	}
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "decoderawtransaction", "\"" +  hex_str + "\",true"));
+	string txid = find_value(r.get_obj(), "txid").get_str();
 	// lookup by sys tx from bridge transfer id
 	/*BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "syscoincheckmint", "\"" + itostr(bridgetransferid) + "\""));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "in_active_chain").get_bool(), true);*/
-    return hex_str;
+    return txid;
 }
 	
 string AssetNew(const string& node, const string& address, string pubdata, string contract, const string& precision, const string& supply, const string& maxsupply, const string& updateflags, const string& witness, const string& symbol, const string& auxfees, bool bRegtest)
