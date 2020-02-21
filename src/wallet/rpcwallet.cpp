@@ -2584,12 +2584,13 @@ static UniValue loadwallet(const JSONRPCRequest& request)
 
     WalletLocation location(request.params[0].get_str());
 
+    boost::system::error_code ec;
     if (!location.Exists()) {
         throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Wallet " + location.GetName() + " not found.");
-    } else if (fs::is_directory(location.GetPath())) {
+    } else if (fs::is_directory(location.GetPath(), ec)) {
         // The given filename is a directory. Check that there's a wallet.dat file.
         fs::path wallet_dat_file = location.GetPath() / "wallet.dat";
-        if (fs::symlink_status(wallet_dat_file).type() == fs::file_not_found) {
+        if (fs::symlink_status(wallet_dat_file, ec).type() == fs::file_not_found) {
             throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Directory " + location.GetName() + " does not contain a wallet.dat file.");
         }
     }

@@ -3599,9 +3599,10 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
     // 4. For backwards compatibility, the name of a data file in -walletdir.
     LOCK(cs_wallets);
     const fs::path& wallet_path = location.GetPath();
-    fs::file_type path_type = fs::symlink_status(wallet_path).type();
+    boost::system::error_code ec;
+    fs::file_type path_type = fs::symlink_status(wallet_path, ec).type();
     if (!(path_type == fs::file_not_found || path_type == fs::directory_file ||
-          (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
+          (path_type == fs::symlink_file && fs::is_directory(wallet_path, ec)) ||
           (path_type == fs::regular_file && fs::path(location.GetName()).filename() == location.GetName()))) {
         error_string = strprintf(
               "Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "

@@ -21,7 +21,8 @@ static void WalletToolReleaseWallet(CWallet* wallet)
 
 static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::path& path)
 {
-    if (fs::exists(path)) {
+    boost::system::error_code ec;
+    if (fs::exists(path, ec)) {
         tfm::format(std::cerr, "Error: File exists already\n");
         return nullptr;
     }
@@ -49,7 +50,8 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
 
 static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::path& path)
 {
-    if (!fs::exists(path)) {
+    boost::system::error_code ec;
+    if (!fs::exists(path, ec)) {
         tfm::format(std::cerr, "Error: Wallet files does not exist\n");
         return nullptr;
     }
@@ -113,7 +115,8 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
             wallet_instance->Flush(true);
         }
     } else if (command == "info") {
-        if (!fs::exists(path)) {
+        boost::system::error_code ec;
+        if (!fs::exists(path, ec)) {
             tfm::format(std::cerr, "Error: no wallet file at %s\n", name);
             return false;
         }

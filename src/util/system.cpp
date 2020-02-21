@@ -137,7 +137,8 @@ bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes)
 {
     constexpr uint64_t min_disk_space = 52428800; // 50 MiB
 
-    uint64_t free_bytes_available = fs::space(dir).available;
+    boost::system::error_code ec;
+    uint64_t free_bytes_available = fs::space(dir, ec).available;
     return free_bytes_available >= min_disk_space + additional_bytes;
 }
 
@@ -594,10 +595,17 @@ const fs::path &GetBlocksDir()
     if (!path.empty()) return path;
 
     if (gArgs.IsArgSet("-blocksdir")) {
-        path = fs::system_complete(gArgs.GetArg("-blocksdir", ""));
-        if (!fs::is_directory(path)) {
+        boost::system::error_code ec;
+        path = fs::system_complete(gArgs.GetArg("-blocksdir", ""), ec);
+        if (ec) {
+            LogPrintf("%s: fs::system_complete: %s %s\n", __func__, ec.message(), gArgs.GetArg("-blocksdir", ""));
+        }
+        if (!fs::is_directory(path, ec)) {
             path = "";
             return path;
+        }
+        if (ec) {
+            LogPrintf("%s: fs::is_directory: %s %s\n", __func__, ec.message(), path.string());
         }
     } else {
         path = GetDataDir(false);
@@ -605,7 +613,11 @@ const fs::path &GetBlocksDir()
 
     path /= BaseParams().DataDir();
     path /= "blocks";
-    fs::create_directories(path);
+    if (!TryCreateDirectories(path)) {
+        path = "";
+        return path;
+    }
+
     return path;
 }
 
@@ -620,8 +632,19 @@ const fs::path &GetDataDir(bool fNetSpecific)
 
     std::string datadir = gArgs.GetArg("-datadir", "");
     if (!datadir.empty()) {
-        path = fs::system_complete(datadir);
-        if (!fs::is_directory(path)) {
+        boost::system::error_code ec;
+        path = fs::system_complete(datadir, ec);
+        if (ec) {
+            LogPrintf("%s: fs::system_complete: %s %s\n", __func__, ec.message(), datadir);
+            path = "";
+            return path;
+        }
+        if (!fs::is_directory(path, ec)) {
+            path = "";
+            return path;
+        }
+        if (ec) {
+            LogPrintf("%s: fs::is_directory: %s %s\n", __func__, ec.message(), path.string());
             path = "";
             return path;
         }
@@ -631,9 +654,9 @@ const fs::path &GetDataDir(bool fNetSpecific)
     if (fNetSpecific)
         path /= BaseParams().DataDir();
 
-    if (fs::create_directories(path)) {
+    if (TryCreateDirectories(path) == TRY_CREATE_DIRECTORIES_OK) {
         // This is the first run, create wallets subdirectory too
-        fs::create_directories(path / "wallets");
+        TryCreateDirectories(path / "wallets");
     }
 
     return path;
@@ -642,7 +665,8 @@ const fs::path &GetDataDir(bool fNetSpecific)
 bool CheckDataDirOption()
 {
     std::string datadir = gArgs.GetArg("-datadir", "");
-    return datadir.empty() || fs::is_directory(fs::system_complete(datadir));
+    boost::system::error_code ec;
+    return datadir.empty() || fs::is_directory(fs::system_complete(datadir, ec), ec);
 }
 
 void ClearDatadirCache()
@@ -899,23 +923,19 @@ bool RenameOver(fs::path src, fs::path dest)
 #endif /* WIN32 */
 }
 
-/**
- * Ignores exceptions thrown by Boost's create_directories if the requested directory exists.
- * Specifically handles case where path p exists, but it wasn't possible for the user to
- * write to the parent directory.
- */
-bool TryCreateDirectories(const fs::path& p)
+TryCreateDirectoriesStatus TryCreateDirectories(const fs::path& p)
 {
-    try
-    {
-        return fs::create_directories(p);
-    } catch (const fs::filesystem_error&) {
-        if (!fs::exists(p) || !fs::is_directory(p))
-            throw;
-    }
+    boost::system::error_code ec;
 
-    // create_directories didn't create the directory, it had to have existed already
-    return false;
+    if (fs::create_directories(p, ec))
+        return TRY_CREATE_DIRECTORIES_OK;
+    // Creation failure because path resolves to an existing directory shall not be treated as an error
+    if (fs::is_directory(p, ec))
+        return TRY_CREATE_DIRECTORIES_EXISTS;
+    if (ec) {
+        LogPrintf("%s: %s %s\n", __func__, ec.message(), p.string());
+    }
+    return TRY_CREATE_DIRECTORIES_FAILED;
 }
 
 bool FileCommit(FILE *file)

@@ -36,7 +36,12 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only)
         return nullptr;
     }
     fs::path path = FileName(pos);
-    fs::create_directories(path.parent_path());
+    boost::system::error_code ec;
+    fs::create_directories(path.parent_path(), ec);
+    if (ec) {
+        LogPrintf("%s: fs::create_directories: %s %s\n", __func__, ec.message(), path.parent_path().string());
+        return nullptr;
+    }
     FILE* file = fsbridge::fopen(path, read_only ? "rb": "rb+");
     if (!file && !read_only)
         file = fsbridge::fopen(path, "wb+");

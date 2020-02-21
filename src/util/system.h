@@ -68,7 +68,14 @@ bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes = 0);
  */
 void ReleaseDirectoryLocks();
 
-bool TryCreateDirectories(const fs::path& p);
+typedef enum TryCreateDirectoriesStatus_t
+{
+    TRY_CREATE_DIRECTORIES_FAILED = 0, // Failed to create directory
+    TRY_CREATE_DIRECTORIES_OK = 1,     // New directory created
+    TRY_CREATE_DIRECTORIES_EXISTS = 2, // Directory already exists
+} TryCreateDirectoriesStatus;
+
+TryCreateDirectoriesStatus TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
 // The blocks directory is always net specific.
 const fs::path &GetBlocksDir();

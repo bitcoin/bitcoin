@@ -281,12 +281,13 @@ void Shutdown(NodeContext& node)
     }
 #endif
 
-    try {
-        if (!fs::remove(GetPidFile())) {
-            LogPrintf("%s: Unable to remove PID file: File does not exist\n", __func__);
-        }
-    } catch (const fs::filesystem_error& e) {
-        LogPrintf("%s: Unable to remove PID file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
+    boost::system::error_code ec;
+    bool removed;
+    removed = fs::remove(GetPidFile(), ec);
+    if (ec) {
+        LogPrintf("%s: Unable to remove PID file: %s %s\n", __func__,  ec.message(), GetPidFile().string());
+    } else if (!removed) {
+        LogPrintf("%s: Unable to remove PID file: File %s does not exist\n", __func__, GetPidFile().string());
     }
     node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
@@ -640,8 +641,17 @@ static void CleanupBlockRevFiles()
     // ordered map keyed by block file index.
     LogPrintf("Removing unusable blk?????.dat and rev?????.dat files for -reindex with -prune\n");
     fs::path blocksdir = GetBlocksDir();
-    for (fs::directory_iterator it(blocksdir); it != fs::directory_iterator(); it++) {
-        if (fs::is_regular_file(*it) &&
+    boost::system::error_code ec, eci;
+    for (auto it = fs::directory_iterator(blocksdir, ec); it != fs::directory_iterator(); it.increment(eci)) {
+        if (ec) {
+            LogPrintf("%s: iterator: %s %s\n", __func__, ec.message(), it->path().string());
+            continue;
+        }
+        if (eci) {
+            LogPrintf("%s: increment: %s %s\n", __func__, eci.message(), it->path().string());
+            continue;
+        }
+        if (fs::is_regular_file(*it, ec) &&
             it->path().filename().string().length() == 12 &&
             it->path().filename().string().substr(8,4) == ".dat")
         {
@@ -680,7 +690,8 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
         int nFile = 0;
         while (true) {
             FlatFilePos pos(nFile, 0);
-            if (!fs::exists(GetBlockPosFilename(pos)))
+            boost::system::error_code ec;
+            if (!fs::exists(GetBlockPosFilename(pos), ec))
                 break; // No block files left to reindex
             FILE *file = OpenBlockFile(pos, true);
             if (!file)
@@ -938,7 +949,8 @@ bool AppInitParameterInteraction()
         InitWarning(strprintf("%s:%i " + _("Section [%s] is not recognized.").translated, section.m_file, section.m_line, section.m_name));
     }
 
-    if (!fs::is_directory(GetBlocksDir())) {
+    boost::system::error_code ec;
+    if (!fs::is_directory(GetBlocksDir(), ec)) {
         return InitError(strprintf(_("Specified blocks directory \"%s\" does not exist.").translated, gArgs.GetArg("-blocksdir", "")));
     }
 
@@ -1220,7 +1232,8 @@ bool AppInitMain(NodeContext& node)
 
     // Only log conf file usage message if conf file actually exists.
     fs::path config_file_path = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
-    if (fs::exists(config_file_path)) {
+    boost::system::error_code ec;
+    if (fs::exists(config_file_path, ec)) {
         LogPrintf("Config file: %s\n", config_file_path.string());
     } else if (gArgs.IsArgSet("-conf")) {
         // Warn if no conf file exists at path provided by user
@@ -1241,7 +1254,7 @@ bool AppInitMain(NodeContext& node)
                   "current working directory '%s'. This is fragile, because if bitcoin is started in the future "
                   "from a different location, it will be unable to locate the current data files. There could "
                   "also be data loss if bitcoin is started while in a temporary directory.\n",
-            gArgs.GetArg("-datadir", ""), fs::current_path().string());
+            gArgs.GetArg("-datadir", ""), fs::current_path(ec).string());
     }
 
     InitSignatureCache();

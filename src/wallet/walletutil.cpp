@@ -10,10 +10,11 @@
 fs::path GetWalletDir()
 {
     fs::path path;
+    boost::system::error_code ec;
 
     if (gArgs.IsArgSet("-walletdir")) {
         path = gArgs.GetArg("-walletdir", "");
-        if (!fs::is_directory(path)) {
+        if (!fs::is_directory(path, ec)) {
             // If the path specified doesn't exist, we return the deliberately
             // invalid empty string.
             path = "";
@@ -21,7 +22,7 @@ fs::path GetWalletDir()
     } else {
         path = GetDataDir();
         // If a wallets directory exists, use that, otherwise default to GetDataDir
-        if (fs::is_directory(path / "wallets")) {
+        if (fs::is_directory(path / "wallets", ec)) {
             path /= "wallets";
         }
     }
@@ -31,11 +32,12 @@ fs::path GetWalletDir()
 
 static bool IsBerkeleyBtree(const fs::path& path)
 {
-    if (!fs::exists(path)) return false;
-
     // A Berkeley DB Btree file has at least 4K.
     // This check also prevents opening lock files.
     boost::system::error_code ec;
+
+    if (!fs::exists(path, ec)) return false;
+
     auto size = fs::file_size(path, ec);
     if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), path.string());
     if (size < 4096) return false;
@@ -60,10 +62,16 @@ std::vector<fs::path> ListWalletDir()
     const size_t offset = wallet_dir.string().size() + 1;
     std::vector<fs::path> paths;
     boost::system::error_code ec;
+    boost::system::error_code eci;
 
-    for (auto it = fs::recursive_directory_iterator(wallet_dir, ec); it != fs::recursive_directory_iterator(); it.increment(ec)) {
+    for (auto it = fs::recursive_directory_iterator(wallet_dir, ec); it != fs::recursive_directory_iterator(); it.increment(eci)) {
         if (ec) {
-            LogPrintf("%s: %s %s\n", __func__, ec.message(), it->path().string());
+            LogPrintf("%s: iterator: %s %s\n", __func__, ec.message(), it->path().string());
+            continue;
+        }
+        if (eci) {
+            LogPrintf("%s: increment: %s %s\n", __func__, eci.message(), it->path().string());
+            it.disable_recursion_pending();
             continue;
         }
 
@@ -100,5 +108,6 @@ WalletLocation::WalletLocation(const std::string& name)
 
 bool WalletLocation::Exists() const
 {
-    return fs::symlink_status(m_path).type() != fs::file_not_found;
+    boost::system::error_code ec;
+    return fs::symlink_status(m_path, ec).type() != fs::file_not_found;
 }

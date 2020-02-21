@@ -104,7 +104,12 @@ BlockFilterIndex::BlockFilterIndex(BlockFilterType filter_type,
     if (filter_name.empty()) throw std::invalid_argument("unknown filter_type");
 
     fs::path path = GetDataDir() / "indexes" / "blockfilter" / filter_name;
-    fs::create_directories(path);
+    boost::system::error_code ec;
+    fs::create_directories(path, ec);
+    if (ec) {
+        LogPrintf("%s: fs::create_directories: %s %s\n", __func__, ec.message(), path.string());
+        return;
+    }
 
     m_name = filter_name + " block filter index";
     m_db = MakeUnique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);

@@ -2300,7 +2300,8 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
     // to avoid confusion due to an interruption.
     fs::path temppath = fs::absolute(request.params[0].get_str() + ".incomplete", GetDataDir());
 
-    if (fs::exists(path)) {
+    boost::system::error_code ec;
+    if (fs::exists(path, ec)) {
         throw JSONRPCError(
             RPC_INVALID_PARAMETER,
             path.string() + " already exists. If you are sure this is what you want, "
@@ -2361,7 +2362,11 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
     }
 
     afile.fclose();
-    fs::rename(temppath, path);
+    fs::rename(temppath, path, ec);
+    if (ec) {
+        LogPrintf("%s: %s %s %s\n", __func__, ec.message(), temppath.string(), path.string());
+        path = temppath;
+    }
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("coins_written", stats.coins_count);

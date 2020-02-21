@@ -73,7 +73,8 @@ void FreespaceChecker::check()
     /* Find first parent that exists, so that fs::space does not fail */
     fs::path parentDir = dataDir;
     fs::path parentDirOld = fs::path();
-    while(parentDir.has_parent_path() && !fs::exists(parentDir))
+    boost::system::error_code ec;
+    while(parentDir.has_parent_path() && !fs::exists(parentDir, ec))
     {
         parentDir = parentDir.parent_path();
 
@@ -84,22 +85,20 @@ void FreespaceChecker::check()
         parentDirOld = parentDir;
     }
 
-    try {
-        freeBytesAvailable = fs::space(parentDir).available;
-        if(fs::exists(dataDir))
-        {
-            if(fs::is_directory(dataDir))
-            {
-                QString separator = "<code>" + QDir::toNativeSeparators("/") + tr("name") + "</code>";
-                replyStatus = ST_OK;
-                replyMessage = tr("Directory already exists. Add %1 if you intend to create a new directory here.").arg(separator);
-            } else {
-                replyStatus = ST_ERROR;
-                replyMessage = tr("Path already exists, and is not a directory.");
-            }
-        }
-    } catch (const fs::filesystem_error&)
+    freeBytesAvailable = fs::space(parentDir, ec).available;
+
+    if(fs::exists(dataDir, ec))
     {
+        if(fs::is_directory(dataDir, ec))
+        {
+            QString separator = "<code>" + QDir::toNativeSeparators("/") + tr("name") + "</code>";
+            replyStatus = ST_OK;
+            replyMessage = tr("Directory already exists. Add %1 if you intend to create a new directory here.").arg(separator);
+        } else {
+            replyStatus = ST_ERROR;
+            replyMessage = tr("Path already exists, and is not a directory.");
+        }
+    } else {
         /* Parent directory does not exist or is not accessible */
         replyStatus = ST_ERROR;
         replyMessage = tr("Cannot create data directory here.");
@@ -195,7 +194,8 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& pru
     /* 2) Allow QSettings to override default dir */
     dataDir = settings.value("strDataDir", dataDir).toString();
 
-    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || gArgs.GetBoolArg("-resetguisettings", false))
+    boost::system::error_code ec;
+    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir), ec) || gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || gArgs.GetBoolArg("-resetguisettings", false))
     {
         /* Use selectParams here to guarantee Params() can be used by node interface */
         try {
@@ -218,13 +218,13 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& pru
                 return false;
             }
             dataDir = intro.getDataDirectory();
-            try {
-                if (TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir))) {
-                    // If a new data directory has been created, make wallets subdirectory too
-                    TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir) / "wallets");
-                }
+            if (TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir)) == TRY_CREATE_DIRECTORIES_OK ) {
+                // If a new data directory has been created, make wallets subdirectory too
+                TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir) / "wallets");
                 break;
-            } catch (const fs::filesystem_error&) {
+            }
+            else
+            {
                 QMessageBox::critical(nullptr, PACKAGE_NAME,
                     tr("Error: Specified data directory \"%1\" cannot be created.").arg(dataDir));
                 /* fall through, back to choosing screen */

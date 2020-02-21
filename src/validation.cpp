@@ -3909,9 +3909,18 @@ void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune)
 {
     for (std::set<int>::iterator it = setFilesToPrune.begin(); it != setFilesToPrune.end(); ++it) {
         FlatFilePos pos(*it, 0);
-        fs::remove(BlockFileSeq().FileName(pos));
-        fs::remove(UndoFileSeq().FileName(pos));
-        LogPrintf("Prune: %s deleted blk/rev (%05u)\n", __func__, *it);
+        boost::system::error_code ec;
+        fs::remove(BlockFileSeq().FileName(pos), ec);
+        if (!ec) {
+            fs::remove(UndoFileSeq().FileName(pos), ec);
+            if (!ec) {
+                LogPrintf("Prune: %s deleted blk/rev (%05u)\n", __func__, *it);
+            } else {
+                LogPrintf("Prune: %s unable to remove undo file: %s %s\n", __func__, ec.message(), UndoFileSeq().FileName(pos).string());
+            }
+        } else {
+            LogPrintf("Prune: %s unable to remove block file: %s %s\n", __func__, ec.message(), BlockFileSeq().FileName(pos).string());
+        }
     }
 }
 

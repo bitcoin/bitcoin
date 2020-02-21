@@ -763,7 +763,8 @@ UniValue dumpwallet(const JSONRPCRequest& request)
      * https://github.com/bitcoin/bitcoin/issues/9934
      * It may also avoid other security issues.
      */
-    if (fs::exists(filepath)) {
+    boost::system::error_code ec;
+    if (fs::exists(filepath, ec)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.string() + " already exists. If you are sure this is what you want, move it out of the way first");
     }
 

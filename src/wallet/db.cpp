@@ -55,7 +55,8 @@ bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
 
 static void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename)
 {
-    if (fs::is_regular_file(wallet_path)) {
+    boost::system::error_code ec;
+    if (fs::is_regular_file(wallet_path, ec)) {
         // Special case for backwards compatibility: if wallet path points to an
         // existing file, treat it as the path to a BDB data file in a parent
         // directory that also contains BDB log files.
@@ -171,14 +172,20 @@ bool BerkeleyEnvironment::Open(bool retry)
     }
 
     fs::path pathIn = strPath;
-    TryCreateDirectories(pathIn);
+    if (!TryCreateDirectories(pathIn)) {
+        LogPrintf("Cannot create wallet directory %s.\n", strPath);
+        return false;
+    }
     if (!LockDirectory(pathIn, ".walletlock")) {
         LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of bitcoin may be using it.\n", strPath);
         return false;
     }
 
     fs::path pathLogDir = pathIn / "database";
-    TryCreateDirectories(pathLogDir);
+    if (!TryCreateDirectories(pathLogDir)) {
+        LogPrintf("Cannot create log directory %s.\n", pathLogDir.string());
+        return false;
+    }
     fs::path pathErrorFile = pathIn / "db.log";
     LogPrintf("BerkeleyEnvironment::Open: LogDir=%s ErrorFile=%s\n", pathLogDir.string(), pathErrorFile.string());
 
@@ -216,10 +223,11 @@ bool BerkeleyEnvironment::Open(bool retry)
         if (retry) {
             // try moving the database env out of the way
             fs::path pathDatabaseBak = pathIn / strprintf("database.%d.bak", GetTime());
-            try {
-                fs::rename(pathLogDir, pathDatabaseBak);
+            boost::system::error_code ec;
+            fs::rename(pathLogDir, pathDatabaseBak, ec);
+            if (!ec) {
                 LogPrintf("Moved old %s to %s. Retrying.\n", pathLogDir.string(), pathDatabaseBak.string());
-            } catch (const fs::filesystem_error&) {
+            } else {
                 // failure is ok (well, not really, but it's not worse than what we started with)
             }
             // try opening it again one more time
@@ -416,7 +424,8 @@ bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, std::vector<st
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, walletFile);
     fs::path walletDir = env->Directory();
 
-    if (fs::exists(walletDir / walletFile))
+    boost::system::error_code ec;
+    if (fs::exists(walletDir / walletFile, ec))
     {
         std::string backup_filename;
         BerkeleyEnvironment::VerifyResult r = env->Verify(walletFile, recoverFunc, backup_filename);
@@ -795,7 +804,11 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
                 dbenv->log_archive(&listp, DB_ARCH_REMOVE);
                 Close();
                 if (!fMockDb) {
-                    fs::remove_all(fs::path(strPath) / "database");
+                    boost::system::error_code ec;
+                    fs::remove_all(fs::path(strPath) / "database", ec);
+                    if (ec) {
+                        LogPrintf("%s: %s %s\n", __func__, ec.message(), (fs::path(strPath) / "database").string());
+                    }
                 }
             }
         }
@@ -869,22 +882,37 @@ bool BerkeleyDatabase::Backup(const std::string& strDest)
                 // Copy wallet file
                 fs::path pathSrc = env->Directory() / strFile;
                 fs::path pathDest(strDest);
-                if (fs::is_directory(pathDest))
+
+                boost::system::error_code ec;
+                bool retval;
+
+                retval = fs::is_directory(pathDest, ec);
+                // Can't be handled as error because it's testing the path only
+                //if (ec) {
+                //    LogPrintf("%s: fs::is_directory: %s %s\n", __func__, ec.message(), pathDest.string());
+                //    return false;
+                //}
+                if (retval)
                     pathDest /= strFile;
 
-                try {
-                    if (fs::equivalent(pathSrc, pathDest)) {
-                        LogPrintf("cannot backup to wallet source file %s\n", pathDest.string());
-                        return false;
-                    }
-
-                    fs::copy_file(pathSrc, pathDest, fs::copy_option::overwrite_if_exists);
-                    LogPrintf("copied %s to %s\n", strFile, pathDest.string());
-                    return true;
-                } catch (const fs::filesystem_error& e) {
-                    LogPrintf("error copying %s to %s - %s\n", strFile, pathDest.string(), fsbridge::get_filesystem_error_message(e));
+                retval = fs::equivalent(pathSrc, pathDest, ec);
+                if (ec) {
+                    LogPrintf("%s: fs::equivalent: %s %s %s\n", __func__, ec.message(), pathSrc.string(), pathDest.string());
                     return false;
                 }
+                if (retval) {
+                    LogPrintf("cannot backup to wallet source file %s\n", pathDest.string());
+                    return false;
+                }
+
+                fs::copy_file(pathSrc, pathDest, fs::copy_option::overwrite_if_exists, ec);
+                if (ec) {
+                    LogPrintf("%s: fs:copy_file: %s %s %s\n", __func__, ec.message(), pathSrc.string(), pathDest.string());
+                    return false;
+                }
+
+                LogPrintf("copied %s to %s\n", strFile, pathDest.string());
+                return true;
             }
         }
         MilliSleep(100);

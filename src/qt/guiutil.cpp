@@ -383,7 +383,8 @@ void openDebugLogfile()
     fs::path pathDebug = GetDataDir() / "debug.log";
 
     /* Open debug.log with the associated application */
-    if (fs::exists(pathDebug))
+    boost::system::error_code ec;
+    if (fs::exists(pathDebug, ec))
         QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathDebug)));
 }
 
@@ -564,13 +565,19 @@ fs::path static StartupShortcutPath()
 bool GetStartOnSystemStartup()
 {
     // check for Bitcoin*.lnk
-    return fs::exists(StartupShortcutPath());
+    boost::system::error_code ec;
+    return fs::exists(StartupShortcutPath(), ec);
 }
 
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
     // If the shortcut exists already, remove it for updating
-    fs::remove(StartupShortcutPath());
+    boost::system::error_code ec;
+    fs::remove(StartupShortcutPath(), ec);
+    if (ec) {
+        LogPrintf("%s: %s %s\n", __func__, ec.message(), StartupShortcutPath().string());
+        return false;
+    }
 
     if (fAutoStart)
     {
@@ -663,8 +670,14 @@ bool GetStartOnSystemStartup()
 
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
-    if (!fAutoStart)
-        fs::remove(GetAutostartFilePath());
+    if (!fAutoStart) {
+        boost::system::error_code ec;
+        fs::remove(GetAutostartFilePath(), ec);
+        if (ec) {
+            LogPrintf("%s: %s %s\n", __func__, ec.message(), GetAutostartFilePath().string());
+            return false;
+        }
+    }
     else
     {
         char pszExePath[MAX_PATH+1];
@@ -673,7 +686,12 @@ bool SetStartOnSystemStartup(bool fAutoStart)
             return false;
         pszExePath[r] = '\0';
 
-        fs::create_directories(GetAutostartDir());
+        boost::system::error_code ec;
+        fs::create_directories(GetAutostartDir(), ec);
+        if (ec) {
+            LogPrintf("%s: fs::create_directories: %s %s\n", __func__, ec.message(), GetAutostartDir().string());
+            return false;
+        }
 
         fsbridge::ofstream optionFile(GetAutostartFilePath(), std::ios_base::out | std::ios_base::trunc);
         if (!optionFile.good())
