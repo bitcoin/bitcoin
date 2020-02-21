@@ -881,11 +881,39 @@ static UniValue sendmany(const JSONRPCRequest& request)
     int nChangePosRet = -1;
     bilingual_str error;
     CTransactionRef tx;
-    bool fCreated = pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control);
-    if (!fCreated)
+    bool fCreated = pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, !pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
+    if (!fCreated) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
-    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
-    return tx->GetHash().GetHex();
+    }
+    if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+        return tx->GetHash().GetHex();
+    } else {
+        CMutableTransaction mtx(*tx);
+        PartiallySignedTransaction psbtx(mtx);
+        bool complete;
+        pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, false, true); // Always fill without signing first
+        const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, true, true);
+        if (err != TransactionError::OK) {
+            throw JSONRPCTransactionError(err);
+        }
+        complete = FinalizeAndExtractPSBT(psbtx, mtx);
+
+        if (complete) {
+            tx = MakeTransactionRef(mtx);
+            pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+            return tx->GetHash().GetHex();
+        } else {
+            UniValue result(UniValue::VOBJ);
+            CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+            ssTx << psbtx;
+            std::string result_str = EncodeBase64(ssTx.str());
+            result.pushKV("psbt", result_str);
+            result.pushKV("complete", complete);
+            return result;
+        }
+
+    }
 }
 
 static UniValue addmultisigaddress(const JSONRPCRequest& request)
