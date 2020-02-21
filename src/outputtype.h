@@ -9,6 +9,11 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 
+enum class OutputType {
+    LEGACY,
+    UNKNOWN,
+};
+
 /**
  * Get a destination of the requested type (if possible) to the specified script.
  * This function will automatically add the script (and any other
