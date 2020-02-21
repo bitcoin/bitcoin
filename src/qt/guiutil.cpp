@@ -760,7 +760,7 @@ QString formatServicesStr(quint64 mask)
     QStringList strList;
 
     for (int i = 0; i < 64; i++) {
-        uint64_t check = 1LL << i;
+        uint64_t check = 1ull << i;
         if (mask & check)
         {
             strList.append(serviceFlagToStr(check, i));
