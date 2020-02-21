@@ -33,7 +33,10 @@ def console(width):
 
 		if len(cmd) == 0:
 			cmd = count - 1
-		elif re.match(r'[0-9]+', cmd):
+		elif cmd == 'clear':
+			os.system('clear')
+			continue
+		elif re.match(r'^[0-9]+$', cmd):
 			cmd = int(cmd)
 		if(cmd in commands):
 			cmd = commands[cmd]

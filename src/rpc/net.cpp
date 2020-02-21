@@ -1025,6 +1025,7 @@ static UniValue DoS(const JSONRPCRequest& request)
                 RPCExamples{
                     HelpExampleCli("DoS", "100 times ping") +
                     HelpExampleCli("DoS", "5 seconds sendcmpct true,2") +
+                    HelpExampleCli("DoS", "5 seconds sendcmpct true,2") +
                     HelpExampleCli("DoS", "100 times [HEX CODE] [MESSAGE NAME]")
                 },
             }.ToString());

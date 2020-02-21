@@ -36,7 +36,8 @@ public:
     //! last counted attempt (memory only)
     int64_t nLastCountAttempt{0};
 
-private:
+// Cybersecurity Lab
+//private:
     //! where knowledge about this address first came from
     CNetAddr source;
 

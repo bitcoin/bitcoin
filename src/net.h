@@ -363,14 +363,12 @@ public:
         return nullptr;
       }
     }
-    std::vector<CAddress> ipdump() {
-      return addrman.GetAddr();
-    }
-    bool ipclear() {
+    bool bucketclear() {
       addrman.Clear();
       return true;
     }
-    bool ipadd(std::string ip, int port, std::string source = "250.1.2.1") {
+    // Add an entry to the IP table
+    bool bucketadd(std::string ip, int port, std::string source = "250.1.2.1") {
       CNetAddr src;
       if(LookupHost(source.c_str(), src, false)) {
         CService serv;
@@ -384,22 +382,60 @@ public:
         return false;
       }
     }
-    bool ipremove(std::string ip, int port, std::string source = "250.1.2.1") {
-      return false;
+    // Mark an entry as Good (from new to tried)
+    bool bucketgood(std::string ip, int port, std::string source = "250.1.2.1") {
+      CNetAddr src;
+      if(LookupHost(source.c_str(), src, false)) {
+        CService serv;
+        if(Lookup(ip.c_str(), serv, port, false)) {
+          CAddress addr = CAddress(serv, NODE_NONE);
+          bool test_before_evict = false;
+          addrman.Good(addr, test_before_evict);
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
     }
-    // Cybersecurity Lab
+    // Remove an entry from the IP table
+    bool bucketremove(std::string ip, int port, std::string source = "250.1.2.1") {
+      CNetAddr src;
+      if(LookupHost(source.c_str(), src, false)) {
+        CService serv;
+        if(Lookup(ip.c_str(), serv, port, false)) {
+          CAddress addr = CAddress(serv, NODE_NONE);
+          int nId;
+          CAddrInfo* pinfo = addrman.Find(addr, &nId);
+          if(!pinfo) return false;
+          if(pinfo->fInTried) {
+            LogPrintf("Failed to delete, address must not be in a 'tried' bucket.");
+            // Cybersecurity Lab Then the application will error.
+            // pinfo->fInTried = false;
+          }
+
+          addrman.Delete(nId);
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
+    // Get information about the buckets
     void bucketinfo(UniValue &result) {
         LOCK(cs); // This data is guarded by CS
         result.pushKV("Number of new buckets", ADDRMAN_NEW_BUCKET_COUNT);
         result.pushKV("Number of tried buckets", ADDRMAN_TRIED_BUCKET_COUNT);
-        result.pushKV("Number of entries for each bucket", ADDRMAN_BUCKET_SIZE);
+        result.pushKV("Number of entries in each bucket", ADDRMAN_BUCKET_SIZE);
 
         result.pushKV("Number of total addresses", addrman.size());
         result.pushKV("Number of (unique) new entries", std::to_string(addrman.nNew) + " out of " + std::to_string(ADDRMAN_BUCKET_SIZE * ADDRMAN_NEW_BUCKET_COUNT));
         result.pushKV("Number of tried entries", std::to_string(addrman.nTried) + " out of " + std::to_string(ADDRMAN_BUCKET_SIZE * ADDRMAN_TRIED_BUCKET_COUNT));
 
-
-        //result.pushKV("Secret key to randomize bucket select with", nKey);
+        result.pushKV("Secret key to randomize bucket select with", addrman.nKey.GetHex());
     }
     void bucketlist(UniValue &result, std::string bucketType) {
       LOCK(cs); // This data is guarded by CS
