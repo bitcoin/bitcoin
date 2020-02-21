@@ -298,6 +298,17 @@ bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     return key.Derive(out.key, out.chaincode, _nChild, chaincode);
 }
 
+bool CExtKey::DerivePath(CExtKey& out, std::vector<uint32_t> path)
+{
+    CExtKey& der = *this;
+    bool result = true;
+    for (const uint32_t& i : path) {
+        result &= der.Derive(der, i);
+    }
+    out = der;
+    return result;
+}
+
 void CExtKey::SetSeed(const unsigned char *seed, unsigned int nSeedLen) {
     static const unsigned char hashkey[] = {'B','i','t','c','o','i','n',' ','s','e','e','d'};
     std::vector<unsigned char, secure_allocator<unsigned char>> vout(64);

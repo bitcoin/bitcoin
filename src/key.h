@@ -160,6 +160,7 @@ struct CExtKey {
     void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;
     void Decode(const unsigned char code[BIP32_EXTKEY_SIZE]);
     bool Derive(CExtKey& out, unsigned int nChild) const;
+    bool DerivePath(CExtKey& out, std::vector<uint32_t> path);
     CExtPubKey Neuter() const;
     void SetSeed(const unsigned char* seed, unsigned int nSeedLen);
 };
