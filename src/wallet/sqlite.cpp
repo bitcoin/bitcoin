@@ -569,7 +569,8 @@ bool SQLiteBatch::TxnAbort()
 bool ExistsSQLiteDatabase(const fs::path& path)
 {
     const fs::path file = path / DATABASE_FILENAME;
-    return fs::symlink_status(file).type() == fs::regular_file && IsSQLiteFile(file);
+    boost::system::error_code ec;
+    return fs::symlink_status(file, ec).type() == fs::regular_file && IsSQLiteFile(file);
 }
 
 std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
@@ -596,10 +597,11 @@ std::string SQLiteDatabaseVersion()
 
 bool IsSQLiteFile(const fs::path& path)
 {
-    if (!fs::exists(path)) return false;
-
     // A SQLite Database file is at least 512 bytes.
     boost::system::error_code ec;
+
+    if (!fs::exists(path, ec)) return false;
+
     auto size = fs::file_size(path, ec);
     if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), path.string());
     if (size < 512) return false;

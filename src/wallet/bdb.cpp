@@ -270,7 +270,9 @@ bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
         return false;
     }
 
-    if (fs::exists(file_path))
+    boost::system::error_code ec;
+
+    if (fs::exists(file_path, ec))
     {
         assert(m_refcount == 0);
 
@@ -842,11 +844,12 @@ std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, con
 
 bool IsBDBFile(const fs::path& path)
 {
-    if (!fs::exists(path)) return false;
-
     // A Berkeley DB Btree file has at least 4K.
     // This check also prevents opening lock files.
     boost::system::error_code ec;
+
+    if (!fs::exists(path, ec)) return false;
+
     auto size = fs::file_size(path, ec);
     if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), path.string());
     if (size < 4096) return false;
