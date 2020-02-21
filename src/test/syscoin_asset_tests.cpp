@@ -1831,19 +1831,14 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
         hexStr = find_value(r.get_obj(), "hex").get_str();
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""));
 
-        // will send transaction but use 0 for total supply + balance
+        // will try to use 0 for total supply + balance
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew","\"" + addressName + "\",\"syse\",\"pub\",\"''\"," + istr + "," + maxstrplusone + "," + maxstrnew + ",31,{},\"''\""));
         string guidZero = itostr(find_value(r.get_obj(), "asset_guid").get_uint());
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
         hexStr = find_value(r.get_obj(), "hex").get_str();
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""));
+        BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);
 
         GenerateBlocks(1);
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetinfo", "\"" + guidZero + "\"", true ));
-        UniValue balance = find_value(r.get_obj(), "balance");
-        UniValue totalsupply = find_value(r.get_obj(), "total_supply");
-        BOOST_CHECK(AmountFromValue(balance) == 0);
-        BOOST_CHECK(AmountFromValue(totalsupply) == 0);
 
 
 		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew" , "\"" + addressName + "\",\"syst\",\"pub\",\"''\"," + istr + ",1," + maxstrplusone + ",31,{},\"''\""));
