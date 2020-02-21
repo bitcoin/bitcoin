@@ -156,6 +156,7 @@ BASE_SCRIPTS = [
     'rpc_signmessage.py',
     'feature_nulldummy.py',
     'mempool_accept.py',
+    'mempool_expiry.py',
     'wallet_import_rescan.py',
     'rpc_bind.py --ipv4',
     'rpc_bind.py --ipv6',
