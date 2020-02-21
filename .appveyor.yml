@@ -74,8 +74,9 @@ before_build:
 - cmd: python build_msvc\msvc-autogen.py
 - ps:  Start-Process clcache-server
 - ps:  fsutil behavior set disablelastaccess 0 # Enable Access time feature on Windows (for clcache)
+- ps:  get-content -Path build_msvc\bitcoin.sln 
 build_script:
-- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitcoin.sln /m /v:q /nologo
+- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitcoin.sln /m /nologo
 after_build:
 - ps:  fsutil behavior set disablelastaccess 1 # Disable Access time feature on Windows (better performance)
 - ps:  clcache -z
