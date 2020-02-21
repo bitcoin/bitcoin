@@ -4,6 +4,8 @@ image: Visual Studio 2019
 configuration: Release
 platform: x64
 clone_depth: 5
+only_commits:
+  message: /build/
 environment:
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
   CLCACHE_SERVER: 1
