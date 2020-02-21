@@ -162,7 +162,7 @@ public:
     {
         LOCK(m_wallet->cs_wallet);
         auto it = m_wallet->m_address_book.find(dest);
-        if (it == m_wallet->m_address_book.end() || it->second.IsChange()) {
+        if (it == m_wallet->m_address_book.end()) {
             return false;
         }
         if (name) {
@@ -181,8 +181,7 @@ public:
         LOCK(m_wallet->cs_wallet);
         std::vector<WalletAddress> result;
         for (const auto& item : m_wallet->m_address_book) {
-            if (item.second.IsChange()) continue;
-            result.emplace_back(item.first, m_wallet->IsMine(item.first), item.second.GetLabel(), item.second.purpose);
+            result.emplace_back(item.first, m_wallet->IsMine(item.first), item.second.name, item.second.purpose);
         }
         return result;
     }
