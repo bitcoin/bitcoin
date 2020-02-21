@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>364</width>
-    <height>213</height>
+    <height>243</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -122,12 +122,32 @@
     <string>Descriptor Wallet</string>
    </property>
   </widget>
+  <widget class="QCheckBox" name="external_signer_checkbox">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>170</y>
+      <width>171</width>
+      <height>22</height>
+     </rect>
+    </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+     <string>External signer</string>
+   </property>
+   <property name="toolTip">
+     <string>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</string>
+   </property>
  </widget>
+</widget>
  <tabstops>
   <tabstop>wallet_name_line_edit</tabstop>
   <tabstop>encrypt_wallet_checkbox</tabstop>
   <tabstop>disable_privkeys_checkbox</tabstop>
   <tabstop>blank_wallet_checkbox</tabstop>
+  <tabstop>external_signer_checkbox</tabstop>
  </tabstops>
  <resources/>
  <connections>

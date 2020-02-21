@@ -25,15 +25,37 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
     });
 
     connect(ui->encrypt_wallet_checkbox, &QCheckBox::toggled, [this](bool checked) {
-        // Disable the disable_privkeys_checkbox when isEncryptWalletChecked is
+        // Disable the disable_privkeys_checkbox and external_signer_checkbox when isEncryptWalletChecked is
         // set to true, enable it when isEncryptWalletChecked is false.
         ui->disable_privkeys_checkbox->setEnabled(!checked);
+        ui->external_signer_checkbox->setEnabled(!checked);
 
         // When the disable_privkeys_checkbox is disabled, uncheck it.
         if (!ui->disable_privkeys_checkbox->isEnabled()) {
             ui->disable_privkeys_checkbox->setChecked(false);
         }
+
+        // When the external_signer_checkbox box is disabled, uncheck it.
+        if (!ui->external_signer_checkbox->isEnabled()) {
+            ui->external_signer_checkbox->setChecked(false);
+        }
+
     });
+
+    connect(ui->external_signer_checkbox, &QCheckBox::toggled, [this](bool checked) {
+        if (checked) {
+            ui->encrypt_wallet_checkbox->setChecked(false);
+            ui->blank_wallet_checkbox->setChecked(false);
+            ui->disable_privkeys_checkbox->setChecked(true);
+            ui->descriptor_checkbox->setChecked(true);
+        }
+
+        ui->encrypt_wallet_checkbox->setEnabled(!checked);
+        ui->blank_wallet_checkbox->setEnabled(!checked);
+        ui->disable_privkeys_checkbox->setEnabled(!checked);
+        ui->descriptor_checkbox->setEnabled(!checked);
+    });
+
 }
 
 CreateWalletDialog::~CreateWalletDialog()
@@ -64,4 +86,9 @@ bool CreateWalletDialog::isMakeBlankWalletChecked() const
 bool CreateWalletDialog::isDescriptorWalletChecked() const
 {
     return ui->descriptor_checkbox->isChecked();
+}
+
+bool CreateWalletDialog::isExternalSignerChecked() const
+{
+    return ui->external_signer_checkbox->isChecked();
 }
