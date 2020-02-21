@@ -10,6 +10,8 @@
 #include <string>
 #include <chrono>
 
+void UninterruptibleSleep(const std::chrono::microseconds& n);
+
 /**
  * Helper to count the seconds of a duration.
  *
