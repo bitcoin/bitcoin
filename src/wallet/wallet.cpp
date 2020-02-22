@@ -3193,7 +3193,7 @@ bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
         LOCK(cs_wallet);
         std::map<CTxDestination, CAddressBookData>::iterator mi = m_address_book.find(address);
         fUpdated = mi != m_address_book.end();
-        m_address_book[address].name = strName;
+        m_address_book[address].SetLabel(strName);
         if (!strPurpose.empty()) /* update purpose only if requested */
             m_address_book[address].purpose = strPurpose;
     }

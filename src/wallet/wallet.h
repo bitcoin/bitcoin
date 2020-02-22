@@ -181,14 +181,20 @@ public:
 /** Address book data */
 class CAddressBookData
 {
+private:
+    std::string m_label;
 public:
-    std::string name;
+    const std::string& name;
     std::string purpose;
 
-    CAddressBookData() : purpose("unknown") {}
+    CAddressBookData() : name(m_label), purpose("unknown") {}
 
     typedef std::map<std::string, std::string> StringMap;
     StringMap destdata;
+
+    void SetLabel(const std::string& label) {
+        m_label = label;
+    }
 };
 
 struct CRecipient
