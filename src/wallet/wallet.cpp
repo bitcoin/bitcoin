@@ -1261,7 +1261,7 @@ bool CWallet::IsChange(const CScript& script) const
             return true;
 
         LOCK(cs_wallet);
-        if (!m_address_book.count(address))
+        if (!FindAddressBookEntry(address)) {
             return true;
         }
     }
@@ -3297,7 +3297,7 @@ bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
     {
         LOCK(cs_wallet);
         std::map<CTxDestination, CAddressBookData>::iterator mi = m_address_book.find(address);
-        fUpdated = mi != m_address_book.end();
+        fUpdated = (mi != m_address_book.end() && !mi->second.IsChange());
         m_address_book[address].SetLabel(strName);
         if (!strPurpose.empty()) /* update purpose only if requested */
             m_address_book[address].purpose = strPurpose;
