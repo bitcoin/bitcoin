@@ -182,6 +182,7 @@ public:
 class CAddressBookData
 {
 private:
+    bool m_change{true};
     std::string m_label;
 public:
     const std::string& name;
@@ -192,7 +193,9 @@ public:
     typedef std::map<std::string, std::string> StringMap;
     StringMap destdata;
 
+    bool IsChange() const { return m_change; }
     void SetLabel(const std::string& label) {
+        m_change = false;
         m_label = label;
     }
 };
