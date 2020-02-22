@@ -33,8 +33,8 @@ static_assert(MINIUPNPC_API_VERSION >= 10, "miniUPnPc API version >= 10 assumed"
 #include <thread>
 
 #ifdef USE_UPNP
-static CThreadInterrupt g_upnp_interrupt;
-static std::thread g_upnp_thread;
+static CThreadInterrupt g_mapport_interrupt;
+static std::thread g_mapport_thread;
 static std::atomic_uint g_mapport_target_proto{MapPortProtoFlag::NONE};
 
 using namespace std::chrono_literals;
@@ -74,7 +74,7 @@ static bool ProcessUpnp()
                     CNetAddr resolved;
                     if (LookupHost(externalIPAddress, resolved, false)) {
                         LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToString());
-                        AddLocal(resolved, LOCAL_UPNP);
+                        AddLocal(resolved, LOCAL_MAPPED);
                     }
                 } else {
                     LogPrintf("UPnP: GetExternalIPAddress failed.\n");
@@ -95,8 +95,8 @@ static bool ProcessUpnp()
                 ret = true;
                 LogPrintf("UPnP Port Mapping successful.\n");
             }
-        } while (g_upnp_interrupt.sleep_for(PORT_MAPPING_REANNOUNCE_PERIOD));
-        g_upnp_interrupt.reset();
+        } while (g_mapport_interrupt.sleep_for(PORT_MAPPING_REANNOUNCE_PERIOD));
+        g_mapport_interrupt.reset();
 
         r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", 0);
         LogPrintf("UPNP_DeletePortMapping() returned: %d\n", r);
@@ -116,14 +116,14 @@ static void ThreadMapPort()
 {
     do {
         if (ProcessUpnp()) return;
-    } while (g_upnp_interrupt.sleep_for(PORT_MAPPING_RETRY_PERIOD));
+    } while (g_mapport_interrupt.sleep_for(PORT_MAPPING_RETRY_PERIOD));
 }
 
 void StartThreadMapPort()
 {
-    if (!g_upnp_thread.joinable()) {
-        assert(!g_upnp_interrupt);
-        g_upnp_thread = std::thread((std::bind(&TraceThread<void (*)()>, "upnp", &ThreadMapPort)));
+    if (!g_mapport_thread.joinable()) {
+        assert(!g_mapport_interrupt);
+        g_mapport_thread = std::thread((std::bind(&TraceThread<void (*)()>, "mapport", &ThreadMapPort)));
     }
 }
 
@@ -154,16 +154,16 @@ void StartMapPort(bool use_upnp)
 
 void InterruptMapPort()
 {
-    if(g_upnp_thread.joinable()) {
-        g_upnp_interrupt();
+    if (g_mapport_thread.joinable()) {
+        g_mapport_interrupt();
     }
 }
 
 void StopMapPort()
 {
-    if(g_upnp_thread.joinable()) {
-        g_upnp_thread.join();
-        g_upnp_interrupt.reset();
+    if (g_mapport_thread.joinable()) {
+        g_mapport_thread.join();
+        g_mapport_interrupt.reset();
     }
 }
 
