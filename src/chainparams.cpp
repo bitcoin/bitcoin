@@ -162,6 +162,11 @@ public:
         consensus.nMinerConfirmationWindow = 2016;       // nPowTargetTimespan / nPowTargetSpacing
         consensus.nMasternodeMinimumConfirmations = 15;
 
+        // Stake constants
+        consensus.nStakeEnforcement = 67500;
+        consensus.nMinStakeAmount = 200 * COIN;
+        consensus.nMinStakeHistory = 360;
+
         // Governance
         consensus.nSuperblockCycle = 20571; // ~(60*24*30)/2.1, actual number of blocks per month is 262800 / 12 = 21900
         consensus.nGovernanceMinQuorum = 10;
@@ -292,6 +297,11 @@ public:
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016;       // nPowTargetTimespan / nPowTargetSpacing
         consensus.nMasternodeMinimumConfirmations = 1;
+
+        // Stake constants
+        consensus.nStakeEnforcement = 60000;
+        consensus.nMinStakeAmount = 150 * COIN;
+        consensus.nMinStakeHistory = 600;
 
         // Governance
         consensus.nSuperblockCycle = 24; // Superblocks can be issued hourly on testnet
