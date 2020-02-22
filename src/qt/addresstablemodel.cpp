@@ -250,36 +250,6 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
                 return false;
             }
             walletModel->wallet().setAddressBook(curAddress, value.toString().toStdString(), strPurpose);
-        } else if(index.column() == Address) {
-            CTxDestination newAddress = DecodeDestination(value.toString().toStdString());
-            // Refuse to set invalid address, set error status and return false
-            if(boost::get<CNoDestination>(&newAddress))
-            {
-                editStatus = INVALID_ADDRESS;
-                return false;
-            }
-            // Do nothing, if old address == new address
-            else if(newAddress == curAddress)
-            {
-                editStatus = NO_CHANGES;
-                return false;
-            }
-            // Check for duplicate addresses to prevent accidental deletion of addresses, if you try
-            // to paste an existing address over another address (with a different label)
-            if (walletModel->wallet().getAddress(
-                    newAddress, /* name= */ nullptr, /* is_mine= */ nullptr, /* purpose= */ nullptr))
-            {
-                editStatus = DUPLICATE_ADDRESS;
-                return false;
-            }
-            // Double-check that we're not overwriting a receiving address
-            else if(rec->type == AddressTableEntry::Sending)
-            {
-                // Remove old entry
-                walletModel->wallet().delAddressBook(curAddress);
-                // Add new entry with new address
-                walletModel->wallet().setAddressBook(newAddress, value.toString().toStdString(), strPurpose);
-            }
         }
         return true;
     }
