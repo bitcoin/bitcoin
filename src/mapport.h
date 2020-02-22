@@ -15,6 +15,7 @@ static const bool DEFAULT_UPNP = false;
 enum MapPortProtoFlag : unsigned int {
     NONE = 0x00,
     UPNP = 0x01,
+    NAT_PMP = 0x02,
 };
 
 void StartMapPort(bool use_upnp);
