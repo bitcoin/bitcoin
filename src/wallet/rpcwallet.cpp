@@ -507,7 +507,7 @@ static UniValue listaddressgroupings(const JSONRPCRequest& request)
             {
                 const auto* address_book_entry = pwallet->FindAddressBookEntry(address);
                 if (address_book_entry) {
-                    addressInfo.push_back(pwallet->m_address_book.find(address)->second.name);
+                    addressInfo.push_back(address_book_entry->name);
                 }
             }
             jsonGrouping.push_back(addressInfo);
@@ -1317,7 +1317,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWalle
             entry.pushKV("amount", ValueFromAmount(-s.amount));
             const auto* address_book_entry = pwallet->FindAddressBookEntry(s.destination);
             if (address_book_entry) {
-                entry.pushKV("label", pwallet->m_address_book.at(s.destination).name);
+                entry.pushKV("label", address_book_entry->name);
             }
             entry.pushKV("vout", s.vout);
             entry.pushKV("fee", ValueFromAmount(-nFee));
@@ -1335,7 +1335,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWalle
             std::string label;
             const auto* address_book_entry = pwallet->FindAddressBookEntry(r.destination);
             if (address_book_entry) {
-                label = pwallet->m_address_book.at(r.destination).name;
+                label = address_book_entry->name;
             }
             if (filter_label && label != *filter_label) {
                 continue;
@@ -3820,7 +3820,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     // value of the name key/value pair in the labels array below.
     const auto* address_book_entry = pwallet->FindAddressBookEntry(dest);
     if (pwallet->chain().rpcEnableDeprecated("label") && address_book_entry) {
-        ret.pushKV("label", pwallet->m_address_book.at(dest).name);
+        ret.pushKV("label", address_book_entry->name);
     }
 
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));

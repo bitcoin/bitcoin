@@ -66,7 +66,7 @@ static bool GetWalletAddressesForKey(LegacyScriptPubKeyMan* spk_man, const CWall
                 strAddr += ",";
             }
             strAddr += EncodeDestination(dest);
-            strLabel = EncodeDumpString(pwallet->m_address_book.at(dest).name);
+            strLabel = EncodeDumpString(address_book_entry->name);
             fLabelFound = true;
         }
     }
