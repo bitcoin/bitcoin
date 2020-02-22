@@ -12,7 +12,12 @@ static const bool DEFAULT_UPNP = USE_UPNP;
 static const bool DEFAULT_UPNP = false;
 #endif
 
-void StartMapPort();
+enum MapPortProtoFlag : unsigned int {
+    NONE = 0x00,
+    UPNP = 0x01,
+};
+
+void StartMapPort(bool use_upnp);
 void InterruptMapPort();
 void StopMapPort();
 
