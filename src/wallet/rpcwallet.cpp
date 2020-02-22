@@ -303,8 +303,8 @@ static UniValue setlabel(const JSONRPCRequest& request)
                 },
                 RPCResults{},
                 RPCExamples{
-                    HelpExampleCli("setlabel", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"tabby\"")
-            + HelpExampleRpc("setlabel", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"tabby\"")
+                    HelpExampleCli("setlabel", EXAMPLE_ADDRESS + " \"tabby\"")
+            + HelpExampleRpc("setlabel", EXAMPLE_ADDRESS + ", \"tabby\"")
                 },
             }.Check(request);
 
@@ -393,10 +393,10 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
             "\"txid\"                  (string) The transaction id.\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
-            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
-            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"\" \"\" true")
-            + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\"")
+                    HelpExampleCli("sendtoaddress", EXAMPLE_ADDRESS + " 0.1")
+            + HelpExampleCli("sendtoaddress", EXAMPLE_ADDRESS + " 0.1 \"donation\" \"seans outpost\"")
+            + HelpExampleCli("sendtoaddress", EXAMPLE_ADDRESS + " 0.1 \"\" \"\" true")
+            + HelpExampleRpc("sendtoaddress", EXAMPLE_ADDRESS + ", 0.1, \"donation\", \"seans outpost\"")
                 },
             }.Check(request);
 
@@ -607,13 +607,13 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
                 },
                 RPCExamples{
             "\nThe amount from transactions with at least 1 confirmation\n"
-            + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\"") +
+            + HelpExampleCli("getreceivedbyaddress", EXAMPLE_ADDRESS) +
             "\nThe amount including unconfirmed transactions, zero confirmations\n"
-            + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" 0") +
+            + HelpExampleCli("getreceivedbyaddress", EXAMPLE_ADDRESS + " 0") +
             "\nThe amount with at least 6 confirmations\n"
-            + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" 6") +
+            + HelpExampleCli("getreceivedbyaddress", EXAMPLE_ADDRESS + " 6") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", 6")
+            + HelpExampleRpc("getreceivedbyaddress", EXAMPLE_ADDRESS + ", 6")
                 },
             }.Check(request);
 
@@ -1223,7 +1223,7 @@ static UniValue listreceivedbyaddress(const JSONRPCRequest& request)
                     HelpExampleCli("listreceivedbyaddress", "")
             + HelpExampleCli("listreceivedbyaddress", "6 true")
             + HelpExampleRpc("listreceivedbyaddress", "6, true, true")
-            + HelpExampleRpc("listreceivedbyaddress", "6, true, true, \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
+            + HelpExampleRpc("listreceivedbyaddress", "6, true, true, " + EXAMPLE_ADDRESS)
                 },
             }.Check(request);
 
@@ -2035,7 +2035,7 @@ static UniValue walletlock(const JSONRPCRequest& request)
             "\nSet the passphrase for 2 minutes to perform a transaction\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 120") +
             "\nPerform a send (requires passphrase set)\n"
-            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 1.0") +
+            + HelpExampleCli("sendtoaddress", EXAMPLE_ADDRESS + " 1.0") +
             "\nClear the passphrase since we are done before 2 minutes is up\n"
             + HelpExampleCli("walletlock", "") +
             "\nAs a JSON-RPC call\n"
