@@ -160,7 +160,7 @@ private:
             std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums);
     void ProcessPendingReconstructedRecoveredSigs(CConnman* connman);
     bool ProcessPendingRecoveredSigs(CConnman* connman); // called from the worker thread of CSigSharesManager
-    void ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum, CConnman* connman);
+    void ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum, CConnman& connman);
     void Cleanup(); // called from the worker thread of CSigSharesManager
 
 public:
@@ -168,7 +168,7 @@ public:
     void RegisterRecoveredSigsListener(CRecoveredSigsListener* l);
     void UnregisterRecoveredSigsListener(CRecoveredSigsListener* l);
 
-    bool AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
+    bool AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash, bool allowReSign = false);
     bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
     bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id);
     bool HasRecoveredSigForSession(const uint256& signHash);

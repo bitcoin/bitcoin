@@ -575,7 +575,7 @@ void CSigningManager::ProcessPendingReconstructedRecoveredSigs(CConnman* connman
         l = std::move(pendingReconstructedRecoveredSigs);
     }
     for (auto& p : l) {
-        ProcessRecoveredSig(-1, p.first, p.second, connman);
+        ProcessRecoveredSig(-1, p.first, p.second, *g_connman);
     }
 }
 
@@ -637,7 +637,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs(CConnman* connman)
             }
 
             const auto& quorum = quorums.at(std::make_pair((Consensus::LLMQType)recSig.llmqType, recSig.quorumHash));
-            ProcessRecoveredSig(nodeId, recSig, quorum, connman);
+            ProcessRecoveredSig(nodeId, recSig, quorum, *connman);
         }
     }
 
@@ -645,7 +645,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs(CConnman* connman)
 }
 
 // signature must be verified already
-void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum, CConnman* connman)
+void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum, CConnman& connman)
 {
     auto llmqType = (Consensus::LLMQType)recoveredSig.llmqType;
 
@@ -740,7 +740,7 @@ void CSigningManager::UnregisterRecoveredSigsListener(CRecoveredSigsListener* l)
     recoveredSigsListeners.erase(itRem, recoveredSigsListeners.end());
 }
 
-bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)
+bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash, bool allowReSign)
 {
     if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
         return false;
@@ -749,24 +749,31 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
     {
         LOCK(cs);
 
-        if (db.HasVotedOnId(llmqType, id)) {
+        bool hasVoted = db.HasVotedOnId(llmqType, id);
+        if (hasVoted) {
             uint256 prevMsgHash;
             db.GetVoteForId(llmqType, id, prevMsgHash);
             if (msgHash != prevMsgHash) {
                 LogPrintf("CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting on conflicting msgHash=%s\n", __func__,
                         id.ToString(), prevMsgHash.ToString(), msgHash.ToString());
+                return false;
+            } else if (allowReSign) {
+                LogPrint(BCLog::LLMQ, "CSigningManager::%s -- already voted for id=%s and msgHash=%s. Resigning!\n", __func__,
+                         id.ToString(), prevMsgHash.ToString());
             } else {
                 LogPrint(BCLog::LLMQ, "CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting again.\n", __func__,
                           id.ToString(), prevMsgHash.ToString());
+                return false;
             }
-            return false;
         }
 
         if (db.HasRecoveredSigForId(llmqType, id)) {
             // no need to sign it if we already have a recovered sig
             return true;
         }
-        db.WriteVoteForId(llmqType, id, msgHash);
+        if (!hasVoted) {
+            db.WriteVoteForId(llmqType, id, msgHash);
+        }
     }
 
     int tipHeight;
@@ -787,10 +794,13 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
     }
 
     if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
-        //LogPrint(BCLog::LLMQ, "CSigningManager::%s -- we're not a valid member of quorum %s\n", __func__, quorum->quorumHash.ToString());
         return false;
     }
 
+    if (allowReSign) {
+        // make us re-announce all known shares (other nodes might have run into a timeout)
+        quorumSigSharesManager->ForceReAnnouncement(quorum, llmqType, id, msgHash);
+    }
     quorumSigSharesManager->AsyncSign(quorum, id, msgHash);
 
     return true;
