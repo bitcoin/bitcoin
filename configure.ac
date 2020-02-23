@@ -291,6 +291,9 @@ if test "x$enable_debug" = xyes; then
   AX_CHECK_PREPROC_FLAG([-DDEBUG],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG"]],,[[$CXXFLAG_WERROR]])
   AX_CHECK_PREPROC_FLAG([-DDEBUG_LOCKORDER],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG_LOCKORDER"]],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-ftrapv],[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -ftrapv"],,[[$CXXFLAG_WERROR]])
+  if test x$use_sanitizers = x; then
+      AX_CHECK_COMPILE_FLAG([-fsanitize=address],[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -fsanitize=address"],,[[$CXXFLAG_WERROR]])
+  fi
 fi
 
 if test x$use_sanitizers != x; then
