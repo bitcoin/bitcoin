@@ -14,6 +14,7 @@ These are the dependencies currently used by Bitcoin Core. You can find instruct
 | GCC |  | [7+](https://gcc.gnu.org/) (C++17 support) |  |  |  |
 | HarfBuzz-NG |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk) |
 | libevent | [2.1.11-stable](https://github.com/libevent/libevent/releases) | [2.0.21](https://github.com/bitcoin/bitcoin/pull/18676) | No |  |  |
+| libnatpmp | [20150609](https://miniupnp.tuxfamily.org/files) |  | No |  |  |
 | libpng |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk) |
 | librsvg | |  |  |  |  |
 | MiniUPnPc | [2.0.20180203](https://miniupnp.tuxfamily.org/files) |  | No |  |  |
@@ -32,7 +33,8 @@ Controlling dependencies
 Some dependencies are not needed in all configurations. The following are some factors that affect the dependency list.
 
 #### Options passed to `./configure`
-* MiniUPnPc is not needed with  `--with-miniupnpc=no`.
+* MiniUPnPc is not needed with `--without-miniupnpc`.
+* libnatpmp is not needed with `--without-natpmp`.
 * Berkeley DB is not needed with `--disable-wallet` or `--without-bdb`.
 * SQLite is not needed with `--disable-wallet` or `--without-sqlite`.
 * Qt is not needed with `--without-gui`.
