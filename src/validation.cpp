@@ -3787,7 +3787,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
-    if (!m_blockman.AcceptBlockHeader(block, state, chainparams, &pindex, block.IsProofOfStake()))
+    if (!m_blockman.AcceptBlockHeader(block, state, chainparams, &pindex, (block.nNonce == 0)))
          return false;
 
     //! no need, we wont even get here unless checkblock/checkblockheader succeeds
@@ -3838,7 +3838,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     }
 
     uint256 hashProofOfStake = uint256();
-    if (block.nNonce == 0) {
+    if (!block.nNonce) {
         bool fValid = CheckProofOfStake(block, pindex->pprev, hashProofOfStake);
         LogPrintf("hashProof = %s\n", hashProofOfStake.ToString().c_str());
         if (!fValid) {

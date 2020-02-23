@@ -7,6 +7,7 @@
 #ifndef BITGREEN_CONSENSUS_PARAMS_H
 #define BITGREEN_CONSENSUS_PARAMS_H
 
+#include <amount.h>
 #include <uint256.h>
 #include <limits>
 #include <map>
@@ -166,6 +167,13 @@ struct Params {
     int nCoinbaseMaturity;
     int nModifierInterval;
 
+    // prevent unfair stakes
+    CAmount nMinStakeAmount;
+    int nMinStakeHistory;
+    int nStakeEnforcement;
+    CAmount StakeEnforcement() const { return nStakeEnforcement; }
+    CAmount MinStakeAmount() const { return nMinStakeAmount; }
+
     std::map<LLMQType, LLMQParams> llmqs;
     LLMQType llmqChainLocks;
     LLMQType llmqForInstantSend{LLMQ_NONE};
@@ -174,6 +182,11 @@ struct Params {
     int nMasternodeMinimumConfirmations;
     int nInstantSendConfirmationsRequired; // in blocks
     int nInstantSendKeepLock; // in blocks
+
+    bool HasStakeMinDepth(int contextHeight, int utxoFromBlockHeight) const
+    {
+        return (contextHeight - utxoFromBlockHeight >= nMinStakeHistory);
+    }
 };
 } // namespace Consensus
 

@@ -5141,6 +5141,11 @@ bool CWallet::SelectStakeCoins(StakeCoinsSet& setCoins, CAmount nTargetAmount) c
     CAmount nAmountSelected = 0;
 
     for (const COutput& out : vCoins) {
+
+        // dont choose inputs smaller than this
+        if (out.tx->tx->vout[out.i].nValue < Params().GetConsensus().MinStakeAmount())
+            continue;
+
         //make sure not to outrun target amount
         if (nAmountSelected + out.tx->tx->vout[out.i].nValue > nTargetAmount)
             continue;

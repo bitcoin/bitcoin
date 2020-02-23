@@ -294,17 +294,40 @@ static bool GetKernelStakeModifier(CBlockIndex* pindexPrev, uint256 hashBlockFro
 bool CheckStakeKernelHash(unsigned int nBits, CBlockIndex* pindexPrev, const CBlockHeader blockFrom, const CTransactionRef& txPrev, const COutPoint& prevout, unsigned int nTimeTx, uint256& hashProofOfStake, bool fPrintProofOfStake)
 {
     const Consensus::Params& params = Params().GetConsensus();
+    bool fHardenedChecks = pindexPrev->nHeight+1 > params.StakeEnforcement();
+
     auto txPrevTime = blockFrom.GetBlockTime();
-    if (nTimeTx < txPrevTime)  // Transaction timestamp violation
-        return error("%s: nTime violation", __func__);
+    if (nTimeTx < txPrevTime) {
+        //! mimic legacy behaviour
+        if (!fHardenedChecks) {
+            return error("%s: nTime violation", __func__);
+        } else {
+            LogPrintf("Timestamp violation (nTimeTx < txPrevTime)\n");
+            return false;
+        }
+    }
 
     unsigned int nTimeBlockFrom = blockFrom.GetBlockTime();
-    if (nTimeBlockFrom + params.nStakeMinAge > nTimeTx) // Min age requirement
-        return error("%s: min age violation", __func__);
+    if (nTimeBlockFrom + params.nStakeMinAge > nTimeTx) {
+        //! mimic legacy behaviour
+        if (!fHardenedChecks) {
+            return error("%s: min age violation", __func__);
+        } else {
+            LogPrintf("Minimum age violation (nTimeBlockFrom + params.nStakeMinAge > nTimeTx)\n");
+            return false;
+        }
+    }
 
     arith_uint256 bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
     CAmount nValueIn = txPrev->vout[prevout.n].nValue;
+
+    //! enforce minimum stake amount
+    if (nValueIn < Params().GetConsensus().MinStakeAmount() && fHardenedChecks) {
+        LogPrintf("Minimum stake amount is %d, amount found was %d\n", Params().GetConsensus().MinStakeAmount()/COIN, nValueIn/COIN);
+        return false;
+    }
+
     // v0.3 protocol kernel hash weight starts from 0 at the 30-day min age
     // this change increases active coins participating the hash and helps
     // to secure the network when proof-of-stake difficulty is low
@@ -362,9 +385,25 @@ bool CheckStakeKernelHash(unsigned int nBits, CBlockIndex* pindexPrev, const CBl
     return true;
 }
 
+int GetLastHeight(uint256 txHash)
+{
+    uint256 hashBlock;
+    CTransactionRef stakeInput;
+    if (!GetTransaction(txHash, stakeInput, Params().GetConsensus(), hashBlock))
+        return 0;
+
+    if (hashBlock == uint256())
+        return 0;
+
+    return ::LookupBlockIndex(hashBlock)->nHeight;
+}
+
 // Check kernel hash target and coinstake signature
 bool CheckProofOfStake(const CBlock &block, CBlockIndex* pindexPrev, uint256& hashProofOfStake)
 {
+    const Consensus::Params& params = Params().GetConsensus();
+    bool fHardenedChecks = pindexPrev->nHeight+1 > params.StakeEnforcement();
+
     const CTransactionRef &tx = block.vtx[1];
     if (!tx->IsCoinStake())
         return error("%s: called on non-coinstake %s", __func__, tx->GetHash().ToString());
@@ -381,6 +420,19 @@ bool CheckProofOfStake(const CBlock &block, CBlockIndex* pindexPrev, uint256& ha
     CTransactionRef txPrev;
     if (!GetTransaction(txin.prevout.hash, txPrev, Params().GetConsensus(), hashBlock))
         return error("%s: read txPrev failed", __func__);
+
+    // Enforce minimum stake depth
+    const int nPreviousBlockHeight = pindexPrev->nHeight;
+    const int nBlockFromHeight = GetLastHeight(txin.prevout.hash);
+
+    // returning zero from GetLastHeight() indicates error
+    if (nBlockFromHeight == 0 && fHardenedChecks)
+        return false;
+
+    if (!Params().GetConsensus().HasStakeMinDepth(nPreviousBlockHeight+1, nBlockFromHeight) && fHardenedChecks) {
+        LogPrintf("\n%s : min age violation - height=%d - nHeightBlockFrom=%d (depth=%d)\n", __func__, nPreviousBlockHeight, nBlockFromHeight, nPreviousBlockHeight - nBlockFromHeight);
+        return false;
+    }
 
     CBlockHeader header = LookupBlockIndex(hashBlock)->GetBlockHeader();
 
