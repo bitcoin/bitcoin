@@ -270,9 +270,9 @@ static UniValue getfulltransaction(const JSONRPCRequest& request)
             RPCHelpMan{"getfulltransaction",
             "\nReturn the full transaction data.\n",
                 {
-                    {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction id"},
-                }}
-                .ToString() +
+                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                },
+            RPCResult{
             "\nResult:\n"
             "{\n"
             "  \"hex\" : \"data\",         (string) The serialized, hex-encoded data for 'txid'\n"
@@ -320,7 +320,11 @@ static UniValue getfulltransaction(const JSONRPCRequest& request)
             "  \"blocktime\" : ttt       (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
             "}\n"
             "\nExamples:\n"
-            + HelpExampleCli("getfulltransaction", "\"mytxid\"")
+            },
+            RPCExamples{
+              HelpExampleCli("getfulltransaction", "\"mytxid\"")
+            },
+            }.ToString()
         );
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
@@ -343,7 +347,7 @@ UniValue do_getfulltransaction(uint256 hash, UniValue& related_outs)
 
     CTransactionRef tx;
     uint256 hash_block;
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hash_block, true, nullptr)) {
+    if (!GetTransaction(hash, tx, Params().GetConsensus(), hash_block, nullptr)) {
         std::string errmsg;
         if (!g_txindex) {
             errmsg = "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
@@ -365,7 +369,7 @@ UniValue do_getfulltransaction(uint256 hash, UniValue& related_outs)
             }
             CTransactionRef related_tx;
             uint256 related_hash_block;
-            if (!GetTransaction(txin.prevout.hash, related_tx, Params().GetConsensus(), related_hash_block, true, nullptr)) {
+            if (!GetTransaction(txin.prevout.hash, related_tx, Params().GetConsensus(), related_hash_block, nullptr)) {
                 std::string errmsg;
                 if (!g_txindex) {
                     errmsg = "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
@@ -432,7 +436,7 @@ static UniValue getrawtransaction2(const JSONRPCRequest& request)
 
     CTransactionRef tx;
     uint256 hash_block;
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hash_block, true, blockindex)) {
+    if (!GetTransaction(hash, tx, Params().GetConsensus(), hash_block, blockindex)) {
         std::string errmsg;
         if (blockindex) {
             if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {

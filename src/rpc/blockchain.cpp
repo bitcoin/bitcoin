@@ -965,9 +965,9 @@ static UniValue getfullblock(const JSONRPCRequest& request)
             RPCHelpMan{"getfullblock",
             "\nReturn the full block data.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The block hash"},
-                }}
-                .ToString() +
+                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ RPCArg::Optional::NO, "The block hash"},
+                },
+            RPCResult{
             "\nResult:\n"
             "{\n"
             "  \"hash\" : \"hash\",               (string) the block hash (same as provided)\n"
@@ -993,8 +993,11 @@ static UniValue getfullblock(const JSONRPCRequest& request)
             "  \"nextblockhash\" : \"hash\"       (string) The hash of the next block\n"
             "}\n"
             "\nExamples:\n"
-            + HelpExampleCli("getfullblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-        );
+            },
+            RPCExamples{
+              HelpExampleCli("getfullblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+            }
+            }.ToString());
 
     LOCK(cs_main);
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
