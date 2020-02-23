@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <governance/governance.h>
 #include <masternodes/notificationinterface.h>
 #include <masternodes/payments.h>
 #include <masternodes/sync.h>
@@ -54,7 +55,7 @@ void CMNNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     llmq::quorumInstantSendManager->UpdatedBlockTip(pindexNew);
     llmq::chainLocksHandler->UpdatedBlockTip(pindexNew);
 
-    // governance.UpdatedBlockTip(pindexNew, connman);
+    governance.UpdatedBlockTip(pindexNew, connman);
     llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);
     llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
 }
@@ -68,9 +69,9 @@ void CMNNotificationInterface::SyncTransaction(const CTransaction &tx, const CBl
 void CMNNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
 {
     CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff);
-    // governance.CheckMasternodeOrphanObjects(connman);
-    // governance.CheckMasternodeOrphanVotes(connman);
-    // governance.UpdateCachesAndClean();
+    governance.CheckMasternodeOrphanObjects(connman);
+    governance.CheckMasternodeOrphanVotes(connman);
+    governance.UpdateCachesAndClean();
 }
 
 void CMNNotificationInterface::NotifyChainLock(const CBlockIndex* pindex)

@@ -105,6 +105,7 @@ public:
     void Init(size_t size);
     bool IsSet(uint16_t quorumMember) const;
     void Set(uint16_t quorumMember, bool v);
+    void SetAll(bool v);
     void Merge(const CSigSharesInv& inv2);
 
     size_t CountSet() const;
@@ -379,6 +380,7 @@ public:
 
     void AsyncSign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
     void Sign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
+    void ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
 
@@ -402,8 +404,8 @@ private:
             const std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& quorums,
             CConnman* connman);
 
-    void ProcessSigShare(NodeId nodeId, const CSigShare& sigShare, CConnman* connman, const CQuorumCPtr& quorum);
-    void TryRecoverSig(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash, CConnman* connman);
+    void ProcessSigShare(NodeId nodeId, const CSigShare& sigShare, CConnman& connman, const CQuorumCPtr& quorum);
+    void TryRecoverSig(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash, CConnman& connman);
 
 private:
     bool GetSessionInfoByRecvId(NodeId nodeId, uint32_t sessionId, CSigSharesNodeState::SessionInfo& retInfo);

@@ -2700,14 +2700,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 LogPrint(BCLog::NET, "  getblocks stopping at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
                 break;
             }
-            // If pruning, don't inv blocks unless we have on disk and are likely to still have
-            // for some reasonable time window (1 hour) that block relay might require.
-            const int nPrunedBlocksLikelyToHave = MIN_BLOCKS_TO_KEEP - 3600 / chainparams.GetConsensus().nPowTargetSpacing;
-            if (fPruneMode && (!(pindex->nStatus & BLOCK_HAVE_DATA) || pindex->nHeight <= ::ChainActive().Tip()->nHeight - nPrunedBlocksLikelyToHave))
-            {
-                LogPrint(BCLog::NET, " getblocks stopping, pruned or too old block at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
-                break;
-            }
             pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
             if (--nLimit <= 0)
             {
@@ -2983,17 +2975,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
             MaybePunishNode(pfrom->GetId(), state, /*via_compact_block*/ false);
         }
-        return true;
     }
 
-    if (strCommand == NetMsgType::CMPCTBLOCK)
+    if (strCommand == NetMsgType::CMPCTBLOCK && !fImporting && !fReindex)
     {
-        // Ignore cmpctblock received while importing
-        if (fImporting || fReindex) {
-            LogPrint(BCLog::NET, "Unexpected cmpctblock message received from peer %d\n", pfrom->GetId());
-            return true;
-        }
-
         CBlockHeaderAndShortTxIDs cmpctblock;
         vRecv >> cmpctblock;
 
