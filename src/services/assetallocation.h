@@ -167,6 +167,14 @@ public:
     bool ReadAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, CAssetAllocationDBEntry& assetallocation) {
         return Read(assetAllocationTuple, assetallocation);
     }
+	bool ReadAssetsByAddress(const CWitnessAddress &address, std::vector<uint32_t> &assetGuids){	
+        return Read(address, assetGuids);	
+    }	
+    bool ExistsAssetsByAddress(const CWitnessAddress &address){	
+        return Exists(address);	
+    }	
+	bool WriteAssetAllocationIndex(const CTransaction &tx, const uint256& txHash, const CAsset& dbAsset, const int &nHeight, const uint256& blockhash);	
+    bool WriteMintIndex(const CTransaction& tx, const uint256& txHash, const CMintSyscoin& mintSyscoin, const int &nHeight, const uint256& blockhash);
     bool Flush(const AssetAllocationMap &mapAssetAllocations);
 	bool ScanAssetAllocations(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
 };
@@ -208,5 +216,8 @@ void GetActorsFromAssetTx(const CAsset& theAsset, const CAssetAllocation& theAss
 void GetActorsFromAssetAllocationTx(const CAssetAllocation &theAssetAllocation, int nVersion, bool bJustSender, bool bGetAddress, ActorSet& actorSet);
 void GetActorsFromMintTx(const CMintSyscoin& theMintSyscoin, bool bJustSender, bool bGetAddress, ActorSet& actorSet);
 bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry);
+bool WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName);
+bool WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName);	
+bool WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid);
 std::string GetSenderOfZdagTx(const CTransaction &tx);
 #endif // SYSCOIN_SERVICES_ASSETALLOCATION_H

@@ -79,6 +79,7 @@ bool fZMQWalletStatus = false;
 bool fZMQNetworkStatus = false;
 bool fZMQEthStatus = false;
 bool fZMQWalletRawTx = false;
+bool fAssetIndex = false;
 uint32_t fGethSyncHeight = 0;
 uint32_t fGethCurrentHeight = 0;
 pid_t gethPID = 0;

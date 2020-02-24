@@ -440,8 +440,13 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     tfm::format(std::cout,"sending assets with assetsend...\n");
     // PHASE 5:  SEND ASSETS TO NEW ALLOCATIONS
     for(int i =0;i<numAssets;i++){
+        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassetindexassets" , "\"" +  vecFundedAddresses[i] + "\""));	
+        UniValue indexArray = r.get_array();	
+        BOOST_CHECK_EQUAL(indexArray.size(), 1);	
+        uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_uint();
         uint32_t nAssetStored;
         ParseUInt32(vecAssets[i], &nAssetStored);
+        BOOST_CHECK_EQUAL(nAsset, nAssetStored);
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetsendmany" ,  vecAssets[i] + ",[{\"address\":\"" + vecFundedAddresses[i] + "\",\"amount\":250}],\"''\""));
 
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet", "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
@@ -584,6 +589,25 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     const int64_t &endblock = GetTimeMicros();
     tfm::format(std::cout,"elapsed time in block creation: %lld\n", endblock-startblock);
     tfm::format(std::cout,"elapsed time in seconds: %lld\n", end-start);
+    tfm::format(std::cout,"checking indexes...\n");	
+    unfoundedAccountIndex = 0;	
+    for(int i =0;i<numAssets;i++){	
+        uint32_t nAssetStored;	
+        ParseUInt32(vecAssets[i], &nAssetStored);	
+        for (int j = 0; j < numberOfAssetSendsPerBlock; j++) {	
+            BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassetindexallocations" , "\"" + unfundedAccounts[unfoundedAccountIndex++] + "\""));	
+            UniValue indexArray = r.get_array();	
+            BOOST_CHECK_EQUAL(indexArray.size(), numAssets);       	
+            if(unfoundedAccountIndex >= unfundedAccounts.size())	
+                unfoundedAccountIndex = 0;	
+        }	
+
+        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassetindexassets" , "\"" + vecFundedAddresses[i] + "\""));	
+        UniValue indexArray = r.get_array();	
+        BOOST_CHECK_EQUAL(indexArray.size(), 1);	
+        uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_uint();	
+        BOOST_CHECK_EQUAL(nAsset, nAssetStored);	
+    }
 
 }
 BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
