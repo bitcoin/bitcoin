@@ -13,6 +13,49 @@
 
 #include <vector>
 
+using ExtPubKeyMap = std::unordered_map<uint32_t, CExtPubKey>;
+
+/** Cache for single descriptor's derived extended pubkeys */
+class DescriptorCache {
+private:
+    /** Map key expression index -> map of (key derivation index -> xpub) */
+    std::unordered_map<uint32_t, ExtPubKeyMap> m_derived_xpubs;
+    /** Map key expression index -> parent xpub */
+    ExtPubKeyMap m_parent_xpubs;
+
+public:
+    /** Cache a parent xpub
+     *
+     * @param[in] key_exp_pos Position of the key expression within the descriptor
+     * @param[in] xpub The CExtPubKey to cache
+     */
+    void CacheParentExtPubKey(uint32_t key_exp_pos, const CExtPubKey& xpub);
+    /** Retrieve a cached parent xpub
+     *
+     * @param[in] key_exp_pos Position of the key expression within the descriptor
+     * @param[in] xpub The CExtPubKey to get from cache
+     */
+    bool GetCachedParentExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const;
+    /** Cache an xpub derived at an index
+     *
+     * @param[in] key_exp_pos Position of the key expression within the descriptor
+     * @param[in] der_index Derivation index of the xpub
+     * @param[in] xpub The CExtPubKey to cache
+     */
+    void CacheDerivedExtPubKey(uint32_t key_exp_pos, uint32_t der_index, const CExtPubKey& xpub);
+    /** Retrieve a cached xpub derived at an index
+     *
+     * @param[in] key_exp_pos Position of the key expression within the descriptor
+     * @param[in] der_index Derivation index of the xpub
+     * @param[in] xpub The CExtPubKey to get from cache
+     */
+    bool GetCachedDerivedExtPubKey(uint32_t key_exp_pos, uint32_t der_index, CExtPubKey& xpub) const;
+
+    /** Retrieve all cached parent xpubs */
+    const ExtPubKeyMap GetCachedParentExtPubKeys() const;
+    /** Retrieve all cached derived xpubs */
+    const std::unordered_map<uint32_t, ExtPubKeyMap> GetCachedDerivedExtPubKeys() const;
+};
 
 /** \brief Interface for parsed descriptor objects.
  *

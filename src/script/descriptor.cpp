@@ -1050,3 +1050,42 @@ std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const Signing
 {
     return InferScript(script, ParseScriptContext::TOP, provider);
 }
+
+void DescriptorCache::CacheParentExtPubKey(uint32_t key_exp_pos, const CExtPubKey& xpub)
+{
+    m_parent_xpubs[key_exp_pos] = xpub;
+}
+
+void DescriptorCache::CacheDerivedExtPubKey(uint32_t key_exp_pos, uint32_t der_index, const CExtPubKey& xpub)
+{
+    auto& xpubs = m_derived_xpubs[key_exp_pos];
+    xpubs[der_index] = xpub;
+}
+
+bool DescriptorCache::GetCachedParentExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const
+{
+    const auto& it = m_parent_xpubs.find(key_exp_pos);
+    if (it == m_parent_xpubs.end()) return false;
+    xpub = it->second;
+    return true;
+}
+
+bool DescriptorCache::GetCachedDerivedExtPubKey(uint32_t key_exp_pos, uint32_t der_index, CExtPubKey& xpub) const
+{
+    const auto& key_exp_it = m_derived_xpubs.find(key_exp_pos);
+    if (key_exp_it == m_derived_xpubs.end()) return false;
+    const auto& der_it = key_exp_it->second.find(der_index);
+    if (der_it == key_exp_it->second.end()) return false;
+    xpub = der_it->second;
+    return true;
+}
+
+const ExtPubKeyMap DescriptorCache::GetCachedParentExtPubKeys() const
+{
+    return m_parent_xpubs;
+}
+
+const std::unordered_map<uint32_t, ExtPubKeyMap> DescriptorCache::GetCachedDerivedExtPubKeys() const
+{
+    return m_derived_xpubs;
+}
