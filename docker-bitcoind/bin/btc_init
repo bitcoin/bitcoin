@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -ex
+
+# This shouldn't be in the Dockerfile or containers built from the same image
+# will have the same credentials.
+if [ ! -e "$HOME/.bitcoin/bitcoin.conf" ]; then
+    mkdir -p $HOME/.bitcoin
+
+    echo "Creating bitcoin.conf"
+
+    # Seed a random password for JSON RPC server
+    cat <<EOF > $HOME/.bitcoin/bitcoin.conf
+disablewallet=${DISABLEWALLET:-1}
+printtoconsole=${PRINTTOCONSOLE:-1}
+rpcuser=${RPCUSER:-bitcoinrpc}
+rpcpassword=${RPCPASSWORD:-`dd if=/dev/urandom bs=33 count=1 2>/dev/null | base64`}
+EOF
+
+fi
+
+cat $HOME/.bitcoin/bitcoin.conf
+
+echo "Initialization completed successfully"

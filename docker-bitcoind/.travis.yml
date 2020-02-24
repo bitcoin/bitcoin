@@ -1,0 +1,22 @@
+language: bash
+services: docker
+
+env:
+  - VARIANT=xenial
+
+install:
+  - git clone https://github.com/docker-library/official-images.git official-images
+
+before_script:
+  - env | sort
+  - image="bitcoind:$VARIANT"
+
+script:
+  - docker build -t "$image" .
+  - official-images/test/run.sh "$image"
+  - test/run.sh "$image"
+
+after_script:
+  - docker images
+
+# vim:set et ts=2 sw=2:
