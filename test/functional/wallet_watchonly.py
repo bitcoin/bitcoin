@@ -28,13 +28,17 @@ class CreateWalletWatchonlyTest(BitcoinTestFramework):
 
         a1 = def_wallet.getnewaddress()
         wo_change = def_wallet.getnewaddress()
+        wo_change2 = def_wallet.getnewaddress()
         wo_addr = def_wallet.getnewaddress()
 
         self.nodes[0].createwallet(wallet_name='wo', disable_private_keys=True)
         wo_wallet = node.get_wallet_rpc('wo')
 
-        wo_wallet.importpubkey(pubkey=def_wallet.getaddressinfo(wo_addr)['pubkey'])
-        wo_wallet.importpubkey(pubkey=def_wallet.getaddressinfo(wo_change)['pubkey'])
+        wo_wallet.importmulti([
+            {"desc": def_wallet.getaddressinfo(wo_addr)['desc'], "timestamp": "now", "keypool": True},
+            {"desc": def_wallet.getaddressinfo(wo_change)['desc'], "timestamp": "now", "keypool": True, "internal": True},
+            {"desc": def_wallet.getaddressinfo(wo_change2)['desc'], "timestamp": "now", "keypool": True, "internal": True}
+        ])
 
         # generate some btc for testing
         node.generatetoaddress(101, a1)
@@ -93,6 +97,14 @@ class CreateWalletWatchonlyTest(BitcoinTestFramework):
         result = wo_wallet.walletcreatefundedpsbt(inputs=inputs, outputs=outputs, options=options)
         assert_equal("psbt" in result, True)
         assert_raises_rpc_error(-4, "Insufficient funds", wo_wallet.walletcreatefundedpsbt, inputs, outputs, 0, no_wo_options)
+
+        self.log.info('Testing sendmany watch-only')
+        result = wo_wallet.sendmany(dummy="", amounts=outputs[0])
+        assert_equal("psbt" in result, True)
+
+        self.log.info('Testing sendtoaddress watch-only')
+        result = wo_wallet.sendtoaddress(a1, 0.5)
+        assert_equal("psbt" in result, True)
 
         self.log.info('Testing fundrawtransaction watch-only defaults')
         rawtx = wo_wallet.createrawtransaction(inputs=inputs, outputs=outputs)

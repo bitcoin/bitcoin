@@ -6,3 +6,5 @@ Low-level RPC Changes
   - Insufficient funds
   - Fee estimation failed
   - Transaction has too long of a mempool chain
+
+- RPC `sendmany` and  `sendtoaddress` now return a PSBT for wallets that have private keys disabled.

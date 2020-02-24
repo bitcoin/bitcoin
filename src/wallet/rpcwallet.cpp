@@ -370,8 +370,33 @@ UniValue SendMoney(interfaces::Chain::Lock& locked_chain, CWallet * const pwalle
     if (!fCreated) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     }
-    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
-    return tx->GetHash().GetHex();
+    if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+        return tx->GetHash().GetHex();
+    } else {
+        CMutableTransaction mtx(*tx);
+        PartiallySignedTransaction psbtx(mtx);
+        bool dummy_complete;
+        const TransactionError err = pwallet->FillPSBT(psbtx, dummy_complete, SIGHASH_ALL, true, true);
+        if (err != TransactionError::OK) {
+            throw JSONRPCTransactionError(err);
+        }
+        // Future ScriptPubKeyMans may be able to sign for wallets without private keys
+        bool complete = FinalizeAndExtractPSBT(psbtx, mtx);
+        if (complete) {
+            tx = MakeTransactionRef(mtx);
+            pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+            return tx->GetHash().GetHex();
+        } else {
+            UniValue result(UniValue::VOBJ);
+            CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+            ssTx << psbtx;
+            std::string result_str = EncodeBase64(ssTx.str());
+            result.pushKV("psbt", result_str);
+            result.pushKV("complete", complete);
+            return result;
+        }
+    }
 }
 
 static UniValue sendtoaddress(const JSONRPCRequest& request)
@@ -407,6 +432,9 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "\"txid\"                  (string) The transaction id.\n"
+            "{\n"
+            "  \"psbt\":    \"psbt\"     (string) The base64-encoded unsigned PSBT of the new transaction. Only returned when wallet private keys are disabled.\n"
+            "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
@@ -453,6 +481,10 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
     coin_control.m_avoid_address_reuse = GetAvoidReuseFlag(pwallet, request.params[8]);
     // We also enable partial spend avoidance if reuse avoidance is set.
     coin_control.m_avoid_partial_spends |= coin_control.m_avoid_address_reuse;
+
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        coin_control.fAllowWatchOnly = true;
+    }
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -849,6 +881,9 @@ static UniValue sendmany(const JSONRPCRequest& request)
                  RPCResult{
             "\"txid\"                   (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
             "                                    the number of addresses.\n"
+            "{\n"
+            "  \"psbt\":    \"psbt\"      (string) The base64-encoded unsigned PSBT of the new transaction. Only returned when wallet private keys are disabled.\n"
+            "}\n"
                  },
                 RPCExamples{
             "\nSend two amounts to two different addresses:\n"
@@ -896,7 +931,9 @@ static UniValue sendmany(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }
-
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        coin_control.fAllowWatchOnly = true;
+    }
     return SendMoney(*locked_chain, pwallet, coin_control, sendTo, mapValue, subtractFeeFromAmount);
 }
 
