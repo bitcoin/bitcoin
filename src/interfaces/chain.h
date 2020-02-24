@@ -30,6 +30,27 @@ namespace interfaces {
 class Handler;
 class Wallet;
 
+//! Helper for findBlock to selectively return pieces of block data.
+class FoundBlock
+{
+public:
+    FoundBlock& hash(uint256& hash) { m_hash = &hash; return *this; }
+    FoundBlock& height(int& height) { m_height = &height; return *this; }
+    FoundBlock& time(int64_t& time) { m_time = &time; return *this; }
+    FoundBlock& maxTime(int64_t& max_time) { m_max_time = &max_time; return *this; }
+    FoundBlock& mtpTime(int64_t& mtp_time) { m_mtp_time = &mtp_time; return *this; }
+    //! Read block data from disk. If the block exists but doesn't have data
+    //! (for example due to pruning), the CBlock variable will be set to null.
+    FoundBlock& data(CBlock& data) { m_data = &data; return *this; }
+
+    uint256* m_hash = nullptr;
+    int* m_height = nullptr;
+    int64_t* m_time = nullptr;
+    int64_t* m_max_time = nullptr;
+    int64_t* m_mtp_time = nullptr;
+    CBlock* m_data = nullptr;
+};
+
 //! Interface giving clients (wallet processes, maybe other analysis tools in
 //! the future) ability to access to the chain state, receive notifications,
 //! estimate fees, and submit transactions.
@@ -127,14 +148,7 @@ public:
 
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
-    //!
-    //! If a block pointer is provided to retrieve the block contents, and the
-    //! block exists but doesn't have data (for example due to pruning), the
-    //! block will be empty and all fields set to null.
-    virtual bool findBlock(const uint256& hash,
-        CBlock* block = nullptr,
-        int64_t* time = nullptr,
-        int64_t* max_time = nullptr) = 0;
+    virtual bool findBlock(const uint256& hash, const FoundBlock& block={}) = 0;
 
     //! Look up unspent output information. Returns coins in the mempool and in
     //! the current chain UTXO set. Iterates through all the keys in the map and
