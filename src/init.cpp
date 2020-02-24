@@ -320,6 +320,7 @@ void Shutdown(NodeContext& node)
     passetallocationmempooldb.reset();
     pethereumtxrootsdb.reset();
     pethereumtxmintdb.reset();
+    passetindexdb.reset();
     pblockindexdb.reset();
 	plockedoutpointsdb.reset();
     {
@@ -479,6 +480,7 @@ void SetupServerArgs()
     gArgs.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-masternodeprivkey=<n>", "Set the masternode private key", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-assetindex=<n>", strprintf("Index Syscoin Assets for historical information (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);	
     gArgs.AddArg("-sysxasset=<n>", strprintf("SYSX Asset Guid specified when running unit tests (default: %u)", defaultChainParams->GetConsensus().nSYSXAsset), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-tpstest", strprintf("TPSTest for unittest. Leave false"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1620,6 +1622,7 @@ bool AppInitMain(NodeContext& node)
                 passetallocationdb.reset();
                 passetallocationmempooldb.reset();
                 pethereumtxrootsdb.reset();
+                passetindexdb.reset();
                 pethereumtxmintdb.reset();
                 pblockindexdb.reset();
 				plockedoutpointsdb.reset();
@@ -1643,6 +1646,9 @@ bool AppInitMain(NodeContext& node)
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));
                 pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset || fReindexChainState));
                 pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReset || fReindexChainState));
+                fAssetIndex = gArgs.GetBoolArg("-assetindex", false);	
+                if(fAssetIndex)	
+                    passetindexdb.reset(new CAssetIndexDB(nCoinDBCache*16, false, fReset));
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();

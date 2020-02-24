@@ -315,6 +315,8 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     {
         return FormatSyscoinErrorMessage(state, "mint-amount-out-of-range", bSanityCheck);
     }
+    if(!fJustCheck && !bSanityCheck)     	
+        return passetallocationdb->WriteMintIndex(tx, txHash, mintSyscoin, nHeight, blockhash);  
     if(!fJustCheck){
         if(!bSanityCheck && nHeight > 0) {   
             LogPrint(BCLog::SYS,"CONNECTED ASSET MINT: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
@@ -501,6 +503,25 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
     else if(mapAssetAllocation->second.nBalance == 0){
         mapAssetAllocation->second.SetNull();
     }
+    if(fAssetIndex){	
+        const uint256& txid = tx.GetHash();	
+        if(passetindexdb->Exists(std::make_pair(false, mintSyscoin.assetAllocationTuple.nAsset))){	
+            if(!passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple, txid)){	
+                LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint asset allocation from asset allocation index\n");	
+                return false;	
+            }	
+            if(!passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple.nAsset, txid)){	
+                LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint asset allocation from asset index\n");	
+                return false;	
+            }	
+            if(!passetindexdb->EraseIndexTXID(senderAllocationTuple, txid)){		
+                LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint sender asset allocation from asset allocation index\n");		
+            }		
+            if(!passetindexdb->EraseIndexTXID(senderAllocationTuple.nAsset, txid)){		
+                LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint sender asset allocation from asset index\n");		
+            } 	
+        }	      	
+    }
     return true; 
 }
 bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, const CAssetAllocation &theAssetAllocation, CCoinsViewCache& view, AssetAllocationMap &mapAssetAllocations){
@@ -559,7 +580,31 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
         }
         else if(storedReceiverAllocationRef.nBalance == 0){
             storedReceiverAllocationRef.SetNull();  
-        }                                      
+        }
+        if(fAssetIndex){	
+            if(passetindexdb->Exists(std::make_pair(false, receiverAllocationTuple.nAsset))){	
+                if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){	
+                    LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase receiver allocation from asset allocation index\n");	
+                    return false;	
+                }	
+                if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){	
+                    LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase receiver allocation from asset index\n");	
+                    return false;	
+                }	
+            } 	
+        }
+    }
+    if(fAssetIndex){	
+        if(passetindexdb->Exists(std::make_pair(false, theAssetAllocation.assetAllocationTuple.nAsset))){	
+            if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){	
+                LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase sender allocation from asset allocation index\n");	
+                return false;	
+            }	
+            if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){	
+                LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase sender allocation from asset index\n");	
+                return false;	
+            }	
+        }	                                    
     }
     return true; 
 }
@@ -954,7 +999,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         if(storedSenderAllocationRef.nBalance == 0)
             storedSenderAllocationRef.SetNull();    
 
-        if(!bSanityCheck && nHeight > 0) {   
+        if(!bSanityCheck && nHeight > 0) {  
+            // send notification on pow, for zdag transactions this is the second notification meaning the zdag tx has been confirmed	
+            if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, dbAsset, nHeight, blockhash)){	
+                return FormatSyscoinErrorMessage(state, "assetallocation-index", bSanityCheck);	
+            }  
             LogPrint(BCLog::SYS,"CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
                 assetAllocationFromTx(tx.nVersion).c_str(),
                 senderTupleStr.c_str(),
@@ -965,6 +1014,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                     
     }
     else if(!bSanityCheck && isZdagTx){
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND){
+            if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, dbAsset, nHeight,blockhash)){
+                return FormatSyscoinErrorMessage(state, "assetallocation-index", bSanityCheck);
+            }
+        }
         #if __cplusplus > 201402 
         auto resultBalance = mapAssetAllocationBalances.try_emplace(senderTupleStr,  std::move(mapBalanceSenderCopy));
         #else
@@ -1033,8 +1087,32 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
 
         if(storedReceiverAllocationRef.nBalance == 0){
             storedReceiverAllocationRef.SetNull();       
-        }                                            
-    }             
+        } 
+        if(fAssetIndex){	
+            if(passetindexdb->Exists(std::make_pair(false, receiverAllocationTuple.nAsset))){	
+                if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){	
+                    LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase receiver allocation from asset allocation index\n");	
+                    return false;	
+                }	
+                if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){	
+                    LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase receiver allocation from asset index\n");	
+                    return false;	
+                }	
+            }	
+        }	                                           
+    }
+    if(fAssetIndex){		
+        if(passetindexdb->Exists(std::make_pair(false, theAssetAllocation.assetAllocationTuple.nAsset))){	
+            if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){	
+                LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase sender allocation from asset allocation index\n");	
+                return false;	
+            }	
+            if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){	
+                LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase sender allocation from asset index\n");	
+                return false;	
+            }	
+        }	    	
+    }              
     return true;  
 }
 bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets){
@@ -1069,7 +1147,13 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
         if(storedSenderRef.nBalance < 0 || storedSenderRef.nTotalSupply < 0) {
             LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Asset cannot be negative: Balance %lld, Supply: %lld\n",storedSenderRef.nBalance, storedSenderRef.nTotalSupply);
             return false;
-        }                                          
+        }
+        if(fAssetIndex){	
+            if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){	
+                LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not erase asset update from asset index\n");	
+                return false;	
+            }	
+        }                                         
     }         
     return true;  
 }
@@ -1098,7 +1182,13 @@ bool DisconnectAssetTransfer(const CTransaction &tx, const uint256& txid, AssetM
     CAsset& storedSenderRef = mapAsset->second; 
     // theAsset.witnessAddress  is enforced to be the sender of the transfer which was the owner at the time of transfer
     // so set it back to reverse the transfer
-    storedSenderRef.witnessAddress = theAsset.witnessAddress;            
+    storedSenderRef.witnessAddress = theAsset.witnessAddress;       
+    if(fAssetIndex){	
+        if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){	
+            LogPrint(BCLog::SYS,"DisconnectAssetTransfer: Could not erase asset update from asset index\n");	
+            return false;	
+        }		
+    }       
     return true;  
 }
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets){
@@ -1113,7 +1203,13 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
     mapAssets.try_emplace(std::move(theAsset.nAsset),  std::move(emptyAsset));
     #else
     mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(std::move(theAsset.nAsset)),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif   
+    #endif 
+    if(fAssetIndex){	
+        if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){	
+            LogPrint(BCLog::SYS,"DisconnectAssetActivate: Could not erase asset activate from asset index\n");	
+            return false;	
+        }	   	
+    }  
     return true;  
 }
 bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state, const CCoinsViewCache &inputs,
@@ -1387,6 +1483,11 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 storedSenderAssetRef.nBalance -= amountTuple.second;                              
             }
         }
+        if (!bSanityCheck && !fJustCheck){	
+            if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, storedSenderAssetRef, nHeight, blockhash)){	
+                return FormatSyscoinErrorMessage(state, "assetallocation-index", bSanityCheck);	
+            } 	
+        } 
     }
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE)
     {
@@ -1402,6 +1503,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     storedSenderAssetRef.txHash = txHash;
     // write asset, if asset send, only write on pow since asset -> asset allocation is not 0-conf compatible
     if (!bSanityCheck && !fJustCheck && nHeight > 0) {
+        if(!passetdb->WriteAssetIndex(tx, txHash, storedSenderAssetRef, nHeight, blockhash)){	
+            return FormatSyscoinErrorMessage(state, "asset-index", bSanityCheck);	
+        }
         LogPrint(BCLog::SYS,"CONNECTED ASSET: tx=%s symbol=%d hash=%s height=%d fJustCheck=%d\n",
                 assetFromTx(tx.nVersion).c_str(),
                 nAsset,

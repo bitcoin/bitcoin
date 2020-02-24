@@ -197,8 +197,142 @@ public:
     bool ReadAsset(const uint32_t& nAsset, CAsset& asset) {
         return Read(nAsset, asset);
     }  
+    bool ReadAssetsByAddress(const CWitnessAddress &address, std::vector<uint32_t> &assetGuids){	
+        return Read(address, assetGuids);	
+    }	
+     bool ExistsAssetsByAddress(const CWitnessAddress &address){	
+        return Exists(address);	
+    }   	
+	bool WriteAssetIndex(const CTransaction& tx, const uint256& txid, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash);
 	bool ScanAssets(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
     bool Flush(const AssetMap &mapAssets);
+};
+class CAssetIndexDB : public CDBWrapper {	
+public:	
+    CAssetIndexDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetindex", nCacheSize, fMemory, fWipe) {	
+    }	
+    bool ReadIndexTXIDs(const CAssetAllocationTuple& allocationTuple, const uint32_t &page, std::vector<uint256> &TXIDS) {	
+        return Read(std::make_pair(allocationTuple.ToString(), page), TXIDS);	
+    }	
+    bool WriteIndexTXIDs(const CAssetAllocationTuple& allocationTuple, const uint32_t &page, const std::vector<uint256> &TXIDS) {	
+        return Write(std::make_pair(allocationTuple.ToString(), page), TXIDS);	
+    }	
+    bool ReadIndexTXIDs(const uint32_t &assetGuid, const uint32_t &page, std::vector<uint256> &TXIDS){	
+        return Read(std::make_pair(assetGuid, page), TXIDS);	
+    }	
+    bool WriteIndexTXIDs(const uint32_t &assetGuid, const uint32_t &page, const std::vector<uint256> &TXIDS) {	
+        return Write(std::make_pair(assetGuid, page), TXIDS);	
+    }	
+   bool EraseIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256 &txid) {	
+        uint32_t page=0;	
+        std::vector<uint256> TXIDS;	
+        if(!ReadAssetAllocationPage(allocationTuple.nAsset, page))	
+            return false;	
+        uint32_t walkBackPage = page;	
+        const std::string &allocationTupleStr = allocationTuple.ToString();	
+        while(true){	
+            if(!ReadIndexTXIDs(allocationTuple, walkBackPage, TXIDS)){	
+                if(walkBackPage == 0)	
+                    break;	
+                walkBackPage--;	
+                continue;	
+            }	
+            if(TXIDS.empty()){	
+                const std::pair<std::string, uint32_t> &pagePair = std::make_pair(allocationTupleStr, walkBackPage);	
+                if(Exists(pagePair) && !Erase(pagePair))	
+                    return false;	
+                if(walkBackPage == 0)	
+                    break;	
+                walkBackPage--;	
+
+                continue;	
+            }	
+            std::vector<uint256>::iterator it = std::find(TXIDS.begin(), TXIDS.end(), txid);	
+            if(it == TXIDS.end()){	
+                if(walkBackPage == 0)	
+                    break;	
+                walkBackPage--;	
+                continue;	
+            }	
+            TXIDS.erase(it);	
+            break;	
+        }	
+        if(TXIDS.empty() && walkBackPage == page){	
+            const std::pair<std::string, uint32_t> &pagePair = std::make_pair(allocationTupleStr, page);	
+            if(Exists(pagePair) && !Erase(pagePair))	
+                return false;	
+            if(page == 0)	
+                return true;	
+            page--;	
+            return WriteAssetAllocationPage(allocationTuple.nAsset, page);	
+        }	
+        return Write(std::make_pair(allocationTupleStr, page), TXIDS);	
+    }    	
+    bool EraseIndexTXID(const uint32_t &assetGuid, const uint256 &txid) {	
+        uint32_t page=0;	
+        std::vector<uint256> TXIDS;	
+        if(!ReadAssetPage(assetGuid, page))	
+            return false;	
+        uint32_t walkBackPage = page;	
+        while(true){	
+            if(!ReadIndexTXIDs(assetGuid, walkBackPage, TXIDS)){	
+                if(walkBackPage == 0)	
+                    break;	
+                walkBackPage--;	
+                continue;	
+            }	
+            if(TXIDS.empty()){	
+                const std::pair<uint32_t, uint32_t> &pagePair = std::make_pair(assetGuid, walkBackPage);	
+                if(Exists(pagePair) && !Erase(pagePair))	
+                    return false;	
+                if(walkBackPage == 0)	
+                    break;	
+                walkBackPage--;	
+                continue;	
+            }            	
+            std::vector<uint256>::iterator it = std::find(TXIDS.begin(), TXIDS.end(), txid);	
+            if(it == TXIDS.end()){	
+                if(walkBackPage == 0)	
+                    break;	
+                walkBackPage--;	
+                continue;	
+            }	
+            TXIDS.erase(it);	
+            break;	
+        }	
+        if(TXIDS.empty() && walkBackPage == page){	
+            const std::pair<uint32_t, uint32_t> &pagePair = std::make_pair(assetGuid, page);	
+            if(Exists(pagePair) && !Erase(pagePair))	
+                return false;	
+            if(page == 0)	
+                return true;	
+            page--;	
+            return WriteAssetPage(assetGuid, page);	
+        }	
+        return Write(std::make_pair(assetGuid, page), TXIDS);	
+    }    	
+    bool ReadAssetPage(const uint32_t &assetGuid, uint32_t& page) {	
+        return Read(std::make_pair(true, assetGuid), page);	
+    }	
+    bool WriteAssetPage(const uint32_t &assetGuid, const uint32_t &page) {	
+        return Write(std::make_pair(true, assetGuid), page);	
+    }	
+    bool ReadAssetAllocationPage(const uint32_t &assetGuid, uint32_t& page) {	
+        return Read(std::make_pair(false, assetGuid), page);	
+    }	
+    bool WriteAssetAllocationPage(const uint32_t &assetGuid, const uint32_t &page) {	
+        return Write(std::make_pair(false, assetGuid), page);	
+    }	
+    bool WritePayload(const uint256& txid, const UniValue& payload) {	
+        return Write(txid, payload.write());	
+    }	
+    bool ReadPayload(const uint256& txid, UniValue& payload) {	
+        std::string strPayload;	
+        bool res = Read(txid, strPayload);	
+        return res && payload.read(strPayload);	
+    }        	
+    bool ScanAssetIndex(uint32_t page, const UniValue& oOptions, UniValue& oRes);	
+    bool FlushErase(const std::vector<uint256> &vecTXIDs);	
 };
 static CAsset emptyAsset;
 static CWitnessAddress burnWitness(0, vchFromString("burn"));
@@ -209,7 +343,9 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oName);
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CWallet* const pwallet, const isminefilter* filter_ismine);
 #endif
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
+bool WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);
 extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 extern std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
+extern std::unique_ptr<CAssetIndexDB> passetindexdb;
 #endif // SYSCOIN_SERVICES_ASSET_H

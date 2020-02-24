@@ -178,6 +178,111 @@ void CAssetAllocationDBEntry::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
+bool CAssetAllocationDB::WriteMintIndex(const CTransaction& tx, const uint256& txHash, const CMintSyscoin& mintSyscoin, const int &nHeight, const uint256& blockhash){	
+    if (fAssetIndex) {		
+        UniValue output(UniValue::VOBJ);	
+        if(AssetMintTxToJson(tx, txHash, mintSyscoin, nHeight, blockhash, output)){		
+            if(fAssetIndex)	
+                return WriteAssetIndexForAllocation(mintSyscoin, txHash, output); 	
+        }	
+    }	
+    return true;	
+}	
+bool CAssetAllocationDB::WriteAssetAllocationIndex(const CTransaction &tx, const uint256& txHash, const CAsset& dbAsset, const int &nHeight, const uint256& blockhash) {	
+	if (fAssetIndex) {	
+		UniValue oName(UniValue::VOBJ);	
+        CAssetAllocation allocation;	
+        if(AssetAllocationTxToJSON(tx, dbAsset, nHeight, blockhash, oName, allocation)){  	
+            if(fAssetIndex)	
+                return WriteAssetIndexForAllocation(allocation, txHash, oName);          	
+        }	
+	}	
+    return true;	
+}	
+bool WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName){	
+    bool ret = true;  	
+    // sender	
+    ret = WriteAssetAllocationIndexTXID(assetallocation.assetAllocationTuple, txid);	
+    if(!ret){	
+        LogPrint(BCLog::SYS, "Failed to write asset allocation index txid\n");   	
+        return false;	
+    }	
+    // receivers	
+    for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {	
+        ret = WriteAssetAllocationIndexTXID(CAssetAllocationTuple(assetallocation.assetAllocationTuple.nAsset, amountTuple.first), txid);	
+        if(!ret){	
+            LogPrint(BCLog::SYS, "Failed to write asset allocation receiver txid\n");   	
+            return false;	
+        }	
+    }	
+    // index into the asset as well     	
+    ret = WriteAssetIndexTXID(assetallocation.assetAllocationTuple.nAsset, txid);	
+    if(!ret){	
+        LogPrint(BCLog::SYS, "Failed to write asset index txid\n");   	
+        return false; 	
+    }      	
+    // write payload only once for txid	
+    return passetindexdb->WritePayload(txid, oName);      	
+
+}	
+bool WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName){	
+    const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, burnWitness);		
+    bool ret = true;	
+     // sender	
+    ret = WriteAssetAllocationIndexTXID(senderAllocationTuple, txid);	
+    if(!ret){	
+        LogPrint(BCLog::SYS, "Failed to write sender asset allocation index txid\n");   	
+        return false; 	
+    }	
+    // receiver	
+    ret = WriteAssetAllocationIndexTXID(mintSyscoin.assetAllocationTuple, txid);	
+    if(!ret){	
+        LogPrint(BCLog::SYS, "Failed to write mint asset allocation index txid\n");   	
+        return false; 	
+    }    	
+    // index into the asset as well     	
+    ret = WriteAssetIndexTXID(mintSyscoin.assetAllocationTuple.nAsset, txid);	
+    if(!ret){	
+        LogPrint(BCLog::SYS, "Failed to write asset index txid\n");   	
+        return false;   	
+    }	
+    ret = passetindexdb->WritePayload(txid, oName);    	
+    if(!ret){	
+        LogPrint(BCLog::SYS, "Failed to write asset allocation index payload\n");   	
+        return false;        	
+    }  	
+    return true;	
+
+}	
+bool WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid){	
+    // index the allocation	
+    uint32_t page;	
+    if(!passetindexdb->ReadAssetAllocationPage(allocationTuple.nAsset, page)){	
+        page = 0;	
+        if(!passetindexdb->WriteAssetAllocationPage(allocationTuple.nAsset, page)){	
+            LogPrint(BCLog::SYS, "Failed to write asset allocation page\n");   	
+            return false; 	
+        }	
+    }	
+
+    std::vector<uint256> TXIDS;	
+    passetindexdb->ReadIndexTXIDs(allocationTuple, page, TXIDS);	
+    // new page needed	
+    if(((int)TXIDS.size()) >= 25){	
+        TXIDS.clear();	
+        page++;	
+        if(!passetindexdb->WriteAssetAllocationPage(allocationTuple.nAsset, page)){	
+            LogPrint(BCLog::SYS, "Failed to write asset allocation new page\n");	
+            return false;    	
+        }    	
+    }	
+    TXIDS.push_back(txid);	
+    if(!passetindexdb->WriteIndexTXIDs(allocationTuple, page, TXIDS)){	
+        LogPrint(BCLog::SYS, "Failed to write index txids\n");  	
+        return false;	
+    }   	
+    return true;	
+}
 bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple, CAssetAllocationDBEntry& txPos) {
     if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
         return false;
@@ -512,6 +617,36 @@ bool CAssetAllocationDB::Flush(const AssetAllocationMap &mapAssetAllocations){
 	int erase = 0;
     std::map<std::string, std::vector<uint32_t> > mapGuids;
     std::vector<uint32_t> emptyVec;
+    if(fAssetIndex){	
+        for (const auto &key : mapAssetAllocations) {	
+            const string& witnessStr = key.second.assetAllocationTuple.witnessAddress.ToString();	
+            auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(std::move(witnessStr)),  std::forward_as_tuple(std::move(emptyVec)));	
+            std::vector<uint32_t> &assetGuids = it.first->second;	
+            // if wasn't found and was added to the map	
+            if(it.second)	
+                ReadAssetsByAddress(key.second.assetAllocationTuple.witnessAddress, assetGuids);	
+            // erase asset address association	
+            if(key.second.nBalance <= 0){	
+                auto itVec = std::find(assetGuids.begin(), assetGuids.end(),  key.second.assetAllocationTuple.nAsset);	
+                if(itVec != assetGuids.end()){	
+                    assetGuids.erase(itVec);  	
+                    // ensure we erase only the ones that are actually being cleared	
+                    if(assetGuids.empty())	
+                        assetGuids.emplace_back(0);	
+                }	
+            }	
+            else{	
+                // add asset address association	
+                auto itVec = std::find(assetGuids.begin(), assetGuids.end(),  key.second.assetAllocationTuple.nAsset);	
+                if(itVec == assetGuids.end()){	
+                    // if we had the special erase flag we remove that and add the real guid	
+                    if(assetGuids.size() == 1 && assetGuids[0] == 0)	
+                        assetGuids.clear();	
+                    assetGuids.emplace_back(key.second.assetAllocationTuple.nAsset);	
+                }	
+            }      	
+        }	
+    }
     for (const auto &key : mapAssetAllocations) {
         if(key.second.nBalance <= 0){
 			erase++;
@@ -520,6 +655,19 @@ bool CAssetAllocationDB::Flush(const AssetAllocationMap &mapAssetAllocations){
         else{
 			write++;
             batch.Write(key.second.assetAllocationTuple, key.second);
+        }
+        if(fAssetIndex){	
+            auto it = mapGuids.find(key.second.assetAllocationTuple.witnessAddress.ToString());	
+            if(it == mapGuids.end())	
+                continue;	
+            const std::vector<uint32_t>& assetGuids = it->second;	
+            // check for special clearing flag before batch erase	
+            if(assetGuids.size() == 1 && assetGuids[0] == 0)	
+                batch.Erase(key.second.assetAllocationTuple.witnessAddress);   	
+            else	
+                batch.Write(key.second.assetAllocationTuple.witnessAddress, assetGuids); 	
+            // we have processed this address so don't process again	
+            mapGuids.erase(it);        	
         }
     }
 	LogPrint(BCLog::SYS, "Flushing %d assets allocations (erased %d, written %d)\n", mapAssetAllocations.size(), erase, write);
