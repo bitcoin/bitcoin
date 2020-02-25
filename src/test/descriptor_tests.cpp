@@ -135,14 +135,14 @@ void DoCheck(const std::string& prv, const std::string& pub, int flags, const st
             // Evaluate the descriptor selected by `t` in poisition `i`.
             FlatSigningProvider script_provider, script_provider_cached;
             std::vector<CScript> spks, spks_cached;
-            std::vector<unsigned char> cache;
-            BOOST_CHECK((t ? parse_priv : parse_pub)->Expand(i, key_provider, spks, script_provider, &cache));
+            DescriptorCache desc_cache;
+            BOOST_CHECK((t ? parse_priv : parse_pub)->Expand(i, key_provider, spks, script_provider, &desc_cache));
 
             // Compare the output with the expected result.
             BOOST_CHECK_EQUAL(spks.size(), ref.size());
 
             // Try to expand again using cached data, and compare.
-            BOOST_CHECK(parse_pub->ExpandFromCache(i, cache, spks_cached, script_provider_cached));
+            BOOST_CHECK(parse_pub->ExpandFromCache(i, desc_cache, spks_cached, script_provider_cached));
             BOOST_CHECK(spks == spks_cached);
             BOOST_CHECK(script_provider.pubkeys == script_provider_cached.pubkeys);
             BOOST_CHECK(script_provider.scripts == script_provider_cached.scripts);
