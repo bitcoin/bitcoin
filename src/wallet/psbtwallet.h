@@ -27,6 +27,6 @@
               bool& complete,
               int sighash_type = 1 /* SIGHASH_ALL */,
               bool sign = true,
-              bool bip32derivs = false);
+              bool bip32derivs = true);
 
 #endif // BITCOIN_WALLET_PSBTWALLET_H
