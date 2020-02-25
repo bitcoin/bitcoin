@@ -13,9 +13,9 @@
 #include <scheduler.h>
 #include <script/descriptor.h>
 #include <util/check.h>
+#include <util/message.h> // For MessageSign(), MessageVerify()
 #include <util/strencodings.h>
 #include <util/system.h>
-#include <util/validation.h>
 
 #include <stdint.h>
 #include <tuple>
@@ -278,31 +278,21 @@ static UniValue verifymessage(const JSONRPCRequest& request)
     std::string strSign     = request.params[1].get_str();
     std::string strMessage  = request.params[2].get_str();
 
-    CTxDestination destination = DecodeDestination(strAddress);
-    if (!IsValidDestination(destination)) {
+    switch (MessageVerify(strAddress, strSign, strMessage)) {
+    case MessageVerificationResult::ERR_INVALID_ADDRESS:
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
-    }
-
-    const PKHash *pkhash = boost::get<PKHash>(&destination);
-    if (!pkhash) {
+    case MessageVerificationResult::ERR_ADDRESS_NO_KEY:
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+    case MessageVerificationResult::ERR_MALFORMED_SIGNATURE:
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
+    case MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED:
+    case MessageVerificationResult::ERR_NOT_SIGNED:
+        return false;
+    case MessageVerificationResult::OK:
+        return true;
     }
 
-    bool fInvalid = false;
-    std::vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
-
-    if (fInvalid)
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
-
-    CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
-    ss << strMessage;
-
-    CPubKey pubkey;
-    if (!pubkey.RecoverCompact(ss.GetHash(), vchSig))
-        return false;
-
-    return (pubkey.GetID() == *pkhash);
+    return false;
 }
 
 static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
@@ -334,15 +324,13 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
     }
 
-    CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
-    ss << strMessage;
+    std::string signature;
 
-    std::vector<unsigned char> vchSig;
-    if (!key.SignCompact(ss.GetHash(), vchSig))
+    if (!MessageSign(key, strMessage, signature)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+    }
 
-    return EncodeBase64(vchSig.data(), vchSig.size());
+    return signature;
 }
 
 static UniValue setmocktime(const JSONRPCRequest& request)
