@@ -9,6 +9,7 @@
 #include <compat/endian.h>
 
 #include <algorithm>
+#include <cstring>
 #include <ios>
 #include <limits>
 #include <map>
@@ -139,27 +140,31 @@ template<typename Stream> inline uint64_t ser_readdata64(Stream &s)
 }
 inline uint64_t ser_double_to_uint64(double x)
 {
-    union { double x; uint64_t y; } tmp;
-    tmp.x = x;
-    return tmp.y;
+    uint64_t tmp;
+    std::memcpy(&tmp, &x, sizeof(x));
+    static_assert(sizeof(tmp) == sizeof(x), "double and uint64_t assumed to have the same size");
+    return tmp;
 }
 inline uint32_t ser_float_to_uint32(float x)
 {
-    union { float x; uint32_t y; } tmp;
-    tmp.x = x;
-    return tmp.y;
+    uint32_t tmp;
+    std::memcpy(&tmp, &x, sizeof(x));
+    static_assert(sizeof(tmp) == sizeof(x), "float and uint32_t assumed to have the same size");
+    return tmp;
 }
 inline double ser_uint64_to_double(uint64_t y)
 {
-    union { double x; uint64_t y; } tmp;
-    tmp.y = y;
-    return tmp.x;
+    double tmp;
+    std::memcpy(&tmp, &y, sizeof(y));
+    static_assert(sizeof(tmp) == sizeof(y), "double and uint64_t assumed to have the same size");
+    return tmp;
 }
 inline float ser_uint32_to_float(uint32_t y)
 {
-    union { float x; uint32_t y; } tmp;
-    tmp.y = y;
-    return tmp.x;
+    float tmp;
+    std::memcpy(&tmp, &y, sizeof(y));
+    static_assert(sizeof(tmp) == sizeof(y), "float and uint32_t assumed to have the same size");
+    return tmp;
 }
 
 
