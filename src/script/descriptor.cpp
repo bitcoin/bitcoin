@@ -345,10 +345,11 @@ public:
         key_out = final_extkey.pubkey;
 
         if (write_cache) {
-            write_cache->CacheDerivedExtPubKey(m_expr_index, pos, final_extkey);
             // Only cache parent if there is any unhardened derivation
             if (m_derive != DeriveType::HARDENED) {
                 write_cache->CacheParentExtPubKey(m_expr_index, parent_extkey);
+            } else if (final_info_out.path.size() > 0) {
+                write_cache->CacheDerivedExtPubKey(m_expr_index, pos, final_extkey);
             }
         }
 

@@ -149,6 +149,54 @@ void DoCheck(const std::string& prv, const std::string& pub, int flags, const st
             BOOST_CHECK(script_provider.scripts == script_provider_cached.scripts);
             BOOST_CHECK(script_provider.origins == script_provider_cached.origins);
 
+            // Check whether keys are in the cache
+            const auto& der_xpub_cache = desc_cache.GetCachedDerivedExtPubKeys();
+            const auto& parent_xpub_cache = desc_cache.GetCachedParentExtPubKeys();
+            if ((flags & RANGE) && !(flags & DERIVE_HARDENED)) {
+                // For ranged, unhardened derivation, None of the keys in origins should appear in the cache but the cache should have parent keys
+                // But we can derive one level from each of those parent keys and find them all
+                BOOST_CHECK(der_xpub_cache.empty());
+                BOOST_CHECK(parent_xpub_cache.size() > 0);
+                std::set<CPubKey> pubkeys;
+                for (const auto& xpub_pair : parent_xpub_cache) {
+                    const CExtPubKey& xpub = xpub_pair.second;
+                    CExtPubKey der;
+                    xpub.Derive(der, i);
+                    pubkeys.insert(der.pubkey);
+                }
+                for (const auto& origin_pair : script_provider_cached.origins) {
+                    const CPubKey& pk = origin_pair.second.first;
+                    BOOST_CHECK(pubkeys.count(pk) > 0);
+                }
+            } else if (pub1.find("xpub") != std::string::npos) {
+                // For ranged, hardened derivation, or not ranged, but has an xpub, all of the keys should appear in the cache
+                BOOST_CHECK(der_xpub_cache.size() + parent_xpub_cache.size() == script_provider_cached.origins.size());
+                // Get all of the derived pubkeys
+                std::set<CPubKey> pubkeys;
+                for (const auto& xpub_map_pair : der_xpub_cache) {
+                    for (const auto& xpub_pair : xpub_map_pair.second) {
+                        const CExtPubKey& xpub = xpub_pair.second;
+                        pubkeys.insert(xpub.pubkey);
+                    }
+                }
+                // Derive one level from all of the parents
+                for (const auto& xpub_pair : parent_xpub_cache) {
+                    const CExtPubKey& xpub = xpub_pair.second;
+                    pubkeys.insert(xpub.pubkey);
+                    CExtPubKey der;
+                    xpub.Derive(der, i);
+                    pubkeys.insert(der.pubkey);
+                }
+                for (const auto& origin_pair : script_provider_cached.origins) {
+                    const CPubKey& pk = origin_pair.second.first;
+                    BOOST_CHECK(pubkeys.count(pk) > 0);
+                }
+            } else {
+                // No xpub, nothing should be cached
+                BOOST_CHECK(der_xpub_cache.empty());
+                BOOST_CHECK(parent_xpub_cache.empty());
+            }
+
             // Make sure we can expand using cached xpubs for unhardened derivation
             if (!(flags & DERIVE_HARDENED)) {
                 // Evaluate the descriptor at i + 1
