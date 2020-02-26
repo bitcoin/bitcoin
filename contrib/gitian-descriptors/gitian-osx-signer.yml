@@ -12,6 +12,7 @@ remotes:
   "dir": "signature"
 files:
 - "bitcoin-osx-unsigned.tar.gz"
+- "signature-osx.tar.gz"
 script: |
   set -e -o pipefail
 
@@ -32,6 +33,13 @@ script: |
 
   UNSIGNED=bitcoin-osx-unsigned.tar.gz
   SIGNED=bitcoin-osx-signed.dmg
+
+  # use local signatures if present
+  if [ -f signature-osx.tar.gz ]
+  then
+    mkdir -p signature
+    tar -xzf signature-osx.tar.gz -C signature
+  fi
 
   tar -xf ${UNSIGNED}
   OSX_VOLNAME="$(cat osx_volname)"
