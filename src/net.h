@@ -965,7 +965,7 @@ public:
     }
 
 
-    void AddInventoryKnown(const uint256& hash)
+    void AddKnownTx(const uint256& hash)
     {
         if (m_tx_relay != nullptr) {
             LOCK(m_tx_relay->cs_tx_inventory);

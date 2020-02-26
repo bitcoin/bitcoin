@@ -2661,7 +2661,7 @@ void ProcessMessage(
                     best_block = &inv.hash;
                 }
             } else {
-                pfrom.AddInventoryKnown(inv.hash);
+                pfrom.AddKnownTx(inv.hash);
                 if (fBlocksOnly) {
                     LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.hash.ToString(), pfrom.GetId());
                     pfrom.fDisconnect = true;
@@ -2908,14 +2908,14 @@ void ProcessMessage(
         CNodeState* nodestate = State(pfrom.GetId());
 
         const uint256& hash = nodestate->m_wtxid_relay ? wtxid : txid;
-        pfrom.AddInventoryKnown(hash);
+        pfrom.AddKnownTx(hash);
         if (nodestate->m_wtxid_relay && txid != wtxid) {
             // Insert txid into filterInventoryKnown, even for
             // wtxidrelay peers. This prevents re-adding of
             // unconfirmed parents to the recently_announced
             // filter, when a child tx is requested. See
             // ProcessGetData().
-            pfrom.AddInventoryKnown(txid);
+            pfrom.AddKnownTx(txid);
         }
 
         TxValidationState state;
@@ -2982,7 +2982,7 @@ void ProcessMessage(
                         // Eventually we should replace this with an improved
                         // protocol for getting all unconfirmed parents.
                         CInv _inv(MSG_TX | nFetchFlags, txin.prevout.hash);
-                        pfrom.AddInventoryKnown(txin.prevout.hash);
+                        pfrom.AddKnownTx(txin.prevout.hash);
                         if (!AlreadyHave(_inv, mempool)) RequestTx(State(pfrom.GetId()), _inv.hash, current_time);
                     }
                 }
