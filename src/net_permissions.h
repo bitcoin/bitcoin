@@ -15,7 +15,7 @@ enum NetPermissionFlags
     PF_BLOOMFILTER = (1U << 1),
     // Relay and accept transactions from this peer, even if -blocksonly is true
     PF_RELAY = (1U << 3),
-    // Always relay transactions from this peer, even if already in mempool or rejected from policy
+    // Always relay transactions from this peer, even if already in mempool
     // Keep parameter interaction: forcerelay implies relay
     PF_FORCERELAY = (1U << 2) | PF_RELAY,
     // Can't be banned for misbehavior
