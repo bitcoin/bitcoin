@@ -2481,6 +2481,13 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime5 - nTime4) * MILLI, nTimeChainState * MICRO, nTimeChainState * MILLI / nBlocksTotal);
 
+    //! Omni Core: begin block connect notification
+    {
+        LOCK(cs_main);
+        LogPrint(BCLog::HANDLER, "Omni Core handler: block connect begin [height: %d]\n", chainActive.Height());
+        mastercore_handler_block_begin(chainActive.Height(), pindexNew);
+    }
+
     mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
     disconnectpool.removeForBlock(blockConnecting.vtx);
     // Update chainActive & related variables.
@@ -2496,10 +2503,6 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
 
     //! Omni Core: number of meta transactions found
     unsigned int nNumMetaTxs = 0;
-
-    //! Omni Core: begin block connect notification
-    LogPrint(BCLog::HANDLER, "Omni Core handler: block connect begin [height: %d]\n", pindexNew->nHeight);
-    mastercore_handler_block_begin(pindexNew->nHeight, pindexNew);
 
     for (size_t i = 0; i < blockConnecting.vtx.size(); i++) {
         //! Omni Core: new confirmed transaction notification
