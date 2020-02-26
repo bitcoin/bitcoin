@@ -27,7 +27,7 @@ NODISCARD inline std::vector<uint8_t> ConsumeRandomLengthByteVector(FuzzedDataPr
 template <typename T>
 NODISCARD inline Optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, size_t max_length = 4096) noexcept
 {
-    const std::vector<uint8_t>& buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
+    const std::vector<uint8_t> buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
     CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
     T obj;
     try {
