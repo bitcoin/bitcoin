@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     //
     // See also: Coin::DynamicMemoryUsage().
     // SYSCOIN account for extra coin data for assets
-    constexpr int COIN_SIZE = is_64_bit ? 64 : 48;
+    constexpr unsigned int COIN_SIZE = is_64_bit ? 64 : 48;
 
     auto print_view_mem_usage = [](CCoinsViewCache& view) {
         BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage());
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     }
 
     print_view_mem_usage(view);
-    BOOST_CHECK_EQUAL(view.DynamicMemoryUsage(), is_64_bit ? 32 : 16);
+    BOOST_CHECK_EQUAL(view.DynamicMemoryUsage(), is_64_bit ? 32U : 16U);
 
     // We should be able to add COINS_UNTIL_CRITICAL coins to the cache before going CRITICAL.
     // This is contingent not only on the dynamic memory usage of the Coins
