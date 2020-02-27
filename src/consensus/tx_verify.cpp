@@ -161,7 +161,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
-        if(txMissingInput != NULL)
+        if(txMissingInput != nullptr)
             *txMissingInput = tx;
         return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent",
                          strprintf("%s: inputs missing/spent", __func__));

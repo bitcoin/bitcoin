@@ -2322,7 +2322,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 // just temp var not used in !fJustCheck mode
                 AssetBalanceMap mapAssetAllocationBalances;
                 if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssetAllocations, mapAssetAllocationBalances, mapAssets, vecMintKeys, vecLockedOutpoints)){
-                    if(syscoinTxFailed != NULL)
+                    if(syscoinTxFailed != nullptr)
                         *syscoinTxFailed = tx;
                     // Any transaction validation failure in ConnectBlock is a block consensus failure
                     state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
