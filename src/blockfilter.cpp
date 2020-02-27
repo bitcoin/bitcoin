@@ -11,6 +11,7 @@
 #include <hash.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
+#include <script/standard.h>
 #include <streams.h>
 
 /// SerType used to serialize parameters in GCS filter encoding.
@@ -21,6 +22,7 @@ static constexpr int GCS_SER_VERSION = 0;
 
 static const std::map<BlockFilterType, std::string> g_filter_types = {
     {BlockFilterType::BASIC, "basic"},
+    {BlockFilterType::P2WPKH, "p2wpkh"},
 };
 
 template <typename OStream>
@@ -279,6 +281,34 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
     return elements;
 }
 
+static GCSFilter::ElementSet P2WPKHFilterElements(const CBlock& block,
+    const CBlockUndo& block_undo)
+{
+    GCSFilter::ElementSet elements;
+
+    for (const CTransactionRef& tx : block.vtx) {
+        for (const CTxOut& txout : tx->vout) {
+            const CScript& scriptPubKey = txout.scriptPubKey;
+            std::vector<std::vector<unsigned char>> solutions;
+            txnouttype script_type = Solver(txout.scriptPubKey, solutions);
+            if (scriptPubKey.empty() || script_type != TX_WITNESS_V0_KEYHASH) continue;
+            elements.emplace(scriptPubKey.begin(), scriptPubKey.end());
+        }
+    }
+
+    for (const CTxUndo& tx_undo : block_undo.vtxundo) {
+        for (const Coin& prevout : tx_undo.vprevout) {
+            const CScript& scriptPubKey = prevout.out.scriptPubKey;
+            std::vector<std::vector<unsigned char>> solutions;
+            txnouttype script_type = Solver(scriptPubKey, solutions);
+            if (scriptPubKey.empty() || script_type != TX_WITNESS_V0_KEYHASH) continue;
+            elements.emplace(scriptPubKey.begin(), scriptPubKey.end());
+        }
+    }
+
+    return elements;
+}
+
 BlockFilter::BlockFilter(BlockFilterType filter_type, const uint256& block_hash,
                          std::vector<unsigned char> filter)
     : m_filter_type(filter_type), m_block_hash(block_hash)
@@ -297,7 +327,15 @@ BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const
     if (!BuildParams(params)) {
         throw std::invalid_argument("unknown filter_type");
     }
-    m_filter = GCSFilter(params, BasicFilterElements(block, block_undo));
+
+    switch (m_filter_type) {
+    case BlockFilterType::BASIC:
+        m_filter = GCSFilter(params, BasicFilterElements(block, block_undo));
+        break;
+    case BlockFilterType::P2WPKH:
+        m_filter = GCSFilter(params, P2WPKHFilterElements(block, block_undo));
+        break;
+    }
 }
 
 bool BlockFilter::BuildParams(GCSFilter::Params& params) const
@@ -306,6 +344,13 @@ bool BlockFilter::BuildParams(GCSFilter::Params& params) const
     case BlockFilterType::BASIC:
         params.m_siphash_k0 = m_block_hash.GetUint64(0);
         params.m_siphash_k1 = m_block_hash.GetUint64(1);
+        params.m_P = BASIC_FILTER_P;
+        params.m_M = BASIC_FILTER_M;
+        return true;
+    case BlockFilterType::P2WPKH:
+        params.m_siphash_k0 = m_block_hash.GetUint64(0);
+        params.m_siphash_k1 = m_block_hash.GetUint64(1);
+        // using the same filter params as basic type
         params.m_P = BASIC_FILTER_P;
         params.m_M = BASIC_FILTER_M;
         return true;
