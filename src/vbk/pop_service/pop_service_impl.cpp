@@ -63,7 +63,7 @@ inline std::string heightToHash(uint32_t height)
 
 void clearTemporaryPayloadsImpl(VeriBlock::PopService& pop, uint32_t begin, uint32_t end)
 {
-    for (uint32_t height = end - 1; height >= begin; --begin) {
+    for (uint32_t height = end - 1; height >= begin; --height) {
         try {
             pop.removePayloads(heightToHash(height), height);
         } catch (const std::exception& /*ignore*/) {
