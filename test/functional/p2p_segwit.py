@@ -147,6 +147,11 @@ class TestP2PConn(P2PInterface):
         super().__init__()
         self.getdataset = set()
 
+    # Avoid sending out msg_getdata in the mininode thread as a reply to invs.
+    # They are not needed and would only lead to races because we send msg_getdata out in the test thread
+    def on_inv(self, message):
+        pass
+
     def on_getdata(self, message):
         for inv in message.inv:
             self.getdataset.add(inv.hash)
