@@ -92,6 +92,8 @@ constexpr uint32_t BASIC_FILTER_M = 784931;
 enum class BlockFilterType : uint8_t
 {
     BASIC = 0,
+    // Floter 1 is reserved as option to include all filters
+    P2WPKH = 2,
     INVALID = 255,
 };
 
