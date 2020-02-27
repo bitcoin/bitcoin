@@ -39,6 +39,7 @@ FUZZ_TARGETS = \
   test/fuzz/messageheader_deserialize \
   test/fuzz/netaddr_deserialize \
   test/fuzz/out_point_deserialize \
+  test/fuzz/p2p_transport_deserializer \
   test/fuzz/parse_hd_keypath \
   test/fuzz/parse_iso8601 \
   test/fuzz/parse_numbers \
@@ -451,6 +452,12 @@ test_fuzz_out_point_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_out_point_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_out_point_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_out_point_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_p2p_transport_deserializer_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_p2p_transport_deserializer_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_p2p_transport_deserializer_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_p2p_transport_deserializer_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_p2p_transport_deserializer_SOURCES = $(FUZZ_SUITE) test/fuzz/p2p_transport_deserializer.cpp
 
 test_fuzz_parse_hd_keypath_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_parse_hd_keypath_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
