@@ -13,6 +13,7 @@ The minimal steps required to build Syscoin Core with the msbuild toolchain are 
 
 ```
 vcpkg install --triplet x64-windows-static berkeleydb boost-filesystem boost-multi-index boost-signals2 boost-test boost-thread libevent[thread] rapidcheck zeromq double-conversion
+vcpkg integrate install
 py -3 build_msvc\msvc-autogen.py
 msbuild /m build_msvc\syscoin.sln /p:Platform=x64 /p:Configuration=Release /t:build
 ```
@@ -65,6 +66,7 @@ The instructions below use `vcpkg` to install the dependencies.
 
 ```
 PS >.\vcpkg install --triplet x64-windows-static $(Get-Content -Path build_msvc\vcpkg-packages.txt).split()
+PS >.\vcpkg integrate install
 ```
 
 - Use Python to generate `*.vcxproj` from Makefile
