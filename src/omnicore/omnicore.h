@@ -31,7 +31,7 @@ int const STORE_EVERY_N_BLOCK = 10000;
 #define TEST_ECO_PROPERTY_1 (0x80000003UL)
 
 // increment this value to force a refresh of the state (similar to --startclean)
-#define DB_VERSION 7
+#define DB_VERSION 8
 
 // could probably also use: int64_t maxInt64 = std::numeric_limits<int64_t>::max();
 // maximum numeric values from the spec:
