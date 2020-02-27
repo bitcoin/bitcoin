@@ -2195,7 +2195,7 @@ static UniValue getblockfilter(const JSONRPCRequest& request)
                 "\nRetrieve a BIP 157 content filter for a particular block.\n",
                 {
                     {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hash of the block"},
-                    {"filtertype", RPCArg::Type::STR, /*default*/ "basic", "The type name of the filter"},
+                    {"filtertype", RPCArg::Type::STR, /*default*/ "basic", "The type name of the filter, values: " + ListBlockFilterTypes()},
                 },
                 RPCResult{
                     "{\n"
