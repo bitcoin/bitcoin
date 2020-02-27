@@ -43,8 +43,8 @@ static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex
     BOOST_CHECK(filter_index.LookupFilterHashRange(block_index->nHeight, block_index,
                                                    filter_hashes));
 
-    BOOST_CHECK_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filter_hashes.size(), 1);
+    BOOST_CHECK_EQUAL(filters.size(), 1U);
+    BOOST_CHECK_EQUAL(filter_hashes.size(), 1U);
 
     BOOST_CHECK_EQUAL(filter.GetHash(), expected_filter.GetHash());
     BOOST_CHECK_EQUAL(filter_header, expected_filter.ComputeHeader(last_header));
@@ -255,8 +255,9 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     BOOST_CHECK(filter_index.LookupFilterRange(0, tip, filters));
     BOOST_CHECK(filter_index.LookupFilterHashRange(0, tip, filter_hashes));
 
-    BOOST_CHECK_EQUAL(filters.size(), tip->nHeight + 1);
-    BOOST_CHECK_EQUAL(filter_hashes.size(), tip->nHeight + 1);
+    assert(tip->nHeight >= 0);
+    BOOST_CHECK_EQUAL(filters.size(), tip->nHeight + 1U);
+    BOOST_CHECK_EQUAL(filter_hashes.size(), tip->nHeight + 1U);
 
     filters.clear();
     filter_hashes.clear();
