@@ -99,7 +99,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     {
         LOCK(cs_assetallocationmempoolremovetx);
         // we should skip setToRemoveFromMempool instead of letting input check below deal with it because zdag state will be inconsistent in the later case
-        // that is meant as a sanity and fallback incase setToRemoveFromMempool misses
+        // that is meant as a sanity and fallback in case setToRemoveFromMempool misses
         txsToRemove.reserve(txsToRemove.size() + setToRemoveFromMempool.size());
         for(const auto& txid: setToRemoveFromMempool){
             txsToRemove.insert(txid);
