@@ -20,7 +20,7 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
     bool calc_fee = true;
     bool all_final = true;
     bool only_missing_sigs = true;
-    bool only_missing_final = false;
+    bool only_missing_final = true;
     CAmount in_amt = 0;
 
     result.inputs.resize(psbtx.tx->vin.size());
@@ -47,6 +47,7 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
             input_analysis.is_final = false;
             input_analysis.next = PSBTRole::UPDATER;
             calc_fee = false;
+            only_missing_final = false;
         }
 
         if (!utxo.IsNull() && utxo.scriptPubKey.IsUnspendable()) {
@@ -77,8 +78,8 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
                     only_missing_sigs = false;
                     input_analysis.next = PSBTRole::UPDATER;
                 }
+                only_missing_final = false;
             } else {
-                only_missing_final = true;
                 input_analysis.next = PSBTRole::FINALIZER;
             }
         } else if (!utxo.IsNull()){
@@ -139,12 +140,12 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
             result.estimated_feerate = feerate;
         }
 
-        if (only_missing_sigs) {
-            result.next = PSBTRole::SIGNER;
+        if (all_final) {
+            result.next = PSBTRole::EXTRACTOR;
         } else if (only_missing_final) {
             result.next = PSBTRole::FINALIZER;
-        } else if (all_final) {
-            result.next = PSBTRole::EXTRACTOR;
+        } else if (only_missing_sigs) {
+            result.next = PSBTRole::SIGNER;
         } else {
             result.next = PSBTRole::UPDATER;
         }
