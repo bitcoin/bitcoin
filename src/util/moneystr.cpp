@@ -36,14 +36,10 @@ bool ParseMoney(const std::string& str, CAmount& nRet)
     if (!ValidAsCString(str)) {
         return false;
     }
-    return ParseMoney(str.c_str(), nRet);
-}
 
-bool ParseMoney(const char* pszIn, CAmount& nRet)
-{
     std::string strWhole;
     int64_t nUnits = 0;
-    const char* p = pszIn;
+    const char* p = str.c_str();
     while (IsSpace(*p))
         p++;
     for (; *p; p++)
