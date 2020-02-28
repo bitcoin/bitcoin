@@ -177,6 +177,11 @@ template<typename SpecialTxPayload>
 static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
 {
     assert(pwallet != nullptr);
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
     LOCK2(cs_main, pwallet->cs_wallet);
 
     CTxDestination nodest = CNoDestination();
@@ -284,12 +289,14 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
 
 static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
 {
+    {
     LOCK(cs_main);
 
     CValidationState state;
     if (!CheckSpecialTx(tx, chainActive.Tip(), state)) {
         throw std::runtime_error(FormatStateMessage(state));
     }
+    } // cs_main
 
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     ds << tx;
