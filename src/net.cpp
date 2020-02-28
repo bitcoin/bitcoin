@@ -2822,8 +2822,8 @@ UniValue connect(const JSONRPCRequest& request)
             "[\n*\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("connect", "10.0.0.1 8333")
-            + HelpExampleRpc("connect", "10.0.0.1 8333")
+                    HelpExampleCli("connect", "1.2.3.4 8333")
+            + HelpExampleRpc("connect", "1.2.3.4 8333")
                 },
             }.ToString());
 
@@ -2871,6 +2871,55 @@ UniValue connect(const JSONRPCRequest& request)
 
 
 // Cybersecurity Lab
+UniValue disconnect(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 2)
+        throw std::runtime_error(
+            RPCHelpMan{"disconnect",
+                "\nAdd an entry to the IP table.\n",
+                {
+                  {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP Address"},
+                  {"port", RPCArg::Type::STR, RPCArg::Optional::NO, "Port"},
+                },
+                RPCResult{
+            "[\n*\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("disconnect", "1.2.3.4 8333")
+            + HelpExampleRpc("disconnect", "1.2.3.4 8333")
+                },
+            }.ToString());
+
+    if(!g_rpc_node->connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+
+    UniValue result(UniValue::VOBJ);
+
+    std::string ipAddress = request.params[0].get_str();
+    std::string portStr = request.params[1].get_str();
+
+    int port = 8333;
+    try {
+      port = std::stoi(portStr);
+    } catch(...) {
+      result.pushKV("Invalid port", port);
+      return result;
+    }
+
+    bool success = g_rpc_node->connman->DisconnectNode(ipAddress + ":" + std::to_string(port));
+
+    if(!success) {
+      result.pushKV(ipAddress + ":" + std::to_string(port), "Failed");
+      return result;
+    } else {
+      result.pushKV(ipAddress + ":" + std::to_string(port), "Successful");
+    }
+    return result;
+}
+
+
+// Cybersecurity Lab
 UniValue bucketclear(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
@@ -2911,8 +2960,8 @@ UniValue bucketadd(const JSONRPCRequest& request)
             "[\n*\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("bucketadd", "10.0.0.1 8333")
-            + HelpExampleRpc("bucketadd", "10.0.0.1 8333")
+                    HelpExampleCli("bucketadd", "1.2.3.4 8333")
+            + HelpExampleRpc("bucketadd", "1.2.3.4 8333")
                 },
             }.ToString());
 
@@ -2932,7 +2981,7 @@ UniValue bucketadd(const JSONRPCRequest& request)
       return result;
     }
 
-    result.pushKV(ipAddress + ":" + std::to_string(port), g_rpc_node->connman->bucketadd(ipAddress, port, "0.0.0.0") ? "Successful" : "Failed");
+    result.pushKV(ipAddress + ":" + std::to_string(port), g_rpc_node->connman->bucketadd(ipAddress, port) ? "Successful" : "Failed");
     return result;
 }
 
@@ -2952,8 +3001,8 @@ UniValue bucketremove(const JSONRPCRequest& request)
             "[\n*\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("bucketremove", "10.0.0.1 8333")
-            + HelpExampleRpc("bucketremove", "10.0.0.1 8333")
+                    HelpExampleCli("bucketremove", "1.2.3.4 8333")
+            + HelpExampleRpc("bucketremove", "1.2.3.4 8333")
                 },
             }.ToString());
 
@@ -2973,7 +3022,7 @@ UniValue bucketremove(const JSONRPCRequest& request)
       return result;
     }
 
-    result.pushKV(ipAddress + ":" + std::to_string(port), g_rpc_node->connman->bucketremove(ipAddress, port, "0.0.0.0") ? "Successful" : "Failed");
+    result.pushKV(ipAddress + ":" + std::to_string(port), g_rpc_node->connman->bucketremove(ipAddress, port) ? "Successful" : "Failed");
     return result;
 }
 
@@ -2992,8 +3041,8 @@ UniValue bucketgood(const JSONRPCRequest& request)
             "[\n*\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("bucketgood", "10.0.0.1 8333")
-            + HelpExampleRpc("bucketgood", "10.0.0.1 8333")
+                    HelpExampleCli("bucketgood", "1.2.3.4 8333")
+            + HelpExampleRpc("bucketgood", "1.2.3.4 8333")
                 },
             }.ToString());
 
@@ -3013,7 +3062,7 @@ UniValue bucketgood(const JSONRPCRequest& request)
       return result;
     }
 
-    result.pushKV(ipAddress + ":" + std::to_string(port), g_rpc_node->connman->bucketgood(ipAddress, port, "0.0.0.0") ? "Successful" : "Failed");
+    result.pushKV(ipAddress + ":" + std::to_string(port), g_rpc_node->connman->bucketgood(ipAddress, port) ? "Successful" : "Failed");
     return result;
 }
 
@@ -3142,6 +3191,7 @@ static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
   { "z Researcher",          "connect",                 &connect,                {"address", "port"} },
+  { "z Researcher",          "disconnect",              &disconnect,             {"address", "port"} },
   { "z Researcher",          "bucketlist",              &bucketlist,             {"new/tried/all"} },
   { "z Researcher",          "bucketinfo",              &bucketinfo,             {} },
   { "z Researcher",          "bucketclear",             &bucketclear,            {} },

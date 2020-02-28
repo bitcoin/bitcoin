@@ -339,15 +339,13 @@ public:
 
 
     // Cybersecurity Lab
-    CNode* ipconnect(std::string ip, int port, std::string source = "250.1.2.1") {
+    CNode* ipconnect(std::string ip, int port, std::string source = "192.168.0.250:8333") {
       CNetAddr src;
-      if(LookupHost(source.c_str(), src, false)) {
+      char* source_c = const_cast<char*>(source.c_str());
+      if(LookupHost(source_c, src, false)) {
         CService serv;
         if(Lookup(ip.c_str(), serv, port, false)) {
           CAddress addrConnect = CAddress(serv, NODE_NONE);
-
-          char* source_c = const_cast<char*>(source.c_str());
-
           bool fCountFailure = false;
           bool manual_connection = true;
           bool block_relay_only = false;
@@ -368,7 +366,7 @@ public:
       return true;
     }
     // Add an entry to the IP table
-    bool bucketadd(std::string ip, int port, std::string source = "250.1.2.1") {
+    bool bucketadd(std::string ip, int port, std::string source = "192.168.0.250:8333") {
       CNetAddr src;
       if(LookupHost(source.c_str(), src, false)) {
         CService serv;
@@ -383,7 +381,7 @@ public:
       }
     }
     // Mark an entry as Good (from new to tried)
-    bool bucketgood(std::string ip, int port, std::string source = "250.1.2.1") {
+    bool bucketgood(std::string ip, int port, std::string source = "192.168.0.250:8333") {
       CNetAddr src;
       if(LookupHost(source.c_str(), src, false)) {
         CService serv;
@@ -400,7 +398,7 @@ public:
       }
     }
     // Remove an entry from the IP table
-    bool bucketremove(std::string ip, int port, std::string source = "250.1.2.1") {
+    bool bucketremove(std::string ip, int port, std::string source = "192.168.0.250:8333") {
       CNetAddr src;
       if(LookupHost(source.c_str(), src, false)) {
         CService serv;
