@@ -165,7 +165,7 @@ public:
      *  write_cache is the cache to write keys to (if not nullptr)
      *  Caches are not exclusive but this is not tested. Currently we use them exclusively
      */
-    virtual bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key, KeyOriginInfo& info, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const = 0;
+    virtual bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key, KeyOriginInfo& info, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) = 0;
 
     /** Whether this represent multiple public keys at different positions. */
     virtual bool IsRange() const = 0;
@@ -195,7 +195,7 @@ class OriginPubkeyProvider final : public PubkeyProvider
 
 public:
     OriginPubkeyProvider(uint32_t exp_index, KeyOriginInfo info, std::unique_ptr<PubkeyProvider> provider) : PubkeyProvider(exp_index), m_origin(std::move(info)), m_provider(std::move(provider)) {}
-    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key, KeyOriginInfo& info, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
+    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key, KeyOriginInfo& info, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) override
     {
         if (!m_provider->GetPubKey(pos, arg, key, info, read_cache, write_cache)) return false;
         std::copy(std::begin(m_origin.fingerprint), std::end(m_origin.fingerprint), info.fingerprint);
@@ -225,7 +225,7 @@ class ConstPubkeyProvider final : public PubkeyProvider
 
 public:
     ConstPubkeyProvider(uint32_t exp_index, const CPubKey& pubkey) : PubkeyProvider(exp_index), m_pubkey(pubkey) {}
-    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key, KeyOriginInfo& info, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
+    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key, KeyOriginInfo& info, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) override
     {
         key = m_pubkey;
         info.path.clear();
@@ -262,6 +262,9 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     CExtPubKey m_root_extkey;
     KeyPath m_path;
     DeriveType m_derive;
+    // Cache of the parent of the final derived pubkeys.
+    // Primarily useful for situations when no read_cache is provided
+    CExtPubKey m_cached_xpub;
 
     bool GetExtKey(const SigningProvider& arg, CExtKey& ret) const
     {
@@ -298,7 +301,7 @@ public:
     BIP32PubkeyProvider(uint32_t exp_index, const CExtPubKey& extkey, KeyPath path, DeriveType derive) : PubkeyProvider(exp_index), m_root_extkey(extkey), m_path(std::move(path)), m_derive(derive) {}
     bool IsRange() const override { return m_derive != DeriveType::NO; }
     size_t GetSize() const override { return 33; }
-    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key_out, KeyOriginInfo& final_info_out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
+    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key_out, KeyOriginInfo& final_info_out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) override
     {
         // Info of parent of the to be derived pubkey
         KeyOriginInfo parent_info;
@@ -323,6 +326,9 @@ public:
                 final_extkey = parent_extkey;
                 if (m_derive == DeriveType::UNHARDENED) der = parent_extkey.Derive(final_extkey, pos);
             }
+        } else if (m_cached_xpub.pubkey.IsValid() && m_derive != DeriveType::HARDENED) {
+            parent_extkey = final_extkey = m_cached_xpub;
+            if (m_derive == DeriveType::UNHARDENED) der = parent_extkey.Derive(final_extkey, pos);
         } else if (IsHardened()) {
             CExtKey xprv;
             if (!GetDerivedExtKey(arg, xprv)) return false;
@@ -343,6 +349,11 @@ public:
 
         final_info_out = final_info_out_tmp;
         key_out = final_extkey.pubkey;
+
+        // We rely on the consumer to check that m_derive isn't HARDENED as above
+        // But we can't have already cached something in case we read something from the cache
+        // and parent_extkey isn't actually the parent.
+        if (!m_cached_xpub.pubkey.IsValid()) m_cached_xpub = parent_extkey;
 
         if (write_cache) {
             // Only cache parent if there is any unhardened derivation
