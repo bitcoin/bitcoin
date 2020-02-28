@@ -105,7 +105,7 @@ AuxpowMiner::getCurrentBlock (const CTxMemPool& mempool,
      pindexPrev == ::ChainActive ().Tip().  But for that to happen, we must
      already have created a pblockCur in a previous call, as pindexPrev is
      initialised only when pblockCur is.  */
-  assert (pblockCur);
+  CHECK_NONFATAL(pblockCur);
 
   arith_uint256 arithTarget;
   bool fNegative, fOverflow;
@@ -174,7 +174,7 @@ AuxpowMiner::submitAuxBlock (const std::string& hashHex,
   std::unique_ptr<CAuxPow> pow(new CAuxPow ());
   ss >> *pow;
   shared_block->SetAuxpow (std::move (pow));
-  assert (shared_block->GetHash ().GetHex () == hashHex);
+  CHECK_NONFATAL(shared_block->GetHash ().GetHex () == hashHex);
 
   return ProcessNewBlock (Params (), shared_block, true, nullptr);
 }
