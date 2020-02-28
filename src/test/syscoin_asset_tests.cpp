@@ -838,7 +838,7 @@ BOOST_AUTO_TEST_CASE(generate_syscoin_asset_zdag_dependency)
 
     string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa", "8", "10", "100");
     AssetSend("node1", assetguid, "[{\"address\":\"" + useraddress1 + "\",\"amount\":2.0}]");
-    // Send from address 2 to address 1, send away from address 1 and back to 1, and then send all from address 1 to 3, the idea is.. if its out of chronological order some txs wont get mined
+    // Send from address 2 to address 1, send away from address 1 and back to 1, and then send all from address 1 to 3, the idea is.. if its out of chronological order some txs won't get mined
     // but they all should be mined and miner code should preserve order even if priority of transactions change
     string txid1 = AssetAllocationTransfer(false, "node2", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":1.5}]");
     //printf("txid1 %s\n", txid1.c_str());
@@ -1472,7 +1472,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_same_input_no_ov
     AssetSend("node1", assetguid, "[{\"address\":\"" + useraddress1 + "\",\"amount\":1.0}]");
     AssetAllocationTransfer(false, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.1}]");
     // burn and transfer at same time for use same input but don't overflow balance, it should flag the sender in conflict even though balance doesn't overflow, 
-    // there is no gaurantee the tx will get mined in order so raise it up as issue
+    // there is no guarantee the tx will get mined in order so raise it up as issue
     // burn only 0.4
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationburn" , assetguid + ",\"" + useraddress1 + "\",0.4,\"0x931d387731bbbc988b312206c74f77d004d6b84b\""));
 
@@ -2094,7 +2094,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid0 + "\""));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
 
-	// send using zdag, balance wont go up only down within block
+	// send using zdag, balance won't go up only down within block
 	string txid1 = AssetAllocationTransfer(true, "node1", guid, newaddress1, "[{\"address\":\"" + newaddress2 + "\",\"amount\":0.12}]");
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  guid + ",\"" + newaddress2 + "\""));
 	balance = find_value(r.get_obj(), "balance_zdag");
