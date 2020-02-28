@@ -42,10 +42,9 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         self.set_dash_dip8_activation(200)
 
     def run_test(self):
-        self.test_node = TestNode()
-        self.test_node.add_connection(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.test_node))
-        NetworkThread().start()  # Start up network handling in another thread
-        self.test_node.wait_for_verack()
+        self.test_node = self.nodes[0].add_p2p_connection(TestNode())
+        network_thread_start()
+        self.nodes[0].p2p.wait_for_verack()
 
         self.confirm_mns()
 
