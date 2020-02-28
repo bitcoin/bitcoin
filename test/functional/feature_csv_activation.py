@@ -343,7 +343,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         bip113tx_v2.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
         bip113signed2 = sign_transaction(self.nodes[0], bip113tx_v2)
         for bip113tx in [bip113signed1, bip113signed2]:
-            self.send_blocks([self.create_test_block([bip113tx])], success=False)
+            self.send_blocks([self.create_test_block([bip113tx])], success=False, reject_reason='bad-txns-nonfinal')
         # BIP 113 tests should now pass if the locktime is < MTP
         bip113tx_v1.nLockTime = self.last_block_time - 600 * 5 - 1  # < MTP of prior block
         bip113signed1 = sign_transaction(self.nodes[0], bip113tx_v1)
@@ -375,11 +375,11 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # All txs without flag fail as we are at delta height = 8 < 10 and delta time = 8 * 600 < 10 * 512
         bip68timetxs = [tx['tx'] for tx in bip68txs_v2 if not tx['sdf'] and tx['stf']]
         for tx in bip68timetxs:
-            self.send_blocks([self.create_test_block([tx])], success=False)
+            self.send_blocks([self.create_test_block([tx])], success=False, reject_reason='bad-txns-nonfinal')
 
         bip68heighttxs = [tx['tx'] for tx in bip68txs_v2 if not tx['sdf'] and not tx['stf']]
         for tx in bip68heighttxs:
-            self.send_blocks([self.create_test_block([tx])], success=False)
+            self.send_blocks([self.create_test_block([tx])], success=False, reject_reason='bad-txns-nonfinal')
 
         # Advance one block to 438
         test_blocks = self.generate_blocks(1)
@@ -390,7 +390,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.send_blocks([self.create_test_block(bip68success_txs)])
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         for tx in bip68heighttxs:
-            self.send_blocks([self.create_test_block([tx])], success=False)
+            self.send_blocks([self.create_test_block([tx])], success=False, reject_reason='bad-txns-nonfinal')
 
         # Advance one block to 439
         test_blocks = self.generate_blocks(1)
@@ -405,7 +405,8 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.log.info("Test version 1 txs")
 
         # -1 OP_CSV tx and (empty stack) OP_CSV tx should fail
-        self.send_blocks([self.create_test_block([bip112tx_special_v1])], success=False)
+        self.send_blocks([self.create_test_block([bip112tx_special_v1])], success=False,
+                         reject_reason='non-mandatory-script-verify-flag (Negative locktime)')
         self.send_blocks([self.create_test_block([bip112tx_emptystack_v1])], success=False,
                          reject_reason='non-mandatory-script-verify-flag (Operation not valid with the current stack size)')
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 1 txs should still pass
@@ -418,15 +419,17 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is unset in argument to OP_CSV, version 1 txs should now fail
         fail_txs = all_rlt_txs(bip112txs_vary_nSequence_v1)
         fail_txs += all_rlt_txs(bip112txs_vary_nSequence_9_v1)
-        fail_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_9_v1 if not tx['sdf']]
+        fail_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_v1 if not tx['sdf']]
         fail_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_9_v1 if not tx['sdf']]
         for tx in fail_txs:
-            self.send_blocks([self.create_test_block([tx])], success=False)
+            self.send_blocks([self.create_test_block([tx])], success=False,
+                             reject_reason='non-mandatory-script-verify-flag (Locktime requirement not satisfied)')
 
         self.log.info("Test version 2 txs")
 
         # -1 OP_CSV tx and (empty stack) OP_CSV tx should fail
-        self.send_blocks([self.create_test_block([bip112tx_special_v2])], success=False)
+        self.send_blocks([self.create_test_block([bip112tx_special_v2])], success=False,
+                         reject_reason='non-mandatory-script-verify-flag (Negative locktime)')
         self.send_blocks([self.create_test_block([bip112tx_emptystack_v2])], success=False,
                          reject_reason='non-mandatory-script-verify-flag (Operation not valid with the current stack size)')
 
@@ -443,18 +446,21 @@ class BIP68_112_113Test(BitcoinTestFramework):
         fail_txs = all_rlt_txs(bip112txs_vary_nSequence_9_v2)
         fail_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_9_v2 if not tx['sdf']]
         for tx in fail_txs:
-            self.send_blocks([self.create_test_block([tx])], success=False)
+            self.send_blocks([self.create_test_block([tx])], success=False,
+                             reject_reason='non-mandatory-script-verify-flag (Locktime requirement not satisfied)')
 
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in nSequence, tx should fail
         fail_txs = [tx['tx'] for tx in bip112txs_vary_nSequence_v2 if tx['sdf']]
         for tx in fail_txs:
-            self.send_blocks([self.create_test_block([tx])], success=False)
+            self.send_blocks([self.create_test_block([tx])], success=False,
+                             reject_reason='non-mandatory-script-verify-flag (Locktime requirement not satisfied)')
 
         # If sequencelock types mismatch, tx should fail
         fail_txs = [tx['tx'] for tx in bip112txs_vary_nSequence_v2 if not tx['sdf'] and tx['stf']]
         fail_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_v2 if not tx['sdf'] and tx['stf']]
         for tx in fail_txs:
-            self.send_blocks([self.create_test_block([tx])], success=False)
+            self.send_blocks([self.create_test_block([tx])], success=False,
+                             reject_reason='non-mandatory-script-verify-flag (Locktime requirement not satisfied)')
 
         # Remaining txs should pass, just test masking works properly
         success_txs = [tx['tx'] for tx in bip112txs_vary_nSequence_v2 if not tx['sdf'] and not tx['stf']]
