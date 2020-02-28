@@ -350,7 +350,7 @@ bool BlockFilter::BuildParams(GCSFilter::Params& params) const
     case BlockFilterType::P2WPKH:
         params.m_siphash_k0 = m_block_hash.GetUint64(0);
         params.m_siphash_k1 = m_block_hash.GetUint64(1);
-        // using the same filter params as basic type
+        // Using the same filter params as basic type.
         params.m_P = BASIC_FILTER_P;
         params.m_M = BASIC_FILTER_M;
         return true;
