@@ -37,6 +37,8 @@ static const int8_t mapBase58[256] = {
 
 bool DecodeBase58(const char* psz, std::vector<unsigned char>& vch, int max_ret_len)
 {
+    assert(psz != nullptr);
+    assert(max_ret_len > 0);
     // Skip leading spaces.
     while (*psz && IsSpace(*psz))
         psz++;
