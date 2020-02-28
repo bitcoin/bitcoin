@@ -194,7 +194,7 @@ public:
 template<typename T>
 uint256 SerializeHash(const T& obj, int nVersion=PROTOCOL_VERSION)
 {
-    CHashWriter ss(SER_GETHASH, nVersion);
+    CHashWriter ss(nVersion);
     ss << obj;
     return ss.GetHash();
 }

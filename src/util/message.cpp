@@ -71,7 +71,7 @@ bool MessageSign(
 
 uint256 MessageHash(const std::string& message)
 {
-    CHashWriter hasher(SER_GETHASH, 0);
+    CHashWriter hasher;
     hasher << MESSAGE_MAGIC << message;
 
     return hasher.GetHash();
