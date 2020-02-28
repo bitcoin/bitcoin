@@ -189,6 +189,19 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     actual_selection.clear();
     selection.clear();
 
+    // Cost of change is greater than the difference between target value and utxo sum
+    add_coin(1 * CENT, 1, actual_selection);
+    BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 0.9 * CENT, 0.5 * CENT, selection, value_ret, not_input_fees));
+    BOOST_CHECK_EQUAL(value_ret, 1 * CENT);
+    BOOST_CHECK(equal_sets(selection, actual_selection));
+    actual_selection.clear();
+    selection.clear();
+
+    // Cost of change is less than the difference between target value and utxo sum
+    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 0.9 * CENT, 0, selection, value_ret, not_input_fees));
+    actual_selection.clear();
+    selection.clear();
+
     // Select 10 Cent
     add_coin(5 * CENT, 5, utxo_pool);
     add_coin(4 * CENT, 4, actual_selection);
