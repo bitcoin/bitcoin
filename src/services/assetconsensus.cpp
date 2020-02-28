@@ -139,7 +139,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         if (!rlpReceiptLogValue.isList()){
             return FormatSyscoinErrorMessage(state, "mint-receipt-log-rlp-list", bSanityCheck);
         }
-        // ensure this log has atleast the address to check against
+        // ensure this log has at least the address to check against
         if (rlpReceiptLogValue.itemCount() < 1){
             return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-count", bSanityCheck);
         }
