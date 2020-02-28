@@ -37,6 +37,10 @@ bool ParseMoney(const std::string& str, CAmount& nRet)
         return false;
     }
 
+    if (str.empty()) {
+        return false;
+    }
+
     std::string strWhole;
     int64_t nUnits = 0;
     const char* p = str.c_str();
