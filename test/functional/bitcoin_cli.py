@@ -35,7 +35,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(["foo", "bar"], self.nodes[0].cli('-rpcuser=%s' % user, '-stdin', '-stdinrpcpass', input=password + "\nfoo\nbar").echo())
         assert_raises_process_error(1, "incorrect rpcuser or rpcpassword", self.nodes[0].cli('-rpcuser=%s' % user, '-stdin', '-stdinrpcpass', input="foo").echo)
 
-        self.log.info("Compare responses from `bitcoin-cli -getinfo` and the RPCs data is retrieved from.")
+        self.log.info("Compare responses from `dash-cli -getinfo` and the RPCs data is retrieved from.")
         cli_get_info = self.nodes[0].cli('-getinfo').help()
         wallet_info = self.nodes[0].getwalletinfo()
         network_info = self.nodes[0].getnetworkinfo()
@@ -45,6 +45,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(cli_get_info['protocolversion'], network_info['protocolversion'])
         assert_equal(cli_get_info['walletversion'], wallet_info['walletversion'])
         assert_equal(cli_get_info['balance'], wallet_info['balance'])
+        assert_equal(cli_get_info['privatesend_balance'], wallet_info['privatesend_balance'])
         assert_equal(cli_get_info['blocks'], blockchain_info['blocks'])
         assert_equal(cli_get_info['timeoffset'], network_info['timeoffset'])
         assert_equal(cli_get_info['connections'], network_info['connections'])

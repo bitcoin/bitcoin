@@ -261,6 +261,7 @@ public:
         if (!batch[ID_WALLETINFO].isNull()) {
             result.pushKV("walletversion", batch[ID_WALLETINFO]["result"]["walletversion"]);
             result.pushKV("balance", batch[ID_WALLETINFO]["result"]["balance"]);
+            result.pushKV("privatesend_balance", batch[ID_WALLETINFO]["result"]["privatesend_balance"]);
             result.pushKV("keypoololdest", batch[ID_WALLETINFO]["result"]["keypoololdest"]);
             result.pushKV("keypoolsize", batch[ID_WALLETINFO]["result"]["keypoolsize"]);
             if (!batch[ID_WALLETINFO]["result"]["unlocked_until"].isNull()) {
