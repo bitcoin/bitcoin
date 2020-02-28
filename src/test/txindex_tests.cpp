@@ -70,6 +70,8 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // shutdown sequence (c.f. Shutdown() in init.cpp)
     txindex.Stop();
 
+    // txindex job may be scheduled, so stop scheduler before destructing
+    m_node.scheduler->stop();
     threadGroup.interrupt_all();
     threadGroup.join_all();
 
