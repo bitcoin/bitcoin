@@ -78,6 +78,10 @@ Subdirectory | File(s)           | Description
 
 3. A wallet database path can be specified by `-wallet` option.
 
+4. `wallet.dat` files must not be shared across different node instances, as that can result in key-reuse and double-spends due the lack of synchronization between instances.
+
+5. Any copy or backup of the wallet should be done through a `backupwallet` call in order to update and lock the wallet, preventing any file corruption caused by updates during the copy.
+
 ## GUI settings
 
 `bitcoin-qt` uses [`QSettings`](https://doc.qt.io/qt-5/qsettings.html) class; this implies platform-specific [locations where application settings are stored](https://doc.qt.io/qt-5/qsettings.html#locations-where-application-settings-are-stored).
