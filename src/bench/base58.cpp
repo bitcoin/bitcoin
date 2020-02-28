@@ -9,7 +9,6 @@
 #include <array>
 #include <vector>
 
-
 static void Base58Encode(benchmark::State& state)
 {
     static const std::array<unsigned char, 32> buff = {
@@ -19,8 +18,10 @@ static void Base58Encode(benchmark::State& state)
             200, 24
         }
     };
+    std::vector<unsigned char> vch;
+    vch.assign(buff.begin(), buff.end());
     while (state.KeepRunning()) {
-        EncodeBase58(buff.data(), buff.data() + buff.size());
+        (void) EncodeBase58(vch);
     }
 }
 
@@ -37,7 +38,7 @@ static void Base58CheckEncode(benchmark::State& state)
     std::vector<unsigned char> vch;
     vch.assign(buff.begin(), buff.end());
     while (state.KeepRunning()) {
-        EncodeBase58Check(vch);
+        (void) EncodeBase58Check(vch);
     }
 }
 

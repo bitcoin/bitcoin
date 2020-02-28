@@ -84,8 +84,10 @@ bool DecodeBase58(const char* psz, std::vector<unsigned char>& vch, int max_ret_
     return true;
 }
 
-std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
+std::string EncodeBase58(const std::vector<unsigned char>& vch)
 {
+    const unsigned char* pbegin = vch.data();
+    const unsigned char* pend = pbegin + vch.size();
     // Skip & count leading zeroes.
     int zeroes = 0;
     int length = 0;
@@ -124,19 +126,6 @@ std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
     return str;
 }
 
-std::string EncodeBase58(const std::vector<unsigned char>& vch)
-{
-    return EncodeBase58(vch.data(), vch.data() + vch.size());
-}
-
-bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret_len)
-{
-    if (!ValidAsCString(str)) {
-        return false;
-    }
-    return DecodeBase58(str.c_str(), vchRet, max_ret_len);
-}
-
 std::string EncodeBase58Check(const std::vector<unsigned char>& vchIn)
 {
     // add 4-byte hash check to the end
@@ -146,9 +135,12 @@ std::string EncodeBase58Check(const std::vector<unsigned char>& vchIn)
     return EncodeBase58(vch);
 }
 
-bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRet, int max_ret_len)
+bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret_len)
 {
-    if (!DecodeBase58(psz, vchRet, max_ret_len > std::numeric_limits<int>::max() - 4 ? std::numeric_limits<int>::max() : max_ret_len + 4) ||
+    if (!ValidAsCString(str)) {
+        return false;
+    }
+    if (!DecodeBase58(str.c_str(), vchRet, max_ret_len > std::numeric_limits<int>::max() - 4 ? std::numeric_limits<int>::max() : max_ret_len + 4) ||
         (vchRet.size() < 4)) {
         vchRet.clear();
         return false;
@@ -161,12 +153,4 @@ bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRet, int 
     }
     vchRet.resize(vchRet.size() - 4);
     return true;
-}
-
-bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret)
-{
-    if (!ValidAsCString(str)) {
-        return false;
-    }
-    return DecodeBase58Check(str.c_str(), vchRet, max_ret);
 }
