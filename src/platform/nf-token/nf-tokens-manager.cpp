@@ -325,19 +325,19 @@ namespace Platform
     }
 
     void NfTokensManager::ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
-                                                       int height,
-                                                       int count,
-                                                       int skipFromTip) const
+                                                       unsigned int height,
+                                                       unsigned int count,
+                                                       unsigned int skipFromTip) const
     {
         LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
         {
             auto originalRange = m_nfTokensIndexSet.get<Tags::Height>().range(
                     bmx::unbounded,
-                    [&](int curHeight) { return curHeight <= height; }
+                    [&](unsigned int curHeight) { return curHeight <= height; }
             );
 
-            long rangeSize = std::distance(originalRange.first, originalRange.second);
+            unsigned long rangeSize = std::distance(originalRange.first, originalRange.second);
             assert(rangeSize >= 0);
 
             auto begin = skipFromTip + count > rangeSize ? originalRange.first : std::prev(originalRange.second, skipFromTip + count);
@@ -359,9 +359,9 @@ namespace Platform
 
     void NfTokensManager::ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                                       uint64_t nftProtoId,
-                                                      int height,
-                                                      int count,
-                                                      int skipFromTip) const
+                                                      unsigned int height,
+                                                      unsigned int count,
+                                                      unsigned int skipFromTip) const
     {
         LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
@@ -369,7 +369,7 @@ namespace Platform
             auto first = m_nfTokensIndexSet.get<Tags::ProtocolIdHeight>().lower_bound(std::make_tuple(nftProtoId, 0));
             auto second = m_nfTokensIndexSet.get<Tags::ProtocolIdHeight>().upper_bound(std::make_tuple(nftProtoId, height));
 
-            long rangeSize = std::distance(first, second);
+            unsigned long rangeSize = std::distance(first, second);
             assert(rangeSize >= 0);
 
             auto begin = skipFromTip + count > rangeSize ? first : std::prev(second, skipFromTip + count);
@@ -391,9 +391,9 @@ namespace Platform
 
     void NfTokensManager::ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                                        CKeyID keyId,
-                                                       int height,
-                                                       int count,
-                                                       int skipFromTip) const
+                                                       unsigned int height,
+                                                       unsigned int count,
+                                                       unsigned int skipFromTip) const
     {
         LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
@@ -401,7 +401,7 @@ namespace Platform
             auto first = m_nfTokensIndexSet.get<Tags::OwnerId>().lower_bound(std::make_tuple(keyId, 0));
             auto second = m_nfTokensIndexSet.get<Tags::OwnerId>().upper_bound(std::make_tuple(keyId, height));
 
-            long rangeSize = std::distance(first, second);
+            unsigned long rangeSize = std::distance(first, second);
             assert(rangeSize >= 0);
 
             auto begin = skipFromTip + count > rangeSize ? first : std::prev(second, skipFromTip + count);
@@ -424,9 +424,9 @@ namespace Platform
     void NfTokensManager::ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                                        uint64_t nftProtoId,
                                                        CKeyID keyId,
-                                                       int height,
-                                                       int count,
-                                                       int skipFromTip) const
+                                                       unsigned int height,
+                                                       unsigned int count,
+                                                       unsigned int skipFromTip) const
     {
         LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
@@ -434,7 +434,7 @@ namespace Platform
             auto first = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>().lower_bound(std::make_tuple(nftProtoId, keyId, 0));
             auto second = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>().upper_bound(std::make_tuple(nftProtoId, keyId, height));
 
-            long rangeSize = std::distance(first, second);
+            unsigned long rangeSize = std::distance(first, second);
             assert(rangeSize >= 0);
 
             auto begin = skipFromTip + count > rangeSize ? first : std::prev(second, skipFromTip + count);

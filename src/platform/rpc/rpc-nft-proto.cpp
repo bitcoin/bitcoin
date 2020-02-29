@@ -143,12 +143,12 @@ Examples:
         if (fHelp || params.empty() || params.size() > 5)
             ListNftProtocolsHelp();
 
-        static const int defaultTxsCount = 20;
-        static const int defaultSkipFromTip = 0;
-        int count = (params.size() > 1) ? ParseInt32V(params[1], "count") : defaultTxsCount;
-        int skipFromTip = (params.size() > 2) ? ParseInt32V(params[2], "skipFromTip") : defaultSkipFromTip;
+        static const unsigned int defaultTxsCount = 20;
+        static const unsigned int defaultSkipFromTip = 0;
+        unsigned int count = (params.size() > 1) ? ParseUInt32V(params[1], "count") : defaultTxsCount;
+        unsigned int skipFromTip = (params.size() > 2) ? ParseUInt32V(params[2], "skipFromTip") : defaultSkipFromTip;
 
-        int height = (params.size() > 3 && params[3].get_str() != "*") ? ParseInt32V(params[3], "height") : chainActive.Height();
+        unsigned int height = (params.size() > 3 && params[3].get_str() != "*") ? ParseUInt32V(params[3], "height") : chainActive.Height();
         if (height < 0 || height > chainActive.Height())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
 

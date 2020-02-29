@@ -209,12 +209,12 @@ List the most recent 20 NFT records
             filterKeyId = ParsePubKeyIDFromAddress(params[2].get_str(), "nfTokenOwnerAddr");
         }
 
-        static const int defaultTxsCount = 20;
-        static const int defaultSkipFromTip = 0;
-        int count = (params.size() > 3) ? ParseInt32V(params[3], "count") : defaultTxsCount;
-        int skipFromTip = (params.size() > 4) ? ParseInt32V(params[4], "skipFromTip") : defaultSkipFromTip;
+        static unsigned const int defaultTxsCount = 20;
+        static unsigned const int defaultSkipFromTip = 0;
+        unsigned int count = (params.size() > 3) ? ParseUInt32V(params[3], "count") : defaultTxsCount;
+        unsigned int skipFromTip = (params.size() > 4) ? ParseUInt32V(params[4], "skipFromTip") : defaultSkipFromTip;
 
-        int height = (params.size() > 5 && params[5].get_str() != "*") ? ParseInt32V(params[5], "height") : chainActive.Height();
+        unsigned int height = (params.size() > 5 && params[5].get_str() != "*") ? ParseUInt32V(params[5], "height") : chainActive.Height();
         if (height < 0 || height > chainActive.Height())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
 
