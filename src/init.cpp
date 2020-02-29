@@ -1780,6 +1780,19 @@ bool AppInitMain(NodeContext& node)
         GetBlockFilterIndex(filter_type)->Start();
     }
 
+    if (nLocalServices & NODE_COMPACT_FILTERS) {
+        const BlockFilterIndex* const basic_filter_index =
+            GetBlockFilterIndex(BlockFilterType::BASIC);
+        if (!basic_filter_index) {
+            error("NODE_COMPACT_FILTERS is signaled, but filter index is not available");
+            return false;
+        }
+        if (!basic_filter_index->IsSynced()) {
+            InitError(strprintf(_("Cannot enable -peercfilters until basic block filter index is in sync. Please disable and reenable once filters have been indexed.").translated));
+            return false;
+        }
+    }
+
     // ********************************************************* Step 9: load wallet
     for (const auto& client : node.chain_clients) {
         if (!client->load()) {

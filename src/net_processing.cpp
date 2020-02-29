@@ -1371,9 +1371,9 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
         connman->WakeMessageHandler();
     }
 
-    ForEachBlockFilterIndex(
-        [](BlockFilterIndex& index) { UpdateCFHeadersCache(index); }
-    );
+    if (connman->GetLocalServices() & NODE_COMPACT_FILTERS) {
+        ForEachBlockFilterIndex([](BlockFilterIndex& index) { UpdateCFHeadersCache(index); });
+    }
 }
 
 /**
