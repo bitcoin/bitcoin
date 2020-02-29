@@ -152,6 +152,24 @@ int32_t ParseInt32V(const Value& v, const std::string &strName)
     return num;
 }
 
+uint32_t ParseUInt32V(const Value& v, const std::string &strName)
+{
+    std::string strNum = v.get_str();
+    uint32_t num;
+    if (!ParseUInt32(strNum, &num))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be a 32bit unsigned integer (not '"+strNum+"')");
+    return num;
+}
+
+uint8_t ParseUInt8V(const Value& v, const std::string &strName)
+{
+    std::string strNum = v.get_str();
+    uint8_t num;
+    if (!ParseUInt8(strNum, &num))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be an 8bit unsigned integer (not '"+strNum+"')");
+    return num;
+}
+
 bool ParseBoolV(const Value& v, const std::string &strName)
 {
     std::string strBool;

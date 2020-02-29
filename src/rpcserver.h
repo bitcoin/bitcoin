@@ -126,6 +126,8 @@ extern std::vector<unsigned char> ParseHexV(const json_spirit::Value& v, std::st
 extern std::vector<unsigned char> ParseHexO(const json_spirit::Object& o, std::string strKey);
 
 extern int32_t ParseInt32V(const json_spirit::Value& v, const std::string &strName);
+extern uint32_t ParseUInt32V(const json_spirit::Value& v, const std::string &strName);
+extern uint8_t ParseUInt8V(const json_spirit::Value& v, const std::string &strName);
 extern bool ParseBoolV(const json_spirit::Value& v, const std::string &strName);
 
 extern void InitRPCMining();
