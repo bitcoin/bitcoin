@@ -958,6 +958,10 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     // check version 3 transaction types
     if (tx.nVersion >= 3)
     {
+        if (!IsSporkActive(SPORK_17_NFT_TX))
+        {
+            return state.DoS(100, false, REJECT_INVALID, "nft-tx-spork-off");
+        }
         if (tx.nType != TRANSACTION_NORMAL &&
             tx.nType != TRANSACTION_GOVERNANCE_VOTE &&
             tx.nType != TRANSACTION_NF_TOKEN_REGISTER &&
@@ -970,7 +974,9 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     }
     // all version 1 transactions are normal
     else if (tx.nType != TRANSACTION_NORMAL)
+    {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
+    }
 
     // Basic checks that don't depend on any context
     if (tx.vin.empty())

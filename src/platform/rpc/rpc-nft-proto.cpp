@@ -2,6 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <spork.h>
 #include "platform/nf-token/nf-token-protocol.h"
 #include "platform/nf-token/nft-protocol-reg-tx-builder.h"
 #include "platform/nf-token/nft-protocols-manager.h"
@@ -14,6 +15,11 @@
 
 json_spirit::Value nftproto(const json_spirit::Array& params, bool fHelp)
 {
+    if (!IsSporkActive(SPORK_17_NFT_TX))
+    {
+        throw std::runtime_error("NFT spork is off");
+    }
+
     std::string command = Platform::GetCommand(params, "usage: nftproto register|list|get|getbytxid|ownerof");
 
     if (command == "register")
