@@ -109,6 +109,24 @@ BOOST_AUTO_TEST_CASE(manythreads)
     BOOST_CHECK_EQUAL(counterSum, 200);
 }
 
+BOOST_AUTO_TEST_CASE(wait_until_past)
+{
+    boost::condition_variable condvar;
+    boost::mutex mtx;
+    boost::unique_lock<boost::mutex> lock{mtx};
+
+    const auto wait_until = [&](const boost::chrono::seconds& d) {
+        return condvar.wait_until<>(lock, boost::chrono::system_clock::now() - d);
+    };
+
+    BOOST_CHECK(boost::cv_status::timeout == wait_until(boost::chrono::seconds{1}));
+    BOOST_CHECK(boost::cv_status::timeout == wait_until(boost::chrono::minutes{1}));
+    BOOST_CHECK(boost::cv_status::timeout == wait_until(boost::chrono::hours{1}));
+    BOOST_CHECK(boost::cv_status::timeout == wait_until(boost::chrono::hours{10}));
+    BOOST_CHECK(boost::cv_status::timeout == wait_until(boost::chrono::hours{100}));
+    BOOST_CHECK(boost::cv_status::timeout == wait_until(boost::chrono::hours{1000}));
+}
+
 BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
 {
     CScheduler scheduler;
