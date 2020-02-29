@@ -989,9 +989,9 @@ bool AppInitParameterInteraction()
 
     // Signal NODE_COMPACT_FILTERS if peercfilters and required index are both enabled.
     if (gArgs.GetBoolArg("-peercfilters", DEFAULT_PEERCFILTERS)) {
-        bool index_enabled = std::find(g_enabled_filter_types.begin(),
-                                       g_enabled_filter_types.end(),
-                                       BlockFilterType::BASIC) != g_enabled_filter_types.end();
+        const bool index_enabled = std::find(g_enabled_filter_types.begin(),
+                                             g_enabled_filter_types.end(),
+                                             BlockFilterType::BASIC) != g_enabled_filter_types.end();
         if (!index_enabled) {
             return InitError(_("Cannot set -peercfilters without -blockfilterindex.").translated);
         }

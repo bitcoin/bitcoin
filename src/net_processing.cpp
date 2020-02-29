@@ -1324,7 +1324,7 @@ static bool UpdateCFHeadersCache(const BlockFilterIndex& filter_index)
     for (uint32_t height = (new_size + 1) * CFCHECKPT_INTERVAL;
          height <= static_cast<uint32_t>(active_chain.Height());
          height += CFCHECKPT_INTERVAL) {
-        const CBlockIndex* block_index = active_chain[height];
+        const CBlockIndex* const block_index = active_chain[height];
         uint256 filter_header;
 
         if (!filter_index.LookupFilterHeader(block_index, filter_header)) {
@@ -2027,7 +2027,7 @@ static bool PrepareBlockFilterRequest(CNode* pfrom, const CChainParams& chain_pa
                                       const CBlockIndex*& stop_index,
                                       BlockFilterIndex*& filter_index)
 {
-    bool supported_filter_type =
+    const bool supported_filter_type =
         (filter_type == BlockFilterType::BASIC &&
          (pfrom->GetLocalServices() & NODE_COMPACT_FILTERS));
     if (!supported_filter_type) {
@@ -2085,7 +2085,7 @@ static bool ProcessGetCFilters(CNode* pfrom, CDataStream& vRecv, const CChainPar
 
     vRecv >> filter_type_ser >> start_height >> stop_hash;
 
-    BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
+    const BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
 
     const CBlockIndex* stop_index;
     BlockFilterIndex* filter_index;
@@ -2120,7 +2120,7 @@ static bool ProcessGetCFHeaders(CNode* pfrom, CDataStream& vRecv, const CChainPa
 
     vRecv >> filter_type_ser >> start_height >> stop_hash;
 
-    BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
+    const BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
 
     const CBlockIndex* stop_index;
     BlockFilterIndex* filter_index;
@@ -2132,7 +2132,8 @@ static bool ProcessGetCFHeaders(CNode* pfrom, CDataStream& vRecv, const CChainPa
 
     uint256 prev_header;
     if (start_height > 0) {
-        const CBlockIndex* prev_block = stop_index->GetAncestor(start_height - 1);
+        const CBlockIndex* const prev_block =
+            stop_index->GetAncestor(static_cast<int>(start_height - 1));
         if (!filter_index->LookupFilterHeader(prev_block, prev_header)) {
             return error("Failed to find block filter header in index: filter_type=%s, block_hash=%s",
                          BlockFilterTypeName(filter_type), prev_block->GetBlockHash().ToString());
@@ -2164,7 +2165,7 @@ static bool ProcessGetCFCheckPt(CNode* pfrom, CDataStream& vRecv, const CChainPa
 
     vRecv >> filter_type_ser >> stop_hash;
 
-    BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
+    const BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
 
     const CBlockIndex* stop_index;
     BlockFilterIndex* filter_index;
