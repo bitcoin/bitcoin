@@ -2186,11 +2186,12 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     if (!request.params[2].isNull())
         fForMixingOnly = request.params[2].get_bool();
 
-    if (fForMixingOnly && !pwallet->IsLocked(true) && pwallet->IsLocked())
-        throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already unlocked for mixing only.");
-
-    if (!pwallet->IsLocked())
+    if (fForMixingOnly && !pwallet->IsLocked()) {
+        // Downgrading from "fuly unlocked" mode to "mixing only" one is not supported.
+        // Updating unlock time when current unlock mode is not changed or when it is upgraded
+        // from "mixing only" to "fuly unlocked" is ok.
         throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already fully unlocked.");
+    }
 
     if (!pwallet->Unlock(strWalletPass, fForMixingOnly))
         throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
