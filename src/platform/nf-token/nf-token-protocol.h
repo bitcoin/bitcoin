@@ -57,7 +57,9 @@ namespace Platform
         CKeyID tokenProtocolOwnerId;
         //TODO: add admin key to the protocol structure. add option to use setup admin key rights including tranfering ownership
 
+        static const unsigned TOKEN_PROTOCOL_ID_MIN = 3;
         static const unsigned TOKEN_PROTOCOL_ID_MAX = 12;
+        static const unsigned TOKEN_PROTOCOL_NAME_MIN = 3;
         static const unsigned TOKEN_PROTOCOL_NAME_MAX = 24;
         static const unsigned TOKEN_METADATA_SCHEMA_URI_MAX = 128;
         static const unsigned TOKEN_METADATA_MIMETYPE_MAX = 32;
