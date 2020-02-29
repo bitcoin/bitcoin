@@ -11,6 +11,11 @@
 
 namespace Platform
 {
+    static bool IsValidSymbol(char c)
+    {
+        return (( c >= 'a' && c <= 'z' ) || ( c >= '1' && c <= '5' ) || c == '.');
+    }
+
     /**
     *  Converts a base32 symbol into its binary representation, used by StringToProtocolName()
     *
@@ -40,13 +45,20 @@ namespace Platform
         uint32_t len = 0;
         while( str[len] ) ++len;
 
+        if (str[0] == '.' || (len > 1 && str[len - 1] == '.'))
+            return static_cast<uint64_t >(-1);
+
         uint64_t value = 0;
 
         for( uint32_t i = 0; i <= 12; ++i )
         {
             uint64_t c = 0;
             if( i < len && i <= 12 )
-                c = uint64_t(CharToSymbol( str[i] ));
+            {
+                if (!IsValidSymbol(str[i]))
+                    return static_cast<uint64_t >(-1);
+                c = uint64_t(CharToSymbol(str[i]));
+            }
 
             if( i < 12 )
             {

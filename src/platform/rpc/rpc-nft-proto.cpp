@@ -293,6 +293,8 @@ Examples:
             NftProtoOwnerOfHelp();
 
         uint64_t tokenProtocolId = StringToProtocolName(params[1].get_str().c_str());
+        if (tokenProtocolId == NfToken::UNKNOWN_TOKEN_PROTOCOL)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT protocol ID contains invalid characters");
 
         CKeyID ownerId = NftProtocolsManager::Instance().OwnerOf(tokenProtocolId);
         if (ownerId.IsNull())

@@ -11,6 +11,7 @@
 #include "platform/platform-utils.h"
 #include "platform/rpc/specialtx-rpc-utils.h"
 #include "nf-token-protocol-reg-tx.h"
+#include "nf-token.h"
 
 namespace Platform
 {
@@ -23,6 +24,8 @@ namespace Platform
             if (nftProtoStr.size() < NfTokenProtocol::TOKEN_PROTOCOL_ID_MIN || nftProtoStr.size() > NfTokenProtocol::TOKEN_PROTOCOL_ID_MAX)
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT protocol ID must be between 3 and 12 symbols long");
             m_nftProto.tokenProtocolId = StringToProtocolName(nftProtoStr.c_str());
+            if (m_nftProto.tokenProtocolId == NfToken::UNKNOWN_TOKEN_PROTOCOL)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT protocol ID contains invalid characters");
             return *this;
         }
 
