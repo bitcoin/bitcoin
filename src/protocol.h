@@ -293,7 +293,7 @@ enum ServiceFlags : uint64_t {
     // If this is turned off then the node will not service nor make xthin requests
     NODE_XTHIN = (1 << 4),
     // NODE_NETWORK_LIMITED means the same as NODE_NETWORK with the limitation of only
-    // serving the last 288 (2 day) blocks
+    // serving the last 288 blocks
     // See BIP159 for details on how this is implemented.
     NODE_NETWORK_LIMITED = (1 << 10),
 

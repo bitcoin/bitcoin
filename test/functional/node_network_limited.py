@@ -6,17 +6,17 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import *
 
-class BaseNode(P2PInterface):
+class BaseNode(NodeConnCB):
     nServices = 0
     firstAddrnServices = 0
-    def on_version(self, message):
+    def on_version(self, conn, message):
         self.nServices = message.nServices
 
 class NodeNetworkLimitedTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [['-prune=550']]
+        self.extra_args = [['-prune=550', '-txindex=0']]
 
     def getSignaledServiceFlags(self):
         node = self.nodes[0].add_p2p_connection(BaseNode())
@@ -46,11 +46,11 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
             node.wait_for_disconnect()
 
     def run_test(self):
-        #NODE_BLOOM & NODE_WITNESS & NODE_NETWORK_LIMITED must now be signaled
-        assert_equal(self.getSignaledServiceFlags(), 1036) #1036 == 0x40C == 0100 0000 1100
-#                                                                              |        ||
-#                                                                              |        |^--- NODE_BLOOM
-#                                                                              |        ^---- NODE_WITNESS
+        #NODE_BLOOM & NODE_NETWORK_LIMITED must now be signaled
+        assert_equal(self.getSignaledServiceFlags(), 1028) # 1028 == 0x404 == 0100 0000 0100
+#                                                                              |         |
+#                                                                              |         ^--- NODE_BLOOM
+#                                                                              |
 #                                                                              ^-- NODE_NETWORK_LIMITED
 
         #now mine some blocks over the NODE_NETWORK_LIMITED + 2(racy buffer ext.) target
@@ -66,10 +66,10 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
 
         #NODE_NETWORK_LIMITED must still be signaled after restart
         self.restart_node(0)
-        assert_equal(self.getSignaledServiceFlags(), 1036)
+        assert_equal(self.getSignaledServiceFlags(), 1028)
 
         #test the RPC service flags
-        assert_equal(self.nodes[0].getnetworkinfo()['localservices'], "000000000000040c")
+        assert_equal(self.nodes[0].getnetworkinfo()['localservices'], "0000000000000404")
 
         # getdata a block above the NODE_NETWORK_LIMITED threshold must be possible
         self.tryGetBlockViaGetData(blockWithinLimitedRange, False)
