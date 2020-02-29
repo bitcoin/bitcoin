@@ -38,11 +38,6 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 #endif
-#ifdef __MACH__
-#include <mach/clock.h>
-#include <mach/mach.h>
-#include <mach/mach_time.h>
-#endif
 #if HAVE_DECL_GETIFADDRS
 #include <ifaddrs.h>
 #endif
