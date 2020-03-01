@@ -435,6 +435,32 @@ bool ParseInt32(const std::string& str, int32_t *out)
         n <= std::numeric_limits<int32_t>::max();
 }
 
+bool ParseUInt32(const std::string& str, uint32_t *out) {
+    char *endp = NULL;
+    errno = 0; // strtol will not set errno if valid
+    unsigned long int n = strtoul(str.c_str(), &endp, 10);
+    if(out)
+        *out = (unsigned int)n;
+    // Note that strtol returns a *long int*, so even if strtol doesn't report a over/underflow
+    // we still have to check that the returned value is within the range of an *int32_t*. On 64-bit
+    // platforms the size of these types may be different.
+    return endp && *endp == 0 && !errno &&
+           n >= std::numeric_limits<uint32_t >::min() &&
+           n <= std::numeric_limits<uint32_t >::max();
+}
+
+bool ParseUInt8(const std::string& str, uint8_t *out) {
+    uint32_t internalOut;
+    if (!ParseUInt32(str, &internalOut)) {
+        return false;
+    }
+    if (out && internalOut >= std::numeric_limits<uint8_t >::min() && internalOut <= std::numeric_limits<uint8_t >::max()) {
+        *out = static_cast<uint8_t >(internalOut);
+        return true;
+    }
+    return false;
+}
+
 std::string FormatParagraph(const std::string in, size_t width, size_t indent)
 {
     std::stringstream out;

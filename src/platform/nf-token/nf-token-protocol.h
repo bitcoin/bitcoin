@@ -27,6 +27,7 @@ namespace Platform
     public:
         /// NF token protocol unique symbol/identifier, can be an a abbreviated name describing this NF token type
         /// Represented as a base32 string, can only contain characters: .abcdefghijklmnopqrstuvwxyz12345
+        /// Dots(.) are not allowed as a first and last characters
         /// Minimum length 3 symbols, maximum length 12 symbols
         uint64_t tokenProtocolId;
 
@@ -57,7 +58,9 @@ namespace Platform
         CKeyID tokenProtocolOwnerId;
         //TODO: add admin key to the protocol structure. add option to use setup admin key rights including tranfering ownership
 
+        static const unsigned TOKEN_PROTOCOL_ID_MIN = 3;
         static const unsigned TOKEN_PROTOCOL_ID_MAX = 12;
+        static const unsigned TOKEN_PROTOCOL_NAME_MIN = 3;
         static const unsigned TOKEN_PROTOCOL_NAME_MAX = 24;
         static const unsigned TOKEN_METADATA_SCHEMA_URI_MAX = 128;
         static const unsigned TOKEN_METADATA_MIMETYPE_MAX = 32;

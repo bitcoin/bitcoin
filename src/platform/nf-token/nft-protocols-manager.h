@@ -106,9 +106,9 @@ namespace Platform
 
         void ProcessFullNftProtoIndexRange(std::function<bool(const NftProtoIndex &)> protoIndexHandler) const;
         void ProcessNftProtoIndexRangeByHeight(std::function<bool(const NftProtoIndex &)> protoIndexHandler,
-                                          int height,
-                                          int count,
-                                          int skipFromTip) const;
+                                          unsigned int height,
+                                          unsigned int count,
+                                          unsigned int skipFromTip) const;
 
         /// Delete a specified nf-token protocol
         bool Delete(uint64_t protocolId);

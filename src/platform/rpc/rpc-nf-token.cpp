@@ -2,6 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <spork.h>
 #include <platform/nf-token/nf-token-protocol.h>
 #include "primitives/transaction.h"
 #include "platform/specialtx.h"
@@ -14,6 +15,11 @@
 
 json_spirit::Value nftoken(const json_spirit::Array& params, bool fHelp)
 {
+    if (!IsSporkActive(SPORK_17_NFT_TX))
+    {
+        throw std::runtime_error("NFT spork is off");
+    }
+
     std::string command = Platform::GetCommand(params, "usage: nftoken register(issue)|list|get|getbytxid|totalsupply|balanceof|ownerof");
 
     if (command == "register" || command == "issue")
@@ -199,8 +205,11 @@ List the most recent 20 NFT records
         if (params.size() > 1)
         {
             std::string nftProtoIdStr = params[1].get_str();
-            if (nftProtoIdStr != "*")
+            if (nftProtoIdStr != "*") {
                 nftProtoId = StringToProtocolName(nftProtoIdStr.c_str());
+                if (nftProtoId == NfToken::UNKNOWN_TOKEN_PROTOCOL)
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT protocol ID contains invalid characters");
+            }
         }
 
         CKeyID filterKeyId;
@@ -209,12 +218,12 @@ List the most recent 20 NFT records
             filterKeyId = ParsePubKeyIDFromAddress(params[2].get_str(), "nfTokenOwnerAddr");
         }
 
-        static const int defaultTxsCount = 20;
-        static const int defaultSkipFromTip = 0;
-        int count = (params.size() > 3) ? ParseInt32V(params[3], "count") : defaultTxsCount;
-        int skipFromTip = (params.size() > 4) ? ParseInt32V(params[4], "skipFromTip") : defaultSkipFromTip;
+        static unsigned const int defaultTxsCount = 20;
+        static unsigned const int defaultSkipFromTip = 0;
+        unsigned int count = (params.size() > 3) ? ParseUInt32V(params[3], "count") : defaultTxsCount;
+        unsigned int skipFromTip = (params.size() > 4) ? ParseUInt32V(params[4], "skipFromTip") : defaultSkipFromTip;
 
-        int height = (params.size() > 5 && params[5].get_str() != "*") ? ParseInt32V(params[5], "height") : chainActive.Height();
+        unsigned int height = (params.size() > 5 && params[5].get_str() != "*") ? ParseUInt32V(params[5], "height") : chainActive.Height();
         if (height < 0 || height > chainActive.Height())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
 
@@ -275,6 +284,8 @@ Examples:
             GetNfTokenHelp();
 
         uint64_t tokenProtocolId = StringToProtocolName(params[1].get_str().c_str());
+        if (tokenProtocolId == NfToken::UNKNOWN_TOKEN_PROTOCOL)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT protocol ID contains invalid characters");
         uint256 tokenId = ParseHashV(params[2].get_str(), "nfTokenId");
 
         auto nftIndex = NfTokensManager::Instance().GetNfTokenIndex(tokenProtocolId, tokenId);
@@ -340,6 +351,8 @@ Examples:
         if (params.size() == 2)
         {
             uint64_t tokenProtocolId = StringToProtocolName(params[1].get_str().c_str());
+            if (tokenProtocolId == NfToken::UNKNOWN_TOKEN_PROTOCOL)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT protocol ID contains invalid characters");
             totalSupply = NfTokensManager::Instance().TotalSupply(tokenProtocolId);
         }
         else
@@ -383,6 +396,8 @@ Display balance of "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address
         if (params.size() == 3)
         {
             uint64_t tokenProtocolId = StringToProtocolName(params[2].get_str().c_str());
+            if (tokenProtocolId == NfToken::UNKNOWN_TOKEN_PROTOCOL)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT protocol ID contains invalid characters");
             balance = NfTokensManager::Instance().BalanceOf(tokenProtocolId, filterKeyId);
         }
         else
@@ -417,6 +432,8 @@ Examples:
             NfTokenOwnerOfHelp();
 
         uint64_t tokenProtocolId = StringToProtocolName(params[1].get_str().c_str());
+        if (tokenProtocolId == NfToken::UNKNOWN_TOKEN_PROTOCOL)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT protocol ID contains invalid characters");
         uint256 tokenId = ParseHashV(params[2].get_str(), "nfTokenId");
 
         CKeyID ownerId = NfTokensManager::Instance().OwnerOf(tokenProtocolId, tokenId);

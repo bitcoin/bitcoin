@@ -123,17 +123,17 @@ namespace Platform
     }
 
     void NftProtocolsManager::ProcessNftProtoIndexRangeByHeight(std::function<bool(const NftProtoIndex &)> protoIndexHandler,
-                                                                                   int height,
-                                                                                   int count,
-                                                                                   int skipFromTip) const
+                                                                                   unsigned int height,
+                                                                                   unsigned int count,
+                                                                                   unsigned int skipFromTip) const
     {
         LOCK(m_cs);
         auto originalRange = m_nftProtoIndexSet.get<Tags::Height>().range(
                 bmx::unbounded,
-                [&](int curHeight) { return curHeight <= height; }
+                [&](unsigned int curHeight) { return curHeight <= height; }
         );
 
-        long rangeSize = std::distance(originalRange.first, originalRange.second);
+        unsigned long rangeSize = std::distance(originalRange.first, originalRange.second);
         assert(rangeSize >= 0);
 
         auto begin = skipFromTip + count > rangeSize ? originalRange.first : std::prev(originalRange.second, skipFromTip + count);

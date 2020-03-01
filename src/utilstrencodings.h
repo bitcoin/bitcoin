@@ -48,6 +48,8 @@ int atoi(const std::string& str);
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
  */
 bool ParseInt32(const std::string& str, int32_t *out);
+bool ParseUInt32(const std::string& str, uint32_t *out);
+bool ParseUInt8(const std::string& str, uint8_t *out);
 
 template<typename T>
 std::string HexStr(const T itbegin, const T itend, bool fSpaces=false)

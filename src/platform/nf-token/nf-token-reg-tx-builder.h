@@ -19,6 +19,8 @@ namespace Platform
         NfTokenRegTxBuilder & SetTokenProtocol(const json_spirit::Value & tokenProtocolId)
         {
             m_nfToken.tokenProtocolId = StringToProtocolName(tokenProtocolId.get_str().c_str());
+            if (m_nfToken.tokenProtocolId == NfToken::UNKNOWN_TOKEN_PROTOCOL)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT protocol ID contains invalid characters");
             return *this;
         }
 

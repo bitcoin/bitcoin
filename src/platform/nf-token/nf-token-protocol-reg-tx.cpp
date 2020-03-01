@@ -36,7 +36,8 @@ namespace Platform
         if (nftProto.nftRegSign < static_cast<uint8_t>(NftRegSignMin) || nftProto.nftRegSign > static_cast<uint8_t>(NftRegSignMax))
             return state.DoS(10, false, REJECT_INVALID, "bad-nft-proto-reg-tx-reg-sign");
 
-        if (nftProto.tokenProtocolName.size() > NfTokenProtocol::TOKEN_PROTOCOL_NAME_MAX)
+        if (nftProto.tokenProtocolName.size() < NfTokenProtocol::TOKEN_PROTOCOL_NAME_MIN
+        || nftProto.tokenProtocolName.size() > NfTokenProtocol::TOKEN_PROTOCOL_NAME_MAX)
             return state.DoS(10, false, REJECT_INVALID, "bad-nft-proto-reg-tx-proto-name");
 
         if (nftProto.tokenMetadataMimeType.size() > NfTokenProtocol::TOKEN_METADATA_MIMETYPE_MAX)

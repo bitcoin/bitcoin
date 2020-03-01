@@ -215,28 +215,28 @@ namespace Platform
 
             void ProcessFullNftIndexRange(std::function<bool(const NfTokenIndex &)> nftIndexHandler) const;
             void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
-                                              int height,
-                                              int count,
-                                              int skipFromTip) const;
+                                              unsigned int height,
+                                              unsigned int count,
+                                              unsigned int skipFromTip) const;
 
             void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                               uint64_t nftProtoId,
-                                              int height,
-                                              int count,
-                                              int skipFromTip) const;
+                                              unsigned int height,
+                                              unsigned int count,
+                                              unsigned int skipFromTip) const;
 
             void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                               CKeyID keyId,
-                                              int height,
-                                              int count,
-                                              int skipFromTip) const;
+                                              unsigned int height,
+                                              unsigned int count,
+                                              unsigned int skipFromTip) const;
 
             void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                               uint64_t nftProtoId,
                                               CKeyID keyId,
-                                              int height,
-                                              int count,
-                                              int skipFromTip) const;
+                                              unsigned int height,
+                                              unsigned int count,
+                                              unsigned int skipFromTip) const;
 
             /// Delete a specified nf-token
             bool Delete(uint64_t protocolId, const uint256 & tokenId);

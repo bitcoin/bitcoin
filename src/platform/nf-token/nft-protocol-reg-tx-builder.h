@@ -11,6 +11,7 @@
 #include "platform/platform-utils.h"
 #include "platform/rpc/specialtx-rpc-utils.h"
 #include "nf-token-protocol-reg-tx.h"
+#include "nf-token.h"
 
 namespace Platform
 {
@@ -20,17 +21,20 @@ namespace Platform
         NftProtocolRegTxBuilder & SetTokenProtocol(const json_spirit::Value & tokenProtocolId)
         {
             auto nftProtoStr = tokenProtocolId.get_str();
-            if (nftProtoStr.size() > NfTokenProtocol::TOKEN_PROTOCOL_ID_MAX)
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT protocol ID is longer than permitted");
+            if (nftProtoStr.size() < NfTokenProtocol::TOKEN_PROTOCOL_ID_MIN || nftProtoStr.size() > NfTokenProtocol::TOKEN_PROTOCOL_ID_MAX)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT protocol ID must be between 3 and 12 symbols long");
             m_nftProto.tokenProtocolId = StringToProtocolName(nftProtoStr.c_str());
+            if (m_nftProto.tokenProtocolId == NfToken::UNKNOWN_TOKEN_PROTOCOL)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT protocol ID contains invalid characters");
             return *this;
         }
 
         NftProtocolRegTxBuilder & SetTokenProtocolName(const json_spirit::Value & tokenProtocolName)
         {
             m_nftProto.tokenProtocolName = tokenProtocolName.get_str();
-            if (m_nftProto.tokenProtocolName.size() > NfTokenProtocol::TOKEN_PROTOCOL_NAME_MAX)
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT Protocol name is longer than permitted");
+            if (m_nftProto.tokenProtocolName.size() < NfTokenProtocol::TOKEN_PROTOCOL_NAME_MIN
+            || m_nftProto.tokenProtocolName.size() > NfTokenProtocol::TOKEN_PROTOCOL_NAME_MAX)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "NFT Protocol name must be between 3 and 24 symbols long");
             return *this;
         }
 
@@ -81,7 +85,7 @@ namespace Platform
 
         NftProtocolRegTxBuilder & SetMaxMetadataSize(const json_spirit::Value & value)
         {
-            m_nftProto.maxMetadataSize = ParseInt32V(value, "maxMetadataSize");
+            m_nftProto.maxMetadataSize = ParseUInt8V(value, "maxMetadataSize");
             return *this;
         }
 
