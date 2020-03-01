@@ -106,7 +106,7 @@ PopServiceImpl::PopServiceImpl(bool altautoconfig)
 
 void PopServiceImpl::addPayloads(std::string blockHash, const int& nHeight, const Publications& publications)
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     AddPayloadsDataRequest request;
     EmptyReply reply;
     ClientContext context;
@@ -132,7 +132,7 @@ void PopServiceImpl::addPayloads(std::string blockHash, const int& nHeight, cons
 
 void PopServiceImpl::addPayloads(const CBlockIndex & blockIndex, const CBlock & block)
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     AddPayloadsDataRequest request;
 
     auto* index = new BlockIndex();
@@ -177,7 +177,7 @@ void PopServiceImpl::removePayloads(const CBlockIndex & block)
 
 void PopServiceImpl::removePayloads(std::string blockHash, const int& nHeight)
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     EmptyReply reply;
     ClientContext context;
     RemovePayloadsRequest request;
@@ -196,7 +196,7 @@ void PopServiceImpl::removePayloads(std::string blockHash, const int& nHeight)
 
 void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight)
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     SaveBlockPopTxRequest request;
     EmptyReply reply;
 
@@ -338,7 +338,7 @@ bool PopServiceImpl::checkATVinternally(const std::vector<uint8_t>& bytes)
 
 void PopServiceImpl::updateContext(const std::vector<std::vector<uint8_t>>& veriBlockBlocks, const std::vector<std::vector<uint8_t>>& bitcoinBlocks)
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     UpdateContextRequest request;
     EmptyReply reply;
     ClientContext context;
@@ -360,7 +360,7 @@ void PopServiceImpl::updateContext(const std::vector<std::vector<uint8_t>>& veri
 // Forkresolution
 int PopServiceImpl::compareTwoBranches(const CBlockIndex* commonKeystone, const CBlockIndex* leftForkTip, const CBlockIndex* rightForkTip)
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     TwoBranchesRequest request;
     CompareTwoBranchesReply reply;
     ClientContext context;
@@ -397,7 +397,7 @@ int PopServiceImpl::compareTwoBranches(const CBlockIndex* commonKeystone, const 
 // Pop rewards
 void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBlockIndex& endorsedBlock, const CBlockIndex& contaningBlocksTip, const CBlockIndex* difficulty_start_interval, const CBlockIndex* difficulty_end_interval, std::map<CScript, int64_t>& outputs)
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     RewardsCalculateRequest request;
     RewardsCalculateReply reply;
     ClientContext context;
@@ -493,7 +493,7 @@ bool PopServiceImpl::determineATVPlausibilityWithBTCRules(AltchainId altChainIde
 
 void PopServiceImpl::setConfig()
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     auto& config = getService<Config>();
 
     ClientContext context;
