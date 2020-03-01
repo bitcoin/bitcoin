@@ -1,6 +1,6 @@
-# Crown Platform 0.13.0
+# Crown Platform 0.14.0
 
-[Crown software](https://crown.tech/wallet) is an implementation of a full Crown Platform node, which can be used both locally, as a wallet for CRW and for running Masternodes and Systemnodes. It is a full node:  it downloads and stores the entire history of Crown transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more. If you would like the process to go faster you can _download the blockchain directly_ **(BOOSTRAP LINK NEEDED)**.
+[Crown software](https://crownplatform.com/wallet) is an implementation of a full Crown Platform node, which can be used both locally, as a wallet for CRW and for running Masternodes and Systemnodes. It is a full node:  it downloads and stores the entire history of Crown transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more. If you would like the process to go faster you can _download the blockchain directly_ **(BOOSTRAP LINK NEEDED)**.
 
 ## Install and Run Crown Wallet
 
@@ -23,26 +23,26 @@ Unpack the files into a directory and run: `bin/crown-qt` or `bin/crownd`. You n
 ### Need Help?
 
 * Ask for help on Discord
-* Or at Crown Forum: https://forum.crown.tech
-* Or write a mail to [support@crown.tech](email:support@crown.tech)
+* Or at Crown Forum: https://forum.crownplatform.com
+* Or write a mail to [support@crownplatform.com](email:support@crownplatform.com)
 
 ## Run Masternode or Systemnode
 
 Here are some guides that will help you to setup and run an incentivized node:
-* [Masternode Setup Guide](https://forum.crown.tech/index.php?topic=1241.0)
-* [Systemnode Setup Guide](https://forum.crown.tech/index.php?topic=1240.0)
+* [Masternode Setup Guide](https://forum.crownplatform.com/index.php?topic=1241.0)
+* [Systemnode Setup Guide](https://forum.crownplatform.com/index.php?topic=1240.0)
 * [Masternode Configuration](masternode-config.md)
 
 ## Participate in Crown Decentralized Governance
 
-As a community member you can participate in the Governance by proposing projects that will advance Crown. You are also encouraged to discuss the poposals at [Crown Forum](https://forum.crown.tech/index.php?board=17.0).
+As a community member you can participate in the Governance by proposing projects that will advance Crown. You are also encouraged to discuss the poposals at [Crown Forum](https://forum.crownplatform.com/index.php?board=17.0).
 
 If you own one or more masternodes you can (and you should!) help to choose the direction in which Crown goes by carefuly studying the proposals and voting for those you consider worthy.
 
-* [Governance and Proposals](https://forum.crown.tech/index.php?topic=17.0) - some frequently asqued questions
+* [Governance and Proposals](https://forum.crownplatform.com/index.php?topic=17.0) - some frequently asqued questions
 * [Console Governance Interface](governance.md) - describes how to submit a proposal, how to vote for a proposal from the console and more
-* [How To Submit a Proposal](https://forum.crown.tech/index.php?topic=11.0) - another proposal submission guide
-* [Proposal Submission Template](https://forum.crown.tech/index.php?topic=9.0)
+* [How To Submit a Proposal](https://forum.crownplatform.com/index.php?topic=11.0) - another proposal submission guide
+* [Proposal Submission Template](https://forum.crownplatform.com/index.php?topic=9.0)
 * [Active Proposals](https://crown.today/proposals)
 
 ## Build Crown From Source
@@ -60,10 +60,10 @@ The Crown repo's [root README](../README.md) contains relevant information on th
 - [Unit Tests](unit-tests.md)
 
 ### Resources
-* Crown Forum: https://forum.crown.tech
+* Crown Forum: https://forum.crownplatform.com
 * Discord: https://discord.gg/Tcrkazc
 * Telegram: https://t.me/crownplatform
-* Guides & How-to: https://forum.crown.tech/index.php?board=5.0
+* Guides & How-to: https://forum.crownplatform.com/index.php?board=5.0
 
 ## License
 
@@ -79,4 +79,4 @@ Copyright © 2009-2018, Bitcoin Core Developers
 
 Copyright © 2014-2016, Dash Core Developers
 
-Copyright © 2014-2019, Crown Developers
+Copyright © 2014-2020, Crown Developers

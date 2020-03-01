@@ -6,6 +6,6 @@ Use the autogen script to prepare the build environment.
     ./configure
     make
 
-Precompiled binaries are available at https://crown.tech/wallet/. Always verify the signatures and checksums.
+Precompiled binaries are available at https://crownplatform.com/wallet/. Always verify the signatures and checksums.
 
 See doc/build-\*.md for instructions on building crownd, the intended-for-services, no-graphical-interface, reference implementation of Crown.

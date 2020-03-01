@@ -221,6 +221,6 @@ Osx-dmg-snapshot:
 trigger_docker_build:
   stage: deploy
   script:
-  - curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=master  --form "variables[VERSION_TAG]=$CI_COMMIT_TAG" https://gitlab.crown.tech/api/v4/projects/17/trigger/pipeline
+  - curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=master  --form "variables[VERSION_TAG]=$CI_COMMIT_TAG" https://gitlab.crownplatform.com/api/v4/projects/17/trigger/pipeline
   only:
   - tags

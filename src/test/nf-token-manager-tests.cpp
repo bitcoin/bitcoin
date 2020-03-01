@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2019 Crown Core developers
+// Copyright (c) 2014-2020 Crown Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 

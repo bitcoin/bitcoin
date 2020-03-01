@@ -22,7 +22,7 @@ Build-Depends: debhelper,
  libqrencode-dev,
  libprotobuf-dev, protobuf-compiler
 Standards-Version: 3.9.2
-Homepage: http://www.crown.tech/
+Homepage: http://www.crownplatform.com/
 Vcs-Git: git://github.com/crownpay/crown.git
 Vcs-Browser: http://github.com/crownpay/crown
 

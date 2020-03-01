@@ -1,4 +1,4 @@
-# Crown Platform 0.13.4
+# Crown Platform 0.14.0
 
 [![pipeline status](http://gitlab.crownplatform.com/crown/crown-core/badges/master/pipeline.svg)](http://gitlab.crownplatform.com/crown/crown-core/commits/master)
 
@@ -82,4 +82,4 @@ Copyright © 2009-2018, Bitcoin Core Developers
 
 Copyright © 2014-2016, Dash Core Developers
 
-Copyright © 2014-2019, Crown Developers
+Copyright © 2014-2020, Crown Developers
