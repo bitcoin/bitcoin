@@ -636,28 +636,12 @@ bool txPopValidation(PopServiceImpl& pop, const CTransactionRef& tx, const CBloc
             return state.Invalid(TxValidationResult::TX_BAD_POP_DATA, "pop-tx-endorsed-block-not-from-this-chain", strprintf("[%s] can not find endorsed block in the chain: %s", tx->GetHash().ToString(), popEndorsementHeader.GetHash().ToString()));
         }
 
-
-        CBlock popEndorsementBlock;
-        if (!ReadBlockFromDisk(popEndorsementBlock, popEndorsementIdnex, params)) {
-            return state.Invalid(TxValidationResult::TX_BAD_POP_DATA, "pop-tx-endorsed-block-from-disk", strprintf("[%s] can not read endorsed block from disk: %s", tx->GetHash().ToString(), popEndorsementBlock.GetHash().ToString()));
-        }
-
-        BlockValidationState blockstate;
-        if (!VeriBlock::VerifyTopLevelMerkleRoot(popEndorsementBlock, blockstate, popEndorsementIdnex->pprev)) {
-            return state.Invalid(
-                TxValidationResult::TX_BAD_POP_DATA,
-                blockstate.GetRejectReason(),
-                strprintf("[%s] top level merkle root is invalid: %s",
-                    tx->GetHash().ToString(),
-                    blockstate.GetDebugMessage()));
-        }
-
         if (pindexPrev.nHeight + 1 - popEndorsementIdnex->nHeight > config.POP_REWARD_SETTLEMENT_INTERVAL) {
             return state.Invalid(TxValidationResult::TX_BAD_POP_DATA,
                 "pop-tx-endorsed-block-too-old",
                 strprintf("[%s] endorsed block is too old for this chain: %s. (last block height: %d, endorsed block height: %d, settlement interval: %d)",
                     tx->GetHash().ToString(),
-                    popEndorsementBlock.GetHash().ToString(),
+                    popEndorsementIdnex->GetBlockHash().GetHex(),
                     pindexPrev.nHeight + 1,
                     popEndorsementIdnex->nHeight,
                     config.POP_REWARD_SETTLEMENT_INTERVAL));
