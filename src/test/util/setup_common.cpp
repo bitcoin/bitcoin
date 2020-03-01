@@ -48,8 +48,6 @@
 #include <validationinterface.h>
 #include <walletinitinterface.h>
 
-#include <util/validation.h>
-
 #include <bls/bls.h>
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
@@ -255,7 +253,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     BlockValidationState state;
     if (!::ChainstateActive().ActivateBestChain(state, chainparams)) {
-        throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", FormatStateMessage(state)));
+        throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
 }
 

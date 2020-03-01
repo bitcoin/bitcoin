@@ -30,7 +30,6 @@
 #include <util/check.h> // For NDEBUG compile time check
 #include <util/system.h>
 #include <util/strencodings.h>
-#include <util/validation.h>
 
 #include <list>
 #include <memory>
@@ -1879,7 +1878,7 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
     if (need_activate_chain) {
         BlockValidationState state;
         if (!::ChainstateActive().ActivateBestChain(state, Params(), a_recent_block)) {
-            LogPrint(BCLog::NET, "failed to activate chain (%s)\n", FormatStateMessage(state));
+            LogPrint(BCLog::NET, "failed to activate chain (%s)\n", state.ToString());
         }
     }
 
@@ -3299,7 +3298,7 @@ void PeerManagerImpl::ProcessMessage(
             }
             BlockValidationState state;
             if (!::ChainstateActive().ActivateBestChain(state, Params(), a_recent_block)) {
-                LogPrint(BCLog::NET, "failed to activate chain (%s)\n", FormatStateMessage(state));
+                LogPrint(BCLog::NET, "failed to activate chain (%s)\n", state.ToString());
             }
         }
 
@@ -3626,7 +3625,7 @@ void PeerManagerImpl::ProcessMessage(
         {
             LogPrint(BCLog::MEMPOOLREJ, "%s from peer=%d was not accepted: %s\n", tx.GetHash().ToString(),
                 pfrom.GetId(),
-                FormatStateMessage(state));
+                state.ToString());
             MaybePunishNodeForTx(pfrom.GetId(), state);
             m_llmq_ctx->isman->TransactionRemovedFromMempool(ptx);
         }

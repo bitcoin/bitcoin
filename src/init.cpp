@@ -61,7 +61,6 @@
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
-#include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -943,7 +942,7 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
     for (CChainState* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
         BlockValidationState state;
         if (!chainstate->ActivateBestChain(state, chainparams, nullptr)) {
-            LogPrintf("Failed to connect best block (%s)\n", FormatStateMessage(state));
+            LogPrintf("Failed to connect best block (%s)\n", state.ToString());
             StartShutdown();
             return;
         }

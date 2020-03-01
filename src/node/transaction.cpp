@@ -7,7 +7,6 @@
 #include <net.h>
 #include <net_processing.h>
 #include <txmempool.h>
-#include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <node/context.h>
@@ -42,7 +41,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         TxValidationState state;
         if (!AcceptToMemoryPool(::ChainstateActive(), *node.mempool, state, std::move(tx),
                                 bypass_limits, max_tx_fee)) {
-            err_string = FormatStateMessage(state);
+            err_string = state.ToString();
             if (state.IsInvalid()) {
                 if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
                     return TransactionError::MISSING_INPUTS;

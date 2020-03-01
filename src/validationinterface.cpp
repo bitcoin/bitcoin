@@ -11,7 +11,6 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <scheduler.h>
-#include <util/validation.h>
 
 #include <governance/object.h>
 #include <governance/vote.h>
@@ -243,7 +242,7 @@ void CMainSignals::ChainStateFlushed(const CBlockLocator &locator) {
 
 void CMainSignals::BlockChecked(const CBlock& block, const BlockValidationState& state) {
     LOG_EVENT("%s: block hash=%s state=%s", __func__,
-              block.GetHash().ToString(), FormatStateMessage(state));
+              block.GetHash().ToString(), state.ToString());
     m_internals->BlockChecked(block, state);
 }
 

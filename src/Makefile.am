@@ -326,7 +326,6 @@ BITCOIN_CORE_H = \
   util/translation.h \
   util/vector.h \
   util/url.h \
-  util/validation.h \
   util/vector.h \
   validation.h \
   validationinterface.h \
@@ -738,7 +737,6 @@ libbitcoin_util_a_SOURCES = \
   util/string.cpp \
   util/threadnames.cpp \
   util/url.cpp \
-  util/validation.cpp \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
