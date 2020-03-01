@@ -53,7 +53,6 @@
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
-#include <util/validation.h>
 #include <util/asmap.h>
 #include <validation.h>
 #include <hash.h>
@@ -808,8 +807,8 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     BlockValidationState state;
     // SYSCOIN
 	const int stopatblocknumber = gArgs.GetArg("-stopatblock", 0);
-    if (!ActivateBestChain(state, chainparams) && stopatblocknumber == 0) {
-        LogPrintf("Failed to connect best block (%s)\n", FormatStateMessage(state));
+    if (!ActivateBestChain(state, chainparams)) {
+        LogPrintf("Failed to connect best block (%s)\n", state.ToString());
         StartShutdown();
         return;
     }

@@ -20,7 +20,6 @@
 #include <timedata.h>
 #include <util/moneystr.h>
 #include <util/system.h>
-#include <util/validation.h>
 
 #include <algorithm>
 #include <utility>
@@ -217,7 +216,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // If problem, remove transactions based on policy for each of the cases and try creating block without it to remove the bottleneck
     if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false, &txMissingInput, &syscoinTxFailed)) {
         if(txMissingInput.IsNull() && syscoinTxFailed.IsNull())
-            throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
+            throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
         bFoundError = true;
         if(!txMissingInput.IsNull()) {
             // If conflicting inputs, remove one that is newer and keep oldest
@@ -251,7 +250,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     if(bFoundError){
         {
             LOCK(cs_assetallocationmempoolremovetx);
-            LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed: %s. setToRemoveFromMempool size %d. Removed %d transactions and trying again...\n", FormatStateMessage(state), setToRemoveFromMempool.size(), txsToRemove.size());
+            LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed: %s. setToRemoveFromMempool size %d. Removed %d transactions and trying again...\n", state.ToString(), setToRemoveFromMempool.size(), txsToRemove.size());
         }
         return CreateNewBlock(scriptPubKeyIn, txsToRemove);
     }
