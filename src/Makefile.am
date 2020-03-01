@@ -207,9 +207,8 @@ SYSCOIN_CORE_H = \
   random.h \
   randomenv.h \
   reverse_iterator.h \
-  reverselock.h \
-  rpc/auxpow_miner.h \
   rpc/blockchain.h \
+  rpc/auxpow_miner.h \
   rpc/client.h \
   rpc/mining.h \
   rpc/protocol.h \
