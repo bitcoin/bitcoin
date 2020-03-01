@@ -337,22 +337,17 @@ BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const
     case BlockFilterType::V0:
         m_filter = GCSFilter(params, V0FilterElements(block, block_undo));
         break;
+    default: assert(false);
     }
 }
 
 bool BlockFilter::BuildParams(GCSFilter::Params& params) const
 {
     switch (m_filter_type) {
+    case BlockFilterType::V0:
     case BlockFilterType::BASIC:
         params.m_siphash_k0 = m_block_hash.GetUint64(0);
         params.m_siphash_k1 = m_block_hash.GetUint64(1);
-        params.m_P = BASIC_FILTER_P;
-        params.m_M = BASIC_FILTER_M;
-        return true;
-    case BlockFilterType::V0:
-        params.m_siphash_k0 = m_block_hash.GetUint64(0);
-        params.m_siphash_k1 = m_block_hash.GetUint64(1);
-        // Using the same filter params as basic type.
         params.m_P = BASIC_FILTER_P;
         params.m_M = BASIC_FILTER_M;
         return true;
