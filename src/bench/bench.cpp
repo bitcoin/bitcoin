@@ -29,7 +29,7 @@ void benchmark::BenchRunner::RunAll(const std::string& filter, bool is_list_only
     std::regex reFilter(filter);
     std::smatch baseMatch;
 
-    std::vector<Result> benchmarkResults;
+    std::vector<ankerl::nanobench::Result> benchmarkResults;
     for (const auto& p : benchmarks()) {
         if (!std::regex_match(p.first, baseMatch, reFilter)) {
             continue;
@@ -69,9 +69,9 @@ void benchmark::BenchRunner::RunAll(const std::string& filter, bool is_list_only
         // Generate legacy CSV data to "benchmarkresults.csv"
         std::ofstream fout("benchmarkresults.csv");
         if (fout.is_open()) {
-            templates::generate("# Benchmark, evals, iterations, total, min, max, median\n"
-                                "{{#result}}{{name}}, {{epochs}}, {{average(iterations)}}, {{sumProduct(iterations, elapsed)}}, {{minimum(elapsed)}}, {{maximum(elapsed)}}, {{median(elapsed)}}\n"
-                                "{{/result}}",
+            ankerl::nanobench::templates::generate("# Benchmark, evals, iterations, total, min, max, median\n"
+                                                   "{{#result}}{{name}}, {{epochs}}, {{average(iterations)}}, {{sumProduct(iterations, elapsed)}}, {{minimum(elapsed)}}, {{maximum(elapsed)}}, {{median(elapsed)}}\n"
+                                                   "{{/result}}",
                 benchmarkResults, fout);
         }
     }

@@ -34,7 +34,7 @@ BENCHMARK(CODE_TO_TIME);
 
 namespace benchmark {
 
-using namespace ankerl::nanobench;
+using ankerl::nanobench::Bench;
 
 typedef std::function<void(Bench&)> BenchFunction;
 
