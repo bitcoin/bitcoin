@@ -13,7 +13,7 @@
 #include <util/strencodings.h>
 #include <util/threadnames.h>
 
-
+#include <system_error>
 #include <map>
 #include <set>
 
@@ -58,6 +58,11 @@ struct CLockLocation {
         return strprintf(
             "%s %s:%s%s (in thread %s)",
             mutexName, sourceFile, itostr(sourceLine), (fTry ? " (TRY)" : ""), m_thread_name);
+    }
+
+    std::string Name() const
+    {
+        return mutexName;
     }
 
 private:
@@ -153,6 +158,18 @@ static void pop_lock()
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry)
 {
     push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry, util::ThreadGetInternalName()));
+}
+
+void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line)
+{
+    if (!g_lockstack.empty()) {
+        const auto& lastlock = g_lockstack.back();
+        if (lastlock.first == cs) {
+            lockname = lastlock.second.Name();
+            return;
+        }
+    }
+    throw std::system_error(EPERM, std::generic_category(), strprintf("%s:%s %s was not most recent critical section locked", file, line, guardname));
 }
 
 void LeaveCritical()
