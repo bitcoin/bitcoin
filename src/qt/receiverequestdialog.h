@@ -20,10 +20,9 @@ class ReceiveRequestDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ReceiveRequestDialog(QWidget *parent = nullptr);
+    explicit ReceiveRequestDialog(WalletModel* wallet_model, QWidget *parent = nullptr);
     ~ReceiveRequestDialog();
 
-    void setModel(WalletModel *model);
     void setInfo(const SendCoinsRecipient &info);
 
 private Q_SLOTS:
@@ -34,7 +33,7 @@ private Q_SLOTS:
 
 private:
     Ui::ReceiveRequestDialog *ui;
-    WalletModel *model;
+    WalletModel* const model;
     SendCoinsRecipient info;
 };
 

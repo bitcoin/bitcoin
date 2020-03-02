@@ -17,10 +17,10 @@
 #include <config/bitcoin-config.h> /* for USE_QRCODE */
 #endif
 
-ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
+ReceiveRequestDialog::ReceiveRequestDialog(WalletModel* wallet_model, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ReceiveRequestDialog),
-    model(nullptr)
+    model(wallet_model)
 {
     ui->setupUi(this);
 
@@ -30,22 +30,15 @@ ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
 #endif
 
     connect(ui->btnSaveAs, &QPushButton::clicked, ui->lblQRCode, &QRImageWidget::saveImage);
+    connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &ReceiveRequestDialog::update);
+
+    // update the display unit if necessary
+    update();
 }
 
 ReceiveRequestDialog::~ReceiveRequestDialog()
 {
     delete ui;
-}
-
-void ReceiveRequestDialog::setModel(WalletModel *_model)
-{
-    this->model = _model;
-
-    if (_model)
-        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &ReceiveRequestDialog::update);
-
-    // update the display unit if necessary
-    update();
 }
 
 void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
