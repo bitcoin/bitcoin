@@ -151,6 +151,24 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
     });
 
     startThread();
+
+    connect(ui->dataDirectory, &QLineEdit::textChanged, [this](const QString& dataDirStr) {
+        /* Disable OK button until check result comes in */
+        ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
+        checkPath(dataDirStr);
+    });
+    connect(ui->dataDirDefault, &QPushButton::clicked, [this] {
+        setDataDirectory(GUIUtil::getDefaultDataDirectory());
+    });
+    connect(ui->ellipsisButton, &QPushButton::clicked, [this] {
+        QString dir = QDir::toNativeSeparators(QFileDialog::getExistingDirectory(nullptr, "Choose data directory", ui->dataDirectory->text()));
+        if(!dir.isEmpty())
+            ui->dataDirectory->setText(dir);
+    });
+    connect(ui->dataDirCustom, &QPushButton::clicked, [this] {
+        ui->dataDirectory->setEnabled(true);
+        ui->ellipsisButton->setEnabled(true);
+    });
 }
 
 Intro::~Intro()
@@ -288,31 +306,6 @@ void Intro::UpdateFreeSpaceLabel()
         ui->freeSpace->setStyleSheet("");
     }
     ui->freeSpace->setText(freeString + ".");
-}
-
-void Intro::on_dataDirectory_textChanged(const QString &dataDirStr)
-{
-    /* Disable OK button until check result comes in */
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
-    checkPath(dataDirStr);
-}
-
-void Intro::on_ellipsisButton_clicked()
-{
-    QString dir = QDir::toNativeSeparators(QFileDialog::getExistingDirectory(nullptr, "Choose data directory", ui->dataDirectory->text()));
-    if(!dir.isEmpty())
-        ui->dataDirectory->setText(dir);
-}
-
-void Intro::on_dataDirDefault_clicked()
-{
-    setDataDirectory(GUIUtil::getDefaultDataDirectory());
-}
-
-void Intro::on_dataDirCustom_clicked()
-{
-    ui->dataDirectory->setEnabled(true);
-    ui->ellipsisButton->setEnabled(true);
 }
 
 void Intro::startThread()
