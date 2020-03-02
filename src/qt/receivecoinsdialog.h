@@ -40,10 +40,8 @@ public:
         MINIMUM_COLUMN_WIDTH = 130
     };
 
-    explicit ReceiveCoinsDialog(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
+    explicit ReceiveCoinsDialog(WalletModel* wallet_model, const PlatformStyle *platformStyle, QWidget *parent = nullptr);
     ~ReceiveCoinsDialog();
-
-    void setModel(WalletModel *model);
 
     RecentRequestsTableModel* recentRequestsTableModel() const { return m_recent_requests_table_model; }
 
@@ -63,6 +61,7 @@ private:
     QMenu *contextMenu;
     const PlatformStyle *platformStyle;
 
+    void setModel(WalletModel *model);
     QModelIndex selectedRow();
     void copyColumnToClipboard(int column);
     virtual void resizeEvent(QResizeEvent *event);
