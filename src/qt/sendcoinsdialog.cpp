@@ -127,6 +127,15 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     ui->customFee->SetAllowEmpty(false);
     ui->customFee->setValue(settings.value("nTransactionFee").toLongLong());
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
+
+    connect(ui->sendButton, &QPushButton::clicked, this, &SendCoinsDialog::send);
+    connect(ui->buttonChooseFee, &QPushButton::clicked, [this] {
+        minimizeFeeSection(false);
+    });
+    connect(ui->buttonMinimizeFee, &QPushButton::clicked, [this] {
+        updateFeeMinimizedLabel();
+        minimizeFeeSection(true);
+    });
 }
 
 void SendCoinsDialog::setClientModel(ClientModel *_clientModel)
@@ -220,7 +229,7 @@ SendCoinsDialog::~SendCoinsDialog()
     delete ui;
 }
 
-void SendCoinsDialog::on_sendButton_clicked()
+void SendCoinsDialog::send()
 {
     if(!model || !model->getOptionsModel())
         return;
@@ -631,17 +640,6 @@ void SendCoinsDialog::minimizeFeeSection(bool fMinimize)
     ui->frameFeeSelection->setVisible(!fMinimize);
     ui->horizontalLayoutSmartFee->setContentsMargins(0, (fMinimize ? 0 : 6), 0, 0);
     fFeeMinimized = fMinimize;
-}
-
-void SendCoinsDialog::on_buttonChooseFee_clicked()
-{
-    minimizeFeeSection(false);
-}
-
-void SendCoinsDialog::on_buttonMinimizeFee_clicked()
-{
-    updateFeeMinimizedLabel();
-    minimizeFeeSection(true);
 }
 
 void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)

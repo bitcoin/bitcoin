@@ -74,9 +74,7 @@ private:
     void updateCoinControlState(CCoinControl& ctrl);
 
 private Q_SLOTS:
-    void on_sendButton_clicked();
-    void on_buttonChooseFee_clicked();
-    void on_buttonMinimizeFee_clicked();
+    void send();
     void removeEntry(SendCoinsEntry* entry);
     void useAvailableBalance(SendCoinsEntry* entry);
     void updateDisplayUnit();
