@@ -35,7 +35,7 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
-TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *parent) :
+TransactionView::TransactionView(WalletModel* wallet_model, const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent), model(nullptr), transactionProxyModel(nullptr),
     transactionView(nullptr), abandonAction(nullptr), bumpFeeAction(nullptr), columnResizingFixer(nullptr)
 {
@@ -202,6 +202,8 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(this, &TransactionView::bumpedFee, [this](const uint256& txid) {
       focusTransaction(txid);
     });
+
+    setModel(wallet_model);
 }
 
 void TransactionView::setModel(WalletModel *_model)

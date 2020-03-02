@@ -34,9 +34,7 @@ class TransactionView : public QWidget
     Q_OBJECT
 
 public:
-    explicit TransactionView(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
-
-    void setModel(WalletModel *model);
+    explicit TransactionView(WalletModel* wallet_model, const PlatformStyle *platformStyle, QWidget *parent = nullptr);
 
     // Date ranges for filter
     enum DateEnum
@@ -85,6 +83,7 @@ private:
     virtual void resizeEvent(QResizeEvent* event);
 
     bool eventFilter(QObject *obj, QEvent *event);
+    void setModel(WalletModel *model);
 
 private Q_SLOTS:
     void contextualMenu(const QPoint &);

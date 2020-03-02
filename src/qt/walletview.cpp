@@ -41,7 +41,7 @@ WalletView::WalletView(ClientModel* client_model, WalletModel* wallet_model, con
     transactionsPage = new QWidget(this);
     QVBoxLayout *vbox = new QVBoxLayout();
     QHBoxLayout *hbox_buttons = new QHBoxLayout();
-    transactionView = new TransactionView(platformStyle, this);
+    transactionView = new TransactionView(wallet_model, platformStyle, this);
     vbox->addWidget(transactionView);
     QPushButton *exportButton = new QPushButton(tr("&Export"), this);
     exportButton->setToolTip(tr("Export the data in the current tab to a file"));
@@ -83,7 +83,6 @@ WalletView::WalletView(ClientModel* client_model, WalletModel* wallet_model, con
     connect(transactionView, &TransactionView::message, this, &WalletView::message);
 
     // Put transaction list in tabs
-    transactionView->setModel(walletModel);
     usedReceivingAddressesPage->setModel(walletModel->getAddressTableModel());
     usedSendingAddressesPage->setModel(walletModel->getAddressTableModel());
 

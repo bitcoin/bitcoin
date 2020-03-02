@@ -166,14 +166,13 @@ void TestGUI(interfaces::Node& node)
 
     // Create widgets for sending coins and listing transactions.
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
-    TransactionView transactionView(platformStyle.get());
     OptionsModel optionsModel(node);
     ClientModel client_model(node, &optionsModel);
     AddWallet(wallet);
     WalletModel walletModel(interfaces::MakeWallet(wallet), node, platformStyle.get(), &optionsModel);
     RemoveWallet(wallet);
     SendCoinsDialog sendCoinsDialog(&client_model, &walletModel, platformStyle.get());
-    transactionView.setModel(&walletModel);
+    TransactionView transactionView(&walletModel, platformStyle.get());
 
     {
         // Check balance in send dialog
