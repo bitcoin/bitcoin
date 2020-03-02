@@ -69,9 +69,6 @@ private:
     void updateFeeMinimizedLabel();
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl& ctrl);
-    void setClientModel(ClientModel *clientModel);
-    void setModel(WalletModel *model);
-
 
 private Q_SLOTS:
     void on_sendButton_clicked();
