@@ -257,8 +257,10 @@ const std::string& ListBlockFilterTypes()
     return type_list;
 }
 
-static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
-                                                 const CBlockUndo& block_undo)
+static GCSFilter::ElementSet BuildFilterElements(const CBlock& block,
+                                                 const CBlockUndo& block_undo,
+                                                 bool only_segwit = true,
+                                                 int witness_version = 0)
 {
     GCSFilter::ElementSet elements;
 
@@ -266,6 +268,13 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
         for (const CTxOut& txout : tx->vout) {
             const CScript& script = txout.scriptPubKey;
             if (script.empty() || script[0] == OP_RETURN) continue;
+            if (only_segwit) {
+                int witnessversion;
+                std::vector<unsigned char> witnessprogram;
+                if (!script.IsWitnessProgram(witnessversion, witnessprogram)) continue;
+                if (witnessversion != witness_version) continue;
+                if (!(witnessversion == 0 && (witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE || witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE))) continue; // specific v0 checks
+            }
             elements.emplace(script.begin(), script.end());
         }
     }
@@ -273,38 +282,15 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
     for (const CTxUndo& tx_undo : block_undo.vtxundo) {
         for (const Coin& prevout : tx_undo.vprevout) {
             const CScript& script = prevout.out.scriptPubKey;
-            if (script.empty()) continue;
+            if (script.empty() || script[0] == OP_RETURN) continue;
+            if (only_segwit) {
+                int witnessversion;
+                std::vector<unsigned char> witnessprogram;
+                if (!script.IsWitnessProgram(witnessversion, witnessprogram)) continue;
+                if (witnessversion != witness_version) continue;
+                if (!(witnessversion == 0 && (witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE || witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE))) continue; // specific v0 checks
+            }
             elements.emplace(script.begin(), script.end());
-        }
-    }
-
-    return elements;
-}
-
-static GCSFilter::ElementSet V0FilterElements(const CBlock& block,
-    const CBlockUndo& block_undo)
-{
-    GCSFilter::ElementSet elements;
-
-    for (const CTransactionRef& tx : block.vtx) {
-        for (const CTxOut& txout : tx->vout) {
-            const CScript& scriptPubKey = txout.scriptPubKey;
-            int witnessversion;
-            std::vector<unsigned char> witnessprogram;
-            if (scriptPubKey.empty() || !scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) continue;
-            if (!(witnessversion == 0 && (witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE || witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE)))  continue;
-            elements.emplace(scriptPubKey.begin(), scriptPubKey.end());
-        }
-    }
-
-    for (const CTxUndo& tx_undo : block_undo.vtxundo) {
-        for (const Coin& prevout : tx_undo.vprevout) {
-            const CScript& scriptPubKey = prevout.out.scriptPubKey;
-            int witnessversion;
-            std::vector<unsigned char> witnessprogram;
-            if (scriptPubKey.empty() || !scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) continue;
-            if (!(witnessversion == 0 && (witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE || witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE))) continue;
-            elements.emplace(scriptPubKey.begin(), scriptPubKey.end());
         }
     }
 
@@ -332,10 +318,10 @@ BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const
 
     switch (m_filter_type) {
     case BlockFilterType::BASIC:
-        m_filter = GCSFilter(params, BasicFilterElements(block, block_undo));
+        m_filter = GCSFilter(params, BuildFilterElements(block, block_undo, false));
         break;
     case BlockFilterType::V0:
-        m_filter = GCSFilter(params, V0FilterElements(block, block_undo));
+        m_filter = GCSFilter(params, BuildFilterElements(block, block_undo));
         break;
     default: assert(false);
     }
