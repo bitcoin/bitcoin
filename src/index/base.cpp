@@ -270,7 +270,7 @@ void BaseIndex::ChainStateFlushed(const CBlockLocator& locator)
     Commit();
 }
 
-bool BaseIndex::BlockUntilSyncedToCurrentChain()
+bool BaseIndex::BlockUntilSyncedToCurrentChain() const
 {
     AssertLockNotHeld(cs_main);
 
