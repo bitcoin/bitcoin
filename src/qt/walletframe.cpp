@@ -45,9 +45,7 @@ bool WalletFrame::addWallet(WalletModel *walletModel)
 
     if (mapWalletViews.count(walletModel) > 0) return false;
 
-    WalletView *walletView = new WalletView(platformStyle, this);
-    walletView->setClientModel(clientModel);
-    walletView->setWalletModel(walletModel);
+    WalletView *walletView = new WalletView(clientModel, walletModel, platformStyle, this);
     walletView->showOutOfSyncWarning(bOutOfSync);
 
     WalletView* current_wallet_view = currentWalletView();

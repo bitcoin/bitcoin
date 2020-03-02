@@ -35,19 +35,10 @@ class WalletView : public QStackedWidget
     Q_OBJECT
 
 public:
-    explicit WalletView(const PlatformStyle *platformStyle, QWidget *parent);
+    explicit WalletView(ClientModel* client_model, WalletModel* wallet_model, const PlatformStyle *platformStyle, QWidget *parent);
     ~WalletView();
 
-    /** Set the client model.
-        The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
-    */
-    void setClientModel(ClientModel *clientModel);
     WalletModel *getWalletModel() { return walletModel; }
-    /** Set the wallet model.
-        The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
-        functionality.
-    */
-    void setWalletModel(WalletModel *walletModel);
 
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
@@ -68,6 +59,16 @@ private:
 
     QProgressDialog *progressDialog;
     const PlatformStyle *platformStyle;
+
+    /** Set the client model.
+        The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
+    */
+    void setClientModel(ClientModel *clientModel);
+    /** Set the wallet model.
+        The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
+        functionality.
+    */
+    void setWalletModel(WalletModel *walletModel);
 
 public Q_SLOTS:
     /** Switch to overview (home) page */
