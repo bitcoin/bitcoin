@@ -184,7 +184,7 @@ public:
     virtual bool IsHDEnabled() const { return false; }
 
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
-    virtual bool CanGetAddresses(bool internal = false) { return false; }
+    virtual bool CanGetAddresses(bool internal = false) const { return false; }
 
     /** Upgrades the wallet to the specified version */
     virtual bool Upgrade(int prev_version, std::string& error) { return false; }
@@ -344,7 +344,7 @@ public:
 
     const CKeyMetadata* GetMetadata(const CTxDestination& dest) const override;
 
-    bool CanGetAddresses(bool internal = false) override;
+    bool CanGetAddresses(bool internal = false) const override;
 
     std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script) const override;
 

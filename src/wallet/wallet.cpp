@@ -1333,7 +1333,7 @@ bool CWallet::IsHDEnabled() const
     return result;
 }
 
-bool CWallet::CanGetAddresses(bool internal)
+bool CWallet::CanGetAddresses(bool internal) const
 {
     LOCK(cs_wallet);
     if (m_spk_managers.empty()) return false;

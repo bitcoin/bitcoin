@@ -1104,7 +1104,7 @@ public:
     bool IsHDEnabled() const;
 
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
-    bool CanGetAddresses(bool internal = false);
+    bool CanGetAddresses(bool internal = false) const;
 
     /**
      * Blocks until the wallet state is up-to-date to /at least/ the current
