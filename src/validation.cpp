@@ -110,6 +110,7 @@ CChain& ChainActive() { return g_chainstate.m_chain; }
  */
 RecursiveMutex cs_main;
 
+std::vector<uint256> vecStakeSeen;
 CBlockIndex *pindexBestHeader = nullptr;
 Mutex g_best_block_mutex;
 std::condition_variable g_best_block_cv;
@@ -1760,6 +1761,12 @@ static int64_t nBlocksTotal = 0;
 /**
  * proof-of-stake
  */
+void maintainStakeSeen()
+{
+    if (vecStakeSeen.size() > 1024)
+        vecStakeSeen.erase(vecStakeSeen.begin(), vecStakeSeen.begin() + 128);
+}
+
 bool PoSContextualBlockChecks(const CBlock& block, CValidationState& state, CBlockIndex* pindex, bool fJustCheck)
 {
     uint256 hashProofOfStake = uint256();
@@ -1768,6 +1775,16 @@ bool PoSContextualBlockChecks(const CBlock& block, CValidationState& state, CBlo
         LogPrintf("%s: check proof-of-stake failed for block %s\n", __func__, block.GetHash().ToString());
         return false; // do not error here as we expect this during initial block download
     }
+
+    //! make sure we havent seen this stake previously
+    for (const auto& seenStake : vecStakeSeen) {
+       if (seenStake == hashProofOfStake &&
+           pindex->nHeight >= Params().GetConsensus().nStakeEnforcement) {
+           LogPrintf(" * already seen this stake (%s), discarding block..\n", hashProofOfStake.ToString().c_str());
+           return false;
+       }
+    }
+    maintainStakeSeen();
 
     // compute stake entropy bit for stake modifier
     unsigned int nEntropyBit = GetStakeEntropyBit(block);
@@ -1803,6 +1820,9 @@ bool PoSContextualBlockChecks(const CBlock& block, CValidationState& state, CBlo
 
     if (fJustCheck)
         return true;
+
+    //! if we get this far, its good
+    vecStakeSeen.push_back(hashProofOfStake);
 
     // write everything to index
     if (block.IsProofOfStake())
