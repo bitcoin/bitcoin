@@ -317,6 +317,9 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     // Keep track of entries that failed inclusion, to avoid duplicate work
     CTxMemPool::setEntries failedTx;
 
+    // A list of failed PoP transactions to delete after we finish assembling the block
+    CTxMemPool::setEntries failedPopTx;
+
     // Start by adding all descendants of previously added txs to mapModifiedTx
     // and modifying them for their already included ancestors
     UpdatePackagesForAdded(inBlock, mapModifiedTx);
@@ -419,6 +422,19 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             continue;
         }
 
+        if (VeriBlock::isPopTx(*iter->GetSharedTx())) {
+            // contextual PoP validation
+            assert(ancestors.size() == 1);
+            TxValidationState txstate;
+            if (nPopTx < config.max_pop_tx_amount &&
+                !VeriBlock::getService<VeriBlock::PopService>().addTemporaryPayloads(iter->GetSharedTx(), *::ChainActive().Tip(), chainparams.GetConsensus(), txstate)) {
+
+                failedTx.insert(iter);
+                failedPopTx.insert(iter);
+                continue;
+            }
+        }
+
         // This transaction will make it in; reset the failed counter.
         nConsecutiveFailed = 0;
 
@@ -438,6 +454,11 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
         // Update transactions that depend on each of these
         nDescendantsUpdated += UpdatePackagesForAdded(ancestors, mapModifiedTx);
+    }
+
+    // delete invalid PoP transactions
+    for (auto & tx: failedPopTx) {
+        mempool.removeRecursive(tx->GetTx(), MemPoolRemovalReason::BLOCK); // FIXME: a more appropriate removal reason
     }
 }
 

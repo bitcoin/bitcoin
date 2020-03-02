@@ -29,6 +29,8 @@ using BlockBytes = std::vector<uint8_t>;
 struct PopService {
     virtual ~PopService() = default;
 
+    virtual bool addTemporaryPayloads(const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) = 0;
+
     virtual void clearTemporaryPayloads() = 0;
 
     virtual void savePopTxToDatabase(const CBlock& block, const int& nHeight) = 0;
