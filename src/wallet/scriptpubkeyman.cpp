@@ -459,7 +459,7 @@ int64_t LegacyScriptPubKeyMan::GetOldestKeyPoolTime()
     return oldestKey;
 }
 
-size_t LegacyScriptPubKeyMan::KeypoolCountExternalKeys()
+size_t LegacyScriptPubKeyMan::KeypoolCountExternalKeys() const
 {
     LOCK(cs_KeyStore);
     return setExternalKeyPool.size() + set_pre_split_keypool.size();
