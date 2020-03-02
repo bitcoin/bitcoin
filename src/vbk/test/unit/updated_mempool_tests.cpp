@@ -288,8 +288,18 @@ BOOST_FIXTURE_TEST_CASE(check_CreateNewBlock_with_blockPopValidation_fail, Testi
    Fake(Method(pop_service_mock, clearTemporaryPayloads));
    When(Method(pop_service_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
 
-   When(Method(pop_service_mock, blockPopValidation)).AlwaysDo([](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) -> bool { return VeriBlock::blockPopValidationImpl((VeriBlock::PopServiceImpl&)VeriBlock::getService<VeriBlock::PopService>(), block, pindexPrev, params, state); });
-   When(Method(pop_service_mock, parsePopTx)).AlwaysDo([](const CTransactionRef&, ScriptError* serror, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType* type) -> bool {
+   fakeit::Mock<VeriBlock::PopServiceImpl> pop_impl_mock;
+
+   When(Method(pop_service_mock, blockPopValidation)).AlwaysDo(
+       [&](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) {
+            return VeriBlock::blockPopValidationImpl(pop_impl_mock.get(), block, pindexPrev, params, state);
+        });
+    When(Method(pop_service_mock, addTemporaryPayloads)).AlwaysDo(
+        [&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
+            return VeriBlock::addTemporaryPayloadsImpl(pop_impl_mock.get(), tx, pindexPrev, params, state);
+        });
+
+   When(Method(pop_impl_mock, parsePopTx)).AlwaysDo([](const CTransactionRef&, ScriptError* serror, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType* type) -> bool {
        if (type != nullptr) {
            *type = VeriBlock::PopTxType::CONTEXT;
        }
@@ -298,8 +308,19 @@ BOOST_FIXTURE_TEST_CASE(check_CreateNewBlock_with_blockPopValidation_fail, Testi
        }
        return true; });
 
+    When(Method(pop_impl_mock, addTemporaryPayloads)).AlwaysDo([&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
+            return VeriBlock::addTemporaryPayloadsImpl(pop_impl_mock.get(), tx, pindexPrev, params, state);
+        });
+    When(Method(pop_impl_mock, clearTemporaryPayloads)).AlwaysDo([&]() {
+                VeriBlock::clearTemporaryPayloadsImpl(pop_impl_mock.get());
+            });
+    VeriBlock::initTemporaryPayloadsMock(pop_impl_mock.get());
+
+    Fake(OverloadedMethod(pop_impl_mock, removePayloads, void(std::string, const int&)));
+
    // Simulate that we have 8 invalid popTxs
-   When(Method(pop_service_mock, updateContext)).Throw(8_Times(VeriBlock::PopServiceException("fail"))).AlwaysDo([](const std::vector<std::vector<uint8_t>>& veriBlockBlocks, const std::vector<std::vector<uint8_t>>& bitcoinBlocks) {});
+   When(Method(pop_impl_mock, updateContext)).Throw(8_Times(VeriBlock::PopServiceException("fail"))).AlwaysDo(
+       [](const std::vector<std::vector<uint8_t>>& veriBlockBlocks, const std::vector<std::vector<uint8_t>>& bitcoinBlocks) {});
 
    const size_t popTxCount = 10;
 
@@ -313,21 +334,11 @@ BOOST_FIXTURE_TEST_CASE(check_CreateNewBlock_with_blockPopValidation_fail, Testi
    BlockAssembler blkAssembler(Params());
    CScript scriptPubKey = CScript() << OP_CHECKSIG;
 
-   // repeatedly attempt to create a new block until either it
-   // succeeds or we make a suspiciously large number of attempts
    // intentionally generate the correct block mutiple times to make sure it's repeatable
-   bool success = false;
    for(size_t i = 0; i < popTxCount*2; i++) {
-       try {
-           std::unique_ptr<CBlockTemplate> pblockTemplate = blkAssembler.CreateNewBlock(scriptPubKey);
-
-           BOOST_TEST(pblockTemplate->block.vtx.size() == 3);
-
-           success = true;
-       }
-       catch (const std::runtime_error&) {}
+        std::unique_ptr<CBlockTemplate> pblockTemplate = blkAssembler.CreateNewBlock(scriptPubKey);
+        BOOST_TEST(pblockTemplate->block.vtx.size() == 3);
    }
-   BOOST_TEST(success);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

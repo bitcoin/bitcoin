@@ -57,13 +57,20 @@ struct BlockValidationFixture : public TestChain100Setup {
         Fake(OverloadedMethod(pop_impl_mock, addPayloads, void(std::string, const int&, const VeriBlock::Publications&)));
         Fake(OverloadedMethod(pop_impl_mock, removePayloads, void(std::string, const int&)));
         Fake(Method(pop_impl_mock, updateContext));
-        Fake(Method(pop_impl_mock, clearTemporaryPayloads));
 
         When(Method(pop_service_mock, checkVTBinternally)).AlwaysReturn(true);
         When(Method(pop_service_mock, checkATVinternally)).AlwaysReturn(true);
         When(Method(pop_service_mock, blockPopValidation)).AlwaysDo([&](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) -> bool {
             return VeriBlock::blockPopValidationImpl(pop_impl_mock.get(), block, pindexPrev, params, state);
         });
+
+        When(Method(pop_impl_mock, addTemporaryPayloads)).AlwaysDo([&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
+                return VeriBlock::addTemporaryPayloadsImpl(pop_impl_mock.get(), tx, pindexPrev, params, state);
+            });
+        When(Method(pop_impl_mock, clearTemporaryPayloads)).AlwaysDo([&]() {
+                VeriBlock::clearTemporaryPayloadsImpl(pop_impl_mock.get());
+            });
+        VeriBlock::initTemporaryPayloadsMock(pop_impl_mock.get());
     };
 
     std::shared_ptr<CDataStream> stream;

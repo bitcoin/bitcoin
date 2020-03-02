@@ -24,10 +24,16 @@ private:
     std::shared_ptr<VeriBlock::GrpcPopService::Stub> grpcPopService;
 
 public:
+
+    // FIXME: have to make it public so that it could be accessed in mocks
+    // the index of the last temporary payloads applied to the alt-integration blockchain view
+    uint32_t temporaryPayloadsIndex;
+
     PopServiceImpl(bool altautoconfig = false);
 
     ~PopServiceImpl() override = default;
 
+    bool addTemporaryPayloads(const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) override;
     void clearTemporaryPayloads() override;
 
     void savePopTxToDatabase(const CBlock& block, const int& nHeight) override;
@@ -65,6 +71,11 @@ public:
 bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state);
 
 bool txPopValidation(PopServiceImpl& pop, const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state, uint32_t heightIndex);
+
+// FIXME: an ugly crutch for tests
+bool addTemporaryPayloadsImpl(PopServiceImpl& pop, const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state);
+void clearTemporaryPayloadsImpl(PopServiceImpl& pop);
+void initTemporaryPayloadsMock(PopServiceImpl& pop);
 
 } // namespace VeriBlock
 #endif //BITCOIN_SRC_VBK_POP_SERVICE_POP_SERVICE_IMPL_HPP

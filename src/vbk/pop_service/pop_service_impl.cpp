@@ -61,16 +61,6 @@ inline std::string heightToHash(uint32_t height)
     return arith_uint256(height).GetHex();
 }
 
-void clearTemporaryPayloadsImpl(VeriBlock::PopService& pop, uint32_t begin, uint32_t end)
-{
-    for (uint32_t height = end - 1; height >= begin; --height) {
-        try {
-            pop.removePayloads(heightToHash(height), height);
-        } catch (const std::exception& /*ignore*/) {
-        }
-    }
-}
-
 } // namespace
 
 
@@ -101,7 +91,16 @@ PopServiceImpl::PopServiceImpl(bool altautoconfig)
         setConfig();
     }
 
+    assert(getReservedBlockIndexBegin(config) <= getReservedBlockIndexEnd(config) && "oh no, programming error");
+    temporaryPayloadsIndex = getReservedBlockIndexEnd(config);
     clearTemporaryPayloads();
+}
+
+void initTemporaryPayloadsMock(PopServiceImpl& pop)
+{
+    auto& config = VeriBlock::getService<VeriBlock::Config>();
+
+    pop.temporaryPayloadsIndex = getReservedBlockIndexBegin(config);
 }
 
 void PopServiceImpl::addPayloads(std::string blockHash, const int& nHeight, const Publications& publications)
@@ -575,7 +574,33 @@ void PopServiceImpl::setConfig()
     }
 }
 
+bool PopServiceImpl::addTemporaryPayloads(const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state)
+{
+    return addTemporaryPayloadsImpl(*this, tx, pindexPrev, params, state);
+}
+
+bool addTemporaryPayloadsImpl(PopServiceImpl& pop, const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state)
+{
+    if (pop.temporaryPayloadsIndex >= getReservedBlockIndexEnd(VeriBlock::getService<VeriBlock::Config>())) {
+        return state.Invalid(TxValidationResult::TX_BAD_POP_DATA, "pop-block-num-pop-tx", "too many pop transactions in a block");
+    }
+
+    //TODO: need locking
+
+    bool isValid = txPopValidation(pop, tx, pindexPrev, params, state, pop.temporaryPayloadsIndex);
+    if (isValid) {
+        pop.temporaryPayloadsIndex++;
+    }
+
+    return isValid;
+}
+
 void PopServiceImpl::clearTemporaryPayloads()
+{
+    clearTemporaryPayloadsImpl(*this);
+}
+
+void clearTemporaryPayloadsImpl(PopServiceImpl& pop)
 {
     // since we have no transactional interface (yet), we agreed to do the following instead:
     // 1. during block pop validation, execute addPayloads with heights from reserved block heights - this changes the state of alt-service and does all validations.
@@ -583,10 +608,18 @@ void PopServiceImpl::clearTemporaryPayloads()
     // 3. if node was shutdown during block pop validation, also clear all payloads within given height range
     // range is [uint32_t::max() - pop_tx_amount_per_block...uint32_t::max); total size is config.pop_tx_amount
 
-    auto& config = getService<Config>();
-    clearTemporaryPayloadsImpl(*this, getReservedBlockIndexBegin(config), getReservedBlockIndexEnd(config));
-}
+    const auto begin = getReservedBlockIndexBegin(getService<Config>());
+    const auto end = pop.temporaryPayloadsIndex;
 
+    for (uint32_t height = end - 1; height >= begin; --height) {
+        try {
+            pop.removePayloads(heightToHash(height), height);
+        } catch (const std::exception& /*ignore*/) {
+        }
+    }
+
+    pop.temporaryPayloadsIndex = begin;
+}
 
 bool txPopValidation(PopServiceImpl& pop, const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state, uint32_t heightIndex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -667,13 +700,6 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
     const auto& config = getService<Config>();
     size_t numOfPopTxes = 0;
 
-    // block index here works as a database transaction ID
-    // if given tx is invalid, we need to rollback the alt-service state
-    // and to know which exactly - we use BlockIndex
-    const auto blockIndexBegin = getReservedBlockIndexBegin(config);
-    auto blockIndexIt = blockIndexBegin;
-    const auto blockIndexEnd = getReservedBlockIndexEnd(config);
-
     LOCK(mempool.cs);
     AssertLockHeld(mempool.cs);
     AssertLockHeld(cs_main);
@@ -684,23 +710,22 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
         }
 
         if (++numOfPopTxes > config.max_pop_tx_amount) {
-            pop.clearTemporaryPayloads();
+            clearTemporaryPayloadsImpl(pop);
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "pop-block-num-pop-tx", "too many pop transactions in a block");
         }
 
         TxValidationState txstate;
-        assert(blockIndexBegin <= blockIndexEnd && "oh no, programming error");
 
-        if (!txPopValidation(pop, tx, pindexPrev, params, txstate, blockIndexIt++)) {
-            clearTemporaryPayloadsImpl(pop, getReservedBlockIndexBegin(config), blockIndexIt);
+        if (!addTemporaryPayloadsImpl(pop, tx, pindexPrev, params, txstate)) {
+            clearTemporaryPayloadsImpl(pop);
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, txstate.GetRejectReason(), txstate.GetDebugMessage());
         }
     }
 
     // because this is validation, we need to clear current temporary payloads
-    // actual addPayloads call is performed in savePopTxToDatabase
-    clearTemporaryPayloadsImpl(pop, getReservedBlockIndexBegin(config), blockIndexIt);
+    // actual addPayloads call is performed in ConnectTip
+    clearTemporaryPayloadsImpl(pop);
 
     return true;
 }

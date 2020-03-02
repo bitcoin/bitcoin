@@ -52,7 +52,25 @@ struct PopServiceFixture : public TestChain100Setup {
                 }
                 return true;
             });
+
         When(Method(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
+
+        When(Method(pop_service_impl_mock, addTemporaryPayloads)).AlwaysDo([&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
+                return VeriBlock::addTemporaryPayloadsImpl(pop_service_impl_mock.get(), tx, pindexPrev, params, state);
+            });
+        When(Method(pop_service_impl_mock, clearTemporaryPayloads)).AlwaysDo([&]() {
+                VeriBlock::clearTemporaryPayloadsImpl(pop_service_impl_mock.get());
+            });
+        VeriBlock::initTemporaryPayloadsMock(pop_service_impl_mock.get());
+    }
+
+    void verifyNoAddRemovePayloads()
+    {
+        Verify_Method(OverloadedMethod(pop_service_impl_mock, addPayloads, void(std::string, const int&, const VeriBlock::Publications&))).Never();
+        Verify_Method(OverloadedMethod(pop_service_impl_mock, addPayloads, void(const CBlockIndex&, const CBlock&))).Never();
+
+        Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(std::string, const int&))).Never();
+        Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(const CBlockIndex&))).Never();
     }
 };
 
@@ -74,7 +92,6 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test, PopServiceFixture)
         .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
             setPublicationData(publicationData, stream, config.index.unwrap());
         });
-
 
     BlockValidationState state;
     {
@@ -110,7 +127,8 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_index, PopServiceFixture)
         BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-altchain-id");
     }
-    Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(std::string, const int&))).Once();
+
+    verifyNoAddRemovePayloads();
 }
 
 BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_known_orphan_block, PopServiceFixture)
@@ -137,7 +155,7 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_known_orphan_
         BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-endorsed-block-not-known-orphan-block");
     }
-    Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(std::string, const int&))).Once();
+    verifyNoAddRemovePayloads();
 }
 
 BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_from_chain, PopServiceFixture)
@@ -174,7 +192,7 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_from_chain, P
         BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-endorsed-block-not-from-this-chain");
     }
-    Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(std::string, const int&))).Once();
+    verifyNoAddRemovePayloads();
 }
 
 BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_settlement_interval, PopServiceFixture)
@@ -203,7 +221,7 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_settlement_interval, PopSe
         BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-endorsed-block-too-old");
     }
-    Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(std::string, const int&))).Once();
+    verifyNoAddRemovePayloads();
 }
 
 BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_addPayloads, PopServiceFixture)
@@ -233,6 +251,11 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_addPayloads, PopServiceFix
         BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-add-payloads-failed");
     }
-    Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(std::string, const int&))).Once();
+
+    Verify_Method(OverloadedMethod(pop_service_impl_mock, addPayloads, void(std::string, const int&, const VeriBlock::Publications&))).Once();
+    Verify_Method(OverloadedMethod(pop_service_impl_mock, addPayloads, void(const CBlockIndex&, const CBlock&))).Never();
+
+    Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(std::string, const int&))).Never();
+    Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(const CBlockIndex&))).Never();
 }
 BOOST_AUTO_TEST_SUITE_END()
