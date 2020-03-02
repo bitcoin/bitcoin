@@ -64,7 +64,7 @@ if [[ "$1" == '--' ]]; then shift; fi SUB (^Z) > > > > > > > > >
            - I-Have-Code
      - Now-Complete:
          requires:
-           - Hold-For-Approval
+           - ./ci/Run_gradle_tasks, get_list=available tasks_with --stacktrace.option.sh, wget_stack_trace, Run --debug option to get_output.logs.sh, Run --scan_get_full" insight".sh, SUB ^Z ("THIS RUN CONMAND" ONLY!) 
            - ~/.circleci/config.yml
 version: 2
 jobs:
