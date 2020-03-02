@@ -31,11 +31,8 @@ class SendCoinsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SendCoinsDialog(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
+    explicit SendCoinsDialog(ClientModel* client_model, WalletModel* wallet_model, const PlatformStyle *platformStyle, QWidget *parent = nullptr);
     ~SendCoinsDialog();
-
-    void setClientModel(ClientModel *clientModel);
-    void setModel(WalletModel *model);
 
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
      */
@@ -72,6 +69,9 @@ private:
     void updateFeeMinimizedLabel();
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl& ctrl);
+    void setClientModel(ClientModel *clientModel);
+    void setModel(WalletModel *model);
+
 
 private Q_SLOTS:
     void on_sendButton_clicked();
