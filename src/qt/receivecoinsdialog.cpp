@@ -24,7 +24,7 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(WalletModel* wallet_model, const Platform
     QDialog(parent),
     ui(new Ui::ReceiveCoinsDialog),
     columnResizingFixer(nullptr),
-    model(nullptr),
+    model(wallet_model),
     platformStyle(_platformStyle)
 {
     ui->setupUi(this);
@@ -63,53 +63,42 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(WalletModel* wallet_model, const Platform
 
     connect(ui->clearButton, &QPushButton::clicked, this, &ReceiveCoinsDialog::clear);
 
-    setModel(wallet_model);
-}
+    m_recent_requests_table_model = new RecentRequestsTableModel(model);
+    m_recent_requests_table_model->sort(RecentRequestsTableModel::Date, Qt::DescendingOrder);
+    connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &ReceiveCoinsDialog::updateDisplayUnit);
+    updateDisplayUnit();
 
-void ReceiveCoinsDialog::setModel(WalletModel *_model)
-{
-    this->model = _model;
+    QTableView* tableView = ui->recentRequestsView;
 
-    if(_model && _model->getOptionsModel())
-    {
-        assert(m_recent_requests_table_model == nullptr);
-        m_recent_requests_table_model = new RecentRequestsTableModel(_model);
-        m_recent_requests_table_model->sort(RecentRequestsTableModel::Date, Qt::DescendingOrder);
-        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &ReceiveCoinsDialog::updateDisplayUnit);
-        updateDisplayUnit();
+    tableView->verticalHeader()->hide();
+    tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    tableView->setModel(m_recent_requests_table_model);
+    tableView->setAlternatingRowColors(true);
+    tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    tableView->setSelectionMode(QAbstractItemView::ContiguousSelection);
+    tableView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
+    tableView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
+    tableView->setColumnWidth(RecentRequestsTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
 
-        QTableView* tableView = ui->recentRequestsView;
+    connect(tableView->selectionModel(),
+        &QItemSelectionModel::selectionChanged, this,
+        &ReceiveCoinsDialog::recentRequestsView_selectionChanged);
+    // Last 2 columns are set by the columnResizingFixer, when the table geometry is ready.
+    columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH, this);
 
-        tableView->verticalHeader()->hide();
-        tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        tableView->setModel(m_recent_requests_table_model);
-        tableView->setAlternatingRowColors(true);
-        tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-        tableView->setSelectionMode(QAbstractItemView::ContiguousSelection);
-        tableView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
-        tableView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
-        tableView->setColumnWidth(RecentRequestsTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
-
-        connect(tableView->selectionModel(),
-            &QItemSelectionModel::selectionChanged, this,
-            &ReceiveCoinsDialog::recentRequestsView_selectionChanged);
-        // Last 2 columns are set by the columnResizingFixer, when the table geometry is ready.
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH, this);
-
-        if (model->wallet().getDefaultAddressType() == OutputType::BECH32) {
-            ui->useBech32->setCheckState(Qt::Checked);
-        } else {
-            ui->useBech32->setCheckState(Qt::Unchecked);
-        }
-
-        // Set the button to be enabled or disabled based on whether the wallet can give out new addresses.
-        ui->receiveButton->setEnabled(model->canGetAddresses());
-
-        // Enable/disable the receive button if the wallet is now able/unable to give out new addresses.
-        connect(model, &WalletModel::canGetAddressesChanged, [this] {
-            ui->receiveButton->setEnabled(model->canGetAddresses());
-        });
+    if (model->wallet().getDefaultAddressType() == OutputType::BECH32) {
+        ui->useBech32->setCheckState(Qt::Checked);
+    } else {
+        ui->useBech32->setCheckState(Qt::Unchecked);
     }
+
+    // Set the button to be enabled or disabled based on whether the wallet can give out new addresses.
+    ui->receiveButton->setEnabled(model->canGetAddresses());
+
+    // Enable/disable the receive button if the wallet is now able/unable to give out new addresses.
+    connect(model, &WalletModel::canGetAddressesChanged, [this] {
+        ui->receiveButton->setEnabled(model->canGetAddresses());
+    });
 }
 
 ReceiveCoinsDialog::~ReceiveCoinsDialog()

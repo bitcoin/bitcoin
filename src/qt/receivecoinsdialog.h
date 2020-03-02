@@ -56,12 +56,11 @@ protected:
 private:
     Ui::ReceiveCoinsDialog *ui;
     GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
-    WalletModel *model;
+    WalletModel* const model;
     RecentRequestsTableModel* m_recent_requests_table_model{nullptr};
     QMenu *contextMenu;
     const PlatformStyle *platformStyle;
 
-    void setModel(WalletModel *model);
     QModelIndex selectedRow();
     void copyColumnToClipboard(int column);
     virtual void resizeEvent(QResizeEvent *event);
