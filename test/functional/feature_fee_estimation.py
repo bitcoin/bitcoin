@@ -13,6 +13,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_raises_rpc_error,
     connect_nodes,
     satoshi_round,
 )
@@ -226,6 +227,10 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.fees_per_kb = []
         self.memutxo = []
         self.confutxo = self.txouts  # Start with the set of confirmed txouts after splitting
+
+        assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 - 1008", self.nodes[0].estimatesmartfee, 0)
+        assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 - 1008", self.nodes[0].estimatesmartfee, 1009)
+
         self.log.info("Will output estimates for 1/2/3/6/15/25 blocks")
 
         for i in range(2):
