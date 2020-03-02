@@ -30,6 +30,12 @@ ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
 #endif
 
     connect(ui->btnSaveAs, &QPushButton::clicked, ui->lblQRCode, &QRImageWidget::saveImage);
+    connect(ui->btnCopyURI, &QPushButton::clicked, [this] {
+        GUIUtil::setClipboard(GUIUtil::formatBitcoinURI(info));
+    });
+    connect(ui->btnCopyAddress, &QPushButton::clicked, [this] {
+        GUIUtil::setClipboard(info.address);
+    });
 }
 
 ReceiveRequestDialog::~ReceiveRequestDialog()
@@ -85,14 +91,4 @@ void ReceiveRequestDialog::update()
     if (ui->lblQRCode->setQR(uri, info.address)) {
         ui->btnSaveAs->setEnabled(true);
     }
-}
-
-void ReceiveRequestDialog::on_btnCopyURI_clicked()
-{
-    GUIUtil::setClipboard(GUIUtil::formatBitcoinURI(info));
-}
-
-void ReceiveRequestDialog::on_btnCopyAddress_clicked()
-{
-    GUIUtil::setClipboard(info.address);
 }

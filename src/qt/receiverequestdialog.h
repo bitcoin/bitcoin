@@ -27,9 +27,6 @@ public:
     void setInfo(const SendCoinsRecipient &info);
 
 private Q_SLOTS:
-    void on_btnCopyURI_clicked();
-    void on_btnCopyAddress_clicked();
-
     void update();
 
 private:
