@@ -212,7 +212,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     for(auto &txid:txsToRemove){
          LogPrintf("CreateNewBlock() txsToRemove size %d txid %s\n", txsToRemove.size(), txid.GetHex().c_str());
     }
-    // Do the sanity block check and report back, conflicting input set, non-existant input check or problematic syscoin tx check (balance overflows). 
+    // Do the sanity block check and report back, conflicting input set, non-existent input check or problematic syscoin tx check (balance overflows). 
     // If problem, remove transactions based on policy for each of the cases and try creating block without it to remove the bottleneck
     if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false, &txMissingInput, &syscoinTxFailed)) {
         if(txMissingInput.IsNull() && syscoinTxFailed.IsNull())
