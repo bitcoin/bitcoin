@@ -113,7 +113,7 @@ public:
 OverviewPage::OverviewPage(ClientModel* client_model, const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
-    clientModel(nullptr),
+    clientModel(client_model),
     walletModel(nullptr),
     txdelegate(new TxViewDelegate(platformStyle, this))
 {
@@ -140,7 +140,9 @@ OverviewPage::OverviewPage(ClientModel* client_model, const PlatformStyle *platf
     connect(ui->labelWalletStatus, &QPushButton::clicked, this, &OverviewPage::handleOutOfSyncWarningClicks);
     connect(ui->labelTransactionsStatus, &QPushButton::clicked, this, &OverviewPage::handleOutOfSyncWarningClicks);
 
-    setClientModel(client_model);
+    // Show warning, for example if this is a prerelease version
+    connect(clientModel, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
+    updateAlerts(clientModel->getStatusBarWarnings());
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
@@ -201,16 +203,6 @@ void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
 
     if (!showWatchOnly)
         ui->labelWatchImmature->hide();
-}
-
-void OverviewPage::setClientModel(ClientModel *model)
-{
-    this->clientModel = model;
-    if (model) {
-        // Show warning, for example if this is a prerelease version
-        connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
-        updateAlerts(model->getStatusBarWarnings());
-    }
 }
 
 void OverviewPage::setWalletModel(WalletModel *model)

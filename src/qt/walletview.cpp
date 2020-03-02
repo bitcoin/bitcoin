@@ -106,8 +106,6 @@ WalletView::WalletView(ClientModel* client_model, WalletModel* wallet_model, con
 
     // Show progress dialog
     connect(walletModel, &WalletModel::showProgress, this, &WalletView::showProgress);
-
-    overviewPage->setClientModel(clientModel);
 }
 
 WalletView::~WalletView()

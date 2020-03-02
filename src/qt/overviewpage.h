@@ -36,9 +36,6 @@ public:
     void setWalletModel(WalletModel *walletModel);
     void showOutOfSyncWarning(bool fShow);
 
-private:
-    void setClientModel(ClientModel *clientModel);
-
 public Q_SLOTS:
     void setBalance(const interfaces::WalletBalances& balances);
 
@@ -48,7 +45,7 @@ Q_SIGNALS:
 
 private:
     Ui::OverviewPage *ui;
-    ClientModel *clientModel;
+    ClientModel* const clientModel;
     WalletModel *walletModel;
     interfaces::WalletBalances m_balances;
 
