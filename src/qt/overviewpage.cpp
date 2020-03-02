@@ -110,7 +110,7 @@ public:
 };
 #include <qt/overviewpage.moc>
 
-OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
+OverviewPage::OverviewPage(ClientModel* client_model, const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
     clientModel(nullptr),
@@ -139,6 +139,8 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     showOutOfSyncWarning(true);
     connect(ui->labelWalletStatus, &QPushButton::clicked, this, &OverviewPage::handleOutOfSyncWarningClicks);
     connect(ui->labelTransactionsStatus, &QPushButton::clicked, this, &OverviewPage::handleOutOfSyncWarningClicks);
+
+    setClientModel(client_model);
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)

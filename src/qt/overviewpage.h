@@ -30,12 +30,14 @@ class OverviewPage : public QWidget
     Q_OBJECT
 
 public:
-    explicit OverviewPage(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
+    explicit OverviewPage(ClientModel* client_model, const PlatformStyle *platformStyle, QWidget *parent = nullptr);
     ~OverviewPage();
 
-    void setClientModel(ClientModel *clientModel);
     void setWalletModel(WalletModel *walletModel);
     void showOutOfSyncWarning(bool fShow);
+
+private:
+    void setClientModel(ClientModel *clientModel);
 
 public Q_SLOTS:
     void setBalance(const interfaces::WalletBalances& balances);

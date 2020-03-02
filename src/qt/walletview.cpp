@@ -31,12 +31,12 @@
 
 WalletView::WalletView(ClientModel* client_model, WalletModel* wallet_model, const PlatformStyle *_platformStyle, QWidget *parent):
     QStackedWidget(parent),
-    clientModel(nullptr),
+    clientModel(client_model),
     walletModel(nullptr),
     platformStyle(_platformStyle)
 {
     // Create tabs
-    overviewPage = new OverviewPage(platformStyle);
+    overviewPage = new OverviewPage(client_model, platformStyle);
 
     transactionsPage = new QWidget(this);
     QVBoxLayout *vbox = new QVBoxLayout();
@@ -82,19 +82,13 @@ WalletView::WalletView(ClientModel* client_model, WalletModel* wallet_model, con
     // Pass through messages from transactionView
     connect(transactionView, &TransactionView::message, this, &WalletView::message);
 
-    setClientModel(client_model);
     setWalletModel(wallet_model);
+
+    overviewPage->setClientModel(clientModel);
 }
 
 WalletView::~WalletView()
 {
-}
-
-void WalletView::setClientModel(ClientModel *_clientModel)
-{
-    this->clientModel = _clientModel;
-
-    overviewPage->setClientModel(_clientModel);
 }
 
 void WalletView::setWalletModel(WalletModel *_walletModel)

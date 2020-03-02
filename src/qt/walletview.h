@@ -45,7 +45,7 @@ public:
     void showOutOfSyncWarning(bool fShow);
 
 private:
-    ClientModel *clientModel;
+    ClientModel* const clientModel;
     WalletModel *walletModel;
 
     OverviewPage *overviewPage;
@@ -60,10 +60,6 @@ private:
     QProgressDialog *progressDialog;
     const PlatformStyle *platformStyle;
 
-    /** Set the client model.
-        The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
-    */
-    void setClientModel(ClientModel *clientModel);
     /** Set the wallet model.
         The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
