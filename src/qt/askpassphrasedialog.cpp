@@ -18,11 +18,16 @@
 #include <QMessageBox>
 #include <QPushButton>
 
-AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent, SecureString* passphrase_out) :
+AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent, SecureString* passphrase_out)
+    : AskPassphraseDialog(mode, nullptr, parent, passphrase_out)
+{
+}
+
+AskPassphraseDialog::AskPassphraseDialog(Mode _mode, WalletModel* wallet_model, QWidget *parent, SecureString* passphrase_out) :
     QDialog(parent),
     ui(new Ui::AskPassphraseDialog),
     mode(_mode),
-    model(nullptr),
+    model(wallet_model),
     fCapsLock(false),
     m_passphrase_out(passphrase_out)
 {
@@ -81,11 +86,6 @@ AskPassphraseDialog::~AskPassphraseDialog()
 {
     secureClearPassFields();
     delete ui;
-}
-
-void AskPassphraseDialog::setModel(WalletModel *_model)
-{
-    this->model = _model;
 }
 
 void AskPassphraseDialog::accept()

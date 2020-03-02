@@ -194,8 +194,7 @@ void WalletView::encryptWallet(bool status)
 {
     if(!walletModel)
         return;
-    AskPassphraseDialog dlg(status ? AskPassphraseDialog::Encrypt : AskPassphraseDialog::Decrypt, this);
-    dlg.setModel(walletModel);
+    AskPassphraseDialog dlg(status ? AskPassphraseDialog::Encrypt : AskPassphraseDialog::Decrypt, walletModel, this);
     dlg.exec();
 
     updateEncryptionStatus();
@@ -222,8 +221,7 @@ void WalletView::backupWallet()
 
 void WalletView::changePassphrase()
 {
-    AskPassphraseDialog dlg(AskPassphraseDialog::ChangePass, this);
-    dlg.setModel(walletModel);
+    AskPassphraseDialog dlg(AskPassphraseDialog::ChangePass, walletModel, this);
     dlg.exec();
 }
 
@@ -234,8 +232,7 @@ void WalletView::unlockWallet()
     // Unlock wallet when requested by wallet model
     if (walletModel->getEncryptionStatus() == WalletModel::Locked)
     {
-        AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
-        dlg.setModel(walletModel);
+        AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, walletModel, this);
         dlg.exec();
     }
 }

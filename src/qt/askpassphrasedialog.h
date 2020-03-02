@@ -29,17 +29,16 @@ public:
         Decrypt     /**< Ask passphrase and decrypt wallet */
     };
 
-    explicit AskPassphraseDialog(Mode mode, QWidget *parent, SecureString* passphrase_out = nullptr);
+    explicit AskPassphraseDialog(Mode mode, QWidget *parent, SecureString* passphrase_out);
+    explicit AskPassphraseDialog(Mode mode, WalletModel* wallet_model, QWidget *parent, SecureString* passphrase_out = nullptr);
     ~AskPassphraseDialog();
 
     void accept();
 
-    void setModel(WalletModel *model);
-
 private:
     Ui::AskPassphraseDialog *ui;
     Mode mode;
-    WalletModel *model;
+    WalletModel* const model;
     bool fCapsLock;
     SecureString* m_passphrase_out;
 
