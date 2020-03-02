@@ -50,35 +50,25 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *par
     connect(ui->deleteButton_is, &QPushButton::clicked, this, &SendCoinsEntry::deleteClicked);
     connect(ui->deleteButton_s, &QPushButton::clicked, this, &SendCoinsEntry::deleteClicked);
     connect(ui->useAvailableBalanceButton, &QPushButton::clicked, this, &SendCoinsEntry::useAvailableBalanceClicked);
+    connect(ui->payTo, &QLineEdit::textChanged, this, &SendCoinsEntry::updateLabel);
+    connect(ui->pasteButton, &QPushButton::clicked, [this] {
+        // Paste text from clipboard into recipient field
+        ui->payTo->setText(QApplication::clipboard()->text());
+    });
+    connect(ui->addressBookButton, &QPushButton::clicked, [this] {
+        if (!model) return;
+        AddressBookPage dlg(platformStyle, AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
+        dlg.setModel(model->getAddressTableModel());
+        if (dlg.exec()) {
+            ui->payTo->setText(dlg.getReturnValue());
+            ui->payAmount->setFocus();
+        }
+    });
 }
 
 SendCoinsEntry::~SendCoinsEntry()
 {
     delete ui;
-}
-
-void SendCoinsEntry::on_pasteButton_clicked()
-{
-    // Paste text from clipboard into recipient field
-    ui->payTo->setText(QApplication::clipboard()->text());
-}
-
-void SendCoinsEntry::on_addressBookButton_clicked()
-{
-    if(!model)
-        return;
-    AddressBookPage dlg(platformStyle, AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
-    dlg.setModel(model->getAddressTableModel());
-    if(dlg.exec())
-    {
-        ui->payTo->setText(dlg.getReturnValue());
-        ui->payAmount->setFocus();
-    }
-}
-
-void SendCoinsEntry::on_payTo_textChanged(const QString &address)
-{
-    updateLabel(address);
 }
 
 void SendCoinsEntry::setModel(WalletModel *_model)

@@ -64,18 +64,14 @@ Q_SIGNALS:
 private Q_SLOTS:
     void deleteClicked();
     void useAvailableBalanceClicked();
-    void on_payTo_textChanged(const QString &address);
-    void on_addressBookButton_clicked();
-    void on_pasteButton_clicked();
     void updateDisplayUnit();
+    bool updateLabel(const QString& address);
 
 private:
     SendCoinsRecipient recipient;
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
     const PlatformStyle *platformStyle;
-
-    bool updateLabel(const QString &address);
 };
 
 #endif // BITCOIN_QT_SENDCOINSENTRY_H
