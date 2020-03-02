@@ -46,7 +46,7 @@ public:
 
 private:
     ClientModel* const clientModel;
-    WalletModel *walletModel;
+    WalletModel* const walletModel;
 
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
@@ -59,12 +59,6 @@ private:
 
     QProgressDialog *progressDialog;
     const PlatformStyle *platformStyle;
-
-    /** Set the wallet model.
-        The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
-        functionality.
-    */
-    void setWalletModel(WalletModel *walletModel);
 
 public Q_SLOTS:
     /** Switch to overview (home) page */

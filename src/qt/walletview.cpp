@@ -32,7 +32,7 @@
 WalletView::WalletView(ClientModel* client_model, WalletModel* wallet_model, const PlatformStyle *_platformStyle, QWidget *parent):
     QStackedWidget(parent),
     clientModel(client_model),
-    walletModel(nullptr),
+    walletModel(wallet_model),
     platformStyle(_platformStyle)
 {
     // Create tabs
@@ -82,46 +82,36 @@ WalletView::WalletView(ClientModel* client_model, WalletModel* wallet_model, con
     // Pass through messages from transactionView
     connect(transactionView, &TransactionView::message, this, &WalletView::message);
 
-    setWalletModel(wallet_model);
+    // Put transaction list in tabs
+    transactionView->setModel(walletModel);
+    overviewPage->setWalletModel(walletModel);
+    usedReceivingAddressesPage->setModel(walletModel->getAddressTableModel());
+    usedSendingAddressesPage->setModel(walletModel->getAddressTableModel());
+
+    // Receive and pass through messages from wallet model
+    connect(walletModel, &WalletModel::message, this, &WalletView::message);
+
+    // Handle changes in encryption status
+    connect(walletModel, &WalletModel::encryptionStatusChanged, this, &WalletView::encryptionStatusChanged);
+    updateEncryptionStatus();
+
+    // update HD status
+    Q_EMIT hdEnabledStatusChanged();
+
+    // Balloon pop-up for new transaction
+    connect(walletModel->getTransactionTableModel(), &TransactionTableModel::rowsInserted, this, &WalletView::processNewTransaction);
+
+    // Ask for passphrase if needed
+    connect(walletModel, &WalletModel::requireUnlock, this, &WalletView::unlockWallet);
+
+    // Show progress dialog
+    connect(walletModel, &WalletModel::showProgress, this, &WalletView::showProgress);
 
     overviewPage->setClientModel(clientModel);
 }
 
 WalletView::~WalletView()
 {
-}
-
-void WalletView::setWalletModel(WalletModel *_walletModel)
-{
-    this->walletModel = _walletModel;
-
-    // Put transaction list in tabs
-    transactionView->setModel(_walletModel);
-    overviewPage->setWalletModel(_walletModel);
-    usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
-    usedSendingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
-
-    if (_walletModel)
-    {
-        // Receive and pass through messages from wallet model
-        connect(_walletModel, &WalletModel::message, this, &WalletView::message);
-
-        // Handle changes in encryption status
-        connect(_walletModel, &WalletModel::encryptionStatusChanged, this, &WalletView::encryptionStatusChanged);
-        updateEncryptionStatus();
-
-        // update HD status
-        Q_EMIT hdEnabledStatusChanged();
-
-        // Balloon pop-up for new transaction
-        connect(_walletModel->getTransactionTableModel(), &TransactionTableModel::rowsInserted, this, &WalletView::processNewTransaction);
-
-        // Ask for passphrase if needed
-        connect(_walletModel, &WalletModel::requireUnlock, this, &WalletView::unlockWallet);
-
-        // Show progress dialog
-        connect(_walletModel, &WalletModel::showProgress, this, &WalletView::showProgress);
-    }
 }
 
 void WalletView::processNewTransaction(const QModelIndex& parent, int start, int /*end*/)
