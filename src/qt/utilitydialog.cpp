@@ -102,6 +102,8 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bo
         ui->scrollArea->setVisible(false);
         ui->aboutLogo->setVisible(false);
     }
+
+    connect(ui->okButton, &QDialogButtonBox::accepted, this, &QDialog::accept);
 }
 
 HelpMessageDialog::~HelpMessageDialog()
@@ -125,12 +127,6 @@ void HelpMessageDialog::showOrPrint()
     printToConsole();
 #endif
 }
-
-void HelpMessageDialog::on_okButton_accepted()
-{
-    close();
-}
-
 
 /** "Shutdown" window */
 ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
