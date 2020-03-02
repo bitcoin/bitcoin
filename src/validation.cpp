@@ -1778,7 +1778,8 @@ bool PoSContextualBlockChecks(const CBlock& block, CValidationState& state, CBlo
 
     //! make sure we havent seen this stake previously
     for (const auto& seenStake : vecStakeSeen) {
-       if (seenStake == hashProofOfStake) {
+       if (seenStake == hashProofOfStake &&
+           pindex->nHeight >= Params().GetConsensus().nStakeEnforcement) {
            LogPrintf(" * already seen this stake (%s), discarding block..\n", hashProofOfStake.ToString().c_str());
            return false;
        }
