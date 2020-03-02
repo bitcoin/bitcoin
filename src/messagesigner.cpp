@@ -5,7 +5,6 @@
 
 #include <base58.h>
 #include <hash.h>
-#include <util/validation.h>
 #include <messagesigner.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
