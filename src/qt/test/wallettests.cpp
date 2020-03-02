@@ -8,6 +8,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
 #include <qt/bitcoinamountfield.h>
+#include <qt/clientmodel.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/qvalidatedlineedit.h>
@@ -165,13 +166,13 @@ void TestGUI(interfaces::Node& node)
 
     // Create widgets for sending coins and listing transactions.
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
-    SendCoinsDialog sendCoinsDialog(platformStyle.get());
     TransactionView transactionView(platformStyle.get());
     OptionsModel optionsModel(node);
+    ClientModel client_model(node, &optionsModel);
     AddWallet(wallet);
     WalletModel walletModel(interfaces::MakeWallet(wallet), node, platformStyle.get(), &optionsModel);
     RemoveWallet(wallet);
-    sendCoinsDialog.setModel(&walletModel);
+    SendCoinsDialog sendCoinsDialog(&client_model, &walletModel, platformStyle.get());
     transactionView.setModel(&walletModel);
 
     {
@@ -200,8 +201,7 @@ void TestGUI(interfaces::Node& node)
     BumpFee(transactionView, txid2, true /* expect disabled */, "already bumped" /* expected error */, false /* cancel */);
 
     // Check current balance on OverviewPage
-    OverviewPage overviewPage(platformStyle.get());
-    overviewPage.setWalletModel(&walletModel);
+    OverviewPage overviewPage(&client_model, &walletModel, platformStyle.get());
     QLabel* balanceLabel = overviewPage.findChild<QLabel*>("labelBalance");
     QString balanceText = balanceLabel->text();
     int unit = walletModel.getOptionsModel()->getDisplayUnit();
@@ -210,8 +210,7 @@ void TestGUI(interfaces::Node& node)
     QCOMPARE(balanceText, balanceComparison);
 
     // Check Request Payment button
-    ReceiveCoinsDialog receiveCoinsDialog(platformStyle.get());
-    receiveCoinsDialog.setModel(&walletModel);
+    ReceiveCoinsDialog receiveCoinsDialog(&walletModel, platformStyle.get());
     RecentRequestsTableModel* requestTableModel = receiveCoinsDialog.recentRequestsTableModel();
     assert(requestTableModel);
 
