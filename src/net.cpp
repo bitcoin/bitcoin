@@ -29,6 +29,7 @@
 #include <scheduler.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/thread.h>
@@ -64,6 +65,8 @@ static constexpr size_t MAX_BLOCK_RELAY_ONLY_ANCHORS = 2;
 static_assert (MAX_BLOCK_RELAY_ONLY_ANCHORS <= static_cast<size_t>(MAX_BLOCK_RELAY_ONLY_CONNECTIONS), "MAX_BLOCK_RELAY_ONLY_ANCHORS must not exceed MAX_BLOCK_RELAY_ONLY_CONNECTIONS.");
 /** Anchor IP address database file name */
 const char* const ANCHORS_DATABASE_FILENAME = "anchors.dat";
+
+static constexpr uint64_t V2_MAX_CONTENTS_LENGTH = 0x01000000 - 1; // 2^24 - 1
 
 // How often to dump addresses to peers.dat
 static constexpr std::chrono::minutes DUMP_PEERS_INTERVAL{15};
@@ -110,6 +113,8 @@ const std::string NET_MESSAGE_TYPE_OTHER = "*other*";
 static const uint64_t RANDOMIZER_ID_NETGROUP = 0x6c0edd8036ef4036ULL; // SHA256("netgroup")[0:8]
 static const uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL; // SHA256("localhostnonce")[0:8]
 static const uint64_t RANDOMIZER_ID_ADDRCACHE = 0x1cf2e4ddd306dda9ULL; // SHA256("addrcache")[0:8]
+
+static constexpr uint8_t V2_LONG_MSG_TYPE_LEN = 12; // V2 (BIP324) message type long ids
 //
 // Global state variables
 //
@@ -685,7 +690,14 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
         if (m_deserializer->Complete()) {
             // decompose a transport agnostic CNetMessage from the deserializer
             bool reject_message{false};
-            CNetMessage msg = m_deserializer->GetMessage(time, reject_message);
+            bool disconnect{false};
+            CNetMessage msg = m_deserializer->GetMessage(time, reject_message, disconnect);
+
+            if (disconnect) {
+                // v2 p2p incorrect MAC tag. Disconnect from peer.
+                return false;
+            }
+
             if (reject_message) {
                 // Message deserialization failed. Drop the message but don't disconnect the peer.
                 // store the size of the corrupt message
@@ -777,10 +789,12 @@ const uint256& V1TransportDeserializer::GetMessageHash() const
     return data_hash;
 }
 
-CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds time, bool& reject_message)
+CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds time, bool& reject_message, bool& disconnect)
 {
     // Initialize out parameter
     reject_message = false;
+    disconnect = false;
+
     // decompose a single CNetMessage from the TransportDeserializer
     CNetMessage msg(std::move(vRecv));
 
@@ -802,6 +816,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds 
                  HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
                  HexStr(hdr.pchChecksum),
                  m_node_id);
+        // TODO: Should we disconnect the v1 peer in this case?
         reject_message = true;
     } else if (!hdr.IsCommandValid()) {
         LogPrint(BCLog::NET, "Header error: Invalid message type (%s, %u bytes), peer=%d\n",
@@ -814,7 +829,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds 
     return msg;
 }
 
-void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const
+bool V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const
 {
     // create dbl-sha256 checksum
     uint256 hash = Hash(msg.data);
@@ -826,6 +841,179 @@ void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vec
     // serialize header
     header.reserve(CMessageHeader::HEADER_SIZE);
     CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, header, 0, hdr};
+    return true;
+}
+
+int V2TransportDeserializer::readHeader(Span<const uint8_t> pkt_bytes)
+{
+    // copy data to temporary parsing buffer
+    const size_t remaining = BIP324_LENGTH_FIELD_LEN - m_hdr_pos;
+    const size_t copy_bytes = std::min<unsigned int>(remaining, pkt_bytes.size());
+
+    memcpy(&vRecv[m_hdr_pos], pkt_bytes.data(), copy_bytes);
+    m_hdr_pos += copy_bytes;
+
+    // if we don't have the encrypted length yet, exit
+    if (m_hdr_pos < BIP324_LENGTH_FIELD_LEN) {
+        return copy_bytes;
+    }
+
+    // we have the 3 bytes encrypted packet length at this point
+    std::array<std::byte, BIP324_LENGTH_FIELD_LEN> encrypted_pkt_len;
+    memcpy(encrypted_pkt_len.data(), vRecv.data(), BIP324_LENGTH_FIELD_LEN);
+
+    // the encrypted packet data = bip324 header + contents (message type + message payload)
+    m_contents_size = m_cipher_suite->DecryptLength(encrypted_pkt_len);
+
+    // m_contents_size is the size of the p2p message
+    if (m_contents_size > V2_MAX_CONTENTS_LENGTH) {
+        return -1;
+    }
+
+    // switch state to reading message data
+    m_in_data = true;
+
+    return copy_bytes;
+}
+
+int V2TransportDeserializer::readData(Span<const uint8_t> pkt_bytes)
+{
+    // Read the BIP324 encrypted packet data.
+    const size_t remaining = BIP324_HEADER_LEN + m_contents_size + RFC8439_EXPANSION - m_data_pos;
+    const size_t copy_bytes = std::min<unsigned int>(remaining, pkt_bytes.size());
+
+    // extend buffer, respect previous copied encrypted length
+    if (vRecv.size() < BIP324_LENGTH_FIELD_LEN + m_data_pos + copy_bytes) {
+        // Allocate up to 256 KiB ahead, but never more than the total message size.
+        vRecv.resize(BIP324_LENGTH_FIELD_LEN + std::min(BIP324_HEADER_LEN + m_contents_size, m_data_pos + copy_bytes + 256 * 1024) + RFC8439_EXPANSION, std::byte{0x00});
+    }
+
+    memcpy(&vRecv[BIP324_LENGTH_FIELD_LEN + m_data_pos], pkt_bytes.data(), copy_bytes);
+    m_data_pos += copy_bytes;
+
+    return copy_bytes;
+}
+
+CNetMessage V2TransportDeserializer::GetMessage(const std::chrono::microseconds time, bool& reject_message, bool& disconnect)
+{
+    const size_t min_contents_size = 1; // BIP324 1-byte message type id is the minimum contents
+
+    // Initialize out parameters
+    reject_message = (vRecv.size() < V2_MIN_PACKET_LENGTH + min_contents_size);
+    disconnect = false;
+
+    // In v2, vRecv contains:
+    // 3 bytes of encrypted packet length
+    // 1-byte encrypted bip324 header
+    // variable length encrypted contents(message type and message payload) and
+    // mac tag
+    assert(Complete());
+
+    std::string msg_type;
+
+    BIP324HeaderFlags flags;
+    size_t msg_type_size = 1; // at least one byte needed for message type
+    if (m_cipher_suite->Crypt({},
+                              Span{reinterpret_cast<const std::byte*>(vRecv.data() + BIP324_LENGTH_FIELD_LEN), BIP324_HEADER_LEN + m_contents_size + RFC8439_EXPANSION},
+                              Span{reinterpret_cast<std::byte*>(vRecv.data()), m_contents_size}, flags, false)) {
+        // MAC check was successful
+        vRecv.resize(m_contents_size);
+        reject_message = reject_message || (BIP324HeaderFlags(BIP324_IGNORE & flags) != BIP324_NONE);
+
+        if (!reject_message) {
+            uint8_t msg_type_id = NO_BIP324_SHORT_ID;
+            try {
+                vRecv >> msg_type_id;
+            } catch (const std::ios_base::failure&) {
+                LogPrint(BCLog::NET, "Failed to read message type, peer=%d\n", m_node_id);
+                reject_message = true;
+            }
+
+            if (msg_type_id == NO_BIP324_SHORT_ID) {
+                if (vRecv.size() < V2_LONG_MSG_TYPE_LEN) {
+                    LogPrint(BCLog::NET, "Invalid v2 message type long id, peer=%d\n", m_node_id);
+                    reject_message = true;
+                }
+                msg_type.resize(V2_LONG_MSG_TYPE_LEN);
+                vRecv.read(MakeWritableByteSpan(msg_type));
+                auto trim_pos = std::find(msg_type.begin(), msg_type.end(), 0);
+                if (trim_pos != msg_type.end()) {
+                    msg_type.resize(trim_pos - msg_type.begin());
+                }
+                msg_type_size += V2_LONG_MSG_TYPE_LEN;
+            } else {
+                auto mtype = GetMessageTypeFromShortID(msg_type_id);
+                if (mtype.has_value()) {
+                    msg_type = mtype.value();
+                } else {
+                    // unknown-short-id results in a valid but unknown message (will be skipped)
+                    msg_type = "unknown-" + ToString(msg_type_id);
+                    reject_message = true;
+                }
+            }
+        }
+    } else {
+        // Invalid mac tag
+        LogPrint(BCLog::NET, "Invalid v2 mac tag, peer=%d\n", m_node_id);
+        disconnect = true;
+        reject_message = true;
+    }
+
+    // we'll always return a CNetMessage (even if decryption fails)
+    // decompose a single CNetMessage from the TransportDeserializer
+    CNetMessage msg(std::move(vRecv));
+    msg.m_type = msg_type;
+    msg.m_time = time;
+
+    if (!reject_message) {
+        msg.m_message_size = m_contents_size - msg_type_size;
+        msg.m_raw_message_size = V2_MIN_PACKET_LENGTH + m_contents_size; // raw wire size
+    }
+
+    Reset();
+    return msg;
+}
+
+bool V2TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const
+{
+    size_t serialized_msg_type_size = 1; // short-IDs are 1 byte
+    uint8_t short_msg_type = GetShortIDFromMessageType(msg.m_type);
+    if (short_msg_type == NO_BIP324_SHORT_ID) {
+        // message type without an assigned short-ID
+        assert(msg.m_type.size() <= V2_LONG_MSG_TYPE_LEN);
+        // encode as NO_BIP324_SHORT_ID || 12-byte long id
+        serialized_msg_type_size += V2_LONG_MSG_TYPE_LEN;
+    }
+
+    std::vector<unsigned char> msg_type_bytes(serialized_msg_type_size, 0);
+
+    // append the short-ID or the varstr of the msg type
+    msg_type_bytes[0] = short_msg_type;
+    if (short_msg_type == NO_BIP324_SHORT_ID) {
+        // append ASCII command string
+        memcpy(msg_type_bytes.data() + 1, msg.m_type.data(), msg.m_type.size());
+    }
+
+    // insert message type directly into the CSerializedNetMsg data buffer (insert at begin)
+    // TODO: if we refactor the BIP324CipherSuite::Crypt() function to allow separate buffers for
+    //       the message type and payload we could avoid a insert and thus a potential reallocation
+    msg.data.insert(msg.data.begin(), msg_type_bytes.begin(), msg_type_bytes.end());
+
+    auto contents_size = msg.data.size();
+    auto encrypted_pkt_size = V2_MIN_PACKET_LENGTH + contents_size;
+    // resize the message buffer to make space for the MAC tag
+    msg.data.resize(encrypted_pkt_size, 0);
+
+    BIP324HeaderFlags flags{BIP324_NONE};
+    // encrypt the payload, this should always succeed (controlled buffers, don't check the MAC during encrypting)
+    auto success = m_cipher_suite->Crypt({},
+                                         Span{reinterpret_cast<const std::byte*>(msg.data.data()), contents_size},
+                                         Span{reinterpret_cast<std::byte*>(msg.data.data()), encrypted_pkt_size},
+                                         flags, true);
+    if (!success) {
+        LogPrint(BCLog::NET, "error in v2 p2p encryption for message type: %s\n", msg.m_type);
+    }
+    return success;
 }
 
 size_t CConnman::SocketSendData(CNode& node) const
@@ -2832,7 +3020,10 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
     // make sure we use the appropriate network transport format
     std::vector<unsigned char> serializedHeader;
-    pnode->m_serializer->prepareForTransport(msg, serializedHeader);
+    if (!pnode->m_serializer->prepareForTransport(msg, serializedHeader)) {
+        return;
+    }
+
     size_t nTotalSize = nMessageSize + serializedHeader.size();
 
     size_t nBytesSent = 0;
