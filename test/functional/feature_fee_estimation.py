@@ -11,6 +11,7 @@ from test_framework.script import CScript, OP_1, OP_DROP, OP_2, OP_HASH160, OP_E
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_fee_amount,
     assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
@@ -253,6 +254,37 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
 
+        # TODO Move these tests to wallet_bumpfee.py once feerates
+        # are mock-able. See issue https://github.com/bitcoin/bitcoin/issues/18243
+        self.log.info("Testing conf_target transactions and bumps when estimator isn't 'blank'")
+
+        # Gather 3 key estimates that should significantly differ
+        slow_conf = 100
+        med_conf = 5
+        fast_conf = 1
+        slow_fee = self.nodes[0].estimatesmartfee(slow_conf)["feerate"]
+        med_fee = self.nodes[0].estimatesmartfee(med_conf)["feerate"]
+        fast_fee = self.nodes[0].estimatesmartfee(fast_conf)["feerate"]
+
+        assert slow_fee < med_fee
+        assert med_fee < fast_fee
+
+        # Send and bump twice with varying confTarget
+        txid1 = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1, "", "", False, True, slow_conf)
+        tx1_info = self.nodes[0].getmempoolentry(txid1)
+        assert_fee_amount(tx1_info["fee"], tx1_info["vsize"], slow_fee)
+
+        txid2 =  self.nodes[0].bumpfee(txid1, {"confTarget":med_conf})["txid"]
+        tx2_info = self.nodes[0].getmempoolentry(txid2)
+        assert_fee_amount(tx2_info["fee"], tx2_info["vsize"], med_fee)
+        assert txid2 in self.nodes[0].getrawmempool()
+        assert txid1 not in self.nodes[0].getrawmempool()
+
+        txid3 =  self.nodes[0].bumpfee(txid2, {"confTarget":fast_conf})["txid"]
+        tx3_info = self.nodes[0].getmempoolentry(txid3)
+        assert_fee_amount(tx3_info["fee"], tx3_info["vsize"], fast_fee)
+        assert txid3 in self.nodes[0].getrawmempool()
+        assert txid2 not in self.nodes[0].getrawmempool()
 
 if __name__ == '__main__':
     EstimateFeeTest().main()
