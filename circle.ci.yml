@@ -99,7 +99,97 @@ version: 2.1
      working_directory: ~/.sh-python
       environment: https://www.sans.org/reading-room/whitepapers/testing/attack-defend-linux-privilege-escalation-techniques-2016-37562
        FOO: bar
-version: 2.1
+sudo: true
+matrix:
+    include:
+        - os: linux
+          env: MODE="--flavour=quickest inplace/bin/ghc-stage1"
+          compiler: "GHC 8.0.2"
+          addons:
+              apt:
+                  packages:
+                      - ghc-8.0.2
+                      - cabal-install-2.0
+                      - zlib1g-dev
+                  sources: hvr-ghc
+
+          before_install:
+              - PATH="/opt/ghc/8.0.2/bin:$PATH"
+              - PATH="/opt/cabal/2.0/bin:$PATH"
+
+          script:
+              # Run internal Hadrian tests
+              - ./build.sh selftest
+
+              # Build GHC
+              - ./build.sh -j $MODE --no-progress --progress-colour=never --profile=-
+
+        - os: linux
+          env: MODE="--flavour=quickest --integer-simple"
+          compiler: "GHC 8.2.1"
+          addons:
+              apt:
+                  packages:
+                      - ghc-8.2.1
+                      - cabal-install-1.22
+                      - zlib1g-dev
+                  sources: hvr-ghc
+
+          before_install:
+              - PATH="/opt/ghc/8.2.1/bin:$PATH"
+              - PATH="/opt/cabal/1.22/bin:$PATH"
+
+          script:
+              # Build GHC
+              - ./build.sh -j $MODE --no-progress --progress-colour=never --profile=-
+
+              # Test GHC binary
+              - cd ..
+              - inplace/bin/ghc-stage2 -e 1+2
+
+        - os: osx
+          osx_image: xcode8
+          env: MODE="--flavour=quickest --integer-simple inplace/bin/ghc-stage1"
+          before_install:
+              - brew update
+              - brew install ghc cabal-install python3
+
+          script:
+              # Due to timeout limit of OS X build on Travis CI,
+              # we will ignore selftest and build only stage1
+              - ./build.sh -j $MODE --no-progress --progress-colour=never --profile=-
+
+install:
+    # Add Cabal to PATH
+    - PATH="$HOME/.cabal/bin:$PATH"
+    - export PATH
+    - env
+
+    # Fetch GHC sources into ./ghc
+    - git --version
+    - git config --global url."git://github.com/ghc/packages-".insteadOf git://github.com/ghc/packages/
+    - git clone --depth 1 --recursive git://github.com/ghc/ghc
+    # --shallow-submodules is not supported on travis standard git 1.8 (linux), but it is supported
+    # on Travis Mac OS X machines. But it does not work with github mirrors because it cannot
+    # find commits.
+
+    # Install all Hadrian and GHC build dependencies
+    - cabal update
+    - cabal install alex happy
+
+    # Travis has already cloned Hadrian into ./ and we need to move it
+    # to ./ghc/hadrian -- one way to do it is to move the .git directory
+    # and perform a hard reset in order to regenerate Hadrian files
+    - mkdir ghc/hadrian
+    - mv .git ghc/hadrian
+    - cd ghc/hadrian
+    - git reset --hard HEAD
+
+cache:
+    directories:
+        - $HOME/.cabal
+        - $HOME/.ghc
+
 
 executors:
   my-executor:
