@@ -1,9 +1,13 @@
-Omni Core v0.7.1
+Omni Core v0.8.0
 ================
 
-Omni Core 0.7.1 paves the way for trading any asset on the Omni Layer for Bitcoin in a decentralized fashion. It adds new commands to accept and execute orders on the distributed exchange.
+v0.8.0 is a major release and an upgrade is required.
 
-Please note, if you have not yet upgrade from 0.6 or earlier versions: Omni Core 0.7 changed the code base of Omni Core from Bitcoin Core 0.13.2 to Bitcoin Core 0.18.1. Once consensus affecting features are enabled, this version is no longer compatible with previous versions and an upgrade is required. Due to the upgrade from Bitcoin Core 0.13.2 to 0.18.1, this version incooperates many changes, so please take your time to read through all previous release notes carefully. The first time you upgrade from Omni Core 0.6 or older versions, the database is reconstructed, which can easily consume several hours. An upgrade from 0.7 to 0.7.1 is seamless.
+A consensus affecting issue in an earlier version of Omni Core has been identified, which may cause some transactions to be executed twice. This has been addressed and fixed in this release.
+
+More information about this issue will be announced on https://blog.omni.foundation/.
+
+The first time you start this version, the internal database for Omni Layer transactions is reconstructed, which may consume several hours or even more than a day. Please plan your downtime accordingly.
 
 Please report bugs using the issue tracker on GitHub:
 
@@ -13,18 +17,14 @@ Please report bugs using the issue tracker on GitHub:
 Table of contents
 =================
 
-- [Omni Core v0.7.1](#omni-core-v071)
+- [Omni Core v0.8.0](#omni-core-v071)
 - [Upgrading and downgrading](#upgrading-and-downgrading)
   - [How to upgrade](#how-to-upgrade)
   - [Downgrading](#downgrading)
   - [Compatibility with Bitcoin Core](#compatibility-with-bitcoin-core)
-- [Imported changes and notes](#imported-changes-and-notes)
-  - [Allow any token to be traded for Bitcoin](#allow-any-token-to-be-traded-for-bitcoin)
-  - [Updates to omni_senddexaccept to accept orders](#updates-to-omni_senddexaccept-to-accept-orders)
-  - [New command omni_senddexpay to execute orders](#new-command-omni_senddexpay-to-execute-orders)
-  - [rpcallowip option changes](#rpcallowip-option-changes)
-  - [Updates to the Omni Core logo](#updates-to-the-omni-core-logo)
-  - [Several stability and performance improvements](#several-stability-and-performance-improvements)
+- [Imported notes](#imported-notes)
+  - [Transaction replays](#transaction-replays)
+  - [Searching for affected transactions](#searching-for-affected-transactions)
 - [Change log](#change-log)
 - [Credits](#credits)
 
@@ -39,12 +39,12 @@ If you are running Bitcoin Core or an older version of Omni Core, shut it down. 
 
 When upgrading from an older version, the database is reconstructed, which can easily consume several hours.
 
-During the first startup historical Omni transactions are reprocessed and Omni Core will not be usable for approximately 15 minutes up to two hours. The progress of the initial scan is reported on the console, the GUI and written to the `debug.log`. The scan may be interrupted, but can not be resumed, and then needs to start from the beginning.
+During the first startup historical Omni transactions are reprocessed and Omni Core will not be usable for several hours up to more than a day. The progress of the initial scan is reported on the console, the GUI and written to the `debug.log`. The scan may be interrupted, but can not be resumed, and then needs to start from the beginning.
 
 Downgrading
 -----------
 
-Downgrading to an Omni Core version prior to 0.7.0 is not supported.
+Downgrading to an Omni Core version prior to 0.8.0 is not supported.
 
 Compatibility with Bitcoin Core
 -------------------------------
@@ -54,133 +54,66 @@ Omni Core is based on Bitcoin Core 0.18.1 and can be used as replacement for Bit
 However, it is not advised to upgrade or downgrade to versions other than Bitcoin Core 0.18. When switching to Omni Core, it may be necessary to reprocess Omni Layer transactions.
 
 
-Imported changes and notes
-==========================
+Imported notes
+==============
 
-Allow any token to be traded for Bitcoin
-----------------------------------------
+Transaction replays
+-------------------
 
-Right now the native distributed exchange of the Omni Layer protocol supports trading Omni and Test Omni for Bitcoin.
+An issue has been discovered that affects all 0.6 and higher versions of Omni Core.
 
-With this version, any token can be traded and there are no longer any trading restrictions. Please see the documentation for the related RPCs:
+The result of this issue is that some transactions may be executed twice. The effect is that tokens will be credited and debited more than once, leaving some token balances lower or higher than they should be. No new money can be created with this issue.
 
-- [omni_senddexsell](https://github.com/OmniLayer/omnicore/blob/v0.7.1/src/omnicore/doc/rpc-api.md#omni_senddexsell)
-- [omni_senddexaccept](https://github.com/OmniLayer/omnicore/blob/v0.7.1/src/omnicore/doc/rpc-api.md#omni_senddexaccept)
-- [omni_senddexpay](https://github.com/OmniLayer/omnicore/blob/v0.7.1/src/omnicore/doc/rpc-api.md#omni_senddexpay)
-- [omni_getactivedexsells](https://github.com/OmniLayer/omnicore/blob/v0.7.1/src/omnicore/doc/rpc-api.md#omni_getactivedexsells)
+This problem goes back to an update of Omni Core 0.6 in August 2019 and since then, while not necessarily exclusive, transactions of the following blocks may have been executed twice:
 
-As well as the specification of the Omni Layer protocol:
+  `619141`, `618465`, `614732`, `599587`, `591848`, `589999`, `578141`
 
-- [Omni Layer protocol: 8.2. Distributed Exchange](https://github.com/OmniLayer/spec/#82-distributed-exchange)
-
-Please note: this consensus change is not yet activated, but included in this release. An announcement will be made, when this feature is activated.
+The first startup of the 0.8.0 release will trigger a full reparse of all blocks, after which balances will be restored to their correct state. This will remove additional tokens credited by this error and any transactions which include them. This step can take several hours or more than a day.
 
 
-Updates to `omni_senddexaccept` to accept orders
-------------------------------------------------
+Searching for affected transactions
+-----------------------------------
 
-The RPC `omni_senddexaccept` was updated to properly pay transaction fees, when accepting an offer on the distributed exchange.
+To exchanges, wallet operators, and any integrators who use another database on top of Omni Core to track transactions or balances, we can suggest the following options for checking the validity of your transaction history. Each of the following options have different time or technical requirements and produce varying levels of details.
 
-### omni_senddexaccept
+Neither option is required, if you solely use Omni Core to track balances and transaction histories, as after the first start of Omni Core 0.8.0, it's internal state is correct.
 
-Create and broadcast an accept offer for the specified token and amount.
+### Option 1:
 
-**Arguments:**
+* Time Commitment: Least
+* Technical Commitment: Least
+* Details: Least
+* Reliability: fair
+* Steps:
+  * Before shutting down your existing node:
+  * Pause all incoming/outgoing transactions for your hot/cold wallets
+  * Run `omnicore-cli omni_getallbalancesforaddress <hot/cold wallet address>`
+  * Record the balances for the addresses
+  * Stop your client, upgrade to 0.8 according to the upgrade instructions of this release, relaunch and let synchronize and reparse
+  * After synchronization and reparse is complete rerun the `omni_getallbalancesforaddress` command and compare the balances reported to the previously saved balances. (Optionally, during the parse you can also compare the saved balances to balances reported on omniexplorer.info)
+  * If balances match before and after you are most likely not affected (see footnote below)
+  * If you notice a discrepancy it is advised you proceed with verification via Option 2 below
 
-| Name                | Type    | Presence | Description                                                                                  |
-|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `fromaddress`       | string  | required | the address to send from                                                                     |
-| `toaddress`         | string  | required | the address of the seller                                                                    |
-| `propertyid`        | number  | required | the identifier of the token to purchase                                                      |
-| `amount`            | string  | required | the amount to accept                                                                         |
-| `override`          | boolean | required | override minimum accept fee and payment window checks (use with caution!)                    |
+Footnote: If your hot wallet utilizes the send all transaction type for sweeping this method may produce a false favorable result. You should proceed with option 2 below for optimal verifications.
 
-**Result:**
-```js
-"hash"  // (string) the hex-encoded transaction hash
-```
+### Option 2:
 
-**Example:**
-
-```bash
-$ omnicore-cli "omni_senddexaccept" \
-    "35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "15.0"
-```
-
----
-
-
-New command `omni_senddexpay` to execute orders
------------------------------------------------
-
-To pay for an offer after it was successfully accepted, a new command `omni_senddexpay` was added.
-
-### omni_senddexpay
-
-Create and broadcast payment for an accept offer.
-
-**Arguments:**
-
-| Name                | Type    | Presence | Description                                                                                  |
-|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `fromaddress`       | string  | required | the address to send from                                                                     |
-| `toaddress`         | string  | required | the address of the seller                                                                    |
-| `propertyid`        | number  | required | the identifier of the token to purchase                                                      |
-| `amount`            | string  | required | the Bitcoin amount to send                                                                   |
-
-**Result:**
-```js
-"hash"  // (string) the hex-encoded transaction hash
-```
-
-**Example:**
-
-```bash
-$ omnicore-cli "omni_senddexpay" \
-    "35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "15.0"
-```
-
----
-
-
-`rpcallowip` option changes
-------------------------
-
-The `rpcallowip` option can no longer be used to automatically listen on all network interfaces.  Instead, the `rpcbind` parameter must be used to specify the IP addresses to listen on. Listening for RPC commands over a public network connection is insecure and should be disabled, so a warning is now printed if a user selects such a configuration.  If you need to expose RPC in order to use a tool like  Docker, ensure you only bind RPC to your localhost, e.g. `docker run [...] -p 127.0.0.1:8332:8332` (this is an extra `:8332` over the normal Docker port specification).
-
-
-Updates to the Omni Core logo
------------------------------
-
-To show the synergy between the Omni Layer protocol and Bitcoin, the Omni Core logos were slightly changed to also include the Bitcoin logo:
-
-- [Omni Core mainnet icon](https://github.com/OmniLayer/omnicore/blob/v0.7.1/src/qt/res/icons/bitcoin.png)
-- [Omni Core testnet icon](https://github.com/OmniLayer/omnicore/blob/v0.7.1/src/qt/res/icons/bitcoin_testnet.png)
-
-
-Several stability and performance improvements
-----------------------------------------------
-
-In some rare cases locking issues may have caused the client to halt. This version comes with several stability and performance improvements to resolve these issues.
-
-
-Change log
-==========
-
-The following list includes relevant pull requests merged into this release:
-
-```
-- #1048 omni_senddexaccept pass min fee to CreateTransaction
-- #1052 Add RPC DEx call to pay for accepted offer
-- #1054 Debug and concurrency updates
-- #1060 Only use wtxNew if fSuccess true
-- #1064 New icons and default splash
-- #1066 Prepare release of Omni Core v0.7.1
-- #1068 Update release notes for v0.7.1
-```
+* Time Commitment: Most
+* Technical Commitment: Moderate
+* Details: Full
+* Reliability: Most
+* Steps:
+  * Stop your client, upgrade to 0.8 according to the upgrade instructions of this release, relaunch and let synchronize and reparse
+  * After synchronization and reparse is complete:
+  * Compile a list of all deposit transaction hashes, amounts you have processed since before you upgraded to 0.6 or later (~roughly around Aug 2019).
+  * Using `omnicore-cli omni_gettransaction <txhash>` reprocess the list of transaction hashes checking:
+  * The transaction is still valid `response['valid']`
+  * The transaction amount matches the amount you recorded/processed in your database `response['amount']`
+  * Note: If your service supports deposits from 'send_all' transactions you will need to adjust the amount field to check for all `amounts` in the `response['subsends']` array of the transaction
+  * For any transaction that does not match the previous two conditions, flag it for manual followup and check the discrepancy between the updated client output and the details of what you processed in the database.
 
 
 Credits
 =======
 
-Thanks to everyone who contributed to this release, especially to Peter Bushnell and all Bitcoin Core developers.
+Thanks to everyone who contributed to this release, especially to Peter Bushnell.
