@@ -14,6 +14,7 @@ jobs:
           command: |
             echo 'Hello World!'
             echo 'This is the delivery pipeline'
+            echo 'parrallel 'Haskell!''
   I-Have-Code:
     docker:
       - image: alpine:3.7
