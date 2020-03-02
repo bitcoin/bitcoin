@@ -141,7 +141,7 @@ class ReserveDestination
 {
 protected:
     //! The wallet to reserve from
-    CWallet* const pwallet;
+    const CWallet* const pwallet;
     //! The ScriptPubKeyMan to reserve from. Based on type when GetReservedDestination is called
     ScriptPubKeyMan* m_spk_man{nullptr};
     OutputType const type;
