@@ -19,10 +19,9 @@ class SignVerifyMessageDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SignVerifyMessageDialog(const PlatformStyle *platformStyle, QWidget *parent);
+    explicit SignVerifyMessageDialog(WalletModel* wallet_model, const PlatformStyle *platformStyle, QWidget *parent);
     ~SignVerifyMessageDialog();
 
-    void setModel(WalletModel *model);
     void setAddress_SM(const QString &address);
     void setAddress_VM(const QString &address);
 
@@ -34,7 +33,7 @@ protected:
 
 private:
     Ui::SignVerifyMessageDialog *ui;
-    WalletModel *model;
+    WalletModel* const model;
     const PlatformStyle *platformStyle;
 
 private Q_SLOTS:

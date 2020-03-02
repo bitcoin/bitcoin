@@ -18,10 +18,10 @@
 
 #include <QClipboard>
 
-SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
+SignVerifyMessageDialog::SignVerifyMessageDialog(WalletModel* wallet_model, const PlatformStyle *_platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SignVerifyMessageDialog),
-    model(nullptr),
+    model(wallet_model),
     platformStyle(_platformStyle)
 {
     ui->setupUi(this);
@@ -52,11 +52,6 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformS
 SignVerifyMessageDialog::~SignVerifyMessageDialog()
 {
     delete ui;
-}
-
-void SignVerifyMessageDialog::setModel(WalletModel *_model)
-{
-    this->model = _model;
 }
 
 void SignVerifyMessageDialog::setAddress_SM(const QString &address)

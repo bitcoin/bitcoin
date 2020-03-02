@@ -156,9 +156,8 @@ void WalletView::gotoSendCoinsPage(QString addr)
 void WalletView::gotoSignMessageTab(QString addr)
 {
     // calls show() in showTab_SM()
-    SignVerifyMessageDialog *signVerifyMessageDialog = new SignVerifyMessageDialog(platformStyle, this);
+    SignVerifyMessageDialog *signVerifyMessageDialog = new SignVerifyMessageDialog(walletModel, platformStyle, this);
     signVerifyMessageDialog->setAttribute(Qt::WA_DeleteOnClose);
-    signVerifyMessageDialog->setModel(walletModel);
     signVerifyMessageDialog->showTab_SM(true);
 
     if (!addr.isEmpty())
@@ -168,9 +167,8 @@ void WalletView::gotoSignMessageTab(QString addr)
 void WalletView::gotoVerifyMessageTab(QString addr)
 {
     // calls show() in showTab_VM()
-    SignVerifyMessageDialog *signVerifyMessageDialog = new SignVerifyMessageDialog(platformStyle, this);
+    SignVerifyMessageDialog *signVerifyMessageDialog = new SignVerifyMessageDialog(walletModel, platformStyle, this);
     signVerifyMessageDialog->setAttribute(Qt::WA_DeleteOnClose);
-    signVerifyMessageDialog->setModel(walletModel);
     signVerifyMessageDialog->showTab_VM(true);
 
     if (!addr.isEmpty())
