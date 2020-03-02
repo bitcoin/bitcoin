@@ -850,7 +850,7 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
     return BerkeleyBatch::Rewrite(*this, pszSkip);
 }
 
-bool BerkeleyDatabase::Backup(const std::string& strDest)
+bool BerkeleyDatabase::Backup(const std::string& strDest) const
 {
     if (IsDummy()) {
         return false;

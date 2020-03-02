@@ -157,7 +157,7 @@ public:
 
     /** Back up the entire database to a file.
      */
-    bool Backup(const std::string& strDest);
+    bool Backup(const std::string& strDest) const;
 
     /** Make sure all changes are flushed to disk.
      */
