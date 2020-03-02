@@ -194,7 +194,7 @@ public:
     //! The action to do when the DB needs rewrite
     virtual void RewriteDB() {}
 
-    virtual int64_t GetOldestKeyPoolTime() { return GetTime(); }
+    virtual int64_t GetOldestKeyPoolTime() const { return GetTime(); }
 
     virtual size_t KeypoolCountExternalKeys() const { return 0; }
     virtual unsigned int GetKeyPoolSize() const { return 0; }
@@ -336,7 +336,7 @@ public:
 
     void RewriteDB() override;
 
-    int64_t GetOldestKeyPoolTime() override;
+    int64_t GetOldestKeyPoolTime() const override;
     size_t KeypoolCountExternalKeys() const override;
     unsigned int GetKeyPoolSize() const override;
 
