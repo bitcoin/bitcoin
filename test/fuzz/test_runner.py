@@ -128,7 +128,7 @@ def main():
                 os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', test_list_selection[0]),
                 '-help=1',
             ],
-            timeout=1,
+            timeout=20,
             check=True,
             stderr=subprocess.PIPE,
             universal_newlines=True,
