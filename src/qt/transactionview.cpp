@@ -36,7 +36,7 @@
 #include <QVBoxLayout>
 
 TransactionView::TransactionView(WalletModel* wallet_model, const PlatformStyle *platformStyle, QWidget *parent) :
-    QWidget(parent), model(nullptr), transactionProxyModel(nullptr),
+    QWidget(parent), model(wallet_model), transactionProxyModel(nullptr),
     transactionView(nullptr), abandonAction(nullptr), bumpFeeAction(nullptr), columnResizingFixer(nullptr)
 {
     // Build filter row
@@ -203,64 +203,55 @@ TransactionView::TransactionView(WalletModel* wallet_model, const PlatformStyle 
       focusTransaction(txid);
     });
 
-    setModel(wallet_model);
-}
+    transactionProxyModel = new TransactionFilterProxy(this);
+    transactionProxyModel->setSourceModel(model->getTransactionTableModel());
+    transactionProxyModel->setDynamicSortFilter(true);
+    transactionProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
+    transactionProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
-void TransactionView::setModel(WalletModel *_model)
-{
-    this->model = _model;
-    if(_model)
+    transactionProxyModel->setSortRole(Qt::EditRole);
+
+    transactionView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    transactionView->setModel(transactionProxyModel);
+    transactionView->setAlternatingRowColors(true);
+    transactionView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    transactionView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    transactionView->horizontalHeader()->setSortIndicator(TransactionTableModel::Date, Qt::DescendingOrder);
+    transactionView->setSortingEnabled(true);
+    transactionView->verticalHeader()->hide();
+
+    transactionView->setColumnWidth(TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
+    transactionView->setColumnWidth(TransactionTableModel::Watchonly, WATCHONLY_COLUMN_WIDTH);
+    transactionView->setColumnWidth(TransactionTableModel::Date, DATE_COLUMN_WIDTH);
+    transactionView->setColumnWidth(TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
+    transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
+
+    columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH, this);
+
+    if (model->getOptionsModel())
     {
-        transactionProxyModel = new TransactionFilterProxy(this);
-        transactionProxyModel->setSourceModel(_model->getTransactionTableModel());
-        transactionProxyModel->setDynamicSortFilter(true);
-        transactionProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-        transactionProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-
-        transactionProxyModel->setSortRole(Qt::EditRole);
-
-        transactionView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        transactionView->setModel(transactionProxyModel);
-        transactionView->setAlternatingRowColors(true);
-        transactionView->setSelectionBehavior(QAbstractItemView::SelectRows);
-        transactionView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-        transactionView->horizontalHeader()->setSortIndicator(TransactionTableModel::Date, Qt::DescendingOrder);
-        transactionView->setSortingEnabled(true);
-        transactionView->verticalHeader()->hide();
-
-        transactionView->setColumnWidth(TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Watchonly, WATCHONLY_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Date, DATE_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
-
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH, this);
-
-        if (_model->getOptionsModel())
+        // Add third party transaction URLs to context menu
+        QStringList listUrls = model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
+        for (int i = 0; i < listUrls.size(); ++i)
         {
-            // Add third party transaction URLs to context menu
-            QStringList listUrls = _model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
-            for (int i = 0; i < listUrls.size(); ++i)
+            QString url = listUrls[i].trimmed();
+            QString host = QUrl(url, QUrl::StrictMode).host();
+            if (!host.isEmpty())
             {
-                QString url = listUrls[i].trimmed();
-                QString host = QUrl(url, QUrl::StrictMode).host();
-                if (!host.isEmpty())
-                {
-                    QAction *thirdPartyTxUrlAction = new QAction(host, this); // use host as menu item label
-                    if (i == 0)
-                        contextMenu->addSeparator();
-                    contextMenu->addAction(thirdPartyTxUrlAction);
-                    connect(thirdPartyTxUrlAction, &QAction::triggered, [this, url] { openThirdPartyTxUrl(url); });
-                }
+                QAction *thirdPartyTxUrlAction = new QAction(host, this); // use host as menu item label
+                if (i == 0)
+                    contextMenu->addSeparator();
+                contextMenu->addAction(thirdPartyTxUrlAction);
+                connect(thirdPartyTxUrlAction, &QAction::triggered, [this, url] { openThirdPartyTxUrl(url); });
             }
         }
-
-        // show/hide column Watch-only
-        updateWatchOnlyColumn(_model->wallet().haveWatchOnly());
-
-        // Watch-only signal
-        connect(_model, &WalletModel::notifyWatchonlyChanged, this, &TransactionView::updateWatchOnlyColumn);
     }
+
+    // show/hide column Watch-only
+    updateWatchOnlyColumn(model->wallet().haveWatchOnly());
+
+    // Watch-only signal
+    connect(model, &WalletModel::notifyWatchonlyChanged, this, &TransactionView::updateWatchOnlyColumn);
 }
 
 void TransactionView::chooseDate(int idx)

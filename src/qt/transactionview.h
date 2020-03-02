@@ -58,7 +58,7 @@ public:
     };
 
 private:
-    WalletModel *model;
+    WalletModel* const model;
     TransactionFilterProxy *transactionProxyModel;
     QTableView *transactionView;
 
@@ -83,7 +83,6 @@ private:
     virtual void resizeEvent(QResizeEvent* event);
 
     bool eventFilter(QObject *obj, QEvent *event);
-    void setModel(WalletModel *model);
 
 private Q_SLOTS:
     void contextualMenu(const QPoint &);
