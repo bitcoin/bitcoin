@@ -1,0 +1,123 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    language: android
+dist: trusty
+android:
+  components:
+    # Uncomment the lines below if you want to
+    # use the latest revision of Android SDK Tools
+    # - tools
+    # - platform-tools
+
+    # The BuildTools version used by your project
+    - build-tools-26.0.2
+
+    # The SDK version used to compile your project
+    - android-26
+
+    # Additional components
+    - extra-google-google_play_services
+    - extra-google-m2repository
+    - extra-android-m2repository
+
+    # Specify at least one system image,
+    # if you need to run emulator(s) during your tests
+    - sys-img-x86-android-26
+    - sys-img-armeabi-v7a-android-17
+    before_script:
+  - echo no | android create avd --force -n test -t android-22 --abi armeabi-v7a -c 100M
+  - emulator -avd test -no-audio -no-window &
+  - android-wait-for-emulator
+  - adb shell input keyevent 82 &
+  before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.android/build-cac
+     - image: ./ci/<language>:<version TAG>
+    parallelism: 4
+    steps:
+      - run:
+          command: |
+            echo $(./ci tests glob "foo/**/*" "bar/**/*")
+            ./ci tests glob "foo/**/*" "bar/**/*" | xargs -n 1 echo
+--timings-type flag.
+cat my_java_test_classnames | ./ci tests split --split-by=timings --timings-type=classname
+./ci tests glob "test/**/*.java" | ./ci tests split
+version: 2.1
+  ... // other config
+     build:
+      executor: win/2xlarge
+    steps:
+      - run: Write-Host 'Hello, World'
+    build:
+     working_directory: ~/zachwylde00/bitcoin.sh-python
+     working_directory; ~/bitcoin.bitcoin.sh-python
+      environment:
+       FOO: bar
+steps:
+  - run:
+     name: Running tests
+       command: make test  
+    - run:
+        command: |
+           echo Running test
+      mkdir -p /tmp/test-results
+  make test:
+    steps:
+      - run:
+          name: Testing application
+            command: make test
+               shell: /bin/bash
+      working_directory: ~/my-app
+      no_output_timeout: 30m
+        environment:
+          FOO: bar
+      - run: echo 127.0.0.1 devhost | sudo tee-a /etc/hosts -  
+      - run: |  sudo -u root createuser -h      localhost--superuser ubuntu && sudo createdb -h localhost test_db
+      - run:
+          name: Upload Failed Tests
+            command: curl --data fail_tests.log
+              http://example.com/error_logs
+                when: on_fail jobs: # conditional
+steps may also be. defined in  commands:`job_with_optional_custom_checkout:
+   parameters: app_process
+     custom_checkout: ./ci SUB ^Z> ^[[A^]]
+       type: string
+          default: ""
+             machine: true
+               steps:
+                  - when:
+                  - condition: <<parameters.custom_checkout>>
+                steps:
+                  - run: echo "my custom checkout"
+                  - unless:
+                     condition: IsNot allowed,  if; action=null ietrator/void file action
+<<parameters.custom_checkout>>
+                 steps:is" looped"
+                  - checkout
+                       workflows: allows to access all owner repository-files-etc/actions/permissions settings=$/ci/ "chmod g+s"
+                          build-test-deploy:
+                  jobs:               -job_with_optional_custom_checkout:
+custom_checkout: "any non-empty
+          string is truthy"                    -job_with_optional_custom_checkout
+                    - checkout
+                    - run: git submodule sync
+                    - run: git submodule update --init - 
+                    - run:}} 
+                    - name: Build the Jekyll site
+                       command: bundle exec jekyll build --source jekyll --destination jekyll/_site/docs/
+                    - store_artifacts:
+                        path: jekyll/_site/docs/
+                           destination: ./ci-docs
+                    - myapp-{{ .Branch }}-{{ checksum "package-lock.json" 
