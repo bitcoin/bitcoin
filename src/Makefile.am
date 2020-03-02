@@ -260,7 +260,6 @@ SYSCOIN_CORE_H = \
   util/time.h \
   util/translation.h \
   util/url.h \
-  util/validation.h \
   util/executable_path/include/boost/executable_path.hpp \
   util/executable_path/include/boost/detail/executable_path_internals.hpp \
   util/vector.h \
@@ -615,7 +614,6 @@ libsyscoin_util_a_SOURCES = \
   util/string.cpp \
   util/time.cpp \
   util/url.cpp \
-  util/validation.cpp \
   util/executable_path/src/executable_path.cpp \
   util/executable_path/src/detail/executable_path_internals_bsd.cpp \
   util/executable_path/src/detail/executable_path_internals_common.cpp \

@@ -13,7 +13,6 @@
 #include <policy/rbf.h>
 #include <chrono>
 #include <consensus/validation.h>
-#include <util/validation.h>
 using namespace std;
 extern std::string exePath;
 extern std::string EncodeDestination(const CTxDestination& dest);
