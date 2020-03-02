@@ -410,7 +410,7 @@ public:
     bool ImportScriptPubKeys(const std::set<CScript>& script_pub_keys, const bool have_solving_data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     /* Returns true if the wallet can generate new keys */
-    bool CanGenerateKeys();
+    bool CanGenerateKeys() const;
 
     /* Generates a new HD seed (will not be activated) */
     CPubKey GenerateNewSeed();
