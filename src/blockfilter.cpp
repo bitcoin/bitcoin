@@ -259,7 +259,7 @@ const std::string& ListBlockFilterTypes()
 
 static GCSFilter::ElementSet BuildFilterElements(const CBlock& block,
                                                  const CBlockUndo& block_undo,
-                                                 bool only_segwit = true,
+                                                 bool only_segwit = false,
                                                  int witness_version = 0)
 {
     GCSFilter::ElementSet elements;
@@ -318,10 +318,10 @@ BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const
 
     switch (m_filter_type) {
     case BlockFilterType::BASIC:
-        m_filter = GCSFilter(params, BuildFilterElements(block, block_undo, false));
+        m_filter = GCSFilter(params, BuildFilterElements(block, block_undo));
         break;
     case BlockFilterType::V0:
-        m_filter = GCSFilter(params, BuildFilterElements(block, block_undo));
+        m_filter = GCSFilter(params, BuildFilterElements(block, block_undo, true));
         break;
     default: assert(false);
     }
