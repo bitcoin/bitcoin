@@ -30,10 +30,9 @@ class OverviewPage : public QWidget
     Q_OBJECT
 
 public:
-    explicit OverviewPage(ClientModel* client_model, const PlatformStyle *platformStyle, QWidget *parent = nullptr);
+    explicit OverviewPage(ClientModel* client_model, WalletModel* wallet_model, const PlatformStyle *platformStyle, QWidget *parent = nullptr);
     ~OverviewPage();
 
-    void setWalletModel(WalletModel *walletModel);
     void showOutOfSyncWarning(bool fShow);
 
 public Q_SLOTS:
@@ -46,7 +45,7 @@ Q_SIGNALS:
 private:
     Ui::OverviewPage *ui;
     ClientModel* const clientModel;
-    WalletModel *walletModel;
+    WalletModel* const walletModel;
     interfaces::WalletBalances m_balances;
 
     TxViewDelegate *txdelegate;

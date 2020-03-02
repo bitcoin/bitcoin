@@ -36,7 +36,7 @@ WalletView::WalletView(ClientModel* client_model, WalletModel* wallet_model, con
     platformStyle(_platformStyle)
 {
     // Create tabs
-    overviewPage = new OverviewPage(client_model, platformStyle);
+    overviewPage = new OverviewPage(client_model, wallet_model, platformStyle);
 
     transactionsPage = new QWidget(this);
     QVBoxLayout *vbox = new QVBoxLayout();
@@ -84,7 +84,6 @@ WalletView::WalletView(ClientModel* client_model, WalletModel* wallet_model, con
 
     // Put transaction list in tabs
     transactionView->setModel(walletModel);
-    overviewPage->setWalletModel(walletModel);
     usedReceivingAddressesPage->setModel(walletModel->getAddressTableModel());
     usedSendingAddressesPage->setModel(walletModel->getAddressTableModel());
 

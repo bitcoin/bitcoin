@@ -110,11 +110,11 @@ public:
 };
 #include <qt/overviewpage.moc>
 
-OverviewPage::OverviewPage(ClientModel* client_model, const PlatformStyle *platformStyle, QWidget *parent) :
+OverviewPage::OverviewPage(ClientModel* client_model, WalletModel* wallet_model, const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
     clientModel(client_model),
-    walletModel(nullptr),
+    walletModel(wallet_model),
     txdelegate(new TxViewDelegate(platformStyle, this))
 {
     ui->setupUi(this);
@@ -143,6 +143,34 @@ OverviewPage::OverviewPage(ClientModel* client_model, const PlatformStyle *platf
     // Show warning, for example if this is a prerelease version
     connect(clientModel, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
     updateAlerts(clientModel->getStatusBarWarnings());
+
+    // Set up transaction list
+    filter.reset(new TransactionFilterProxy());
+    filter->setSourceModel(walletModel->getTransactionTableModel());
+    filter->setLimit(NUM_ITEMS);
+    filter->setDynamicSortFilter(true);
+    filter->setSortRole(Qt::EditRole);
+    filter->setShowInactive(false);
+    filter->sort(TransactionTableModel::Date, Qt::DescendingOrder);
+
+    ui->listTransactions->setModel(filter.get());
+    ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
+
+    // Keep up to date with wallet
+    interfaces::Wallet& wallet = walletModel->wallet();
+    interfaces::WalletBalances balances = wallet.getBalances();
+    setBalance(balances);
+    connect(walletModel, &WalletModel::balanceChanged, this, &OverviewPage::setBalance);
+
+    connect(walletModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &OverviewPage::updateDisplayUnit);
+
+    updateWatchOnlyLabels(wallet.haveWatchOnly() && !walletModel->privateKeysDisabled());
+    connect(walletModel, &WalletModel::notifyWatchonlyChanged, [this](bool showWatchOnly) {
+        updateWatchOnlyLabels(showWatchOnly && !walletModel->privateKeysDisabled());
+    });
+
+    // update the display unit, to not use the default ("BTC")
+    updateDisplayUnit();
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
@@ -203,41 +231,6 @@ void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
 
     if (!showWatchOnly)
         ui->labelWatchImmature->hide();
-}
-
-void OverviewPage::setWalletModel(WalletModel *model)
-{
-    this->walletModel = model;
-    if(model && model->getOptionsModel())
-    {
-        // Set up transaction list
-        filter.reset(new TransactionFilterProxy());
-        filter->setSourceModel(model->getTransactionTableModel());
-        filter->setLimit(NUM_ITEMS);
-        filter->setDynamicSortFilter(true);
-        filter->setSortRole(Qt::EditRole);
-        filter->setShowInactive(false);
-        filter->sort(TransactionTableModel::Date, Qt::DescendingOrder);
-
-        ui->listTransactions->setModel(filter.get());
-        ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
-
-        // Keep up to date with wallet
-        interfaces::Wallet& wallet = model->wallet();
-        interfaces::WalletBalances balances = wallet.getBalances();
-        setBalance(balances);
-        connect(model, &WalletModel::balanceChanged, this, &OverviewPage::setBalance);
-
-        connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &OverviewPage::updateDisplayUnit);
-
-        updateWatchOnlyLabels(wallet.haveWatchOnly() && !model->privateKeysDisabled());
-        connect(model, &WalletModel::notifyWatchonlyChanged, [this](bool showWatchOnly) {
-            updateWatchOnlyLabels(showWatchOnly && !walletModel->privateKeysDisabled());
-        });
-    }
-
-    // update the display unit, to not use the default ("BTC")
-    updateDisplayUnit();
 }
 
 void OverviewPage::updateDisplayUnit()
