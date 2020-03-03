@@ -169,8 +169,8 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
             obj.pushKV("pingtime", stats.m_ping_usec / 1e6);
         if (stats.m_min_ping_usec < std::numeric_limits<int64_t>::max())
             obj.pushKV("minping", stats.m_min_ping_usec / 1e6);
-        if (stats.dPingWait > 0.0)
-            obj.pushKV("pingwait", stats.dPingWait);
+        if (stats.m_ping_wait_usec > 0)
+            obj.pushKV("pingwait", stats.m_ping_wait_usec / 1e6);
         obj.pushKV("version", stats.nVersion);
         // Use the sanitized form of subver here, to avoid tricksy remote peers from
         // corrupting or modifying the JSON output by putting special characters in

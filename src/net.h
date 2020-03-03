@@ -597,7 +597,7 @@ public:
     NetPermissionFlags m_permissionFlags;
     bool m_legacyWhitelisted;
     int64_t m_ping_usec;
-    double dPingWait;
+    int64_t m_ping_wait_usec;
     int64_t m_min_ping_usec;
     CAmount minFeeFilter;
     // Our address, as reported by the peer

@@ -557,7 +557,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     // Raw ping time is in microseconds, but show it to user as whole seconds (Bitcoin users should be well used to small numbers with many decimal places by now :)
     stats.m_ping_usec = nPingUsecTime;
     stats.m_min_ping_usec  = nMinPingUsecTime;
-    stats.dPingWait = (((double)nPingUsecWait) / 1e6);
+    stats.m_ping_wait_usec = nPingUsecWait;
 
     // Leave string empty if addrLocal invalid (not filled in yet)
     CService addrLocalUnlocked = GetAddrLocal();

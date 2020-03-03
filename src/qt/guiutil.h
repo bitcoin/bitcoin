@@ -202,9 +202,6 @@ namespace GUIUtil
     /* Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(quint64 mask);
 
-    /* Format a CNodeCombinedStats.dPingTime into a user-readable string or display N/A, if 0*/
-    QString formatPingTime(double dPingTime);
-
     /* Format a CNodeStats.m_ping_usec into a user-readable string or display N/A, if 0*/
     QString formatPingTime(int64_t ping_usec);
 
