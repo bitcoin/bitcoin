@@ -84,7 +84,7 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
         }
     }
 
-    // Calculate next role for PSBT by grabbing "minumum" PSBTInput next role
+    // Calculate next role for PSBT by grabbing "minimum" PSBTInput next role
     result.next = PSBTRole::EXTRACTOR;
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
         PSBTInputAnalysis& input_analysis = result.inputs[i];
