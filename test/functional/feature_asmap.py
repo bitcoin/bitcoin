@@ -16,7 +16,7 @@ Verify node behaviour and debug log when launching syscoind in these cases:
 
 5. `syscoind -asmap` with no file specified and a missing default asmap file
 
-6. `bitcoind -asmap` with an empty (unparsable) default asmap file
+6. `syscoind -asmap` with an empty (unparsable) default asmap file
 
 The tests are order-independent.
 
@@ -80,7 +80,7 @@ class AsmapTest(SyscoinTestFramework):
         self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
 
     def test_empty_asmap(self):
-        self.log.info('Test bitcoind -asmap with empty map file')
+        self.log.info('Test syscoind -asmap with empty map file')
         self.stop_node(0)
         with open(self.default_asmap, "w", encoding="utf-8") as f:
             f.write("")
