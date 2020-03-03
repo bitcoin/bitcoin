@@ -254,18 +254,19 @@ enum class DeriveType {
 /** An object representing a parsed extended public key in a descriptor. */
 class BIP32PubkeyProvider final : public PubkeyProvider
 {
-    CExtPubKey m_extkey;
+    // Root xpub, path, and final derivation step type being used, if any
+    CExtPubKey m_root_extkey;
     KeyPath m_path;
     DeriveType m_derive;
 
     bool GetExtKey(const SigningProvider& arg, CExtKey& ret) const
     {
         CKey key;
-        if (!arg.GetKey(m_extkey.pubkey.GetID(), key)) return false;
-        ret.nDepth = m_extkey.nDepth;
-        std::copy(m_extkey.vchFingerprint, m_extkey.vchFingerprint + sizeof(ret.vchFingerprint), ret.vchFingerprint);
-        ret.nChild = m_extkey.nChild;
-        ret.chaincode = m_extkey.chaincode;
+        if (!arg.GetKey(m_root_extkey.pubkey.GetID(), key)) return false;
+        ret.nDepth = m_root_extkey.nDepth;
+        std::copy(m_root_extkey.vchFingerprint, m_root_extkey.vchFingerprint + sizeof(ret.vchFingerprint), ret.vchFingerprint);
+        ret.nChild = m_root_extkey.nChild;
+        ret.chaincode = m_root_extkey.chaincode;
         ret.key = key;
         return true;
     }
@@ -280,7 +281,7 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     }
 
 public:
-    BIP32PubkeyProvider(uint32_t exp_index, const CExtPubKey& extkey, KeyPath path, DeriveType derive) : PubkeyProvider(exp_index), m_extkey(extkey), m_path(std::move(path)), m_derive(derive) {}
+    BIP32PubkeyProvider(uint32_t exp_index, const CExtPubKey& extkey, KeyPath path, DeriveType derive) : PubkeyProvider(exp_index), m_root_extkey(extkey), m_path(std::move(path)), m_derive(derive) {}
     bool IsRange() const override { return m_derive != DeriveType::NO; }
     size_t GetSize() const override { return 33; }
     bool GetPubKey(int pos, const SigningProvider& arg, CPubKey* key, KeyOriginInfo& info) const override
@@ -292,7 +293,7 @@ public:
                 *key = priv_key.GetPubKey();
             } else {
                 // TODO: optimize by caching
-                CExtPubKey extkey = m_extkey;
+                CExtPubKey extkey = m_root_extkey;
                 for (auto entry : m_path) {
                     extkey.Derive(extkey, entry);
                 }
@@ -301,7 +302,7 @@ public:
                 *key = extkey.pubkey;
             }
         }
-        CKeyID keyid = m_extkey.pubkey.GetID();
+        CKeyID keyid = m_root_extkey.pubkey.GetID();
         std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
         info.path = m_path;
         if (m_derive == DeriveType::UNHARDENED) info.path.push_back((uint32_t)pos);
@@ -310,7 +311,7 @@ public:
     }
     std::string ToString() const override
     {
-        std::string ret = EncodeExtPubKey(m_extkey) + FormatHDKeypath(m_path);
+        std::string ret = EncodeExtPubKey(m_root_extkey) + FormatHDKeypath(m_path);
         if (IsRange()) {
             ret += "/*";
             if (m_derive == DeriveType::HARDENED) ret += '\'';
