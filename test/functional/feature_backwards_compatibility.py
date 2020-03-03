@@ -113,7 +113,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # Create another conflicting transaction using RBF
         tx3_id = self.nodes[1].sendtoaddress(return_address, 1)
         tx4_id = self.nodes[1].bumpfee(tx3_id)["txid"]
-        # Abondon transaction, but don't confirm
+        # Abandon transaction, but don't confirm
         self.nodes[1].abandontransaction(tx3_id)
 
         # w1_v19: regular wallet, created with v0.19

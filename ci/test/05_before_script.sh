@@ -26,7 +26,7 @@ if [[ $HOST = *-mingw32 ]]; then
 fi
 if [ -z "$NO_DEPENDS" ]; then
   if [[ $DOCKER_NAME_TAG == centos* ]]; then
-    # CentOS has problems building the depends if the config shell is not explicitely set
+    # CentOS has problems building the depends if the config shell is not explicitly set
     # (i.e. for libevent a Makefile with an empty SHELL variable is generated, leading to
     #  an error as the first command is executed)
     SHELL_OPTS="CONFIG_SHELL=/bin/bash"
