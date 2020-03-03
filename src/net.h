@@ -596,7 +596,7 @@ public:
     mapMsgCmdSize mapRecvBytesPerMsgCmd;
     NetPermissionFlags m_permissionFlags;
     bool m_legacyWhitelisted;
-    double dPingTime;
+    int64_t m_ping_usec;
     double dPingWait;
     double dMinPing;
     CAmount minFeeFilter;

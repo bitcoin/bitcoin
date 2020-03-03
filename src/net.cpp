@@ -555,7 +555,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     }
 
     // Raw ping time is in microseconds, but show it to user as whole seconds (Bitcoin users should be well used to small numbers with many decimal places by now :)
-    stats.dPingTime = (((double)nPingUsecTime) / 1e6);
+    stats.m_ping_usec = nPingUsecTime;
     stats.dMinPing  = (((double)nMinPingUsecTime) / 1e6);
     stats.dPingWait = (((double)nPingUsecWait) / 1e6);
 
