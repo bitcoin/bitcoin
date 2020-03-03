@@ -167,8 +167,8 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
         obj.pushKV("timeoffset", stats.nTimeOffset);
         if (stats.m_ping_usec > 0)
             obj.pushKV("pingtime", stats.m_ping_usec / 1e6);
-        if (stats.dMinPing < static_cast<double>(std::numeric_limits<int64_t>::max())/1e6)
-            obj.pushKV("minping", stats.dMinPing);
+        if (stats.m_min_ping_usec < std::numeric_limits<int64_t>::max())
+            obj.pushKV("minping", stats.m_min_ping_usec / 1e6);
         if (stats.dPingWait > 0.0)
             obj.pushKV("pingwait", stats.dPingWait);
         obj.pushKV("version", stats.nVersion);
