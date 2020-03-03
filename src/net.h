@@ -763,9 +763,9 @@ public:
     mapMsgCmdSize mapRecvBytesPerMsgCmd;
     NetPermissionFlags m_permissionFlags;
     bool m_legacyWhitelisted;
-    double dPingTime;
-    double dPingWait;
-    double dMinPing;
+    int64_t m_ping_usec;
+    int64_t m_ping_wait_usec;
+    int64_t m_min_ping_usec;
     // Our address, as reported by the peer
     std::string addrLocal;
     // Address of this peer
