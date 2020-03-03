@@ -359,14 +359,11 @@ static UniValue omni_getfeetrigger(const JSONRPCRequest& request)
 }
 
 // Provides the fee share the wallet (or specific address) will receive from fee distributions
+#ifdef ENABLE_WALLET
 static UniValue omni_getfeeshare(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() > 2)
         throw runtime_error(
@@ -438,6 +435,7 @@ static UniValue omni_getfeeshare(const JSONRPCRequest& request)
 
     return response;
 }
+#endif
 
 // Provides the current values of the fee cache
 static UniValue omni_getfeecache(const JSONRPCRequest& request)
@@ -598,6 +596,7 @@ static UniValue omni_getpayload(const JSONRPCRequest& request)
 }
 
 // determine whether to automatically commit transactions
+#ifdef ENABLE_WALLET
 static UniValue omni_setautocommit(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
@@ -621,6 +620,7 @@ static UniValue omni_setautocommit(const JSONRPCRequest& request)
     autoCommit = request.params[0].get_bool();
     return autoCommit;
 }
+#endif
 
 // display the tally map & the offer/accept list(s)
 static UniValue mscrpc(const JSONRPCRequest& request)
@@ -981,12 +981,11 @@ static std::set<std::string> getWalletAddresses(const JSONRPCRequest& request, b
     return result;
 }
 
+#ifdef ENABLE_WALLET
 static UniValue omni_getwalletbalances(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
-#endif
 
     if (request.fHelp || request.params.size() > 1)
         throw runtime_error(
@@ -1020,7 +1019,6 @@ static UniValue omni_getwalletbalances(const JSONRPCRequest& request)
 
     UniValue response(UniValue::VARR);
 
-#ifdef ENABLE_WALLET
     if (!pwallet) {
         return response;
     }
@@ -1091,17 +1089,15 @@ static UniValue omni_getwalletbalances(const JSONRPCRequest& request)
 
         response.push_back(objBalance);
     }
-#endif
 
     return response;
 }
 
 static UniValue omni_getwalletaddressbalances(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
+
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
-#endif
 
     if (request.fHelp || request.params.size() > 1)
         throw runtime_error(
@@ -1142,7 +1138,6 @@ static UniValue omni_getwalletaddressbalances(const JSONRPCRequest& request)
 
     UniValue response(UniValue::VARR);
 
-#ifdef ENABLE_WALLET
     if (!pwallet) {
         return response;
     }
@@ -1184,10 +1179,10 @@ static UniValue omni_getwalletaddressbalances(const JSONRPCRequest& request)
             response.push_back(objEntry);
         }
     }
-#endif
 
     return response;
 }
+#endif
 
 static UniValue omni_getproperty(const JSONRPCRequest& request)
 {
@@ -1713,7 +1708,7 @@ static UniValue omni_gettradehistoryforaddress(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(wallet);
 #else
-    std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(nullptr);
+    std::unique_ptr<interfaces::Wallet> pWallet;
 #endif
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
@@ -2077,7 +2072,7 @@ static UniValue omni_gettransaction(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(wallet);
 #else
-    std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(nullptr);
+    std::unique_ptr<interfaces::Wallet> pWallet;
 #endif
 
     if (request.fHelp || request.params.size() != 1)
@@ -2119,14 +2114,11 @@ static UniValue omni_gettransaction(const JSONRPCRequest& request)
     return txobj;
 }
 
+#ifdef ENABLE_WALLET
 static UniValue omni_listtransactions(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() > 5)
         throw runtime_error(
@@ -2202,6 +2194,7 @@ static UniValue omni_listtransactions(const JSONRPCRequest& request)
 
     return response;
 }
+#endif
 
 static UniValue omni_listpendingtransactions(const JSONRPCRequest& request)
 {
@@ -2209,7 +2202,7 @@ static UniValue omni_listpendingtransactions(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(wallet);
 #else
-    std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(nullptr);
+    std::unique_ptr<interfaces::Wallet> pWallet;
 #endif
 
     if (request.fHelp || request.params.size() > 1)
@@ -2428,7 +2421,7 @@ static UniValue omni_getsto(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(wallet);
 #else
-    std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(nullptr);
+    std::unique_ptr<interfaces::Wallet> pWallet;
 #endif
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
@@ -2487,7 +2480,7 @@ static UniValue omni_gettrade(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(wallet);
 #else
-    std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(nullptr);
+    std::unique_ptr<interfaces::Wallet> pWallet;
 #endif
 
     if (request.fHelp || request.params.size() != 1)

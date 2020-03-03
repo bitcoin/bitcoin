@@ -34,7 +34,7 @@ static UniValue omni_decodetransaction(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(wallet);
 #else
-    std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(nullptr);
+    std::unique_ptr<interfaces::Wallet> pWallet;
 #endif
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
@@ -150,7 +150,7 @@ static UniValue omni_createrawtx_multisig(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(wallet);
 #else
-    std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(nullptr);
+    std::unique_ptr<interfaces::Wallet> pWallet;
 #endif
 
     if (request.fHelp || request.params.size() != 4)
