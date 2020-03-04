@@ -282,7 +282,7 @@ static GCSFilter::ElementSet BuildFilterElements(const CBlock& block,
     for (const CTxUndo& tx_undo : block_undo.vtxundo) {
         for (const Coin& prevout : tx_undo.vprevout) {
             const CScript& script = prevout.out.scriptPubKey;
-            if (script.empty() || script[0] == OP_RETURN) continue;
+            if (script.empty()) continue;
             if (only_segwit) {
                 int witnessversion;
                 std::vector<unsigned char> witnessprogram;
@@ -323,15 +323,16 @@ BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const
     case BlockFilterType::V0:
         m_filter = GCSFilter(params, BuildFilterElements(block, block_undo, true));
         break;
-    default: assert(false);
+    case BlockFilterType::INVALID:
+        assert(false);
     }
 }
 
 bool BlockFilter::BuildParams(GCSFilter::Params& params) const
 {
     switch (m_filter_type) {
-    case BlockFilterType::V0:
     case BlockFilterType::BASIC:
+    case BlockFilterType::V0:
         params.m_siphash_k0 = m_block_hash.GetUint64(0);
         params.m_siphash_k1 = m_block_hash.GetUint64(1);
         params.m_P = BASIC_FILTER_P;
