@@ -5150,6 +5150,10 @@ bool CWallet::SelectStakeCoins(StakeCoinsSet& setCoins, CAmount nTargetAmount) c
         if (nAmountSelected + out.tx->tx->vout[out.i].nValue > nTargetAmount)
             continue;
 
+        //! do not choose collateral type amounts
+        if (out.tx->tx->vout[out.i].nValue == 2500 * COIN)
+            continue;
+
         //check for min age
         if (GetAdjustedTime() - out.tx->GetTxTime() < Params().GetConsensus().nStakeMinAge)
             continue;

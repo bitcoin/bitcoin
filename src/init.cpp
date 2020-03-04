@@ -2047,7 +2047,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     }, DUMP_BANS_INTERVAL * 1000);
 
 #ifdef ENABLE_WALLET
-    if (GetWallets().front() && gArgs.GetBoolArg("-staking", true))
+    if (!fMasternodeMode && GetWallets().front() && gArgs.GetBoolArg("-staking", true))
         threadGroup.create_thread(std::bind(&PoSMiner, GetWallets().front()));
 #endif
 
