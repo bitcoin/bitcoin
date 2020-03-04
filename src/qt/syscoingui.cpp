@@ -37,6 +37,7 @@
 #include <ui_interface.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <validation.h>
 
 #include <QAction>
 #include <QApplication>
@@ -591,7 +592,7 @@ void SyscoinGUI::setClientModel(ClientModel *_clientModel)
         connect(_clientModel, &ClientModel::networkActiveChanged, this, &SyscoinGUI::setNetworkActive);
 
         modalOverlay->setKnownBestHeight(_clientModel->getHeaderTipHeight(), QDateTime::fromTime_t(_clientModel->getHeaderTipTime()));
-        setNumBlocks(m_node.getNumBlocks(), QDateTime::fromTime_t(m_node.getLastBlockTime()), m_node.getVerificationProgress(), false);
+        setNumBlocks(m_node.getNumBlocks(), QDateTime::fromTime_t(m_node.getLastBlockTime()), m_node.getVerificationProgress(), false, SynchronizationState::INIT_DOWNLOAD);
         connect(_clientModel, &ClientModel::numBlocksChanged, this, &SyscoinGUI::setNumBlocks);
         // SYSCOIN
         connect(_clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &SyscoinGUI::setAdditionalDataSyncProgress);
@@ -965,11 +966,15 @@ void SyscoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
     dlg.exec();
 }
 
-void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool header)
+void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool header, SynchronizationState sync_state)
 {
 // Disabling macOS App Nap on initial sync, disk and reindex operations.
 #ifdef Q_OS_MAC
-    (m_node.isInitialBlockDownload() || m_node.getReindex() || m_node.getImporting()) ? m_app_nap_inhibitor->disableAppNap() : m_app_nap_inhibitor->enableAppNap();
+    if (sync_state == SynchronizationState::POST_INIT) {
+        m_app_nap_inhibitor->enableAppNap();
+    } else {
+        m_app_nap_inhibitor->disableAppNap();
+    }
 #endif
 
     if (modalOverlay)
