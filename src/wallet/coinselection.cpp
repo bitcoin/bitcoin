@@ -106,6 +106,9 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
                 best_selection = curr_selection;
                 best_selection.resize(utxo_pool.size());
                 best_waste = curr_waste;
+                if (best_waste == 0) {
+                    break;
+                }
             }
             curr_waste -= (curr_value - actual_target); // Remove the excess value as we will be selecting different coins now
             backtrack = true;
