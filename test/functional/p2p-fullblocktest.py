@@ -47,7 +47,7 @@ from test_framework.util import assert_equal
 
 MAX_BLOCK_SIGOPS = 20000
 
-class PreviousSpendableOutput(object):
+class PreviousSpendableOutput():
     def __init__(self, tx=CTransaction(), n=-1):
         self.tx = tx
         self.n = n  # the output we're spending

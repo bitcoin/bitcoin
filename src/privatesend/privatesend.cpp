@@ -273,7 +273,7 @@ bool CPrivateSendBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const
         nFees -= txout.nValue;
     }
 
-    CCoinsViewMemPool viewMemPool(pcoinsTip, mempool);
+    CCoinsViewMemPool viewMemPool(pcoinsTip.get(), mempool);
 
     for (const auto& txin : vin) {
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendBaseSession::%s -- txin=%s\n", __func__, txin.ToString());

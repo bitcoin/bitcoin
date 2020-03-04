@@ -371,7 +371,7 @@ class CScriptTruncatedPushDataError(CScriptInvalidError):
         super(CScriptTruncatedPushDataError, self).__init__(msg)
 
 # This is used, eg, for blockchain heights in coinbase scripts (bip34)
-class CScriptNum(object):
+class CScriptNum():
     def __init__(self, d=0):
         self.value = d
 

@@ -58,10 +58,9 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
             self.nodes[0].generate(10)
         sync_blocks(self.nodes, timeout=60*5)
 
-        self.test_node = TestNode()
-        self.test_node.add_connection(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.test_node))
-        NetworkThread().start()  # Start up network handling in another thread
-        self.test_node.wait_for_verack()
+        self.test_node = self.nodes[0].add_p2p_connection(TestNode())
+        network_thread_start()
+        self.nodes[0].p2p.wait_for_verack()
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)

@@ -216,9 +216,9 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
     return chain.Genesis();
 }
 
-CCoinsViewDB *pcoinsdbview = nullptr;
-CCoinsViewCache *pcoinsTip = nullptr;
-CBlockTreeDB *pblocktree = nullptr;
+std::unique_ptr<CCoinsViewDB> pcoinsdbview;
+std::unique_ptr<CCoinsViewCache> pcoinsTip;
+std::unique_ptr<CBlockTreeDB> pblocktree;
 
 enum FlushStateMode {
     FLUSH_STATE_NONE,
@@ -310,7 +310,7 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp, bool 
     }
     else {
         // pcoinsTip contains the UTXO set for chainActive.Tip()
-        CCoinsViewMemPool viewMemPool(pcoinsTip, mempool);
+        CCoinsViewMemPool viewMemPool(pcoinsTip.get(), mempool);
         std::vector<int> prevheights;
         prevheights.resize(tx.vin.size());
         for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
@@ -495,7 +495,7 @@ void UpdateMempoolForReorg(DisconnectedBlockTransactions &disconnectpool, bool f
     mempool.UpdateTransactionsFromBlock(vHashUpdate);
 
     // We also need to remove any now-immature transactions
-    mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
+    mempool.removeForReorg(pcoinsTip.get(), chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
     // Re-limit mempool size, in case we added any transactions
     LimitMempoolSize(mempool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
 }
@@ -612,7 +612,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         LockPoints lp;
         {
         LOCK(pool.cs);
-        CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
+        CCoinsViewMemPool viewMemPool(pcoinsTip.get(), pool);
         view.SetBackend(viewMemPool);
 
         // do all inputs exist?
@@ -2479,7 +2479,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
     {
         auto dbTx = evoDb->BeginTransaction();
 
-        CCoinsViewCache view(pcoinsTip);
+        CCoinsViewCache view(pcoinsTip.get());
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
         if (DisconnectBlock(block, pindexDelete, view) != DISCONNECT_OK)
             return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
@@ -2612,7 +2612,7 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     {
         auto dbTx = evoDb->BeginTransaction();
 
-        CCoinsViewCache view(pcoinsTip);
+        CCoinsViewCache view(pcoinsTip.get());
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
@@ -2791,7 +2791,7 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
         // any disconnected transactions back to the mempool.
         UpdateMempoolForReorg(disconnectpool, true);
     }
-    mempool.check(pcoinsTip);
+    mempool.check(pcoinsTip.get());
 
     // Callbacks/notifications for a new best chain.
     if (fInvalidFound)
@@ -2879,7 +2879,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
 
             for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
                 assert(trace.pblock && trace.pindex);
-                GetMainSignals().BlockConnected(trace.pblock, trace.pindex, *trace.conflictedTxs);
+                GetMainSignals().BlockConnected(trace.pblock, trace.pindex, trace.conflictedTxs);
             }
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
@@ -3652,7 +3652,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
         return state.DoS(10, error("%s: conflicting with chainlock", __func__), REJECT_INVALID, "bad-chainlock");
     }
 
-    CCoinsViewCache viewNew(pcoinsTip);
+    CCoinsViewCache viewNew(pcoinsTip.get());
     CBlockIndex indexDummy(block);
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;

@@ -14,7 +14,7 @@ import os
 REFERENCE_FILENAME = 'rpc_interface.txt'
 
 
-class AuthServiceProxyWrapper(object):
+class AuthServiceProxyWrapper():
     """
     An object that wraps AuthServiceProxy to record specific RPC calls.
 

@@ -20,7 +20,7 @@
  * JSON-RPC protocol.  Bitcoin speaks version 1.0 for maximum compatibility,
  * but uses JSON-RPC 1.1/2.0 standards for parts of the 1.0 standard that were
  * unspecified (HTTP errors and contents of 'error').
- * 
+ *
  * 1.0 spec: http://json-rpc.org/wiki/specification
  * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
  */
@@ -137,3 +137,22 @@ void DeleteAuthCookie()
     }
 }
 
+std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue &in, size_t num)
+{
+    if (!in.isArray()) {
+        throw std::runtime_error("Batch must be an array");
+    }
+    std::vector<UniValue> batch(num);
+    for (size_t i=0; i<in.size(); ++i) {
+        const UniValue &rec = in[i];
+        if (!rec.isObject()) {
+            throw std::runtime_error("Batch member must be object");
+        }
+        size_t id = rec["id"].get_int();
+        if (id >= num) {
+            throw std::runtime_error("Batch member id larger than size");
+        }
+        batch[id] = rec;
+    }
+    return batch;
+}

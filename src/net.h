@@ -554,9 +554,9 @@ private:
     /** Services this instance offers */
     ServiceFlags nLocalServices;
 
-    CSemaphore *semOutbound;
-    CSemaphore *semAddnode;
-    CSemaphore *semMasternodeOutbound;
+    std::unique_ptr<CSemaphore> semOutbound;
+    std::unique_ptr<CSemaphore> semAddnode;
+    std::unique_ptr<CSemaphore> semMasternodeOutbound;
     int nMaxConnections;
     int nMaxOutbound;
     int nMaxAddnode;
@@ -820,7 +820,7 @@ public:
     CSemaphoreGrant grantOutbound;
     CSemaphoreGrant grantMasternodeOutbound;
     CCriticalSection cs_filter;
-    CBloomFilter* pfilter;
+    std::unique_ptr<CBloomFilter> pfilter;
     std::atomic<int> nRefCount;
 
     const uint64_t nKeyedNetGroup;

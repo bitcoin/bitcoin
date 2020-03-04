@@ -107,8 +107,8 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         if (nNet > 0)
         {
             // Credit
-            if (IsValidDestinationString(rec->strAddress)) {
-                CTxDestination address = rec->txDest;
+            CTxDestination address = DecodeDestination(rec->strAddress);
+            if (IsValidDestination(address)) {
                 if (wallet->mapAddressBook.count(address))
                 {
                     strHTML += "<b>" + tr("From") + ":</b> " + tr("unknown") + "<br>";

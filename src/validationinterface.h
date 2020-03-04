@@ -6,9 +6,10 @@
 #ifndef BITCOIN_VALIDATIONINTERFACE_H
 #define BITCOIN_VALIDATIONINTERFACE_H
 
-#include <memory>
-
 #include "primitives/transaction.h" // CTransaction(Ref)
+
+#include <functional>
+#include <memory>
 
 class CBlock;
 class CBlockIndex;
@@ -23,6 +24,8 @@ class CDeterministicMNList;
 class CDeterministicMNListDiff;
 class uint256;
 class CScheduler;
+class CTxMemPool;
+enum class MemPoolRemovalReason;
 
 namespace llmq {
     class CChainLockSig;
@@ -37,21 +40,56 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn);
 void UnregisterValidationInterface(CValidationInterface* pwalletIn);
 /** Unregister all wallets from core */
 void UnregisterAllValidationInterfaces();
+/**
+ * Pushes a function to callback onto the notification queue, guaranteeing any
+ * callbacks generated prior to now are finished when the function is called.
+ *
+ * Be very careful blocking on func to be called if any locks are held -
+ * validation interface clients may not be able to make progress as they often
+ * wait for things like cs_main, so blocking until func is called with cs_main
+ * will result in a deadlock (that DEBUG_LOCKORDER will miss).
+ */
+void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
 
 class CValidationInterface {
 protected:
     virtual void AcceptedBlockHeader(const CBlockIndex *pindexNew) {}
     virtual void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) {}
-    /** Notifies listeners of updated block chain tip */
+    /**
+     * Notifies listeners of updated block chain tip
+     *
+     * Called on a background thread.
+     */
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
-    /** Notifies listeners of a transaction having been added to mempool. */
+    /**
+     * Notifies listeners of a transaction having been added to mempool.
+     *
+     * Called on a background thread.
+     */
     virtual void TransactionAddedToMempool(const CTransactionRef &ptxn, int64_t nAcceptTime) {}
+    /**
+     * Notifies listeners of a transaction leaving mempool.
+     *
+     * This only fires for transactions which leave mempool because of expiry,
+     * size limiting, reorg (changes in lock times/coinbase maturity), or
+     * replacement. This does not include any transactions which are included
+     * in BlockConnectedDisconnected either in block->vtx or in txnConflicted.
+     *
+     * Called on a background thread.
+     */
+    virtual void TransactionRemovedFromMempool(const CTransactionRef &ptx) {}
     /**
      * Notifies listeners of a block being connected.
      * Provides a vector of transactions evicted from the mempool as a result.
+     *
+     * Called on a background thread.
      */
     virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex, const std::vector<CTransactionRef> &txnConflicted) {}
-    /** Notifies listeners of a block being disconnected */
+    /**
+     * Notifies listeners of a block being disconnected
+     *
+     * Called on a background thread.
+     */
     virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindexDisconnected) {}
     virtual void NotifyTransactionLock(const CTransaction &tx, const llmq::CInstantSendLock& islock) {}
     virtual void NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLockSig& clsig) {}
@@ -59,9 +97,17 @@ protected:
     virtual void NotifyGovernanceObject(const CGovernanceObject &object) {}
     virtual void NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) {}
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
-    /** Notifies listeners of the new active block chain on-disk. */
+    /**
+     * Notifies listeners of the new active block chain on-disk.
+     *
+     * Called on a background thread.
+     */
     virtual void SetBestChain(const CBlockLocator &locator) {}
-    /** Notifies listeners about an inventory item being seen on the network. */
+    /**
+     * Notifies listeners about an inventory item being seen on the network.
+     *
+     * Called on a background thread.
+     */
     virtual void Inventory(const uint256 &hash) {}
     /** Tells listeners to broadcast their data. */
     virtual void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) {}
@@ -89,6 +135,9 @@ private:
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();
+    friend void ::CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
+
+    void MempoolEntryRemoved(CTransactionRef tx, MemPoolRemovalReason reason);
 
 public:
     /** Register a CScheduler to give callbacks which should run in the background (may only be called once) */
@@ -98,11 +147,16 @@ public:
     /** Call any remaining callbacks on the calling thread */
     void FlushBackgroundCallbacks();
 
+    /** Register with mempool to call TransactionRemovedFromMempool callbacks */
+    void RegisterWithMempoolSignals(CTxMemPool& pool);
+    /** Unregister with mempool */
+    void UnregisterWithMempoolSignals(CTxMemPool& pool);
+
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef &, int64_t);
-    void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef> &);
+    void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>> &);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex* pindexDisconnected);
     void NotifyTransactionLock(const CTransaction &tx, const llmq::CInstantSendLock& islock);
     void NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLockSig& clsig);
