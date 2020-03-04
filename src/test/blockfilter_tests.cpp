@@ -254,16 +254,15 @@ BOOST_AUTO_TEST_CASE(blockfilter_type_names)
     BOOST_CHECK_EQUAL(BlockFilterTypeName(BlockFilterType::V0), "v0");
     BOOST_CHECK_EQUAL(BlockFilterTypeName(static_cast<BlockFilterType>(255)), "");
 
-    BlockFilterType filter_type_basic;
-    BOOST_CHECK(BlockFilterTypeByName("basic", filter_type_basic));
-    BOOST_CHECK_EQUAL(filter_type_basic, BlockFilterType::BASIC);
+    BlockFilterType filter_type;
+    BOOST_CHECK(BlockFilterTypeByName("basic", filter_type));
+    BOOST_CHECK_EQUAL(filter_type, BlockFilterType::BASIC);
 
     BlockFilterType filter_type_v0;
     BOOST_CHECK(BlockFilterTypeByName("v0", filter_type_v0));
     BOOST_CHECK_EQUAL(filter_type_v0, BlockFilterType::V0);
 
-    BlockFilterType filter_type_unknown;
-    BOOST_CHECK(!BlockFilterTypeByName("unknown", filter_type_unknown));
+    BOOST_CHECK(!BlockFilterTypeByName("unknown", filter_type));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
