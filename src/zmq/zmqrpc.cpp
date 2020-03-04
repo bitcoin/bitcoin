@@ -19,14 +19,15 @@ UniValue getzmqnotifications(const JSONRPCRequest& request)
                 "\nReturns information about the active ZeroMQ notifications.\n",
                 {},
                 RPCResult{
-            "[\n"
-            "  {                        (json object)\n"
-            "    \"type\" : \"pubhashtx\",   (string) Type of notification\n"
-            "    \"address\" : \"...\",      (string) Address of the publisher\n"
-            "    \"hwm\" : n                 (numeric) Outbound message high water mark\n"
-            "  },\n"
-            "  ...\n"
-            "]\n"
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::STR, "type", "Type of notification"},
+                            {RPCResult::Type::STR, "address", "Address of the publisher"},
+                            {RPCResult::Type::NUM, "hwm", "Outbound message high water mark"},
+                        }},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("getzmqnotifications", "")

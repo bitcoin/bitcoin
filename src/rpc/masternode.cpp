@@ -872,7 +872,7 @@ UniValue sentinelping(const JSONRPCRequest& request)
                     {"version", RPCArg::Type::NUM, RPCArg::Optional::NO, "Sentinel Version"}
                 },
                 RPCResult{
-                    "true|false      (boolean) Ping result\n"
+                    RPCResult::Type::NUM, "", "Ping result"
                 },
                 RPCExamples{
                     HelpExampleCli("sentinelping", "1000000")
