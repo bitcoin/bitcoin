@@ -117,13 +117,6 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
         ui->statusLabel_SM->setText(tr("The entered address is invalid.") + QString(" ") + tr("Please check the address and try again."));
         return;
     }
-    const PKHash* pkhash = boost::get<PKHash>(&destination);
-    if (!pkhash) {
-        ui->addressIn_SM->setValid(false);
-        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(tr("The entered address does not refer to a key.") + QString(" ") + tr("Please check the address and try again."));
-        return;
-    }
 
     WalletModel::UnlockContext ctx(model->requestUnlock());
     if (!ctx.isValid())
@@ -133,27 +126,27 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
         return;
     }
 
-    CKey key;
-    if (!model->wallet().getPrivKey(GetScriptForDestination(destination), CKeyID(*pkhash), key))
-    {
-        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(tr("Private key for the entered address is not available."));
-        return;
+    auto message = ui->messageIn_SM->document()->toPlainText().toStdString();
+    std::vector<uint8_t> vchSig;
+
+    std::string failure = "";
+
+    try {
+        model->wallet().signMessage(message, destination, vchSig);
+    } catch (const std::runtime_error& err) {
+        failure = err.what();
     }
 
-    const std::string& message = ui->messageIn_SM->document()->toPlainText().toStdString();
-    std::string signature;
-
-    if (!MessageSign(key, message, signature)) {
+    if (failure != "") {
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(QString("<nobr>") + tr("Message signing failed.") + QString("</nobr>"));
+        ui->statusLabel_SM->setText(tr(failure.c_str()));
         return;
     }
 
     ui->statusLabel_SM->setStyleSheet("QLabel { color: green; }");
     ui->statusLabel_SM->setText(QString("<nobr>") + tr("Message signed.") + QString("</nobr>"));
 
-    ui->signatureOut_SM->setText(QString::fromStdString(signature));
+    ui->signatureOut_SM->setText(QString::fromStdString(EncodeBase64(vchSig.data(), vchSig.size())));
 }
 
 void SignVerifyMessageDialog::on_copySignatureButton_SM_clicked()
