@@ -37,6 +37,7 @@ extern const std::string EXAMPLE_ADDRESS;
 class FillableSigningProvider;
 class CPubKey;
 class CScript;
+struct Sections;
 
 /** Wrapper for UniValue::VType, which includes typeAny:
  * Used to denote don't care type. */
@@ -101,6 +102,16 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
 /** Returns, given services flags, a list of humanly readable (known) network services */
 UniValue GetServicesNames(ServiceFlags services);
 
+/**
+ * Serializing JSON objects depends on the outer type. Only arrays and
+ * dictionaries can be nested in json. The top-level outer type is "NONE".
+ */
+enum class OuterType {
+    ARR,
+    OBJ,
+    NONE, // Only set on first recursion
+};
+
 struct RPCArg {
     enum class Type {
         OBJ,
@@ -140,37 +151,37 @@ struct RPCArg {
     const std::vector<std::string> m_type_str; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_type_str.at(0) will override the type of the value in a key-value pair, m_type_str.at(1) will override the type in the argument description.
 
     RPCArg(
-        const std::string& name,
-        const Type& type,
-        const Fallback& fallback,
-        const std::string& description,
-        const std::string& oneline_description = "",
-        const std::vector<std::string>& type_str = {})
-        : m_name{name},
-          m_type{type},
-          m_fallback{fallback},
-          m_description{description},
-          m_oneline_description{oneline_description},
-          m_type_str{type_str}
+        const std::string name,
+        const Type type,
+        const Fallback fallback,
+        const std::string description,
+        const std::string oneline_description = "",
+        const std::vector<std::string> type_str = {})
+        : m_name{std::move(name)},
+          m_type{std::move(type)},
+          m_fallback{std::move(fallback)},
+          m_description{std::move(description)},
+          m_oneline_description{std::move(oneline_description)},
+          m_type_str{std::move(type_str)}
     {
         CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ);
     }
 
     RPCArg(
-        const std::string& name,
-        const Type& type,
-        const Fallback& fallback,
-        const std::string& description,
-        const std::vector<RPCArg>& inner,
-        const std::string& oneline_description = "",
-        const std::vector<std::string>& type_str = {})
-        : m_name{name},
-          m_type{type},
-          m_inner{inner},
-          m_fallback{fallback},
-          m_description{description},
-          m_oneline_description{oneline_description},
-          m_type_str{type_str}
+        const std::string name,
+        const Type type,
+        const Fallback fallback,
+        const std::string description,
+        const std::vector<RPCArg> inner,
+        const std::string oneline_description = "",
+        const std::vector<std::string> type_str = {})
+        : m_name{std::move(name)},
+          m_type{std::move(type)},
+          m_inner{std::move(inner)},
+          m_fallback{std::move(fallback)},
+          m_description{std::move(description)},
+          m_oneline_description{std::move(oneline_description)},
+          m_type_str{std::move(type_str)}
     {
         CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ);
     }
@@ -195,21 +206,85 @@ struct RPCArg {
 };
 
 struct RPCResult {
+    enum class Type {
+        OBJ,
+        ARR,
+        STR,
+        NUM,
+        BOOL,
+        NONE,
+        STR_AMOUNT, //!< Special string to represent a floating point amount
+        STR_HEX,    //!< Special string with only hex chars
+        OBJ_DYN,    //!< Special dictionary with keys that are not literals
+        ARR_FIXED,  //!< Special array that has a fixed number of entries
+        NUM_TIME,   //!< Special numeric to denote unix epoch time
+        ELISION,    //!< Special type to denote elision (...)
+    };
+
+    const Type m_type;
+    const std::string m_key_name;         //!< Only used for dicts
+    const std::vector<RPCResult> m_inner; //!< Only used for arrays or dicts
+    const bool m_optional;
+    const std::string m_description;
     const std::string m_cond;
-    const std::string m_result;
 
-    explicit RPCResult(std::string result)
-        : m_cond{}, m_result{std::move(result)}
-    {
-        CHECK_NONFATAL(!m_result.empty());
-    }
-
-    RPCResult(std::string cond, std::string result)
-        : m_cond{std::move(cond)}, m_result{std::move(result)}
+    RPCResult(
+        const std::string cond,
+        const Type type,
+        const std::string m_key_name,
+        const bool optional,
+        const std::string description,
+        const std::vector<RPCResult> inner = {})
+        : m_type{std::move(type)},
+          m_key_name{std::move(m_key_name)},
+          m_inner{std::move(inner)},
+          m_optional{optional},
+          m_description{std::move(description)},
+          m_cond{std::move(cond)}
     {
         CHECK_NONFATAL(!m_cond.empty());
-        CHECK_NONFATAL(!m_result.empty());
+        const bool inner_needed{type == Type::ARR || type == Type::ARR_FIXED || type == Type::OBJ || type == Type::OBJ_DYN};
+        CHECK_NONFATAL(inner_needed != inner.empty());
     }
+
+    RPCResult(
+        const std::string cond,
+        const Type type,
+        const std::string m_key_name,
+        const std::string description,
+        const std::vector<RPCResult> inner = {})
+        : RPCResult{cond, type, m_key_name, false, description, inner} {}
+
+    RPCResult(
+        const Type type,
+        const std::string m_key_name,
+        const bool optional,
+        const std::string description,
+        const std::vector<RPCResult> inner = {})
+        : m_type{std::move(type)},
+          m_key_name{std::move(m_key_name)},
+          m_inner{std::move(inner)},
+          m_optional{optional},
+          m_description{std::move(description)},
+          m_cond{}
+    {
+        const bool inner_needed{type == Type::ARR || type == Type::ARR_FIXED || type == Type::OBJ || type == Type::OBJ_DYN};
+        CHECK_NONFATAL(inner_needed != inner.empty());
+    }
+
+    RPCResult(
+        const Type type,
+        const std::string m_key_name,
+        const std::string description,
+        const std::vector<RPCResult> inner = {})
+        : RPCResult{type, m_key_name, false, description, inner} {}
+
+    /** Append the sections of the result. */
+    void ToSections(Sections& sections, OuterType outer_type = OuterType::NONE, const int current_indent = 0) const;
+    /** Return the type string of the result when it is in an object (dict). */
+    std::string ToStringObj() const;
+    /** Return the description string, including the result type. */
+    std::string ToDescriptionString() const;
 };
 
 struct RPCResults {

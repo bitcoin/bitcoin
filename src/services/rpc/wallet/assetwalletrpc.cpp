@@ -138,10 +138,10 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address funding this transaction."},
         },
         RPCResult{
-            "{\n"
-            "  \"hex\": \"hexstring\"       (string) the unsigned funded transaction hexstring.\n"
-            "}\n"
-        },
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+            }},
         RPCExamples{
             HelpExampleCli("syscointxfund", "<hexstring> \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\"")
             + HelpExampleRpc("syscointxfund", "<hexstring>, \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\"")
@@ -357,10 +357,10 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to burn."},
         },
         RPCResult{
-            "{\n"
-            "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-            "}\n"
-        },
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+            }},
         RPCExamples{
             HelpExampleCli("syscoinburntoassetallocation", "\"funding_address\" \"asset_guid\" \"amount\"")
             + HelpExampleRpc("syscoinburntoassetallocation", "\"funding_address\", \"asset_guid\", \"amount\"")
@@ -408,7 +408,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"address", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "An address that you own."},
         {"symbol", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset symbol (1-8 characters)"},
         {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
-        {"contract", RPCArg::Type::STR, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
+        {"contract", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
         {"total_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped."},
         {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
@@ -427,11 +427,11 @@ UniValue assetnew(const JSONRPCRequest& request) {
         {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address that will sign for web-of-trust notarization of this transaction."}
     },
     RPCResult{
-    "{\n"
-    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-    "  \"assetguid\": xxxx        (numeric) The guid of asset to be created\n"
-    "}\n"
-    },
+        RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+            {RPCResult::Type::NUM, "asset_guid", "The guid of asset to be created"},
+        }},
     RPCExamples{
     HelpExampleCli("assetnew", "\"myaddress\" \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 {} \"\"")
     + HelpExampleRpc("assetnew", "\"myaddress\", \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, {}, \"\"")
@@ -521,7 +521,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
             {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
-            {"contract",  RPCArg::Type::STR, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridg."},
+            {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridg."},
             {"supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
             {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
             {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
@@ -538,10 +538,10 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address that will sign for web-of-trust notarization of this transaction."}
         },
         RPCResult{
-            "{\n"
-            "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-            "}\n"
-        },
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+            }},
         RPCExamples{
             HelpExampleCli("assetupdate", "\"assetguid\" \"publicvalue\" \"contractaddress\" \"supply\" \"update_flags\" {} \"\"")
             + HelpExampleRpc("assetupdate", "\"assetguid\", \"publicvalue\", \"contractaddress\", \"supply\", \"update_flags\", {}, \"\"")
@@ -623,11 +623,11 @@ UniValue assettransfer(const JSONRPCRequest& request) {
         {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to transfer to."},
         {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address that will sign for web-of-trust notarization of this transaction."}
     },
-    RPCResult{
-    "{\n"
-    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-    "}\n"
-    },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+            }},
     RPCExamples{
         HelpExampleCli("assettransfer", "\"asset_guid\" \"address\" \"\"")
         + HelpExampleRpc("assettransfer", "\"asset_guid\", \"address\", \"\"")
@@ -687,10 +687,10 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         {"witness", RPCArg::Type::STR, "\"\"", "Witnesses address that will sign for web-of-trust notarization of this transaction"}
     },
     RPCResult{
-    "{\n"
-    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-    "}\n"
-    },
+        RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+        }},
     RPCExamples{
         HelpExampleCli("assetsendmany", "\"assetguid\" '[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
         + HelpExampleCli("assetsendmany", "\"assetguid\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
@@ -758,10 +758,10 @@ UniValue assetsend(const JSONRPCRequest& request) {
         {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The quantity of asset to send."}
     },
     RPCResult{
-    "{\n"
-    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-    "}\n"
-    },
+        RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+        }},
     RPCExamples{
         HelpExampleCli("assetsend", "\"assetguid\" \"address\" \"amount\"")
         + HelpExampleRpc("assetsend", "\"assetguid\", \"address\", \"amount\"")
@@ -814,10 +814,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                 {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction"}
         },
         RPCResult{
-            "{\n"
-            "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-            "}\n"
-        },
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+            }},
         RPCExamples{
             HelpExampleCli("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
             + HelpExampleCli("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
@@ -931,10 +931,10 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
             {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 byte (40 character) hex string of the ethereum destination address. Leave empty to burn to Syscoin."}
         },
         RPCResult{
-            "{\n"
-            "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-            "}\n"
-        },
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+            }},
         RPCExamples{
             HelpExampleCli("assetallocationburn", "\"asset_guid\" \"address\" \"amount\" \"ethereum_destination_address\"")
             + HelpExampleRpc("assetallocationburn", "\"asset_guid\", \"address\", \"amount\", \"ethereum_destination_address\"")
@@ -1041,10 +1041,10 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction."}
         },
         RPCResult{
-            "{\n"
-            "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-            "}\n"
-        },
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+            }},
         RPCExamples{
             HelpExampleCli("assetallocationmint", "\"assetguid\" \"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\" \"witness\"")
             + HelpExampleRpc("assetallocationmint", "\"assetguid\", \"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\", \"\"")
@@ -1157,10 +1157,10 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The quantity of asset to send"}
         },
         RPCResult{
-            "{\n"
-            "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-            "}\n"
-        },
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+            }},
         RPCExamples{
             HelpExampleCli("assetallocationsend", "\"assetguid\" \"addressfrom\" \"address\" \"amount\"")
             + HelpExampleRpc("assetallocationsend", "\"assetguid\", \"addressfrom\", \"address\", \"amount\"")
@@ -1205,10 +1205,10 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
         {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction"}
     },
     RPCResult{
-    "{\n"
-    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-    "}\n"
-    },
+        RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+        }},
     RPCExamples{
     HelpExampleCli("assetallocationlock", "\"asset_guid\" \"addressfrom\" \"txid\" \"output_index\" \"\"")
     + HelpExampleRpc("assetallocationlock", "\"asset_guid\",\"addressfrom\",\"txid\",\"output_index\",\"\"")
@@ -1278,10 +1278,10 @@ UniValue sendfrom(const JSONRPCRequest& request)
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"}
         },
         RPCResult{
-        "{\n"
-        "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-        "}\n"
-        },
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
+            }},
         RPCExamples{
             HelpExampleCli("sendfrom", "\"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
             + HelpExampleCli("sendfrom", "\"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
@@ -1312,98 +1312,6 @@ UniValue sendfrom(const JSONRPCRequest& request)
     std::string strWitness = "";
     return syscointxfund_helper(pwallet, EncodeDestination(from), 0, strWitness, vecSend);
 }
-UniValue convertaddresswallet(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-    RPCHelpMan{"convertaddresswallet",
-    "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3. Adds to wallet as receiving address under label specified.\n",
-    {
-        {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."},
-        {"label", RPCArg::Type::STR,RPCArg::Optional::NO, "Label Syscoin V4 address and store in receiving address. Set to \"\" to not add to receiving address", "An optional label"},
-        {"rescan", RPCArg::Type::BOOL, /* default */ "false", "Rescan the wallet for transactions. Useful if you provided label to add to receiving address"},
-    },
-    RPCResult{
-        "{\n"
-        "  \"v3address\" : \"address\",        (string) The syscoin 3 address validated\n"
-        "  \"v4address\" : \"address\",        (string) The syscoin 4 address validated\n"
-        "}\n"
-    },
-    RPCExamples{
-        HelpExampleCli("convertaddresswallet", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\" \"bob\" true")
-        + HelpExampleRpc("convertaddresswallet", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\" \"bob\" true")
-    }
-    }.Check(request);
-    
-    
-    UniValue ret(UniValue::VOBJ);
-    CTxDestination dest = DecodeDestination(request.params[0].get_str());
-    std::string strLabel = "";
-    if (!request.params[1].isNull())
-        strLabel = request.params[1].get_str();    
-    bool fRescan = false;
-    if (!request.params[2].isNull())
-        fRescan = request.params[2].get_bool();
-    // Make sure the destination is valid
-    if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
-    }
-    std::string currentV4Address = "";
-    std::string currentV3Address = "";
-    CTxDestination v4Dest;
-    if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
-        v4Dest = dest;
-        currentV4Address =  EncodeDestination(v4Dest);
-        currentV3Address =  EncodeDestination(PKHash(*witness_id));
-    }
-    else if (auto key_id = boost::get<PKHash>(&dest)) {
-        v4Dest = WitnessV0KeyHash(*key_id);
-        currentV4Address =  EncodeDestination(v4Dest);
-        currentV3Address =  EncodeDestination(*key_id);
-    }
-    else if (auto script_id = boost::get<ScriptHash>(&dest)) {
-        v4Dest = *script_id;
-        currentV4Address =  EncodeDestination(v4Dest);
-        currentV3Address =  currentV4Address;
-    }
-    else if (boost::get<WitnessV0ScriptHash>(&dest)) {
-        v4Dest = dest;
-        currentV4Address =  EncodeDestination(v4Dest);
-        currentV3Address =  currentV4Address;
-    } 
-    else
-        strLabel = "";
-    isminetype mine = pwallet->IsMine(v4Dest);
-    if(!(mine & ISMINE_SPENDABLE)){
-        throw JSONRPCError(RPC_MISC_ERROR, "The V4 Public key or redeemscript not known to wallet, or the key is uncompressed.");
-    }
-    if(!strLabel.empty())
-    {
-        auto locked_chain = pwallet->chain().lock();
-        LOCK(pwallet->cs_wallet);   
-        CScript witprog = GetScriptForDestination(v4Dest);
-        LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-        if(spk_man)
-            spk_man->AddCScript(witprog); // Implicit for single-key now, but necessary for multisig and for compatibility
-        pwallet->SetAddressBook(v4Dest, strLabel, "receive");
-        WalletRescanReserver reserver(pwallet);                   
-        if (fRescan) {
-            int64_t scanned_time = pwallet->RescanFromTime(0, reserver, true);
-            if (pwallet->IsAbortingRescan()) {
-                throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
-            } else if (scanned_time > 0) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Rescan was unable to fully rescan the blockchain. Some transactions may be missing.");
-            }
-        }  
-    }
-
-    ret.pushKV("v3address", currentV3Address);
-    ret.pushKV("v4address", currentV4Address); 
-    return ret;
-}
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
@@ -1411,7 +1319,6 @@ static const CRPCCommand commands[] =
 
    /* assets using the blockchain, coins/points/service backed tokens*/
     { "syscoinwallet",            "syscoinburntoassetallocation",     &syscoinburntoassetallocation,  {"funding_address","asset_guid","amount"} }, 
-    { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","address","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","witness"} },     
     { "syscoinwallet",            "assetnew",                         &assetnew,                      {"address","symbol","description","contract","precision","total_supply","max_supply","update_flags","aux_fees","witness"}},

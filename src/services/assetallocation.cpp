@@ -19,7 +19,6 @@ extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern UniValue DescribeAddress(const CTxDestination& dest);
 extern void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
-extern UniValue convertaddress(const JSONRPCRequest& request);
 RecursiveMutex cs_assetallocationmempoolbalance;
 RecursiveMutex cs_assetallocationarrival;
 RecursiveMutex cs_assetallocationconflicts;

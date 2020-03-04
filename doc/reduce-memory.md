@@ -12,7 +12,7 @@ The size of some in-memory caches can be reduced. As caches trade off memory usa
 
 ## Memory pool
 
-- In Syscoin Core there is a memory pool limiter which can be configured with `-maxmempool=<n>`, where `<n>` is the size in MB (1000). The default value is `300`.
+- In Syscoin Core there is a memory pool limiter which can be configured with `-maxmempool=<n>`, where `<n>` is the size in MB (1000). The default value is `3000`.
   - The minimum value for `-maxmempool` is 5.
   - A lower maximum mempool size means that transactions will be evicted sooner. This will affect any uses of `syscoind` that process unconfirmed transactions.
 

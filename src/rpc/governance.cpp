@@ -898,8 +898,8 @@ UniValue voteraw(const JSONRPCRequest& request)
                         {"vote-sig", RPCArg::Type::STR, RPCArg::Optional::NO, "The external signature of the vote"}
                     },
                     RPCResult{
-                    "\"result\"      (string) Result"
-                    },
+                         RPCResult::Type::STR, "result", "Result"
+                     },
                     RPCExamples{
                         HelpExampleCli("voteraw", "\"tx-hash\" \"tx-index\" \"gov-hash\" \"funding\" \"yes\" \"time\" \"vote-sig\"")
                         + HelpExampleRpc("voteraw", "\"tx-hash\", \"tx-index\", \"gov-hash\", \"funding\", \"yes\", \"time\", \"vote-sig\"")
@@ -966,17 +966,19 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
                 RPCHelpMan{"getgovernanceinfo",
                     "\nReturns an object containing governance parameters.\n",
                     {},
-                    RPCResult{
-            "{\n"
-            "  \"governanceminquorum\": xxxxx,           (numeric) the absolute minimum number of votes needed to trigger a governance action\n"
-            "  \"masternodewatchdogmaxseconds\": xxxxx,  (numeric) sentinel watchdog expiration time in seconds (DEPRECATED)\n"
-            "  \"sentinelpingmaxseconds\": xxxxx,        (numeric) sentinel ping expiration time in seconds\n"
-            "  \"proposalfee\": xxx.xx,                  (numeric) the collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT + "\n"
-            "  \"superblockcycle\": xxxxx,               (numeric) the number of blocks between superblocks\n"
-            "  \"lastsuperblock\": xxxxx,                (numeric) the block number of the last superblock\n"
-            "  \"nextsuperblock\": xxxxx,                (numeric) the block number of the next superblock\n"
-            "  \"maxgovobjdatasize\": xxxxx,             (numeric) maximum governance object data size in bytes\n"
-                "}\n"},
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::NUM, "governanceminquorum", "the absolute minimum number of votes needed to trigger a governance action"},
+                            {RPCResult::Type::NUM, "masternodewatchdogmaxseconds", "sentinel watchdog expiration time in seconds (DEPRECATED)"},
+                            {RPCResult::Type::NUM, "sentinelpingmaxseconds", "sentinel ping expiration time in seconds"},
+                            {RPCResult::Type::NUM, "proposalfee", "the collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT},
+                            {RPCResult::Type::NUM, "superblockcycle", "the number of blocks between superblocks"},
+                            {RPCResult::Type::NUM, "lastsuperblock", "the block number of the last superblock"},
+                            {RPCResult::Type::NUM, "nextsuperblock", "the block number of the next superblock"},
+                            {RPCResult::Type::NUM, "maxgovobjdatasize", "maximum governance object data size in bytes"},
+                        }
+                },
                     RPCExamples{
                         HelpExampleCli("getgovernanceinfo", "")
                         + HelpExampleRpc("getgovernanceinfo", "")
@@ -1018,7 +1020,7 @@ UniValue getsuperblockbudget(const JSONRPCRequest& request)
                     {"index", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block index"}
                 },
                 RPCResult{
-            "n                (numeric) The absolute maximum sum of superblock payments allowed, in " + CURRENCY_UNIT + "\n"
+                    RPCResult::Type::NUM, "", "The absolute maximum sum of superblock payments allowed, in " + CURRENCY_UNIT
                 },
                 RPCExamples{
                     HelpExampleCli("getsuperblockbudget", "1000")
