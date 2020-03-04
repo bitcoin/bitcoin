@@ -205,7 +205,7 @@ static UniValue getbestblockhash(const JSONRPCRequest& request)
     return ::ChainActive().Tip()->GetBlockHash().GetHex();
 }
 
-void RPCNotifyBlockChange(bool ibd, const CBlockIndex * pindex)
+void RPCNotifyBlockChange(const CBlockIndex* pindex)
 {
     if(pindex) {
         std::lock_guard<std::mutex> lock(cs_blockchange);
