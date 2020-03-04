@@ -7,6 +7,7 @@
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <pow.h>
+#include <random.h>
 #include <txmempool.h>
 #include <validation.h>
 
