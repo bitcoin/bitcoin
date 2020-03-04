@@ -62,6 +62,64 @@ distribution provides binaries for the RISC-V platform.
 Notable changes
 ===============
 
+P2P and network changes
+-----------------------
+
+#### Removal of reject network messages from Bitcoin Core (BIP61)
+
+The command line option to enable BIP61 (`-enablebip61`) has been removed.
+
+This feature has been disabled by default since Bitcoin Core version 0.18.0.
+Nodes on the network can not generally be trusted to send valid ("reject")
+messages, so this should only ever be used when connected to a trusted node.
+Please use the recommended alternatives if you rely on this deprecated feature:
+
+* Testing or debugging of implementations of the Bitcoin P2P network protocol
+  should be done by inspecting the log messages that are produced by a recent
+  version of Bitcoin Core. Bitcoin Core logs debug messages
+  (`-debug=<category>`) to a stream (`-printtoconsole`) or to a file
+  (`-debuglogfile=<debug.log>`).
+
+* Testing the validity of a block can be achieved by specific RPCs:
+  - `submitblock`
+  - `getblocktemplate` with `'mode'` set to `'proposal'` for blocks with
+    potentially invalid POW
+
+* Testing the validity of a transaction can be achieved by specific RPCs:
+  - `sendrawtransaction`
+  - `testmempoolaccept`
+
+* Wallets should not use the absence of "reject" messages to indicate a
+  transaction has propagated the network, nor should wallets use "reject"
+  messages to set transaction fees. Wallets should rather use fee estimation
+  to determine transaction fees and set replace-by-fee if desired. Thus, they
+  could wait until the transaction has confirmed (taking into account the fee
+  target they set (compare the RPC `estimatesmartfee`)) or listen for the
+  transaction announcement by other network peers to check for propagation.
+
+The removal of BIP61 REJECT message support also has the following minor RPC
+and logging implications:
+
+* `testmempoolaccept` and `sendrawtransaction` no longer return the P2P REJECT
+  code when a transaction is not accepted to the mempool. They still return the
+  verbal reject reason.
+
+* Log messages that previously reported the REJECT code when a transaction was
+  not accepted to the mempool now no longer report the REJECT code. The reason
+  for rejection is still reported.
+
+Updated RPCs
+------------
+
+- `testmempoolaccept` and `sendrawtransaction` no longer return the P2P REJECT
+  code when a transaction is not accepted to the mempool. See the Section
+  _Removal of reject network messages from Bitcoin Core (BIP61)_ for details on
+  the removal of BIP61 REJECT message support.
+
+- A new descriptor type `sortedmulti(...)` has been added to support multisig scripts where the public keys are sorted lexicographically in the resulting script.
+
+- `walletprocesspsbt` and `walletcreatefundedpsbt` now include BIP 32 derivation paths by default for public keys if we know them. This can be disabled by setting `bip32derivs` to `false`.
+
 Build System
 ------------
 
@@ -84,11 +142,10 @@ It can be set with two command line arguments (`rpcwhitelist` and `rpcwhitelistd
 Updated settings
 ----------------
 
-Updated RPCs
-------------
+Importing blocks upon startup via the `bootstrap.dat` file no longer occurs by default. The file must now be specified with `-loadblock=<file>`.
 
-Note: some low-level RPC changes mainly useful for testing are described in the
-Low-level Changes section below.
+-  The `-debug=db` logging category has been renamed to `-debug=walletdb`, to distinguish it from `coindb`.
+   `-debug=db` has been deprecated and will be removed in the next major release.
 
 GUI changes
 -----------
@@ -100,6 +157,20 @@ Wallet
 
 - The wallet now by default uses bech32 addresses when using RPC, and creates native segwit change outputs.
 - The way that output trust was computed has been fixed in #16766, which impacts confirmed/unconfirmed balance status and coin selection.
+
+- The RPC gettransaction, listtransactions and listsinceblock responses now also
+includes the height of the block that contains the wallet transaction, if any.
+
+- RPC `getaddressinfo` changes:
+
+  - the `label` field has been deprecated in favor of the `labels` field and
+    will be removed in 0.21. It can be re-enabled in the interim by launching
+    with `-deprecatedrpc=label`.
+
+  - the `labels` behavior of returning an array of JSON objects containing name
+    and purpose key/value pairs has been deprecated in favor of an array of
+    label names and will be removed in 0.21. The previous behavior can be
+    re-enabled in the interim by launching with `-deprecatedrpc=labelspurpose`.
 
 Low-level changes
 =================
