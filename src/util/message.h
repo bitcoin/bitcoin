@@ -13,6 +13,8 @@
 
 enum class OutputType;
 
+enum class OutputType;
+
 /** The result of a signed message verification.
  * Message verification takes as an input:
  * - address (with whose private key the message is supposed to have been signed)
@@ -39,6 +41,11 @@ enum class MessageVerificationResult {
     OK
 };
 
+inline std::string MessageVerificationResultString(const MessageVerificationResult r) {
+    static const char *strings[] = {"ERR_INVALID_ADDRESS", "ERR_ADDRESS_NO_KEY", "ERR_MALFORMED_SIGNATURE", "ERR_PUBKEY_NOT_RECOVERED", "ERR_NOT_SIGNED", "OK"};
+    return strings[(int)r];
+}
+
 /** Verify a signed message.
  * @param[in] address Signer's bitcoin address, it must refer to a public key.
  * @param[in] signature The signature in base64 format.
@@ -50,13 +57,15 @@ MessageVerificationResult MessageVerify(
     const std::string& message);
 
 /** Sign a message.
- * @param[in] privkey Private key to sign with.
- * @param[in] message The message to sign.
+ * @param[in] privkey      Private key to sign with.
+ * @param[in] message      The message to sign.
+ * @param[in] address_type The address type to use for signing
  * @param[out] signature Signature, base64 encoded, only set if true is returned.
  * @return true if signing was successful. */
 bool MessageSign(
     const CKey& privkey,
     const std::string& message,
+    const OutputType& address_type,
     std::string& signature);
 
 /**

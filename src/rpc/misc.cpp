@@ -262,9 +262,15 @@ static UniValue verifymessage(const JSONRPCRequest& request)
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to use for the signature."},
                     {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "The signature provided by the signer in base 64 encoding (see signmessage)."},
                     {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message that was signed."},
+                    {"verbosity", RPCArg::Type::NUM, "0", "0 to return boolean true/false, 1 to return BIP-322 result strings."}
                 },
-                RPCResult{
-                    RPCResult::Type::BOOL, "", "If the signature is verified or not."
+                {
+                    RPCResult{"if verbosity is set to 0",
+                        RPCResult::Type::BOOL, "", "If the proof is valid or not."
+                    },
+                    RPCResult{"if verbosity is set to 1",
+                        RPCResult::Type::STR, "", "Error string",
+                    },
                 },
                 RPCExamples{
             "\nUnlock the wallet for 30 seconds\n"
@@ -283,22 +289,11 @@ static UniValue verifymessage(const JSONRPCRequest& request)
     std::string strAddress  = request.params[0].get_str();
     std::string strSign     = request.params[1].get_str();
     std::string strMessage  = request.params[2].get_str();
+    int verbosity           = request.params[3].isNull() ? 0 : request.params[3].get_int();
 
-    switch (MessageVerify(strAddress, strSign, strMessage)) {
-    case MessageVerificationResult::ERR_INVALID_ADDRESS:
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
-    case MessageVerificationResult::ERR_ADDRESS_NO_KEY:
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
-    case MessageVerificationResult::ERR_MALFORMED_SIGNATURE:
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
-    case MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED:
-    case MessageVerificationResult::ERR_NOT_SIGNED:
-        return false;
-    case MessageVerificationResult::OK:
-        return true;
-    }
-
-    return false;
+    auto rv = MessageVerify(strAddress, strSign, strMessage);
+    if (verbosity > 0) return MessageVerificationResultString(rv);
+    return rv == MessageVerificationResult::OK;
 }
 
 static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
@@ -308,6 +303,7 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
                 {
                     {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The private key to sign the message with."},
                     {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message to create a signature of."},
+                    {"address_type", RPCArg::Type::STR, "legacy", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "signature", "The signature of the message encoded in base 64"
@@ -325,6 +321,11 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
     std::string strPrivkey = request.params[0].get_str();
     std::string strMessage = request.params[1].get_str();
 
+    OutputType address_type = OutputType::LEGACY;
+    if (!request.params[2].isNull() && !ParseOutputType(request.params[2].get_str(), address_type)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[2].get_str()));
+    }
+
     CKey key = DecodeSecret(strPrivkey);
     if (!key.IsValid()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
@@ -332,7 +333,7 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
 
     std::string signature;
 
-    if (!MessageSign(key, strMessage, signature)) {
+    if (!MessageSign(key, strMessage, address_type, signature)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
     }
 
@@ -599,8 +600,8 @@ static const CRPCCommand commands[] =
     { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys","address_type"} },
     { "util",               "deriveaddresses",        &deriveaddresses,        {"descriptor", "range"} },
     { "util",               "getdescriptorinfo",      &getdescriptorinfo,      {"descriptor"} },
-    { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
-    { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
+    { "util",               "verifymessage",          &verifymessage,          {"address","signature","message","verbosity"} },
+    { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message","address_type"} },
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},

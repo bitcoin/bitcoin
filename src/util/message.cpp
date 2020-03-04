@@ -11,6 +11,8 @@
 #include <serialize.h>       // For SER_GETHASH
 #include <util/message.h>
 #include <util/strencodings.h> // For DecodeBase64()
+#include <outputtype.h>      // for OutputType
+#include <script/proof.h>    // BIP-322
 
 #include <string>
 #include <vector>
@@ -25,36 +27,34 @@ MessageVerificationResult MessageVerify(
         return MessageVerificationResult::ERR_INVALID_ADDRESS;
     }
 
-    if (boost::get<PKHash>(&destination) == nullptr) {
-        return MessageVerificationResult::ERR_ADDRESS_NO_KEY;
-    }
-
     bool invalid = false;
     std::vector<unsigned char> signature_bytes = DecodeBase64(signature.c_str(), &invalid);
     if (invalid) {
         return MessageVerificationResult::ERR_MALFORMED_SIGNATURE;
     }
 
-    CPubKey pubkey;
-    if (!pubkey.RecoverCompact(MessageHash(message), signature_bytes)) {
-        return MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED;
+    using proof::Result;
+    Result r = proof::VerifySignature(message, destination, signature_bytes);
+    switch (r) {
+    case Result::Inconclusive:
+    case Result::Incomplete: return MessageVerificationResult::ERR_NOT_SIGNED;
+    case Result::Invalid: return MessageVerificationResult::ERR_MALFORMED_SIGNATURE;
+    case Result::Error: return MessageVerificationResult::ERR_MALFORMED_SIGNATURE;
+    default: return MessageVerificationResult::OK;
     }
-
-    if (!(CTxDestination(PKHash(pubkey)) == destination)) {
-        return MessageVerificationResult::ERR_NOT_SIGNED;
-    }
-
-    return MessageVerificationResult::OK;
 }
 
 bool MessageSign(
     const CKey& privkey,
     const std::string& message,
+    const OutputType& address_type,
     std::string& signature)
 {
     std::vector<unsigned char> signature_bytes;
 
-    if (!privkey.SignCompact(MessageHash(message), signature_bytes)) {
+    try {
+        proof::SignMessageWithPrivateKey(privkey, address_type, message, signature_bytes);
+    } catch (const proof::signing_error&) {
         return false;
     }
 

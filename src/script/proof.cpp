@@ -54,7 +54,7 @@ void SignMessageWithSigningProvider(std::unique_ptr<SigningProvider> sp, const s
     }
 }
 
-void SignMessageWithPrivateKey(CKey& key, OutputType address_type, const std::string& message, std::vector<uint8_t>& signature_out)
+void SignMessageWithPrivateKey(const CKey& key, OutputType address_type, const std::string& message, std::vector<uint8_t>& signature_out)
 {
     if (address_type == OutputType::LEGACY) {
         CHashWriter ss(SER_GETHASH, 0);

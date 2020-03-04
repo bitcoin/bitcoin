@@ -134,6 +134,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "importmulti", 1, "options" },
     { "verifychain", 0, "checklevel" },
     { "verifychain", 1, "nblocks" },
+    { "verifymessage", 3, "verbosity" },
     { "getblockstats", 0, "hash_or_height" },
     { "getblockstats", 1, "stats" },
     { "pruneblockchain", 0, "height" },

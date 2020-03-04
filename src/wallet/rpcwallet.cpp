@@ -16,10 +16,10 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#include <script/proof.h>
 #include <script/sign.h>
 #include <util/bip32.h>
 #include <util/fees.h>
-#include <util/message.h> // For MessageSign()
 #include <util/moneystr.h>
 #include <util/string.h>
 #include <util/system.h>
@@ -562,29 +562,18 @@ static UniValue signmessage(const JSONRPCRequest& request)
     }
 
     const PKHash *pkhash = boost::get<PKHash>(&dest);
-    if (!pkhash) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+    std::unique_ptr<SigningProvider> provider;
+    if (pkhash) {
+        CScript script_pub_key = GetScriptForDestination(*pkhash);
+        provider = pwallet->GetSigningProvider(script_pub_key);
+    } else {
+        provider = pwallet->GetSigningProvider(GetScriptForDestination(dest));
     }
 
-    CScript script_pub_key = GetScriptForDestination(*pkhash);
-    std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(script_pub_key);
-    if (!provider) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
-    }
+    std::vector<uint8_t> vchSig;
+    proof::SignMessageWithSigningProvider(std::move(provider), strMessage, dest, vchSig);
 
-    CKey key;
-    CKeyID keyID(*pkhash);
-    if (!provider->GetKey(keyID, key)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
-    }
-
-    std::string signature;
-
-    if (!MessageSign(key, strMessage, signature)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
-    }
-
-    return signature;
+    return EncodeBase64(vchSig.data(), vchSig.size());
 }
 
 static UniValue getreceivedbyaddress(const JSONRPCRequest& request)

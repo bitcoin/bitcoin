@@ -19,6 +19,7 @@
 #include <util/time.h>
 #include <util/spanparsing.h>
 #include <util/vector.h>
+#include <outputtype.h>
 
 #include <array>
 #include <stdint.h>
@@ -2058,7 +2059,7 @@ BOOST_AUTO_TEST_CASE(message_sign)
     BOOST_REQUIRE_MESSAGE(!privkey.IsValid(),
         "Confirm the private key is invalid");
 
-    BOOST_CHECK_MESSAGE(!MessageSign(privkey, message, generated_signature),
+    BOOST_CHECK_MESSAGE(!MessageSign(privkey, message, OutputType::LEGACY, generated_signature),
         "Sign with an invalid private key");
 
     privkey.Set(privkey_bytes.begin(), privkey_bytes.end(), true);
@@ -2066,7 +2067,7 @@ BOOST_AUTO_TEST_CASE(message_sign)
     BOOST_REQUIRE_MESSAGE(privkey.IsValid(),
         "Confirm the private key is valid");
 
-    BOOST_CHECK_MESSAGE(MessageSign(privkey, message, generated_signature),
+    BOOST_CHECK_MESSAGE(MessageSign(privkey, message, OutputType::LEGACY, generated_signature),
         "Sign with a valid private key");
 
     BOOST_CHECK_EQUAL(expected_signature, generated_signature);

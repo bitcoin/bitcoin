@@ -258,7 +258,7 @@ void SignMessageWithSigningProvider(std::unique_ptr<SigningProvider> sp, const s
 /**
  * Attempt to sign a message with the given private key and address format.
  */
-void SignMessageWithPrivateKey(CKey& key, OutputType address_type, const std::string& message, std::vector<uint8_t>& signature_out);
+void SignMessageWithPrivateKey(const CKey& key, OutputType address_type, const std::string& message, std::vector<uint8_t>& signature_out);
 
 /**
  * Determine if a signature is valid for the given message.
