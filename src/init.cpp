@@ -605,9 +605,9 @@ std::string LicenseInfo()
 }
 
 #if HAVE_SYSTEM
-static void BlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex)
+static void BlockNotifyCallback(SynchronizationState sync_state, const CBlockIndex* pBlockIndex)
 {
-    if (initialSync || !pBlockIndex)
+    if (sync_state != SynchronizationState::POST_INIT || !pBlockIndex)
         return;
 
     std::string strCmd = gArgs.GetArg("-blocknotify", "");
