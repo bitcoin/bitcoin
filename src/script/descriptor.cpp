@@ -150,6 +150,14 @@ typedef std::vector<uint32_t> KeyPath;
 /** Interface for public key objects in descriptors. */
 struct PubkeyProvider
 {
+protected:
+    //! Index of this key expression in the descriptor
+    //! E.g. If this PubkeyProvider is key1 in multi(2, key1, key2, key3), then m_expr_index = 0
+    uint32_t m_expr_index;
+
+public:
+    PubkeyProvider(uint32_t exp_index) : m_expr_index(exp_index) {}
+
     virtual ~PubkeyProvider() = default;
 
     /** Derive a public key. If key==nullptr, only info is desired. */
@@ -182,7 +190,7 @@ class OriginPubkeyProvider final : public PubkeyProvider
     }
 
 public:
-    OriginPubkeyProvider(KeyOriginInfo info, std::unique_ptr<PubkeyProvider> provider) : m_origin(std::move(info)), m_provider(std::move(provider)) {}
+    OriginPubkeyProvider(uint32_t exp_index, KeyOriginInfo info, std::unique_ptr<PubkeyProvider> provider) : PubkeyProvider(exp_index), m_origin(std::move(info)), m_provider(std::move(provider)) {}
     bool GetPubKey(int pos, const SigningProvider& arg, CPubKey* key, KeyOriginInfo& info) const override
     {
         if (!m_provider->GetPubKey(pos, arg, key, info)) return false;
@@ -212,7 +220,7 @@ class ConstPubkeyProvider final : public PubkeyProvider
     CPubKey m_pubkey;
 
 public:
-    ConstPubkeyProvider(const CPubKey& pubkey) : m_pubkey(pubkey) {}
+    ConstPubkeyProvider(uint32_t exp_index, const CPubKey& pubkey) : PubkeyProvider(exp_index), m_pubkey(pubkey) {}
     bool GetPubKey(int pos, const SigningProvider& arg, CPubKey* key, KeyOriginInfo& info) const override
     {
         if (key) *key = m_pubkey;
@@ -272,7 +280,7 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     }
 
 public:
-    BIP32PubkeyProvider(const CExtPubKey& extkey, KeyPath path, DeriveType derive) : m_extkey(extkey), m_path(std::move(path)), m_derive(derive) {}
+    BIP32PubkeyProvider(uint32_t exp_index, const CExtPubKey& extkey, KeyPath path, DeriveType derive) : PubkeyProvider(exp_index), m_extkey(extkey), m_path(std::move(path)), m_derive(derive) {}
     bool IsRange() const override { return m_derive != DeriveType::NO; }
     size_t GetSize() const override { return 33; }
     bool GetPubKey(int pos, const SigningProvider& arg, CPubKey* key, KeyOriginInfo& info) const override
@@ -698,7 +706,7 @@ NODISCARD bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath&
 }
 
 /** Parse a public key that excludes origin information. */
-std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out, std::string& error)
+std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out, std::string& error)
 {
     using namespace spanparsing;
 
@@ -714,7 +722,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, boo
             CPubKey pubkey(data);
             if (pubkey.IsFullyValid()) {
                 if (permit_uncompressed || pubkey.IsCompressed()) {
-                    return MakeUnique<ConstPubkeyProvider>(pubkey);
+                    return MakeUnique<ConstPubkeyProvider>(key_exp_index, pubkey);
                 } else {
                     error = "Uncompressed keys are not allowed";
                     return nullptr;
@@ -728,7 +736,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, boo
             if (permit_uncompressed || key.IsCompressed()) {
                 CPubKey pubkey = key.GetPubKey();
                 out.keys.emplace(pubkey.GetID(), key);
-                return MakeUnique<ConstPubkeyProvider>(pubkey);
+                return MakeUnique<ConstPubkeyProvider>(key_exp_index, pubkey);
             } else {
                 error = "Uncompressed keys are not allowed";
                 return nullptr;
@@ -755,11 +763,11 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, boo
         extpubkey = extkey.Neuter();
         out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
     }
-    return MakeUnique<BIP32PubkeyProvider>(extpubkey, std::move(path), type);
+    return MakeUnique<BIP32PubkeyProvider>(key_exp_index, extpubkey, std::move(path), type);
 }
 
 /** Parse a public key including origin information (if enabled). */
-std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out, std::string& error)
+std::unique_ptr<PubkeyProvider> ParsePubkey(uint32_t key_exp_index, const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out, std::string& error)
 {
     using namespace spanparsing;
 
@@ -768,7 +776,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool per
         error = "Multiple ']' characters found for a single pubkey";
         return nullptr;
     }
-    if (origin_split.size() == 1) return ParsePubkeyInner(origin_split[0], permit_uncompressed, out, error);
+    if (origin_split.size() == 1) return ParsePubkeyInner(key_exp_index, origin_split[0], permit_uncompressed, out, error);
     if (origin_split[0].size() < 1 || origin_split[0][0] != '[') {
         error = strprintf("Key origin start '[ character expected but not found, got '%c' instead", origin_split[0][0]);
         return nullptr;
@@ -789,30 +797,30 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool per
     assert(fpr_bytes.size() == 4);
     std::copy(fpr_bytes.begin(), fpr_bytes.end(), info.fingerprint);
     if (!ParseKeyPath(slash_split, info.path, error)) return nullptr;
-    auto provider = ParsePubkeyInner(origin_split[1], permit_uncompressed, out, error);
+    auto provider = ParsePubkeyInner(key_exp_index, origin_split[1], permit_uncompressed, out, error);
     if (!provider) return nullptr;
-    return MakeUnique<OriginPubkeyProvider>(std::move(info), std::move(provider));
+    return MakeUnique<OriginPubkeyProvider>(key_exp_index, std::move(info), std::move(provider));
 }
 
 /** Parse a script in a particular context. */
-std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
+std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
 {
     using namespace spanparsing;
 
     auto expr = Expr(sp);
     bool sorted_multi = false;
     if (Func("pk", expr)) {
-        auto pubkey = ParsePubkey(expr, ctx != ParseScriptContext::P2WSH, out, error);
+        auto pubkey = ParsePubkey(key_exp_index, expr, ctx != ParseScriptContext::P2WSH, out, error);
         if (!pubkey) return nullptr;
         return MakeUnique<PKDescriptor>(std::move(pubkey));
     }
     if (Func("pkh", expr)) {
-        auto pubkey = ParsePubkey(expr, ctx != ParseScriptContext::P2WSH, out, error);
+        auto pubkey = ParsePubkey(key_exp_index, expr, ctx != ParseScriptContext::P2WSH, out, error);
         if (!pubkey) return nullptr;
         return MakeUnique<PKHDescriptor>(std::move(pubkey));
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
-        auto pubkey = ParsePubkey(expr, true, out, error);
+        auto pubkey = ParsePubkey(key_exp_index, expr, true, out, error);
         if (!pubkey) return nullptr;
         return MakeUnique<ComboDescriptor>(std::move(pubkey));
     } else if (ctx != ParseScriptContext::TOP && Func("combo", expr)) {
@@ -834,10 +842,11 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
                 return nullptr;
             }
             auto arg = Expr(expr);
-            auto pk = ParsePubkey(arg, ctx != ParseScriptContext::P2WSH, out, error);
+            auto pk = ParsePubkey(key_exp_index, arg, ctx != ParseScriptContext::P2WSH, out, error);
             if (!pk) return nullptr;
             script_size += pk->GetSize() + 1;
             providers.emplace_back(std::move(pk));
+            key_exp_index++;
         }
         if (providers.size() < 1 || providers.size() > 16) {
             error = strprintf("Cannot have %u keys in multisig; must have between 1 and 16 keys, inclusive", providers.size());
@@ -864,7 +873,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
         return MakeUnique<MultisigDescriptor>(thres, std::move(providers), sorted_multi);
     }
     if (ctx != ParseScriptContext::P2WSH && Func("wpkh", expr)) {
-        auto pubkey = ParsePubkey(expr, false, out, error);
+        auto pubkey = ParsePubkey(key_exp_index, expr, false, out, error);
         if (!pubkey) return nullptr;
         return MakeUnique<WPKHDescriptor>(std::move(pubkey));
     } else if (ctx == ParseScriptContext::P2WSH && Func("wpkh", expr)) {
@@ -872,7 +881,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
         return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
-        auto desc = ParseScript(expr, ParseScriptContext::P2SH, out, error);
+        auto desc = ParseScript(key_exp_index, expr, ParseScriptContext::P2SH, out, error);
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<SHDescriptor>(std::move(desc));
     } else if (ctx != ParseScriptContext::TOP && Func("sh", expr)) {
@@ -880,7 +889,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
         return nullptr;
     }
     if (ctx != ParseScriptContext::P2WSH && Func("wsh", expr)) {
-        auto desc = ParseScript(expr, ParseScriptContext::P2WSH, out, error);
+        auto desc = ParseScript(key_exp_index, expr, ParseScriptContext::P2WSH, out, error);
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<WSHDescriptor>(std::move(desc));
     } else if (ctx == ParseScriptContext::P2WSH && Func("wsh", expr)) {
@@ -917,10 +926,10 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
 
 std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptContext, const SigningProvider& provider)
 {
-    std::unique_ptr<PubkeyProvider> key_provider = MakeUnique<ConstPubkeyProvider>(pubkey);
+    std::unique_ptr<PubkeyProvider> key_provider = MakeUnique<ConstPubkeyProvider>(0, pubkey);
     KeyOriginInfo info;
     if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
-        return MakeUnique<OriginPubkeyProvider>(std::move(info), std::move(key_provider));
+        return MakeUnique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
     }
     return key_provider;
 }
@@ -1032,7 +1041,7 @@ std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProv
 {
     Span<const char> sp(descriptor.data(), descriptor.size());
     if (!CheckChecksum(sp, require_checksum, error)) return nullptr;
-    auto ret = ParseScript(sp, ParseScriptContext::TOP, out, error);
+    auto ret = ParseScript(0, sp, ParseScriptContext::TOP, out, error);
     if (sp.size() == 0 && ret) return std::unique_ptr<Descriptor>(std::move(ret));
     return nullptr;
 }
