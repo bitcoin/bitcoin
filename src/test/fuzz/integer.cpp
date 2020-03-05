@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <amount.h>
 #include <arith_uint256.h>
 #include <compressor.h>
 #include <consensus/merkle.h>
@@ -56,7 +57,14 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 
     const Consensus::Params& consensus_params = Params().GetConsensus();
     (void)CheckProofOfWork(u256, u32, consensus_params);
-    (void)CompressAmount(u64);
+    if (u64 <= MAX_MONEY) {
+        const uint64_t compressed_money_amount = CompressAmount(u64);
+        assert(u64 == DecompressAmount(compressed_money_amount));
+        static const uint64_t compressed_money_amount_max = CompressAmount(MAX_MONEY - 1);
+        assert(compressed_money_amount <= compressed_money_amount_max);
+    } else {
+        (void)CompressAmount(u64);
+    }
     static const uint256 u256_min(uint256S("0000000000000000000000000000000000000000000000000000000000000000"));
     static const uint256 u256_max(uint256S("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     const std::vector<uint256> v256{u256, u256_min, u256_max};
