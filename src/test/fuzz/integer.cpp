@@ -19,12 +19,14 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <serialize.h>
+#include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <uint256.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/time.h>
+#include <version.h>
 
 #include <cassert>
 #include <limits>
@@ -54,6 +56,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     // We cannot assume a specific value of std::is_signed<char>::value:
     // ConsumeIntegral<char>() instead of casting from {u,}int8_t.
     const char ch = fuzzed_data_provider.ConsumeIntegral<char>();
+    const bool b = fuzzed_data_provider.ConsumeBool();
 
     const Consensus::Params& consensus_params = Params().GetConsensus();
     (void)CheckProofOfWork(u256, u32, consensus_params);
@@ -131,5 +134,69 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         (void)GetKeyForDestination(store, destination);
         (void)GetScriptForDestination(destination);
         (void)IsValidDestination(destination);
+    }
+
+    {
+        CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
+
+        uint256 deserialized_u256;
+        stream << u256;
+        stream >> deserialized_u256;
+        assert(u256 == deserialized_u256 && stream.empty());
+
+        uint160 deserialized_u160;
+        stream << u160;
+        stream >> deserialized_u160;
+        assert(u160 == deserialized_u160 && stream.empty());
+
+        uint64_t deserialized_u64;
+        stream << u64;
+        stream >> deserialized_u64;
+        assert(u64 == deserialized_u64 && stream.empty());
+
+        int64_t deserialized_i64;
+        stream << i64;
+        stream >> deserialized_i64;
+        assert(i64 == deserialized_i64 && stream.empty());
+
+        uint32_t deserialized_u32;
+        stream << u32;
+        stream >> deserialized_u32;
+        assert(u32 == deserialized_u32 && stream.empty());
+
+        int32_t deserialized_i32;
+        stream << i32;
+        stream >> deserialized_i32;
+        assert(i32 == deserialized_i32 && stream.empty());
+
+        uint16_t deserialized_u16;
+        stream << u16;
+        stream >> deserialized_u16;
+        assert(u16 == deserialized_u16 && stream.empty());
+
+        int16_t deserialized_i16;
+        stream << i16;
+        stream >> deserialized_i16;
+        assert(i16 == deserialized_i16 && stream.empty());
+
+        uint8_t deserialized_u8;
+        stream << u8;
+        stream >> deserialized_u8;
+        assert(u8 == deserialized_u8 && stream.empty());
+
+        int8_t deserialized_i8;
+        stream << i8;
+        stream >> deserialized_i8;
+        assert(i8 == deserialized_i8 && stream.empty());
+
+        char deserialized_ch;
+        stream << ch;
+        stream >> deserialized_ch;
+        assert(ch == deserialized_ch && stream.empty());
+
+        bool deserialized_b;
+        stream << b;
+        stream >> deserialized_b;
+        assert(b == deserialized_b && stream.empty());
     }
 }
