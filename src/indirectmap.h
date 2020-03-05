@@ -5,6 +5,8 @@
 #ifndef SYSCOIN_INDIRECTMAP_H
 #define SYSCOIN_INDIRECTMAP_H
 
+#include <map>
+
 template <class T>
 struct DereferencingComparator { bool operator()(const T a, const T b) const { return *a < *b; } };
 
