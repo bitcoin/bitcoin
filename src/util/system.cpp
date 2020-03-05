@@ -255,6 +255,7 @@ const std::list<SectionInfo> ArgsManager::GetUnrecognizedSections() const
 {
     // Section names to be recognized in the config file.
     static const std::set<std::string> available_sections{
+        CBaseChainParams::SIGNET,
         CBaseChainParams::REGTEST,
         CBaseChainParams::TESTNET,
         CBaseChainParams::MAIN
@@ -832,15 +833,20 @@ std::string ArgsManager::GetChainName() const
 
     const bool fRegTest = get_net("-regtest");
     const bool fTestNet = get_net("-testnet");
+    const bool fSigNet  = get_net("-signet");
     const bool is_chain_arg_set = IsArgSet("-chain");
 
-    if ((int)is_chain_arg_set + (int)fRegTest + (int)fTestNet > 1) {
-        throw std::runtime_error("Invalid combination of -regtest, -testnet and -chain. Can use at most one.");
+    if ((int)is_chain_arg_set + (int)fRegTest + (int)fTestNet + (int)fSigNet > 1) {
+        throw std::runtime_error("Invalid combination of -regtest, -testnet, -signet and -chain. Can use at most one.");
     }
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
+    if (fSigNet) {
+        return CBaseChainParams::SIGNET;
+    }
+
     return GetArg("-chain", CBaseChainParams::MAIN);
 }
 
