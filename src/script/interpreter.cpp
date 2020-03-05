@@ -1478,6 +1478,18 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
 template class GenericTransactionSignatureChecker<CTransaction>;
 template class GenericTransactionSignatureChecker<CMutableTransaction>;
 
+bool SimpleSignatureChecker::CheckSig(const std::vector<unsigned char>& vchSigIn, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const
+{
+    CPubKey pubkey(vchPubKey);
+    if (!pubkey.IsValid()) return false;
+
+    std::vector<unsigned char> vchSig(vchSigIn);
+    if (vchSig.empty()) return false;
+    vchSig.pop_back();
+
+    return pubkey.Verify(m_hash, vchSig);
+}
+
 static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CScript& scriptPubKey, unsigned int flags, SigVersion sigversion, const BaseSignatureChecker& checker, ScriptError* serror)
 {
     std::vector<valtype> stack{stack_span.begin(), stack_span.end()};
