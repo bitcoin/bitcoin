@@ -88,7 +88,7 @@ bench: $(BENCH_BINARY) FORCE
 bitcoin_bench_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_BENCH) $(bench_bench_bitcoin_OBJECTS) $(BENCH_BINARY)
 
-%.raw.h: %.raw
+%.raw.h: %.raw bench/data.h
 	@$(MKDIR_P) $(@D)
 	@{ \
 	 echo "static unsigned const char $(*F)_raw[] = {" && \
