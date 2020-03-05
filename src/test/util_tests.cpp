@@ -1182,6 +1182,12 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney)
     BOOST_CHECK_EQUAL(ret, COIN);
     BOOST_CHECK(ParseMoney("1", ret));
     BOOST_CHECK_EQUAL(ret, COIN);
+    BOOST_CHECK(ParseMoney("   1", ret));
+    BOOST_CHECK_EQUAL(ret, COIN);
+    BOOST_CHECK(ParseMoney("1   ", ret));
+    BOOST_CHECK_EQUAL(ret, COIN);
+    BOOST_CHECK(ParseMoney("  1 ", ret));
+    BOOST_CHECK_EQUAL(ret, COIN);
     BOOST_CHECK(ParseMoney("0.1", ret));
     BOOST_CHECK_EQUAL(ret, COIN/10);
     BOOST_CHECK(ParseMoney("0.01", ret));
@@ -1198,12 +1204,26 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney)
     BOOST_CHECK_EQUAL(ret, COIN/10000000);
     BOOST_CHECK(ParseMoney("0.00000001", ret));
     BOOST_CHECK_EQUAL(ret, COIN/100000000);
+    BOOST_CHECK(ParseMoney(" 0.00000001 ", ret));
+    BOOST_CHECK_EQUAL(ret, COIN/100000000);
+    BOOST_CHECK(ParseMoney("0.00000001 ", ret));
+    BOOST_CHECK_EQUAL(ret, COIN/100000000);
+    BOOST_CHECK(ParseMoney(" 0.00000001", ret));
+    BOOST_CHECK_EQUAL(ret, COIN/100000000);
 
     // Parsing amount that can not be represented in ret should fail
     BOOST_CHECK(!ParseMoney("0.000000001", ret));
 
     // Parsing empty string should fail
     BOOST_CHECK(!ParseMoney("", ret));
+    BOOST_CHECK(!ParseMoney(" ", ret));
+    BOOST_CHECK(!ParseMoney("  ", ret));
+
+    // Parsing two numbers should fail
+    BOOST_CHECK(!ParseMoney("1 2", ret));
+    BOOST_CHECK(!ParseMoney(" 1 2 ", ret));
+    BOOST_CHECK(!ParseMoney(" 1.2 3 ", ret));
+    BOOST_CHECK(!ParseMoney(" 1 2.3 ", ret));
 
     // Attempted 63 bit overflow should fail
     BOOST_CHECK(!ParseMoney("92233720368.54775808", ret));
