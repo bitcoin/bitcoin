@@ -500,7 +500,7 @@ static inline Wrapper<Formatter, T&> Using(T&& t) { return Wrapper<Formatter, T&
 
 #define VARINT_MODE(obj, mode) Using<VarIntFormatter<mode>>(obj)
 #define VARINT(obj) Using<VarIntFormatter<VarIntMode::DEFAULT>>(obj)
-#define COMPACTSIZE(obj) CCompactSize(REF(obj))
+#define COMPACTSIZE(obj) Using<CompactSizeFormatter>(obj)
 #define LIMITED_STRING(obj,n) LimitedString< n >(REF(obj))
 
 /** Serialization wrapper class for integers in VarInt format. */
@@ -515,6 +515,28 @@ struct VarIntFormatter
     template<typename Stream, typename I> void Unser(Stream& s, I& v)
     {
         v = ReadVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s);
+    }
+};
+
+template<int Bytes>
+struct CustomUintFormatter
+{
+    static_assert(Bytes > 0 && Bytes <= 8, "CustomUintFormatter Bytes out of range");
+    static constexpr uint64_t MAX = 0xffffffffffffffff >> (8 * (8 - Bytes));
+
+    template <typename Stream, typename I> void Ser(Stream& s, I v)
+    {
+        if (v < 0 || v > MAX) throw std::ios_base::failure("CustomUintFormatter value out of range");
+        uint64_t raw = htole64(v);
+        s.write((const char*)&raw, Bytes);
+    }
+
+    template <typename Stream, typename I> void Unser(Stream& s, I& v)
+    {
+        static_assert(std::numeric_limits<I>::max() >= MAX && std::numeric_limits<I>::min() <= 0, "CustomUintFormatter type too small");
+        uint64_t raw = 0;
+        s.read((char*)&raw, Bytes);
+        v = le64toh(raw);
     }
 };
 
@@ -552,21 +574,26 @@ public:
     }
 };
 
-class CCompactSize
+/** Formatter for integers in CompactSize format. */
+struct CompactSizeFormatter
 {
-protected:
-    uint64_t &n;
-public:
-    explicit CCompactSize(uint64_t& nIn) : n(nIn) { }
-
-    template<typename Stream>
-    void Serialize(Stream &s) const {
-        WriteCompactSize<Stream>(s, n);
+    template<typename Stream, typename I>
+    void Unser(Stream& s, I& v)
+    {
+        uint64_t n = ReadCompactSize<Stream>(s);
+        if (n < std::numeric_limits<I>::min() || n > std::numeric_limits<I>::max()) {
+            throw std::ios_base::failure("CompactSize exceeds limit of type");
+        }
+        v = n;
     }
 
-    template<typename Stream>
-    void Unserialize(Stream& s) {
-        n = ReadCompactSize<Stream>(s);
+    template<typename Stream, typename I>
+    void Ser(Stream& s, I v)
+    {
+        static_assert(std::is_unsigned<I>::value, "CompactSize only supported for unsigned integers");
+        static_assert(std::numeric_limits<I>::max() <= std::numeric_limits<uint64_t>::max(), "CompactSize only supports 64-bit integers and below");
+
+        WriteCompactSize<Stream>(s, v);
     }
 };
 
@@ -613,7 +640,7 @@ BigEndian<I> WrapBigEndian(I& n) { return BigEndian<I>(n); }
  * as a vector of VarInt-encoded integers.
  *
  * V is not required to be an std::vector type. It works for any class that
- * exposes a value_type, size, reserve, push_back, and const iterators.
+ * exposes a value_type, size, reserve, emplace_back, back, and const iterators.
  */
 template<class Formatter>
 struct VectorFormatter
@@ -621,15 +648,17 @@ struct VectorFormatter
     template<typename Stream, typename V>
     void Ser(Stream& s, const V& v)
     {
+        Formatter formatter;
         WriteCompactSize(s, v.size());
         for (const typename V::value_type& elem : v) {
-            s << Using<Formatter>(elem);
+            formatter.Ser(s, elem);
         }
     }
 
     template<typename Stream, typename V>
     void Unser(Stream& s, V& v)
     {
+        Formatter formatter;
         v.clear();
         size_t size = ReadCompactSize(s);
         size_t allocated = 0;
@@ -641,9 +670,8 @@ struct VectorFormatter
             allocated = std::min(size, allocated + MAX_VECTOR_ALLOCATE / sizeof(typename V::value_type));
             v.reserve(allocated);
             while (v.size() < allocated) {
-                typename V::value_type val;
-                s >> Using<Formatter>(val);
-                v.push_back(std::move(val));
+                v.emplace_back();
+                formatter.Unser(s, v.back());
             }
         }
     };
