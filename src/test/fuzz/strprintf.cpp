@@ -8,7 +8,6 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -27,7 +26,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     // * strprintf("%.222222200000000$", 1.1);
     //
     // Upstream bug report: https://github.com/c42f/tinyformat/issues/70
-    if (format_string.find("%") != std::string::npos && digits_in_format_specifier >= 7) {
+    if (format_string.find('%') != std::string::npos && digits_in_format_specifier >= 7) {
         return;
     }
 
@@ -35,7 +34,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     // * strprintf("%1$*1$*", -11111111);
     //
     // Upstream bug report: https://github.com/c42f/tinyformat/issues/70
-    if (format_string.find("%") != std::string::npos && format_string.find("$") != std::string::npos && format_string.find("*") != std::string::npos && digits_in_format_specifier > 0) {
+    if (format_string.find('%') != std::string::npos && format_string.find('$') != std::string::npos && format_string.find('*') != std::string::npos && digits_in_format_specifier > 0) {
         return;
     }
 
@@ -96,7 +95,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
 
     try {
-        switch (fuzzed_data_provider.ConsumeIntegralInRange(0, 13)) {
+        switch (fuzzed_data_provider.ConsumeIntegralInRange(0, 5)) {
         case 0:
             (void)strprintf(format_string, fuzzed_data_provider.ConsumeRandomLengthString(32));
             break;
@@ -115,32 +114,52 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         case 5:
             (void)strprintf(format_string, fuzzed_data_provider.ConsumeBool());
             break;
-        case 6:
+        }
+    } catch (const tinyformat::format_error&) {
+    }
+
+    if (format_string.find('%') != std::string::npos && format_string.find('c') != std::string::npos) {
+        // Avoid triggering the following:
+        // * strprintf("%c", 1.31783e+38);
+        // tinyformat.h:244:36: runtime error: 1.31783e+38 is outside the range of representable values of type 'char'
+        return;
+    }
+
+    if (format_string.find('%') != std::string::npos && format_string.find('*') != std::string::npos) {
+        // Avoid triggering the following:
+        // * strprintf("%*", -2.33527e+38);
+        // tinyformat.h:283:65: runtime error: -2.33527e+38 is outside the range of representable values of type 'int'
+        // * strprintf("%*", -2147483648);
+        // tinyformat.h:763:25: runtime error: negation of -2147483648 cannot be represented in type 'int'; cast to an unsigned type to negate this value to itself
+        return;
+    }
+
+    try {
+        switch (fuzzed_data_provider.ConsumeIntegralInRange(0, 7)) {
+        case 0:
             (void)strprintf(format_string, fuzzed_data_provider.ConsumeFloatingPoint<float>());
             break;
-        case 7:
+        case 1:
             (void)strprintf(format_string, fuzzed_data_provider.ConsumeFloatingPoint<double>());
             break;
-        case 8:
+        case 2:
             (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<int16_t>());
             break;
-        case 9:
+        case 3:
             (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<uint16_t>());
             break;
-        case 10:
+        case 4:
             (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<int32_t>());
             break;
-        case 11:
+        case 5:
             (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<uint32_t>());
             break;
-        case 12:
+        case 6:
             (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<int64_t>());
             break;
-        case 13:
+        case 7:
             (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<uint64_t>());
             break;
-        default:
-            assert(false);
         }
     } catch (const tinyformat::format_error&) {
     }
