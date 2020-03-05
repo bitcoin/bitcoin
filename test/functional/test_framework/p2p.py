@@ -57,8 +57,13 @@ from test_framework.messages import (
     msg_notfound,
     msg_ping,
     msg_pong,
+    msg_reconcildiff,
+    msg_reqrecon,
+    msg_reqsketchext,
     msg_sendaddrv2,
     msg_sendcmpct,
+    msg_sendrecon,
+    msg_sketch,
     msg_sendheaders,
     msg_tx,
     MSG_TX,
@@ -116,9 +121,14 @@ MESSAGEMAP = {
     b"notfound": msg_notfound,
     b"ping": msg_ping,
     b"pong": msg_pong,
+    b"reconcildiff": msg_reconcildiff,
+    b"reqrecon": msg_reqrecon,
+    b"reqsketchext": msg_reqsketchext,
     b"sendaddrv2": msg_sendaddrv2,
     b"sendcmpct": msg_sendcmpct,
     b"sendheaders": msg_sendheaders,
+    b"sendrecon": msg_sendrecon,
+    b"sketch": msg_sketch,
     b"tx": msg_tx,
     b"verack": msg_verack,
     b"version": msg_version,
@@ -430,6 +440,7 @@ class P2PInterface(P2PConnection):
     def on_sendaddrv2(self, message): pass
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
+    def on_sendrecon(self, message): pass
     def on_tx(self, message): pass
     def on_wtxidrelay(self, message): pass
 
