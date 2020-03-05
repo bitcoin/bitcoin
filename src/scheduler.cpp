@@ -56,8 +56,20 @@ void CScheduler::serviceQueue()
             // Explicitly use a template here to avoid hitting that overload.
             while (!shouldStop() && !taskQueue.empty()) {
                 boost::chrono::system_clock::time_point timeToWaitFor = taskQueue.begin()->first;
-                if (newTaskScheduled.wait_until<>(lock, timeToWaitFor) == boost::cv_status::timeout)
-                    break; // Exit loop after timeout, it means we reached the time of the event
+                try {
+                    if (newTaskScheduled.wait_until<>(lock, timeToWaitFor) == boost::cv_status::timeout) {
+                        break; // Exit loop after timeout, it means we reached the time of the event
+                    }
+                } catch (boost::thread_interrupted) {
+                    // We need to make sure we don't ignore this, or the thread won't end
+                    throw;
+                } catch (...) {
+                    // Some boost versions have a bug that can cause a time prior to system boot (or wake from sleep) to throw an exception instead of return timeout
+                    // See https://github.com/boostorg/thread/issues/308
+                    // Check if the time has passed and, if so, break gracefully
+                    if (timeToWaitFor <= boost::chrono::system_clock::now()) break;
+                    throw;
+                }
             }
 #endif
             // If there are multiple threads, the queue can empty while we're waiting (another
