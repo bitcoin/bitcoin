@@ -1084,6 +1084,50 @@ UniValue getnewblockhex(const JSONRPCRequest& request)
     return HexStr(ssBlock.begin(), ssBlock.end());
 }
 
+static UniValue grindblock(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"grindblock",
+        "\nGrind the given signet block to find valid proof of work\n"
+        "May fail if it reaches maxtries attempts.\n",
+        {
+            {"blockhex", RPCArg::Type::STR, RPCArg::Optional::NO, "The block data"},
+            {"maxtries", RPCArg::Type::NUM, /* default */ "1000000", "How many iterations to try."},
+        },
+        RPCResult{
+            RPCResult::Type::STR_HEX, "blockhash", "Resulting block hash, or null if none was found"
+        },
+        RPCExamples{
+            "\nGrind a block with hex $blockhex\n"
+            + HelpExampleCli("grindblock", "$blockhex")
+        },
+    }.Check(request);
+
+    CBlock block;
+    if (!DecodeHexBlk(block, request.params[0].get_str())) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Failed to decode block hex");
+    }
+
+    if (!Params().GetConsensus().signet_blocks) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Grinding blocks is only possible in a signet network");
+    }
+
+    std::vector<uint8_t> signet_commitment;
+    if (!block.GetWitnessCommitmentSection(SIGNET_HEADER, signet_commitment)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block has no signet commitment; please sign it first");
+    }
+
+    uint64_t max_tries = request.params[1].isNull() ? 1000000 : request.params[1].get_int();
+    uint256 result;
+    while (max_tries > 0 && !ShutdownRequested()) {
+        if (grindBlock(&block, max_tries, result)) {
+            return result.GetHex();
+        }
+        if (max_tries == 0) break;
+    }
+
+    return false;
+}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -1105,6 +1149,7 @@ static const CRPCCommand commands[] =
 
     /** Signet mining */
     { "signet",             "getnewblockhex",         &getnewblockhex,         {"coinbase_destination"} },
+    { "signet",             "grindblock",             &grindblock,             {"blockhex", "maxtries"} },
 };
 // clang-format on
 
