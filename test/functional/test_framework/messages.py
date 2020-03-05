@@ -120,6 +120,11 @@ def ser_uint256(u):
         u >>= 32
     return rs
 
+def deser_uint32(f):
+    return struct.unpack("<I", f.read(4))[0]
+
+def ser_uint32(u):
+    return b"" + struct.pack("<I", u & 0xFFFFFFFF)
 
 def uint256_from_str(s):
     r = 0
@@ -176,6 +181,34 @@ def ser_uint256_vector(l):
     r = ser_compact_size(len(l))
     for i in l:
         r += ser_uint256(i)
+    return r
+
+def deser_uint32_vector(f):
+    nit = deser_compact_size(f)
+    r = []
+    for i in range(nit):
+        t = deser_uint32(f)
+        r.append(t)
+    return r
+
+def ser_uint32_vector(l):
+    r = ser_compact_size(len(l))
+    for i in l:
+        r += ser_uint32(i)
+    return r
+
+def deser_uint8_vector(f):
+    nit = deser_compact_size(f)
+    r = []
+    for i in range(nit):
+        t = struct.unpack("<B", f.read(1))[0]
+        r.append(t)
+    return r
+
+def ser_uint8_vector(l):
+    r = ser_compact_size(len(l))
+    for i in l:
+        r += struct.pack("<B", i & 0xff)
     return r
 
 
@@ -1790,3 +1823,108 @@ class msg_cfcheckpt:
     def __repr__(self):
         return "msg_cfcheckpt(filter_type={:#x}, stop_hash={:x})".format(
             self.filter_type, self.stop_hash)
+
+class msg_sendrecon:
+    __slots__ = ("sender", "responder", "version", "salt")
+    msgtype = b"sendrecon"
+
+    def __init__(self):
+        self.sender = False
+        self.responder = False
+        self.version = 0
+        self.salt = 0
+
+    def deserialize(self, f):
+        self.sender = struct.unpack("<?", f.read(1))[0]
+        self.responder = struct.unpack("<?", f.read(1))[0]
+        self.version = struct.unpack("<I", f.read(4))[0]
+        self.salt = struct.unpack("<Q", f.read(8))[0]
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<?", self.sender)
+        r += struct.pack("<?", self.responder)
+        r += struct.pack("<I", self.version)
+        r += struct.pack("<Q", self.salt)
+        return r
+
+    def __repr__(self):
+        return "msg_sendrecon(sender=%i, responder=%i, version=%lu, salt=%lu)" %\
+            (self.sender, self.responder, self.version, self.salt)
+
+class msg_reqrecon:
+    __slots__ = ("set_size", "q")
+    msgtype = b"reqrecon"
+
+    def __init__(self):
+        self.set_size = 0
+        self.q = 0
+
+    def deserialize(self, f):
+        self.set_size = struct.unpack("<H", f.read(2))[0]
+        self.q = struct.unpack("<H", f.read(2))[0]
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<I", self.set_size)
+        r += struct.pack("<I", self.q)
+        return r
+
+    def __repr__(self):
+        return "msg_reqrecon(set_size=%i, q=%i)" % (self.set_size, self.q)
+
+class msg_sketch:
+    __slots__ = ("skdata")
+    msgtype = b"sketch"
+
+    def __init__(self):
+        self.skdata = []
+
+    def deserialize(self, f):
+        self.skdata = deser_uint8_vector(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_uint8_vector(self.skdata)
+        return r
+
+    def __repr__(self):
+        return "msg_sketch(sketch_size=%i)" % (len(self.skdata))
+
+class msg_reqsketchext:
+    __slots__ = ()
+    msgtype = b"reqsketchext"
+
+    def __init__(self):
+        return
+
+    def deserialize(self, f):
+        return
+
+    def serialize(self):
+        r = b""
+        return r
+
+    def __repr__(self):
+        return "msg_reqsketchext"
+
+class msg_reconcildiff:
+    __slots__ = ("success", "ask_shortids")
+    msgtype = b"reconcildiff"
+
+    def __init__(self):
+        self.success = 0
+        self.ask_shortids = []
+
+    def deserialize(self, f):
+        self.success = struct.unpack("<B", f.read(1))[0]
+        self.ask_shortids = deser_uint32_vector(f)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.success)
+        r += ser_uint32_vector(self.ask_shortids)
+        return r
+
+    def __repr__(self):
+        return "msg_reconcildiff(success=%i,ask_shortids=%i)" % (self.success, len(self.ask_shortids))
