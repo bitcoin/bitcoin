@@ -161,6 +161,17 @@ public:
     virtual ~BaseSignatureChecker() {}
 };
 
+/** A general purpose signature checker. */
+class SimpleSignatureChecker : public BaseSignatureChecker
+{
+private:
+    uint256 m_hash;
+public:
+    const uint256& GetHash() const { return m_hash; }
+    explicit SimpleSignatureChecker(const uint256& hash) : m_hash(hash) {}
+    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
+};
+
 template <class T>
 class GenericTransactionSignatureChecker : public BaseSignatureChecker
 {
