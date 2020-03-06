@@ -97,7 +97,7 @@ public:
     /// sync once and only needs to process blocks in the ValidationInterface
     /// queue. If the index is catching up from far behind, this method does
     /// not block and immediately returns false.
-    bool BlockUntilSyncedToCurrentChain();
+    bool BlockUntilSyncedToCurrentChain() const;
 
     void Interrupt();
 
