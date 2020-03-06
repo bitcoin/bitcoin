@@ -393,7 +393,7 @@ static UniValue mockscheduler(const JSONRPCRequest& request)
     // protect against null pointer dereference
     CHECK_NONFATAL(g_rpc_node);
     CHECK_NONFATAL(g_rpc_node->scheduler);
-    g_rpc_node->scheduler->MockForward(boost::chrono::seconds(delta_seconds));
+    g_rpc_node->scheduler->MockForward(std::chrono::seconds(delta_seconds));
 
     return NullUniValue;
 }
