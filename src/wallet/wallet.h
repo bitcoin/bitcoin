@@ -148,7 +148,7 @@ class ReserveDestination
 {
 protected:
     //! The wallet to reserve from
-    CWallet* const pwallet;
+    const CWallet* const pwallet;
     //! The ScriptPubKeyMan to reserve from. Based on type when GetReservedDestination is called
     ScriptPubKeyMan* m_spk_man{nullptr};
 
@@ -918,8 +918,8 @@ public:
      * Rescan abort properties
      */
     void AbortRescan() { fAbortRescan = true; }
-    bool IsAbortingRescan() { return fAbortRescan; }
-    bool IsScanning() { return fScanningWallet; }
+    bool IsAbortingRescan() const { return fAbortRescan; }
+    bool IsScanning() const { return fScanningWallet; }
     int64_t ScanningDuration() const { return fScanningWallet ? GetTimeMillis() - m_scanning_start : 0; }
     double ScanningProgress() const { return fScanningWallet ? (double) m_scanning_progress : 0; }
 
@@ -1057,14 +1057,14 @@ public:
     /** Absolute maximum transaction fee (in satoshis) used by default for the wallet */
     CAmount m_default_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
 
-    size_t KeypoolCountExternalKeys() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    size_t KeypoolCountInternalKeys() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    size_t KeypoolCountExternalKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    size_t KeypoolCountInternalKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool TopUpKeyPool(unsigned int kpSize = 0);
 
-    int64_t GetOldestKeyPoolTime();
+    int64_t GetOldestKeyPoolTime() const;
 
-    std::set<std::set<CTxDestination>> GetAddressGroupings() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    std::map<CTxDestination, CAmount> GetAddressBalances();
+    std::set<std::set<CTxDestination>> GetAddressGroupings() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::map<CTxDestination, CAmount> GetAddressBalances() const;
 
     std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
 
@@ -1117,7 +1117,7 @@ public:
     bool SetMaxVersion(int nVersion);
 
     //! get the current wallet format (the oldest client version guaranteed to understand this wallet)
-    int GetVersion() { LOCK(cs_wallet); return nWalletVersion; }
+    int GetVersion() const { LOCK(cs_wallet); return nWalletVersion; }
 
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<uint256> GetConflicts(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -1198,7 +1198,7 @@ public:
     static bool InitAutoBackup();
     bool AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error_string, std::vector<bilingual_str>& warnings);
 
-    bool BackupWallet(const std::string& strDest);
+    bool BackupWallet(const std::string& strDest) const;
 
     /**
      * HD Wallet Functions
@@ -1211,7 +1211,7 @@ public:
     bool GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, const SecureString& secureWalletPassphrase);
 
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
-    bool CanGetAddresses(bool internal = false);
+    bool CanGetAddresses(bool internal = false) const;
 
     void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) override;
     void NotifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) override;
@@ -1229,7 +1229,7 @@ public:
      * Obviously holding cs_main/cs_wallet when going into this call may cause
      * deadlock
      */
-    void BlockUntilSyncedToCurrentChain() LOCKS_EXCLUDED(cs_main, cs_wallet);
+    void BlockUntilSyncedToCurrentChain() const LOCKS_EXCLUDED(cs_main, cs_wallet);
 
     /** set a single wallet flag */
     void SetWalletFlag(uint64_t flags);

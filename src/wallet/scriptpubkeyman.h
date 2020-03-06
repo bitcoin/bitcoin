@@ -173,17 +173,17 @@ public:
     virtual bool IsHDEnabled() const { return false; }
 
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
-    virtual bool CanGetAddresses(bool internal = false) { return false; }
+    virtual bool CanGetAddresses(bool internal = false) const { return false; }
 
     virtual bool HavePrivateKeys() const { return false; }
 
     //! The action to do when the DB needs rewrite
     virtual void RewriteDB() {}
 
-    virtual int64_t GetOldestKeyPoolTime() { return GetTime(); }
+    virtual int64_t GetOldestKeyPoolTime() const { return GetTime(); }
 
-    virtual size_t KeypoolCountExternalKeys() { return 0; }
-    virtual size_t KeypoolCountInternalKeys() { return 0; }
+    virtual size_t KeypoolCountExternalKeys() const { return 0; }
+    virtual size_t KeypoolCountInternalKeys() const { return 0; }
     virtual unsigned int GetKeyPoolSize() const { return 0; }
 
     virtual int64_t GetTimeFirstKey() const { return 0; }
@@ -320,9 +320,9 @@ public:
 
     void RewriteDB() override;
 
-    int64_t GetOldestKeyPoolTime() override;
-    size_t KeypoolCountExternalKeys() override;
-    size_t KeypoolCountInternalKeys() override;
+    int64_t GetOldestKeyPoolTime() const override;
+    size_t KeypoolCountExternalKeys() const override;
+    size_t KeypoolCountInternalKeys() const override;
 
     unsigned int GetKeyPoolSize() const override;
 
@@ -330,7 +330,7 @@ public:
 
     const CKeyMetadata* GetMetadata(const CTxDestination& dest) const override;
 
-    bool CanGetAddresses(bool internal = false) override;
+    bool CanGetAddresses(bool internal = false) const override;
 
     std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script) const override;
 
@@ -422,7 +422,7 @@ public:
     bool ImportScriptPubKeys(const std::set<CScript>& script_pub_keys, const bool have_solving_data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     /* Returns true if the wallet can generate new keys */
-    bool CanGenerateKeys();
+    bool CanGenerateKeys() const;
 
     //! Adds a HDPubKey into the wallet(database)
     bool AddHDPubKey(WalletBatch &batch, const CExtPubKey &extPubKey, bool fInternal);

@@ -563,7 +563,7 @@ bool LegacyScriptPubKeyMan::IsHDEnabled() const
     return GetHDChain(hdChainCurrent);
 }
 
-bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal)
+bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal) const
 {
     LOCK(cs_KeyStore);
     // Check if the keypool has keys
@@ -612,7 +612,7 @@ static int64_t GetOldestKeyTimeInPool(const std::set<int64_t>& setKeyPool, Walle
     return keypool.nTime;
 }
 
-int64_t LegacyScriptPubKeyMan::GetOldestKeyPoolTime()
+int64_t LegacyScriptPubKeyMan::GetOldestKeyPoolTime() const
 {
     LOCK(cs_KeyStore);
 
@@ -625,13 +625,13 @@ int64_t LegacyScriptPubKeyMan::GetOldestKeyPoolTime()
     return oldestKey;
 }
 
-size_t LegacyScriptPubKeyMan::KeypoolCountExternalKeys()
+size_t LegacyScriptPubKeyMan::KeypoolCountExternalKeys() const
 {
     LOCK(cs_KeyStore);
     return setExternalKeyPool.size();
 }
 
-size_t LegacyScriptPubKeyMan::KeypoolCountInternalKeys()
+size_t LegacyScriptPubKeyMan::KeypoolCountInternalKeys() const
 {
     LOCK(cs_KeyStore); // setInternalKeyPool
     return setInternalKeyPool.size();
@@ -1278,7 +1278,7 @@ void LegacyScriptPubKeyMan::LoadKeyPool(int64_t nIndex, const CKeyPool &keypool)
         mapKeyMetadata[keyid] = CKeyMetadata(keypool.nTime);
 }
 
-bool LegacyScriptPubKeyMan::CanGenerateKeys()
+bool LegacyScriptPubKeyMan::CanGenerateKeys() const
 {
     LOCK(cs_KeyStore);
     if (m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) || m_storage.IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {

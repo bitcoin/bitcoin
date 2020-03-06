@@ -812,7 +812,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    const CWallet* const pwallet = wallet.get();
 
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
 
@@ -857,7 +857,7 @@ UniValue dumphdinfo(const JSONRPCRequest& request)
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    const CWallet* const pwallet = wallet.get();
 
     LOCK(pwallet->cs_wallet);
 
@@ -909,7 +909,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    const CWallet* const pwallet = wallet.get();
 
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
 
@@ -1011,7 +1011,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         if (spk_man.GetKey(keyid, key)) {
             file << strprintf("%s %s ", EncodeSecret(key), strTime);
             if (pwallet->mapAddressBook.count(pkhash)) {
-                file << strprintf("label=%s", EncodeDumpString(pwallet->mapAddressBook[pkhash].name));
+                file << strprintf("label=%s", EncodeDumpString(pwallet->mapAddressBook.at(pkhash).name));
             } else if (mapKeyPool.count(keyid)) {
                 file << "reserve=1";
             } else {

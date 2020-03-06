@@ -1275,7 +1275,7 @@ void CWallet::UpdatedBlockTip()
 }
 
 
-void CWallet::BlockUntilSyncedToCurrentChain() {
+void CWallet::BlockUntilSyncedToCurrentChain() const {
     AssertLockNotHeld(cs_wallet);
     // Skip the queue-draining stuff if we know we're caught up with
     // chainActive.Tip(), otherwise put a callback in the validation interface queue and wait
@@ -1586,7 +1586,7 @@ bool CWallet::IsHDEnabled() const
     return result;
 }
 
-bool CWallet::CanGetAddresses(bool internal)
+bool CWallet::CanGetAddresses(bool internal) const
 {
     LOCK(cs_wallet);
     if (m_spk_managers.empty()) return false;
@@ -3765,7 +3765,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
     return WalletBatch(*database).EraseName(EncodeDestination(address));
 }
 
-size_t CWallet::KeypoolCountExternalKeys()
+size_t CWallet::KeypoolCountExternalKeys() const
 {
     AssertLockHeld(cs_wallet);
 
@@ -3777,7 +3777,7 @@ size_t CWallet::KeypoolCountExternalKeys()
     return count;
 }
 
-size_t CWallet::KeypoolCountInternalKeys()
+size_t CWallet::KeypoolCountInternalKeys() const
 {
     AssertLockHeld(cs_wallet);
 
@@ -3857,7 +3857,7 @@ void CWallet::MarkDestinationsDirty(const std::set<CTxDestination>& destinations
     }
 }
 
-std::map<CTxDestination, CAmount> CWallet::GetAddressBalances()
+std::map<CTxDestination, CAmount> CWallet::GetAddressBalances() const
 {
     std::map<CTxDestination, CAmount> balances;
 
@@ -3895,7 +3895,7 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances()
     return balances;
 }
 
-std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
+std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings() const
 {
     AssertLockHeld(cs_wallet);
     std::set< std::set<CTxDestination> > groupings;
@@ -4670,7 +4670,7 @@ bool CWallet::InitAutoBackup()
     return true;
 }
 
-bool CWallet::BackupWallet(const std::string& strDest)
+bool CWallet::BackupWallet(const std::string& strDest) const
 {
     return database->Backup(strDest);
 }
