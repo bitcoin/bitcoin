@@ -92,11 +92,6 @@ void CScheduler::schedule(CScheduler::Function f, std::chrono::system_clock::tim
     newTaskScheduled.notify_one();
 }
 
-void CScheduler::scheduleFromNow(CScheduler::Function f, int64_t deltaMilliSeconds)
-{
-    schedule(f, std::chrono::system_clock::now() + std::chrono::milliseconds(deltaMilliSeconds));
-}
-
 void CScheduler::MockForward(std::chrono::seconds delta_seconds)
 {
     assert(delta_seconds.count() > 0 && delta_seconds < std::chrono::hours{1});
@@ -119,15 +114,15 @@ void CScheduler::MockForward(std::chrono::seconds delta_seconds)
     newTaskScheduled.notify_one();
 }
 
-static void Repeat(CScheduler* s, CScheduler::Function f, int64_t deltaMilliSeconds)
+static void Repeat(CScheduler& s, CScheduler::Function f, std::chrono::milliseconds delta)
 {
     f();
-    s->scheduleFromNow(std::bind(&Repeat, s, f, deltaMilliSeconds), deltaMilliSeconds);
+    s.scheduleFromNow([=, &s] { Repeat(s, f, delta); }, delta);
 }
 
-void CScheduler::scheduleEvery(CScheduler::Function f, int64_t deltaMilliSeconds)
+void CScheduler::scheduleEvery(CScheduler::Function f, std::chrono::milliseconds delta)
 {
-    scheduleFromNow(std::bind(&Repeat, this, f, deltaMilliSeconds), deltaMilliSeconds);
+    scheduleFromNow([=] { Repeat(*this, f, delta); }, delta);
 }
 
 size_t CScheduler::getQueueInfo(std::chrono::system_clock::time_point &first,

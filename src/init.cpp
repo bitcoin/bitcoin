@@ -86,8 +86,8 @@ static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
 static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 
-// Dump addresses to banlist.dat every 15 minutes (900s)
-static constexpr int DUMP_BANS_INTERVAL = 60 * 15;
+// How often to dump addresses to banlist.dat
+static constexpr std::chrono::minutes DUMP_BANS_INTERVAL{15};
 
 
 #ifdef WIN32
@@ -1278,7 +1278,7 @@ bool AppInitMain(NodeContext& node)
     // Gather some entropy once per minute.
     node.scheduler->scheduleEvery([]{
         RandAddPeriodic();
-    }, 60000);
+    }, std::chrono::minutes{1});
 
     GetMainSignals().RegisterBackgroundSignalScheduler(*node.scheduler);
 
@@ -1863,7 +1863,7 @@ bool AppInitMain(NodeContext& node)
     BanMan* banman = node.banman.get();
     node.scheduler->scheduleEvery([banman]{
         banman->DumpBanlist();
-    }, DUMP_BANS_INTERVAL * 1000);
+    }, DUMP_BANS_INTERVAL);
 
     return true;
 }

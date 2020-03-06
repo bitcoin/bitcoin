@@ -24,8 +24,8 @@
 // Usage:
 //
 // CScheduler* s = new CScheduler();
-// s->scheduleFromNow(doSomething, 11); // Assuming a: void doSomething() { }
-// s->scheduleFromNow(std::bind(Class::func, this, argument), 3);
+// s->scheduleFromNow(doSomething, std::chrono::milliseconds{11}); // Assuming a: void doSomething() { }
+// s->scheduleFromNow([=] { this->func(argument); }, std::chrono::milliseconds{3});
 // boost::thread* t = new boost::thread(std::bind(CScheduler::serviceQueue, s));
 //
 // ... then at program shutdown, make sure to call stop() to clean up the thread(s) running serviceQueue:
@@ -46,15 +46,19 @@ public:
     // Call func at/after time t
     void schedule(Function f, std::chrono::system_clock::time_point t);
 
-    // Convenience method: call f once deltaMilliSeconds from now
-    void scheduleFromNow(Function f, int64_t deltaMilliSeconds);
+    /** Call f once after the delta has passed */
+    void scheduleFromNow(Function f, std::chrono::milliseconds delta)
+    {
+        schedule(std::move(f), std::chrono::system_clock::now() + delta);
+    }
 
-    // Another convenience method: call f approximately
-    // every deltaMilliSeconds forever, starting deltaMilliSeconds from now.
-    // To be more precise: every time f is finished, it
-    // is rescheduled to run deltaMilliSeconds later. If you
-    // need more accurate scheduling, don't use this method.
-    void scheduleEvery(Function f, int64_t deltaMilliSeconds);
+    /**
+     * Repeat f until the scheduler is stopped. First run is after delta has passed once.
+     *
+     * The timing is not exact: Every time f is finished, it is rescheduled to run again after delta. If you need more
+     * accurate scheduling, don't use this method.
+     */
+    void scheduleEvery(Function f, std::chrono::milliseconds delta);
 
     /**
      * Mock the scheduler to fast forward in time.
