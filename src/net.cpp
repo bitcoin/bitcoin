@@ -455,6 +455,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     pnode->AddRef();
 
     LogPrint(BCLog::RESEARCHER, "\n*** Connected *** addr=%s\n", pnode->GetAddrName()); // Cybersecurity Lab
+    LogPrint(BCLog::NET, "\n*** Connected *** addr=%s\n", pnode->GetAddrName()); // Cybersecurity Lab
 
 
     // We're making a new connection, harvest entropy from the time (and our peer count)
@@ -466,6 +467,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
 void CNode::CloseSocketDisconnect()
 {
     LogPrint(BCLog::RESEARCHER, "\n*** Disconnecting *** addr=%s\n", GetAddrName()); // Cybersecurity Lab
+    LogPrint(BCLog::NET, "\n*** Disconnecting *** addr=%s\n", GetAddrName()); // Cybersecurity Lab
     fDisconnect = true;
     LOCK(cs_hSocket);
     if (hSocket != INVALID_SOCKET)
@@ -2808,6 +2810,7 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
 
 
 // Cybersecurity Lab
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 UniValue connect(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
@@ -2853,6 +2856,8 @@ UniValue connect(const JSONRPCRequest& request)
       result.pushKV(ipAddress + ":" + std::to_string(port), "Successful");
     }
 
+    /*
+
     bool fOneShot = false;
     bool fFeeler = false;
     bool manual_connection = false;
@@ -2863,7 +2868,7 @@ UniValue connect(const JSONRPCRequest& request)
         pnode->fFeeler = true;
     if (manual_connection)
         pnode->m_manual_connection = true;
-
+    */
     //vNodes.push_back(pnode);
 
     return result;

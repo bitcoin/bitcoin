@@ -365,9 +365,11 @@ void CAddrMan::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime)
 CAddrInfo CAddrMan::Select_(bool newOnly)
 {
     // Cybersecurity Lab
-    int nId = 100; // vvNew[nUBucket][nUBucketPos];
+    int nId = 0; // vvNew[nUBucket][nUBucketPos];
     CAddrInfo& info = mapInfo[nId];
     return info;
+    //////////////////////////////////////////////
+
 
     if (size() == 0)
         return CAddrInfo();

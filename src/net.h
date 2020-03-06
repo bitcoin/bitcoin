@@ -339,6 +339,7 @@ public:
 
 
     // Cybersecurity Lab
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     CNode* ipconnect(std::string ip, int port, std::string source = "192.168.0.250:8333") {
       CNetAddr src;
       char* source_c = const_cast<char*>(source.c_str());
@@ -347,7 +348,7 @@ public:
         if(Lookup(ip.c_str(), serv, port, false)) {
           CAddress addrConnect = CAddress(serv, NODE_NONE);
           bool fCountFailure = false;
-          bool manual_connection = true;
+          bool manual_connection = false; //true;
           bool block_relay_only = false;
 
           CNode* pnode = ConnectNode(addrConnect, source_c, fCountFailure, manual_connection, block_relay_only);
