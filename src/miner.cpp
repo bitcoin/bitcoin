@@ -548,7 +548,7 @@ static bool ProcessBlockFound(const CBlock* pblock)
 
     // Process this block the same as if we had received it from another node
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-    if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
+    if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr, nullptr))
         return error("%s: block not accepted", __func__);
 
     return true;

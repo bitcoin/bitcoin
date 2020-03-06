@@ -133,7 +133,7 @@ static UniValue generateBlocks(const CScript& coinbase_script, int nGenerate, ui
             continue;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-        if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
+        if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr, nullptr))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
@@ -736,9 +736,10 @@ static UniValue submitblock(const JSONRPCRequest& request)
     }
 
     bool new_block;
+    bool fSpamNode;
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool accepted = ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
+    bool accepted = ProcessNewBlock(Params(), blockptr, true, &new_block, &fSpamNode);
     UnregisterValidationInterface(&sc);
     if (!new_block && accepted) {
         return "duplicate";

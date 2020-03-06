@@ -5245,10 +5245,11 @@ bool CWallet::CreateCoinStake(unsigned int nBits,
             // Search backward in time from the given txNew timestamp
             // Search nSearchInterval seconds back up to nMaxStakeSearchInterval
             uint256 hashProofOfStake = uint256();
+            bool *fSpamNode;
             COutPoint prevoutStake = COutPoint(pcoin.first->GetHash(), pcoin.second);
             nTryTime = nTxNewTime + 45 - n; // TODO: change 45 to nHashDrift
 
-            if (CheckStakeKernelHash(nBits, ChainActive().Tip(), block, pcoin.first->tx, prevoutStake, nTryTime, hashProofOfStake, false))  // nTxNewTime - n
+            if (CheckStakeKernelHash(nBits, ChainActive().Tip(), block, pcoin.first->tx, prevoutStake, nTryTime, hashProofOfStake, *fSpamNode))
             {
                 // Found a kernel
                 LogPrint(BCLog::KERNEL, "%s: kernel found\n", __func__);
