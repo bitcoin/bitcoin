@@ -21,6 +21,7 @@ FUZZERS_MISSING_CORPORA = [
     "fee_rate_deserialize",
     "flat_file_pos_deserialize",
     "key_origin_info_deserialize",
+    "locale",
     "merkle_block_deserialize",
     "out_point_deserialize",
     "partial_merkle_tree_deserialize",
