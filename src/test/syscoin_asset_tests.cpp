@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     // PHASE 9:  WAIT 10 SECONDS + DELAY SET ABOVE (1 SECOND)
     tfm::format(std::cout,"Waiting 11 seconds as per protocol...\n");
     // start 11 second wait
-    MilliSleep(11000);
+    UninterruptibleSleep(std::chrono::milliseconds(11000));
 
     // PHASE 10:  CALL tpstestinfo ON SENDERS AND GET AVERAGE START TIME (TIME SENDERS PUSHED TRANSACTIONS TO THE SOCKETS)
     // get the elapsed time of each node on how long it took to push the vector of signed txs to the network
@@ -773,7 +773,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_within_block)
     AssetAllocationTransfer(false, "node2", assetguid, useraddress2, "[{\"address\":\"" + useraddress1 + "\",\"amount\":1.0}]");
     // From W2 send 1 SPT to W1 - DO NOT WAIT FOR CONFIRM
     AssetAllocationTransfer(true, "node2", assetguid, useraddress2, "[{\"address\":\"" + useraddress1 + "\",\"amount\":1.0}]");
-    MilliSleep(500);
+    UninterruptibleSleep(std::chrono::milliseconds(500));
     // From W1 send 1 SPT to W2 within same Block
     AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":1.0}]");
     GenerateBlocks(1);
@@ -846,7 +846,7 @@ BOOST_AUTO_TEST_CASE(generate_syscoin_asset_zdag_dependency)
     //printf("txid2 %s\n", txid2.c_str());
     string txid3 = AssetAllocationTransfer(true, "node2", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.5}]");
     //printf("txid3 %s\n", txid3.c_str());
-    MilliSleep(100);
+    UninterruptibleSleep(std::chrono::milliseconds(100));
     // we hope that this gets pushed ahead to the queue by increasing fees, this will validate the block but txid2/txid3 will be discarded erroneously
     // we want txid2/txid3 to get mined and txid4 to get mined after like choronological order of mempool acceptance
     string txid4 = AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "[{\"address\":\"" + useraddress3 + "\",\"amount\":1.0}]");
@@ -906,26 +906,26 @@ BOOST_AUTO_TEST_CASE(generate_syscoin_asset_zdag_dependency1)
 
     string b10a_to_b224 = AssetAllocationTransfer(true, "node2", assetguid, b10a, "[{\"address\":\"" + b224 + "\",\"amount\":0.5}]");
     //printf("b10a_to_b224 %s\n", b10a_to_b224.c_str());
-    MilliSleep(250);
+    UninterruptibleSleep(std::chrono::milliseconds(250));
     string b41_to_b10b = AssetAllocationTransfer(true, "node2", assetguid, b41, "[{\"address\":\"" + b10b + "\",\"amount\":0.5}]");
     //printf("b41_to_b10b %s\n", b41_to_b10b.c_str());
-    MilliSleep(250);
+    UninterruptibleSleep(std::chrono::milliseconds(250));
     string b11a_to_b10b = AssetAllocationTransfer(true, "node1", assetguid, b11a, "[{\"address\":\"" + b10b + "\",\"amount\":0.5}]");
     //printf("b11a_to_b10b %s\n", b11a_to_b10b.c_str());
-    MilliSleep(250);
+    UninterruptibleSleep(std::chrono::milliseconds(250));
     string b11a_to_b11b = AssetAllocationTransfer(true, "node1", assetguid, b11a, "[{\"address\":\"" + b11b + "\",\"amount\":0.5}]");
     //printf("b11a_to_b11b %s\n", b11a_to_b11b.c_str());
-    MilliSleep(250);
+    UninterruptibleSleep(std::chrono::milliseconds(250));
     string b10b_to_b224 = AssetAllocationTransfer(true, "node2", assetguid, b10b, "[{\"address\":\"" + b224 + "\",\"amount\":0.5}]");
     //printf("b10b_to_b224 %s\n", b10b_to_b224.c_str());
-    MilliSleep(250);
+    UninterruptibleSleep(std::chrono::milliseconds(250));
     string b10b_to_b21 = AssetAllocationTransfer(true, "node2", assetguid, b10b, "[{\"address\":\"" + b21 + "\",\"amount\":0.6}]");
     //printf("b10b_to_b21 %s\n", b10b_to_b21.c_str());
-    MilliSleep(400);
+    UninterruptibleSleep(std::chrono::milliseconds(400));
     string b11b_to_b21 = AssetAllocationTransfer(true, "node1", assetguid, b11b, "[{\"address\":\"" + b21 + "\",\"amount\":0.6}]");
     //printf("b11b_to_b21 %s\n", b11b_to_b21.c_str());
 
-    MilliSleep(250);
+    UninterruptibleSleep(std::chrono::milliseconds(250));
    
 
     GenerateBlocks(1);
@@ -1042,7 +1042,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag1)
     // shouldn't allow to build ontop of an invalid sys tx
     BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);
 
-    MilliSleep(500);
+    UninterruptibleSleep(std::chrono::milliseconds(500));
 
     GenerateBlocks(2, "node1");
 
@@ -1278,12 +1278,12 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     string assettxid = find_value(r.get_obj(), "txid").get_str();
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node2","sendrawtransaction" , "\"" + burnHex + "\""));
     // ensure duplicate input is detected
-    MilliSleep(500);
+    UninterruptibleSleep(std::chrono::milliseconds(500));
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "sendrawtransaction" , "\"" +  assetHex + "\""));
-    MilliSleep(500);
+    UninterruptibleSleep(std::chrono::milliseconds(500));
     string txid1 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.1}]");
     string txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "[{\"address\":\"" + useraddress1 + "\",\"amount\":0.05}]");
-    MilliSleep(500);
+    UninterruptibleSleep(std::chrono::milliseconds(500));
     // txid1 depends on double spend so it is conflicted
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid1 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
@@ -1333,7 +1333,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     string assettxid2 = find_value(r.get_obj(), "txid").get_str();
     // on node2 it would have had a conflicting output for this sender since it double spent so we can't send
     BOOST_CHECK_THROW(r = CallExtRPC("node2", "sendrawtransaction" , "\"" +  assetHex + "\""), runtime_error);
-    MilliSleep(100);
+    UninterruptibleSleep(std::chrono::milliseconds(100));
     // can't find because it wasn't sent
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + assettxid2 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
@@ -1381,7 +1381,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     // send on node2 where it would have had a conflicting output for this sender since it double spent
     // but now should be cleared due to the 300 second expiry and assetnew previously would have triggered expiry code
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "sendrawtransaction" , "\"" +  assetHex + "\""));
-    MilliSleep(500);
+    UninterruptibleSleep(std::chrono::milliseconds(500));
     // status should be ok since timeout should clear bad status
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + assettxid3 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
@@ -1435,7 +1435,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_same_input)
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "decoderawtransaction" , "\"" + burnHex + "\"" + ",true"));
 	string txid2 = find_value(r.get_obj(), "txid").get_str();
     
-    MilliSleep(500);
+    UninterruptibleSleep(std::chrono::milliseconds(500));
     // check just sender, burn marks as major issue on zdag
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid1 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
@@ -1493,7 +1493,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_same_input_no_ov
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "decoderawtransaction" , "\"" + burnHex + "\"" + ",true"));
 	string txid2 = find_value(r.get_obj(), "txid").get_str();
     
-    MilliSleep(500);
+    UninterruptibleSleep(std::chrono::milliseconds(500));
     // check just sender, burn marks as major issue on zdag
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + txid1 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
@@ -1547,9 +1547,9 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_same_input_no_ov
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "decoderawtransaction" , "\"" + assetHex + "\""));
     string txid1 = find_value(r.get_obj(), "txid").get_str();
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node2","sendrawtransaction" , "\"" + burnHex + "\""));
-    MilliSleep(500);
+    UninterruptibleSleep(std::chrono::milliseconds(500));
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "sendrawtransaction" , "\"" +  assetHex + "\""));
-    MilliSleep(500);
+    UninterruptibleSleep(std::chrono::milliseconds(500));
 
     // now we will with try to build ontop of the burn transaction which was relayed but is part of the conflict structure setToRemoveFromMempool
     
@@ -1657,7 +1657,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx21, tx23));
     string tx24 = AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx22, tx24));
-    MilliSleep(500);
+    UninterruptibleSleep(std::chrono::milliseconds(500));
     
     // not zdag transactions
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + tx24 + "\""));
@@ -1688,7 +1688,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
     
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "decoderawtransaction" , "\"" + assetHex + "\",true"));
     string dblspendtx = find_value(r.get_obj(), "txid").get_str();
-    MilliSleep(500);
+    UninterruptibleSleep(std::chrono::milliseconds(500));
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + tx17 + "\""));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
@@ -1717,10 +1717,10 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
     tfm::format(std::cout, "Setting time ahead 300 seconds...\n");
     SleepFor(300 * 1000, 0);
-    MilliSleep(250);
+    UninterruptibleSleep(std::chrono::milliseconds(250));
     // allow mempool expiry to work
     AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
-    MilliSleep(250);
+    UninterruptibleSleep(std::chrono::milliseconds(250));
     // after confirm we shouldn't have any txs to check
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationverifyzdag", "\"" + dblspendtx + "\""));
     // could be not found or status ok , status ok if node1 wallet accepting to mempool again because it detected unconfirmed transactions
@@ -2099,7 +2099,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  guid + ",\"" + newaddress2 + "\""));
 	balance = find_value(r.get_obj(), "balance_zdag");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.11 * COIN);
-	MilliSleep(500);
+	UninterruptibleSleep(std::chrono::milliseconds(500));
 	// second send
 	string txid2 = AssetAllocationTransfer(true, "node1", guid, newaddress1, "[{\"address\":\"" + newaddress2 + "\",\"amount\":0.13}]");
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  guid + ",\"" + newaddress2 + "\""));

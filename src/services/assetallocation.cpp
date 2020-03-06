@@ -310,7 +310,7 @@ bool BuildAssetAllocationJson(const CAssetAllocationDBEntry& assetallocation, co
 }
 // TODO: clean this up copied to support disable-wallet build
 #ifdef ENABLE_WALLET
-bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* const pwallet, const isminefilter* filter_ismine)
+bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, const CWallet* const pwallet, const isminefilter* filter_ismine)
 {
     CAssetAllocation assetallocation;
     std::vector<unsigned char> vchEthAddress;

@@ -51,7 +51,7 @@ bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<uns
 bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation, std::vector<unsigned char> &vchEthAddress, std::vector<unsigned char> &vchEthContract);
 bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, CAmount &nAmountFromScript, std::vector<unsigned char> &vchEthAddress, uint8_t &nPrecision, std::vector<unsigned char> &vchEthContract);
 #ifdef ENABLE_WALLET
-bool SysTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* const pwallet, const isminefilter* filter_ismine);
+bool SysTxToJSON(const CTransaction &tx, UniValue &entry, const CWallet* const pwallet, const isminefilter* filter_ismine);
 #endif
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
 bool IsOutpointMature(const COutPoint& outpoint);
@@ -340,7 +340,7 @@ static std::string burnWitnessStr(burnWitness.ToString());
 bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, UniValue& oName);
 #ifdef ENABLE_WALLET
-bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CWallet* const pwallet, const isminefilter* filter_ismine);
+bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, const CWallet* const pwallet, const isminefilter* filter_ismine);
 #endif
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
 bool WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);

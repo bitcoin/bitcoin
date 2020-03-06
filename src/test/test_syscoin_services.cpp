@@ -158,7 +158,7 @@ void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, b
 	}	
 	boost::thread t(runCommand, nodePath);
 	tfm::format(std::cout,"Launching %s, waiting 1 second before trying to ping...\n", nodePath.c_str());
-	MilliSleep(1000);
+	UninterruptibleSleep(std::chrono::milliseconds(1000));
 	UniValue r;
 	while (1)
 	{
@@ -170,7 +170,7 @@ void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, b
 				if (node1LastBlock > find_value(r.get_obj(), "blocks").get_int())
 				{
 					tfm::format(std::cout,"Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node1LastBlock);
-					MilliSleep(500);
+					UninterruptibleSleep(std::chrono::milliseconds(500));
 					continue;
 				}
 				node1Online = true;
@@ -181,7 +181,7 @@ void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, b
 				if (node2LastBlock > find_value(r.get_obj(), "blocks").get_int())
 				{
 					tfm::format(std::cout,"Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node2LastBlock);
-					MilliSleep(500);
+					UninterruptibleSleep(std::chrono::milliseconds(500));
 					continue;
 				}
 				node2Online = true;
@@ -192,18 +192,18 @@ void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, b
 				if (node3LastBlock > find_value(r.get_obj(), "blocks").get_int())
 				{
 					tfm::format(std::cout,"Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node3LastBlock);
-					MilliSleep(500);
+					UninterruptibleSleep(std::chrono::milliseconds(500));
 					continue;
 				}
 				node3Online = true;
 				node3LastBlock = 0;
 			}
-			MilliSleep(500);
+			UninterruptibleSleep(std::chrono::milliseconds(500));
 		}
 		catch (const runtime_error& error)
 		{
 			tfm::format(std::cout,"Waiting for %s to come online, trying again in 1 second...\n", dataDir.c_str());
-			MilliSleep(1000);
+			UninterruptibleSleep(std::chrono::milliseconds(1000));
 			continue;
 		}
 		break;
@@ -238,7 +238,7 @@ void StopNode(const string &dataDirIn, bool regtest) {
 	while (1)
 	{
 		try {
-			MilliSleep(1000);
+			UninterruptibleSleep(std::chrono::milliseconds(1000));
 			CallExtRPC(dataDir, "getblockchaininfo");
 		}
 		catch (const runtime_error& error)
@@ -343,7 +343,7 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 	BOOST_CHECK(newHeight >= targetHeight);
 	height = 0;
 	timeoutCounter = 0;
-	MilliSleep(10);
+	UninterruptibleSleep(std::chrono::milliseconds(10));
 	while (!otherNode1.empty() && height < newHeight)
 	{
 		try
@@ -365,7 +365,7 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 			tfm::format(std::cout,"Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
 			break;
 		}
-		MilliSleep(10);
+		UninterruptibleSleep(std::chrono::milliseconds(10));
 	}
 	if (!otherNode1.empty())
 		BOOST_CHECK(height >= targetHeight);
@@ -398,7 +398,7 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "generatetoaddress", sBlocks + ",\"" + newaddress + "\"", false));
 	height = 0;
 	timeoutCounter = 0;
-	MilliSleep(10);
+	UninterruptibleSleep(std::chrono::milliseconds(10));
 	while (!node.empty() && height < newHeight)
 	{
 		try
@@ -420,7 +420,7 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 			tfm::format(std::cout,"Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", node.c_str(), height, newHeight);
 			break;
 		}
-		MilliSleep(10);
+		UninterruptibleSleep(std::chrono::milliseconds(10));
 	}
 	if (!node.empty())
 		BOOST_CHECK(height >= newHeight);
@@ -447,7 +447,7 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 			tfm::format(std::cout,"Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
 			break;
 		}
-		MilliSleep(10);
+		UninterruptibleSleep(std::chrono::milliseconds(10));
 	}
 	if (!otherNode1.empty())
 		BOOST_CHECK(height >= newHeight);
@@ -474,7 +474,7 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 			tfm::format(std::cout,"Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode2.c_str(), height, newHeight);
 			break;
 		}
-		MilliSleep(10);
+		UninterruptibleSleep(std::chrono::milliseconds(10));
 	}
 	if (!otherNode2.empty())
 		BOOST_CHECK(height >= newHeight);
@@ -566,7 +566,7 @@ string GetNewFundedAddress(const string &nodeIn, string& txid) {
 }
 void SleepFor(const int& milliseconds, bool actualSleep) {
 	if (actualSleep)
-		MilliSleep(milliseconds);
+		UninterruptibleSleep(std::chrono::milliseconds(milliseconds));
 	float seconds = milliseconds / 1000;
 	BOOST_CHECK(seconds > 0);
 	UniValue r;
@@ -1106,7 +1106,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "decoderawtransaction", "\"" + hex_str + "\",true"));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 	if (usezdag) {
-		MilliSleep(100);
+		UninterruptibleSleep(std::chrono::milliseconds(100));
 	}
     else
         GenerateBlocks(1, node);
