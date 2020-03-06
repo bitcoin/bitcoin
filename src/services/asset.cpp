@@ -413,7 +413,7 @@ bool IsSyscoinTx(const int &nVersion){
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
 }
 #ifdef ENABLE_WALLET
-bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CWallet* const pwallet, const isminefilter* filter_ismine){
+bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, const CWallet* const pwallet, const isminefilter* filter_ismine){
     vector<vector<unsigned char> > vvch;
     bool found = false;
     if(IsSyscoinMintTx(rawTx.nVersion)){
@@ -440,7 +440,7 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
 }
 // TODO cleanup, this is to support disable-wallet build make sure to wrap around ENABLE_WALLET
 #ifdef ENABLE_WALLET
-bool SysTxToJSON(const CTransaction& tx, UniValue& output, CWallet* const pwallet, const isminefilter* filter_ismine)
+bool SysTxToJSON(const CTransaction& tx, UniValue& output, const CWallet* const pwallet, const isminefilter* filter_ismine)
 {
     bool found = false;
     if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)

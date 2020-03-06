@@ -2119,7 +2119,7 @@ bool AppInitMain(NodeContext& node)
     }, DUMP_BANS_INTERVAL * 1000);
 
     // SYSCOIN
-    MilliSleep(1000);
+    UninterruptibleSleep(std::chrono::milliseconds{1000});
     int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
     int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
     bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
