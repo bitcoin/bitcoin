@@ -86,9 +86,9 @@ private:
     mutable Mutex newTaskMutex;
     std::condition_variable newTaskScheduled;
     std::multimap<std::chrono::system_clock::time_point, Function> taskQueue GUARDED_BY(newTaskMutex);
-    int nThreadsServicingQueue GUARDED_BY(newTaskMutex);
-    bool stopRequested GUARDED_BY(newTaskMutex);
-    bool stopWhenEmpty GUARDED_BY(newTaskMutex);
+    int nThreadsServicingQueue GUARDED_BY(newTaskMutex){0};
+    bool stopRequested GUARDED_BY(newTaskMutex){false};
+    bool stopWhenEmpty GUARDED_BY(newTaskMutex){false};
     bool shouldStop() const EXCLUSIVE_LOCKS_REQUIRED(newTaskMutex) { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
 };
 

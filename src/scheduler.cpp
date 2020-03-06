@@ -9,13 +9,14 @@
 #include <assert.h>
 #include <utility>
 
-CScheduler::CScheduler() : nThreadsServicingQueue(0), stopRequested(false), stopWhenEmpty(false)
+CScheduler::CScheduler()
 {
 }
 
 CScheduler::~CScheduler()
 {
     assert(nThreadsServicingQueue == 0);
+    if (stopWhenEmpty) assert(taskQueue.empty());
 }
 
 
