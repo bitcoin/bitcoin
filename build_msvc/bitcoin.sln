@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.539
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoinconsensus", "libbitcoinconsensus\libbitcoinconsensus.vcxproj", "{2B384FA8-9EE1-4544-93CB-0D733C25E8CE}"
 EndProject
@@ -172,7 +172,6 @@ Global
 		{0B2D7431-F876-4A58-87BF-F748338CD3BF}.Release|x86.ActiveCfg = Release|Win32
 		{0B2D7431-F876-4A58-87BF-F748338CD3BF}.Release|x86.Build.0 = Release|Win32
 		{1125654E-E1B2-4431-8B5C-62EA9A2FEECB}.Debug|x64.ActiveCfg = Debug|x64
-		{1125654E-E1B2-4431-8B5C-62EA9A2FEECB}.Debug|x64.Build.0 = Debug|x64
 		{1125654E-E1B2-4431-8B5C-62EA9A2FEECB}.Debug|x86.ActiveCfg = Debug|Win32
 		{1125654E-E1B2-4431-8B5C-62EA9A2FEECB}.Debug|x86.Build.0 = Debug|Win32
 		{1125654E-E1B2-4431-8B5C-62EA9A2FEECB}.Release|x64.ActiveCfg = Release|x64
@@ -188,7 +187,6 @@ Global
 		{D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}.Release|x86.ActiveCfg = Release|Win32
 		{D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}.Release|x86.Build.0 = Release|Win32
 		{84DE8790-EDE3-4483-81AC-C32F15E861F4}.Debug|x64.ActiveCfg = Debug|x64
-		{84DE8790-EDE3-4483-81AC-C32F15E861F4}.Debug|x64.Build.0 = Debug|x64
 		{84DE8790-EDE3-4483-81AC-C32F15E861F4}.Debug|x86.ActiveCfg = Debug|Win32
 		{84DE8790-EDE3-4483-81AC-C32F15E861F4}.Debug|x86.Build.0 = Debug|Win32
 		{84DE8790-EDE3-4483-81AC-C32F15E861F4}.Release|x64.ActiveCfg = Release|x64
@@ -220,7 +218,6 @@ Global
 		{18430FEF-6B61-4C53-B396-718E02850F1B}.Release|x86.ActiveCfg = Release|Win32
 		{18430FEF-6B61-4C53-B396-718E02850F1B}.Release|x86.Build.0 = Release|Win32
 		{2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Debug|x64.ActiveCfg = Debug|x64
-		{2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Debug|x64.Build.0 = Debug|x64
 		{2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Debug|x86.ActiveCfg = Debug|Win32
 		{2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Debug|x86.Build.0 = Debug|Win32
 		{2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Release|x64.ActiveCfg = Release|x64
@@ -228,7 +225,6 @@ Global
 		{2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Release|x86.ActiveCfg = Release|Win32
 		{2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Release|x86.Build.0 = Release|Win32
 		{7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Debug|x64.ActiveCfg = Debug|x64
-		{7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Debug|x64.Build.0 = Debug|x64
 		{7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Debug|x86.ActiveCfg = Debug|Win32
 		{7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Debug|x86.Build.0 = Debug|Win32
 		{7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Release|x64.ActiveCfg = Release|x64
@@ -248,7 +244,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		        SolutionGuid = {8AA72EDA-2CD4-4564-B1E4-688B760EEEE9}
 		SolutionGuid = {A5303C40-20A0-4BB4-951E-AA80F059A14A}
+		        SolutionGuid = {8AA72EDA-2CD4-4564-B1E4-688B760EEEE9}
 	EndGlobalSection
 EndGlobal
