@@ -1262,6 +1262,9 @@ if test x$use_pkgconfig = xyes; then
       PKG_CHECK_MODULES([GRPC], [grpc++ protobuf],, [AC_MSG_ERROR(grpc++/protobuf not found.)])
       PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR(openssl not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto not found.)])
+      if test x$use_tests != xno; then
+        PKG_CHECK_MODULES([GMOCK], [gmock],,[AC_MSG_ERROR(gmock not found.)])
+      fi
       if test x$enable_bip70 != xno; then
         BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [have_protobuf=no])])
       fi
@@ -1299,6 +1302,11 @@ else
   AC_CHECK_LIB([crypto],[main],[GRPC_LIBS+=" -lcrypto"],AC_MSG_ERROR(crypto missing))
   AC_CHECK_LIB([protobuf],[main],[GRPC_LIBS+=" -lprotobuf"],AC_MSG_ERROR(protobuf missing))
   AC_CHECK_LIB([address_sorting],[main],[GRPC_LIBS+=" -laddress_sorting"],AC_MSG_ERROR(protobuf missing))
+
+  if test x$use_tests != xno; then
+    AC_CHECK_HEADER([gmock/gmock.h],,AC_MSG_ERROR(libgmock headers missing))
+    AC_CHECK_LIB([gmock],[main],[GMOCK_LIBS=" -lgmock"],AC_MSG_ERROR(libgmock missing))
+  fi
 
   AC_ARG_VAR(GRPC_LIBS, "linker flags for GRPC")
 

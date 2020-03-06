@@ -125,7 +125,8 @@ VBK_TESTS = \
   vbk/test/unit/vbk_merkle_tests.cpp \
   vbk/test/unit/vbk_net_processing_tests.cpp \
   vbk/test/unit/pop_interpreter_tests.cpp \
-  vbk/test/unit/block_validation_tests.cpp
+  vbk/test/unit/block_validation_tests.cpp \
+  vbk/test/unit/gmock_tests.cpp
   
 ### VeriBlock section end
 
@@ -240,7 +241,8 @@ test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
 endif
 
 test_test_bitcoin_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) \
-  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(GRPC_LIBS) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
+  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(GRPC_LIBS) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS) \
+  $(GMOCK_LIBS)
 test_test_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(FAKEIT_CXXFLAGS) -g -Og
 
 test_test_bitcoin_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(RAPIDCHECK_LIBS)

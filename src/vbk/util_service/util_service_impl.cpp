@@ -159,7 +159,7 @@ bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, cons
 
         auto p = cbpayouts.find(script);
         // coinbase pays correct reward?
-        if (p == rewards.end()) {
+        if (p == cbpayouts.end()) {
             // we expected payout for that address
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-pop-missing-payout",
                 strprintf("[tx: %s] missing payout for scriptPubKey: '%s' with amount: '%d'",

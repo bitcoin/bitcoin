@@ -3,9 +3,22 @@
   <Import Project="..\common.init.vcxproj" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{18430FEF-6B61-4C53-B396-718E02850F1B}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\leveldb\db\builder.cc" />
@@ -52,10 +65,10 @@
   </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-	 <PreprocessorDefinitions>_CRT_NONSTDC_NO_DEPRECATE;LEVELDB_PLATFORM_WINDOWS;LEVELDB_ATOMIC_PRESENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-	 <DisableSpecificWarnings>4244;4267;4312;</DisableSpecificWarnings>
-	 <AdditionalIncludeDirectories>..\..\src\leveldb;..\..\src\leveldb\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-	</ClCompile>
+      <PreprocessorDefinitions>_CRT_NONSTDC_NO_DEPRECATE;LEVELDB_PLATFORM_WINDOWS;LEVELDB_ATOMIC_PRESENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4244;4267;4312;</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>..\..\src\leveldb;..\..\src\leveldb\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
