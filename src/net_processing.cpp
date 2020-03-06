@@ -3175,9 +3175,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
             ProcessNewBlock(chainparams, pblock, true, &fNewBlock, &fSpamNode);
+
             if (fSpamNode) {
-                LogPrint(BCLog::NET, "node %d will get banned\n", pfrom->GetId());
+                Misbehaving(pfrom->GetId(), 100, strprintf("Peer %d sent us invalid stake\n", pfrom->GetId()));
+                return true;
             }
+
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
             } else {
@@ -3269,6 +3272,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // protections in the compact block handler -- see related comment
             // in compact block optimistic reconstruction handling.
             ProcessNewBlock(chainparams, pblock, true, &fNewBlock, &fSpamNode);
+
+            if (fSpamNode) {
+                Misbehaving(pfrom->GetId(), 100, strprintf("Peer %d sent us invalid stake\n", pfrom->GetId()));
+            }
+
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
             } else {
@@ -3331,6 +3339,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         bool fNewBlock = false;
         bool fSpamNode = false;
         ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock, &fSpamNode);
+
+        if (fSpamNode) {
+            Misbehaving(pfrom->GetId(), 100, strprintf("Peer %d sent us invalid stake\n", pfrom->GetId()));
+        }
+
         if (fNewBlock) {
             pfrom->nLastBlockTime = GetTime();
         } else {
