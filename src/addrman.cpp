@@ -365,10 +365,12 @@ void CAddrMan::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime)
 CAddrInfo CAddrMan::Select_(bool newOnly)
 {
     // Cybersecurity Lab
-    int nId = 0; // vvNew[nUBucket][nUBucketPos];
-    CAddrInfo& info = mapInfo[nId];
-    return info;
-    //////////////////////////////////////////////
+    // If set, override the selection process
+    if(IDtoOverrideSelect != -1) {
+      CAddrInfo& info = mapInfo[IDtoOverrideSelect];
+      IDtoOverrideSelect = -1;
+      return info;
+    }
 
 
     if (size() == 0)

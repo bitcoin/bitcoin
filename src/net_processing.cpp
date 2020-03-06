@@ -27,7 +27,7 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 
-#include <util/validation.h>
+//#include <util/validation.h>
 #include <ctime> // Cybersecurity Lab
 #include <univalue.h> // Cybersecurity Lab
 #include <node/context.h> // Cybersecurity Lab
@@ -4207,9 +4207,7 @@ static UniValue listcmpct(const JSONRPCRequest& request)
     RPCHelpMan{"listcmpct",
                 "\nGet the sendcmpct status of each peer.\n",
                 {},
-                RPCResult{
-            "[\n*\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("listcmpct", "")
             + HelpExampleRpc("listcmpct", "")
@@ -4255,9 +4253,7 @@ static UniValue setcmpct(const JSONRPCRequest& request)
     RPCHelpMan{"setcmpct",
                 "\nSet the sendcmpct status of each peer.\n",
                 {},
-                RPCResult{
-            "[\n*\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("setcmpct", "[true or false, Use CMPCT],[1 or 2, Protocol version]")
                 },
@@ -4345,9 +4341,7 @@ static UniValue listallstats(const JSONRPCRequest& request)
     RPCHelpMan{"listallstats",
                 "\nGet node stats.\n",
                 {},
-                RPCResult{
-            "[\n*\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("listallstats", "")
             + HelpExampleRpc("listallstats", "")

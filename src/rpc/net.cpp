@@ -1160,9 +1160,7 @@ static UniValue list(const JSONRPCRequest& request)
             RPCHelpMan{"list",
                 "\nGet the misbehavior score for each peer.\n",
                 {},
-                RPCResult{
-            "[\n*\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("list", "")
             + HelpExampleRpc("list", "")

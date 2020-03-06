@@ -2831,9 +2831,7 @@ UniValue connect(const JSONRPCRequest& request)
                   {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP Address"},
                   {"port", RPCArg::Type::STR, RPCArg::Optional::NO, "Port"},
                 },
-                RPCResult{
-            "[\n*\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("connect", "1.2.3.4 8333")
             + HelpExampleRpc("connect", "1.2.3.4 8333")
@@ -2896,9 +2894,7 @@ UniValue disconnect(const JSONRPCRequest& request)
                   {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP Address"},
                   {"port", RPCArg::Type::STR, RPCArg::Optional::NO, "Port"},
                 },
-                RPCResult{
-            "[\n*\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("disconnect", "1.2.3.4 8333")
             + HelpExampleRpc("disconnect", "1.2.3.4 8333")
@@ -2942,9 +2938,7 @@ UniValue bucketclear(const JSONRPCRequest& request)
             RPCHelpMan{"bucketclear",
                 "\nClear out the IP table.\n",
                 {},
-                RPCResult{
-            "[\n*\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("bucketclear", "")
             + HelpExampleRpc("bucketclear", "")
@@ -2971,9 +2965,7 @@ UniValue bucketadd(const JSONRPCRequest& request)
                   {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP Address"},
                   {"port", RPCArg::Type::STR, RPCArg::Optional::NO, "Port"},
                 },
-                RPCResult{
-            "[\n*\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("bucketadd", "1.2.3.4 8333")
             + HelpExampleRpc("bucketadd", "1.2.3.4 8333")
@@ -3012,9 +3004,7 @@ UniValue bucketremove(const JSONRPCRequest& request)
                   {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP Address"},
                   {"port", RPCArg::Type::STR, RPCArg::Optional::NO, "Port"},
                 },
-                RPCResult{
-            "[\n*\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("bucketremove", "1.2.3.4 8333")
             + HelpExampleRpc("bucketremove", "1.2.3.4 8333")
@@ -3052,9 +3042,7 @@ UniValue bucketgood(const JSONRPCRequest& request)
                   {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP Address"},
                   {"port", RPCArg::Type::STR, RPCArg::Optional::NO, "Port"},
                 },
-                RPCResult{
-            "[\n*\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("bucketgood", "1.2.3.4 8333")
             + HelpExampleRpc("bucketgood", "1.2.3.4 8333")
@@ -3089,11 +3077,7 @@ UniValue getmsginfo(const JSONRPCRequest& request)
             RPCHelpMan{"getmsginfo",
                 "\nList out the computer message info.\n",
                 {},
-                RPCResult{
-            "{\n"
-            "  \"x.x.x.x\": 0,\n"
-            "}\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("getmsginfo", "")
             + HelpExampleRpc("getmsginfo", "")
@@ -3142,9 +3126,7 @@ UniValue bucketinfo(const JSONRPCRequest& request)
             RPCHelpMan{"bucketinfo",
                 "\nList IP table info.\n",
                 {},
-                RPCResult{
-            "[\n*\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("bucketinfo", "")
             + HelpExampleRpc("bucketinfo", "")
@@ -3174,9 +3156,7 @@ UniValue bucketlist(const JSONRPCRequest& request)
                 {
                   {"new/tried/all", RPCArg::Type::STR, RPCArg::Optional::NO, "Which bucket category to list"},
                 },
-                RPCResult{
-            "[\n*\n"
-                },
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("bucketlist", "")
                     + HelpExampleCli("bucketlist", "all")
@@ -3200,6 +3180,46 @@ UniValue bucketlist(const JSONRPCRequest& request)
     return result;
 }
 
+
+
+// Cybersecurity Lab
+UniValue nextIPselect(const JSONRPCRequest& request)
+{
+  if (request.fHelp || request.params.size() != 2)
+      throw std::runtime_error(
+          RPCHelpMan{"nextIPselect",
+              "\nSet the next IP selection for connection, as opposed to nondeterministic random.\n",
+              {
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP Address"},
+                {"port", RPCArg::Type::STR, RPCArg::Optional::NO, "Port"},
+              },
+              RPCResults{},
+              RPCExamples{
+                  HelpExampleCli("nextIPselect", "1.2.3.4 8333")
+          + HelpExampleRpc("nextIPselect", "1.2.3.4 8333")
+              },
+          }.ToString());
+
+  if(!g_rpc_node->connman)
+      throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+  UniValue result(UniValue::VOBJ);
+
+  std::string ipAddress = request.params[0].get_str();
+  std::string portStr = request.params[1].get_str();
+
+  int port = 8333;
+  try {
+    port = std::stoi(portStr);
+  } catch(...) {
+    result.pushKV("Invalid port", port);
+    return result;
+  }
+  g_rpc_node->connman->_nextIPselect(result);
+  return result;
+}
+
+
 // Cybersecurity Lab
 // clang-format off
 static const CRPCCommand commands[] =
@@ -3213,6 +3233,7 @@ static const CRPCCommand commands[] =
   { "z Researcher",          "bucketadd",               &bucketadd,              {"address", "port"} },
   { "z Researcher",          "bucketremove",            &bucketremove,           {"address", "port"} },
   { "z Researcher",          "getmsginfo",              &getmsginfo,             {} },
+  { "z Researcher",          "nextIPselect",            &nextIPselect,           {"address", "port"} },
 };
 // clang-format on
 

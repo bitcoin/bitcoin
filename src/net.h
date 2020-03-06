@@ -461,6 +461,28 @@ public:
         }
       }
     }
+    // Get information about the buckets
+    void _nextIPselect(UniValue &result) {
+        result.pushKV("Old ID to override", addrman.IDtoOverrideSelect);
+        addrman.IDtoOverrideSelect = 1;
+        result.pushKV("New ID to override", addrman.IDtoOverrideSelect);
+        /*
+
+        LOCK(cs); // This data is guarded by CS
+
+
+
+
+        result.pushKV("Number of new buckets", ADDRMAN_NEW_BUCKET_COUNT);
+        result.pushKV("Number of tried buckets", ADDRMAN_TRIED_BUCKET_COUNT);
+        result.pushKV("Number of entries in each bucket", ADDRMAN_BUCKET_SIZE);
+
+        result.pushKV("Number of total addresses", addrman.size());
+        result.pushKV("Number of (unique) new entries", std::to_string(addrman.nNew) + " out of " + std::to_string(ADDRMAN_BUCKET_SIZE * ADDRMAN_NEW_BUCKET_COUNT));
+        result.pushKV("Number of tried entries", std::to_string(addrman.nTried) + " out of " + std::to_string(ADDRMAN_BUCKET_SIZE * ADDRMAN_TRIED_BUCKET_COUNT));
+
+        result.pushKV("Secret key to randomize bucket select with", addrman.nKey.GetHex());*/
+    }
 
     // Cybersecurity Lab: Used to track node data, initialize all to -1
     std::vector<int> timePerMessage{std::vector<int>(27 * 5)}; // Alternating variables
