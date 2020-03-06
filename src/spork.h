@@ -56,7 +56,7 @@ using namespace boost;
 #define SPORK_14_SYSTEMNODE_PAYMENT_ENFORCEMENT_DEFAULT       4070908800   //OFF
 #define SPORK_15_SYSTEMNODE_DONT_PAY_OLD_NODES_DEFAULT        4070908800   //OFF
 #define SPORK_16_DISCONNECT_OLD_NODES_DEFAULT                 4070908800   //OFF
-#define SPORK_17_NFT_TX_DEFAULT                               1582992203   //2020-2-29
+#define SPORK_17_NFT_TX_DEFAULT                               1585044000   //2020-3-24 10:00 AM UTC
     
 class CSporkMessage;
 class CSporkManager;
