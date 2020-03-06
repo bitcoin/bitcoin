@@ -709,11 +709,7 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     BlockValidationState state;
     if (!ActivateBestChain(state, chainparams)) {
-<<<<<<< HEAD
-        LogPrintf("\nFailed to connect best block (%s)\n", FormatStateMessage(state));
-=======
-        LogPrintf("Failed to connect best block (%s)\n", state.ToString());
->>>>>>> 3f826598a42dcc707b58224e94c394e30a42ceee
+        LogPrintf("\nFailed to connect best block (%s)\n", state.ToString());
         StartShutdown();
         return;
     }
@@ -1854,28 +1850,6 @@ bool AppInitMain(NodeContext& node)
         return false;
     }
 
-<<<<<<< HEAD
-    // Read asmap file if configured
-    if (gArgs.IsArgSet("-asmap")) {
-        std::string asmap_file = gArgs.GetArg("-asmap", "");
-        if (asmap_file.empty()) {
-            asmap_file = DEFAULT_ASMAP_FILENAME;
-        }
-        const fs::path asmap_path = GetDataDir() / asmap_file;
-        std::vector<bool> asmap = CAddrMan::DecodeAsmap(asmap_path);
-        if (asmap.size() == 0) {
-            InitError(strprintf(_("Could not find or parse specified asmap: '%s'").translated, asmap_path));
-            return false;
-        }
-        const uint256 asmap_version = SerializeHash(asmap);
-        node.connman->SetAsmap(std::move(asmap));
-        LogPrintf("\nUsing asmap version %s for IP bucketing.\n", asmap_version.ToString());
-    } else {
-        LogPrintf("\nUsing /16 prefix for IP bucketing.\n");
-    }
-
-=======
->>>>>>> 3f826598a42dcc707b58224e94c394e30a42ceee
     // ********************************************************* Step 13: finished
 
     SetRPCWarmupFinished();

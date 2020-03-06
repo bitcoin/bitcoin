@@ -2358,11 +2358,7 @@ void CChainState::ForceFlushStateToDisk() {
     BlockValidationState state;
     const CChainParams& chainparams = Params();
     if (!this->FlushStateToDisk(chainparams, state, FlushStateMode::ALWAYS)) {
-<<<<<<< HEAD
-        LogPrintf("\n%s: failed to flush state (%s)\n", __func__, FormatStateMessage(state));
-=======
-        LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
->>>>>>> 3f826598a42dcc707b58224e94c394e30a42ceee
+        LogPrintf("\n%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
 
@@ -2372,11 +2368,7 @@ void CChainState::PruneAndFlush() {
     const CChainParams& chainparams = Params();
 
     if (!this->FlushStateToDisk(chainparams, state, FlushStateMode::NONE)) {
-<<<<<<< HEAD
-        LogPrintf("\n%s: failed to flush state (%s)\n", __func__, FormatStateMessage(state));
-=======
-        LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
->>>>>>> 3f826598a42dcc707b58224e94c394e30a42ceee
+        LogPrintf("\n%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
 
@@ -3951,11 +3943,7 @@ void PruneBlockFilesManual(int nManualPruneHeight)
     const CChainParams& chainparams = Params();
     if (!::ChainstateActive().FlushStateToDisk(
             chainparams, state, FlushStateMode::NONE, nManualPruneHeight)) {
-<<<<<<< HEAD
-        LogPrintf("\n%s: failed to flush state (%s)\n", __func__, FormatStateMessage(state));
-=======
-        LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
->>>>>>> 3f826598a42dcc707b58224e94c394e30a42ceee
+        LogPrintf("\n%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
 
@@ -4530,11 +4518,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
 
         // Occasionally flush state to disk.
         if (!FlushStateToDisk(params, state, FlushStateMode::PERIODIC)) {
-<<<<<<< HEAD
-            LogPrintf("\nRewindBlockIndex: unable to flush state to disk (%s)\n", FormatStateMessage(state));
-=======
-            LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
->>>>>>> 3f826598a42dcc707b58224e94c394e30a42ceee
+            LogPrintf("\nRewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
             return false;
         }
     }
@@ -4565,11 +4549,7 @@ bool RewindBlockIndex(const CChainParams& params) {
         // it'll get called a bunch real soon.
         BlockValidationState state;
         if (!::ChainstateActive().FlushStateToDisk(params, state, FlushStateMode::ALWAYS)) {
-<<<<<<< HEAD
-            LogPrintf("\nRewindBlockIndex: unable to flush state to disk (%s)\n", FormatStateMessage(state));
-=======
-            LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
->>>>>>> 3f826598a42dcc707b58224e94c394e30a42ceee
+            LogPrintf("\nRewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
             return false;
         }
     }

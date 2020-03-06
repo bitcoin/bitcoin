@@ -26,7 +26,7 @@
 #include <txmempool.h>
 #include <util/system.h>
 #include <util/strencodings.h>
-<<<<<<< HEAD
+
 #include <util/validation.h>
 #include <ctime> // Cybersecurity Lab
 #include <univalue.h> // Cybersecurity Lab
@@ -35,8 +35,6 @@
 #include <rpc/server.h> // Cybersecurity Lab
 #include <rpc/protocol.h> // Cybersecurity Lab
 #include <rpc/util.h> // Cybersecurity Lab
-=======
->>>>>>> 3f826598a42dcc707b58224e94c394e30a42ceee
 
 #include <memory>
 #include <typeinfo>
@@ -2621,16 +2619,9 @@ bool static _ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataSt
                 // if they were already in the mempool,
                 // allowing the node to function as a gateway for
                 // nodes hidden behind it.
-<<<<<<< HEAD
-                //
-                // Never relay transactions that might result in being
-                // disconnected (or banned).
-                if (state.IsInvalid() && TxRelayMayResultInDisconnect(state)) {
-                    LogPrintf("\nNot relaying invalid transaction %s from whitelisted peer=%d (%s)\n", tx.GetHash().ToString(), pfrom->GetId(), FormatStateMessage(state));
-=======
+
                 if (!mempool.exists(tx.GetHash())) {
-                    LogPrintf("Not relaying non-mempool transaction %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->GetId());
->>>>>>> 3f826598a42dcc707b58224e94c394e30a42ceee
+                    LogPrintf("\nNot relaying non-mempool transaction %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->GetId());
                 } else {
                     LogPrintf("\nForce relaying tx %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->GetId());
                     RelayTransaction(tx.GetHash(), *connman);
