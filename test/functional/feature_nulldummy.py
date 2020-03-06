@@ -41,7 +41,10 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         # This script tests NULLDUMMY activation, which is part of the 'segwit' deployment, so we go through
         # normal segwit activation here (and don't use the default always-on behaviour).
-        self.extra_args = [['-whitelist=127.0.0.1', '-segwitheight=432', '-addresstype=legacy']]
+        self.extra_args = [[
+            '-segwitheight=432',
+            '-addresstype=legacy',
+        ]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

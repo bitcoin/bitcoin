@@ -424,13 +424,18 @@ public:
         return first;
     }
 
-    void push_back(const T& value) {
+    template<typename... Args>
+    void emplace_back(Args&&... args) {
         size_type new_size = size() + 1;
         if (capacity() < new_size) {
             change_capacity(new_size + (new_size >> 1));
         }
-        new(item_ptr(size())) T(value);
+        new(item_ptr(size())) T(std::forward<Args>(args)...);
         _size++;
+    }
+
+    void push_back(const T& value) {
+        emplace_back(value);
     }
 
     void pop_back() {

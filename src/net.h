@@ -339,6 +339,7 @@ public:
 
 
     // Cybersecurity Lab
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     CNode* ipconnect(std::string ip, int port, std::string source = "192.168.0.250:8333") {
       CNetAddr src;
       char* source_c = const_cast<char*>(source.c_str());
@@ -347,7 +348,7 @@ public:
         if(Lookup(ip.c_str(), serv, port, false)) {
           CAddress addrConnect = CAddress(serv, NODE_NONE);
           bool fCountFailure = false;
-          bool manual_connection = true;
+          bool manual_connection = false; //true;
           bool block_relay_only = false;
 
           CNode* pnode = ConnectNode(addrConnect, source_c, fCountFailure, manual_connection, block_relay_only);
@@ -732,9 +733,9 @@ public:
     mapMsgCmdSize mapRecvBytesPerMsgCmd;
     NetPermissionFlags m_permissionFlags;
     bool m_legacyWhitelisted;
-    double dPingTime;
-    double dPingWait;
-    double dMinPing;
+    int64_t m_ping_usec;
+    int64_t m_ping_wait_usec;
+    int64_t m_min_ping_usec;
     CAmount minFeeFilter;
     // Our address, as reported by the peer
     std::string addrLocal;
@@ -839,12 +840,27 @@ public:
     CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) override;
 };
 
+/** The TransportSerializer prepares messages for the network transport
+ */
+class TransportSerializer {
+public:
+    // prepare message for transport (header construction, error-correction computation, payload encryption, etc.)
+    virtual void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) = 0;
+    virtual ~TransportSerializer() {}
+};
+
+class V1TransportSerializer  : public TransportSerializer {
+public:
+    void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) override;
+};
+
 /** Information about a peer */
 class CNode
 {
     friend class CConnman;
 public:
     std::unique_ptr<TransportDeserializer> m_deserializer;
+    std::unique_ptr<TransportSerializer> m_serializer;
 
     // socket
     std::atomic<ServiceFlags> nServices{NODE_NONE};
