@@ -26,6 +26,7 @@
 #include <txmempool.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+<<<<<<< HEAD
 #include <util/validation.h>
 #include <ctime> // Cybersecurity Lab
 #include <univalue.h> // Cybersecurity Lab
@@ -34,6 +35,8 @@
 #include <rpc/server.h> // Cybersecurity Lab
 #include <rpc/protocol.h> // Cybersecurity Lab
 #include <rpc/util.h> // Cybersecurity Lab
+=======
+>>>>>>> 3f826598a42dcc707b58224e94c394e30a42ceee
 
 #include <memory>
 #include <typeinfo>
@@ -997,15 +1000,6 @@ void Misbehaving(NodeId pnode, int howmuch, const std::string& message) EXCLUSIV
 }
 
 /**
- * Returns true if the given validation state result may result in a peer
- * banning/disconnecting us. We use this to determine which unaccepted
- * transactions from a whitelisted peer that we can safely relay.
- */
-static bool TxRelayMayResultInDisconnect(const TxValidationState& state) {
-    return state.GetResult() == TxValidationResult::TX_CONSENSUS;
-}
-
-/**
  * Potentially ban a node based on the contents of a BlockValidationState object
  *
  * @param[in] via_compact_block this bool is passed in because net_processing should
@@ -1074,10 +1068,9 @@ static bool MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& s
  * Potentially ban a node based on the contents of a TxValidationState object
  *
  * @return Returns true if the peer was punished (probably disconnected)
- *
- * Changes here may need to be reflected in TxRelayMayResultInDisconnect().
  */
-static bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message = "") {
+static bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message = "")
+{
     switch (state.GetResult()) {
     case TxValidationResult::TX_RESULT_UNSET:
         break;
@@ -1103,11 +1096,6 @@ static bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, 
     }
     return false;
 }
-
-
-
-
-
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1457,7 +1445,7 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
     if (need_activate_chain) {
         BlockValidationState state;
         if (!ActivateBestChain(state, Params(), a_recent_block)) {
-            LogPrint(BCLog::NET, "failed to activate chain (%s)\n", FormatStateMessage(state));
+            LogPrint(BCLog::NET, "failed to activate chain (%s)\n", state.ToString());
         }
     }
 
@@ -2372,7 +2360,7 @@ bool static _ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataSt
             }
             BlockValidationState state;
             if (!ActivateBestChain(state, Params(), a_recent_block)) {
-                LogPrint(BCLog::NET, "failed to activate chain (%s)\n", FormatStateMessage(state));
+                LogPrint(BCLog::NET, "failed to activate chain (%s)\n", state.ToString());
             }
         }
 
@@ -2630,14 +2618,19 @@ bool static _ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataSt
 
             if (pfrom->HasPermission(PF_FORCERELAY)) {
                 // Always relay transactions received from whitelisted peers, even
-                // if they were already in the mempool or rejected from it due
-                // to policy, allowing the node to function as a gateway for
+                // if they were already in the mempool,
+                // allowing the node to function as a gateway for
                 // nodes hidden behind it.
+<<<<<<< HEAD
                 //
                 // Never relay transactions that might result in being
                 // disconnected (or banned).
                 if (state.IsInvalid() && TxRelayMayResultInDisconnect(state)) {
                     LogPrintf("\nNot relaying invalid transaction %s from whitelisted peer=%d (%s)\n", tx.GetHash().ToString(), pfrom->GetId(), FormatStateMessage(state));
+=======
+                if (!mempool.exists(tx.GetHash())) {
+                    LogPrintf("Not relaying non-mempool transaction %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->GetId());
+>>>>>>> 3f826598a42dcc707b58224e94c394e30a42ceee
                 } else {
                     LogPrintf("\nForce relaying tx %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->GetId());
                     RelayTransaction(tx.GetHash(), *connman);
@@ -2669,7 +2662,7 @@ bool static _ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataSt
         {
             LogPrint(BCLog::MEMPOOLREJ, "%s from peer=%d was not accepted: %s\n", tx.GetHash().ToString(),
                 pfrom->GetId(),
-                FormatStateMessage(state));
+                state.ToString());
             MaybePunishNodeForTx(pfrom->GetId(), state);
         }
         return true;
