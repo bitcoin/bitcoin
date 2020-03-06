@@ -258,12 +258,6 @@
 /* Define if the visibility attribute is supported. */
 #define HAVE_VISIBILITY_ATTRIBUTE 1
 
-/* Define this symbol if boost sleep works */
-/* #undef HAVE_WORKING_BOOST_SLEEP */
-
-/* Define this symbol if boost sleep_for works */
-#define HAVE_WORKING_BOOST_SLEEP_FOR 1
-
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #define LT_OBJDIR ".libs/"
 
