@@ -17,7 +17,6 @@ struct CCoinsStats
 {
     int nHeight{0};
     uint256 hashBlock{};
-    uint64_t nTransactions{0};
     uint64_t nTransactionOutputs{0};
     uint64_t nBogoSize{0};
     uint256 hashSerialized{};
