@@ -3176,7 +3176,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // reconstructed compact blocks as having been requested.
             ProcessNewBlock(chainparams, pblock, true, &fNewBlock, &fSpamNode);
             if (fSpamNode) {
-                LogPrintf("node %d will get banned\n", pfrom->GetId());
+                LogPrint(BCLog::NET, "node %d will get banned\n", pfrom->GetId());
             }
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
