@@ -212,7 +212,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     for(auto &txid:txsToRemove){
          LogPrintf("CreateNewBlock() txsToRemove size %d txid %s\n", txsToRemove.size(), txid.GetHex().c_str());
     }
-    // Do the sanity block check and report back, conflicting input set, non-existent input check or problematic syscoin tx check (balance overflows). 
+    // Do the sanity block check and report back, conflicting input set, non-existent input check or problematic syscoin tx check. 
     // If problem, remove transactions based on policy for each of the cases and try creating block without it to remove the bottleneck
     if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false, &txMissingInput, &syscoinTxFailed)) {
         if(txMissingInput.IsNull() && syscoinTxFailed.IsNull())
@@ -235,15 +235,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                 mempool.removeRecursive(txMissingInput, MemPoolRemovalReason::CONFLICT);
             }
         }
-        // find which sender fails, get the first tx from that sender in this block, look for other txs of that sender in the block and ensure they are in order of time (so only in conflict you order by time otherwise order by fee/dependency).
-        // If tx is newer than any other sender tx, remove tx. If no senders found then remove tx (for next block).
-        // This avoids someone from bumping fee and causing balance overflows. Bumping fee is allowed if you are using CPFP or using another input but balances won’t overflow by paying higher fee because CPFP will ensure everything is in order
-        // Either way miner should remove it if its invalid. If not allocation tx just remove and try again (so blocks keep moving)
         if(!syscoinTxFailed.IsNull()) {
             LogPrintf("CreateNewBlock(): TestBlockValidity syscoinTxFailed\n");
-            // loop through all txs of block in order, find first one that matches sender, then continue to ensure the first sender is earliest by time, if not remove
-            // if not found another one also remove
-            // if order is all correct just remove syscoinTxFailed as the culprit transaction if syscoinTxFailed is not the same as the case above where sender wasn't found in another tx
             txsToRemove.insert(syscoinTxFailed.GetHash());
         }
     }
