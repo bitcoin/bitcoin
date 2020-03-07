@@ -23,6 +23,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <uint256.h>
+#include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/time.h>
@@ -76,11 +77,19 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)DecompressAmount(u64);
     (void)FormatISO8601Date(i64);
     (void)FormatISO8601DateTime(i64);
+    // FormatMoney(i) not defined when i == std::numeric_limits<int64_t>::min()
+    if (i64 != std::numeric_limits<int64_t>::min()) {
+        int64_t parsed_money;
+        if (ParseMoney(FormatMoney(i64), parsed_money)) {
+            assert(parsed_money == i64);
+        }
+    }
     (void)GetSizeOfCompactSize(u64);
     (void)GetSpecialScriptSize(u32);
     // (void)GetVirtualTransactionSize(i64, i64); // function defined only for a subset of int64_t inputs
     // (void)GetVirtualTransactionSize(i64, i64, u32); // function defined only for a subset of int64_t/uint32_t inputs
     (void)HexDigit(ch);
+    (void)MoneyRange(i64);
     (void)i64tostr(i64);
     (void)IsDigit(ch);
     (void)IsSpace(ch);
@@ -106,6 +115,14 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)SipHashUint256(u64, u64, u256);
     (void)SipHashUint256Extra(u64, u64, u256, u32);
     (void)ToLower(ch);
+    (void)ToUpper(ch);
+    // ValueFromAmount(i) not defined when i == std::numeric_limits<int64_t>::min()
+    if (i64 != std::numeric_limits<int64_t>::min()) {
+        int64_t parsed_money;
+        if (ParseMoney(ValueFromAmount(i64).getValStr(), parsed_money)) {
+            assert(parsed_money == i64);
+        }
+    }
 
     const arith_uint256 au256 = UintToArith256(u256);
     assert(ArithToUint256(au256) == u256);
