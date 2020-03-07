@@ -1,24 +1,33 @@
 from scapy.all import *
 a = " "
-#os.system("tshark  -T fields  -e frame.time -e  data.data -w bitcoin.pcap > Eavesdrop_Data.txt -F pcap -c 1000")
-#os.system("tcpdump -i enp0s3 -w bitcoin.pcap")
 
-src = "10.0.2.15"
-dst = "10.0.2.7"
-sport = " "
-dport = " "
-seq = 0
+src = "10.0.2.11"
+dst = "10.0.2.12"
+sport = 11111 #random.randint(1024,65535)
+dport = 8333
+seq = 3587496741#random.randint(1587496741,9587496741)
 ack = 0
 pld_VERSION = '\xf9\xbe\xb4\xd9version\x00\x00\x00\x00\x00\x00\x00\x00\x00]\xf6\xe0\xe2'
+
+#SYN
 ip = IP(src = src, dst = dst)
-#SYN = TCP(sport=sport, dport=dport, flags='S', seq = 1000)
-#send(ip/SYN)
+SYN = TCP(sport=sport, dport=dport, flags='S', seq = seq)
+##send(ip/SYN)
+SYNACK = sr1(ip/SYN)
 
-#SYNACK = sr1(ip/SYN)
 
-#ACK = TCP(sport=sport, dport=dport, flags='A', seq=SYNACK.ack, ack=SYNACK.seq+1)
-#send(ip/ACK)
+#SYN-ACK
+ACK = TCP(sport=sport, dport=dport, flags='A', seq=SYNACK.ack, ack=SYNACK.seq+1)
+send(ip/ACK)
+#FINACK=sr1(ip/ACK)
+'''
+#Bitcoin version
+#tcp = TCP(sport=sport, dport=dport, flags='PA', seq=FINACK.ack, ack=FINACK.seq+1)
+tcp = TCP(sport=sport, dport=dport, flags='PA', seq=ACK.seq+1, ack=ACK.ack)
+VERACK = sr1(ip/tcp/pld_VERSION)
+'''
 
+'''
 def pkt_callback(pkt):
     src = "10.0.2.12"
     dst = "10.0.2.7"
@@ -70,3 +79,4 @@ def pkt_callback(pkt):
        
 
 sniff(iface="enp0s3",prn=pkt_callback, filter="tcp", store=1)
+'''

