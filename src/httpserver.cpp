@@ -317,6 +317,9 @@ my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t
             case EVUTIL_EAI_SYSTEM:
                 LogPrintf("libevent: getaddrinfo\n");
                 break;
+            case EVUTIL_EAI_NODATA:
+                LogPrintf("evutil_getaddrinfo doesn't support IPv6; cannot bind %s:%d\n", address, port);
+                [[fallthrough]];
             case EVUTIL_EAI_ADDRFAMILY:
             case EVUTIL_EAI_FAMILY:
             case EVUTIL_EAI_SOCKTYPE:
