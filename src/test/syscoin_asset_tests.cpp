@@ -1822,6 +1822,9 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 	for (int i = 0; i <= 8; i++) {
 		string istr = itostr(i);
 		string addressName = GetNewFundedAddress("node1");
+        string addressName1 = GetNewFundedAddress("node1");
+        string addressName2 = GetNewFundedAddress("node1");
+        string addressName3 = GetNewFundedAddress("node1");
 		// test max supply for every possible precision
 		
 		UniValue negonevalue(UniValue::VSTR);
@@ -1850,13 +1853,13 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
         hexStr = find_value(r.get_obj(), "hex").get_str();
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""));
 
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew","\"" + addressName + "\",\"sysx\",\"pub\",\"''\"," + istr + ",1," + maxstrnew + ",31,{},\"''\""));
+        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew","\"" + addressName1 + "\",\"sysx\",\"pub\",\"''\"," + istr + ",1," + maxstrnew + ",31,{},\"''\""));
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
         hexStr = find_value(r.get_obj(), "hex").get_str();
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""));
 
         // will try to use 0 for total supply + balance
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew","\"" + addressName + "\",\"syse\",\"pub\",\"''\"," + istr + "," + maxstrplusone + "," + maxstrnew + ",31,{},\"''\""));
+        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew","\"" + addressName2 + "\",\"syse\",\"pub\",\"''\"," + istr + "," + maxstrplusone + "," + maxstrnew + ",31,{},\"''\""));
         string guidZero = itostr(find_value(r.get_obj(), "asset_guid").get_uint());
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
         hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -1865,7 +1868,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
         GenerateBlocks(1);
 
 
-		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew" , "\"" + addressName + "\",\"syst\",\"pub\",\"''\"," + istr + ",1," + maxstrplusone + ",31,{},\"''\""));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew" , "\"" + addressName3 + "\",\"syst\",\"pub\",\"''\"," + istr + ",1," + maxstrplusone + ",31,{},\"''\""));
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
         hexStr = find_value(r.get_obj(), "hex").get_str();
         BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);

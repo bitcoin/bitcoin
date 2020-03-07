@@ -355,6 +355,20 @@ bool FlushSyscoinDBs() {
      }
 	return ret;
 }
+COutPoint FindAssetOwnerOutPoint(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress &witnessAddressToMatch) {
+	CTxDestination dest;
+	int witnessversion;
+	std::vector<unsigned char> witnessprogram;
+	for (unsigned int i = 0; i < tx.vin.size(); i++) {
+		const Coin& prevCoins = inputs.AccessCoin(tx.vin[i].prevout);
+		if (prevCoins.IsSpent() || prevCoins.IsCoinBase()) {
+			continue;
+		}
+		if (prevCoins.out.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram) && witnessAddressToMatch.vchWitnessProgram == witnessprogram && witnessAddressToMatch.nVersion == (unsigned char)witnessversion)
+			return tx.vin[i].prevout;
+	}
+	return COutPoint();
+}
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress &witnessAddressToMatch) {
 	CTxDestination dest;
 	int witnessversion;
@@ -369,6 +383,7 @@ bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, c
 	}
 	return false;
 }
+
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress &witnessAddressToMatch, const COutPoint& lockedOutpoint) {
     if (lockedOutpoint.IsNull()){
 		return FindAssetOwnerInTx(inputs, tx, witnessAddressToMatch);
@@ -459,21 +474,11 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
         found = AssetAllocationTxToJSON(tx, output);
     return found;
 }
-int GenerateSyscoinGuid(const CWitnessAddress& witnessAddress, const int& nHeight)
+int32_t GenerateSyscoinGuid(const COutPoint& outPoint)
 {
-    uint64_t low64 = 0;
-    if(witnessAddress.nVersion == 0){
-        if (witnessAddress.vchWitnessProgram.size() == WITNESS_V0_KEYHASH_SIZE) {
-            low64 = WitnessV0KeyHash(witnessAddress.vchWitnessProgram).GetUint64(0);
-        }
-        else if (witnessAddress.vchWitnessProgram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
-            low64 = WitnessV0ScriptHash(witnessAddress.vchWitnessProgram).GetUint64(0);
-        }
-        else
-            return -1;
-    }
-    int32_t low32 = (int32_t)low64;
-    low32 += nHeight;
+    const arith_uint256 &txidArith = UintToArith256(outPoint.hash);
+    int32_t low32 = (int32_t)txidArith.GetLow64();
+    low32 += outPoint.n;
     if(low32 < 0){
         low32 *= -1;
     }

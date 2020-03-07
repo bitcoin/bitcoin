@@ -397,7 +397,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     UniValue res = syscointxfund_helper(pwallet, strAddressFrom, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION, "", vecSend);
     return res;
 }
-
 UniValue assetnew(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -474,7 +473,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     // calculate net
     // build asset object
     CAsset newAsset;
-    newAsset.nAsset = GenerateSyscoinGuid(witnessAddress, ChainActive().Tip()->nHeight);
+    newAsset.nAsset = 0;
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
     UniValue feesStructArr = find_value(params[8].get_obj(), "fee_struct");
@@ -490,16 +489,11 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.nMaxSupply = nMaxSupply;
     newAsset.nPrecision = precision;
     newAsset.nUpdateFlags = nUpdateFlags;
-    newAsset.nHeight = ChainActive().Tip()->nHeight;
     vector<unsigned char> data;
     newAsset.Serialize(data);
-    
 
     // use the script pub key to create the vecsend which sendmoney takes and puts it into vout
     vector<CRecipient> vecSend;
-
-
-
     CScript scriptData;
     scriptData << OP_RETURN << data;
     CRecipient fee;
@@ -509,7 +503,44 @@ UniValue assetnew(const JSONRPCRequest& request) {
         fee.nAmount += 500*COIN;
     }
     vecSend.push_back(fee);
+    std::vector<CTxIn> savedtxinsCopy;
+    // save copy of txins for tps test
+    if(fTPSTest && fTPSTestEnabled)
+        savedtxinsCopy = savedtxins;
+    // two rounds one to get input to determine the right asset guid and second to do the real tx
     UniValue res = syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ASSET_ACTIVATE, vchWitness, vecSend);
+    // replace copy because savedtxins is mutated
+    if(fTPSTest && fTPSTestEnabled)
+        savedtxins =  savedtxinsCopy;
+    const UniValue& resHex = find_value(res.get_obj(), "hex");
+    const std::string& strHex = resHex.get_str();
+    CMutableTransaction txIn;
+    // decode as non-witness
+    if (!DecodeHexTx(txIn, strHex, true, false))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not send raw transaction: Cannot decode transaction from hex string: " + strHex);
+    CTransaction txIn_t(txIn);
+    COutPoint inputOutPoint;
+    {
+        LOCK(cs_main);
+        inputOutPoint = FindAssetOwnerOutPoint(::ChainstateActive().CoinsTip(), txIn_t, witnessAddress);
+    }
+    if(inputOutPoint.IsNull()){
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "No input found to fund this transaction");
+    }
+    data.clear();
+    vecSend.clear();
+    // generate deterministic guid based on input txid
+    newAsset.nAsset = GenerateSyscoinGuid(inputOutPoint);
+    newAsset.Serialize(data);
+    scriptData.clear();
+    scriptData << OP_RETURN << data;
+    CreateFeeRecipient(scriptData, fee);
+    if(!fUnitTest){
+        // 500 SYS fee for new asset
+        fee.nAmount += 500*COIN;
+    }
+    vecSend.push_back(fee);
+    res = syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ASSET_ACTIVATE, vchWitness, vecSend);
     res.__pushKV("asset_guid", newAsset.nAsset);
     return res;
 }

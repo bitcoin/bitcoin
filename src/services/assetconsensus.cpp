@@ -1275,10 +1275,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-address", bSanityCheck);
             }
-            if ( /*nHeight >= Params().GetConsensus().nBridgeStartBlock && */theAsset.nAsset != GenerateSyscoinGuid(theAsset.witnessAddress, theAsset.nHeight))
-            {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-guid", bSanityCheck);
-            }
             if(theAsset.nUpdateFlags > ASSET_UPDATE_ALL){
                 return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
             } 
@@ -1495,10 +1491,15 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     }
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE)
     {
-        if (!FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
+        const COutPoint& inputOutPoint = FindAssetOwnerOutPoint(inputs, tx, storedSenderAssetRef.witnessAddress);
+        if (inputOutPoint.IsNull())
         {
              return FormatSyscoinErrorMessage(state, "asset-invalid-sender", bSanityCheck);
-        }          
+        } 
+        if ( /*nHeight >= Params().GetConsensus().nBridgeStartBlock && */storedSenderAssetRef.nAsset != GenerateSyscoinGuid(inputOutPoint))
+        {
+            return FormatSyscoinErrorMessage(state, "asset-invalid-guid", bSanityCheck);
+        }         
         // starting supply is the supplied balance upon init
         storedSenderAssetRef.nTotalSupply = storedSenderAssetRef.nBalance;
     }
