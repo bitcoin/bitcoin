@@ -58,13 +58,14 @@ bool IsOutpointMature(const COutPoint& outpoint);
 bool FlushSyscoinDBs();
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress& witnessAddressToMatch);
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress& witnessAddressToMatch, const COutPoint& lockedOutpoint);
+COutPoint FindAssetOwnerOutPoint(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress &witnessAddressToMatch);
 bool IsAssetAllocationTx(const int &nVersion);
 bool IsZdagTx(const int &nVersion);
 bool IsSyscoinTx(const int &nVersion);
 bool IsAssetTx(const int &nVersion);
 bool IsSyscoinMintTx(const int &nVersion);
 CAmount getaddressbalance(const std::string& strAddress);
-int GenerateSyscoinGuid(const CWitnessAddress& witnessAddress, const int& nHeight);
+int32_t GenerateSyscoinGuid(const COutPoint& outPoint);
 
 
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry);
