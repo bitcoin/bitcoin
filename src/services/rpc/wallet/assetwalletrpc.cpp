@@ -474,7 +474,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     // calculate net
     // build asset object
     CAsset newAsset;
-    newAsset.nAsset = GenerateSyscoinGuid();
+    newAsset.nAsset = GenerateSyscoinGuid(witnessAddress, ChainActive().Tip()->nHeight);
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
     UniValue feesStructArr = find_value(params[8].get_obj(), "fee_struct");
@@ -490,6 +490,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.nMaxSupply = nMaxSupply;
     newAsset.nPrecision = precision;
     newAsset.nUpdateFlags = nUpdateFlags;
+    newAsset.nHeight = ChainActive().Tip()->nHeight;
     vector<unsigned char> data;
     newAsset.Serialize(data);
     

@@ -64,7 +64,7 @@ bool IsSyscoinTx(const int &nVersion);
 bool IsAssetTx(const int &nVersion);
 bool IsSyscoinMintTx(const int &nVersion);
 CAmount getaddressbalance(const std::string& strAddress);
-int GenerateSyscoinGuid();
+int GenerateSyscoinGuid(const CWitnessAddress& witnessAddress, const int& nHeight);
 
 
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry);

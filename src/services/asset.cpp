@@ -459,12 +459,28 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
         found = AssetAllocationTxToJSON(tx, output);
     return found;
 }
-int GenerateSyscoinGuid()
+int GenerateSyscoinGuid(const CWitnessAddress& witnessAddress, const int& nHeight)
 {
-    int rand = 0;
-    while(rand <= SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
-	    rand = GetRand(std::numeric_limits<int>::max());
-    return rand;
+    uint64_t low64 = 0;
+    if(witnessAddress.nVersion == 0){
+        if (witnessAddress.vchWitnessProgram.size() == WITNESS_V0_KEYHASH_SIZE) {
+            low64 = WitnessV0KeyHash(witnessAddress.vchWitnessProgram).GetUint64(0);
+        }
+        else if (witnessAddress.vchWitnessProgram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
+            low64 = WitnessV0ScriptHash(witnessAddress.vchWitnessProgram).GetUint64(0);
+        }
+        else
+            return -1;
+    }
+    int32_t low32 = (int32_t)low64;
+    low32 += nHeight;
+    if(low32 < 0){
+        low32 *= -1;
+    }
+    if(low32 <= SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN*10){
+        low32 = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN*10;
+    }
+    return low32;
 }
 
 bool IsOutpointMature(const COutPoint& outpoint)
