@@ -2316,17 +2316,19 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             }
             control.Add(vChecks);
             // SYSCOIN
-            if(IsSyscoinTx(tx.nVersion)){
-                TxValidationState tx_state;
-                // just temp var not used in !fJustCheck mode
-                AssetBalanceMap mapAssetAllocationBalances;
-                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssetAllocations, mapAssetAllocationBalances, mapAssets, vecMintKeys, vecLockedOutpoints)){
-                    if(syscoinTxFailed != nullptr)
-                        *syscoinTxFailed = tx;
-                    // Any transaction validation failure in ConnectBlock is a block consensus failure
-                    state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
-                                tx_state.GetRejectReason(), tx_state.GetDebugMessage());
-                    return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
+            if(::ChainActive().Contains(pindex->pprev)){
+                if(IsSyscoinTx(tx.nVersion)){
+                    TxValidationState tx_state;
+                    // just temp var not used in !fJustCheck mode
+                    AssetBalanceMap mapAssetAllocationBalances;
+                    if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssetAllocations, mapAssetAllocationBalances, mapAssets, vecMintKeys, vecLockedOutpoints)){
+                        if(syscoinTxFailed != nullptr)
+                            *syscoinTxFailed = tx;
+                        // Any transaction validation failure in ConnectBlock is a block consensus failure
+                        state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
+                                    tx_state.GetRejectReason(), tx_state.GetDebugMessage());
+                        return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
+                    }
                 }
             }
         }
