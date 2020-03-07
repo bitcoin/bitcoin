@@ -9,15 +9,15 @@
 /**
  * network protocol versioning
  */
-static const int PROTOCOL_VERSION = 70057;
+static const int PROTOCOL_VERSION = 70059;
 static const int PROTOCOL_POS_START = 70057;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
 
 //! disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION_PREV = 70057;
-static const int MIN_PEER_PROTO_VERSION_CURR = 70057;
+static const int MIN_PEER_PROTO_VERSION_PREV = 70058;
+static const int MIN_PEER_PROTO_VERSION_CURR = 70059;
 
 //! minimum peer version accepted by legacySigner
 static const int MIN_POOL_PEER_PROTO_VERSION = 70057;
@@ -35,13 +35,13 @@ static const int MIN_MNW_PING_VERSION = 70057;
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
 static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_PREV = 70057;
-static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_CURR = 70057;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_CURR = 70058;
 
 //! minimum peer version that can receive systemnode payments
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
 static const int MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_PREV = 70057;
-static const int MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_CURR = 70057;
+static const int MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_CURR = 70058;
 
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this

@@ -1,0 +1,15 @@
+{
+  "devnet":{
+    "name": "devnet-name"
+  },
+
+  "nodes": {
+    "seed": { "seed": true, "addnodes": ["miner", "wallet", "percival", "lancelot"] },
+    "miner": { "generate": true, "send_to": "wallet" },
+
+    "percival": { },
+    "lancelot": { },
+
+    "wallet": { "masternodes": ["percival", "lancelot"] }
+  }
+}

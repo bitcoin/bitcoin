@@ -1,0 +1,59 @@
+add_executable(crown_test
+  arith_uint256_tests.cpp 
+  bignum.h 
+  alert_tests.cpp 
+  allocator_tests.cpp 
+  base32_tests.cpp 
+  base58_tests.cpp 
+  base64_tests.cpp 
+  bloom_tests.cpp 
+  checkblock_tests.cpp 
+  Checkpoints_tests.cpp 
+  coins_tests.cpp 
+  compress_tests.cpp 
+  crypto_tests.cpp 
+  DoS_tests.cpp 
+  getarg_tests.cpp 
+  hash_tests.cpp 
+  key_tests.cpp 
+  main_tests.cpp 
+  mempool_tests.cpp 
+  miner_tests.cpp 
+  mruset_tests.cpp 
+  multisig_tests.cpp 
+  netbase_tests.cpp
+  pmt_tests.cpp
+  prevector_tests.cpp 
+  rpc_tests.cpp 
+  sanity_tests.cpp 
+  script_P2SH_tests.cpp 
+  script_tests.cpp 
+  scriptnum_tests.cpp 
+  serialize_tests.cpp 
+  sighash_tests.cpp 
+  sigopcount_tests.cpp 
+  skiplist_tests.cpp 
+  test_crown.cpp 
+  timedata_tests.cpp 
+  transaction_tests.cpp 
+  univalue_tests.cpp 
+  util_tests.cpp
+  accounting_tests.cpp 
+  wallet_tests.cpp 
+  rpc_wallet_tests.cpp
+  mnbudget-test.cpp
+  db_tests.cpp
+)
+
+target_compile_definitions(crown_test PRIVATE "BOOST_TEST_DYN_LINK=1")
+
+target_link_libraries(crown_test
+  Boost::boost
+  Boost::unit_test_framework
+  crown_client
+  crown_core
+  crown_server
+  crown_common
+  crown_util
+  crown_crypto
+  crown_univalue)

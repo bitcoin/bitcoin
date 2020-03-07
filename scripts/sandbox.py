@@ -295,16 +295,11 @@ class Sandbox:
         return out.strip()
 
     def get_transaction(self, node, txhash, binary='crown-cli'):
-        rtx, err = self.client_command(node, binary, 'getrawtransaction', txhash)
+        tx, err = self.client_command(node, binary, 'getrawtransaction', txhash, '1')
         if len(err) != 0:
             print err
         assert (len(err) == 0)
-        dtx, err = self.client_command(node, binary, 'decoderawtransaction', rtx.strip())
-        if len(err) != 0:
-            print err
-            print rtx
-        assert (len(err) == 0)
-        return json.loads(dtx)
+        return json.loads(tx)
 
     def create_key(self, node, binary='crown-cli'):
         out, err = self.client_command(node, binary, 'node', 'genkey')
@@ -337,6 +332,8 @@ class Sandbox:
         colltx = self.get_transaction(control_node, txhash)
         claddr = tx_find_output(colltx, 10000)
 
+        print 'colltx hash: {0}'.format(txhash)
+
         self.network['nodes'][control_node]['mnconfig'][masternode] = {
             'ip': self.node_ip(masternode),
             'key': prvkey,
@@ -354,8 +351,26 @@ class Sandbox:
         self.write_config(masternode)
         self.start_node(masternode)
 
+        while 'confirmations' not in colltx or colltx['confirmations'] < 15:
+            print '{0} confirmations, waiting'.format(colltx['confirmations'] if 'confirmations' in colltx else 0)
+            time.sleep(2)
+            colltx = self.get_transaction(control_node, txhash)
+
+        print '{0} confirmations, done'.format(colltx['confirmations'] if 'confirmations' in colltx else 0)
         time.sleep(1)
-        self.start_masternode(control_node, masternode)
+        out, err = self.start_masternode(control_node, masternode)
+        print err
+        print out
+
+    def stop_nodes(self, nodes=None):
+        if nodes is None:
+            nodes = []
+        nodes = nodes if nodes != [] else self.network['nodes'].iterkeys()
+        for name in nodes:
+            try:
+                self.stop_node(name)
+            except RuntimeError as e:
+                print e
 
     def stop_node(self, node):
         return self.client_command(node, 'crown-cli', 'stop')
@@ -367,7 +382,7 @@ class Sandbox:
         return [k for k, v in self.network['nodes'].iteritems() if v['masternodes'] != []]
 
     def start_masternode(self, control_node, masternode):
-        self.client_command(control_node, 'crown-cli', 'masternode', 'start-alias', masternode)
+        return self.client_command(control_node, 'crown-cli', 'masternode', 'start-alias', masternode)
 
     def gen_or_reuse_address(self, node):
         if 'receive_with' in self.network['nodes'][node]:
@@ -375,6 +390,14 @@ class Sandbox:
 
         self.network['nodes'][node]['receive_with'] = self.gen_address(node)
         return self.network['nodes'][node]['receive_with']
+
+    def get_block_height(self, node):
+        try:
+            out, err = self.client_command(node, 'crown-cli', 'getinfo')
+            info = json.loads(out)
+            return int(info['blocks'])
+        except ValueError:
+            return 0
 
 
 def prepare(json_desc_file, target_dir, bin_dir):
@@ -385,6 +408,11 @@ def prepare(json_desc_file, target_dir, bin_dir):
 def start(json_desc_file, target_dir, bin_dir, nodes):
     sb = Sandbox(bin_dir, target_dir, open(json_desc_file))
     sb.start_nodes(nodes)
+
+
+def stop(json_desc_file, target_dir, bin_dir, nodes):
+    sb = Sandbox(bin_dir, target_dir, open(json_desc_file))
+    sb.stop_nodes(nodes)
 
 
 def command(json_desc_file, target_dir, bin_dir, node, *args):
@@ -442,6 +470,21 @@ def run_simulation(json_desc_file, target_dir, bin_dir):
 
                 print 'Setting up masternode {0}'.format(mn)
                 sb.setup_masternode(node, mn)
+
+                blockheight = sb.get_block_height(node)
+                while blockheight == 0:
+                    print 'Cannot get block height. Retrying...'
+                    time.sleep(2)
+                    blockheight = sb.get_block_height(node)
+
+                while True:
+                    time.sleep(2)
+                    if sb.get_block_height(node) > blockheight + 15:
+                        break
+
+                out, err = sb.start_masternode(node, mn)
+                print err
+                print out
                 print 'Next masternode is {0}'.format(sb.next_masternode_to_setup()[0])
 
         except RuntimeError:
@@ -469,6 +512,8 @@ if __name__ == '__main__':
             prepare(parsed.file, parsed.directory, parsed.bin_directory)
         elif parsed.command[0] == 'start':
             start(parsed.file, parsed.directory, parsed.bin_directory, parsed.command[1:])
+        elif parsed.command[0] == 'stop':
+            stop(parsed.file, parsed.directory, parsed.bin_directory, parsed.command[1:])
         elif parsed.command[0] == 'cmd':
             command(parsed.file, parsed.directory, parsed.bin_directory, parsed.command[1], *parsed.command[2:])
         elif parsed.command[0] == 'sim':

@@ -102,7 +102,7 @@ private:
 public:
     CRPCTable();
     const CRPCCommand* operator[](std::string name) const;
-    std::string help(std::string name) const;
+    std::string help(const std::string & strCommand, const std::string & strSubCommand) const;
 
     /**
      * Execute a method.
@@ -124,6 +124,11 @@ extern uint256 ParseHashV(const json_spirit::Value& v, std::string strName);
 extern uint256 ParseHashO(const json_spirit::Object& o, std::string strKey);
 extern std::vector<unsigned char> ParseHexV(const json_spirit::Value& v, std::string strName);
 extern std::vector<unsigned char> ParseHexO(const json_spirit::Object& o, std::string strKey);
+
+extern int32_t ParseInt32V(const json_spirit::Value& v, const std::string &strName);
+extern uint32_t ParseUInt32V(const json_spirit::Value& v, const std::string &strName);
+extern uint8_t ParseUInt8V(const json_spirit::Value& v, const std::string &strName);
+extern bool ParseBoolV(const json_spirit::Value& v, const std::string &strName);
 
 extern void InitRPCMining();
 extern void ShutdownRPCMining();

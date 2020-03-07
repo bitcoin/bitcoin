@@ -3,12 +3,12 @@
 Crown Core v0.13.4 is a minor release and a recommended upgrade.
 It is available for download from:
 
-https://crown.tech/downloads
+https://crownplatform.com/downloads
 
 Please report bugs through the Help, Guides and Support board at the
 Crown forum
 
-https://forum.crown.tech/index.php?board=5.0
+https://forum.crownplatform.com/index.php?board=5.0
 
 ## How to upgrade
 

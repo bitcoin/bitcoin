@@ -39,6 +39,7 @@
 #include "utilmoneystr.h"
 #include "dbmanager.h"
 #include "instantx.h"
+#include "platform/platform-db.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
@@ -216,6 +217,7 @@ void PrepareShutdown()
         pcoinsdbview = NULL;
         delete pblocktree;
         pblocktree = NULL;
+        Platform::PlatformDb::DestroyInstance();
     }
 #ifdef ENABLE_WALLET
     if (pwalletMain)
@@ -242,6 +244,10 @@ void Shutdown()
     if(!fRestartRequested){
         PrepareShutdown();
     }
+
+    // Unregister NFT special transaction mempool handler
+    g_nfTokenTxMemPoolHandler.UnregisterSelf(mempool);
+    g_nftProtoTxMemPoolHandler.UnregisterSelf(mempool);
 
    // Shutdown part 2: delete wallet instance
 #ifdef ENABLE_WALLET
@@ -464,6 +470,9 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times") + "\n";
     strUsage += "  -rpcthreads=<n>        " + strprintf(_("Set the number of threads to service RPC calls (default: %d)"), 4) + "\n";
     strUsage += "  -rpckeepalive          " + strprintf(_("RPC support for HTTP persistent connections (default: %d)"), 1) + "\n";
+
+    strUsage += "\n" + _("Platform options:") + "\n";
+    strUsage += "  -platformoptram=<n>            " + strprintf(_("Optimize the platform server RAM usage (but respond much slower) or optimize speed (server latency) (0-1, default: %u)"), 0) + "\n";
 
     strUsage += "\n" + _("RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)") + "\n";
     strUsage += "  -rpcssl                                  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n";
@@ -828,6 +837,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (GetBoolArg("-benchmark", false))
         InitWarning(_("Warning: Unsupported argument -benchmark ignored, use -debug=bench."));
 
+    // Register NFT special transaction mempool handler
+    g_nftProtoTxMemPoolHandler.RegisterSelf(mempool);
+    g_nfTokenTxMemPoolHandler.RegisterSelf(mempool);
     // Checkmempool and checkblockindex default to true in regtest mode
     mempool.setSanityCheck(GetBoolArg("-checkmempool", Params().DefaultConsistencyChecks()));
     fCheckBlockIndex = GetBoolArg("-checkblockindex", Params().DefaultConsistencyChecks());
@@ -1245,6 +1257,9 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
     }
 
+    bool platformOptRam = GetBoolArg("-platformoptram", false);
+    Platform::PlatformOpt opt = platformOptRam ? Platform::PlatformOpt::OptRam : Platform::PlatformOpt::OptSpeed;
+
     // cache size calculations
     int64_t nTotalCache = (GetArg("-dbcache", nDefaultDbCache) << 20);
     nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
@@ -1257,6 +1272,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     nTotalCache -= nCoinDBCache;
     nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
     int64_t nMempoolSizeMax = GetArg("-maxmempool", 300) * 1000000;
+    int64_t nPlatformDbCache = 1024 * 1024 * 10; //TODO: set appropriate platform db cache size
     LogPrintf("Cache configuration:\n");
     LogPrintf("* Using %.1fMiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
     LogPrintf("* Using %.1fMiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
@@ -1277,7 +1293,9 @@ bool AppInit2(boost::thread_group& threadGroup)
                 delete pcoinsdbview;
                 delete pcoinscatcher;
                 delete pblocktree;
+                Platform::PlatformDb::DestroyInstance();
 
+                Platform::PlatformDb::CreateInstance(nPlatformDbCache, opt, false, fReindex);
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
@@ -1313,7 +1331,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
                 fVerifying = true;
-                if (!CVerifyDB().VerifyDB(pcoinsdbview, GetArg("-checklevel", 3),
+                if (!CVerifyDB().VerifyDB(pcoinsdbview, GetArg("-checklevel", 4),
                               GetArg("-checkblocks", 288))) {
                     strLoadError = _("Corrupted block database detected");
                     fVerifying = false;

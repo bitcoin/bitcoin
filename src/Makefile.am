@@ -149,6 +149,27 @@ BITCOIN_CORE_H = \
   mn-pos/stakeminer.h \
   mn-pos/stakevalidation.h \
   nodeconfig.h \
+  platform/specialtx-common.h \
+  platform/specialtx.h \
+  platform/platform-db.h \
+  platform/platform-utils.h \
+  platform/rpc/rpcagents.h \
+  platform/rpc/rpc-nf-token.h \
+  platform/rpc/rpc-nft-proto.h \
+  platform/rpc/specialtx-rpc-utils.h \
+  platform/nf-token/nf-token-index.h \
+  platform/nf-token/nf-token-multiindex-utils.h \
+  platform/nf-token/nf-token-protocol-index.h \
+  platform/nf-token/nf-token-protocol-reg-tx.h \
+  platform/nf-token/nf-token-protocol-tx-mem-pool-handler.h \
+  platform/nf-token/nf-token-protocol.h \
+  platform/nf-token/nf-token-reg-tx-builder.h \
+  platform/nf-token/nf-token-reg-tx.h \
+  platform/nf-token/nf-token-tx-mem-pool-handler.h \
+  platform/nf-token/nf-token.h \
+  platform/nf-token/nf-tokens-manager.h \
+  platform/nf-token/nft-protocol-reg-tx-builder.h \
+  platform/nf-token/nft-protocols-manager.h \
   systemnode.h \
   systemnode-payments.h \
   systemnode-sync.h \
@@ -232,7 +253,29 @@ libbitcoin_server_a_SOURCES = \
   txdb.cpp \
   txmempool.cpp \
   dbdetails.cpp \
-  $(JSON_H) \
+  platform/agent.cpp \
+  platform/agent.h \
+  platform/governance.cpp \
+  platform/governance.h \
+  platform/governance-approval-voting.h \
+  platform/governance-approval-voting.cpp \
+  platform/governance-vote.cpp \
+  platform/governance-vote.h \
+  platform/specialtx.cpp \
+  platform/platform-db.cpp \
+  platform/rpc/specialtx-rpc-utils.cpp \
+  platform/rpc/rpcagents.cpp \
+  platform/rpc/rpc-nf-token.cpp \
+  platform/rpc/rpc-nft-proto.cpp \
+  platform/nf-token/nf-token-multiindex-utils.cpp \
+  platform/nf-token/nf-token-protocol-reg-tx.cpp \
+  platform/nf-token/nf-token-protocol-tx-mem-pool-handler.cpp \
+  platform/nf-token/nf-token-protocol.cpp \
+  platform/nf-token/nf-token-reg-tx.cpp \
+  platform/nf-token/nf-token-tx-mem-pool-handler.cpp \
+  platform/nf-token/nf-tokens-manager.cpp \
+  platform/nf-token/nft-protocols-manager.cpp \
+    $(JSON_H) \
   $(BITCOIN_CORE_H)
 
 # wallet: shared between crownd and crown-qt, but only linked

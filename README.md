@@ -1,4 +1,4 @@
-# Crown Platform 0.13.4
+# Crown Platform 0.14.0
 
 [![pipeline status](http://gitlab.crownplatform.com/crown/crown-core/badges/master/pipeline.svg)](http://gitlab.crownplatform.com/crown/crown-core/commits/master)
 
@@ -22,8 +22,8 @@ For more information, as well as an immediately usable, binary version Crown see
 
 Crown is ultimately a community-driven platform. Its potential to bring social and technological growth is contingent on the ideas and support its users provide. We invite you to lend your voice and imagination to this burgeoning platform and share in its success. Together, there’s no limit to what we can accomplish.
 
-* Crown Forum: https://forum.crownplatform.com
-* Discord: https://discord.gg/uFhNZNW
+* Crown Forum: https://forum.crown.tech
+* Discord: https://discord.gg/Tcrkazc
 * Telegram: https://t.me/crownplatform
 * Guides & How-to: https://forum.crownplatform.com/index.php?board=5.0
 
@@ -69,6 +69,7 @@ When describing a bug please include following information:
 Crown core developers are working hard on bug fixes, platform enhancements, and new product features.
 Some of these tasks may be completed by talented community members through the bounty program.
 Bounties are posted to the wiki and can be picked up by anyone who wants to submit new code to the project repository.
+If you want to be directly notified of new bounties matching your specific skillset, fill out the short intake survey to get onto the [InSource Community Job Board](https://crown.link/insource).
 If you have any questions regarding code submissions, please contact Artem Brazhnikov through Discord and ask about bounties.
 
 ## License
@@ -81,4 +82,4 @@ Copyright © 2009-2018, Bitcoin Core Developers
 
 Copyright © 2014-2016, Dash Core Developers
 
-Copyright © 2014-2019, Crown Developers
+Copyright © 2014-2020, Crown Developers

@@ -21,6 +21,11 @@
 #include "wallet.h"
 #endif
 
+#include "platform/specialtx.h"
+#include "platform/nf-token/nf-token-reg-tx.h"
+#include "platform/nf-token/nf-token-protocol-reg-tx.h"
+#include "platform/governance-vote.h"
+
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
@@ -60,6 +65,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 {
     entry.push_back(Pair("txid", tx.GetHash().GetHex()));
     entry.push_back(Pair("version", tx.nVersion));
+    entry.push_back(Pair("type", tx.nType));
     entry.push_back(Pair("locktime", (int64_t)tx.nLockTime));
     Array vin;
     BOOST_FOREACH(const CTxIn& txin, tx.vin) {
@@ -100,6 +106,42 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
         vout.push_back(out);
     }
     entry.push_back(Pair("vout", vout));
+
+    if (!tx.extraPayload.empty()) {
+        entry.push_back(Pair("extraPayloadSize", (int)tx.extraPayload.size()));
+        entry.push_back(Pair("extraPayload", HexStr(tx.extraPayload)));
+    }
+
+    if (tx.nType == TRANSACTION_NF_TOKEN_REGISTER)
+    {
+        Platform::NfTokenRegTx nftRegTx;
+        if (Platform::GetTxPayload(tx, nftRegTx))
+        {
+            Object nftRegTxObj;
+            nftRegTx.ToJson(nftRegTxObj);
+            entry.push_back(Pair("nftRegTx", nftRegTxObj));
+        }
+    }
+    else if (tx.nType == TRANSACTION_GOVERNANCE_VOTE)
+    {
+        Platform::VoteTx voteTx;
+        if (Platform::GetTxPayload(tx, voteTx))
+        {
+            Object voteTxObj;
+            voteTx.ToJson(voteTxObj);
+            entry.push_back(Pair("voteTx", voteTxObj));
+        }
+    }
+    else if (tx.nType == TRANSACTION_NF_TOKEN_PROTOCOL_REGISTER)
+    {
+        Platform::NfTokenProtocolRegTx nftProtoRegTx;
+        if (Platform::GetTxPayload(tx, nftProtoRegTx))
+        {
+            Object nftRegTxObj;
+            nftProtoRegTx.ToJson(nftRegTxObj);
+            entry.push_back(Pair("nftProtoRegTx", nftRegTxObj));
+        }
+    }
 
     if (!hashBlock.IsNull()) {
         entry.push_back(Pair("blockhash", hashBlock.GetHex()));
@@ -405,6 +447,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
             "{\n"
             "  \"txid\" : \"id\",        (string) The transaction id\n"
             "  \"version\" : n,          (numeric) The version\n"
+            "  \"type\" : n,             (numeric) The type\n"
             "  \"locktime\" : ttt,       (numeric) The lock time\n"
             "  \"vin\" : [               (array of json objects)\n"
             "     {\n"

@@ -117,3 +117,11 @@ qa/pull-tester/test.*/*
 .cproject
 .project
 /doc/doxygen/
+
+.idea/
+cmake-build-*/
+.vscode/
+
+scripts/*.json
+scripts/sb.sh
+scripts/sb-wallet.sh

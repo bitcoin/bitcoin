@@ -550,7 +550,7 @@ int main(int argc, char *argv[])
 #endif
 
     Q_INIT_RESOURCE(crown);
-    Q_INIT_RESOURCE(crown_locale);
+//    Q_INIT_RESOURCE(crown_locale);
 
     BitcoinApplication app(argc, argv);
 #if QT_VERSION > 0x050100

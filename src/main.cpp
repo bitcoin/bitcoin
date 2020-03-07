@@ -30,6 +30,8 @@
 #include "util.h"
 #include "spork.h"
 #include "utilmoneystr.h"
+#include "platform/specialtx.h"
+#include "platform/platform-db.h"
 
 #include <sstream>
 
@@ -82,6 +84,8 @@ int nLastStakeAttempt = 0;
 CFeeRate minRelayTxFee = CFeeRate(10000);
 
 CTxMemPool mempool(::minRelayTxFee);
+Platform::NfTokenTxMemPoolHandler g_nfTokenTxMemPoolHandler;
+Platform::NftProtoTxMemPoolHandler g_nftProtoTxMemPoolHandler;
 
 struct COrphanTx {
     CTransaction tx;
@@ -951,6 +955,29 @@ int GetIXConfirmations(uint256 nTXHash)
 
 bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 {
+    // check version 3 transaction types
+    if (tx.nVersion >= 3)
+    {
+        if (!IsSporkActive(SPORK_17_NFT_TX))
+        {
+            return state.DoS(100, false, REJECT_INVALID, "nft-tx-spork-off");
+        }
+        if (tx.nType != TRANSACTION_NORMAL &&
+            tx.nType != TRANSACTION_GOVERNANCE_VOTE &&
+            tx.nType != TRANSACTION_NF_TOKEN_REGISTER &&
+            tx.nType != TRANSACTION_NF_TOKEN_PROTOCOL_REGISTER)
+        {
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
+        }
+        if (tx.IsCoinBase() && tx.nType != TRANSACTION_NORMAL)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-cb-type");
+    }
+    // all version 1 transactions are normal
+    else if (tx.nType != TRANSACTION_NORMAL)
+    {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
+    }
+
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
         return state.DoS(10, error("CheckTransaction() : vin empty"),
@@ -962,6 +989,9 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return state.DoS(100, error("CheckTransaction() : size limits failed"),
                          REJECT_INVALID, "bad-txns-oversize");
+
+    if (tx.extraPayload.size() > MAX_TX_EXTRA_PAYLOAD)
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-payload-oversize");
 
     // Check for negative or overflow output values
     CAmount nValueOut = 0;
@@ -1052,6 +1082,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (!CheckTransaction(tx, state))
         return error("AcceptToMemoryPool: : CheckTransaction failed");
 
+    if (!Platform::CheckSpecialTx(tx, chainActive.Tip(), state))
+        return false;
+
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase() || tx.IsCoinStake())
         return state.DoS(100, error("AcceptToMemoryPool: : coinbase/coinstake as individual tx"),
@@ -1063,6 +1096,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         return state.DoS(0,
                          error("AcceptToMemoryPool : nonstandard transaction: %s", reason),
                          REJECT_NONSTANDARD, reason);
+
+    if (pool.ExistsSpecTxConflict(tx))
+        return state.DoS(0, false, REJECT_DUPLICATE, "spec-tx-dup");
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
@@ -1849,7 +1885,7 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
     if (state.IsInvalid(nDoS)) {
         std::map<uint256, NodeId>::iterator it = mapBlockSource.find(pindex->GetBlockHash());
         if (it != mapBlockSource.end() && State(it->second)) {
-            CBlockReject reject = {state.GetRejectCode(), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), pindex->GetBlockHash()};
+            CBlockReject reject = {static_cast<unsigned char>(state.GetRejectCode()), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), pindex->GetBlockHash()};
             State(it->second)->rejects.push_back(reject);
             if (nDoS > 0)
                 Misbehaving(it->second, nDoS);
@@ -2028,6 +2064,10 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
         nSizeCheck++;
     if (nSizeCheck != block.vtx.size())
         return error("DisconnectBlock() : block and undo data inconsistent, check=%d size=%d", nSizeCheck, block.vtx.size());
+
+    if (!Platform::UndoSpecialTxsInBlock(block, pindex)) {
+        return error("DisconnectBlock() : failed to undo special tx");;
+    }
 
     // undo transactions in reverse order
     for (int i = block.vtx.size() - 1; i >= 0; i--) {
@@ -2379,6 +2419,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nTime1 = GetTimeMicros(); nTimeConnect += nTime1 - nTimeStart;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime1 - nTimeStart), 0.001 * (nTime1 - nTimeStart) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime1 - nTimeStart) / (nInputs-1), nTimeConnect * 0.000001);
 
+    if (!Platform::ProcessSpecialTxsInBlock(fJustCheck, block, pindex, state))
+        return false;
+
     // Check that block's created coins is under the maximum allowed amount
     if (!IsBlockValueValid(block, GetBlockValue(pindex->pprev->nHeight, nFees))){
         CAmount nValueCreated = block.vtx[0].GetValueOut();
@@ -2548,6 +2591,9 @@ void FlushStateToDisk() {
 void static UpdateTip(CBlockIndex *pindexNew) {
     chainActive.SetTip(pindexNew);
 
+    // Update block tip for special txs handlers
+    Platform::UpdateSpecialTxsBlockTip(pindexNew);
+
     // New best block
     nTimeBestReceived = GetTime();
     mempool.AddTransactionsUpdated(1);
@@ -2595,10 +2641,16 @@ bool static DisconnectTip(CValidationState &state) {
     // Apply the block atomically to the chain state.
     int64_t nStart = GetTimeMicros();
     {
+        auto platformDbTx = Platform::PlatformDb::Instance().BeginTransaction();
+
         CCoinsViewCache view(pcoinsTip);
         if (!DisconnectBlock(block, state, pindexDelete, view))
             return error("DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
-        assert(view.Flush());
+
+        bool flushed = view.Flush();
+        assert(flushed);
+        bool committed = platformDbTx->Commit();
+        assert(committed);
     }
     LogPrint("bench", "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
     // Write the chain state to disk, if necessary.
@@ -2650,6 +2702,8 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, const CB
     int64_t nTime3;
     LogPrint("bench", "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * 0.001, nTimeReadFromDisk * 0.000001);
     {
+        auto platformDbTx = Platform::PlatformDb::Instance().BeginTransaction();
+
         CCoinsViewCache view(pcoinsTip);
         g_signals.BlockChecked(*pblock, state);
         if (!ConnectBlock(*pblock, state, pindexNew, view)) {
@@ -2660,7 +2714,11 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, const CB
         mapBlockSource.erase(pindexNew->GetBlockHash());
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
         LogPrint("bench", "  - Connect total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
-        assert(view.Flush());
+
+        bool flushed = view.Flush();
+        assert(flushed);
+        bool committed = platformDbTx->Commit();
+        assert(committed);
     }
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint("bench", "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
@@ -3690,6 +3748,9 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;
 
+    // begin tx and let it rollback
+    auto platformDbTx = Platform::PlatformDb::Instance().BeginTransaction();
+
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, pindexPrev))
         return false;
@@ -3909,6 +3970,9 @@ bool CVerifyDB::VerifyDB(CCoinsView *coinsview, int nCheckLevel, int nCheckDepth
     LOCK(cs_main);
     if (chainActive.Tip() == NULL || chainActive.Tip()->pprev == NULL)
         return true;
+
+    // begin tx and let it rollback
+    auto platformDbTx = Platform::PlatformDb::Instance().BeginTransaction();
 
     // Verify blocks in the best chain
     if (nCheckDepth <= 0)
@@ -6087,3 +6151,12 @@ public:
         mapOrphanTransactionsByPrev.clear();
     }
 } instance_of_cmaincleanup;
+
+/** Convert CValidationState to a human-readable message for logging */
+std::string FormatStateMessage(const CValidationState &state)
+{
+    return strprintf("%s%s (code %i)",
+                     state.GetRejectReason(),
+                     state.GetDebugMessage().empty() ? "" : ", "+state.GetDebugMessage(),
+                     state.GetRejectCode());
+}

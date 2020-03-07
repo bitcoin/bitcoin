@@ -3,8 +3,8 @@
 It is possible to control any number of masternodes and/or systemnodes from a single wallet. The wallet needs to have a valid collateral output of 10000 coins for each masternode and 500 coins for each systemnode. 
 
 There are two ways to create and control masternodes and systemnodes: using GUI features of the Crown wallet or manually editing `masternode.conf` or `systemnode.conf` and running console commands. There are instructions for the setup through GUI:
-* [Masternode Setup Guide](https://forum.crown.tech/index.php?topic=1241.0)
-* [Systemnode Setup Guide](https://forum.crown.tech/index.php?topic=1240.0)
+* [Masternode Setup Guide](https://forum.crownplatform.com/index.php?topic=1241.0)
+* [Systemnode Setup Guide](https://forum.crownplatform.com/index.php?topic=1240.0)
 
 The rest of the document describes the format of the configuration file and console commands.
 

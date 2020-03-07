@@ -1,5 +1,0 @@
-Crowncoin changelog:
-
-* fixed compilation of QT wallet for Linux/Windows/MacOS
-* removed traces from bcr
-

@@ -14,7 +14,7 @@
 (The OS version, like Ubuntu 16.04.)
 
 ### Crown-core application info
-(The wallet version, like v0.13.4.0; link to the pipeline/build if possible.)
+(The wallet version, like v0.12.4.1; link to the pipeline/build if possible.)
 
 ### Relevant logs, dumps and/or screenshots
 (Paste any relevant logs - please use code blocks (```) to format console output,

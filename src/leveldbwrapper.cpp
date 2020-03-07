@@ -87,3 +87,9 @@ bool CLevelDBWrapper::WriteBatch(CLevelDBBatch& batch, bool fSync) // throw(leve
     HandleError(status);
     return true;
 }
+
+TransactionLevelDBWrapper::TransactionLevelDBWrapper(const std::string & dbName, size_t nCacheSize, bool fMemory, bool fWipe)
+: m_db(GetDataDir() / dbName, nCacheSize, fMemory, fWipe)
+, m_dbTransaction(m_db)
+{
+}

@@ -12,6 +12,10 @@
 #include "main.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "utilstrencodings.h"
+#include "platform/rpc/rpcagents.h"
+#include "platform/rpc/rpc-nf-token.h"
+#include "platform/rpc/rpc-nft-proto.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
@@ -139,12 +143,58 @@ vector<unsigned char> ParseHexO(const Object& o, string strKey)
     return ParseHexV(find_value(o, strKey), strKey);
 }
 
+int32_t ParseInt32V(const Value& v, const std::string &strName)
+{
+    std::string strNum = v.get_str();
+    int32_t num;
+    if (!ParseInt32(strNum, &num))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be a 32bit integer (not '"+strNum+"')");
+    return num;
+}
+
+uint32_t ParseUInt32V(const Value& v, const std::string &strName)
+{
+    std::string strNum = v.get_str();
+    uint32_t num;
+    if (!ParseUInt32(strNum, &num))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be a 32bit unsigned integer (not '"+strNum+"')");
+    return num;
+}
+
+uint8_t ParseUInt8V(const Value& v, const std::string &strName)
+{
+    std::string strNum = v.get_str();
+    uint8_t num;
+    if (!ParseUInt8(strNum, &num))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be an 8bit unsigned integer (not '"+strNum+"')");
+    return num;
+}
+
+bool ParseBoolV(const Value& v, const std::string &strName)
+{
+    std::string strBool;
+    if (v.type() == bool_type)
+        return v.get_bool();
+    else if (v.type() == int_type)
+        strBool = itostr(v.get_int());
+    else if (v.type() == str_type)
+        strBool = v.get_str();
+
+    std::transform(strBool.begin(), strBool.end(), strBool.begin(), ::tolower);
+
+    if (strBool == "true" || strBool == "yes" || strBool == "1") {
+        return true;
+    } else if (strBool == "false" || strBool == "no" || strBool == "0") {
+        return false;
+    }
+    throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be true, false, yes, no, 1 or 0 (not '"+strBool+"')");
+}
 
 /**
  * Note: This interface may still be subject to change.
  */
 
-string CRPCTable::help(string strCommand) const
+string CRPCTable::help(const string & strCommand, const string & strSubCommand) const
 {
     string strRet;
     string category;
@@ -172,6 +222,8 @@ string CRPCTable::help(string strCommand) const
         try
         {
             Array params;
+            if (!strSubCommand.empty())
+                params.push_back(strSubCommand);
             rpcfn_type pfn = pcmd->actor;
             if (setDone.insert(pfn).second)
                 (*pfn)(params, true);
@@ -206,7 +258,7 @@ string CRPCTable::help(string strCommand) const
 
 Value help(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
             "help ( \"command\" )\n"
             "\nList all commands, or get help for a specified command.\n"
@@ -217,10 +269,13 @@ Value help(const Array& params, bool fHelp)
         );
 
     string strCommand;
+    string strSubCommand;
     if (params.size() > 0)
         strCommand = params[0].get_str();
+    if (params.size() > 1)
+        strSubCommand = params[1].get_str();
 
-    return tableRPC.help(strCommand);
+    return tableRPC.help(strCommand, strSubCommand);
 }
 
 
@@ -387,6 +442,9 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "walletpassphrase",       &walletpassphrase,       true,      false,      true },
     { "wallet",             "update",                 &update,                 true,      false,      true },
 #endif // ENABLE_WALLET
+    { "platform",           "agents",                 &agents,                 true,      true,       false },
+    { "platform",           "nftoken",                &nftoken,                true,      true,       false },
+    { "platform",           "nftproto",               &nftproto,               true,      true,       false },
 };
 
 CRPCTable::CRPCTable()

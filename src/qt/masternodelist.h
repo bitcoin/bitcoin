@@ -44,7 +44,7 @@ public:
 private:
     QMenu *contextMenu;
     int64_t nTimeFilterUpdate;
-    bool fFilterUpdated;
+    bool fFilterUpdated = false;
 public Q_SLOTS:
     void updateMyMasternodeInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CMasternode *pmn);
     void updateMyNodeList(bool reset = false);

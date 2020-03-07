@@ -1,5 +1,5 @@
 
-// Copyright (c) 2009-2012 The Crown developers
+// Copyright (c) 2014-2020 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef SPORK_H
@@ -24,7 +24,7 @@ using namespace boost;
     - This would result in old clients getting confused about which spork is for what
 */
 #define SPORK_START                                           10001
-#define SPORK_END                                             10015
+#define SPORK_END                                             10016
 
 #define SPORK_2_INSTANTX                                      10001
 #define SPORK_3_INSTANTX_BLOCK_FILTERING                      10002
@@ -40,6 +40,7 @@ using namespace boost;
 #define SPORK_14_SYSTEMNODE_PAYMENT_ENFORCEMENT               10013
 #define SPORK_15_SYSTEMNODE_DONT_PAY_OLD_NODES                10014
 #define SPORK_16_DISCONNECT_OLD_NODES                         10015
+#define SPORK_17_NFT_TX                                       10016
 
 #define SPORK_2_INSTANTX_DEFAULT                              978307200     //2001-1-1
 #define SPORK_3_INSTANTX_BLOCK_FILTERING_DEFAULT              1424217600    //2015-2-18
@@ -55,6 +56,7 @@ using namespace boost;
 #define SPORK_14_SYSTEMNODE_PAYMENT_ENFORCEMENT_DEFAULT       4070908800   //OFF
 #define SPORK_15_SYSTEMNODE_DONT_PAY_OLD_NODES_DEFAULT        4070908800   //OFF
 #define SPORK_16_DISCONNECT_OLD_NODES_DEFAULT                 4070908800   //OFF
+#define SPORK_17_NFT_TX_DEFAULT                               1585044000   //2020-3-24 10:00 AM UTC
     
 class CSporkMessage;
 class CSporkManager;

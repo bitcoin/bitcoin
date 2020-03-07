@@ -154,7 +154,7 @@ protected:
     std::string strSporkKey;
     std::string strLegacySignerDummyAddress;
     std::string strDevfundAddress;
-    int64_t nStartMasternodePayments;
+    int64_t nStartMasternodePayments{0};
     int32_t nAuxpowChainId;
     int32_t nPoSChainId;
     int nBlockPoSStart;
