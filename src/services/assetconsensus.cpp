@@ -1275,6 +1275,10 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-address", bSanityCheck);
             }
+            if ( /*nHeight >= Params().GetConsensus().nBridgeStartBlock && */theAsset.nAsset != GenerateSyscoinGuid(theAsset.witnessAddress, theAsset.nHeight))
+            {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-guid", bSanityCheck);
+            }
             if(theAsset.nUpdateFlags > ASSET_UPDATE_ALL){
                 return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
             } 
