@@ -660,7 +660,7 @@ void doNotOptimizeAway(T const& val) {
 namespace ankerl {
 namespace nanobench {
 
-// helper stuff that only intended to be used internally
+// helper stuff that is only intended to be used internally
 namespace detail {
 
 struct TableInfo;
@@ -1188,7 +1188,7 @@ PerformanceCounters& performanceCounters() {
     return pc;
 }
 
-// Windows version of do not optimize away
+// Windows version of doNotOptimizeAway
 // see https://github.com/google/benchmark/blob/master/include/benchmark/benchmark.h#L307
 // see https://github.com/facebook/folly/blob/master/folly/Benchmark.h#L280
 // see https://docs.microsoft.com/en-us/cpp/preprocessor/optimize
