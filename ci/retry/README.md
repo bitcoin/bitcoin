@@ -13,7 +13,7 @@ retry is a shell script, so drop it somewhere and make sure it's added to your $
 sudo sh -c "curl https://raw.githubusercontent.com/kadwanev/retry/master/retry -o /usr/local/bin/retry && chmod +x /usr/local/bin/retry"
 ```
 
-If you're on OS X, retry is also on Homebrew:
+If you're on macOS, retry is also on Homebrew:
 
 ```
 brew pull 27283
