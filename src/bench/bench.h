@@ -38,6 +38,14 @@ using ankerl::nanobench::Bench;
 
 typedef std::function<void(Bench&)> BenchFunction;
 
+struct Args {
+    std::string regex_filter;
+    bool is_list_only;
+    std::vector<double> asymptote;
+    std::string output_csv;
+    std::string output_json;
+};
+
 class BenchRunner
 {
     typedef std::map<std::string, BenchFunction> BenchmarkMap;
@@ -46,7 +54,7 @@ class BenchRunner
 public:
     BenchRunner(std::string name, BenchFunction func);
 
-    static void RunAll(const std::string& filter, bool is_list_only, const std::vector<double>& asymptote);
+    static void RunAll(const Args& args);
 };
 }
 // BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo("foo");

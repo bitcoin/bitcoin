@@ -15,9 +15,11 @@ static void SetupBenchArgs()
 {
     SetupHelpOptions(gArgs);
 
-    gArgs.AddArg("-list", "List benchmarks without executing them. Can be combined with -scaling and -filter", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-list", "List benchmarks without executing them", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-filter=<regex>", strprintf("Regular expression filter to select benchmark by name (default: %s)", DEFAULT_BENCH_FILTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-asymptote=n1,n2,n3,...", strprintf("Test asymptotic growth of the runtime of an algorithm, if supported by the benchmark"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-output_csv=<output.csv>", "Generate CSV file with the most important benchmark results.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-output_json=<output.json>", "Generate JSON file with all benchmark results.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
 
 // parses a comma separated list like "10,20,30,50"
@@ -48,11 +50,14 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    std::string regex_filter = gArgs.GetArg("-filter", DEFAULT_BENCH_FILTER);
-    bool is_list_only = gArgs.GetBoolArg("-list", false);
-    std::vector<double> asymptote = parseAsymptote(gArgs.GetArg("-asymptote", ""));
+    benchmark::Args args;
+    args.regex_filter = gArgs.GetArg("-filter", DEFAULT_BENCH_FILTER);
+    args.is_list_only = gArgs.GetBoolArg("-list", false);
+    args.asymptote = parseAsymptote(gArgs.GetArg("-asymptote", ""));
+    args.output_csv = gArgs.GetArg("-output_csv", "");
+    args.output_json = gArgs.GetArg("-output_json", "");
 
-    benchmark::BenchRunner::RunAll(regex_filter, is_list_only, asymptote);
+    benchmark::BenchRunner::RunAll(args);
 
     return EXIT_SUCCESS;
 }
