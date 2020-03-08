@@ -129,8 +129,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     const size_t &itemCount = rlpReceiptLogsValue.itemCount();
     // just sanity checks for bounds
-    if (itemCount < 1 || itemCount > 10){
-        return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-logs-count", bSanityCheck);
+    if(nHeight >= Params().GetConsensus().nDeterministicAssetStartBlock) {
+        if (itemCount < 1 || itemCount > 10){
+            return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-logs-count", bSanityCheck);
+        }
+    } else {
+        if (itemCount != 3){
+            return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-logs-count", bSanityCheck);
+        }   
     }
     // look for TokenFreeze event and get the last parameter which should be the BridgeTransferID
     uint32_t nBridgeTransferID = 0;
