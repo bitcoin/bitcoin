@@ -54,6 +54,7 @@ struct Params {
     unsigned int nSeniorityHeight2;
     double nSeniorityLevel2;
     int nBridgeStartBlock;
+    int nDeterministicAssetStartBlock;
         
     int nSuperblockStartBlock;
     int nSuperblockCycle; // in blocks
