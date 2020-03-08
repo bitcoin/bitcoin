@@ -1496,7 +1496,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         {
              return FormatSyscoinErrorMessage(state, "asset-invalid-sender", bSanityCheck);
         } 
-        if ( /*nHeight >= Params().GetConsensus().nBridgeStartBlock && */storedSenderAssetRef.nAsset != GenerateSyscoinGuid(inputOutPoint))
+        if (nHeight >= Params().GetConsensus().nDeterministicAssetStartBlock && storedSenderAssetRef.nAsset != GenerateSyscoinGuid(inputOutPoint))
         {
             return FormatSyscoinErrorMessage(state, "asset-invalid-guid", bSanityCheck);
         }         
