@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <util/time.h>
 
 // Extremely fast-running benchmark:
 #include <math.h>
