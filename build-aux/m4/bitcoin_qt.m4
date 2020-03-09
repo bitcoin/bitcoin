@@ -250,7 +250,7 @@ AC_DEFUN([_BITCOIN_QT_IS_STATIC],[
   AC_CACHE_CHECK(for static Qt, bitcoin_cv_static_qt,[
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
         #include <QtCore/qconfig.h>
-        #ifndef QT_VERSION OR QT_VERSION_STR
+        #ifndef QT_VERSION
         #  include <QtCore/qglobal.h>
         #endif
       ]],
