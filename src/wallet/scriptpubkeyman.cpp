@@ -5,6 +5,7 @@
 #include <key_io.h>
 #include <outputtype.h>
 #include <script/descriptor.h>
+#include <script/sign.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
@@ -477,7 +478,7 @@ int64_t LegacyScriptPubKeyMan::GetTimeFirstKey() const
     return nTimeFirstKey;
 }
 
-std::unique_ptr<SigningProvider> LegacyScriptPubKeyMan::GetSigningProvider(const CScript& script) const
+std::unique_ptr<SigningProvider> LegacyScriptPubKeyMan::GetSolvingProvider(const CScript& script) const
 {
     return MakeUnique<LegacySigningProvider>(*this);
 }
@@ -503,6 +504,67 @@ bool LegacyScriptPubKeyMan::CanProvide(const CScript& script, SignatureData& sig
         }
         return false;
     }
+}
+
+bool LegacyScriptPubKeyMan::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const
+{
+    return ::SignTransaction(tx, this, coins, sighash, input_errors);
+}
+
+SigningResult LegacyScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
+{
+    CKeyID key_id(pkhash);
+    CKey key;
+    if (!GetKey(key_id, key)) {
+        return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+    }
+
+    if (MessageSign(key, message, str_sig)) {
+        return SigningResult::OK;
+    }
+    return SigningResult::SIGNING_FAILED;
+}
+
+TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, int sighash_type, bool sign, bool bip32derivs) const
+{
+    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
+        const CTxIn& txin = psbtx.tx->vin[i];
+        PSBTInput& input = psbtx.inputs.at(i);
+
+        if (PSBTInputSigned(input)) {
+            continue;
+        }
+
+        // Verify input looks sane. This will check that we have at most one uxto, witness or non-witness.
+        if (!input.IsSane()) {
+            return TransactionError::INVALID_PSBT;
+        }
+
+        // Get the Sighash type
+        if (sign && input.sighash_type > 0 && input.sighash_type != sighash_type) {
+            return TransactionError::SIGHASH_MISMATCH;
+        }
+
+        // Check non_witness_utxo has specified prevout
+        if (input.non_witness_utxo) {
+            if (txin.prevout.n >= input.non_witness_utxo->vout.size()) {
+                return TransactionError::MISSING_INPUTS;
+            }
+        } else if (input.witness_utxo.IsNull()) {
+            // There's no UTXO so we can just skip this now
+            continue;
+        }
+        SignatureData sigdata;
+        input.FillSignatureData(sigdata);
+        SignPSBTInput(HidingSigningProvider(this, !sign, !bip32derivs), psbtx, i, sighash_type);
+    }
+
+    // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
+    for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
+        UpdatePSBTOutput(HidingSigningProvider(this, true, !bip32derivs), psbtx, i);
+    }
+
+    return TransactionError::OK;
 }
 
 const CKeyMetadata* LegacyScriptPubKeyMan::GetMetadata(const CTxDestination& dest) const

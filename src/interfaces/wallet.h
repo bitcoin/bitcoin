@@ -10,6 +10,7 @@
 #include <script/standard.h>           // For CTxDestination
 #include <support/allocators/secure.h> // For SecureString
 #include <ui_interface.h>              // For ChangeType
+#include <util/message.h>
 
 #include <functional>
 #include <map>
@@ -84,8 +85,8 @@ public:
     //! Get public key.
     virtual bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) = 0;
 
-    //! Get private key.
-    virtual bool getPrivKey(const CScript& script, const CKeyID& address, CKey& key) = 0;
+    //! Sign message
+    virtual SigningResult signMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) = 0;
 
     //! Return whether wallet has private key.
     virtual bool isSpendable(const CTxDestination& dest) = 0;
@@ -196,7 +197,7 @@ public:
         bool& complete,
         int sighash_type = 1 /* SIGHASH_ALL */,
         bool sign = true,
-        bool bip32derivs = false) = 0;
+        bool bip32derivs = false) const = 0;
 
     //! Get balances.
     virtual WalletBalances getBalances() = 0;

@@ -11,8 +11,10 @@
 #include <interfaces/handler.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
+#include <psbt.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
+#include <util/message.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <validationinterface.h>
@@ -916,7 +918,30 @@ public:
      * calling CreateTransaction();
      */
     bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
-    bool SignTransaction(CMutableTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    // Fetch the inputs and sign with SIGHASH_ALL.
+    bool SignTransaction(CMutableTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    // Sign the tx given the input coins and sighash.
+    bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const;
+    SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const;
+
+    /**
+     * Fills out a PSBT with information from the wallet. Fills in UTXOs if we have
+     * them. Tries to sign if sign=true. Sets `complete` if the PSBT is now complete
+     * (i.e. has all required signatures or signature-parts, and is ready to
+     * finalize.) Sets `error` and returns false if something goes wrong.
+     *
+     * @param[in]  psbtx PartiallySignedTransaction to fill in
+     * @param[out] complete indicates whether the PSBT is now complete
+     * @param[in]  sighash_type the sighash type to use when signing (if PSBT does not specify)
+     * @param[in]  sign whether to sign or not
+     * @param[in]  bip32derivs whether to fill in bip32 derivation information if available
+     * return error
+     */
+    TransactionError FillPSBT(PartiallySignedTransaction& psbtx,
+                  bool& complete,
+                  int sighash_type = 1 /* SIGHASH_ALL */,
+                  bool sign = true,
+                  bool bip32derivs = true) const;
 
     /**
      * Create a new transaction paying the recipients with a set of coins
@@ -1153,9 +1178,12 @@ public:
     //! Get the ScriptPubKeyMan by id
     ScriptPubKeyMan* GetScriptPubKeyMan(const uint256& id) const;
 
+    //! Get all of the ScriptPubKeyMans for a script given additional information in sigdata (populated by e.g. a psbt)
+    std::set<ScriptPubKeyMan*> GetScriptPubKeyMans(const CScript& script, SignatureData& sigdata) const;
+
     //! Get the SigningProvider for a script
-    std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script) const;
-    std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script, SignatureData& sigdata) const;
+    std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const;
+    std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script, SignatureData& sigdata) const;
 
     //! Get the LegacyScriptPubKeyMan which is used for all types, internal, and external.
     LegacyScriptPubKeyMan* GetLegacyScriptPubKeyMan() const;
