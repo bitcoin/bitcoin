@@ -55,7 +55,7 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
         }
         SignatureData sigdata;
         input.FillSignatureData(sigdata);
-        std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(script, sigdata);
+        std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(script, sigdata);
         if (!provider) {
             complete = false;
             continue;
@@ -67,7 +67,7 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
     for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
         const CTxOut& out = psbtx.tx->vout.at(i);
-        std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(out.scriptPubKey);
+        std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(out.scriptPubKey);
         if (provider) {
             UpdatePSBTOutput(HidingSigningProvider(provider.get(), true, !bip32derivs), psbtx, i);
         }
