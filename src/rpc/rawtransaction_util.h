@@ -6,7 +6,8 @@
 #define SYSCOIN_RPC_RAWTRANSACTION_UTIL_H
 
 #include <map>
-class CTransaction;
+#include <string>
+
 class FillableSigningProvider;
 class UniValue;
 class uint256;
@@ -14,7 +15,7 @@ struct CMutableTransaction;
 class Coin;
 class COutPoint;
 class SigningProvider;
-
+class CTransaction;
 /**
  * Sign a transaction with the given keystore and previous transactions
  *
@@ -25,6 +26,7 @@ class SigningProvider;
  * @param result         JSON object where signed transaction results accumulate
  */
 void SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, const UniValue& hashType, UniValue& result);
+void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const std::map<COutPoint, Coin>& coins, std::map<int, std::string>& input_errors, UniValue& result);
 
 /**
   * Parse a prevtxs UniValue array and get the map of coins from it

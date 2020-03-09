@@ -133,20 +133,27 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
         return;
     }
 
-    CKey key;
-    if (!model->wallet().getPrivKey(GetScriptForDestination(destination), CKeyID(*pkhash), key))
-    {
-        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(tr("Private key for the entered address is not available."));
-        return;
-    }
-
     const std::string& message = ui->messageIn_SM->document()->toPlainText().toStdString();
     std::string signature;
+    SigningResult res = model->wallet().signMessage(message, *pkhash, signature);
 
-    if (!MessageSign(key, message, signature)) {
+    QString error;
+    switch (res) {
+        case SigningResult::OK:
+            error = tr("No error");
+            break;
+        case SigningResult::PRIVATE_KEY_NOT_AVAILABLE:
+            error = tr("Private key for the entered address is not available.");
+            break;
+        case SigningResult::SIGNING_FAILED:
+            error = tr("Message signing failed.");
+            break;
+        // no default case, so the compiler can warn about missing cases
+    }
+
+    if (res != SigningResult::OK) {
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(QString("<nobr>") + tr("Message signing failed.") + QString("</nobr>"));
+        ui->statusLabel_SM->setText(QString("<nobr>") + error + QString("</nobr>"));
         return;
     }
 

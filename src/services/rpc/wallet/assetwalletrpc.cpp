@@ -226,7 +226,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             vin.nSequence = CTxIn::SEQUENCE_FINAL - 1;
         tx.vin.emplace_back(vin);
         int numSigs = 0;
-        std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(coin.out.scriptPubKey);
+        std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(coin.out.scriptPubKey);
         CCountSigsVisitor(*provider, numSigs).Process(coin.out.scriptPubKey);
         if(isSyscoinTx)
             numSigs *= 2;
@@ -307,7 +307,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
                 }
             }
             int numSigs = 0;
-            std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(scriptPubKey);
+            std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(scriptPubKey);
             CCountSigsVisitor(*provider, numSigs).Process(scriptPubKey);
             if(isSyscoinTx){
                  // double relay fee for zdag tx to account for dbl bandwidth on dbl spend relays
