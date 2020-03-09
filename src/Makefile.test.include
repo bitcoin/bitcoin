@@ -64,6 +64,7 @@ FUZZ_TARGETS = \
   test/fuzz/script_ops \
   test/fuzz/scriptnum_ops \
   test/fuzz/service_deserialize \
+  test/fuzz/snapshotmetadata_deserialize \
   test/fuzz/spanparsing \
   test/fuzz/strprintf \
   test/fuzz/sub_net_deserialize \
@@ -72,7 +73,9 @@ FUZZ_TARGETS = \
   test/fuzz/tx_in_deserialize \
   test/fuzz/tx_out \
   test/fuzz/txoutcompressor_deserialize \
-  test/fuzz/txundo_deserialize
+  test/fuzz/txundo_deserialize \
+  test/fuzz/uint160_deserialize \
+  test/fuzz/uint256_deserialize
 
 if ENABLE_FUZZ
 noinst_PROGRAMS += $(FUZZ_TARGETS:=)
@@ -628,6 +631,12 @@ test_fuzz_sub_net_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_sub_net_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_sub_net_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 
+test_fuzz_snapshotmetadata_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DSNAPSHOTMETADATA_DESERIALIZE=1
+test_fuzz_snapshotmetadata_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_snapshotmetadata_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_snapshotmetadata_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_snapshotmetadata_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
 test_fuzz_transaction_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_transaction_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_transaction_LDADD = $(FUZZ_SUITE_LD_COMMON)
@@ -663,6 +672,18 @@ test_fuzz_txundo_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_txundo_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_txundo_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_txundo_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_uint160_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DUINT160_DESERIALIZE=1
+test_fuzz_uint160_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_uint160_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_uint160_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_uint160_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_uint256_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DUINT256_DESERIALIZE=1
+test_fuzz_uint256_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_uint256_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_uint256_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_uint256_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 
 endif # ENABLE_FUZZ
 
