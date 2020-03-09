@@ -1083,7 +1083,7 @@ else
   BITCOIN_QT_INIT
 
   dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
-  BITCOIN_QT_CONFIGURE([$use_pkgconfig])
+  BITCOIN_QT_CONFIGURE
 fi
 
 if test x$enable_wallet != xno; then

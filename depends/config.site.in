@@ -42,15 +42,6 @@ if test x@host_os@ = xdarwin; then
   PORT=no
 fi
 
-if test x@host_os@ = xmingw32; then
-  if test -z $with_qt_incdir; then
-    with_qt_incdir=$depends_prefix/include
-  fi
-  if test -z $with_qt_libdir; then
-    with_qt_libdir=$depends_prefix/lib
-  fi
-fi
-
 PATH=$depends_prefix/native/bin:$PATH
 PKG_CONFIG="`which pkg-config` --static"
 
