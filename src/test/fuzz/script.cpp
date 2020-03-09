@@ -41,13 +41,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(script == decompressed_script);
     }
 
-    for (unsigned int size = 0; size < 6; ++size) {
-        std::vector<unsigned char> vch(GetSpecialScriptSize(size), 0x00);
-        vch.insert(vch.end(), buffer.begin(), buffer.end());
-        CScript decompressed_script;
-        (void)DecompressScript(decompressed_script, size, vch);
-    }
-
     CTxDestination address;
     (void)ExtractDestination(script, address);
 
