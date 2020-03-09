@@ -181,7 +181,7 @@ Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
-
+- Архипов Владимир Иванович
 - accraze
 - Alex Morcos
 - BtcDrak
