@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2014-2018 The Crown developers
+// Copyright (c) 2014-2020 The Crown developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -971,11 +971,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
         }
         if (tx.IsCoinBase() && tx.nType != TRANSACTION_NORMAL)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-cb-type");
-    }
-    // all version 1 transactions are normal
-    else if (tx.nType != TRANSACTION_NORMAL)
-    {
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
     }
 
     // Basic checks that don't depend on any context
