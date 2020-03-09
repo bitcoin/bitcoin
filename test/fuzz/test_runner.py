@@ -12,10 +12,6 @@ import sys
 import subprocess
 import logging
 
-# Fuzzers known to lack a seed corpus in https://github.com/bitcoin-core/qa-assets/tree/master/fuzz_seed_corpus
-FUZZERS_MISSING_CORPORA = [
-]
-
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -94,6 +90,20 @@ def main():
 
     logging.info("{} of {} detected fuzz target(s) selected: {}".format(len(test_list_selection), len(test_list_all), " ".join(test_list_selection)))
 
+    test_list_seedless = []
+    for t in test_list_selection:
+        corpus_path = os.path.join(args.seed_dir, t)
+        if not os.path.exists(corpus_path) or len(os.listdir(corpus_path)) == 0:
+            test_list_seedless.append(t)
+    test_list_seedless.sort()
+    if test_list_seedless:
+        logging.info(
+            "Fuzzing harnesses lacking a seed corpus: {}".format(
+                " ".join(test_list_seedless)
+            )
+        )
+        logging.info("Please consider adding a fuzz seed corpus at https://github.com/bitcoin-core/qa-assets")
+
     try:
         help_output = subprocess.run(
             args=[
@@ -124,8 +134,7 @@ def main():
 def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
     for t in test_list:
         corpus_path = os.path.join(corpus, t)
-        if t in FUZZERS_MISSING_CORPORA:
-            os.makedirs(corpus_path, exist_ok=True)
+        os.makedirs(corpus_path, exist_ok=True)
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', t),
             '-runs=1',
