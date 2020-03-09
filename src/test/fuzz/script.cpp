@@ -46,10 +46,12 @@ FUZZ_TARGET_INIT(script, initialize_script)
     CompressedScript compressed;
     if (CompressScript(script, compressed)) {
         const unsigned int size = compressed[0];
+        compressed.erase(compressed.begin());
         assert(size <= 5);
         CScript decompressed_script;
         const bool ok = DecompressScript(decompressed_script, size, compressed);
         assert(ok);
+        assert(script == decompressed_script);
     }
 
     CTxDestination address;
