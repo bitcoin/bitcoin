@@ -1365,28 +1365,25 @@ fi
 dnl univalue check
 
 need_bundled_univalue=yes
-
 if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononononono; then
   need_bundled_univalue=no
 else
-
-if test x$system_univalue != xno ; then
-  PKG_CHECK_MODULES([UNIVALUE], [libunivalue >= 1.0.4], [found_univalue=yes], [found_univalue=no])
-  if test x$found_univalue = xyes ; then
-    system_univalue=yes
-    need_bundled_univalue=no
-  elif test x$system_univalue = xyes ; then
-    AC_MSG_ERROR([univalue not found])
-  else
-    system_univalue=no
+  if test x$system_univalue != xno; then
+    PKG_CHECK_MODULES([UNIVALUE], [libunivalue >= 1.0.4], [found_univalue=yes], [found_univalue=no])
+    if test x$found_univalue = xyes; then
+      system_univalue=yes
+      need_bundled_univalue=no
+    elif test x$system_univalue = xyes; then
+      AC_MSG_ERROR([univalue not found])
+    else
+      system_univalue=no
+    fi
   fi
-fi
 
-if test x$need_bundled_univalue = xyes ; then
-  UNIVALUE_CFLAGS='-I$(srcdir)/univalue/include'
-  UNIVALUE_LIBS='univalue/libunivalue.la'
-fi
-
+  if test x$need_bundled_univalue = xyes; then
+    UNIVALUE_CFLAGS='-I$(srcdir)/univalue/include'
+    UNIVALUE_LIBS='univalue/libunivalue.la'
+  fi
 fi
 
 AM_CONDITIONAL([EMBEDDED_UNIVALUE],[test x$need_bundled_univalue = xyes])
