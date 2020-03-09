@@ -12,49 +12,6 @@ import sys
 import subprocess
 import logging
 
-# Fuzzers known to lack a seed corpus in https://github.com/bitcoin-core/qa-assets/tree/master/fuzz_seed_corpus
-FUZZERS_MISSING_CORPORA = [
-    "addr_info_deserialize",
-    "asmap",
-    "base_encode_decode",
-    "block",
-    "block_file_info_deserialize",
-    "block_filter_deserialize",
-    "block_header_and_short_txids_deserialize",
-    "bloom_filter",
-    "decode_tx",
-    "fee_rate_deserialize",
-    "flat_file_pos_deserialize",
-    "float",
-    "hex",
-    "key_io",
-    "integer",
-    "key",
-    "key_origin_info_deserialize",
-    "locale",
-    "merkle_block_deserialize",
-    "netaddress",
-    "out_point_deserialize",
-    "p2p_transport_deserializer",
-    "parse_hd_keypath",
-    "parse_numbers",
-    "parse_script",
-    "parse_univalue",
-    "partial_merkle_tree_deserialize",
-    "partially_signed_transaction_deserialize",
-    "prefilled_transaction_deserialize",
-    "psbt_input_deserialize",
-    "psbt_output_deserialize",
-    "pub_key_deserialize",
-    "rolling_bloom_filter",
-    "script_deserialize",
-    "strprintf",
-    "sub_net_deserialize",
-    "tx_in",
-    "tx_in_deserialize",
-    "tx_out",
-]
-
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
@@ -119,6 +76,20 @@ def main():
         logging.error("No fuzz targets selected")
     logging.info("Fuzz targets selected: {}".format(test_list_selection))
 
+    test_list_seedless = []
+    for t in test_list_selection:
+        corpus_path = os.path.join(args.seed_dir, t)
+        if not os.path.exists(corpus_path) or len(os.listdir(corpus_path)) == 0:
+            test_list_seedless.append(t)
+    test_list_seedless.sort()
+    if test_list_seedless:
+        logging.info(
+            "Fuzzing harnesses lacking a seed corpus: {}".format(
+                " ".join(test_list_seedless)
+            )
+        )
+        logging.info("Please consider adding a fuzz seed corpus at https://github.com/bitcoin-core/qa-assets")
+
     try:
         help_output = subprocess.run(
             args=[
@@ -149,8 +120,7 @@ def main():
 def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
     for t in test_list:
         corpus_path = os.path.join(corpus, t)
-        if t in FUZZERS_MISSING_CORPORA:
-            os.makedirs(corpus_path, exist_ok=True)
+        os.makedirs(corpus_path, exist_ok=True)
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', t),
             '-runs=1',
