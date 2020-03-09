@@ -1314,16 +1314,6 @@ if test x$use_pkgconfig = xyes; then
           PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads >= 2.0.21],, [AC_MSG_ERROR(libevent_pthreads version 2.0.21 or greater not found.)])
         fi
       fi
-
-      if test "x$use_zmq" = "xyes"; then
-        PKG_CHECK_MODULES([ZMQ],[libzmq >= 4],
-          [AC_DEFINE([ENABLE_ZMQ],[1],[Define to 1 to enable ZMQ functions])],
-          [AC_DEFINE([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
-           AC_MSG_WARN([libzmq version 4.x or greater not found, disabling])
-           use_zmq=no])
-      else
-          AC_DEFINE_UNQUOTED([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
-      fi
     ]
   )
 else
@@ -1336,33 +1326,30 @@ else
     fi
   fi
 
-  if test "x$use_zmq" = "xyes"; then
-     AC_CHECK_HEADER([zmq.h],
-       [AC_DEFINE([ENABLE_ZMQ],[1],[Define to 1 to enable ZMQ functions])],
-       [AC_MSG_WARN([zmq.h not found, disabling zmq support])
-        use_zmq=no
-        AC_DEFINE([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])])
-     AC_CHECK_LIB([zmq],[zmq_ctx_shutdown],ZMQ_LIBS=-lzmq,
-       [AC_MSG_WARN([libzmq >= 4.0 not found, disabling zmq support])
-        use_zmq=no
-        AC_DEFINE([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])])
-  else
-    AC_DEFINE_UNQUOTED([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
-  fi
-
-  if test "x$use_zmq" = "xyes"; then
-    dnl Assume libzmq was built for static linking
-    case $host in
-      *mingw*)
-        ZMQ_CFLAGS="$ZMQ_CFLAGS -DZMQ_STATIC"
-      ;;
-    esac
-  fi
-
   if test x$use_qr != xno; then
     SYSCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
     SYSCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
   fi
+
+dnl ZMQ check
+
+if test "x$use_zmq" = xyes; then
+  PKG_CHECK_MODULES([ZMQ], [libzmq >= 4],
+    AC_DEFINE([ENABLE_ZMQ], [1], [Define to 1 to enable ZMQ functions]),
+    [AC_DEFINE([ENABLE_ZMQ], [0], [Define to 1 to enable ZMQ functions])
+    AC_MSG_WARN([libzmq version 4.x or greater not found, disabling])
+    use_zmq=no])
+else
+  AC_DEFINE_UNQUOTED([ENABLE_ZMQ], [0], [Define to 1 to enable ZMQ functions])
+fi
+
+if test "x$use_zmq" = xyes; then
+  dnl Assume libzmq was built for static linking
+  case $host in
+    *mingw*)
+      ZMQ_CFLAGS="$ZMQ_CFLAGS -DZMQ_STATIC"
+    ;;
+  esac
 fi
 
 dnl univalue check
