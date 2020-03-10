@@ -55,32 +55,47 @@ BOOST_AUTO_TEST_CASE(generate_map_test)
 	tfm::format(std::cout,"Running generate_map_test...\n");
 	AssetMap mapAssets;
     AssetAllocationMap mapAssetAllocations;
-    std::string recv = "";
-    for(int i =0;i<1000000;i++){
-        int j = i;
+    for(int i =0;i<10000;i++){
+        std::string recv = itostr(i);
         #if __cplusplus > 201402 
-        auto result = mapAssets.try_emplace(std::move(i),  std::move(emptyAsset));
+        auto result = mapAssets.try_emplace(i,  std::move(emptyAsset));
         auto result1 = mapAssetAllocations.try_emplace(recv,  std::move(emptyAllocation));
         #else
         auto result =  mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(i),  std::forward_as_tuple(std::move(emptyAsset)));
         auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(recv),  std::forward_as_tuple(std::move(emptyAllocation)));
         #endif 
-        BOOST_CHECK(i == j);
-        CAsset tmpAsset;
-        tmpAsset.nBalance = 1;
-        CAssetAllocationDBEntry tmpDbEntry;
-        tmpDbEntry.nBalance = 1;
-        result1.first->second = std::move(tmpDbEntry);
-        result1.first->second.nBalance = 0;
-        result.first->second = std::move(tmpAsset);
-        result.first->second.SetNull();
     }
-    for (const auto &key : mapAssets) {
-		BOOST_CHECK (key.second.IsNull());
+    for(int i =0;i<10000;i++){
+        std::string recv = itostr(i);
+        #if __cplusplus > 201402 
+        auto result = mapAssets.try_emplace(i,  std::move(emptyAsset));
+        auto result1 = mapAssetAllocations.try_emplace(recv,  std::move(emptyAllocation));
+        #else
+        auto result =  mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(i),  std::forward_as_tuple(std::move(emptyAsset)));
+        auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(recv),  std::forward_as_tuple(std::move(emptyAllocation)));
+        #endif 
+        if((i%2) == 0){
+            CAsset tmpAsset;
+            tmpAsset.nBalance = 1;
+            result.first->second = std::move(tmpAsset);
+            CAssetAllocationDBEntry tmpDbEntry;
+            tmpDbEntry.nBalance = 1;
+            result1.first->second = std::move(tmpDbEntry);
+        } else {
+            result.first->second.SetNull();
+            result1.first->second.nBalance = 0;
+        }
     }
-    for (const auto &key : mapAssetAllocations) {
-		BOOST_CHECK (key.second.nBalance <= 0);
+  
+   for(int i =0;i<10000;i++){
+        if((i%2) != 0){
+            auto &asset = mapAssets[i];
+		    BOOST_CHECK (asset.IsNull());
+            auto &assetallocation = mapAssetAllocations[itostr(i)];
+		    BOOST_CHECK (assetallocation.nBalance <= 0);
+        }
     }
+  
 
 }
 BOOST_AUTO_TEST_CASE(generate_asset_spt_sysx)
