@@ -19,6 +19,7 @@
 #include <univalue.h>
 #include <util/strencodings.h>
 #include <services/rpc/assetrpc.h>
+#include <services/assetconsensus.h>
 using namespace std;
 extern UniValue read_json(const std::string& jsondata);
 BOOST_FIXTURE_TEST_SUITE(syscoin_asset_tests, BasicSyscoinTestingSetup)
@@ -49,6 +50,39 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
     string hexStr = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);
 }
+BOOST_AUTO_TEST_CASE(generate_map_test)
+{
+	tfm::format(std::cout,"Running generate_map_test...\n");
+	AssetMap mapAssets;
+    AssetAllocationMap mapAssetAllocations;
+    std::string recv = "";
+    for(int i =0;i<1000000;i++){
+        int j = i;
+        #if __cplusplus > 201402 
+        auto result = mapAssets.try_emplace(std::move(i),  std::move(emptyAsset));
+        auto result1 = mapAssetAllocations.try_emplace(recv,  std::move(emptyAllocation));
+        #else
+        auto result =  mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(i),  std::forward_as_tuple(std::move(emptyAsset)));
+        auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(recv),  std::forward_as_tuple(std::move(emptyAllocation)));
+        #endif 
+        BOOST_CHECK(i == j);
+        CAsset tmpAsset;
+        tmpAsset.nBalance = 1;
+        CAssetAllocationDBEntry tmpDbEntry;
+        tmpDbEntry.nBalance = 1;
+        result1.first->second = std::move(tmpDbEntry);
+        result1.first->second.nBalance = 0;
+        result.first->second = std::move(tmpAsset);
+        result.first->second.SetNull();
+    }
+    for (const auto &key : mapAssets) {
+		BOOST_CHECK (key.second.IsNull());
+    }
+    for (const auto &key : mapAssetAllocations) {
+		BOOST_CHECK (key.second.nBalance <= 0);
+    }
+
+}
 BOOST_AUTO_TEST_CASE(generate_asset_spt_sysx)
 {
     UniValue r;
@@ -66,6 +100,77 @@ BOOST_AUTO_TEST_CASE(generate_asset_spt_sysx)
 
     // can update contract + pub data
     AssetUpdate("node1", strSYSXAsset, "pub", "''", updateFlags, "0x931d387731bbbc988b312206c74f77d004d6b84b");   
+}
+// keep two miner nodes on different chains, smaller chain gets assetnew and longer chain must be able to include it in blocks once longest chain rule plays out
+BOOST_AUTO_TEST_CASE(generate_asset_reorg_activechain)
+{
+    UniValue r;
+    tfm::format(std::cout,"Running generate_asset_reorg_activechain...\n");
+    GenerateBlocks(5);
+    GenerateBlocks(5, "node2");
+    GenerateBlocks(5, "node3");
+    string assetaddress = GetNewFundedAddress("node3");
+    StopNodes();
+    // start node connecting to one another
+    StartNode("node1", true, "", false, false);
+    StartNode("node2", true, "", false, false);
+    StartNode("node3", true, "", false, false);
+    // send asset new to all the nodes so it is in mempool
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "assetnew" , "\"" +  assetaddress + "\",\"test\",\"''\",\"''\",8,250,250,31,{},\"''\""));
+    string guid = itostr(find_value(r.get_obj(), "asset_guid").get_uint());
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "signrawtransactionwithwallet", "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
+    string hex_str = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hex_str + "\""));
+    // generate 11 blocks for node1 and 10 for node3
+	string sBlocks = strprintf("%d", 1);
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
+	string newaddress = r.get_str();
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "generatetoaddress", sBlocks + ",\"" + newaddress + "\"", false));
+
+	sBlocks = strprintf("%d", 1);
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
+	newaddress = r.get_str();
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "generatetoaddress", sBlocks + ",\"" + newaddress + "\"", false));
+
+    // save tip for longest chain, it should match this after we add our nodes
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getblockchaininfo"));
+    string longestChain1 = find_value(r.get_obj(), "bestblockhash").get_str();
+    // save tip for longest chain, it should match this after we add our nodes
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getblockchaininfo"));
+    string longestChain3 = find_value(r.get_obj(), "bestblockhash").get_str();
+
+    // now connect the nodes, node 1 should see node 3 chain as orphan chain
+    // then node 1 chain will become longest but it should include the asset new in its chain when we mine on it
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "addnode", "\"127.0.0.1:18379\", \"onetry\""));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "addnode", "\"127.0.0.1:18389\", \"onetry\""));
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "addnode", "\"127.0.0.1:18369\", \"onetry\""));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "addnode", "\"127.0.0.1:18389\", \"onetry\""));
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "addnode", "\"127.0.0.1:18369\", \"onetry\""));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "addnode", "\"127.0.0.1:18379\", \"onetry\""));
+    sBlocks = strprintf("%d", 1);
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
+	newaddress = r.get_str();
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "generatetoaddress", sBlocks + ",\"" + newaddress + "\"", false));   
+
+    // ensure the tips match after adding nodes, syncs to longest chain
+    UninterruptibleSleep(std::chrono::milliseconds(1000));
+    // shouldn't have asset in the chain because its not mined on the longest chain yet
+    BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetinfo", "\"" + guid + "\""), runtime_error);
+    BOOST_CHECK_THROW(r = CallExtRPC("node2", "assetinfo", "\"" + guid + "\""), runtime_error);
+    BOOST_CHECK_THROW(r = CallExtRPC("node3", "assetinfo", "\"" + guid + "\""), runtime_error);
+    GenerateBlocks(1, "node3");
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "sendrawtransaction" , "\"" + hex_str + "\""));
+    GenerateBlocks(1, "node3");
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetinfo", "\"" + guid + "\""));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "assetinfo", "\"" + guid + "\""));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "assetinfo", "\"" + guid + "\""));
+    // mine a few on the node with shorter chain initially for sanity and then on the other nodes
+    GenerateBlocks(5, "node3");
+    GenerateBlocks(5, "node2");
+    GenerateBlocks(5, "node1");
 }
 BOOST_AUTO_TEST_CASE(generate_auxfees)
 {

@@ -133,11 +133,11 @@ void StopNodes()
 	StopNode("node3");
 	tfm::format(std::cout,"Done!\n");
 }
-void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, bool reindex)
+void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, bool reindex, bool connectOtherNodes)
 {
 	string dataDir = LookupURLLocal(dataDirIn);
 	boost::filesystem::path fpath = boost::filesystem::system_complete("./syscoind");
-	string nodePath = fpath.string() + string(" -server -rpcuser=u -rpcpassword=p -unittest -tpstest -assetindex -daemon -server -debug=0");
+	string nodePath = fpath.string() + string(" -server -rpcuser=u -rpcpassword=p -unittest -tpstest -assetindex -daemon -server -debug=1");
 	nodePath += string(" -datadir=") + dataDir;
 	if (regTest)
 		nodePath += string(" -regtest");
@@ -148,13 +148,19 @@ void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, b
 	if (!extraArgs.empty())
 		nodePath += string(" ") + extraArgs;
 	if (dataDir == "./test/node1"){
-		nodePath += string(" -rpcport=28379 -port=18369 -addnode=127.0.0.1:18379 -addnode=127.0.0.1:18389");
+		nodePath += string(" -rpcport=28379 -port=18369");
+		if(connectOtherNodes)
+			nodePath += string(" -addnode=127.0.0.1:18379 -addnode=127.0.0.1:18389");
 	}
 	else if (dataDir == "./test/node2"){
-		nodePath += string(" -rpcport=38379 -port=18379 -addnode=127.0.0.1:18369 -addnode=127.0.0.1:18389");
+		nodePath += string(" -rpcport=38379 -port=18379");
+		if(connectOtherNodes)
+			nodePath += string("-addnode=127.0.0.1:18369 -addnode=127.0.0.1:18389");
 	}
 	else if (dataDir == "./test/node3"){
-		nodePath += string(" -rpcport=48379 -port=18389 -addnode=127.0.0.1:18369 -addnode=127.0.0.1:18379");
+		nodePath += string(" -rpcport=48379 -port=18389");
+		if(connectOtherNodes)
+			nodePath += string(" -addnode=127.0.0.1:18369 -addnode=127.0.0.1:18379");
 	}	
 	boost::thread t(runCommand, nodePath);
 	tfm::format(std::cout,"Launching %s, waiting 1 second before trying to ping...\n", nodePath.c_str());
