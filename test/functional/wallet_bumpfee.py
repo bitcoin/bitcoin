@@ -130,9 +130,9 @@ def test_feerate_args(self, rbf_node, peer_node, dest_address):
     self.sync_mempools((rbf_node, peer_node))
     assert rbfid in rbf_node.getrawmempool() and rbfid in peer_node.getrawmempool()
 
-    assert_raises_rpc_error(-8, "confTarget can't be set with totalFee or fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.", rbf_node.bumpfee, rbfid, {"fee_rate":0.00001, "confTarget":1})
-    assert_raises_rpc_error(-8, "confTarget can't be set with totalFee or fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.", rbf_node.bumpfee, rbfid, {"totalFee":0.00001, "confTarget":1})
-    assert_raises_rpc_error(-8, "fee_rate can't be set along with totalFee.", rbf_node.bumpfee, rbfid, {"fee_rate":0.00001, "totalFee":0.001})
+    assert_raises_rpc_error(-8, "confTarget can't be set with fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.", rbf_node.bumpfee, rbfid, {"fee_rate": NORMAL, "confTarget": 1})
+
+    assert_raises_rpc_error(-3, "Unexpected key totalFee", rbf_node.bumpfee, rbfid, {"totalFee": NORMAL})
 
     # Bumping to just above minrelay should fail to increase total fee enough, at least
     assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, rbfid, {"fee_rate": INSUFFICIENT})
