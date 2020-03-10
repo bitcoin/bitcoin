@@ -15,12 +15,11 @@
 #include <version.h>
 
 #include <cassert>
-#include <memory>
 #include <string>
 
 void initialize()
 {
-    const static auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const ECCVerifyHandle verify_handle;
     SelectParams(CBaseChainParams::REGTEST);
 }
 

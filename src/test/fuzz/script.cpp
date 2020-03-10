@@ -23,7 +23,7 @@
 void initialize()
 {
     // Fuzzers using pubkey must hold an ECCVerifyHandle.
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const ECCVerifyHandle verify_handle;
 
     SelectParams(CBaseChainParams::REGTEST);
 }
