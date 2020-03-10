@@ -14,7 +14,9 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <streams.h>
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/util.h>
 #include <univalue.h>
 #include <util/memory.h>
 
@@ -85,4 +87,14 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     ScriptToUniv(script, o3, true);
     UniValue o4(UniValue::VOBJ);
     ScriptToUniv(script, o4, false);
+
+    {
+        FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+        const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+        // DecompressScript(..., ..., bytes) is not guaranteed to be defined if bytes.size() <= 23.
+        if (bytes.size() >= 24) {
+            CScript decompressed_script;
+            DecompressScript(decompressed_script, fuzzed_data_provider.ConsumeIntegral<unsigned int>(), bytes);
+        }
+    }
 }
