@@ -10,7 +10,6 @@ WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
 {
     bool fFirstRun;
     m_wallet.LoadWallet(fFirstRun);
-    m_wallet.handleNotifications();
-
+    m_chain_notifications_handler = m_chain->handleNotifications({ &m_wallet, [](CWallet*) {} });
     m_chain_client->registerRpcs();
 }
