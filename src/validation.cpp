@@ -641,7 +641,14 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // SYSCOIN
     // Check for conflicts with in-memory transactions
     const bool& IsZTx = IsZdagTx(tx.nVersion);
-    bool fReplacementOptOut = true;
+    if(IsZTx){
+        sender = GetSenderOfZdagTx(tx);
+        if(sender.empty()){
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx-no-sender",
+                strprintf("Could not get sender of zdag tx %s",
+                    hash.ToString()));
+        }
+    }
     for (const CTxIn &txin : tx.vin)
     {
         const CTransaction* ptxConflicting = m_pool.GetConflictTx(txin.prevout);
@@ -660,7 +667,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // first-seen mempool behavior should be checking all
                 // unconfirmed ancestors anyway; doing otherwise is hopelessly
                 // insecure.
-                
+                bool fReplacementOptOut = true;
                 
                 for (const CTxIn &_txin : ptxConflicting->vin)
                 {
@@ -675,22 +682,17 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                     // if not RBF then allow first dbl-spend to be relayed, ZDAG by default isn't RBF enabled because it shouldn't be replaceable and because of checks below
                     // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because zdag isn't RBF.
                     if(!args.m_test_accept && IsZTx){
-                        sender = GetSenderOfZdagTx(tx);
-                        if(sender.empty()){
-                            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
-                        }
+                        LOCK(cs_assetallocationconflicts);
+                        // only do this the first time, relay the first double spend and fall back to normal policy to not relay and potentially ban on other double spends
+                        if(assetAllocationConflicts.find(sender) == assetAllocationConflicts.end())
                         {
-                            LOCK(cs_assetallocationconflicts);
-                            // only do this the first time, relay the first double spend and fall back to normal policy to not relay and potentially ban on other double spends
-                            if(assetAllocationConflicts.find(sender) == assetAllocationConflicts.end())
-                            {
-                                // add conflicting sender
-                                duplicate = true;
-                                break;
-                            }
-                            else
-                                return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
+                            // add conflicting sender
+                            duplicate = true;
+                            break;
                         }
+                        else
+                            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
+                        
                     }
                     else
                         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
@@ -793,7 +795,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     const CTxMemPool::setEntries setIterConflicting = m_pool.GetIterSet(setConflicts);
     // Calculate in-mempool ancestors, up to a limit.
     // SYSCOIN, if RBF or syscoin asset dbl-spend first-seen duplicate
-    if (setConflicts.size() == 1) {
+    if (setConflicts.size() == 1 || duplicate) {
         // In general, when we receive an RBF transaction with mempool conflicts, we want to know whether we
         // would meet the chain limits after the conflicts have been removed. However, there isn't a practical
         // way to do this short of calculating the ancestor and descendant sets with an overlay cache of
@@ -830,47 +832,37 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     std::string errString;
     // SYSCOIN
-    std::string strSender;
+    fReplacementTransaction = setConflicts.size();
     if(IsSyscoinTx(tx.nVersion)){
-        if(sender.empty() && IsZTx){
-            sender = GetSenderOfZdagTx(tx);
-            if(sender.empty()){
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx-no-sender",
-                 strprintf("Could not get sender of zdag tx %s",
-                        hash.ToString()));
-            }
-        }
         TxValidationState tx_state;
         if (!CheckSyscoinInputs(tx, hash, tx_state, ws.mapAssetAllocationBalances, m_view, true, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), args.m_test_accept || args.m_bypass_limits)) {
-            // if already set as duplicate means this is the first time we saw this conflict otherwise we need to check against the sender later
-            if(!duplicate){
-                // if reason is "assetallocation-insufficient-balance" then we should allow it to succeed the first time an error happens
-                // this should also allow you to RBF your assetallocation low fee transaction the first time
-                if(tx_state.GetRejectReason() == "assetallocation-insufficient-balance"){
-                    bool arrivalTimeExists = false;
-                    {
-                        LOCK(cs_assetallocationarrival);
-                        // ensure there are previous tx for this sender so we can reject if this is the first tx for this sender in mempool
-                        auto arrivalTimesIt = arrivalTimesSet.find(sender);
-                        if(arrivalTimesIt != arrivalTimesSet.end())
-                            arrivalTimeExists = !arrivalTimesIt->second.empty();
-                    }
-                    {
-                        LOCK(cs_assetallocationconflicts);
-                        if(arrivalTimeExists && assetAllocationConflicts.find(sender) == assetAllocationConflicts.end()){
-                            duplicate = true;
-                        }   
-                    }
+            bool dblSpendAssetConflict = false;
+            // if reason is "assetallocation-insufficient-balance" then we should allow it to succeed the first time an error happens
+            // this should also allow you to RBF your assetallocation low fee transaction the first time, see below
+            // this should be the only error that allows you to propogate asset dbl spends since its the only intermittent state that can happen across relay
+            if(tx_state.GetRejectReason() == "assetallocation-insufficient-balance"){
+                bool arrivalTimeExists = false;
+                {
+                    LOCK(cs_assetallocationarrival);
+                    // ensure there are previous tx for this sender so we can reject if this is the first tx for this sender in mempool
+                    auto arrivalTimesIt = arrivalTimesSet.find(sender);
+                    if(arrivalTimesIt != arrivalTimesSet.end())
+                        arrivalTimeExists = !arrivalTimesIt->second.empty();
+                }
+                {
+                    LOCK(cs_assetallocationconflicts);
+                    if(arrivalTimeExists && assetAllocationConflicts.find(sender) == assetAllocationConflicts.end()){
+                        dblSpendAssetConflict = true;
+                    }   
                 }
             }
+            
             // if still not duplicate then just reject
-            if(!duplicate){
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx",
-                    tx_state.ToString()); 
-            // if RBF and this is the first time we have seen the conflict (duplicate == true), we don't want to flag the tx under setToRemoveFromMempool which stops miner from mining
-            // being RBF also lets us assume that duplicate would have been false before checksyscoininputs clause because it is only set true if not RBF
-            } else if (!fReplacementOptOut) {
-                duplicate = false;
+            if(!dblSpendAssetConflict)
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx", tx_state.ToString()); 
+            // if RBF then we don't want to set duplicate to true but still want to relay it, duplicate set to true will add to setToRemoveFromMempool which avoids miner from mining the RBF tx
+            if (!fReplacementTransaction) {
+                duplicate = true;
             }
         } 
     } 
@@ -932,7 +924,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // If we don't hold the lock allConflicting might be incomplete; the
     // subsequent RemoveStaged() and addUnchecked() calls don't guarantee
     // mempool consistency for us.
-    fReplacementTransaction = setConflicts.size();
     if (fReplacementTransaction)
     {
         CFeeRate newFeeRate(nModifiedFees, nSize);
