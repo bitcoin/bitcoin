@@ -15,7 +15,7 @@ extern string strSYSXAsset;
 extern string strSYSXAddress;
 UniValue CallExtRPC(const string &node, const string& command, const string& args="", bool readJson = true);
 void SetupSYSXAsset();
-void StartNode(const string &dataDir, bool regTest = true, const string& extraArgs="", bool reindex = false);
+void StartNode(const string &dataDir, bool regTest = true, const string& extraArgs="", bool reindex = false, bool connectOtherNodes = true);
 void StopNode(const string &dataDir="node1", bool regtest = true);
 void StartNodes();
 void StartMainNetNodes();
