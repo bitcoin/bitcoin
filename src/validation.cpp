@@ -641,6 +641,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // SYSCOIN
     // Check for conflicts with in-memory transactions
     const bool& IsZTx = IsZdagTx(tx.nVersion);
+    bool fReplacementOptOut = true;
     for (const CTxIn &txin : tx.vin)
     {
         const CTransaction* ptxConflicting = m_pool.GetConflictTx(txin.prevout);
@@ -659,7 +660,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // first-seen mempool behavior should be checking all
                 // unconfirmed ancestors anyway; doing otherwise is hopelessly
                 // insecure.
-                bool fReplacementOptOut = true;
+                
                 
                 for (const CTxIn &_txin : ptxConflicting->vin)
                 {
@@ -844,6 +845,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             // if already set as duplicate means this is the first time we saw this conflict otherwise we need to check against the sender later
             if(!duplicate){
                 // if reason is "assetallocation-insufficient-balance" then we should allow it to succeed the first time an error happens
+                // this should also allow you to RBF your assetallocation low fee transaction the first time
                 if(tx_state.GetRejectReason() == "assetallocation-insufficient-balance"){
                     bool arrivalTimeExists = false;
                     {
@@ -865,10 +867,14 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             if(!duplicate){
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx",
                     tx_state.ToString()); 
+            // if RBF and this is the first time we have seen the conflict (duplicate == true), we don't want to flag the tx under setToRemoveFromMempool which stops miner from mining
+            // being RBF also lets us assume that duplicate would have been false before checksyscoininputs clause because it is only set true if not RBF
+            } else if (!fReplacementOptOut) {
+                duplicate = false;
             }
         } 
     } 
-    if (!m_pool.CalculateMemPoolAncestors(*entry, setAncestors, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants, m_limit_descendant_size, errString, true, duplicate, sender)) {
+    if (!m_pool.CalculateMemPoolAncestors(*entry, setAncestors, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants, m_limit_descendant_size, errString, true)) {
         setAncestors.clear();
         // If CalculateMemPoolAncestors fails second time, we want the original error string.
         std::string dummy_err_string;
@@ -884,7 +890,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // outputs - one for each counterparty. For more info on the uses for
         // this, see https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/016518.html
         if (nSize >  EXTRA_DESCENDANT_TX_SIZE_LIMIT ||
-                !m_pool.CalculateMemPoolAncestors(*entry, setAncestors, 2, m_limit_ancestor_size, m_limit_descendants + 1, m_limit_descendant_size + EXTRA_DESCENDANT_TX_SIZE_LIMIT, dummy_err_string, true, duplicate, sender)) {
+                !m_pool.CalculateMemPoolAncestors(*entry, setAncestors, 2, m_limit_ancestor_size, m_limit_descendants + 1, m_limit_descendant_size + EXTRA_DESCENDANT_TX_SIZE_LIMIT, dummy_err_string, true)) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", errString);
         }
     }
