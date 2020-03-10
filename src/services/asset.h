@@ -335,6 +335,7 @@ public:
     bool ScanAssetIndex(uint32_t page, const UniValue& oOptions, UniValue& oRes);	
     bool FlushErase(const std::vector<uint256> &vecTXIDs);	
 };
+static CAsset emptyAsset;
 static CWitnessAddress burnWitness(0, vchFromString("burn"));
 static std::string burnWitnessStr(burnWitness.ToString());
 bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
