@@ -109,9 +109,9 @@ static void ReleaseWallet(CWallet* wallet)
     // so that it's in sync with the current chainstate.
     const std::string name = wallet->GetName();
     wallet->WalletLogPrintf("Releasing wallet\n");
-    wallet->BlockUntilSyncedToCurrentChain();
-    wallet->Flush();
     wallet->m_chain_notifications_handler.reset();
+    wallet->chain().waitForNotifications();
+    wallet->Flush();
     delete wallet;
     // Wallet is now released, notify UnloadWallet, if any.
     {

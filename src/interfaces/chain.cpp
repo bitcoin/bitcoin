@@ -354,6 +354,10 @@ public:
         }
         SyncWithValidationInterfaceQueue();
     }
+    void waitForNotifications() override
+    {
+        SyncWithValidationInterfaceQueue();
+    }
     std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) override
     {
         return MakeUnique<RpcHandlerImpl>(command);

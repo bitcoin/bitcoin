@@ -232,6 +232,9 @@ public:
     //! chain tip.
     virtual void waitForNotificationsIfTipChanged(const uint256& old_tip) = 0;
 
+    //! Wait for pending notifications to be processed.
+    virtual void waitForNotifications() = 0;
+
     //! Register handler for RPC. Command is not copied, so reference
     //! needs to remain valid until Handler is disconnected.
     virtual std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) = 0;
