@@ -139,6 +139,14 @@ New settings
 - RPC Whitelist system. It can give certain RPC users permissions to only some RPC calls.
 It can be set with two command line arguments (`rpcwhitelist` and `rpcwhitelistdefault`). (#12763)
 
+- A new `-asmap` configuration option has been added to enable IP-to-ASN mapping
+  for bucketing of the network peers to diversify the network connections. The
+  legacy /16 prefix mapping remains the default. See [issue
+  #16599](https://github.com/bitcoin/bitcoin/issues/16599), [PR
+  #16702](https://github.com/bitcoin/bitcoin/pull/16702), and the `bitcoind
+  help` for more information. This option is experimental and subject to changes
+  or removal in future releases.
+
 Updated settings
 ----------------
 
