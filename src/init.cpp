@@ -1012,7 +1012,7 @@ namespace { // Variables internal to initialization process only
 int nMaxConnections;
 int nUserMaxConnections;
 int nFD;
-ServiceFlags nLocalServices = NODE_NETWORK;
+ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK | NODE_NETWORK_LIMITED);
 
 } // namespace
 
@@ -1542,6 +1542,15 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("Using data directory %s\n", GetDataDir().string());
     LogPrintf("Using config file %s\n", GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string());
     LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
+
+    // Warn about relative -datadir path.
+    if (gArgs.IsArgSet("-datadir") && !fs::path(gArgs.GetArg("-datadir", "")).is_absolute()) {
+        LogPrintf("Warning: relative datadir option '%s' specified, which will be interpreted relative to the "
+                  "current working directory '%s'. This is fragile, because if Dash Core is started in the future "
+                  "from a different location, it will be unable to locate the current data files. There could "
+                  "also be data loss if Dash Core is started while in a temporary directory.\n",
+            gArgs.GetArg("-datadir", ""), fs::current_path().string());
+    }
 
     InitSignatureCache();
     InitScriptExecutionCache();
@@ -2286,13 +2295,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 #ifdef ENABLE_WALLET
     StartWallets(scheduler);
 #endif
-
-    // Final check if the user requested to kill the GUI during one of the last operations. If so, exit.
-    if (fRequestShutdown)
-    {
-        LogPrintf("Shutdown requested. Exiting.\n");
-        return false;
-    }
 
     return true;
 }

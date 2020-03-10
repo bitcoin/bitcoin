@@ -94,7 +94,7 @@ enum class FeeEstimateMode;
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
 {
-    FEATURE_BASE = 10500, // the earliest version new wallets supports (only useful for getinfo's clientversion output)
+    FEATURE_BASE = 10500, // the earliest version new wallets supports (only useful for getwalletinfo's clientversion output)
 
     FEATURE_WALLETCRYPT = 40000, // wallet encryption
     FEATURE_COMPRPUBKEY = 60000, // compressed public keys
@@ -1024,7 +1024,7 @@ public:
     int64_t IncOrderPosNext(CWalletDB *pwalletdb = nullptr);
     DBErrors ReorderTransactions();
     bool AccountMove(std::string strFrom, std::string strTo, CAmount nAmount, std::string strComment = "");
-    bool GetAccountPubkey(CPubKey &pubKey, std::string strAccount, bool bForceNew = false);
+    bool GetAccountDestination(CTxDestination &dest, std::string strAccount, bool bForceNew = false);
 
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);

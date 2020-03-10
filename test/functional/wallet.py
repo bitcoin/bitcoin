@@ -36,9 +36,6 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listunspent()), 0)
         assert_equal(len(self.nodes[2].listunspent()), 0)
 
-        self.log.info("Check for mempoolminfee in getmempoolinfo")
-        assert_equal(self.nodes[0].getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
-
         self.log.info("Mining blocks...")
 
         self.nodes[0].generate(1)

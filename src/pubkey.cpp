@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -46,7 +47,7 @@ static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1
     lenbyte = input[pos++];
     if (lenbyte & 0x80) {
         lenbyte -= 0x80;
-        if (pos + lenbyte > inputlen) {
+        if (lenbyte > inputlen - pos) {
             return 0;
         }
         pos += lenbyte;
@@ -65,14 +66,15 @@ static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1
     lenbyte = input[pos++];
     if (lenbyte & 0x80) {
         lenbyte -= 0x80;
-        if (pos + lenbyte > inputlen) {
+        if (lenbyte > inputlen - pos) {
             return 0;
         }
         while (lenbyte > 0 && input[pos] == 0) {
             pos++;
             lenbyte--;
         }
-        if (lenbyte >= sizeof(size_t)) {
+        static_assert(sizeof(size_t) >= 4, "size_t too small");
+        if (lenbyte >= 4) {
             return 0;
         }
         rlen = 0;
@@ -103,14 +105,15 @@ static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1
     lenbyte = input[pos++];
     if (lenbyte & 0x80) {
         lenbyte -= 0x80;
-        if (pos + lenbyte > inputlen) {
+        if (lenbyte > inputlen - pos) {
             return 0;
         }
         while (lenbyte > 0 && input[pos] == 0) {
             pos++;
             lenbyte--;
         }
-        if (lenbyte >= sizeof(size_t)) {
+        static_assert(sizeof(size_t) >= 4, "size_t too small");
+        if (lenbyte >= 4) {
             return 0;
         }
         slen = 0;
@@ -181,7 +184,7 @@ bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchS
 }
 
 bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
-    if (vchSig.size() != 65)
+    if (vchSig.size() != COMPACT_SIGNATURE_SIZE)
         return false;
     int recid = (vchSig[0] - 27) & 3;
     bool fComp = ((vchSig[0] - 27) & 4) != 0;
@@ -193,8 +196,8 @@ bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned cha
     if (!secp256k1_ecdsa_recover(secp256k1_context_verify, &pubkey, &sig, hash.begin())) {
         return false;
     }
-    unsigned char pub[65];
-    size_t publen = 65;
+    unsigned char pub[PUBLIC_KEY_SIZE];
+    size_t publen = PUBLIC_KEY_SIZE;
     secp256k1_ec_pubkey_serialize(secp256k1_context_verify, pub, &publen, &pubkey, fComp ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
     Set(pub, pub + publen);
     return true;
@@ -214,8 +217,8 @@ bool CPubKey::Decompress() {
     if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size())) {
         return false;
     }
-    unsigned char pub[65];
-    size_t publen = 65;
+    unsigned char pub[PUBLIC_KEY_SIZE];
+    size_t publen = PUBLIC_KEY_SIZE;
     secp256k1_ec_pubkey_serialize(secp256k1_context_verify, pub, &publen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
     Set(pub, pub + publen);
     return true;
@@ -224,7 +227,7 @@ bool CPubKey::Decompress() {
 bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const {
     assert(IsValid());
     assert((nChild >> 31) == 0);
-    assert(begin() + 33 == end());
+    assert(size() == COMPRESSED_PUBLIC_KEY_SIZE);
     unsigned char out[64];
     BIP32Hash(cc, nChild, *begin(), begin()+1, out);
     memcpy(ccChild.begin(), out+32, 32);
@@ -235,8 +238,8 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
     if (!secp256k1_ec_pubkey_tweak_add(secp256k1_context_verify, &pubkey, out)) {
         return false;
     }
-    unsigned char pub[33];
-    size_t publen = 33;
+    unsigned char pub[COMPRESSED_PUBLIC_KEY_SIZE];
+    size_t publen = COMPRESSED_PUBLIC_KEY_SIZE;
     secp256k1_ec_pubkey_serialize(secp256k1_context_verify, pub, &publen, &pubkey, SECP256K1_EC_COMPRESSED);
     pubkeyChild.Set(pub, pub + publen);
     return true;
@@ -248,8 +251,8 @@ void CExtPubKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
     code[5] = (nChild >> 24) & 0xFF; code[6] = (nChild >> 16) & 0xFF;
     code[7] = (nChild >>  8) & 0xFF; code[8] = (nChild >>  0) & 0xFF;
     memcpy(code+9, chaincode.begin(), 32);
-    assert(pubkey.size() == 33);
-    memcpy(code+41, pubkey.begin(), 33);
+    assert(pubkey.size() == CPubKey::COMPRESSED_PUBLIC_KEY_SIZE);
+    memcpy(code+41, pubkey.begin(), CPubKey::COMPRESSED_PUBLIC_KEY_SIZE);
 }
 
 void CExtPubKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {

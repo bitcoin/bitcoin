@@ -17,10 +17,14 @@ class MempoolLimitTest(BitcoinTestFramework):
         txouts = gen_return_txouts()
         relayfee = self.nodes[0].getnetworkinfo()['relayfee']
 
+        self.log.info('Check that mempoolminfee is minrelytxfee')
+        assert_equal(self.nodes[0].getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
+        assert_equal(self.nodes[0].getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
+
         txids = []
         utxos = create_confirmed_utxos(relayfee, self.nodes[0], 491)
 
-        #create a mempool tx that will be evicted
+        self.log.info('Create a mempool tx that will be evicted')
         us0 = utxos.pop()
         inputs = [{ "txid" : us0["txid"], "vout" : us0["vout"]}]
         outputs = {self.nodes[0].getnewaddress() : 0.0001}
@@ -37,10 +41,14 @@ class MempoolLimitTest(BitcoinTestFramework):
             txids.append([])
             txids[i] = create_lots_of_big_transactions(self.nodes[0], txouts, utxos[30*i:30*i+30], 30, (i+1)*base_fee)
 
-        # by now, the tx should be evicted, check confirmation state
+        self.log.info('The tx should be evicted by now')
         assert(txid not in self.nodes[0].getrawmempool())
         txdata = self.nodes[0].gettransaction(txid)
         assert(txdata['confirmations'] ==  0) #confirmation should still be 0
+
+        self.log.info('Check that mempoolminfee is larger than minrelytxfee')
+        assert_equal(self.nodes[0].getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
+        assert_greater_than(self.nodes[0].getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
 if __name__ == '__main__':
     MempoolLimitTest().main()

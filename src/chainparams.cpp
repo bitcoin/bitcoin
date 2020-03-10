@@ -404,7 +404,7 @@ public:
         nMinSporkKeys = 1;
         fBIP9CheckMasternodesUpgraded = true;
 
-        checkpointData = (CCheckpointData) {
+        checkpointData = {
             {
                 {1500, uint256S("0x000000aaf0300f59f49bc3e970bad15c11f961fe2347accffff19d96ec9778e3")},
                 {4991, uint256S("0x000000003b01809551952460744d5dbb8fcbd6cbae3c220267bf7fa43f837367")},
@@ -580,7 +580,7 @@ public:
         nMinSporkKeys = 1;
         fBIP9CheckMasternodesUpgraded = true;
 
-        checkpointData = (CCheckpointData) {
+        checkpointData = {
             {
                 {261, uint256S("0x00000c26026d0815a7e2ce4fa270775f61403c040647ff2c3091f99e894a4618")},
                 {1999, uint256S("0x00000052e538d27fa53693efe6fb6892a0c1d26c0235f599171c48a3cce553b1")},
@@ -848,7 +848,7 @@ public:
         // regtest usually has no masternodes in most tests, so don't check for upgraged MNs
         fBIP9CheckMasternodesUpgraded = false;
 
-        checkpointData = (CCheckpointData) {
+        checkpointData = {
             {
                 {0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e")},
             }

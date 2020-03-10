@@ -28,3 +28,4 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v0.13.0**):
 * [`BIP 130`](https://github.com/bitcoin/bips/blob/master/bip-0130.mediawiki): direct headers announcement is negotiated with peer versions `>=70012` as of **v0.12.0** ([PR 6494](https://github.com/bitcoin/bitcoin/pull/6494)).
 * [`BIP 147`](https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki): NULLDUMMY softfork as of **v0.13.1** ([PR 8636](https://github.com/bitcoin/bitcoin/pull/8636) and [PR 8937](https://github.com/bitcoin/bitcoin/pull/8937)).
 * [`BIP 152`](https://github.com/bitcoin/bips/blob/master/bip-0152.mediawiki): Compact block transfer and related optimizations are used as of **v0.13.0** ([PR 8068](https://github.com/bitcoin/bitcoin/pull/8068)).
+* [`BIP 159`](https://github.com/bitcoin/bips/blob/master/bip-0159.mediawiki): NODE_NETWORK_LIMITED service bit [signaling only] is supported as of **v0.16.0** ([PR 10740](https://github.com/bitcoin/bitcoin/pull/10740)).

@@ -99,6 +99,7 @@ BASE_SCRIPTS= [
     'mempool_reorg.py',
     'mempool_persist.py',
     'multiwallet.py',
+    'multiwallet.py --usecli',
     'httpbasics.py',
     'multi_rpc.py',
     'proxy_test.py',
@@ -143,6 +144,8 @@ BASE_SCRIPTS= [
     'privatesend.py',
     'uacomment.py',
     'feature_logging.py',
+    'node_network_limited.py',
+    'conf_args.py',
 ]
 
 EXTENDED_SCRIPTS = [

@@ -36,6 +36,8 @@
 
 #include <univalue.h>
 
+#include <functional>
+
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
 CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
@@ -174,14 +176,14 @@ UniValue getnewaddress(const JSONRPCRequest& request)
 }
 
 
-CTxDestination GetAccountAddress(CWallet * const pwallet, std::string strAccount, bool bForceNew=false)
+CTxDestination GetAccountDestination(CWallet* const pwallet, std::string strAccount, bool bForceNew=false)
 {
-    CPubKey pubKey;
-    if (!pwallet->GetAccountPubkey(pubKey, strAccount, bForceNew)) {
+    CTxDestination dest;
+    if (!pwallet->GetAccountDestination(dest, strAccount, bForceNew)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     }
 
-    return pubKey.GetID();
+    return dest;
 }
 
 UniValue getaccountaddress(const JSONRPCRequest& request)
@@ -213,7 +215,7 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VSTR);
 
-    ret = EncodeDestination(GetAccountAddress(pwallet, strAccount));
+    ret = EncodeDestination(GetAccountDestination(pwallet, strAccount));
     return ret;
 }
 
@@ -291,8 +293,8 @@ UniValue setaccount(const JSONRPCRequest& request)
         // Detect when changing the account of an address that is the 'unused current key' of another account:
         if (pwallet->mapAddressBook.count(dest)) {
             std::string strOldAccount = pwallet->mapAddressBook[dest].name;
-            if (dest == GetAccountAddress(pwallet, strOldAccount)) {
-                GetAccountAddress(pwallet, strOldAccount, true);
+            if (dest == GetAccountDestination(pwallet, strOldAccount)) {
+                GetAccountDestination(pwallet, strOldAccount, true);
             }
         }
         pwallet->SetAddressBook(dest, strAccount, "receive");
@@ -2215,7 +2217,7 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
             "This is needed prior to performing transactions related to private keys such as sending dashs\n"
             "\nArguments:\n"
             "1. \"passphrase\"        (string, required) The wallet passphrase\n"
-            "2. timeout             (numeric, required) The time to keep the decryption key in seconds.\n"
+            "2. timeout             (numeric, required) The time to keep the decryption key in seconds; capped at 100000000 (~3 years).\n"
             "3. mixingonly          (boolean, optional, default=false) If is true sending functions are disabled.\n"
             "\nNote:\n"
             "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
@@ -2247,17 +2249,28 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     // Alternately, find a way to make request.params[0] mlock()'d to begin with.
     strWalletPass = request.params[0].get_str().c_str();
 
+    // Get the timeout
     int64_t nSleepTime = request.params[1].get_int64();
+    // Timeout cannot be negative, otherwise it will relock immediately
+    if (nSleepTime < 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Timeout cannot be negative.");
+    }
+    // Clamp timeout
+    constexpr int64_t MAX_SLEEP_TIME = 100000000; // larger values trigger a macos/libevent bug?
+    if (nSleepTime > MAX_SLEEP_TIME) {
+        nSleepTime = MAX_SLEEP_TIME;
+    }
 
     bool fForMixingOnly = false;
     if (!request.params[2].isNull())
         fForMixingOnly = request.params[2].get_bool();
 
-    if (fForMixingOnly && !pwallet->IsLocked(true) && pwallet->IsLocked())
-        throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already unlocked for mixing only.");
-
-    if (!pwallet->IsLocked())
+    if (fForMixingOnly && !pwallet->IsLocked()) {
+        // Downgrading from "fuly unlocked" mode to "mixing only" one is not supported.
+        // Updating unlock time when current unlock mode is not changed or when it is upgraded
+        // from "mixing only" to "fuly unlocked" is ok.
         throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already fully unlocked.");
+    }
 
     if (!pwallet->Unlock(strWalletPass, fForMixingOnly))
         throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
@@ -2265,7 +2278,7 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     pwallet->TopUpKeyPool();
 
     pwallet->nRelockTime = GetTime() + nSleepTime;
-    RPCRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), boost::bind(LockWallet, pwallet), nSleepTime);
+    RPCRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), std::bind(LockWallet, pwallet), nSleepTime);
 
     return NullUniValue;
 }

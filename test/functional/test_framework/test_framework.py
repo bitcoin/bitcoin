@@ -73,6 +73,7 @@ class BitcoinTestFramework():
         self.setup_clean_chain = False
         self.nodes = []
         self.mocktime = 0
+        self.supports_cli = False
         self.set_test_params()
 
         assert hasattr(self, "num_nodes"), "Test must set self.num_nodes in set_test_params()"
@@ -102,6 +103,8 @@ class BitcoinTestFramework():
                           help="Location of the test framework config file")
         parser.add_option("--pdbonfailure", dest="pdbonfailure", default=False, action="store_true",
                           help="Attach a python debugger if test fails")
+        parser.add_option("--usecli", dest="usecli", default=False, action="store_true",
+                          help="use bitcoin-cli instead of RPC for all commands")
         self.add_options(parser)
         (self.options, self.args) = parser.parse_args()
 
@@ -124,6 +127,8 @@ class BitcoinTestFramework():
         success = TestStatus.FAILED
 
         try:
+            if self.options.usecli and not self.supports_cli:
+                raise SkipTest("--usecli specified but test does not support using CLI")
             self.setup_chain()
             self.setup_network()
             self.run_test()
@@ -247,20 +252,20 @@ class BitcoinTestFramework():
         assert_equal(len(binary), num_nodes)
         old_num_nodes = len(self.nodes)
         for i in range(num_nodes):
-            self.nodes.append(TestNode(old_num_nodes + i, self.options.tmpdir, extra_args[i], rpchost, timewait=timewait, binary=binary[i], stderr=stderr, mocktime=self.mocktime, coverage_dir=self.options.coveragedir))
+            self.nodes.append(TestNode(old_num_nodes + i, self.options.tmpdir, extra_args[i], rpchost, timewait=timewait, binary=binary[i], stderr=stderr, mocktime=self.mocktime, coverage_dir=self.options.coveragedir, use_cli=self.options.usecli))
 
-    def start_node(self, i, extra_args=None, stderr=None):
+    def start_node(self, i, *args, **kwargs):
         """Start a dashd"""
 
         node = self.nodes[i]
 
-        node.start(extra_args, stderr)
+        node.start(*args, **kwargs)
         node.wait_for_rpc_connection()
 
         if self.options.coveragedir is not None:
             coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
 
-    def start_nodes(self, extra_args=None, stderr=None):
+    def start_nodes(self, extra_args=None, stderr=None, *args, **kwargs):
         """Start multiple dashds"""
 
         if extra_args is None:
@@ -268,7 +273,7 @@ class BitcoinTestFramework():
         assert_equal(len(extra_args), self.num_nodes)
         try:
             for i, node in enumerate(self.nodes):
-                node.start(extra_args[i], stderr)
+                node.start(extra_args[i], stderr, *args, **kwargs)
             for node in self.nodes:
                 node.wait_for_rpc_connection()
         except:
@@ -300,10 +305,10 @@ class BitcoinTestFramework():
         self.stop_node(i)
         self.start_node(i, extra_args)
 
-    def assert_start_raises_init_error(self, i, extra_args=None, expected_msg=None):
+    def assert_start_raises_init_error(self, i, extra_args=None, expected_msg=None, *args, **kwargs):
         with tempfile.SpooledTemporaryFile(max_size=2**16) as log_stderr:
             try:
-                self.start_node(i, extra_args, stderr=log_stderr)
+                self.start_node(i, extra_args, stderr=log_stderr, *args, **kwargs)
                 self.stop_node(i)
             except Exception as e:
                 assert 'dashd exited' in str(e)  # node must have shutdown
