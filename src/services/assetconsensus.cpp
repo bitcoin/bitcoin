@@ -483,8 +483,8 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
         CAssetAllocationDBEntry senderAllocation;	
         GetAssetAllocation(senderAllocationTuple, senderAllocation);	
         if (senderAllocation.assetAllocationTuple.IsNull()) {           	
-            senderAllocation.assetAllocationTuple.nAsset = std::move(senderAllocationTuple.nAsset);	
-            senderAllocation.assetAllocationTuple.witnessAddress = std::move(senderAllocationTuple.witnessAddress); 	
+            senderAllocation.assetAllocationTuple.nAsset = senderAllocationTuple.nAsset;	
+            senderAllocation.assetAllocationTuple.witnessAddress = senderAllocationTuple.witnessAddress; 	
         }	
         mapSenderAssetAllocation->second = std::move(senderAllocation);              	
     }
@@ -495,8 +495,8 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
         CAssetAllocationDBEntry receiverAllocation;
         GetAssetAllocation(mintSyscoin.assetAllocationTuple, receiverAllocation);
         if (receiverAllocation.assetAllocationTuple.IsNull()) {           
-            receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
-            receiverAllocation.assetAllocationTuple.witnessAddress = std::move(mintSyscoin.assetAllocationTuple.witnessAddress);
+            receiverAllocation.assetAllocationTuple.nAsset = mintSyscoin.assetAllocationTuple.nAsset;
+            receiverAllocation.assetAllocationTuple.witnessAddress = mintSyscoin.assetAllocationTuple.witnessAddress;
         }
         mapAssetAllocation->second = std::move(receiverAllocation);             
     }
@@ -546,8 +546,8 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
         CAssetAllocationDBEntry senderAllocation;
         GetAssetAllocation(theAssetAllocation.assetAllocationTuple, senderAllocation);
         if (senderAllocation.assetAllocationTuple.IsNull()) {
-            senderAllocation.assetAllocationTuple.nAsset = std::move(theAssetAllocation.assetAllocationTuple.nAsset);
-            senderAllocation.assetAllocationTuple.witnessAddress = std::move(theAssetAllocation.assetAllocationTuple.witnessAddress);       
+            senderAllocation.assetAllocationTuple.nAsset = theAssetAllocation.assetAllocationTuple.nAsset;
+            senderAllocation.assetAllocationTuple.witnessAddress = theAssetAllocation.assetAllocationTuple.witnessAddress;       
         } 
         mapAssetAllocation->second = std::move(senderAllocation);               
     }
@@ -569,8 +569,8 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
         if(mapAssetAllocationReceiverNotFound){
             GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
             if (receiverAllocation.assetAllocationTuple.IsNull()) {
-                receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
-                receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);
+                receiverAllocation.assetAllocationTuple.nAsset = receiverAllocationTuple.nAsset;
+                receiverAllocation.assetAllocationTuple.witnessAddress = receiverAllocationTuple.witnessAddress;
             } 
             mapAssetAllocationReceiver->second = std::move(receiverAllocation);               
         }
@@ -1078,8 +1078,8 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
         if(mapAssetAllocationNotFound){
             GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
             if (receiverAllocation.assetAllocationTuple.IsNull()) {
-                receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
-                receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);
+                receiverAllocation.assetAllocationTuple.nAsset = receiverAllocationTuple.nAsset;
+                receiverAllocation.assetAllocationTuple.witnessAddress = receiverAllocationTuple.witnessAddress;
             } 
             mapAssetAllocation->second = std::move(receiverAllocation);            
         }
@@ -1206,9 +1206,9 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
         return false;
     }
     #if __cplusplus > 201402 
-    mapAssets.try_emplace(std::move(theAsset.nAsset),  std::move(emptyAsset));
+    mapAssets.try_emplace(theAsset.nAsset,  std::move(emptyAsset));
     #else
-    mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(std::move(theAsset.nAsset)),  std::forward_as_tuple(std::move(emptyAsset)));
+    mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
     #endif 
     if(fAssetIndex){	
         if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){	
