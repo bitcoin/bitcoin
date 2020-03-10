@@ -222,9 +222,9 @@ def test_small_output_with_feerate_succeeds(self, rbf_node, dest_address):
     input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
     assert_equal(len(input_list), 1)
     original_txin = input_list[0]
-    self.log.info('Keep bumping until transaction fee out-spends change output amount')
+    self.log.info('Keep bumping until transaction fee out-spends non-destination value')
     tx_fee = 0
-    while tx_fee < Decimal("0.0005"):
+    while True:
         input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
         new_item = list(input_list)[0]
         assert_equal(len(input_list), 1)
@@ -236,7 +236,11 @@ def test_small_output_with_feerate_succeeds(self, rbf_node, dest_address):
         assert rbfid not in raw_pool
         assert rbfid_new in raw_pool
         rbfid = rbfid_new
-        tx_fee = rbfid_new_details["origfee"]
+        tx_fee = rbfid_new_details["fee"]
+
+        # Total value from input not going to destination
+        if tx_fee > Decimal('0.00050000'):
+            break
 
     # input(s) have been added
     final_input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
