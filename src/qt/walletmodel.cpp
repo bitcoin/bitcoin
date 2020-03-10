@@ -482,7 +482,7 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     CAmount old_fee;
     CAmount new_fee;
     CMutableTransaction mtx;
-    if (!m_wallet->createBumpTransaction(hash, coin_control, 0 /* totalFee */, errors, old_fee, new_fee, mtx)) {
+    if (!m_wallet->createBumpTransaction(hash, coin_control, errors, old_fee, new_fee, mtx)) {
         QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Increasing transaction fee failed") + "<br />(" +
             (errors.size() ? QString::fromStdString(errors[0]) : "") +")");
          return false;
