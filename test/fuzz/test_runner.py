@@ -30,11 +30,6 @@ def main():
         help="log events at this level and higher to the console. Can be set to DEBUG, INFO, WARNING, ERROR or CRITICAL. Passing --loglevel DEBUG will output all logs to console.",
     )
     parser.add_argument(
-        '--export_coverage',
-        action='store_true',
-        help='If true, export coverage information to files in the seed corpus',
-    )
-    parser.add_argument(
         '--valgrind',
         action='store_true',
         help='If true, run fuzzing binaries under the valgrind memory error detector',
@@ -131,7 +126,6 @@ def main():
         corpus=args.seed_dir,
         test_list=test_list_selection,
         build_dir=config["environment"]["BUILDDIR"],
-        export_coverage=args.export_coverage,
         use_valgrind=args.valgrind,
     )
 
@@ -152,7 +146,7 @@ def merge_inputs(*, corpus, test_list, build_dir, merge_dir):
         logging.debug('Output: {}'.format(output))
 
 
-def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
+def run_once(*, corpus, test_list, build_dir, use_valgrind):
     for t in test_list:
         corpus_path = os.path.join(corpus, t)
         if t in FUZZERS_MISSING_CORPORA:
@@ -177,13 +171,6 @@ def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
                 logging.info(e.stderr)
             logging.info("Target \"{}\" failed with exit code {}: {}".format(t, e.returncode, " ".join(args)))
             sys.exit(1)
-        if not export_coverage:
-            continue
-        for l in output.splitlines():
-            if 'INITED' in l:
-                with open(os.path.join(corpus, t + '_coverage'), 'w', encoding='utf-8') as cov_file:
-                    cov_file.write(l)
-                    break
 
 
 def parse_test_list(makefile):
