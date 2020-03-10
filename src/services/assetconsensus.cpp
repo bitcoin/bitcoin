@@ -268,7 +268,6 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         return FormatSyscoinErrorMessage(state, "mint-burn-value", bSanityCheck);
     }  
     const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
-    CAssetAllocationDBEntry emptyAllocation;
     #if __cplusplus > 201402 
     auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
     #else
@@ -276,13 +275,12 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     #endif
 
     // sender as burn	
-    CAssetAllocationDBEntry emptyAllocation1;
     const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, burnWitness);	
     const std::string &senderTupleStr = senderAllocationTuple.ToString();	
     #if __cplusplus > 201402 
-    auto result2 = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation1));
+    auto result2 = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
     #else
-    auto result2 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation1)));	
+    auto result2 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));	
     #endif
     auto mapSenderAssetAllocation = result2.first;	
     const bool &mapSenderAssetAllocationNotFound = result2.second;	
@@ -464,8 +462,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
     const std::vector<unsigned char> &vchHash = hash.asBytes();
     vecMintKeys.emplace_back(std::make_pair(std::make_pair(vchHash, 0), txHash));
 
-    const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
-    CAssetAllocationDBEntry emptyAllocation;
+     const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
     #if __cplusplus > 201402 
     auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
     #else
@@ -473,13 +470,12 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
     #endif
 
     // sender as burn	
-    CAssetAllocationDBEntry emptyAllocation1;
     const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, burnWitness);	
     const std::string &senderTupleStr = senderAllocationTuple.ToString();	
     #if __cplusplus > 201402 
-    auto result2 = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation1));
+    auto result2 = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
     #else
-    auto result2 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation1)));	
+    auto result2 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));	
     #endif
     auto mapSenderAssetAllocation = result2.first;	
     const bool &mapSenderAssetAllocationNotFound = result2.second;	
@@ -537,7 +533,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
 bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, const CAssetAllocation &theAssetAllocation, CCoinsViewCache& view, AssetAllocationMap &mapAssetAllocations){
 
     const std::string &senderTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
-    CAssetAllocationDBEntry emptyAllocation;
+
     #if __cplusplus > 201402 
     auto result = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
     #else
@@ -559,13 +555,13 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
     CAmount nTotal = 0;
     for(const auto& amountTuple:theAssetAllocation.listSendingAllocationAmounts){
         const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
-        CAssetAllocationDBEntry emptyAllocation1;
+       
         const std::string &receiverTupleStr = receiverAllocationTuple.ToString();
         CAssetAllocationDBEntry receiverAllocation;
         #if __cplusplus > 201402 
-        auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation1));
+        auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
         #else
-        auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation1)));
+        auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
         #endif
 
         auto mapAssetAllocationReceiver = result1.first;
@@ -737,7 +733,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         }     
     }
     else{
-        CAssetAllocationDBEntry emptyAllocation;
         #if __cplusplus > 201402 
         auto result = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
         #else
@@ -821,8 +816,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         if (mapBalanceSenderCopy < 0) {         
             return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bSanityCheck);
         }
-        if (!fJustCheck) {  
-            CAssetAllocationDBEntry emptyAllocation; 
+        if (!fJustCheck) {   
             #if __cplusplus > 201402 
             auto resultReceiver = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
             #else
@@ -906,7 +900,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         const CAssetAllocationTuple receiverAllocationTuple(nBurnAsset,  burnWitness);
         const string& receiverTupleStr = receiverAllocationTuple.ToString(); 
         if (!fJustCheck) {   
-            CAssetAllocationDBEntry emptyAllocation;
             #if __cplusplus > 201402 
             auto resultReceiver = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
             #else
@@ -978,7 +971,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                 return FormatSyscoinErrorMessage(state, "assetallocation-send-to-yourself", bSanityCheck);
             }
             if (!fJustCheck) {  
-                CAssetAllocationDBEntry emptyAllocation;
                 const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
                 const string &receiverTupleStr = receiverAllocationTuple.ToString();
                 #if __cplusplus > 201402 
@@ -1053,7 +1045,6 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not decode asset allocation in asset send\n");
         return false;
     } 
-    CAsset emptyAsset;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(theAssetAllocation.assetAllocationTuple.nAsset,  std::move(emptyAsset));
     #else
@@ -1076,11 +1067,10 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
         const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
         const std::string &receiverTupleStr = receiverAllocationTuple.ToString();
         CAssetAllocationDBEntry receiverAllocation;
-        CAssetAllocationDBEntry emptyAllocation1;
         #if __cplusplus > 201402 
-        auto result = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation1));
+        auto result = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
         #else
-        auto result = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation1)));
+        auto result = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
         #endif 
         
         auto mapAssetAllocation = result.first;
@@ -1139,7 +1129,6 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
         LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not decode asset\n");
         return false;
     }
-    CAsset emptyAsset;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(theAsset.nAsset,  std::move(emptyAsset));
     #else
@@ -1182,7 +1171,6 @@ bool DisconnectAssetTransfer(const CTransaction &tx, const uint256& txid, AssetM
         LogPrint(BCLog::SYS,"DisconnectAssetTransfer: Could not decode asset\n");
         return false;
     }
-    CAsset emptyAsset;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(theAsset.nAsset,  std::move(emptyAsset));
     #else
@@ -1217,7 +1205,6 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
         LogPrint(BCLog::SYS,"DisconnectAssetActivate: Could not decode asset in asset activate\n");
         return false;
     }
-    CAsset emptyAsset;
     #if __cplusplus > 201402 
     mapAssets.try_emplace(std::move(theAsset.nAsset),  std::move(emptyAsset));
     #else
@@ -1346,7 +1333,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     }
 
     CAsset dbAsset;
-    CAsset emptyAsset;
     const uint32_t &nAsset = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND ? theAssetAllocation.assetAllocationTuple.nAsset : theAsset.nAsset;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
@@ -1474,7 +1460,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         for (const auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
             if (!bSanityCheck) {
                 CAssetAllocationDBEntry receiverAllocation;
-                CAssetAllocationDBEntry emptyAllocation;
                 const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
                 const string& receiverTupleStr = receiverAllocationTuple.ToString();
                 #if __cplusplus > 201402 
