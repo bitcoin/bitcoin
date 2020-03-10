@@ -28,16 +28,6 @@ enum class Result
 //! Return whether transaction can be bumped.
 bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid);
 
-//! Create bumpfee transaction based on total amount.
-Result CreateTotalBumpTransaction(const CWallet* wallet,
-                         const uint256& txid,
-                         const CCoinControl& coin_control,
-                         CAmount total_fee,
-                         std::vector<std::string>& errors,
-                         CAmount& old_fee,
-                         CAmount& new_fee,
-                         CMutableTransaction& mtx);
-
 //! Create bumpfee transaction based on feerate estimates.
 Result CreateRateBumpTransaction(CWallet& wallet,
                          const uint256& txid,
