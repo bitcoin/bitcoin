@@ -120,4 +120,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     const CNetAddr other_net_addr = ConsumeNetAddr(fuzzed_data_provider);
     (void)net_addr.GetReachabilityFrom(&other_net_addr);
     (void)sub_net.Match(other_net_addr);
+
+    const CService other_service{net_addr, fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
+    assert((service == other_service) != (service != other_service));
 }
