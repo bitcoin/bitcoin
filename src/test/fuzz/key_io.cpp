@@ -15,7 +15,9 @@
 
 void initialize_key_io()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    static const ECCVerifyHandle verify_handle;
+    ECC_Start();
+    SelectParams(CBaseChainParams::MAIN);
 }
 
 FUZZ_TARGET_INIT(key_io, initialize_key_io)
