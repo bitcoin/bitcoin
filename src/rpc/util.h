@@ -29,10 +29,10 @@
 extern const std::string UNIX_EPOCH_TIME;
 
 /**
- * Example bech32 address used in multiple RPCExamples. The address is intentionally
+ * Example bech32 addresses for the RPCExamples help documentation. They are intentionally
  * invalid to prevent accidental transactions by users.
  */
-extern const std::string EXAMPLE_ADDRESS;
+extern const std::string EXAMPLE_ADDRESS[2];
 
 class FillableSigningProvider;
 class CPubKey;
