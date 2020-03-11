@@ -9,17 +9,25 @@
 #include <string>
 
 class CBlock;
+class COutPoint;
 class CScript;
-class CTxIn;
 struct NodeContext;
 
+void ReGenerateCommitments(CBlock& block);
+
 /** Returns the generated coin */
-CTxIn MineBlock(const NodeContext&, const CScript& coinbase_scriptPubKey);
+COutPoint MineBlock(const NodeContext&, const CScript& coinbase_scriptPubKey);
+
+/**
+ * Returns the generated coin (or Null if the block was invalid).
+ * It is recommended to call ReGenerateCommitments before mining the block to avoid merkle tree mismatches.
+ **/
+COutPoint MineBlock(std::shared_ptr<CBlock>& block);
 
 /** Prepare a block to be mined */
 std::shared_ptr<CBlock> PrepareBlock(const NodeContext&, const CScript& coinbase_scriptPubKey);
 
 /** RPC-like helper function, returns the generated coin */
-CTxIn generatetoaddress(const NodeContext&, const std::string& address);
+COutPoint generatetoaddress(const NodeContext&, const std::string& address);
 
 #endif // BITCOIN_TEST_UTIL_MINING_H
