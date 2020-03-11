@@ -16,6 +16,7 @@ from test_framework.messages import (
     CTransaction,
     CTxOut,
     MAX_BLOCK_BASE_SIZE,
+    MAX_MONEY,
 )
 from test_framework.script import (
     hash160,
@@ -220,7 +221,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         # The following two validations prevent overflow of the output amounts (see CVE-2010-5139).
         self.log.info('A transaction with too large output value')
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
-        tx.vout[0].nValue = 21000000 * COIN + 1
+        tx.vout[0].nValue = MAX_MONEY + 1
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-vout-toolarge'}],
             rawtxs=[tx.serialize().hex()],
@@ -229,7 +230,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.log.info('A transaction with too large sum of output values')
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
         tx.vout = [tx.vout[0]] * 2
-        tx.vout[0].nValue = 21000000 * COIN
+        tx.vout[0].nValue = MAX_MONEY
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-txouttotal-toolarge'}],
             rawtxs=[tx.serialize().hex()],
