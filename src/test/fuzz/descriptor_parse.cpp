@@ -10,7 +10,7 @@
 
 void initialize()
 {
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const ECCVerifyHandle verify_handle;
     SelectParams(CBaseChainParams::REGTEST);
 }
 

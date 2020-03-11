@@ -14,7 +14,7 @@
 
 void initialize()
 {
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const ECCVerifyHandle verify_handle;
     SelectParams(CBaseChainParams::REGTEST);
 }
 
@@ -35,21 +35,31 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
     try {
         (void)ParseHashO(univalue, "A");
+    } catch (const UniValue&) {
+    } catch (const std::runtime_error&) {
+    }
+    try {
         (void)ParseHashO(univalue, random_string);
     } catch (const UniValue&) {
     } catch (const std::runtime_error&) {
     }
     try {
         (void)ParseHashV(univalue, "A");
+    } catch (const UniValue&) {
+    } catch (const std::runtime_error&) {
+    }
+    try {
         (void)ParseHashV(univalue, random_string);
     } catch (const UniValue&) {
     } catch (const std::runtime_error&) {
     }
     try {
         (void)ParseHexO(univalue, "A");
+    } catch (const UniValue&) {
+    }
+    try {
         (void)ParseHexO(univalue, random_string);
     } catch (const UniValue&) {
-    } catch (const std::runtime_error&) {
     }
     try {
         (void)ParseHexUV(univalue, "A");
@@ -59,6 +69,10 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
     try {
         (void)ParseHexV(univalue, "A");
+    } catch (const UniValue&) {
+    } catch (const std::runtime_error&) {
+    }
+    try {
         (void)ParseHexV(univalue, random_string);
     } catch (const UniValue&) {
     } catch (const std::runtime_error&) {
