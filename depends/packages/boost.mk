@@ -26,6 +26,10 @@ $(package)_config_libraries=filesystem,system,thread,test
 $(package)_cxxflags=-std=c++11 -fvisibility=hidden
 $(package)_cxxflags_linux=-fPIC
 $(package)_cxxflags_android=-fPIC
+ifneq (,$(findstring clang,$(CXX)))
+  $(package)_toolset_$(host_os)=clang
+  $(package)_cxx=$(CXX)
+endif
 endef
 
 define $(package)_preprocess_cmds
