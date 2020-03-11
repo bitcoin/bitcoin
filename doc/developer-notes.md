@@ -288,6 +288,7 @@ $ valgrind --suppressions=contrib/valgrind.supp src/test/test_syscoin
 $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
       --show-leak-kinds=all src/test/test_syscoin --log_level=test_suite
 $ valgrind -v --leak-check=full src/syscoind -printtoconsole
+$ ./test/functional/test_runner.py --valgrind
 ```
 
 ### Compiling for test coverage
