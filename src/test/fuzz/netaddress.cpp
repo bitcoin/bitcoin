@@ -123,4 +123,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 
     const CService other_service{net_addr, fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
     assert((service == other_service) != (service != other_service));
+    (void)(service < other_service);
+
+    const CSubNet sub_net_copy_1{net_addr, other_net_addr};
+    const CSubNet sub_net_copy_2{net_addr};
+
+    CNetAddr mutable_net_addr;
+    mutable_net_addr.SetIP(net_addr);
+    assert(net_addr == mutable_net_addr);
 }
