@@ -196,6 +196,7 @@ BASE_SCRIPTS = [
     'wallet_fallbackfee.py',
     'rpc_dumptxoutset.py',
     'feature_minchainwork.py',
+    'rpc_estimatefee.py',
     'rpc_getblockstats.py',
     'wallet_create_tx.py',
     'p2p_fingerprint.py',
