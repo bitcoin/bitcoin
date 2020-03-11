@@ -62,7 +62,7 @@ class BIP65Test(BitcoinTestFramework):
             '-acceptnonstdtxn=1',  # cltv_invalidate is nonstandard
         ]]
         self.setup_clean_chain = True
-        self.rpc_timeout = 120
+        self.rpc_timeout = 480
 
     def test_cltv_info(self, *, is_active):
         assert_equal(self.nodes[0].getblockchaininfo()['softforks']['bip65'],
