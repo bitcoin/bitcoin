@@ -79,7 +79,7 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w4.getnewaddress)
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w4.getrawchangeaddress)
         # Now set a seed and it should work. Wallet should also be encrypted
-        w4.walletpassphrase('pass', 2)
+        w4.walletpassphrase('pass', 60)
         w4.sethdseed()
         w4.getnewaddress()
         w4.getrawchangeaddress()
