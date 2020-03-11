@@ -15,7 +15,7 @@
 
 const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
 // SYSCOIN
-const std::string EXAMPLE_ADDRESS = "\"sys1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl\"";
+const std::string EXAMPLE_ADDRESS[2] = {"sys1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl", "sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee"};
 
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValueType>& typesExpected,
