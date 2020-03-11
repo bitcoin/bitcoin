@@ -52,6 +52,6 @@ void SetupChainParamsBaseOptions();
 const CBaseChainParams& BaseParams();
 
 /** Sets the params returned by Params() to those for the given network. */
-void SelectBaseParams(const std::string& chain);
+void SelectBaseParams(const std::string& chain, const CBaseChainParams* out = nullptr);
 
 #endif // BITCOIN_CHAINPARAMSBASE_H

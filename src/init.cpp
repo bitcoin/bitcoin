@@ -299,6 +299,8 @@ void Shutdown(NodeContext& node)
     ECC_Stop();
     if (node.mempool) node.mempool = nullptr;
     node.scheduler.reset();
+    node.base_params = nullptr;
+    node.params = nullptr;
 
     try {
         if (!fs::remove(GetPidFile())) {

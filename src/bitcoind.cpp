@@ -85,9 +85,9 @@ static bool AppInit(int argc, char* argv[])
         if (!gArgs.ReadConfigFiles(error, true)) {
             return InitError(strprintf("Error reading configuration file: %s\n", error));
         }
-        // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
+        // Check for chain parameter; Params() calls are only valid after this clause
         try {
-            SelectParams(gArgs.GetChainName());
+            SelectParams(gArgs.GetChainName(), node.base_params, node.params);
         } catch (const std::exception& e) {
             return InitError(strprintf("%s\n", e.what()));
         }

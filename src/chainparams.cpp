@@ -8,8 +8,8 @@
 #include <chainparamsseeds.h>
 #include <consensus/merkle.h>
 #include <tinyformat.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 #include <versionbitsinfo.h>
 
 #include <assert.h>
@@ -399,8 +399,9 @@ std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain)
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
-void SelectParams(const std::string& network)
+void SelectParams(const std::string& network, const CBaseChainParams* out_base, const CChainParams* out)
 {
-    SelectBaseParams(network);
+    SelectBaseParams(network, out_base);
     globalChainParams = CreateChainParams(network);
+    if (out) out = globalChainParams.get();
 }

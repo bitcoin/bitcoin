@@ -5,10 +5,13 @@
 #ifndef BITCOIN_NODE_CONTEXT_H
 #define BITCOIN_NODE_CONTEXT_H
 
+#include <cassert>
 #include <memory>
 #include <vector>
 
 class BanMan;
+class CBaseChainParams;
+class CChainParams;
 class CConnman;
 class CScheduler;
 class CTxMemPool;
@@ -33,6 +36,8 @@ struct NodeContext {
     CTxMemPool* mempool{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
     std::unique_ptr<PeerLogicValidation> peer_logic;
     std::unique_ptr<BanMan> banman;
+    const CBaseChainParams* base_params{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
+    const CChainParams* params{nullptr};          // Currently a raw pointer because the memory is not managed by this struct
     std::unique_ptr<interfaces::Chain> chain;
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
     std::unique_ptr<CScheduler> scheduler;
@@ -43,5 +48,17 @@ struct NodeContext {
     NodeContext();
     ~NodeContext();
 };
+
+inline const CBaseChainParams& EnsureBaseParams(const NodeContext& node)
+{
+    assert(node.base_params);
+    return *node.base_params;
+};
+
+inline const CChainParams& EnsureParams(const NodeContext& node)
+{
+    assert(node.params);
+    return *node.params;
+}
 
 #endif // BITCOIN_NODE_CONTEXT_H

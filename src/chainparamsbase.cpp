@@ -6,8 +6,8 @@
 #include <chainparamsbase.h>
 
 #include <tinyformat.h>
-#include <util/system.h>
 #include <util/memory.h>
+#include <util/system.h>
 
 #include <assert.h>
 
@@ -25,7 +25,7 @@ void SetupChainParamsBaseOptions()
     gArgs.AddArg("-vbparams=deployment:start:end", "Use given start/end times for specified version bits deployment (regtest-only)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CHAINPARAMS);
 }
 
-static std::unique_ptr<CBaseChainParams> globalChainBaseParams;
+static std::unique_ptr<const CBaseChainParams> globalChainBaseParams;
 
 const CBaseChainParams& BaseParams()
 {
@@ -45,8 +45,9 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
-void SelectBaseParams(const std::string& chain)
+void SelectBaseParams(const std::string& chain, const CBaseChainParams* out)
 {
     globalChainBaseParams = CreateBaseChainParams(chain);
+    if (out) out = globalChainBaseParams.get();
     gArgs.SelectConfigNetwork(chain);
 }
