@@ -195,7 +195,11 @@ void SingleThreadedSchedulerClient::AddToProcessQueue(std::function<void ()> fun
         LOCK(m_cs_callbacks_pending);
         m_callbacks_pending.emplace_back(std::move(func));
     }
-    MaybeScheduleProcessQueue();
+    if (m_pscheduler->AreThreadsServicingQueue()) {
+        MaybeScheduleProcessQueue();
+    } else {
+        EmptyQueue();
+    }
 }
 
 void SingleThreadedSchedulerClient::EmptyQueue() {
