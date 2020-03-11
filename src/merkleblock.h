@@ -13,6 +13,10 @@
 
 #include <vector>
 
+// Helper functions for serialization.
+std::vector<unsigned char> BitsToBytes(const std::vector<bool>& bits);
+std::vector<bool> BytesToBits(const std::vector<unsigned char>& bytes);
+
 /** Data structure that represents a partial merkle tree.
  *
  * It represents a subset of the txid's of a known block, in a way that
@@ -81,27 +85,14 @@ protected:
 
 public:
 
-    /** serialization implementation */
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(nTransactions);
-        READWRITE(vHash);
-        std::vector<unsigned char> vBytes;
-        if (ser_action.ForRead()) {
-            READWRITE(vBytes);
-            CPartialMerkleTree &us = *(const_cast<CPartialMerkleTree*>(this));
-            us.vBits.resize(vBytes.size() * 8);
-            for (unsigned int p = 0; p < us.vBits.size(); p++)
-                us.vBits[p] = (vBytes[p / 8] & (1 << (p % 8))) != 0;
-            us.fBad = false;
-        } else {
-            vBytes.resize((vBits.size()+7)/8);
-            for (unsigned int p = 0; p < vBits.size(); p++)
-                vBytes[p / 8] |= vBits[p] << (p % 8);
-            READWRITE(vBytes);
-        }
+    SERIALIZE_METHODS(CPartialMerkleTree, obj)
+    {
+        READWRITE(obj.nTransactions, obj.vHash);
+        std::vector<unsigned char> bytes;
+        SER_WRITE(obj, bytes = BitsToBytes(obj.vBits));
+        READWRITE(bytes);
+        SER_READ(obj, obj.vBits = BytesToBits(bytes));
+        SER_READ(obj, obj.fBad = false);
     }
 
     /** Construct a partial merkle tree from a list of transaction ids, and a mask that selects a subset of them */
@@ -157,13 +148,7 @@ public:
 
     CMerkleBlock() {}
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(header);
-        READWRITE(txn);
-    }
+    SERIALIZE_METHODS(CMerkleBlock, obj) { READWRITE(obj.header, obj.txn); }
 
 private:
     // Combined constructor to consolidate code
