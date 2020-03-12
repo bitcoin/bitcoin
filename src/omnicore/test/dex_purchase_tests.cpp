@@ -6,11 +6,6 @@
 
 #include <stdint.h>
 
-// forward declaration
-namespace mastercore {
-extern int64_t calculateDExPurchase(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid);
-}
-
 using mastercore::calculateDExPurchase;
 
 BOOST_FIXTURE_TEST_SUITE(omnicore_dex_purchase_tests, BasicTestingSetup)
