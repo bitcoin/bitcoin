@@ -17,6 +17,9 @@ namespace interfaces {
 class Chain;
 class ChainClient;
 } // namespace interfaces
+namespace boost {
+class thread;
+}
 
 //! NodeContext struct containing references to chain state and connection
 //! state.
@@ -36,6 +39,8 @@ struct NodeContext {
     std::unique_ptr<interfaces::Chain> chain;
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
     std::unique_ptr<CScheduler> scheduler;
+    /** The thread group used by the scheduler and checkqueue. */
+    std::unique_ptr<std::vector<boost::thread>> thread_group;
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class

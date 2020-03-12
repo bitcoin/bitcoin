@@ -10,5 +10,7 @@
 #include <net_processing.h>
 #include <scheduler.h>
 
+#include <boost/thread.hpp>
+
 NodeContext::NodeContext() {}
 NodeContext::~NodeContext() {}

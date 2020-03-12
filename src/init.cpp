@@ -155,8 +155,6 @@ NODISCARD static bool CreatePidFile()
 
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
-static boost::thread_group threadGroup;
-
 void Interrupt(NodeContext& node)
 {
     InterruptHTTPServer();
@@ -205,10 +203,17 @@ void Shutdown(NodeContext& node)
     StopTorControl();
 
     // After everything has been shut down, but before things get flushed, stop the
-    // CScheduler/checkqueue threadGroup
+    // CScheduler/checkqueue thread group
     if (node.scheduler) node.scheduler->stop();
-    threadGroup.interrupt_all();
-    threadGroup.join_all();
+    if (node.thread_group) {
+        for (auto& thread : *node.thread_group) {
+            thread.interrupt();
+        }
+        for (auto& thread : *node.thread_group) {
+            thread.join();
+        }
+    }
+    node.thread_group.reset();
 
     // After the threads that potentially access these pointers have been stopped,
     // destruct and reset all to nullptr.
@@ -1247,6 +1252,9 @@ bool AppInitMain(NodeContext& node)
     InitSignatureCache();
     InitScriptExecutionCache();
 
+    assert(!node.thread_group);
+    node.thread_group = MakeUnique<std::vector<boost::thread>>();
+
     int script_threads = gArgs.GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
     if (script_threads <= 0) {
         // -par=0 means autodetect (number of cores - 1 script threads)
@@ -1264,7 +1272,7 @@ bool AppInitMain(NodeContext& node)
     if (script_threads >= 1) {
         g_parallel_script_checks = true;
         for (int i = 0; i < script_threads; ++i) {
-            threadGroup.create_thread([i]() { return ThreadScriptCheck(i); });
+            node.thread_group->emplace_back([i]() { return ThreadScriptCheck(i); });
         }
     }
 
@@ -1273,7 +1281,7 @@ bool AppInitMain(NodeContext& node)
 
     // Start the lightweight task scheduler thread
     CScheduler::Function serviceLoop = [&node]{ node.scheduler->serviceQueue(); };
-    threadGroup.create_thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
+    node.thread_group->emplace_back([=] { TraceThread("scheduler", serviceLoop); });
 
     // Gather some entropy once per minute.
     node.scheduler->scheduleEvery([]{
@@ -1757,7 +1765,7 @@ bool AppInitMain(NodeContext& node)
         vImportFiles.push_back(strFile);
     }
 
-    threadGroup.create_thread(std::bind(&ThreadImport, vImportFiles));
+    node.thread_group->emplace_back([=] { ThreadImport(vImportFiles); });
 
     // Wait for genesis block to be processed
     {
