@@ -1388,6 +1388,16 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(const CompactTallyItem& ta
 
     if (!privateSendClient.fEnablePrivateSend || !privateSendClient.fPrivateSendRunning) return false;
 
+    // Skip way too tiny amounts
+    if (tallyItem.nAmount < CPrivateSend::GetCollateralAmount()) {
+        return false;
+    }
+
+    // Skip single inputs that can be used as collaterals already
+    if (tallyItem.vecOutPoints.size() == 1 && CPrivateSend::IsCollateralAmount(tallyItem.nAmount)) {
+        return false;
+    }
+
     // denominated input is always a single one, so we can check its amount directly and return early
     if (!fTryDenominated && tallyItem.vecOutPoints.size() == 1 && CPrivateSend::IsDenominatedAmount(tallyItem.nAmount)) {
         return false;
@@ -1409,7 +1419,16 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(const CompactTallyItem& ta
     assert(reservekeyCollateral.GetReservedKey(vchPubKey, false)); // should never fail, as we just unlocked
     scriptCollateral = GetScriptForDestination(vchPubKey.GetID());
 
-    vecSend.push_back((CRecipient){scriptCollateral, CPrivateSend::GetMaxCollateralAmount(), false});
+    CAmount nCollateralAmount{0};
+    if (tallyItem.nAmount > CPrivateSend::GetMaxCollateralAmount() + CPrivateSend::GetCollateralAmount()*2) {
+        // Change output will be large enough to be valid as a collateral or a source input for another run
+        nCollateralAmount = CPrivateSend::GetMaxCollateralAmount();
+    } else {
+        // Change output might be too small for another collateral if we try to create the largest collateral
+        // here, create a slightly smaller one instead
+        nCollateralAmount = CPrivateSend::GetMaxCollateralAmount() - CPrivateSend::GetCollateralAmount();
+    }
+    vecSend.push_back((CRecipient){scriptCollateral, nCollateralAmount, false});
 
     // try to use non-denominated and not mn-like funds first, select them explicitly
     CCoinControl coinControl;
