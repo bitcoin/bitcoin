@@ -583,8 +583,10 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
 // Perform any actions that need to be taken when the total number of tokens for a property ID changes
 void NotifyTotalTokensChanged(uint32_t propertyId, int block)
 {
-    pDbFeeCache->UpdateDistributionThresholds(propertyId);
-    pDbFeeCache->EvalCache(propertyId, block);
+    if (IsFeatureActivated(FEATURE_FEES, block)) {
+        pDbFeeCache->UpdateDistributionThresholds(propertyId);
+        pDbFeeCache->EvalCache(propertyId, block);
+    }
 }
 
 void CheckWalletUpdate(bool forceUpdate)
