@@ -507,11 +507,32 @@ static void prune_state_files(const CBlockIndex* topIndex)
 }
 
 /**
+ * @return The block height at which the state is persisted every block.
+ */
+static int GetWrapModeHeight()
+{
+    if (MainNet()) {
+        return DONT_STORE_MAINNET_STATE_UNTIL;
+    } else {
+        return 0;
+    }
+}
+
+/**
  * Indicates whether persistence is enabled and the state is stored.
  */
-bool IsPersistenceEnabled(int blockHeight) {
+bool IsPersistenceEnabled(int blockHeight)
+{
+    static int nWarpModeHeight = GetWrapModeHeight();
+
+    int nMinHeight = nWarpModeHeight;
+
+    if (nWarpModeHeight == 0) {
+        nMinHeight = GetHeight();
+    }
+
     // if too far away from the top -- do not write
-    if (GetHeight() > (blockHeight + MAX_STATE_HISTORY)
+    if (nMinHeight > (blockHeight + MAX_STATE_HISTORY)
             && (blockHeight % STORE_EVERY_N_BLOCK != 0)) {
         return false;
     }
