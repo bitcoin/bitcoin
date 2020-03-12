@@ -67,6 +67,13 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             return;
         }
 
+        if ((~pnode->nServices) & (NODE_NETWORK | NODE_BLOOM)) {
+            // either NODE_NETWORK or NODE_BLOOM bit is missiing in node's services
+            LOCK(cs_main);
+            Misbehaving(pnode->GetId(), 100, "mnauth from a node with invalid services");
+            return;
+        }
+
         if (mnauth.proRegTxHash.IsNull()) {
             LOCK(cs_main);
             Misbehaving(pnode->GetId(), 100, "empty mnauth proRegTxHash");
