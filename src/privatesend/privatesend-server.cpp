@@ -48,7 +48,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         CPrivateSendAccept dsa;
         vRecv >> dsa;
 
-        LogPrint(BCLog::PRIVATESEND, "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CPrivateSend::GetDenominationsToString(dsa.nDenom), dsa.txCollateral.ToString());
+        LogPrint(BCLog::PRIVATESEND, "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CPrivateSend::DenominationToString(dsa.nDenom), dsa.txCollateral.ToString());
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
         auto dmn = mnList.GetValidMNByCollateral(activeMasternodeInfo.outpoint);
@@ -650,8 +650,7 @@ bool CPrivateSendServer::IsAcceptableDSA(const CPrivateSendAccept& dsa, PoolMess
     if (!fMasternodeMode) return false;
 
     // is denom even something legit?
-    std::vector<int> vecBits;
-    if (!CPrivateSend::GetDenominationsBits(dsa.nDenom, vecBits)) {
+    if (!CPrivateSend::IsValidDenomination(dsa.nDenom)) {
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::%s -- denom not valid!\n", __func__);
         nMessageIDRet = ERR_DENOM;
         return false;
@@ -700,7 +699,7 @@ bool CPrivateSendServer::CreateNewSession(const CPrivateSendAccept& dsa, PoolMes
 
     vecSessionCollaterals.push_back(MakeTransactionRef(dsa.txCollateral));
     LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::CreateNewSession -- new session created, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d  CPrivateSend::GetMaxPoolParticipants(): %d\n",
-        nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size(), CPrivateSend::GetMaxPoolParticipants());
+        nSessionID, nSessionDenom, CPrivateSend::DenominationToString(nSessionDenom), vecSessionCollaterals.size(), CPrivateSend::GetMaxPoolParticipants());
 
     return true;
 }
@@ -722,7 +721,7 @@ bool CPrivateSendServer::AddUserToExistingSession(const CPrivateSendAccept& dsa,
 
     if (dsa.nDenom != nSessionDenom) {
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::AddUserToExistingSession -- incompatible denom %d (%s) != nSessionDenom %d (%s)\n",
-            dsa.nDenom, CPrivateSend::GetDenominationsToString(dsa.nDenom), nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
+            dsa.nDenom, CPrivateSend::DenominationToString(dsa.nDenom), nSessionDenom, CPrivateSend::DenominationToString(nSessionDenom));
         nMessageIDRet = ERR_DENOM;
         return false;
     }
@@ -733,7 +732,7 @@ bool CPrivateSendServer::AddUserToExistingSession(const CPrivateSendAccept& dsa,
     vecSessionCollaterals.push_back(MakeTransactionRef(dsa.txCollateral));
 
     LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::AddUserToExistingSession -- new user accepted, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d  CPrivateSend::GetMaxPoolParticipants(): %d\n",
-        nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size(), CPrivateSend::GetMaxPoolParticipants());
+        nSessionID, nSessionDenom, CPrivateSend::DenominationToString(nSessionDenom), vecSessionCollaterals.size(), CPrivateSend::GetMaxPoolParticipants());
 
     return true;
 }
@@ -758,7 +757,7 @@ bool CPrivateSendServer::IsSessionReady()
 void CPrivateSendServer::RelayFinalTransaction(const CTransaction& txFinal, CConnman& connman)
 {
     LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::%s -- nSessionID: %d  nSessionDenom: %d (%s)\n",
-        __func__, nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
+        __func__, nSessionID, nSessionDenom, CPrivateSend::DenominationToString(nSessionDenom));
 
     // final mixing tx with empty signatures should be relayed to mixing participants only
     for (const auto& entry : vecEntries) {
@@ -801,7 +800,7 @@ void CPrivateSendServer::RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& c
 
     // something went wrong
     LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::%s -- can't continue, %llu client(s) disconnected, nSessionID: %d  nSessionDenom: %d (%s)\n",
-        __func__, nDisconnected, nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
+        __func__, nDisconnected, nSessionID, nSessionDenom, CPrivateSend::DenominationToString(nSessionDenom));
 
     // notify everyone else that this session should be terminated
     for (const auto& entry : vecEntries) {
@@ -821,7 +820,7 @@ void CPrivateSendServer::RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& c
 void CPrivateSendServer::RelayCompletedTransaction(PoolMessage nMessageID, CConnman& connman)
 {
     LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::%s -- nSessionID: %d  nSessionDenom: %d (%s)\n",
-        __func__, nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
+        __func__, nSessionID, nSessionDenom, CPrivateSend::DenominationToString(nSessionDenom));
 
     // final mixing tx with empty signatures should be relayed to mixing participants only
     for (const auto& entry : vecEntries) {
@@ -869,11 +868,7 @@ void CPrivateSendServer::GetJsonInfo(UniValue& obj) const
     obj.clear();
     obj.setObject();
     obj.push_back(Pair("queue_size",    GetQueueSize()));
-    CAmount amount{0};
-    if (nSessionDenom) {
-        ParseFixedPoint(CPrivateSend::GetDenominationsToString(nSessionDenom), 8, &amount);
-    }
-    obj.push_back(Pair("denomination",  ValueFromAmount(amount)));
+    obj.push_back(Pair("denomination",  ValueFromAmount(CPrivateSend::DenominationToAmount(nSessionDenom))));
     obj.push_back(Pair("state",         GetStateString()));
     obj.push_back(Pair("entries_count", GetEntriesCount()));
 }

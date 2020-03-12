@@ -238,11 +238,10 @@ bool CPrivateSendBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const
     }
 
     auto checkTxOut = [&](const CTxOut& txout) {
-        std::vector<CTxOut> vecTxOut{txout};
-        int nDenom = CPrivateSend::GetDenominations(vecTxOut);
+        int nDenom = CPrivateSend::AmountToDenomination(txout.nValue);
         if (nDenom != nSessionDenom) {
             LogPrint(BCLog::PRIVATESEND, "CPrivateSendBaseSession::IsValidInOuts -- ERROR: incompatible denom %d (%s) != nSessionDenom %d (%s)\n",
-                    nDenom, CPrivateSend::GetDenominationsToString(nDenom), nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
+                    nDenom, CPrivateSend::DenominationToString(nDenom), nSessionDenom, CPrivateSend::DenominationToString(nSessionDenom));
             nMessageIDRet = ERR_DENOM;
             if (fConsumeCollateralRet) *fConsumeCollateralRet = true;
             return false;
@@ -399,122 +398,84 @@ bool CPrivateSend::IsCollateralAmount(CAmount nInputAmount)
     return (nInputAmount >= GetCollateralAmount() && nInputAmount <= GetMaxCollateralAmount());
 }
 
-/*  Create a nice string to show the denominations
-    Function returns as follows (for 4 denominations):
-        ( bit on if present )
-        bit 0           - 10
-        bit 1           - 1
-        bit 2           - .1
-        bit 3           - .01
-        bit 4 and so on - out-of-bounds
-        none of above   - non-denom
+/*
+    Return a bitshifted integer representing a denomination in vecStandardDenominations
+    or 0 if none was found
 */
-std::string CPrivateSend::GetDenominationsToString(int nDenom)
+int CPrivateSend::AmountToDenomination(CAmount nInputAmount)
 {
-    std::string strDenom = "";
-    int nMaxDenoms = vecStandardDenominations.size();
-
-    if (nDenom >= (1 << nMaxDenoms)) {
-        return "out-of-bounds";
-    }
-
-    for (int i = 0; i < nMaxDenoms; ++i) {
-        if (nDenom & (1 << i)) {
-            strDenom += (strDenom.empty() ? "" : "+") + FormatMoney(vecStandardDenominations[i]);
+    for (size_t i = 0; i < vecStandardDenominations.size(); ++i) {
+        if (nInputAmount == vecStandardDenominations[i]) {
+            return 1 << i;
         }
     }
-
-    if (strDenom.empty()) {
-        return "non-denom";
-    }
-
-    return strDenom;
+    return 0;
 }
 
-/*  Return a bitshifted integer representing the denominations in this list
-    Function returns as follows (for 4 denominations):
-        ( bit on if present )
-        10        - bit 0
-        1         - bit 1
-        .1        - bit 2
-        .01       - bit 3
-        non-denom - 0, all bits off
+/*
+    Returns:
+    - one of standard denominations from vecStandardDenominations based on the provided bitshifted integer
+    - 0 for non-initialized sessions (nDenom = 0)
+    - a value below 0 if an error occured while converting from one to another
 */
-int CPrivateSend::GetDenominations(const std::vector<CTxOut>& vecTxOut, bool fSingleRandomDenom)
+CAmount CPrivateSend::DenominationToAmount(int nDenom)
 {
-    std::vector<std::pair<CAmount, int> > vecDenomUsed;
-
-    // make a list of denominations, with zero uses
-    for (const auto& nDenomValue : vecStandardDenominations) {
-        vecDenomUsed.push_back(std::make_pair(nDenomValue, 0));
+    if (nDenom == 0) {
+        // not initialized
+        return 0;
     }
 
-    // look for denominations and update uses to 1
-    for (const auto& txout : vecTxOut) {
-        bool found = false;
-        for (auto& s : vecDenomUsed) {
-            if (txout.nValue == s.first) {
-                s.second = 1;
-                found = true;
-            }
-        }
-        if (!found) return 0;
+    size_t nMaxDenoms = vecStandardDenominations.size();
+
+    if (nDenom >= (1 << nMaxDenoms) || nDenom < 0) {
+        // out of bounds
+        return -1;
     }
 
-    int nDenom = 0;
-    int c = 0;
-    // if the denomination is used, shift the bit on
-    for (const auto& s : vecDenomUsed) {
-        int bit = (fSingleRandomDenom ? GetRandInt(2) : 1) & s.second;
-        nDenom |= bit << c++;
-        if (fSingleRandomDenom && bit) break; // use just one random denomination
+    if ((nDenom & (nDenom - 1)) != 0) {
+        // non-denom
+        return -2;
     }
 
-    return nDenom;
-}
+    CAmount nDenomAmount{-3};
 
-bool CPrivateSend::GetDenominationsBits(int nDenom, std::vector<int>& vecBitsRet)
-{
-    // ( bit on if present, 4 denominations example )
-    // bit 0 - 100DASH+1
-    // bit 1 - 10DASH+1
-    // bit 2 - 1DASH+1
-    // bit 3 - .1DASH+1
-
-    int nMaxDenoms = vecStandardDenominations.size();
-
-    if (nDenom >= (1 << nMaxDenoms)) return false;
-
-    vecBitsRet.clear();
-
-    for (int i = 0; i < nMaxDenoms; ++i) {
+    for (size_t i = 0; i < nMaxDenoms; ++i) {
         if (nDenom & (1 << i)) {
-            vecBitsRet.push_back(i);
+            nDenomAmount = vecStandardDenominations[i];
+            break;
         }
     }
 
-    return !vecBitsRet.empty();
+    return nDenomAmount;
 }
 
-int CPrivateSend::GetDenominationsByAmounts(const std::vector<CAmount>& vecAmount)
+/*
+    Same as DenominationToAmount but returns a string representation
+*/
+std::string CPrivateSend::DenominationToString(int nDenom)
 {
-    CScript scriptTmp = CScript();
-    std::vector<CTxOut> vecTxOut;
+    CAmount nDenomAmount = DenominationToAmount(nDenom);
 
-    for (auto it = vecAmount.rbegin(); it != vecAmount.rend(); ++it) {
-        CTxOut txout((*it), scriptTmp);
-        vecTxOut.push_back(txout);
+    switch (nDenomAmount) {
+        case  0: return "N/A";
+        case -1: return "out-of-bounds";
+        case -2: return "non-denom";
+        case -3: return "to-amount-error";
+        default: return ValueFromAmount(nDenomAmount).getValStr();
     }
 
-    return GetDenominations(vecTxOut, true);
+    // shouldn't happen
+    return "to-string-error";
 }
 
 bool CPrivateSend::IsDenominatedAmount(CAmount nInputAmount)
 {
-    for (const auto& nDenomValue : vecStandardDenominations) {
-        if (nInputAmount == nDenomValue) return true;
-    }
-    return false;
+    return AmountToDenomination(nInputAmount) > 0;
+}
+
+bool CPrivateSend::IsValidDenomination(int nDenom)
+{
+    return DenominationToAmount(nDenom) > 0;
 }
 
 std::string CPrivateSend::GetMessageByID(PoolMessage nMessageID)

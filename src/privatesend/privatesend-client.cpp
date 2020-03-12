@@ -337,7 +337,7 @@ std::string CPrivateSendClientManager::GetSessionDenoms()
     std::string strSessionDenoms;
 
     for (auto& session : deqSessions) {
-        strSessionDenoms += (session.nSessionDenom ? CPrivateSend::GetDenominationsToString(session.nSessionDenom) : "N/A") + "; ";
+        strSessionDenoms += CPrivateSend::DenominationToString(session.nSessionDenom) + "; ";
     }
     return strSessionDenoms.empty() ? "N/A" : strSessionDenoms;
 }
@@ -1041,7 +1041,6 @@ bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymize
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
 
-    std::vector<CAmount> vecStandardDenoms = CPrivateSend::GetStandardDenominations();
     // Look through the queues and see if anything matches
     CPrivateSendQueue dsq;
     while (privateSendClient.GetQueueItemAndTry(dsq)) {
@@ -1058,25 +1057,17 @@ bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymize
             continue;
         }
 
-        std::vector<int> vecBits;
-        if (!CPrivateSend::GetDenominationsBits(dsq.nDenom, vecBits)) {
-            // incompatible denom
-            continue;
-        }
-
         // mixing rate limit i.e. nLastDsq check should already pass in DSQUEUE ProcessMessage
         // in order for dsq to get into vecPrivateSendQueue, so we should be safe to mix already,
         // no need for additional verification here
 
-        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::JoinExistingQueue -- found valid queue: %s\n", dsq.ToString());
+        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::JoinExistingQueue -- trying queue: %s\n", dsq.ToString());
 
         std::vector<std::pair<CTxDSIn, CTxOut> > vecPSInOutPairsTmp;
-        CAmount nMinAmount = vecStandardDenoms[vecBits.front()];
-        CAmount nMaxAmount = nBalanceNeedsAnonymized;
 
         // Try to match their denominations if possible, select exact number of denominations
-        if (!vpwallets[0]->SelectPSInOutPairsByDenominations(dsq.nDenom, nMinAmount, nMaxAmount, vecPSInOutPairsTmp)) {
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::JoinExistingQueue -- Couldn't match %d denominations %d (%s)\n", vecBits.front(), dsq.nDenom, CPrivateSend::GetDenominationsToString(dsq.nDenom));
+        if (!vpwallets[0]->SelectPSInOutPairsByDenominations(dsq.nDenom, nBalanceNeedsAnonymized, vecPSInOutPairsTmp)) {
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::JoinExistingQueue -- Couldn't match denomination %d (%s)\n", dsq.nDenom, CPrivateSend::DenominationToString(dsq.nDenom));
             continue;
         }
 
@@ -1095,7 +1086,7 @@ bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymize
         SetState(POOL_STATE_QUEUE);
         nTimeLastSuccessfulStep = GetTime();
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::JoinExistingQueue -- pending connection (from queue): nSessionDenom: %d (%s), addr=%s\n",
-            nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), dmn->pdmnState->addr.ToString());
+            nSessionDenom, CPrivateSend::DenominationToString(nSessionDenom), dmn->pdmnState->addr.ToString());
         strAutoDenomResult = _("Trying to connect...");
         return true;
     }
@@ -1111,10 +1102,9 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, C
     int nTries = 0;
     int nMnCount = deterministicMNManager->GetListAtChainTip().GetValidMNsCount();
 
-    // ** find the coins we'll use
-    std::vector<CTxIn> vecTxIn;
-    CAmount nValueInTmp = 0;
-    if (!vpwallets[0]->SelectPrivateCoins(CPrivateSend::GetSmallestDenomination(), nBalanceNeedsAnonymized, vecTxIn, nValueInTmp, 0, privateSendClient.nPrivateSendRounds - 1)) {
+    // find available denominated amounts
+    std::set<CAmount> setAmounts;
+    if (!vpwallets[0]->SelectDenominatedAmounts(nBalanceNeedsAnonymized, setAmounts)) {
         // this should never happen
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- Can't mix: no compatible inputs found!\n");
         strAutoDenomResult = _("Can't mix: no compatible inputs found!");
@@ -1158,11 +1148,13 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, C
 
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- attempt %d connection to Masternode %s\n", nTries, dmn->pdmnState->addr.ToString());
 
-        std::vector<CAmount> vecAmounts;
-        vpwallets[0]->ConvertList(vecTxIn, vecAmounts);
-        // try to get a single random denom out of vecAmounts
+        // try to get a single random denom out of setAmounts
         while (nSessionDenom == 0) {
-            nSessionDenom = CPrivateSend::GetDenominationsByAmounts(vecAmounts);
+            for (const auto& amount : setAmounts) {
+                if (setAmounts.size() > 1 && GetRandInt(2)) continue;
+                nSessionDenom = CPrivateSend::AmountToDenomination(amount);
+                break;
+            }
         }
 
         mixingMasternode = dmn;
@@ -1172,7 +1164,7 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, C
         SetState(POOL_STATE_QUEUE);
         nTimeLastSuccessfulStep = GetTime();
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- pending connection, nSessionDenom: %d (%s), addr=%s\n",
-            nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), dmn->pdmnState->addr.ToString());
+            nSessionDenom, CPrivateSend::DenominationToString(nSessionDenom), dmn->pdmnState->addr.ToString());
         strAutoDenomResult = _("Trying to connect...");
         return true;
     }
@@ -1281,14 +1273,7 @@ bool CPrivateSendClientSession::SelectDenominate(std::string& strErrorRet, std::
 
     vecPSInOutPairsRet.clear();
 
-    std::vector<int> vecBits;
-    if (!CPrivateSend::GetDenominationsBits(nSessionDenom, vecBits)) {
-        strErrorRet = "Incorrect session denom";
-        return false;
-    }
-    std::vector<CAmount> vecStandardDenoms = CPrivateSend::GetStandardDenominations();
-
-    bool fSelected = vpwallets[0]->SelectPSInOutPairsByDenominations(nSessionDenom, vecStandardDenoms[vecBits.front()], CPrivateSend::GetMaxPoolAmount(), vecPSInOutPairsRet);
+    bool fSelected = vpwallets[0]->SelectPSInOutPairsByDenominations(nSessionDenom, CPrivateSend::GetMaxPoolAmount(), vecPSInOutPairsRet);
     if (!fSelected) {
         strErrorRet = "Can't select current denominated inputs";
         return false;
@@ -1302,55 +1287,43 @@ bool CPrivateSendClientSession::PrepareDenominate(int nMinRounds, int nMaxRounds
     AssertLockHeld(cs_main);
     AssertLockHeld(vpwallets[0]->cs_wallet);
 
-    std::vector<int> vecBits;
-    if (!CPrivateSend::GetDenominationsBits(nSessionDenom, vecBits)) {
+    if (!CPrivateSend::IsValidDenomination(nSessionDenom)) {
         strErrorRet = "Incorrect session denom";
         return false;
     }
+    CAmount nDenomAmount = CPrivateSend::DenominationToAmount(nSessionDenom);
 
     // NOTE: No need to randomize order of inputs because they were
     // initially shuffled in CWallet::SelectPSInOutPairsByDenominations already.
-    int nDenomResult{0};
-
-    std::vector<CAmount> vecStandardDenoms = CPrivateSend::GetStandardDenominations();
-    std::vector<int> vecSteps(vecStandardDenoms.size(), 0);
+    int nSteps{0};
     vecPSInOutPairsRet.clear();
 
     // Try to add up to PRIVATESEND_ENTRY_MAX_SIZE of every needed denomination
     for (const auto& pair : vecPSInOutPairsIn) {
-        if (pair.second.nRounds < nMinRounds || pair.second.nRounds > nMaxRounds) {
-            continue;
-        }
-        bool fFound = false;
-        for (const auto& nBit : vecBits) {
-            if (vecSteps[nBit] >= PRIVATESEND_ENTRY_MAX_SIZE) break;
-            CAmount nValueDenom = vecStandardDenoms[nBit];
-            if (pair.second.nValue == nValueDenom) {
-                CScript scriptDenom;
-                if (fDryRun) {
-                    scriptDenom = CScript();
-                } else {
-                    // randomly skip some inputs when we have at least one of the same denom already
-                    // TODO: make it adjustable via options/cmd-line params
-                    if (vecSteps[nBit] >= 1 && GetRandInt(5) == 0) {
-                        // still count it as a step to randomize number of inputs
-                        // if we have more than (or exactly) PRIVATESEND_ENTRY_MAX_SIZE of them
-                        ++vecSteps[nBit];
-                        break;
-                    }
-                    scriptDenom = keyHolderStorage.AddKey(vpwallets[0]);
-                }
-                vecPSInOutPairsRet.emplace_back(pair.first, CTxOut(nValueDenom, scriptDenom));
-                fFound = true;
-                nDenomResult |= 1 << nBit;
-                // step is complete
-                ++vecSteps[nBit];
-                break;
+        if (nSteps >= PRIVATESEND_ENTRY_MAX_SIZE) break;
+        if (pair.second.nRounds < nMinRounds || pair.second.nRounds > nMaxRounds) continue;
+        if (pair.second.nValue != nDenomAmount) continue;
+
+        CScript scriptDenom;
+        if (fDryRun) {
+            scriptDenom = CScript();
+        } else {
+            // randomly skip some inputs when we have at least one of the same denom already
+            // TODO: make it adjustable via options/cmd-line params
+            if (nSteps >= 1 && GetRandInt(5) == 0) {
+                // still count it as a step to randomize number of inputs
+                // if we have more than (or exactly) PRIVATESEND_ENTRY_MAX_SIZE of them
+                ++nSteps;
+                continue;
             }
+            scriptDenom = keyHolderStorage.AddKey(vpwallets[0]);
         }
+        vecPSInOutPairsRet.emplace_back(pair.first, CTxOut(nDenomAmount, scriptDenom));
+        // step is complete
+        ++nSteps;
     }
 
-    if (nDenomResult != nSessionDenom) {
+    if (vecPSInOutPairsRet.empty()) {
         keyHolderStorage.ReturnAll();
         strErrorRet = "Can't prepare current denominated outputs";
         return false;
@@ -1695,18 +1668,7 @@ void CPrivateSendClientSession::GetJsonInfo(UniValue& obj) const
         obj.push_back(Pair("outpoint",  mixingMasternode->collateralOutpoint.ToStringShort()));
         obj.push_back(Pair("service",   mixingMasternode->pdmnState->addr.ToString()));
     }
-    CAmount amount{0};
-    if (nSessionDenom) {
-        // TODO: GetDenominationsToString has few issues:
-        // - it returns a string of denomination amounts concatenated via "+" if there are many of them
-        // - it uses FormatMoney which drops trailing zeros
-        // We no longer use multiple denominations in one session and this thing should be refactored
-        // together with other similar functions in CPrivatesend.
-        // For now, we just use a workaround here to convert a string into CAmount and convert it to a
-        // proper format via ValueFromAmount later.
-        ParseFixedPoint(CPrivateSend::GetDenominationsToString(nSessionDenom), 8, &amount);
-    }
-    obj.push_back(Pair("denomination",  ValueFromAmount(amount)));
+    obj.push_back(Pair("denomination",  ValueFromAmount(CPrivateSend::DenominationToAmount(nSessionDenom))));
     obj.push_back(Pair("state",         GetStateString()));
     obj.push_back(Pair("entries_count", GetEntriesCount()));
 }
