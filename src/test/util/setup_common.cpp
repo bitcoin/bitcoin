@@ -31,6 +31,8 @@
 
 #include <functional>
 
+#include <boost/thread.hpp>
+
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 FastRandomContext g_insecure_rand_ctx;
@@ -105,9 +107,10 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
     m_node.scheduler = MakeUnique<CScheduler>();
 
+    m_node.thread_group = MakeUnique<std::vector<boost::thread>>();
     // We have to run a scheduler thread to prevent ActivateBestChain
     // from blocking due to queue overrun.
-    threadGroup.create_thread([&]{ m_node.scheduler->serviceQueue(); });
+    m_node.thread_group->emplace_back([&] { m_node.scheduler->serviceQueue(); });
     GetMainSignals().RegisterBackgroundSignalScheduler(*g_rpc_node->scheduler);
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
@@ -129,7 +132,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
     for (int i = 0; i < script_check_threads; ++i) {
-        threadGroup.create_thread([i]() { return ThreadScriptCheck(i); });
+        m_node.thread_group->emplace_back([i]() { return ThreadScriptCheck(i); });
     }
     g_parallel_script_checks = true;
 
@@ -143,8 +146,13 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 TestingSetup::~TestingSetup()
 {
     if (m_node.scheduler) m_node.scheduler->stop();
-    threadGroup.interrupt_all();
-    threadGroup.join_all();
+    for (auto& thread : *m_node.thread_group) {
+        thread.interrupt();
+    }
+    for (auto& thread : *m_node.thread_group) {
+        thread.join();
+    }
+    m_node.thread_group.reset();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     g_rpc_node = nullptr;

@@ -30,6 +30,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/thread.hpp>
 
 #include <univalue.h>
 
@@ -426,12 +427,12 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
 
     // check all inputs concurrently, with the cache
     PrecomputedTransactionData txdata(tx);
-    boost::thread_group threadGroup;
+    std::vector<boost::thread> thread_group;
     CCheckQueue<CScriptCheck> scriptcheckqueue(128);
     CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
 
     for (int i=0; i<20; i++)
-        threadGroup.create_thread(std::bind(&CCheckQueue<CScriptCheck>::Thread, std::ref(scriptcheckqueue)));
+        thread_group.emplace_back([&] { scriptcheckqueue.Thread(); });
 
     std::vector<Coin> coins;
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
@@ -454,8 +455,12 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
     bool controlCheck = control.Wait();
     assert(controlCheck);
 
-    threadGroup.interrupt_all();
-    threadGroup.join_all();
+    for (auto& thread : thread_group) {
+        thread.interrupt();
+    }
+    for (auto& thread : thread_group) {
+        thread.join();
+    }
 }
 
 SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutableTransaction& input2, const CTransactionRef tx)

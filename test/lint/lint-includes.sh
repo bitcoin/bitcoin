@@ -69,7 +69,9 @@ EXPECTED_BOOST_INCLUDES=(
     boost/test/unit_test.hpp
     boost/thread.hpp
     boost/thread/condition_variable.hpp
+    boost/thread/locks.hpp
     boost/thread/mutex.hpp
+    boost/thread/shared_mutex.hpp
     boost/thread/thread.hpp
     boost/variant.hpp
     boost/variant/apply_visitor.hpp

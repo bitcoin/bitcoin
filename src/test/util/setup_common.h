@@ -16,8 +16,6 @@
 
 #include <type_traits>
 
-#include <boost/thread.hpp>
-
 /** This is connected to the logger. Can be used to redirect logs to any other log */
 extern const std::function<void(const std::string&)> G_TEST_LOG_FUN;
 
@@ -84,7 +82,6 @@ private:
  */
 struct TestingSetup : public BasicTestingSetup {
     NodeContext m_node;
-    boost::thread_group threadGroup;
 
     explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();

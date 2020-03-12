@@ -9,6 +9,9 @@
 #include <thread>
 #include <deque>
 
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
+
 /** Test Suite for CuckooCache
  *
  *  1. All tests should have a deterministic result (using insecure rand
