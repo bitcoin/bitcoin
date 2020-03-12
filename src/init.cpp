@@ -1760,11 +1760,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         InitWarning(_("You are starting in lite mode, most Dash-specific functionality is disabled."));
     }
 
-    if((!fLiteMode && fTxIndex == false)
-       && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
-        return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index."));
-    }
-
     if (!fLiteMode) {
         uiInterface.InitMessage(_("Loading sporks cache..."));
         CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
@@ -1836,6 +1831,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 if (!LoadBlockIndex(chainparams)) {
                     strLoadError = _("Error loading block database");
                     break;
+                }
+
+                if (!fLiteMode && !fTxIndex
+                   && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
+                    return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index."));
                 }
 
                 // If the loaded chain has a wrong genesis, bail out immediately
