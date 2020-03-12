@@ -31,6 +31,11 @@ def setup():
         subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin-core/bitcoin-detached-sigs.git'])
     if not os.path.isdir('gitian-builder'):
         subprocess.check_call(['git', 'clone', 'https://github.com/devrandom/gitian-builder.git'])
+        os.chdir('gitian-builder')
+        os.makedirs('inputs')
+        os.chdir('inputs')
+        subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin/bitcoin.git'])
+        os.chdir(workdir)
     if not os.path.isdir('bitcoin'):
         subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin/bitcoin.git'])
     os.chdir('gitian-builder')
