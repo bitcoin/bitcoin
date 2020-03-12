@@ -72,8 +72,6 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 
     // txindex job may be scheduled, so stop scheduler before destructing
     m_node.scheduler->stop();
-    threadGroup.interrupt_all();
-    threadGroup.join_all();
 
     // Rest of shutdown sequence and destructors happen in ~TestingSetup()
 }

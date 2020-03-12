@@ -6,15 +6,16 @@
 #include <scheduler.h>
 #include <util/time.h>
 
-#include <boost/thread.hpp>
+#include <thread>
+
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(scheduler_tests)
 
-static void microTask(CScheduler& s, boost::mutex& mutex, int& counter, int delta, std::chrono::system_clock::time_point rescheduleTime)
+static void microTask(CScheduler& s, Mutex& mutex, int& counter, int delta, std::chrono::system_clock::time_point rescheduleTime)
 {
     {
-        boost::unique_lock<boost::mutex> lock(mutex);
+        LOCK(mutex);
         counter += delta;
     }
     std::chrono::system_clock::time_point noTime = std::chrono::system_clock::time_point::min();
@@ -38,7 +39,7 @@ BOOST_AUTO_TEST_CASE(manythreads)
     // counters should sum to the number of initial tasks performed.
     CScheduler microTasks;
 
-    boost::mutex counterMutex[10];
+    Mutex counterMutex[10];
     int counter[10] = { 0 };
     FastRandomContext rng{/* fDeterministic */ true};
     auto zeroToNine = [](FastRandomContext& rc) -> int { return rc.randrange(10); }; // [0, 9]
@@ -66,16 +67,16 @@ BOOST_AUTO_TEST_CASE(manythreads)
     BOOST_CHECK(last > now);
 
     // As soon as these are created they will start running and servicing the queue
-    boost::thread_group microThreads;
+    std::vector<std::thread> micro_threads;
     for (int i = 0; i < 5; i++)
-        microThreads.create_thread(std::bind(&CScheduler::serviceQueue, &microTasks));
+        micro_threads.emplace_back([&] { microTasks.serviceQueue(); });
 
     UninterruptibleSleep(std::chrono::microseconds{600});
     now = std::chrono::system_clock::now();
 
     // More threads and more tasks:
     for (int i = 0; i < 5; i++)
-        microThreads.create_thread(std::bind(&CScheduler::serviceQueue, &microTasks));
+        micro_threads.emplace_back([&] { microTasks.serviceQueue(); });
     for (int i = 0; i < 100; i++) {
         std::chrono::system_clock::time_point t = now + std::chrono::microseconds(randomMsec(rng));
         std::chrono::system_clock::time_point tReschedule = now + std::chrono::microseconds(500 + randomMsec(rng));
@@ -88,7 +89,10 @@ BOOST_AUTO_TEST_CASE(manythreads)
 
     // Drain the task queue then exit threads
     microTasks.stop(true);
-    microThreads.join_all(); // ... wait until all the threads are done
+    // ... wait until all the threads are done
+    for (auto& thread : micro_threads) {
+        thread.join();
+    }
 
     int counterSum = 0;
     for (int i = 0; i < 10; i++) {
@@ -128,9 +132,9 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
     // if the queues only permit execution of one task at once then
     // the extra threads should effectively be doing nothing
     // if they don't we'll get out of order behaviour
-    boost::thread_group threads;
+    std::vector<std::thread> threads;
     for (int i = 0; i < 5; ++i) {
-        threads.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
+        threads.emplace_back([&] { scheduler.serviceQueue(); });
     }
 
     // these are not atomic, if SinglethreadedSchedulerClient prevents
@@ -154,7 +158,9 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
 
     // finish up
     scheduler.stop(true);
-    threads.join_all();
+    for (auto& thread : threads) {
+        thread.join();
+    }
 
     BOOST_CHECK_EQUAL(counter1, 100);
     BOOST_CHECK_EQUAL(counter2, 100);
