@@ -166,6 +166,8 @@ script: |
     find ${DISTNAME} | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
     cd ../../
   done
-  mkdir -p $OUTDIR/src
-  mv $SOURCEDIST $OUTDIR/src
+
+  mkdir -p ${OUTDIR}/src
+  git archive --output=${OUTDIR}/src/${DISTNAME}.tar.gz HEAD
+
   mv ${OUTDIR}/${DISTNAME}-x86_64-*.tar.gz ${OUTDIR}/${DISTNAME}-osx64.tar.gz
