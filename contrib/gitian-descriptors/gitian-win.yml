@@ -117,13 +117,6 @@ script: |
   SOURCEDIST=$(echo bitcoin-*.tar.gz)
   DISTNAME=${SOURCEDIST/%.tar.gz}
 
-  # Correct tar file order
-  mkdir -p temp
-  pushd temp
-  tar -xf ../$SOURCEDIST
-  find bitcoin-* | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
-  popd
-
   # Workaround for tarball not building with the bare tag version (prep)
   make -C src obj/build.h
 
