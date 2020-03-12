@@ -135,7 +135,7 @@ def test_witness_block(node, p2p, block, accepted, with_witness=True, reason=Non
 
     - Submit the block over the p2p interface
     - use the getbestblockhash rpc to check for acceptance."""
-    reason = [reason] if reason else []
+    reason = reason if reason else []
     with node.assert_debug_log(expected_msgs=reason):
         p2p.send_message(msg_block(block) if with_witness else msg_no_witness_block(block))
         p2p.sync_with_ping()
@@ -341,7 +341,7 @@ class SegWitTest(BitcoinTestFramework):
         self.update_witness_block_with_transactions(block, [tx])
         # Sending witness data before activation is not allowed (anti-spam
         # rule).
-        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, reason='unexpected-witness')
+        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, reason=['unexpected-witness'])
 
         # But it should not be permanently marked bad...
         # Resend without witness information.
@@ -488,7 +488,7 @@ class SegWitTest(BitcoinTestFramework):
         self.update_witness_block_with_transactions(block, [tx])
         # Verify that segwit isn't activated. A block serialized with witness
         # should be rejected prior to activation.
-        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=True, reason='unexpected-witness')
+        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=True, reason=['unexpected-witness'])
         # Now send the block without witness. It should be accepted
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True, with_witness=False)
 
@@ -514,7 +514,7 @@ class SegWitTest(BitcoinTestFramework):
 
             # When the block is serialized with a witness, the block will be rejected because witness
             # data isn't allowed in blocks that don't commit to witness data.
-            test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=True, reason='unexpected-witness')
+            test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=True, reason=['unexpected-witness'])
 
             # When the block is serialized without witness, validation fails because the transaction is
             # invalid (transactions are always validated with SCRIPT_VERIFY_WITNESS so a segwit v0 transaction
@@ -1405,7 +1405,7 @@ class SegWitTest(BitcoinTestFramework):
         tx3.rehash()
         # Spending a higher version witness output is not allowed by policy,
         # even with fRequireStandard=false.
-        test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=False, reason="reserved for soft-fork upgrades")
+        test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=False, reason=["reserved for soft-fork upgrades"])
 
         # Building a block with the transaction must be valid, however.
         block = self.build_next_block()
