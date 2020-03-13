@@ -30,6 +30,13 @@ from test_framework.util import (
 WALLET_PASSPHRASE = "test"
 WALLET_PASSPHRASE_TIMEOUT = 3600
 
+# Fee rates (in BTC per 1000 vbytes)
+INSUFFICIENT = 0.00001000
+ECONOMICAL   = 0.00050000
+NORMAL       = 0.00100000
+HIGH         = 0.00500000
+TOO_HIGH     = 1.00000000
+
 class BumpFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
@@ -37,7 +44,6 @@ class BumpFeeTest(BitcoinTestFramework):
         self.extra_args = [[
             "-walletrbf={}".format(i),
             "-mintxfee=0.00002",
-            "-deprecatedrpc=totalFee",
             "-addresstype=bech32",
         ] for i in range(self.num_nodes)]
 
@@ -75,7 +81,6 @@ class BumpFeeTest(BitcoinTestFramework):
         test_nonrbf_bumpfee_fails(self, peer_node, dest_address)
         test_notmine_bumpfee_fails(self, rbf_node, peer_node, dest_address)
         test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_address)
-        test_small_output_fails(self, rbf_node, dest_address)
         test_dust_to_fee(self, rbf_node, dest_address)
         test_settxfee(self, rbf_node, dest_address)
         test_watchonly_psbt(self, peer_node, rbf_node, dest_address)
@@ -93,13 +98,13 @@ class BumpFeeTest(BitcoinTestFramework):
 
 
 def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
-    self.log.info('Test simple bumpfee')
+    self.log.info('Test simple bumpfee: {}'.format(mode))
     rbfid = spend_one_input(rbf_node, dest_address)
     rbftx = rbf_node.gettransaction(rbfid)
     self.sync_mempools((rbf_node, peer_node))
     assert rbfid in rbf_node.getrawmempool() and rbfid in peer_node.getrawmempool()
     if mode == "fee_rate":
-        bumped_tx = rbf_node.bumpfee(rbfid, {"fee_rate":0.0015})
+        bumped_tx = rbf_node.bumpfee(rbfid, {"fee_rate": NORMAL})
     else:
         bumped_tx = rbf_node.bumpfee(rbfid)
     assert_equal(bumped_tx["errors"], [])
@@ -120,7 +125,7 @@ def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     assert_equal(bumpedwtx["replaces_txid"], rbfid)
 
 def test_feerate_args(self, rbf_node, peer_node, dest_address):
-    self.log.info('Test feerate args')
+    self.log.info('Test fee_rate args')
     rbfid = spend_one_input(rbf_node, dest_address)
     self.sync_mempools((rbf_node, peer_node))
     assert rbfid in rbf_node.getrawmempool() and rbfid in peer_node.getrawmempool()
@@ -130,11 +135,11 @@ def test_feerate_args(self, rbf_node, peer_node, dest_address):
     assert_raises_rpc_error(-8, "fee_rate can't be set along with totalFee.", rbf_node.bumpfee, rbfid, {"fee_rate":0.00001, "totalFee":0.001})
 
     # Bumping to just above minrelay should fail to increase total fee enough, at least
-    assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, rbfid, {"fee_rate":0.00001000})
+    assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, rbfid, {"fee_rate": INSUFFICIENT})
 
     assert_raises_rpc_error(-3, "Amount out of range", rbf_node.bumpfee, rbfid, {"fee_rate":-1})
 
-    assert_raises_rpc_error(-4, "is too high (cannot be higher than", rbf_node.bumpfee, rbfid, {"fee_rate":1})
+    assert_raises_rpc_error(-4, "is too high (cannot be higher than", rbf_node.bumpfee, rbfid, {"fee_rate": TOO_HIGH})
 
 
 def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
@@ -204,15 +209,6 @@ def test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_ad
     rbf_node.sendrawtransaction(tx["hex"])
     assert_raises_rpc_error(-8, "Transaction has descendants in the wallet", rbf_node.bumpfee, parent_id)
 
-def test_small_output_fails(self, rbf_node, dest_address):
-    self.log.info('Test totalFee bump with small output fails')
-    # cannot bump fee with a too-small output
-    rbfid = spend_one_input(rbf_node, dest_address)
-    rbf_node.bumpfee(rbfid, {"totalFee": 50000})
-
-    rbfid = spend_one_input(rbf_node, dest_address)
-    assert_raises_rpc_error(-4, "Change output is too small", rbf_node.bumpfee, rbfid, {"totalFee": 50001})
-
 def test_small_output_with_feerate_succeeds(self, rbf_node, dest_address):
     self.log.info('Testing small output with feerate bump succeeds')
 
@@ -255,15 +251,19 @@ def test_small_output_with_feerate_succeeds(self, rbf_node, dest_address):
 
 def test_dust_to_fee(self, rbf_node, dest_address):
     self.log.info('Test that bumped output that is dust is dropped to fee')
-    # the bumped tx sets fee=49,900, but it converts to 50,000
     rbfid = spend_one_input(rbf_node, dest_address)
     fulltx = rbf_node.getrawtransaction(rbfid, 1)
-    # (31-vbyte p2wpkh output size + 67-vbyte p2wpkh spend estimate) * 10k(discard_rate) / 1000 = 980
-    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 50000 - 980})
+    # size of transaction (p2wpkh, 1 input, 2 outputs): 141 vbytes
+    assert_equal(fulltx["vsize"], 141)
+    # bump with fee_rate of 0.00350000 BTC per 1000 vbytes
+    # expected bump fee of 141 vbytes * fee_rate 0.00350000 BTC / 1000 vbytes = 0.00049350 BTC
+    # but dust is dropped, so actual bump fee is 0.00050000
+    bumped_tx = rbf_node.bumpfee(rbfid, {"fee_rate": 0.0035})
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
     assert_equal(bumped_tx["fee"], Decimal("0.00050000"))
     assert_equal(len(fulltx["vout"]), 2)
     assert_equal(len(full_bumped_tx["vout"]), 1)  # change output is eliminated
+    assert_equal(full_bumped_tx["vout"][0]['value'], Decimal("0.00050000"))
 
 
 def test_settxfee(self, rbf_node, dest_address):
@@ -285,7 +285,8 @@ def test_settxfee(self, rbf_node, dest_address):
 def test_maxtxfee_fails(self, rbf_node, dest_address):
     self.log.info('Test that bumpfee fails when it hits -matxfee')
     # size of bumped transaction (p2wpkh, 1 input, 2 outputs): 141 vbytes
-    # expected bumping feerate of 20 sats/vbyte => 141*20 sats = 0.00002820 btc
+    # expected bump fee of 141 vbytes * 0.00200000 BTC / 1000 vbytes = 0.00002820 BTC
+    # which exceeds maxtxfee and is expected to raise
     self.restart_node(1, ['-maxtxfee=0.000025'] + self.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     rbfid = spend_one_input(rbf_node, dest_address)
@@ -356,7 +357,7 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
     assert_equal(len(watcher.decodepsbt(psbt)["tx"]["vin"]), 1)
 
     # Bump fee, obnoxiously high to add additional watchonly input
-    bumped_psbt = watcher.bumpfee(original_txid, {"fee_rate":0.005})
+    bumped_psbt = watcher.bumpfee(original_txid, {"fee_rate": HIGH})
     assert_greater_than(len(watcher.decodepsbt(bumped_psbt['psbt'])["tx"]["vin"]), 1)
     assert "txid" not in bumped_psbt
     assert_equal(bumped_psbt["origfee"], -watcher.gettransaction(original_txid)["fee"])
@@ -378,17 +379,17 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
 def test_rebumping(self, rbf_node, dest_address):
     self.log.info('Test that re-bumping the original tx fails, but bumping successor works')
     rbfid = spend_one_input(rbf_node, dest_address)
-    bumped = rbf_node.bumpfee(rbfid, {"totalFee": 2000})
-    assert_raises_rpc_error(-4, "already bumped", rbf_node.bumpfee, rbfid, {"totalFee": 3000})
-    rbf_node.bumpfee(bumped["txid"], {"totalFee": 3000})
+    bumped = rbf_node.bumpfee(rbfid, {"fee_rate": ECONOMICAL})
+    assert_raises_rpc_error(-4, "already bumped", rbf_node.bumpfee, rbfid, {"fee_rate": NORMAL})
+    rbf_node.bumpfee(bumped["txid"], {"fee_rate": NORMAL})
 
 
 def test_rebumping_not_replaceable(self, rbf_node, dest_address):
     self.log.info('Test that re-bumping non-replaceable fails')
     rbfid = spend_one_input(rbf_node, dest_address)
-    bumped = rbf_node.bumpfee(rbfid, {"totalFee": 10000, "replaceable": False})
+    bumped = rbf_node.bumpfee(rbfid, {"fee_rate": ECONOMICAL, "replaceable": False})
     assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
-                            {"totalFee": 20000})
+                            {"fee_rate": NORMAL})
 
 
 def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
@@ -450,7 +451,7 @@ def test_locked_wallet_fails(self, rbf_node, dest_address):
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 
 def test_change_script_match(self, rbf_node, dest_address):
-    self.log.info('Test that the same change addresses is used for the replacement transaction when possible.')
+    self.log.info('Test that the same change addresses is used for the replacement transaction when possible')
 
     def get_change_address(tx):
         tx_details = rbf_node.getrawtransaction(tx, 1)
@@ -463,7 +464,7 @@ def test_change_script_match(self, rbf_node, dest_address):
     assert_equal(len(change_addresses), 1)
 
     # Now find that address in each subsequent tx, and no other change
-    bumped_total_tx = rbf_node.bumpfee(rbfid, {"totalFee": 2000})
+    bumped_total_tx = rbf_node.bumpfee(rbfid, {"fee_rate": ECONOMICAL})
     assert_equal(change_addresses, get_change_address(bumped_total_tx['txid']))
     bumped_rate_tx = rbf_node.bumpfee(bumped_total_tx["txid"])
     assert_equal(change_addresses, get_change_address(bumped_rate_tx['txid']))
@@ -502,6 +503,7 @@ def test_no_more_inputs_fails(self, rbf_node, dest_address):
     # spend all funds, no change output
     rbfid = rbf_node.sendtoaddress(rbf_node.getnewaddress(), rbf_node.getbalance(), "", "", True)
     assert_raises_rpc_error(-4, "Unable to create transaction: Insufficient funds", rbf_node.bumpfee, rbfid)
+
 
 if __name__ == "__main__":
     BumpFeeTest().main()
