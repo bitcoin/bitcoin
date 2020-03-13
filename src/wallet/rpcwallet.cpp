@@ -2851,9 +2851,9 @@ static UniValue listunspent(const JSONRPCRequest& request)
                             {RPCResult::Type::BOOL, "solvable", "Whether we know how to spend this output, ignoring the lack of keys"},
                             {RPCResult::Type::BOOL, "reused", "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
                             {RPCResult::Type::STR, "desc", "(only when solvable) A descriptor for spending this output"},
-                            {RPCResult::Type::BOOL, "safe", "Whether this output is considered safe to spend. Unconfirmed transactions"
-            "                              from outside keys and unconfirmed replacement transactions are considered unsafe\n"
-                                "and are not eligible for spending by fundrawtransaction and sendtoaddress."},
+                            {RPCResult::Type::BOOL, "safe", "Whether this output is considered safe to spend. Unconfirmed transactions\n"
+                                                            "from outside keys and unconfirmed replacement transactions are considered unsafe\n"
+                                                            "and are not eligible for spending by fundrawtransaction and sendtoaddress."},
                         }},
                     }
                 },
