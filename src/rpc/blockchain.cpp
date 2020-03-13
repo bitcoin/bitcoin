@@ -1726,7 +1726,7 @@ RPCHelpMan getblockchaininfo()
                         {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
                         {RPCResult::Type::NUM, "activation_height", "expected activation height for this softfork (only for \"locked_in\" status)"},
                         {RPCResult::Type::NUM, "min_activation_height", "minimum height of blocks for which the rules may be enforced"},
-                        {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP9 signalling for a softfork",
+                        {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP9 signalling for a softfork (only for \"started\" status)",
                         {
                             {RPCResult::Type::NUM, "period", "the length in blocks of the BIP9 signalling period"},
                             {RPCResult::Type::NUM, "threshold", "the number of blocks with the version bit set required to activate the feature"},
