@@ -348,7 +348,7 @@ public:
         if(Lookup(ip.c_str(), serv, port, false)) {
           CAddress addrConnect = CAddress(serv, NODE_NONE);
           bool fCountFailure = false;
-          bool manual_connection = false; //true;
+          bool manual_connection = true;
           bool block_relay_only = false;
 
           CNode* pnode = ConnectNode(addrConnect, source_c, fCountFailure, manual_connection, block_relay_only);
@@ -462,9 +462,9 @@ public:
       }
     }
     // Get information about the buckets
-    void _nextIPselect(UniValue &result) {
+    void _nextIPselect(int id, UniValue &result) {
         result.pushKV("Old ID to override", addrman.IDtoOverrideSelect);
-        addrman.IDtoOverrideSelect = 1;
+        addrman.IDtoOverrideSelect = id;
         result.pushKV("New ID to override", addrman.IDtoOverrideSelect);
         /*
 

@@ -3185,18 +3185,17 @@ UniValue bucketlist(const JSONRPCRequest& request)
 // Cybersecurity Lab
 UniValue nextIPselect(const JSONRPCRequest& request)
 {
-  if (request.fHelp || request.params.size() != 2)
+  if (request.fHelp || request.params.size() != 1)
       throw std::runtime_error(
           RPCHelpMan{"nextIPselect",
               "\nSet the next IP selection for connection, as opposed to nondeterministic random.\n",
               {
-                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "IP Address"},
-                {"port", RPCArg::Type::STR, RPCArg::Optional::NO, "Port"},
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "ID"},
               },
               RPCResults{},
               RPCExamples{
-                  HelpExampleCli("nextIPselect", "1.2.3.4 8333")
-          + HelpExampleRpc("nextIPselect", "1.2.3.4 8333")
+                  HelpExampleCli("nextIPselect", "100")
+          + HelpExampleRpc("nextIPselect", "100")
               },
           }.ToString());
 
@@ -3205,17 +3204,16 @@ UniValue nextIPselect(const JSONRPCRequest& request)
 
   UniValue result(UniValue::VOBJ);
 
-  std::string ipAddress = request.params[0].get_str();
-  std::string portStr = request.params[1].get_str();
+  std::string idStr = request.params[0].get_str();
 
-  int port = 8333;
+  int id = 0;
   try {
-    port = std::stoi(portStr);
+    id = std::stoi(idStr);
   } catch(...) {
-    result.pushKV("Invalid port", port);
+    result.pushKV("Invalid ID", id);
     return result;
   }
-  g_rpc_node->connman->_nextIPselect(result);
+  g_rpc_node->connman->_nextIPselect(id, result);
   return result;
 }
 

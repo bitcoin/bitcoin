@@ -367,6 +367,7 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
     // Cybersecurity Lab
     // If set, override the selection process
     if(IDtoOverrideSelect != -1) {
+      LogPrintf("\nOverriding select\n");
       CAddrInfo& info = mapInfo[IDtoOverrideSelect];
       IDtoOverrideSelect = -1;
       return info;
