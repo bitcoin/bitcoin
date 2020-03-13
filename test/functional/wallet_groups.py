@@ -11,12 +11,13 @@ from test_framework.util import (
     assert_equal,
 )
 
+
 class WalletGroupTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.extra_args = [[], [], ['-avoidpartialspends']]
-        self.rpc_timeout = 240
+        self.rpc_timeout = 480
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -87,5 +88,6 @@ class WalletGroupTest(BitcoinTestFramework):
         # is way too big.
         assert self.nodes[2].sendtoaddress(address=addr2[0], amount=5)
 
+
 if __name__ == '__main__':
-    WalletGroupTest().main ()
+    WalletGroupTest().main()
