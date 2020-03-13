@@ -13,6 +13,49 @@
 
 #include <vector>
 
+using ExtPubKeyMap = std::unordered_map<uint32_t, CExtPubKey>;
+
+/** Cache for single descriptor's derived extended pubkeys */
+class DescriptorCache {
+private:
+    /** Map key expression index -> map of (key derivation index -> xpub) */
+    std::unordered_map<uint32_t, ExtPubKeyMap> m_derived_xpubs;
+    /** Map key expression index -> parent xpub */
+    ExtPubKeyMap m_parent_xpubs;
+
+public:
+    /** Cache a parent xpub
+     *
+     * @param[in] key_exp_pos Position of the key expression within the descriptor
+     * @param[in] xpub The CExtPubKey to cache
+     */
+    void CacheParentExtPubKey(uint32_t key_exp_pos, const CExtPubKey& xpub);
+    /** Retrieve a cached parent xpub
+     *
+     * @param[in] key_exp_pos Position of the key expression within the descriptor
+     * @param[in] xpub The CExtPubKey to get from cache
+     */
+    bool GetCachedParentExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const;
+    /** Cache an xpub derived at an index
+     *
+     * @param[in] key_exp_pos Position of the key expression within the descriptor
+     * @param[in] der_index Derivation index of the xpub
+     * @param[in] xpub The CExtPubKey to cache
+     */
+    void CacheDerivedExtPubKey(uint32_t key_exp_pos, uint32_t der_index, const CExtPubKey& xpub);
+    /** Retrieve a cached xpub derived at an index
+     *
+     * @param[in] key_exp_pos Position of the key expression within the descriptor
+     * @param[in] der_index Derivation index of the xpub
+     * @param[in] xpub The CExtPubKey to get from cache
+     */
+    bool GetCachedDerivedExtPubKey(uint32_t key_exp_pos, uint32_t der_index, CExtPubKey& xpub) const;
+
+    /** Retrieve all cached parent xpubs */
+    const ExtPubKeyMap GetCachedParentExtPubKeys() const;
+    /** Retrieve all cached derived xpubs */
+    const std::unordered_map<uint32_t, ExtPubKeyMap> GetCachedDerivedExtPubKeys() const;
+};
 
 /** \brief Interface for parsed descriptor objects.
  *
@@ -53,18 +96,18 @@ struct Descriptor {
      * @param[in] provider The provider to query for private keys in case of hardened derivation.
      * @param[out] output_scripts The expanded scriptPubKeys.
      * @param[out] out Scripts and public keys necessary for solving the expanded scriptPubKeys (may be equal to `provider`).
-     * @param[out] cache Cache data necessary to evaluate the descriptor at this point without access to private keys.
+     * @param[out] write_cache Cache data necessary to evaluate the descriptor at this point without access to private keys.
      */
-    virtual bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out, std::vector<unsigned char>* cache = nullptr) const = 0;
+    virtual bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out, DescriptorCache* write_cache = nullptr) const = 0;
 
     /** Expand a descriptor at a specified position using cached expansion data.
      *
      * @param[in] pos The position at which to expand the descriptor. If IsRange() is false, this is ignored.
-     * @param[in] cache Cached expansion data.
+     * @param[in] read_cache Cached expansion data.
      * @param[out] output_scripts The expanded scriptPubKeys.
      * @param[out] out Scripts and public keys necessary for solving the expanded scriptPubKeys (may be equal to `provider`).
      */
-    virtual bool ExpandFromCache(int pos, const std::vector<unsigned char>& cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const = 0;
+    virtual bool ExpandFromCache(int pos, const DescriptorCache& read_cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const = 0;
 
     /** Expand the private key for a descriptor at a specified position, if possible.
      *
