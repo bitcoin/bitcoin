@@ -27,6 +27,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
+#include <validation.h>
 
 #include <QFontMetrics>
 #include <QScrollBar>
@@ -175,7 +176,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         connect(ui->customFee, &BitcoinAmountField::valueChanged, this, &SendCoinsDialog::coinControlUpdateLabels);
         connect(ui->optInRBF, &QCheckBox::stateChanged, this, &SendCoinsDialog::updateSmartFeeLabel);
         connect(ui->optInRBF, &QCheckBox::stateChanged, this, &SendCoinsDialog::coinControlUpdateLabels);
-        CAmount requiredFee = model->wallet().getRequiredFee(1000);
+        CAmount requiredFee = model->wallet().getRequiredFee(DEFAULT_MIN_RELAY_TX_FEE);
         ui->customFee->SetMinValue(requiredFee);
         if (ui->customFee->value() < requiredFee) {
             ui->customFee->setValue(requiredFee);
