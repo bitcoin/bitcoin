@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -344,9 +344,9 @@ void SendCoinsDialog::on_sendButton_clicked()
         // append RBF message according to transaction's signalling
         questionString.append("<span style='font-size:10pt; font-weight:normal;'>");
         if (ui->optInRBF->isChecked()) {
-            questionString.append(tr("You can increase the fee later (signals Replace-By-Fee, BIP-125)."));
+            questionString.append(tr("You can increase the fee later (Signaling Replace-By-Fee)."));
         } else {
-            questionString.append(tr("Not signalling Replace-By-Fee, BIP-125."));
+            questionString.append(tr("You cannot increase the fee later (Not signalling Replace-By-Fee)"));
         }
         questionString.append("</span>");
     }
@@ -374,7 +374,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     } else {
         questionString = questionString.arg("<br /><br />" + formatted.at(0));
     }
-    const QString confirmation = model->privateKeysDisabled() ? tr("Confirm transaction proposal") : tr("Confirm send coins");
+    const QString confirmation = model->privateKeysDisabled() ? tr("Confirm transaction proposal") : tr("Are you sure you want to send?");
     const QString confirmButtonText = model->privateKeysDisabled() ? tr("Copy PSBT to clipboard") : tr("Send");
     SendConfirmationDialog confirmationDialog(confirmation, questionString, informative_text, detailed_text, SEND_CONFIRM_DELAY, confirmButtonText, this);
     confirmationDialog.exec();
