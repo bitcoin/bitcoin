@@ -64,6 +64,8 @@
 #endif
 
 #include <boost/algorithm/string/replace.hpp>
+#include <filesystem>
+#include <system_error>
 #include <thread>
 #include <typeinfo>
 #include <univalue.h>
@@ -1005,15 +1007,15 @@ void ArgsManager::LogArgs() const
     logArgsPrefix("Command-line arg:", "", m_settings.command_line_options);
 }
 
+/**
+ * Rename src to dest.
+ * @return true if the rename was successful.
+ */
 bool RenameOver(fs::path src, fs::path dest)
 {
-#ifdef WIN32
-    return MoveFileExW(src.wstring().c_str(), dest.wstring().c_str(),
-                       MOVEFILE_REPLACE_EXISTING) != 0;
-#else
-    int rc = std::rename(src.string().c_str(), dest.string().c_str());
-    return (rc == 0);
-#endif /* WIN32 */
+    std::error_code error;
+    std::filesystem::rename(src.string(), dest.string(), error);
+    return !error;
 }
 
 /**
