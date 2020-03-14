@@ -37,6 +37,8 @@ if [ "${BITCOIN_GENBUILD_NO_GIT}" != "1" ] && [ -e "$(command -v git)" ] && [ "$
     # otherwise generate suffix from git, i.e. string like "59887e8-dirty"
     SUFFIX=$(git rev-parse --short HEAD)
     git diff-index --quiet HEAD -- || SUFFIX="$SUFFIX-dirty"
+elif [ -f "$FILE" ]; then
+    exit 0
 fi
 
 if [ -n "$DESC" ]; then
