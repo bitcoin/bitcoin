@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export TZ=UTC
 export LC_ALL=C
 set -e -o pipefail
 
