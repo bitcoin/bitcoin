@@ -32,8 +32,8 @@ public:
     ~SplashScreen();
 
 protected:
-    void paintEvent(QPaintEvent *event);
-    void closeEvent(QCloseEvent *event);
+    void paintEvent(QPaintEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 public Q_SLOTS:
     /** Hide the splash screen window and schedule the splash screen object for deletion */
@@ -43,7 +43,7 @@ public Q_SLOTS:
     void showMessage(const QString &message, int alignment, const QColor &color);
 
 protected:
-    bool eventFilter(QObject * obj, QEvent * ev);
+    bool eventFilter(QObject * obj, QEvent * ev) override;
 
 private:
     /** Connect core signals to splash screen */

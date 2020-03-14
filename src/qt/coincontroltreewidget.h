@@ -16,7 +16,7 @@ public:
     explicit CoinControlTreeWidget(QWidget *parent = nullptr);
 
 protected:
-    virtual void keyPressEvent(QKeyEvent *event);
+    virtual void keyPressEvent(QKeyEvent *event) override;
 };
 
 #endif // SYSCOIN_QT_COINCONTROLTREEWIDGET_H

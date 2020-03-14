@@ -51,7 +51,7 @@ public:
     static QWidget* showShutdownWindow(QMainWindow* window);
 
 protected:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
 };
 
 #endif // SYSCOIN_QT_UTILITYDIALOG_H

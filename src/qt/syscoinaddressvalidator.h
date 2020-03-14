@@ -17,7 +17,7 @@ class SyscoinAddressEntryValidator : public QValidator
 public:
     explicit SyscoinAddressEntryValidator(QObject *parent);
 
-    State validate(QString &input, int &pos) const;
+    State validate(QString &input, int &pos) const override;
 };
 
 /** Syscoin address widget validator, checks for a valid syscoin address.
@@ -29,7 +29,7 @@ class SyscoinAddressCheckValidator : public QValidator
 public:
     explicit SyscoinAddressCheckValidator(QObject *parent);
 
-    State validate(QString &input, int &pos) const;
+    State validate(QString &input, int &pos) const override;
 };
 
 #endif // SYSCOIN_QT_SYSCOINADDRESSVALIDATOR_H
