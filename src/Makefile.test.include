@@ -29,6 +29,7 @@ FUZZ_TARGETS = \
   test/fuzz/descriptor_parse \
   test/fuzz/diskblockindex_deserialize \
   test/fuzz/eval_script \
+  test/fuzz/fee_rate \
   test/fuzz/fee_rate_deserialize \
   test/fuzz/flat_file_pos_deserialize \
   test/fuzz/float \
@@ -433,6 +434,12 @@ test_fuzz_eval_script_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_eval_script_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_eval_script_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_eval_script_SOURCES = $(FUZZ_SUITE) test/fuzz/eval_script.cpp
+
+test_fuzz_fee_rate_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_fee_rate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_fee_rate_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_fee_rate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_fee_rate_SOURCES = $(FUZZ_SUITE) test/fuzz/fee_rate.cpp
 
 test_fuzz_fee_rate_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DFEE_RATE_DESERIALIZE=1
 test_fuzz_fee_rate_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
