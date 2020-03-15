@@ -234,17 +234,19 @@ def main():
     if args.commit and args.pull:
         raise Exception('Cannot have both commit and pull')
     args.commit = ('' if args.commit else 'v') + args.version
+    print(args.commit)
 
     os.chdir('bitcoin')
     if args.pull:
         subprocess.check_call(['git', 'fetch', args.url, 'refs/pull/'+args.version+'/merge'])
         os.chdir('../gitian-builder/inputs/bitcoin')
         subprocess.check_call(['git', 'fetch', args.url, 'refs/pull/'+args.version+'/merge'])
-        args.commit = subprocess.check_output(['git', 'show', '-s', '--format=%H', 'FETCH_HEAD'], universal_newlines=True, encoding='utf8').strip()
         args.version = 'pull-' + args.version
-    print(args.commit)
-    subprocess.check_call(['git', 'fetch'])
-    subprocess.check_call(['git', 'checkout', args.commit])
+    else:
+        subprocess.check_call(['git', 'fetch', args.url, args.commit])
+
+    subprocess.check_call(['git', 'checkout', 'FETCH_HEAD'])
+    args.commit = subprocess.check_output(['git', 'log', '-1', '--format=%H'], universal_newlines=True, encoding='utf8').strip()
     os.chdir(workdir)
 
     os.chdir('gitian-builder')
