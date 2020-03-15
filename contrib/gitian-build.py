@@ -160,7 +160,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Script for running full Gitian builds.')
     parser.add_argument('-c', '--commit', action='store_true', dest='commit', help='Indicate that the version argument is for a commit or branch')
-    parser.add_argument('-p', '--pull', action='store_true', dest='pull', help='Indicate that the version argument is the number of a github repository pull request')
+    parser.add_argument('-p', '--pull', action='store_true', dest='pull', help='Indicate that the version argument is the number of a GitHub repository pull request')
     parser.add_argument('-u', '--url', dest='url', default='https://github.com/bitcoin/bitcoin', help='Specify the URL of the repository. Default is %(default)s')
     parser.add_argument('-v', '--verify', action='store_true', dest='verify', help='Verify the Gitian build')
     parser.add_argument('-b', '--build', action='store_true', dest='build', help='Do a Gitian build')
@@ -172,10 +172,10 @@ def main():
     parser.add_argument('-k', '--kvm', action='store_true', dest='kvm', help='Use KVM instead of LXC')
     parser.add_argument('-d', '--docker', action='store_true', dest='docker', help='Use Docker instead of LXC')
     parser.add_argument('-S', '--setup', action='store_true', dest='setup', help='Set up the Gitian building environment. Only works on Debian-based systems (Ubuntu, Debian)')
-    parser.add_argument('-D', '--detach-sign', action='store_true', dest='detach_sign', help='Create the assert file for detached signing. Will not commit anything.')
+    parser.add_argument('-D', '--detach-sign', action='store_true', dest='detach_sign', help='Create the assert file for detached signing. Will not commit anything')
     parser.add_argument('-n', '--no-commit', action='store_false', dest='commit_files', help='Do not commit anything to git')
     parser.add_argument('signer', nargs='?', help='GPG signer to sign each build assert file')
-    parser.add_argument('version', nargs='?', help='Version number, commit, or branch to build. If building a commit or branch, the -c option must be specified')
+    parser.add_argument('version', nargs='?', help='Version number, commit, branch, or pull request  to build. If building a commit or branch, the -c option must be specified. If building a pull request, the -p option must be specified')
 
     args = parser.parse_args()
     workdir = os.getcwd()
@@ -232,14 +232,16 @@ def main():
 
     # Add leading 'v' for tags
     if args.commit and args.pull:
-        raise Exception('Cannot have both commit and pull')
+        raise Exception('Cannot have both --commit and --pull')
     args.commit = ('' if args.commit else 'v') + args.version
     print(args.commit)
 
+    if args.pull:
+        os.chdir('gitian-builder/inputs/bitcoin')
+        subprocess.check_call(['git', 'fetch', args.url, 'refs/pull/'+args.version+'/merge'])
+        os.chdir(workdir)
     os.chdir('bitcoin')
     if args.pull:
-        subprocess.check_call(['git', 'fetch', args.url, 'refs/pull/'+args.version+'/merge'])
-        os.chdir('../gitian-builder/inputs/bitcoin')
         subprocess.check_call(['git', 'fetch', args.url, 'refs/pull/'+args.version+'/merge'])
         args.version = 'pull-' + args.version
     else:
