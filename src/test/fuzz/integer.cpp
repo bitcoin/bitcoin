@@ -23,6 +23,7 @@
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <time.h>
 #include <uint256.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
@@ -31,6 +32,7 @@
 #include <version.h>
 
 #include <cassert>
+#include <chrono>
 #include <limits>
 #include <vector>
 
@@ -124,6 +126,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             assert(parsed_money == i64);
         }
     }
+    const std::chrono::seconds seconds{i64};
+    assert(count_seconds(seconds) == i64);
 
     const arith_uint256 au256 = UintToArith256(u256);
     assert(ArithToUint256(au256) == u256);
