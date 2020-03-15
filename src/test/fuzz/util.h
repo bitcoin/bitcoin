@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_H
 #define BITCOIN_TEST_FUZZ_UTIL_H
 
+#include <amount.h>
 #include <attributes.h>
 #include <optional.h>
 #include <serialize.h>
@@ -22,6 +23,16 @@
     return {s.begin(), s.end()};
 }
 
+[[ nodiscard ]] inline std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider& fuzzed_data_provider, size_t max_vector_size = 16, size_t max_string_length = 16) noexcept
+{
+    const size_t n_elements = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
+    std::vector<std::string> r;
+    for (size_t i = 0; i < n_elements; ++i) {
+        r.push_back(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length));
+    }
+    return r;
+}
+
 template <typename T>
 [[ nodiscard ]] inline Optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, size_t max_length = 4096) noexcept
 {
@@ -34,6 +45,34 @@ template <typename T>
         return nullopt;
     }
     return obj;
+}
+
+[[ nodiscard ]] inline CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    return fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, MAX_MONEY);
+}
+
+template <typename T>
+bool MultiplicationOverflow(T i, T j)
+{
+    static_assert(std::is_integral<T>::value, "Integral required.");
+    if (std::numeric_limits<T>::is_signed) {
+        if (i > 0) {
+            if (j > 0) {
+                return i > (std::numeric_limits<T>::max() / j);
+            } else {
+                return j < (std::numeric_limits<T>::min() / i);
+            }
+        } else {
+            if (j > 0) {
+                return i < (std::numeric_limits<T>::min() / j);
+            } else {
+                return i != 0 && (j < (std::numeric_limits<T>::max() / i));
+            }
+        }
+    } else {
+        return j != 0 && i > std::numeric_limits<T>::max() / j;
+    }
 }
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_H
