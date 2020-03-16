@@ -73,7 +73,7 @@ UniValue gobject(const JSONRPCRequest& request)
                     {
                         {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "command to call (check|prepare|submit|deserialize|count|get|getvotes|getcurrentvotes|list|diff|vote-name|vote-conf|vote-many)"}
                     },
-                    RPCResults{},
+                    RPCResult{RPCResult::Type::NONE, "", ""},
                     RPCExamples{
                         HelpExampleCli("gobject", "list")
                         + HelpExampleRpc("gobject", "list")

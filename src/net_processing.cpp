@@ -4020,7 +4020,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 LOCK(pto->m_tx_relay->cs_tx_inventory);
                 // Check whether periodic sends should happen
                 bool fSendTrickle = true;/*pto->HasPermission(PF_NOBAN);
-                if (pto->m_tx_relay->nNextInvSend < nNow) {
+                if (pto->m_tx_relay->nNextInvSend < current_time) {
                     fSendTrickle = true;
                     if (pto->fInbound) {
                         pto->m_tx_relay->nNextInvSend = std::chrono::microseconds{connman->PoissonNextSendInbound(nNow, INVENTORY_BROADCAST_INTERVAL)};
