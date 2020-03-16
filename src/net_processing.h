@@ -6,11 +6,13 @@
 #ifndef SYSCOIN_NET_PROCESSING_H
 #define SYSCOIN_NET_PROCESSING_H
 
-#include <net.h>
-#include <validationinterface.h>
 #include <consensus/params.h>
+#include <net.h>
 #include <sync.h>
-// SYSCOIN
+#include <validationinterface.h>
+
+class CTxMemPool;
+
 extern RecursiveMutex cs_main;
 
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
@@ -23,11 +25,12 @@ class PeerLogicValidation final : public CValidationInterface, public NetEventsI
 private:
     CConnman* const connman;
     BanMan* const m_banman;
+    CTxMemPool& m_mempool;
 
     bool CheckIfBanned(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 public:
-    PeerLogicValidation(CConnman* connman, BanMan* banman, CScheduler& scheduler);
+    PeerLogicValidation(CConnman* connman, BanMan* banman, CScheduler& scheduler, CTxMemPool& pool);
 
     /**
      * Overridden from CValidationInterface.
