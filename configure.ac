@@ -935,11 +935,10 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>
 AC_MSG_CHECKING(for sysctl)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
   #include <sys/sysctl.h>]],
- [[ static const int name[2] = {CTL_KERN, KERN_VERSION};
-    #ifdef __linux__
+ [[ #ifdef __linux__
     #error "Don't use sysctl on Linux, it's deprecated even when it works"
     #endif
-    sysctl(name, 2, nullptr, nullptr, nullptr, 0); ]])],
+    sysctl(nullptr, 2, nullptr, nullptr, nullptr, 0); ]])],
  [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_SYSCTL, 1,[Define this symbol if the BSD sysctl() is available]) ],
  [ AC_MSG_RESULT(no)]
 )
@@ -947,7 +946,10 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
 AC_MSG_CHECKING(for sysctl KERN_ARND)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
   #include <sys/sysctl.h>]],
- [[ static const int name[2] = {CTL_KERN, KERN_ARND};
+ [[ #ifdef __linux__
+    #error "Don't use sysctl on Linux, it's deprecated even when it works"
+    #endif
+    static int name[2] = {CTL_KERN, KERN_ARND};
     sysctl(name, 2, nullptr, nullptr, nullptr, 0); ]])],
  [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_SYSCTL_ARND, 1,[Define this symbol if the BSD sysctl(KERN_ARND) is available]) ],
  [ AC_MSG_RESULT(no)]
