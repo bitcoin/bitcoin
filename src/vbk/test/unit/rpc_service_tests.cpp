@@ -1,7 +1,6 @@
 #include <boost/test/unit_test.hpp>
 #include <chainparams.h>
 #include <consensus/merkle.h>
-#include <fakeit.hpp>
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <test/util/setup_common.h>
@@ -22,7 +21,7 @@ UniValue CallRPC(std::string args);
 struct RpcServiceFixture : public TestChain100Setup {
     VeriBlockTest::ServicesFixture service_fixture;
 
-    fakeit::Mock<VeriBlock::PopService> pop_service_mock;
+    VeriBlockTest::PopServiceMock pop_service_mock;
 
     RpcServiceFixture()
     {

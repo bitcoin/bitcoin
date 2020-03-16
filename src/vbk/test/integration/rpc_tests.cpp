@@ -2,7 +2,6 @@
 
 #include <chainparams.h>
 #include <consensus/merkle.h>
-#include <fakeit.hpp>
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <test/util/setup_common.h>

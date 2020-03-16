@@ -1,12 +1,6 @@
 #include <boost/test/unit_test.hpp>
-
 #include <validation.h>
-
 #include <vbk/test/integration/test_setup.hpp>
-
-#include <fakeit.hpp>
-
-using namespace fakeit;
 
 static CBlock CreateTestBlock(TestChain100Setup& test, std::vector<CMutableTransaction> trxs = {})
 {
