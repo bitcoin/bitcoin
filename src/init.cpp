@@ -1812,7 +1812,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 pblocktree.reset();
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
                 llmq::DestroyLLMQSystem();
+                // Same logic as above with pblocktree
+                evoDb.reset();
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState));
+                deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
 
                 llmq::InitLLMQSystem(*evoDb, &scheduler, false, fReset || fReindexChainState);
