@@ -347,7 +347,7 @@ static UniValue setmocktime(const JSONRPCRequest& request)
                     {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, UNIX_EPOCH_TIME + "\n"
             "   Pass 0 to go back to using the system time."},
                 },
-                RPCResults{},
+                RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{""},
             }.Check(request);
 
@@ -375,7 +375,7 @@ static UniValue mockscheduler(const JSONRPCRequest& request)
         {
             {"delta_time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of seconds to forward the scheduler into the future." },
         },
-        RPCResults{},
+        RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{""},
     }.Check(request);
 
@@ -579,7 +579,7 @@ static UniValue echo(const JSONRPCRequest& request)
                 "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
                 "bitcoin-cli and the GUI. There is no server-side difference.",
                 {},
-                RPCResults{},
+                RPCResult{RPCResult::Type::NONE, "", "Returns whatever was passed in"},
                 RPCExamples{""},
             }.ToString()
         );
