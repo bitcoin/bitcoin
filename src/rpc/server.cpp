@@ -153,6 +153,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
 
 UniValue stop(const JSONRPCRequest& jsonRequest)
 {
+    static const std::string RESULT{PACKAGE_NAME " stopping"};
     // Accept the deprecated and ignored 'detach' boolean argument
     // Also accept the hidden 'wait' integer argument (milliseconds)
     // For instance, 'stop 1000' makes the call wait 1 second before returning
@@ -162,7 +163,7 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
             RPCHelpMan{"stop",
                 "\nRequest a graceful shutdown of " PACKAGE_NAME ".",
                 {},
-                RPCResults{},
+                RPCResult{RPCResult::Type::STR, "", "A string with the content '" + RESULT + "'"},
                 RPCExamples{""},
             }.ToString());
     // Event loop will exit after current HTTP requests have been handled, so
@@ -171,7 +172,7 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     if (jsonRequest.params[0].isNum()) {
         UninterruptibleSleep(std::chrono::milliseconds{jsonRequest.params[0].get_int()});
     }
-    return PACKAGE_NAME " stopping";
+    return RESULT;
 }
 
 static UniValue uptime(const JSONRPCRequest& jsonRequest)
