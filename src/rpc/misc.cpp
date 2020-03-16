@@ -530,7 +530,7 @@ static UniValue setmocktime(const JSONRPCRequest& request)
                     {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Unix seconds-since-epoch timestamp\n"
             "   Pass 0 to go back to using the system time."},
                 },
-                RPCResults{},
+                RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{""},
             }.ToString()
         );
@@ -1278,7 +1278,7 @@ static UniValue echo(const JSONRPCRequest& request)
                 "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
                 "dash-cli and the GUI. There is no server-side difference.",
                 {},
-                RPCResults{},
+                RPCResult{RPCResult::Type::NONE, "", "Returns whatever was passed in"},
                 RPCExamples{""},
             }.ToString()
         );
