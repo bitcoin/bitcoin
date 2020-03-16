@@ -218,11 +218,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   ],[
     bitcoin_enable_qt=no
   ])
-  if test x$bitcoin_enable_qt = xyes; then
-    AC_MSG_RESULT([$bitcoin_enable_qt ($QT_LIB_PREFIX)])
-  else
-    AC_MSG_RESULT([$bitcoin_enable_qt])
-  fi
+  AC_MSG_RESULT([$bitcoin_enable_qt])
 
   AC_SUBST(QT_PIE_FLAGS)
   AC_SUBST(QT_INCLUDES)
@@ -320,7 +316,6 @@ dnl Outputs: All necessary QT_* variables are set.
 dnl Outputs: have_qt_test and have_qt_dbus are set (if applicable) to yes|no.
 AC_DEFUN([_BITCOIN_QT_FIND_LIBS],[
   m4_ifdef([PKG_CHECK_MODULES],[
-    QT_LIB_PREFIX=Qt5
     qt5_modules="Qt5Core Qt5Gui Qt5Network Qt5Widgets"
     BITCOIN_QT_CHECK([
       PKG_CHECK_MODULES([QT5], [$qt5_modules], [QT_INCLUDES="$QT5_CFLAGS"; QT_LIBS="$QT5_LIBS" have_qt=yes],[have_qt=no])
@@ -331,9 +326,9 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS],[
       fi
     ])
     BITCOIN_QT_CHECK([
-      PKG_CHECK_MODULES([QT_TEST], [${QT_LIB_PREFIX}Test], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
+      PKG_CHECK_MODULES([QT_TEST], [Qt5Test], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
       if test "x$use_dbus" != xno; then
-        PKG_CHECK_MODULES([QT_DBUS], [${QT_LIB_PREFIX}DBus], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
+        PKG_CHECK_MODULES([QT_DBUS], [Qt5DBus], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
       fi
     ])
   ])
