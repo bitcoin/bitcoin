@@ -616,7 +616,7 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
                 }
                 }
         },
-        RPCResults{},
+        RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{
             HelpExampleCli("listassetallocationmempoolbalances", "0")
             + HelpExampleCli("listassetallocationmempoolbalances", "10 10")

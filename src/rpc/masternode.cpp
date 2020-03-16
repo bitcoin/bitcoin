@@ -81,7 +81,7 @@ UniValue masternode(const JSONRPCRequest& request)
                     {
                         {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "(count|current|genkey|outputs|initialize|start-<mode>|status|list|list-conf|winner|winners"}
                     },
-                    RPCResults{},
+                    RPCResult{RPCResult::Type::NONE, "", ""},
                     RPCExamples{
                         HelpExampleCli("masternode", "list")
                         + HelpExampleRpc("masternode", "list")
@@ -461,7 +461,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                     {"mode", RPCArg::Type::STR, "json", "The mode to run list in"},
                     {"filter", RPCArg::Type::STR, "", "FIlter results. Partial match by outpoint by default in all modes; additional matches in some modes are also available"} 
                 },
-                RPCResults{},
+                RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("masternodelist", "")
                     + HelpExampleRpc("masternodelist", "")
@@ -652,7 +652,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
                     {
                         {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute (create-name|create-all|decode|relay)"}
                     },
-                    RPCResults{},
+                    RPCResult{RPCResult::Type::NONE, "", ""},
                     RPCExamples{
                         HelpExampleCli("masternodebroadcast", "decode \"message\"")
                         + HelpExampleRpc("masternodebroadcast", "decode, \"message\"")
