@@ -13,9 +13,9 @@
 #include <vbk/util.hpp>
 #include <vbk/util_service/util_service_impl.hpp>
 
-#include <fakeit.hpp>
+#include <gmock/gmock.h>
 
-using namespace fakeit;
+using ::testing::Return;
 
 BOOST_AUTO_TEST_SUITE(pop_interpreter_tests)
 
@@ -62,11 +62,11 @@ struct EvalScriptFixture {
         config.btc_header_size = 3;
         config.vbk_header_size = 4;
 
-        When(Method(pop, checkATVinternally)).AlwaysReturn(true);
-        When(Method(pop, checkVTBinternally)).AlwaysReturn(true);
+        ON_CALL(pop, checkATVinternally).WillByDefault(Return(true));
+        ON_CALL(pop, checkVTBinternally).WillByDefault(Return(true));
     }
 
-    Mock<VeriBlock::PopService> pop;
+    VeriBlockTest::PopServiceMock pop;
     VeriBlock::UtilService& util{VeriBlock::InitUtilService()};
     VeriBlock::Config& config{VeriBlock::InitConfig()};
 
@@ -85,6 +85,9 @@ struct EvalScriptFixture {
 
 BOOST_FIXTURE_TEST_CASE(eval_pop_tx_scriptSig_valid, EvalScriptFixture)
 {
+    EXPECT_CALL(pop, checkATVinternally).Times(1);
+    EXPECT_CALL(pop, checkVTBinternally).Times(3);
+
     BOOST_CHECK(util.EvalScript(script, stack, &serror, &pub, &ctx, &type, true));
     BOOST_REQUIRE(!stack.empty());
     BOOST_CHECK(type == VeriBlock::PopTxType::PUBLICATIONS);
@@ -94,8 +97,6 @@ BOOST_FIXTURE_TEST_CASE(eval_pop_tx_scriptSig_valid, EvalScriptFixture)
     BOOST_CHECK(pub.vtbs[0] == "VTB1"_v);
     BOOST_CHECK(pub.vtbs[1] == "VTB2"_v);
     BOOST_CHECK(pub.vtbs[2] == "VTB3"_v);
-    Verify_Method(Method(pop, checkATVinternally)).Once();
-    Verify_Method(Method(pop, checkVTBinternally)).Exactly(3);
 }
 
 BOOST_FIXTURE_TEST_CASE(eval_pop_tx_scriptSig_atv_size_invalid, EvalScriptFixture)

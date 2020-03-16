@@ -10,16 +10,15 @@
 #include <validation.h>
 #include <wallet/wallet.h>
 
-#include <fakeit.hpp>
 #include <vbk/init.hpp>
 #include <vbk/pop_service/pop_service_impl.hpp>
-#include <vbk/test/util/mock.hpp>
 #include <vbk/test/util/tx.hpp>
+#include <vbk/test/util/mock.hpp>
 
 #include <algorithm>
 #include <vector>
 
-using namespace fakeit;
+using ::testing::Return;
 
 BOOST_AUTO_TEST_SUITE(updated_mempool_tests)
 
@@ -283,62 +282,72 @@ BOOST_FIXTURE_TEST_CASE(check_the_pop_tx_limits_in_block, TestingSetup)
 
 BOOST_FIXTURE_TEST_CASE(check_CreateNewBlock_with_blockPopValidation_fail, TestingSetup)
 {
-   Fake(OverloadedMethod(pop_service_mock, addPayloads, void(std::string, const int&, const VeriBlock::Publications&)));
-   Fake(OverloadedMethod(pop_service_mock, removePayloads, void(std::string, const int&)));
-   Fake(Method(pop_service_mock, clearTemporaryPayloads));
-   When(Method(pop_service_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
+    testing::NiceMock<VeriBlockTest::PopServiceImplMock> pop_impl_mock;
 
-   fakeit::Mock<VeriBlock::PopServiceImpl> pop_impl_mock;
-
-   When(Method(pop_service_mock, blockPopValidation)).AlwaysDo(
-       [&](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) {
-            return VeriBlock::blockPopValidationImpl(pop_impl_mock.get(), block, pindexPrev, params, state);
-        });
-    When(Method(pop_service_mock, addTemporaryPayloads)).AlwaysDo(
-        [&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
-            return VeriBlock::addTemporaryPayloadsImpl(pop_impl_mock.get(), tx, pindexPrev, params, state);
-        });
-
-   When(Method(pop_impl_mock, parsePopTx)).AlwaysDo([](const CTransactionRef&, ScriptError* serror, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType* type) -> bool {
-       if (type != nullptr) {
-           *type = VeriBlock::PopTxType::CONTEXT;
-       }
-       if (serror != nullptr) {
-           *serror = ScriptError::SCRIPT_ERR_OK;
-       }
-       return true; });
-
-    When(Method(pop_impl_mock, addTemporaryPayloads)).AlwaysDo([&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
-            return VeriBlock::addTemporaryPayloadsImpl(pop_impl_mock.get(), tx, pindexPrev, params, state);
-        });
-    When(Method(pop_impl_mock, clearTemporaryPayloads)).AlwaysDo([&]() {
-                VeriBlock::clearTemporaryPayloadsImpl(pop_impl_mock.get());
+    ON_CALL(pop_service_mock, determineATVPlausibilityWithBTCRules).WillByDefault(Return(true));
+    ON_CALL(pop_service_mock, blockPopValidation)
+        .WillByDefault(
+            [&](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) {
+                return VeriBlock::blockPopValidationImpl(pop_impl_mock, block, pindexPrev, params, state);
             });
-    VeriBlock::initTemporaryPayloadsMock(pop_impl_mock.get());
+    ON_CALL(pop_service_mock, addTemporaryPayloads)
+        .WillByDefault(
+            [&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
+                return VeriBlock::addTemporaryPayloadsImpl(pop_impl_mock, tx, pindexPrev, params, state);
+            });
 
-    Fake(OverloadedMethod(pop_impl_mock, removePayloads, void(std::string, const int&)));
+    ON_CALL(pop_impl_mock, parsePopTx)
+        .WillByDefault(
+            [](const CTransactionRef&, ScriptError* serror, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType* type) -> bool {
+              if (type != nullptr) {
+                *type = VeriBlock::PopTxType::CONTEXT;
+              }
+              if (serror != nullptr) {
+                *serror = ScriptError::SCRIPT_ERR_OK;
+              }
+              return true;
+            });
+    ON_CALL(pop_impl_mock, addTemporaryPayloads)
+        .WillByDefault(
+            [&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
+                return VeriBlock::addTemporaryPayloadsImpl(pop_impl_mock, tx, pindexPrev, params, state);
+            });
+    ON_CALL(pop_impl_mock, clearTemporaryPayloads)
+        .WillByDefault(
+            [&]() {
+                VeriBlock::clearTemporaryPayloadsImpl(pop_impl_mock);
+            });
 
-   // Simulate that we have 8 invalid popTxs
-   When(Method(pop_impl_mock, updateContext)).Throw(8_Times(VeriBlock::PopServiceException("fail"))).AlwaysDo(
-       [](const std::vector<std::vector<uint8_t>>& veriBlockBlocks, const std::vector<std::vector<uint8_t>>& bitcoinBlocks) {});
+    VeriBlock::initTemporaryPayloadsMock(pop_impl_mock);
 
-   const size_t popTxCount = 10;
+    // Simulate that we have 8 invalid popTxs
+    EXPECT_CALL(pop_impl_mock, updateContext)
+        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
+        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
+        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
+        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
+        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
+        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
+        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
+        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
+        .WillRepeatedly(Return());
+    const size_t popTxCount = 10;
 
-   TestMemPoolEntryHelper entry;
-   for (size_t i = 0; i < popTxCount; ++i) {
-       LOCK2(cs_main, mempool.cs);
-       CMutableTransaction popTx = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, i)});
-       mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx));
-   }
+    TestMemPoolEntryHelper entry;
+    for (size_t i = 0; i < popTxCount; ++i) {
+        LOCK2(cs_main, mempool.cs);
+        CMutableTransaction popTx = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, i)});
+        mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx));
+    }
 
-   BlockAssembler blkAssembler(Params());
-   CScript scriptPubKey = CScript() << OP_CHECKSIG;
+    BlockAssembler blkAssembler(Params());
+    CScript scriptPubKey = CScript() << OP_CHECKSIG;
 
-   // intentionally generate the correct block mutiple times to make sure it's repeatable
-   for(size_t i = 0; i < popTxCount*2; i++) {
+    // intentionally generate the correct block mutiple times to make sure it's repeatable
+    for (size_t i = 0; i < popTxCount * 2; i++) {
         std::unique_ptr<CBlockTemplate> pblockTemplate = blkAssembler.CreateNewBlock(scriptPubKey);
         BOOST_TEST(pblockTemplate->block.vtx.size() == 3);
-   }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

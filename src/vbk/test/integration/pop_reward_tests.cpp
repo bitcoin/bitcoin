@@ -17,10 +17,6 @@
 
 #include <algorithm>
 
-#include <fakeit.hpp>
-
-using namespace fakeit;
-
 //Before starting this test you should configurate the alt-service properties file with the concrete bootstrap blocks
 //The bootstrap blocks are contained in the vbk/test/integration/utils.cpp source file
 BOOST_FIXTURE_TEST_SUITE(pop_reward_tests, VeriBlockTest::IntegrationTestFixture)

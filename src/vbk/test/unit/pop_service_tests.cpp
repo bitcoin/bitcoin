@@ -4,7 +4,6 @@
 #include <test/util/setup_common.h>
 #include <validation.h>
 
-#include <fakeit.hpp>
 #include <vbk/config.hpp>
 #include <vbk/init.hpp>
 #include <vbk/pop_service.hpp>
@@ -13,7 +12,7 @@
 #include <vbk/test/util/mock.hpp>
 #include <vbk/test/util/tx.hpp>
 
-using namespace fakeit;
+using ::testing::Return;
 
 static CBlock createBlockWithPopTx(TestChain100Setup& test)
 {
@@ -29,7 +28,7 @@ inline void setPublicationData(VeriBlock::PublicationData& pub, const CDataStrea
 }
 
 struct PopServiceFixture : public TestChain100Setup {
-    Mock<VeriBlock::PopServiceImpl> pop_service_impl_mock{};
+    testing::NiceMock<VeriBlockTest::PopServiceImplMock> pop_service_impl_mock;
 
     PopServiceFixture()
     {
@@ -37,40 +36,38 @@ struct PopServiceFixture : public TestChain100Setup {
         VeriBlock::InitUtilService();
         VeriBlock::InitConfig();
         VeriBlockTest::setUpPopServiceMock(pop_service_mock);
-        Fake(OverloadedMethod(pop_service_mock, removePayloads, void(const CBlockIndex&)));
-        Fake(OverloadedMethod(pop_service_impl_mock, addPayloads, void(std::string, const int&, const VeriBlock::Publications&)));
-        Fake(OverloadedMethod(pop_service_impl_mock, addPayloads, void(const CBlockIndex&, const CBlock&)));
-        Fake(OverloadedMethod(pop_service_impl_mock, removePayloads, void(std::string, const int&)));
-        Fake(Method(pop_service_impl_mock, clearTemporaryPayloads));
-        When(OverloadedMethod(pop_service_impl_mock, parsePopTx, bool(const CTransactionRef&, ScriptError*, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType*)))
-            .Do([](const CTransactionRef&, ScriptError* serror, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType* type) -> bool {
-                if (type != nullptr) {
-                    *type = VeriBlock::PopTxType::PUBLICATIONS;
-                }
-                if (serror != nullptr) {
-                    *serror = ScriptError::SCRIPT_ERR_OK;
-                }
-                return true;
-            });
 
-        When(Method(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
+        ON_CALL(pop_service_impl_mock, parsePopTx)
+            .WillByDefault(
+                [](const CTransactionRef&, ScriptError* serror, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType* type) -> bool {
+                    if (type != nullptr) {
+                        *type = VeriBlock::PopTxType::PUBLICATIONS;
+                    }
+                    if (serror != nullptr) {
+                        *serror = ScriptError::SCRIPT_ERR_OK;
+                    }
+                    return true;
+                });
+        ON_CALL(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)
+            .WillByDefault(Return(true));
+        ON_CALL(pop_service_impl_mock, addTemporaryPayloads)
+            .WillByDefault(
+              [&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
+                return VeriBlock::addTemporaryPayloadsImpl(pop_service_impl_mock, tx, pindexPrev, params, state);
+            });
+        ON_CALL(pop_service_impl_mock, clearTemporaryPayloads)
+            .WillByDefault(
+                [&]() {
+                    VeriBlock::clearTemporaryPayloadsImpl(pop_service_impl_mock);
+                });
 
-        When(Method(pop_service_impl_mock, addTemporaryPayloads)).AlwaysDo([&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
-                return VeriBlock::addTemporaryPayloadsImpl(pop_service_impl_mock.get(), tx, pindexPrev, params, state);
-            });
-        When(Method(pop_service_impl_mock, clearTemporaryPayloads)).AlwaysDo([&]() {
-                VeriBlock::clearTemporaryPayloadsImpl(pop_service_impl_mock.get());
-            });
-        VeriBlock::initTemporaryPayloadsMock(pop_service_impl_mock.get());
+        VeriBlock::initTemporaryPayloadsMock(pop_service_impl_mock);
     }
 
-    void verifyNoAddRemovePayloads()
+    void setNoAddRemovePayloadsExpectations()
     {
-        Verify_Method(OverloadedMethod(pop_service_impl_mock, addPayloads, void(std::string, const int&, const VeriBlock::Publications&))).Never();
-        Verify_Method(OverloadedMethod(pop_service_impl_mock, addPayloads, void(const CBlockIndex&, const CBlock&))).Never();
-
-        Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(std::string, const int&))).Never();
-        Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(const CBlockIndex&))).Never();
+        EXPECT_CALL(pop_service_impl_mock, addPayloads).Times(0);
+        EXPECT_CALL(pop_service_impl_mock, removePayloads).Times(0);
     }
 };
 
@@ -88,15 +85,16 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test, PopServiceFixture)
     stream << endorsedBlock.GetBlockHeader();
     auto& config = VeriBlock::getService<VeriBlock::Config>();
 
-    When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications&, VeriBlock::PublicationData&)))
-        .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-            setPublicationData(publicationData, stream, config.index.unwrap());
-        });
+    ON_CALL(pop_service_impl_mock, getPublicationsData)
+        .WillByDefault(
+            [stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
+                setPublicationData(publicationData, stream, config.index.unwrap());
+            });
 
     BlockValidationState state;
     {
         LOCK(cs_main);
-        BOOST_CHECK(VeriBlock::blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
+        BOOST_CHECK(VeriBlock::blockPopValidationImpl(pop_service_impl_mock, block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
     }
 }
 
@@ -112,23 +110,28 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_index, PopServiceFixture)
     stream << endorsedBlock.GetBlockHeader();
 
     // make another index
-    When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications&, VeriBlock::PublicationData&)))
-        .Do([stream](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-            setPublicationData(publicationData, stream, -1);
-        });
-
-    When(Method(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)).AlwaysDo([](VeriBlock::AltchainId altChainIdentifier, const CBlockHeader& popEndorsementHeader, const Consensus::Params& params, TxValidationState& state) -> bool {
-        return VeriBlock::PopServiceImpl().determineATVPlausibilityWithBTCRules(altChainIdentifier, popEndorsementHeader, params, state);
-    });
+    ON_CALL(pop_service_impl_mock, getPublicationsData)
+        .WillByDefault(
+            [stream](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
+                setPublicationData(publicationData, stream, -1);
+            });
+    ON_CALL(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)
+        .WillByDefault(
+            [](VeriBlock::AltchainId altChainIdentifier, const CBlockHeader& popEndorsementHeader,
+              const Consensus::Params& params, TxValidationState& state) -> bool {
+                VeriBlock::PopServiceImpl pop_service_impl(false, false);
+                return pop_service_impl.determineATVPlausibilityWithBTCRules(altChainIdentifier, popEndorsementHeader, params, state);
+            });
+    setNoAddRemovePayloadsExpectations();
 
     BlockValidationState state;
     {
         LOCK(cs_main);
-        BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
+        BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock, block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-altchain-id");
     }
 
-    verifyNoAddRemovePayloads();
+    testing::Mock::VerifyAndClearExpectations(&pop_service_impl_mock);
 }
 
 BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_known_orphan_block, PopServiceFixture)
@@ -144,18 +147,21 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_known_orphan_
     stream << endorsedBlock.GetBlockHeader();
     auto& config = VeriBlock::getService<VeriBlock::Config>();
 
-    When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData)))
-        .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-            setPublicationData(publicationData, stream, config.index.unwrap());
-        });
+    ON_CALL(pop_service_impl_mock, getPublicationsData)
+        .WillByDefault(
+            [stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
+                setPublicationData(publicationData, stream, config.index.unwrap());
+            });
+    setNoAddRemovePayloadsExpectations();
 
     {
         BlockValidationState state;
         LOCK(cs_main);
-        BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
+        BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock, block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-endorsed-block-not-known-orphan-block");
     }
-    verifyNoAddRemovePayloads();
+
+    testing::Mock::VerifyAndClearExpectations(&pop_service_impl_mock);
 }
 
 BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_from_chain, PopServiceFixture)
@@ -182,17 +188,20 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_from_chain, P
     stream << endorsedBlock.GetBlockHeader();
     auto& config = VeriBlock::getService<VeriBlock::Config>();
 
-    When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData)))
-        .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-            setPublicationData(publicationData, stream, config.index.unwrap());
-        });
+    ON_CALL(pop_service_impl_mock, getPublicationsData)
+        .WillByDefault(
+            [stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
+                setPublicationData(publicationData, stream, config.index.unwrap());
+            });
+    setNoAddRemovePayloadsExpectations();
 
     {
         LOCK(cs_main);
-        BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
+        BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock, block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-endorsed-block-not-from-this-chain");
     }
-    verifyNoAddRemovePayloads();
+
+    testing::Mock::VerifyAndClearExpectations(&pop_service_impl_mock);
 }
 
 BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_settlement_interval, PopServiceFixture)
@@ -207,10 +216,12 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_settlement_interval, PopSe
     stream << endorsedBlock.GetBlockHeader();
     auto& config = VeriBlock::getService<VeriBlock::Config>();
 
-    When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData)))
-        .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-            setPublicationData(publicationData, stream, config.index.unwrap());
-        });
+    ON_CALL(pop_service_impl_mock, getPublicationsData)
+        .WillByDefault(
+            [stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
+                setPublicationData(publicationData, stream, config.index.unwrap());
+            });
+    setNoAddRemovePayloadsExpectations();
 
     config.POP_REWARD_SETTLEMENT_INTERVAL = 0;
     VeriBlock::setService<VeriBlock::Config>(new VeriBlock::Config(config));
@@ -218,10 +229,11 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_settlement_interval, PopSe
     BlockValidationState state;
     {
         LOCK(cs_main);
-        BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
+        BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock, block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-endorsed-block-too-old");
     }
-    verifyNoAddRemovePayloads();
+
+    testing::Mock::VerifyAndClearExpectations(&pop_service_impl_mock);
 }
 
 BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_addPayloads, PopServiceFixture)
@@ -236,26 +248,26 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_addPayloads, PopServiceFix
     stream << endorsedBlock.GetBlockHeader();
     auto& config = VeriBlock::getService<VeriBlock::Config>();
 
-    When(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData)))
-        .Do([stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-            setPublicationData(publicationData, stream, config.index.unwrap());
-        });
-
-    When(OverloadedMethod(pop_service_impl_mock, addPayloads, void(std::string, const int&, const VeriBlock::Publications&))).AlwaysDo([](std::string hash, const int& nHeight, const VeriBlock::Publications& publications) -> void {
-        throw VeriBlock::PopServiceException("fail");
-    });
+    ON_CALL(pop_service_impl_mock, getPublicationsData)
+        .WillByDefault(
+            [stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
+                setPublicationData(publicationData, stream, config.index.unwrap());
+            });
+    ON_CALL(pop_service_impl_mock, addPayloads)
+        .WillByDefault(
+            [](std::string hash, const int& nHeight, const VeriBlock::Publications& publications) -> void {
+                throw VeriBlock::PopServiceException("fail");
+            });
+    EXPECT_CALL(pop_service_impl_mock, addPayloads).Times(1);
+    EXPECT_CALL(pop_service_impl_mock, removePayloads).Times(0);
 
     BlockValidationState state;
     {
         LOCK(cs_main);
-        BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
+        BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock, block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "pop-tx-add-payloads-failed");
     }
 
-    Verify_Method(OverloadedMethod(pop_service_impl_mock, addPayloads, void(std::string, const int&, const VeriBlock::Publications&))).Once();
-    Verify_Method(OverloadedMethod(pop_service_impl_mock, addPayloads, void(const CBlockIndex&, const CBlock&))).Never();
-
-    Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(std::string, const int&))).Never();
-    Verify_Method(OverloadedMethod(pop_service_impl_mock, removePayloads, void(const CBlockIndex&))).Never();
+    testing::Mock::VerifyAndClearExpectations(&pop_service_impl_mock);
 }
 BOOST_AUTO_TEST_SUITE_END()

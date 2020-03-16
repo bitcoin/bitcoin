@@ -12,9 +12,6 @@
 #include <vbk/util_service.hpp>
 #include <vbk/util_service/util_service_impl.hpp>
 
-#include <fakeit.hpp>
-using namespace fakeit;
-
 struct CForkresolutionTest : public VeriBlock::UtilServiceImpl {
     const CBlockIndex* FindCommonKeystoneTest(const CBlockIndex* leftFork, const CBlockIndex* rightFork)
     {
@@ -277,7 +274,8 @@ BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_1_test, TestChain100Setup)
 
     CBlockIndex* pblockwins = ChainActive().Tip();
 
-    When(Method(service_fixture.util_service_mock, compareForks)).AlwaysDo([&](const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip) -> int {
+    ON_CALL(service_fixture.util_service_mock, compareForks).WillByDefault(
+      [&](const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip) -> int {
         if (rightForkTip.GetBlockHash() == leftForkTip.GetBlockHash())
             return 0;
         if (rightForkTip.GetBlockHash() == pblockwins->GetBlockHash())
@@ -351,7 +349,8 @@ BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_2_test, TestChain100Setup)
 
     CBlockIndex* pblockwins = ChainActive().Tip();
 
-    When(Method(service_fixture.util_service_mock, compareForks)).AlwaysDo([&](const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip) -> int {
+    ON_CALL(service_fixture.util_service_mock, compareForks).WillByDefault(
+      [&](const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip) -> int {
         if (rightForkTip.GetBlockHash() == leftForkTip.GetBlockHash())
             return 0;
         if (rightForkTip.GetBlockHash() == pblockwins->GetBlockHash())
@@ -433,7 +432,9 @@ BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_3_test, TestChain100Setup)
     CreateTestBlock(*this);
 
     CBlockIndex* pblockwins = ChainActive().Tip();
-    When(Method(service_fixture.util_service_mock, compareForks)).AlwaysDo([&](const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip) -> int {
+
+    ON_CALL(service_fixture.util_service_mock, compareForks).WillByDefault(
+      [&](const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip) -> int {
         if (rightForkTip.GetBlockHash() == leftForkTip.GetBlockHash())
             return 0;
         if (rightForkTip.GetBlockHash() == pblockwins->GetBlockHash())
@@ -442,6 +443,7 @@ BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_3_test, TestChain100Setup)
             return 1;
         return 0;
     });
+
     InvalidateTestBlock(pblock2);
 
     CreateTestBlock(*this);
@@ -585,7 +587,8 @@ BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_4_test, TestChain100Setup)
     CreateTestBlock(*this);
 
     CBlockIndex* pblockwins = ChainActive().Tip();
-    When(Method(service_fixture.util_service_mock, compareForks)).AlwaysDo([&](const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip) -> int {
+    ON_CALL(service_fixture.util_service_mock, compareForks).WillByDefault(
+      [&](const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip) -> int {
         if (rightForkTip.GetBlockHash() == leftForkTip.GetBlockHash())
             return 0;
         if (rightForkTip.GetBlockHash() == pblockwins->GetBlockHash())

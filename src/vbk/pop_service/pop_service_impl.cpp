@@ -66,8 +66,11 @@ inline std::string heightToHash(uint32_t height)
 
 namespace VeriBlock {
 
-PopServiceImpl::PopServiceImpl(bool altautoconfig)
+PopServiceImpl::PopServiceImpl(bool altautoconfig, bool doinit)
 {
+    // for mocking purposes
+    if (!doinit) return;
+
     auto& config = VeriBlock::getService<VeriBlock::Config>();
     std::string ip = config.service_ip;
     std::string port = config.service_port;

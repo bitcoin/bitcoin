@@ -29,7 +29,7 @@ public:
     // the index of the last temporary payloads applied to the alt-integration blockchain view
     uint32_t temporaryPayloadsIndex;
 
-    PopServiceImpl(bool altautoconfig = false);
+    PopServiceImpl(bool altautoconfig = false, bool doinit = true);
 
     ~PopServiceImpl() override = default;
 

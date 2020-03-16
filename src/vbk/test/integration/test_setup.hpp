@@ -11,13 +11,13 @@
 #include <vbk/util_service.hpp>
 #include <vbk/util_service/util_service_impl.hpp>
 
-#include <fakeit.hpp>
+#include <gmock/gmock.h>
 
 namespace VeriBlockTest {
 
 struct IntegrationTestFixture : public TestChain100Setup {
     VeriBlock::UtilServiceImpl util_service_impl;
-    fakeit::Mock<VeriBlock::UtilService> util_service_mock;
+    UtilServiceMock util_service_mock;
 
     IntegrationTestFixture();
 };

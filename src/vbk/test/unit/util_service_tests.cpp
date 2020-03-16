@@ -8,14 +8,12 @@
 #include <vbk/init.hpp>
 #include <vbk/pop_service.hpp>
 #include <vbk/service_locator.hpp>
-#include <vbk/test/util/mock.hpp>
 #include <vbk/test/util/tx.hpp>
+#include <vbk/test/util/mock.hpp>
 #include <vbk/util.hpp>
 #include <vbk/util_service/util_service_impl.hpp>
 
-#include <fakeit.hpp>
-
-using namespace fakeit;
+using ::testing::Return;
 
 BOOST_AUTO_TEST_SUITE(util_service_tests)
 
@@ -123,7 +121,8 @@ BOOST_AUTO_TEST_CASE(check_pop_inputs)
 {
     VeriBlock::InitConfig();
     auto& util = VeriBlock::InitUtilService();
-    Mock<VeriBlock::PopService> pop_service_mock;
+    VeriBlockTest::PopServiceMock pop_service_mock;
+
     VeriBlockTest::setServiceMock<VeriBlock::PopService>(pop_service_mock);
 
     CTransaction tx = VeriBlockTest::makePopTx({1, 2, 3, 4, 5}, {{2, 3, 4, 5, 6, 7}});
@@ -131,11 +130,11 @@ BOOST_AUTO_TEST_CASE(check_pop_inputs)
 
     PrecomputedTransactionData data(tx);
 
-    When(Method(pop_service_mock, checkATVinternally)).AlwaysReturn(true);
-    When(Method(pop_service_mock, checkVTBinternally)).AlwaysReturn(true);
+    ON_CALL(pop_service_mock, checkATVinternally).WillByDefault(Return(true));
+    ON_CALL(pop_service_mock, checkVTBinternally).WillByDefault(Return(true));
     BOOST_CHECK(util.CheckPopInputs(tx, state, 0, false, data));
 
-    When(Method(pop_service_mock, checkATVinternally)).AlwaysReturn(false);
+    ON_CALL(pop_service_mock, checkATVinternally).WillByDefault(Return(false));
     BOOST_CHECK(!util.CheckPopInputs(tx, state, 0, false, data));
 }
 

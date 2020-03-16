@@ -16,9 +16,7 @@
 #include <vbk/test/util/tx.hpp>
 #include <vbk/util.hpp>
 
-#include <fakeit.hpp>
 #include <merkleblock.h>
-using namespace fakeit;
 
 BOOST_AUTO_TEST_SUITE(pop_tx_tests)
 
@@ -27,10 +25,11 @@ BOOST_FIXTURE_TEST_CASE(DisconnectBlock_restore_iputs_ignore_pop_tx_test, TestCh
     CMutableTransaction popTx = VeriBlockTest::makePopTx({1}, {{2}});
 
     BOOST_CHECK(VeriBlock::isPopTx(CTransaction(popTx)));
+    EXPECT_CALL(pop_service_mock, savePopTxToDatabase).Times(testing::AtLeast(1));
 
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     CBlock block = CreateAndProcessBlock({popTx}, scriptPubKey);
-    Verify_Method(Method(pop_service_mock, savePopTxToDatabase)).AtLeastOnce();
+    testing::Mock::VerifyAndClearExpectations(&pop_service_mock);
 
     BOOST_CHECK(ChainActive().Tip()->GetBlockHash() == block.GetHash()); // check that our block is the Tip of the current blockChain
     {
