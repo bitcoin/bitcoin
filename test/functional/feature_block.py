@@ -580,7 +580,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(44)
         b47 = self.next_block(47, solve=False)
         target = uint256_from_compact(b47.nBits)
-        while b47.sha256 < target:
+        while b47.sha256 <= target:
             b47.nNonce += 1
             b47.rehash()
         self.send_blocks([b47], False, request_block=False)
@@ -1257,6 +1257,8 @@ class FullBlockTest(BitcoinTestFramework):
             block.hashMerkleRoot = block.calc_merkle_root()
         if solve:
             block.solve()
+        else:
+            block.rehash()
         self.tip = block
         self.block_heights[block.sha256] = height
         assert number not in self.blocks
