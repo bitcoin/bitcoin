@@ -7,6 +7,7 @@
 
 #include <chainparams.h>
 #include <random.h>
+#include <spork.h>
 #include <validation.h>
 
 namespace llmq
@@ -47,6 +48,22 @@ std::set<uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType,
 
     auto mns = GetAllQuorumMembers(llmqType, pindexQuorum);
     std::set<uint256> result;
+
+    if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
+        for (auto& dmn : mns) {
+            // this will cause deterministic behaviour between incoming and outgoing connections.
+            // Each member needs a connection to all other members, so we have each member paired. The below check
+            // will be true on one side and false on the other side of the pairing, so we avoid having both members
+            // initiating the connection.
+            if (dmn->proTxHash < forMember) {
+                result.emplace(dmn->proTxHash);
+            }
+        }
+        return result;
+    }
+
+    // TODO remove this after activation of SPORK_21_QUORUM_ALL_CONNECTED
+
     for (size_t i = 0; i < mns.size(); i++) {
         auto& dmn = mns[i];
         if (dmn->proTxHash == forMember) {
