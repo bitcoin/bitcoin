@@ -321,10 +321,10 @@ void GetOSRand(unsigned char *ent32)
         RandFailure();
     }
 #elif defined(HAVE_SYSCTL_ARND)
-    /* FreeBSD and similar. It is possible for the call to return less
+    /* FreeBSD, NetBSD and similar. It is possible for the call to return less
      * bytes than requested, so need to read in a loop.
      */
-    static const int name[2] = {CTL_KERN, KERN_ARND};
+    static int name[2] = {CTL_KERN, KERN_ARND};
     int have = 0;
     do {
         size_t len = NUM_OS_RANDOM_BYTES - have;
