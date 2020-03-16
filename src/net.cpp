@@ -2797,15 +2797,13 @@ bool CConnman::AddPendingMasternode(const uint256& proTxHash)
     return true;
 }
 
-bool CConnman::AddMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes)
+void CConnman::SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes)
 {
     LOCK(cs_vPendingMasternodes);
-    auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
-    if (it != masternodeQuorumNodes.end()) {
-        return false;
+    auto it = masternodeQuorumNodes.emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
+    if (!it.second) {
+        it.first->second = proTxHashes;
     }
-    masternodeQuorumNodes.emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
-    return true;
 }
 
 bool CConnman::HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash)

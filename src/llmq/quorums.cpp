@@ -193,9 +193,8 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
             continue;
         }
 
-        if (!g_connman->HasMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash)) {
-            CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash, allowWatch);
-        }
+        CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash, allowWatch);
+
         connmanQuorumsToDelete.erase(quorum->qc.quorumHash);
     }
 

@@ -127,7 +127,7 @@ void CLLMQUtils::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBl
             }
             LogPrint(BCLog::LLMQ, debugMsg.c_str());
         }
-        g_connman->AddMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash(), connections);
+        g_connman->SetMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash(), connections);
     }
 }
 

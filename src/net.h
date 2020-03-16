@@ -408,7 +408,7 @@ public:
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
 
     bool AddPendingMasternode(const uint256& proTxHash);
-    bool AddMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
+    void SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
     bool HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
     std::set<uint256> GetMasternodeQuorums(Consensus::LLMQType llmqType);
     // also returns QWATCH nodes
