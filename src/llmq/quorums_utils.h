@@ -34,6 +34,8 @@ public:
     static std::set<uint256> GetQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember);
     static std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, size_t memberCount, size_t connectionCount);
 
+    static void EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& myProTxHash, bool allowWatch);
+
     static bool IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash);
 
     template<typename NodesContainer, typename Continue, typename Callback>

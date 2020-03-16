@@ -95,6 +95,42 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(Consensus::LLMQTy
     return result;
 }
 
+void CLLMQUtils::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexQuorum, const uint256& myProTxHash, bool allowWatch)
+{
+    auto members = GetAllQuorumMembers(llmqType, pindexQuorum);
+    bool isMember = std::find_if(members.begin(), members.end(), [&](const CDeterministicMNCPtr& dmn) { return dmn->proTxHash == myProTxHash; }) != members.end();
+
+    if (!isMember && !allowWatch) {
+        return;
+    }
+
+    std::set<uint256> connections;
+    if (isMember) {
+        connections = CLLMQUtils::GetQuorumConnections(llmqType, pindexQuorum, myProTxHash);
+    } else {
+        auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(llmqType, pindexQuorum, members.size(), 1);
+        for (auto idx : cindexes) {
+            connections.emplace(members[idx]->proTxHash);
+        }
+    }
+    if (!connections.empty()) {
+        if (LogAcceptCategory(BCLog::LLMQ)) {
+            auto mnList = deterministicMNManager->GetListAtChainTip();
+            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
+            for (auto& c : connections) {
+                auto dmn = mnList.GetValidMN(c);
+                if (!dmn) {
+                    debugMsg += strprintf("  %s (not in valid MN set anymore)\n", c.ToString());
+                } else {
+                    debugMsg += strprintf("  %s (%s)\n", c.ToString(), dmn->pdmnState->addr.ToString(false));
+                }
+            }
+            LogPrint(BCLog::LLMQ, debugMsg.c_str());
+        }
+        g_connman->AddMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash(), connections);
+    }
+}
+
 bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash)
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
