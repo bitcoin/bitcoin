@@ -5,7 +5,7 @@ dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
 dnl Helper for cases where a qt dependency is not met.
 dnl Output: If qt version is auto, set bitcoin_enable_qt to false. Else, exit.
 AC_DEFUN([BITCOIN_QT_FAIL],[
-  if test "x$bitcoin_qt_want_version" = xauto && test "x$bitcoin_qt_force" != xyes; then
+  if test "x$bitcoin_qt_want_version" = xauto; then
     if test "x$bitcoin_enable_qt" != xno; then
       AC_MSG_WARN([$1; bitcoin-qt frontend will not be built])
     fi
@@ -53,16 +53,14 @@ dnl CAUTION: Do not use this inside of a conditional.
 AC_DEFUN([BITCOIN_QT_INIT],[
   dnl enable qt support
   AC_ARG_WITH([gui],
-    [AS_HELP_STRING([--with-gui@<:@=no|qt5|auto@:>@],
-    [build bitcoin-qt GUI (default=auto)])],
-    [
-     bitcoin_qt_want_version=$withval
-     if test "x$bitcoin_qt_want_version" = xyes; then
-       bitcoin_qt_force=yes
-       bitcoin_qt_want_version=auto
-     fi
-    ],
-    [bitcoin_qt_want_version=auto])
+              [AS_HELP_STRING([--with-gui@<:@=yes|no|auto|qt5@:>@],
+                              [build bitcoin-qt GUI (default is auto; --with-gui and --with-gui=qt5 are equivalent to --with-gui=yes)])])
+
+  AS_CASE([$with_gui],
+          [yes|qt5], [bitcoin_qt_want_version=yes],
+          [""|auto], [bitcoin_qt_want_version=auto],
+          [no], [bitcoin_qt_want_version=no],
+          [AC_MSG_ERROR([--with-gui=$with_gui value is not yes, no, auto, or qt5])])
 
   AC_ARG_WITH([qt-incdir],[AS_HELP_STRING([--with-qt-incdir=INC_DIR],[specify qt include path (overridden by pkgconfig)])], [qt_include_path=$withval], [])
   AC_ARG_WITH([qt-libdir],[AS_HELP_STRING([--with-qt-libdir=LIB_DIR],[specify qt lib path (overridden by pkgconfig)])], [qt_lib_path=$withval], [])
