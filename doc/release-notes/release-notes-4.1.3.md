@@ -56,6 +56,18 @@ when macOS "dark mode" is activated.
 Notable changes
 ===============
 
+Syscoin Core Changes
+--------------------
+
+Fixed masternodes counting against outbound resulting in extra count
+Fixed uninitialized CAmount in OPRETURN resulting in inconsistent TXIDs
+Added rawtransaction message in zmq for mempool inclusion
+Added HWM for mempool transaction
+Syned up auxpow code to the Bitcoin change where generate() is replaced by generatetoaddress()
+Corrected log count to account for different ERC20 standards
+
+
+
 P2P and network changes
 -----------------------
 
@@ -210,6 +222,12 @@ Andrew Toth (1):
 
 Anthony Towns (1):
       psbt_wallet_tests: use unique_ptr for GetSigningProvider
+      scheduler: don't rely on boost interrupt on shutdown
+      sync.h: add REVERSE_LOCK
+      scheduler: switch from boost to std
+      Drop unused reverselock.h
+      scheduler_tests: re-enable mockforward test
+      lint-cppcheck: Remove -DHAVE_WORKING_BOOST_SLEEP_FOR
 
 Ben Woosley (6):
       Fix improper Doxygen inline comments
@@ -239,6 +257,8 @@ Gloria Zhao (1):
 Gregory Sanders (2):
       IsUsedDestination shouldn't use key id as script id for ScriptHash
       Don't allow implementers to think ScriptHash(Witness*()) results in nesting computation
+      Add some test logging to wallet_bumpfee.py
+      bumpfee test: exit loop at proper time with new fee value being compared
 
 Harris (1):
       gui: hide HD & encryption icons when no wallet loaded
@@ -264,6 +284,7 @@ Jon Atack (10):
       net: extract conditional to bool CNetAddr::IsHeNet
       rpc: fix getpeerinfo RPCResult `mapped_as` type
       init: move asmap code earlier in init process
+      test: add logging to wallet_listsinceblock.py
 
 Jonas Schnelli (6):
       Merge #17998: gui: Shortcut to close ModalOverlay
@@ -283,9 +304,12 @@ João Barbosa (9):
       gui: Drop PeerTableModel dependency to ClientModel
       gui: Fix unintialized WalletView::progressDialog
       refactor: rpc: Remove vector copy from listtransactions
+      qa: Add getdescriptorinfo functional test
+      Fix missing header in sync.h
 
 Karl-Johan Alm (1):
       test: add missing #include to fix compiler errors
+      rpc/wallet: initialize nFeeRequired to avoid using garbage value on failure
 
 Larry Ruane (1):
       on startup, write config options to debug.log
@@ -325,6 +349,31 @@ MarcoFalke (29):
       Merge #17399: validation: Templatize ValidationState instead of subclassing
       Merge #17809: rpc: Auto-format RPCResult
       doc: Merge release notes for 0.20.0 release
+      Merge #18109: tests: Avoid hitting some known minor tinyformat issues when fuzzing strprintf(...)
+      Merge #17917: tests: Add amount compression/decompression fuzzing to existing fuzzing harness
+      Merge #17996: tests: Add fuzzing harness for serialization/deserialization of floating-points and integrals
+      use utxo as input for deterministic asset guid
+      Merge #18292: fuzz: Add assert(script == decompressed_script)
+      Merge #18047: tests: Add basic fuzzing harness for CNetAddr/CService/CSubNet related functions (netaddress.h)
+      Merge #18176: tests: Add fuzzing harness for CScript and CScriptNum operations
+      test: Explain why test logging should be used
+      ci: Enable all functional tests in valgrind
+      doc: Explain rebase/squash policy in CONTRIBUTING.md
+      Merge #18310: doc: asmap release note
+      Merge #17159: doc: Add a note about backporting
+      Merge #17833: doc: Added running functional tests in valgrind
+      Merge #18170: doc: Minor grammatical changes and flow improvements
+      Merge #18219: doc: Add warning against wallet.dat re-use
+      Merge #18208: rpc: Change RPCExamples to bech32
+      test: Bump walletpassphrase timeouts in wallet_createwallet to avoid valgrind timeouts
+      Merge #18268: rpc: Remove redundant types from descriptions
+      test: Bump rpc timeout in feature_assumevalid to avoid valgrind timeouts
+      fuzz: Add missing ECC_Start to key_io test
+      Merge #13693: [test] Add coverage to estimaterawfee and estimatesmartfee
+      Merge #18213: test: Fix race in p2p_segwit
+      Merge #18228: test: Add missing syncwithvalidationinterfacequeue
+      test: Bump timeouts to avoid valgrind failures
+      Merge #17997: refactor: Remove mempool global from net
 
 Micky Yun Chan (1):
       bump test timeouts so that functional tests run in valgrind
@@ -352,6 +401,7 @@ Samuel Dobson (9):
       Merge #17577: refactor: deduplicate the message sign/verify code
       Merge #17264: rpc: set default bip32derivs to true for psbt methods
       Merge #18224: Make AnalyzePSBT next role calculation simple, correct
+      Merge #18115: wallet: Pass in transactions and messages for signing instead of exporting the private keys
 
 Sebastian Falbesoner (7):
       test: rename test suite name "tx_validationcache_tests" to match filename
@@ -416,6 +466,18 @@ Wladimir J. van der Laan (36):
       Merge #18168: httpserver: use own HTTP status codes
       Merge #18056: ci: Check for submodules
       Merge #18112: Serialization improvements step 5 (blockencodings)
+      doc: Add historical release notes for 0.19.1
+      Merge #18285: test: Check that wait_until returns if time point is in the past
+      Merge #18290: build: Set minimum Automake version to 1.13
+      Merge #18255: test: Add bad-txns-*-toolarge test cases to invalid_txs
+      Merge #18002: Abstract out script execution out of VerifyWitnessProgram()
+      Merge #18204: descriptors: improve descriptor cache and cache xpubs
+      Merge #16902: O(1) OP_IF/NOTIF/ELSE/ENDIF script implementation
+      qt: Periodical translations update
+      tx: Bump transifex slug to 020x
+      Merge #18341: doc: Replace remaining literal BTC with CURRENCY_UNIT.
+      Merge #18344: doc: Fix nit in getblockchaininfo
+      Merge #18346: rpc: Document an RPCResult for all calls; Enforce at compile time
 
 darosior (1):
       src/init: correct a typo
@@ -455,6 +517,12 @@ fanquake (34):
       Merge #18225: util: Fail to parse empty string in ParseMoney
       Merge #18229: random: drop unused MACH time headers
       Merge #18249: test: Bump timeouts to accomodate really slow disks
+      Merge #16117: util: Replace boost sleep with std sleep
+      Merge #18241: wallet/refactor: refer to CWallet immutably when possible
+      Merge #18286: build: Add locale fuzzer to FUZZERS_MISSING_CORPORA (and unbreak Travis! :))
+      Merge #18264: build: Remove Boost Chrono
+      Merge #18320: guix: Remove now-unnecessary gcc make flag
+      Merge #18316: util: HelpExampleRpc formatting
 
 practicalswift (10):
       tests: Update FuzzedDataProvider.h from upstream (LLVM)
@@ -467,6 +535,35 @@ practicalswift (10):
       tests: Improve test runner output in case of target errors
       tests: Add fuzzing harness for bloom filter class CBloomFilter
       tests: Add fuzzing harness for rolling bloom filter class CRollingBloomFilter
+      compressor: Make the domain of CompressAmount(...) explicit
+      tests: Add serialization/deserialization fuzzing for integral types
+      tests: Add float to FUZZERS_MISSING_CORPORA (temporarily)
+      tests: Add fuzzing harness for CKey related functions
+      tests: Add fuzzing harness for locale independence testing
+      build: Add locale fuzzer to FUZZERS_MISSING_CORPORA
+      tests: Add key_io fuzzing harness
+      tests: Fuzz additional functions in the hex fuzzing harness
+      tests: Fuzz additional functions in the integer fuzzing harness
+      tests: Fuzz additional functions in the transaction fuzzing harness
+      tests: Fuzz additional functions in the script fuzzing harness
+      tests: Reset FUZZERS_MISSING_CORPORA to enable regression fuzzing for more harnesses
+      tests: Remove FUZZERS_MISSING_CORPORA
+      tests: Add fuzzing harness for CScriptNum operations
+      Make lifetime correctness easier to see (avoid reference lifetime extension)
+      tests: Add fuzzing harness for ProcessMessage(...)
+      tests: Add one specialized ProcessMessage(...) fuzzing binary per message type for optimal results when using coverage-guided fuzzing
+      tests: Add deserialization fuzzing of SnapshotMetadata (utxo_snapshot), uint160 and uint256
+      tests: Remove unit test from fuzzing harness
+      tests: Re-arrange test cases in parse_univalue to increase coverage
+      tests: Fuzz currently uncovered code path in TxToUniv(...)
+      tests: Increase fuzzing coverage of DecompressScript(...)
+      tests: Fuzz operator!= of CService
+      tests: Fuzz RecursiveDynamicUsage(const std::shared_ptr<X>& p)
+      tests: Fuzz DecodeHexBlk(...)
+      tests: Simplify code by removing unwarranted use of unique_ptr:s
+      tests: Fuzz DecodeBase64PSBT(...)
+      tests: Fuzz HasAllDesirableServiceFlags(...) and MayHaveUsefulAddressDB(...)
+      tests: Add fuzzing of CSubNet, CNetAddr and CService related functions
 
 sidhujag (50):
       masternodes shouldn't count against extra outbound count
@@ -482,21 +579,12 @@ sidhujag (50):
       add existsConflict logic
       order by time
       remove graph ordering by time logic
-      rm graph
       check for log counts properly to account for different erc20 standards
       remove resync on miner
       work on zdag fixes
-      add graph
       refactor and clean up zdag
-      fix time
-      cleanup
       fix node merge
-      wip tests
-      fix tests
-      rm qt
-      cleanup
       save checksyscoininputs state seperately
-      fix tests
       create iszdagtx type and use it to store zdag structures
       dbl costs and set rbf opt out for zdag txs only
       remove bridge start block logic that doesn't have any affect now
@@ -506,16 +594,27 @@ sidhujag (50):
       fix disconnectmintasset
       fix precision test
       add assetindex back temporarily for spark
-      fix ci
       ubunt 16 fix build
       update checkpoints and other settings
       spelling fixes for CI
       ci auxpow
       remove spellcheck for getwork wrapper
-      right ignore
       include check.h
       remove fuzz CI's for now
       cleanup validation removal from sys code
+      chain active check around syscoin consensus
+      deterministic asset guids
+      add height check around asset guid feature
+      receipts log check around the start block for compatibility
+      remove static empty asset/allocation use tmp var not static for consistency and avoid intermittent trampling
+      Revert "remove static empty asset/allocation use tmp var not static for consistency and avoid intermittent trampling"
+      remove moves because of asset index using these variables
+      add tests and remove chainactive check for sys consensus
+      support rbf + allocation dbl spend
+      allow RBF to work properly with asset allocation txs
+      fix setconflicts check
+      update slug
+      rpc: Document an RPCResult for all calls;
 
 wincss (1):
       fix masternode list-conf bug
