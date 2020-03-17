@@ -5,16 +5,19 @@
 #ifndef BITCOIN_BANMAN_H
 #define BITCOIN_BANMAN_H
 
-#include <cstdint>
-#include <memory>
-
 #include <addrdb.h>
 #include <fs.h>
 #include <net_types.h> // For banmap_t
 #include <sync.h>
 
+#include <chrono>
+#include <cstdint>
+#include <memory>
+
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static constexpr unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24; // Default 24-hour ban
+// How often to dump addresses to banlist.dat
+static constexpr std::chrono::minutes DUMP_BANS_INTERVAL{15};
 
 class CClientUIInterface;
 class CNetAddr;
