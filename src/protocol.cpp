@@ -85,8 +85,12 @@ CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn)
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
 {
     memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
-    memset(pchCommand, 0, sizeof(pchCommand));
-    strncpy(pchCommand, pszCommand, COMMAND_SIZE);
+    // Copy pszCommand to pchCommand field with zero padding
+    bool in_padding = false;
+    for (size_t pos = 0; pos < COMMAND_SIZE; ++pos) {
+        pchCommand[pos] = in_padding ? 0 : pszCommand[pos];
+        in_padding = (pchCommand[pos] == 0);
+    }
     nMessageSize = nMessageSizeIn;
     memset(pchChecksum, 0, CHECKSUM_SIZE);
 }
