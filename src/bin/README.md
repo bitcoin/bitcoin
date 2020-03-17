@@ -5,18 +5,18 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Weeping Heart (v1.9.11)
+The current version is Tall Moose (v1.9.12)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`1213b8ee10529bf85b6be8f539842d35`
+`d939c9d93e73aa726849a2167ef2d3ef`
 
 MacOS
-`a2529dc7dd5165ea881cd1871e808036`
+`014e68c0289201f924adda27f0ddc778`
 
 Windows (64-bit)
-`b957595de679a818b2e2e1b9aa1d2d3a`
+`3f86fe797808c3314850385387a75869`
 
 
 Relayer
