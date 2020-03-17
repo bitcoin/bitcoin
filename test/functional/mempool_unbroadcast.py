@@ -58,6 +58,9 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         assert rpc_tx_hsh not in mempool
         assert wallet_tx_hsh not in mempool
 
+        # ensure that unbroadcast txs are persisted to mempool.dat
+        self.restart_node(0)
+
         self.log.info("Reconnect nodes & check if they are sent to node 1")
         connect_nodes(node, 1)
 
