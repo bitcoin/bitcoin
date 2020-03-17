@@ -1250,6 +1250,7 @@ if test x$use_pkgconfig = xyes; then
     [PKG_CHECK_MODULES],
     [
       echo "pkg-config is used..."
+      export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib64/pkgconfig
       PKG_CHECK_MODULES([GRPC], [grpc++ protobuf],, [AC_MSG_ERROR(grpc++/protobuf not found.)])
       PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR(openssl not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto not found.)])
@@ -1296,7 +1297,8 @@ else
 
   if test x$use_tests != xno; then
     AC_CHECK_HEADER([gmock/gmock.h],,AC_MSG_ERROR(libgmock headers missing))
-    AC_CHECK_LIB([gmock],[main],[GMOCK_LIBS=" -lgmock"],AC_MSG_ERROR(libgmock missing))
+    AC_CHECK_LIB([gtest],[main],[GMOCK_LIBS=" -lgtest"],AC_MSG_ERROR(libgtest missing))
+    AC_CHECK_LIB([gmock],[main],[GMOCK_LIBS+=" -lgmock"],AC_MSG_ERROR(libgmock missing))
   fi
 
   AC_ARG_VAR(GRPC_LIBS, "linker flags for GRPC")
