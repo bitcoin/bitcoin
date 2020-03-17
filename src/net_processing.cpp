@@ -321,7 +321,7 @@ void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
     }
 
     connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge));
+            nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->fMasternode));
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
@@ -1869,6 +1869,13 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (!vRecv.empty()) {
             LOCK(pfrom->cs_mnauth);
             vRecv >> pfrom->receivedMNAuthChallenge;
+        }
+        if (!vRecv.empty()) {
+            bool fOtherMasternode = false;
+            vRecv >> fOtherMasternode;
+            if (pfrom->fInbound) {
+                pfrom->fMasternode = fOtherMasternode;
+            }
         }
         // Disconnect if we connected to ourself
         if (pfrom->fInbound && !connman->CheckIncomingNonce(nNonce))
