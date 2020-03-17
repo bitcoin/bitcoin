@@ -12,6 +12,7 @@
 #include <chainparams.h>
 #include <init.h>
 #include <net_processing.h>
+#include <spork.h>
 #include <validation.h>
 
 namespace llmq
@@ -528,6 +529,9 @@ void CDKGSessionHandler::HandleDKGRound()
     });
 
     CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash, gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS));
+    if (curSession->AreWeMember() && sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
+        CLLMQUtils::AddQuorumProbeConnections(params.type, pindexQuorum, curSession->myProTxHash);
+    }
 
     WaitForNextPhase(QuorumPhase_Initialized, QuorumPhase_Contribute, curQuorumHash, []{return false;});
 

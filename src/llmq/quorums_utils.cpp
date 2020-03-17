@@ -10,6 +10,8 @@
 #include <spork.h>
 #include <validation.h>
 
+#include <masternode/masternode-meta.h>
+
 namespace llmq
 {
 
@@ -145,6 +147,42 @@ void CLLMQUtils::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBl
             LogPrint(BCLog::LLMQ, debugMsg.c_str());
         }
         g_connman->SetMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash(), connections);
+    }
+}
+
+void CLLMQUtils::AddQuorumProbeConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexQuorum, const uint256 &myProTxHash)
+{
+    auto members = GetAllQuorumMembers(llmqType, pindexQuorum);
+    auto curTime = GetAdjustedTime();
+
+    std::set<uint256> probeConnections;
+    for (auto& dmn : members) {
+        if (dmn->proTxHash == myProTxHash) {
+            continue;
+        }
+        auto lastOutbound = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastOutboundSuccess();
+        // re-probe after 50 minutes so that the "good connection" check in the DKG doesn't fail just because we're on
+        // the brink of timeout
+        if (curTime - lastOutbound > 50 * 60) {
+            probeConnections.emplace(dmn->proTxHash);
+        }
+    }
+
+    if (!probeConnections.empty()) {
+        if (LogAcceptCategory(BCLog::LLMQ)) {
+            auto mnList = deterministicMNManager->GetListAtChainTip();
+            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes probes for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
+            for (auto& c : probeConnections) {
+                auto dmn = mnList.GetValidMN(c);
+                if (!dmn) {
+                    debugMsg += strprintf("  %s (not in valid MN set anymore)\n", c.ToString());
+                } else {
+                    debugMsg += strprintf("  %s (%s)\n", c.ToString(), dmn->pdmnState->addr.ToString(false));
+                }
+            }
+            LogPrint(BCLog::LLMQ, debugMsg.c_str());
+        }
+        g_connman->AddPendingProbeConnections(probeConnections);
     }
 }
 

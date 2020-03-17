@@ -34,6 +34,7 @@ private:
     std::map<uint256, int> mapGovernanceObjectsVotedOn;
 
     int64_t lastOutboundAttempt = 0;
+    int64_t lastOutboundSuccess = 0;
 
 public:
     CMasternodeMetaInfo() {}
@@ -43,7 +44,8 @@ public:
         nLastDsq(ref.nLastDsq),
         nMixingTxCount(ref.nMixingTxCount),
         mapGovernanceObjectsVotedOn(ref.mapGovernanceObjectsVotedOn),
-        lastOutboundAttempt(ref.lastOutboundAttempt)
+        lastOutboundAttempt(ref.lastOutboundAttempt),
+        lastOutboundSuccess(ref.lastOutboundSuccess)
     {
     }
 
@@ -57,6 +59,7 @@ public:
         READWRITE(nMixingTxCount);
         READWRITE(mapGovernanceObjectsVotedOn);
         READWRITE(lastOutboundAttempt);
+        READWRITE(lastOutboundSuccess);
     }
 
 public:
@@ -73,6 +76,8 @@ public:
 
     void SetLastOutboundAttempt(int64_t t) { LOCK(cs); lastOutboundAttempt = t; }
     int64_t GetLastOutboundAttempt() const { LOCK(cs); return lastOutboundAttempt; }
+    void SetLastOutboundSuccess(int64_t t) { LOCK(cs); lastOutboundSuccess = t; }
+    int64_t GetLastOutboundSuccess() const { LOCK(cs); return lastOutboundSuccess; }
 };
 typedef std::shared_ptr<CMasternodeMetaInfo> CMasternodeMetaInfoPtr;
 
