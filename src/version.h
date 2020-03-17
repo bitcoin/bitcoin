@@ -11,7 +11,7 @@
  */
 
 
-static const int PROTOCOL_VERSION = 70216;
+static const int PROTOCOL_VERSION = 70217;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
