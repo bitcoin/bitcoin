@@ -12,6 +12,7 @@
 #include <evo/specialtx.h>
 
 #include <masternode/activemasternode.h>
+#include <masternode/masternode-meta.h>
 #include <chainparams.h>
 #include <init.h>
 #include <net.h>
@@ -437,7 +438,45 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
     logger.Batch("verified contributions. time=%d", t1.count());
     logger.Flush();
 
+    if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
+        VerifyConnectionAndMinProtoVersions();
+    }
+
     SendComplaint(pendingMessages);
+}
+
+void CDKGSession::VerifyConnectionAndMinProtoVersions()
+{
+    CDKGLogger logger(*this, __func__);
+
+    std::unordered_map<uint256, int, StaticSaltedHasher> protoMap;
+    g_connman->ForEachNode([&](const CNode* pnode) {
+        if (pnode->verifiedProRegTxHash.IsNull()) {
+            return;
+        }
+        protoMap.emplace(pnode->verifiedProRegTxHash, pnode->nVersion);
+    });
+
+    for (auto& m : members) {
+        if (m->dmn->proTxHash == myProTxHash) {
+            continue;
+        }
+
+        auto it = protoMap.find(m->dmn->proTxHash);
+        if (it == protoMap.end()) {
+            m->badConnection = true;
+            logger.Batch("%s is not connected to us", m->dmn->proTxHash.ToString());
+        } else if (it != protoMap.end() && it->second < MIN_MASTERNODE_PROTO_VERSION) {
+            m->badConnection = true;
+            logger.Batch("%s does not have min proto version %d (has %d)", m->dmn->proTxHash.ToString(), MIN_MASTERNODE_PROTO_VERSION, it->second);
+        }
+
+        auto lastOutbound = mmetaman.GetMetaInfo(m->dmn->proTxHash)->GetLastOutboundSuccess();
+        if (GetAdjustedTime() - lastOutbound > 60 * 60) {
+            m->badConnection = true;
+            logger.Batch("%s no outbound connection since %d seconds", m->dmn->proTxHash.ToString(), GetAdjustedTime() - lastOutbound);
+        }
+    }
 }
 
 void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
@@ -455,7 +494,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
     int complaintCount = 0;
     for (size_t i = 0; i < members.size(); i++) {
         auto& m = members[i];
-        if (m->bad) {
+        if (m->bad || m->badConnection) {
             qc.badMembers[i] = true;
             badCount++;
         } else if (m->weComplain) {

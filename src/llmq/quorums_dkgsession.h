@@ -217,6 +217,7 @@ public:
     std::set<uint256> complaintsFromOthers;
 
     bool bad{false};
+    bool badConnection{false};
     bool weComplain{false};
     bool someoneComplain{false};
 };
@@ -310,6 +311,7 @@ public:
 
     // Phase 2: complaint
     void VerifyAndComplain(CDKGPendingMessages& pendingMessages);
+    void VerifyConnectionAndMinProtoVersions();
     void SendComplaint(CDKGPendingMessages& pendingMessages);
     bool PreVerifyMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan) const;
     void ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan);
