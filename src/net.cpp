@@ -2130,40 +2130,42 @@ void CConnman::ThreadOpenMasternodeConnections()
         { // don't hold lock while calling OpenMasternodeConnection as cs_main is locked deep inside
             LOCK2(cs_vNodes, cs_vPendingMasternodes);
 
-            std::vector<CService> pending;
-            for (const auto& group : masternodeQuorumNodes) {
-                for (const auto& proRegTxHash : group.second) {
-                    auto dmn = mnList.GetMN(proRegTxHash);
-                    if (!dmn) {
-                        continue;
-                    }
-                    const auto& addr2 = dmn->pdmnState->addr;
-                    if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
-                        auto addrInfo = addrman.GetAddressInfo(addr2);
-                        // back off trying connecting to an address if we already tried recently
-                        if (addrInfo.IsValid() && nANow - addrInfo.nLastTry < 60) {
-                            continue;
-                        }
-                        pending.emplace_back(addr2);
-                    }
-                }
-            }
-
             if (!vPendingMasternodes.empty()) {
                 auto addr2 = vPendingMasternodes.front();
                 vPendingMasternodes.erase(vPendingMasternodes.begin());
                 if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2)) {
-                    pending.emplace_back(addr2);
+                    addr = addr2;
                 }
             }
 
-            if (pending.empty()) {
-                // nothing to do, keep waiting
-                continue;
-            }
+            if (addr == CService()) {
+                std::vector<CService> pending;
+                for (const auto& group : masternodeQuorumNodes) {
+                    for (const auto& proRegTxHash : group.second) {
+                        auto dmn = mnList.GetMN(proRegTxHash);
+                        if (!dmn) {
+                            continue;
+                        }
+                        const auto& addr2 = dmn->pdmnState->addr;
+                        if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
+                            auto addrInfo = addrman.GetAddressInfo(addr2);
+                            // back off trying connecting to an address if we already tried recently
+                            if (addrInfo.IsValid() && nANow - addrInfo.nLastTry < 60) {
+                                continue;
+                            }
+                            pending.emplace_back(addr2);
+                        }
+                    }
+                }
 
-            std::random_shuffle(pending.begin(), pending.end());
-            addr = pending.front();
+                if (!pending.empty()) {
+                    addr = pending[GetRandInt(pending.size())];
+                }
+            }
+        }
+
+        if (addr == CService()) {
+            continue;
         }
 
         OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
