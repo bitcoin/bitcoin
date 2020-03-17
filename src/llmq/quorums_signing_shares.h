@@ -30,7 +30,6 @@ namespace llmq
 // <signHash, quorumMember>
 typedef std::pair<uint256, uint16_t> SigShareKey;
 
-// this one does not get transmitted over the wire as it is batched inside CBatchedSigShares
 class CSigShare
 {
 public:
@@ -53,6 +52,22 @@ public:
     {
         assert(!key.first.IsNull());
         return key.first;
+    }
+
+    ADD_SERIALIZE_METHODS
+
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(llmqType);
+        READWRITE(quorumHash);
+        READWRITE(quorumMember);
+        READWRITE(id);
+        READWRITE(msgHash);
+        READWRITE(sigShare);
+
+        if (ser_action.ForRead()) {
+            UpdateKey();
+        }
     }
 };
 
@@ -327,6 +342,16 @@ public:
     void RemoveSession(const uint256& signHash);
 };
 
+class CSignedSession
+{
+public:
+    CSigShare sigShare;
+    CQuorumCPtr quorum;
+
+    int64_t nextAttemptTime{0};
+    int attempt{0};
+};
+
 class CSigSharesManager : public CRecoveredSigsListener
 {
     static const int64_t SESSION_NEW_SHARES_TIMEOUT = 60;
@@ -339,6 +364,9 @@ class CSigSharesManager : public CRecoveredSigsListener
     // 400 is the maximum quorum size, so this is also the maximum number of sigs we need to support
     const size_t MAX_MSGS_TOTAL_BATCHED_SIGS = 400;
 
+    const int64_t SEND_FOR_RECOVERY_TIMEOUT = 1;
+    const size_t MAX_MSGS_SIG_SHARES = 32;
+
 private:
     CCriticalSection cs;
 
@@ -346,6 +374,7 @@ private:
     CThreadInterrupt workInterrupt;
 
     SigShareMap<CSigShare> sigShares;
+    std::unordered_map<uint256, CSignedSession, StaticSaltedHasher> signedSessions;
 
     // stores time of last receivedSigShare. Used to detect timeouts
     std::unordered_map<uint256, int64_t, StaticSaltedHasher> timeSeenForSessions;
@@ -381,12 +410,15 @@ public:
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
 
+    static CDeterministicMNCPtr SelectMemberForRecovery(const CQuorumCPtr& quorum, const uint256& id, int attempt);
+
 private:
     // all of these return false when the currently processed message should be aborted (as each message actually contains multiple messages)
     bool ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& ann, CConnman& connman);
     bool ProcessMessageSigSharesInv(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
     bool ProcessMessageGetSigShares(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
     bool ProcessMessageBatchedSigShares(CNode* pfrom, const CBatchedSigShares& batchedSigShares, CConnman& connman);
+    void ProcessMessageSigShare(NodeId fromId, const CSigShare& sigShare, CConnman& connman);
 
     bool VerifySigSharesInv(NodeId from, Consensus::LLMQType llmqType, const CSigSharesInv& inv);
     bool PreVerifyBatchedSigShares(NodeId nodeId, const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
@@ -417,6 +449,7 @@ private:
     bool SendMessages();
     void CollectSigSharesToRequest(std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToRequest);
     void CollectSigSharesToSend(std::unordered_map<NodeId, std::unordered_map<uint256, CBatchedSigShares, StaticSaltedHasher>>& sigSharesToSend);
+    void CollectSigSharesToSend(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::vector<CNode*>& vNodes);
     void CollectSigSharesToAnnounce(std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToAnnounce);
     bool SignPendingSigShares();
     void WorkThreadMain();

@@ -114,6 +114,9 @@ struct LLMQParams {
     // Used for inter-quorum communication. This is the number of quorums for which we should keep old connections. This
     // should be at least one more then the active quorums set.
     int keepOldConnections;
+
+    // How many members should we try to send all sigShares to before we give up.
+    int recoveryMembers;
 };
 
 /**
