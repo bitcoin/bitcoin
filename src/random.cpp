@@ -15,7 +15,7 @@
 #endif
 #include <logging.h>  // for LogPrintf()
 #include <sync.h>     // for Mutex
-#include <util/time.h> // for GetTime()
+#include <util/time.h> // for GetTimeMicros()
 
 #include <stdlib.h>
 #include <thread>
