@@ -31,8 +31,8 @@ def bn2vch(v):
     # isn't a spare bit in the bit length, add an extension byte.
     have_ext = False
     ext = bytearray()
-    if v.bit_length() > 0:
-        have_ext = (v.bit_length() & 0x07) == 0
+    if v.bit_length() > 0 && (v.bit_length() & 0x07) == 0:
+        have_ext = True
         ext.append(0)
 
     # Is the number negative?
