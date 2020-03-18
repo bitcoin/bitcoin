@@ -69,7 +69,7 @@ Syscoin Core Changes
 
 - RBF (replace-by-fee) has been added and updated to work properly with assetallocation transactions.
   This includes correcting the behavior of handling double spend for ZDAG transactions
-- Doubled the relay fee of ZDAG transaction 
+- Doubled the relay fee of ZDAG transaction to align with the bandwidth usage
 - Amended ZDAG rules for optimization
    - Sender balance has to be within the PoW balance within a block.  This allow us to avoid doing ordering algorithms in mempool and speed up the process
 - Refactored ZDAG code for optimization
