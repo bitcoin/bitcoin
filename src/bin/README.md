@@ -23,7 +23,11 @@ Relayer
 -------
 
 Source: [Github](https://www.github.com/syscoin/relayer/)
+
 Version: 1.0.23
+
 MD5 (relayer-linux) = e6e8d7716c1bf2a2b5642d93bdd34870
+
 MD5 (relayer-macos) = 1c5a58ed84a3cb9229c36dd180fb39a9
+
 MD5 (relayer-win.exe) = afc70f73907e7f37ab1674ecaed377e1
