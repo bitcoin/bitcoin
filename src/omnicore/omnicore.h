@@ -25,8 +25,15 @@ class Coin;
 #include <set>
 #include <unordered_map>
 
+// Keep the state of the last 50 blocks to roll back quickly
+// in case of a block reorganization
 int const MAX_STATE_HISTORY = 50;
-int const STORE_EVERY_N_BLOCK = 10000;
+// Also store the state every 5000 blocks to be able to recover
+// from a crash or shutdown during reparse more quickly
+int const STORE_EVERY_N_BLOCK = 5000;
+// Don't store the state every block on mainnet until block 622000
+// was reached
+int const DONT_STORE_MAINNET_STATE_UNTIL = 622000;
 
 #define TEST_ECO_PROPERTY_1 (0x80000003UL)
 
