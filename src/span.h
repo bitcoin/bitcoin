@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <cstddef>
 #include <algorithm>
+#include <assert.h>
 
 /** A Span is an object that can refer to a contiguous sequence of objects.
  *
@@ -44,6 +45,8 @@ public:
     constexpr C* data() const noexcept { return m_data; }
     constexpr C* begin() const noexcept { return m_data; }
     constexpr C* end() const noexcept { return m_data + m_size; }
+    constexpr C& front() const noexcept { return m_data[0]; }
+    constexpr C& back() const noexcept { return m_data[m_size - 1]; }
     constexpr std::ptrdiff_t size() const noexcept { return m_size; }
     constexpr C& operator[](std::ptrdiff_t pos) const noexcept { return m_data[pos]; }
 
@@ -75,5 +78,16 @@ constexpr Span<A> MakeSpan(A (&a)[N]) { return Span<A>(a, N); }
 
 template<typename V>
 constexpr Span<typename std::remove_pointer<decltype(std::declval<V>().data())>::type> MakeSpan(V& v) { return Span<typename std::remove_pointer<decltype(std::declval<V>().data())>::type>(v.data(), v.size()); }
+
+/** Pop the last element off a span, and return a reference to that element. */
+template <typename T>
+T& SpanPopBack(Span<T>& span)
+{
+    size_t size = span.size();
+    assert(size > 0);
+    T& back = span[size - 1];
+    span = Span<T>(span.data(), size - 1);
+    return back;
+}
 
 #endif
