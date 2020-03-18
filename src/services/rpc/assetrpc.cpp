@@ -457,6 +457,7 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sen
             // check if any ancestor inputs are dbl spent, reject if so
             if(mempool.existsConflicts(*ancestorTxRef))
                 return ZDAG_MAJOR_CONFLICT;
+
         }  
     } 
     {
