@@ -14,18 +14,16 @@ import logging
 
 
 def main():
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description='''Run the fuzz targets with all inputs from the seed_dir once.''',
+    )
     parser.add_argument(
         "-l",
         "--loglevel",
         dest="loglevel",
         default="INFO",
         help="log events at this level and higher to the console. Can be set to DEBUG, INFO, WARNING, ERROR or CRITICAL. Passing --loglevel DEBUG will output all logs to console.",
-    )
-    parser.add_argument(
-        '--export_coverage',
-        action='store_true',
-        help='If true, export coverage information to files in the seed corpus',
     )
     parser.add_argument(
         '--valgrind',
@@ -45,6 +43,10 @@ def main():
         'target',
         nargs='*',
         help='The target(s) to run. Default is to run all targets.',
+    )
+    parser.add_argument(
+        '--m_dir',
+        help='Merge inputs from this directory into the seed_dir. Needs /target subdirectory.',
     )
 
     args = parser.parse_args()
@@ -122,16 +124,39 @@ def main():
         logging.error("subprocess timed out: Currently only libFuzzer is supported")
         sys.exit(1)
 
+    if args.m_dir:
+        merge_inputs(
+            corpus=args.seed_dir,
+            test_list=test_list_selection,
+            build_dir=config["environment"]["BUILDDIR"],
+            merge_dir=args.m_dir,
+        )
+
     run_once(
         corpus=args.seed_dir,
         test_list=test_list_selection,
         build_dir=config["environment"]["BUILDDIR"],
-        export_coverage=args.export_coverage,
         use_valgrind=args.valgrind,
     )
 
 
-def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
+def merge_inputs(*, corpus, test_list, build_dir, merge_dir):
+    logging.info("Merge the inputs in the passed dir into the seed_dir. Passed dir {}".format(merge_dir))
+    for t in test_list:
+        args = [
+            os.path.join(build_dir, 'src', 'test', 'fuzz', t),
+            '-merge=1',
+            os.path.join(corpus, t),
+            os.path.join(merge_dir, t),
+        ]
+        os.makedirs(os.path.join(corpus, t), exist_ok=True)
+        os.makedirs(os.path.join(merge_dir, t), exist_ok=True)
+        logging.debug('Run {} with args {}'.format(t, args))
+        output = subprocess.run(args, check=True, stderr=subprocess.PIPE, universal_newlines=True).stderr
+        logging.debug('Output: {}'.format(output))
+
+
+def run_once(*, corpus, test_list, build_dir, use_valgrind):
     for t in test_list:
         corpus_path = os.path.join(corpus, t)
         os.makedirs(corpus_path, exist_ok=True)
@@ -155,13 +180,6 @@ def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
                 logging.info(e.stderr)
             logging.info("Target \"{}\" failed with exit code {}: {}".format(t, e.returncode, " ".join(args)))
             sys.exit(1)
-        if not export_coverage:
-            continue
-        for l in output.splitlines():
-            if 'INITED' in l:
-                with open(os.path.join(corpus, t + '_coverage'), 'w', encoding='utf-8') as cov_file:
-                    cov_file.write(l)
-                    break
 
 
 def parse_test_list(makefile):

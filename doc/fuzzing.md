@@ -52,7 +52,7 @@ For macOS you may need to ignore x86 compilation checks when running `make`:
 To build Bitcoin Core using AFL instrumentation (this assumes that the
 `AFLPATH` was set as above):
 ```
-./configure --disable-ccache --disable-shared --enable-tests --enable-fuzz CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++
+./configure --disable-shared --enable-tests --enable-fuzz CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++
 export AFL_HARDEN=1
 make
 ```
@@ -60,7 +60,7 @@ make
 If you are using clang you will need to substitute `afl-gcc` with `afl-clang`
 and `afl-g++` with `afl-clang++`, so the first line above becomes:
 ```
-./configure --disable-ccache --disable-shared --enable-tests --enable-fuzz CC=${AFLPATH}/afl-clang CXX=${AFLPATH}/afl-clang++
+./configure --disable-shared --enable-tests --enable-fuzz CC=${AFLPATH}/afl-clang CXX=${AFLPATH}/afl-clang++
 ```
 
 We disable ccache because we don't want to pollute the ccache with instrumented
@@ -102,7 +102,7 @@ libFuzzer is needed (all found in the `compiler-rt` runtime libraries package).
 To build all fuzz targets with libFuzzer, run
 
 ```
-./configure --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=clang CXX=clang++
+./configure --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=clang CXX=clang++
 make
 ```
 
@@ -134,5 +134,5 @@ clang does not come first in your path.
 
 Full configure that was tested on macOS Catalina with `brew` installed `llvm`:
 ```
-./configure --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ --disable-asm
+./configure --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ --disable-asm
 ```
