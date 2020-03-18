@@ -34,7 +34,13 @@ Syscoin Core is supported and extensively tested on operating systems using
 the Linux kernel, macOS 10.12+, and Windows 7 and newer. It is not recommended
 to use Syscoin Core on unsupported systems.
 
-The only in-compatibility between 4.0.x and 4.1.x is the interim .node files 
+A target block height of 448000 has been set for upgrade deadline.
+Nodes not upgraded to Syscoin Core 4.1.3 may have issue syncing up to the network past block 448000
+After the block height, 2 new changes will be activated on the network
+1. The ability to bridge all ERC-20 Standard Token to Syscoin blockchain
+2. The asset guid generated from assetnew will be deterministic
+
+The previous in-compatibility between 4.0.x and 4.1.x is the interim .node files 
 (specifically `scrypt.node`) that may exist in the binary path or /usr/local/bin
  on linux that may impede the functioning of the [relayer](https://github.com/Syscoin/relayer).
 The node version used to build the [relayer](https://github.com/Syscoin/relayer) 
@@ -59,77 +65,37 @@ Notable changes
 Syscoin Core Changes
 --------------------
 
-### Compatibility & Blockheight for Upgrade Deadline
-
-A target block height of 448000 has been set for upgrade deadline.
-Nodes not upgraded to Syscoin Core 4.1.3 may have issue syncing up to the network past block 448000
-After the block height, 2 new changes will be activated on the network
-1. The ability to bridge all ERC-20 Standard Token to Syscoin blockchain
-2. The asset guid generated from assetnew will be deterministic
-receipts log check around the start block for compatibility
-add height check around asset guid feature
-deterministic asset guids  based on address so someone cannot frontrun assets unknowingly to the user
-
 ### ZDAG Fixes and Optimizations
-allow RBF to work properly with asset allocation txs
- - RBF wasn't working properly because duplicate was set to true and likely never going to mine the replacement tx
 
-support rbf + allocation dbl spend
- - if first-seen dbl spend and rbf this is useful for when sending allocation that is replaceable but simply nto enough fees, you should be able to replace it (you might get "assetallocation-insufficient-balance" but since its first-time it will be allowed, we don't want to flag this tx as duplicate which puts it in setToRemoveFromMempool, just mine it as normal because its 2 mempool txs that are replacing and mined as 1 tx. If we kept it in setToRemoveFromMempool then miner wouldn't see the replacement and the RBF wouldn't be working with asset allocation txs.
-ensure no RBF for neighbouring txs as well
-fix mempool emplace only when zdag tx
-dbl costs and set rbf opt out for zdag txs only
-create iszdagtx type and use it to store zdag structures
- - for dbl spend protection and mempool balances we only need to store if its a zdag tx, anything that will spend from an account where an asset allocation can be sent from as well.
-save checksyscoininputs state seperately 
- - don't confuse mempool state based on checksyscoininputs which allows dbl spend first seen behaviour
-refactor and clean up zdag
-1) keep senders within pow balance within a block
- a) this will avoid us to do ordering algorithms in mempool
-    i) avoids dos attacks and other vulnerabilities
-    ii) avoids complicated logic and potential bugs, forks
- b) it will also be faster, less processing and simpler logic to follow
-2) refactor all zdag logic to mempool insert/remove logic
-   a) single point of add/remove zdag functionality and structures
-   b) cleans up call to sync structures, removes ones unneeded
- 3) mempool code validates before changing any state
-   a) because of this we need to keep a copy of state of balances for every tx and update mempool balances at the end in mempool code so bad txs dont inadvertently change state.
-Added HWM for mempool transaction
-remove graph ordering by time logic 
- - txmempool has a comparator which does hash if the ancestor account is equal so fall back to time in that case
-add existsConflict logic
- - modify removeConflicts to return a bool (for miner) if conflict got removed so miner can try again to create a new block. Also miner verifies inputs are valid or rejects/clears tx because a remnant from a input conflict where one got mined and the other stays (removeConflicts returns false but the input isn't valid in the mainchain because its spent)
-
-zdag uses existsConflict so it doesnt remove it and subsequent calls pass to verifyzdag in the event of an error the first time due to inputs conflict
-fixes #390 
- - this fixes and closed #390 based on checking last bound and returning it once only also wrote a test for it.
-enforce tx in and out sizes for zdag transactions
- - we want to enforce size constraints to tx by ensuring in and outs are normal, only reason for someone to use more inputs/outputs is intentionally, especially when the opreturn size is bigger (> 200 means around 5 receivers or more)
+- RBF (replace-by-fee) has been added and updated to work properly with assetallocation transactions.
+  This includes correcting the behavior of handling double spend for ZDAG transactions
+- Doubled the fee of ZDAG transaction 
+- Amended ZDAG rules for optimization
+   - Sender balance has to be within the PoW balance within a block.  This allow us to avoid doing ordering algorithms in mempool and speed up the process
+- Refactored ZDAG code for optimization
+- Fixed [#390](https://github.com/syscoin/syscoin/issues/390)
 
 ### Asset Protocol Fixes
-fix disconnectmintasset 
- - disconnect mint asset wasn't correctly reverting the sender balance, and a dangling reference was causing senders and receivers to be left with incorrect balances following reversing mint transactions (in the event of a re-org) which would explain the recent issues with long-running nodes having incorrect balances post-mint tx re-orgs
-remove moves because of asset index using these variables
-remove static empty asset/allocation use tmp var not static for consistency and avoid intermittent trampling
-sanity checks on allocation types
+
+- Enabled detereminstic asset guid so someone cannot frontrun assets unknowingly to the user.  This change will occur after a set blockheight
+- Fixed issue with re-org when disconnecting blocks that contain mint asset transactions
 remove resync on miner 
- - shouldn't be needed because state is isolated on checksyscoininputs when called with sanity, should not need to resync states
-Fixed masternodes counting against outbound resulting in extra count
-Fixed uninitialized CAmount in OPRETURN resulting in inconsistent TXIDs
-Added rawtransaction message in zmq for mempool inclusion
- - its useful to get notified only when mempool adds a transactions (for the gateway)
-Corrected log count to account for different ERC20 standards
- - it seems some erc20's emit different amount of events, so be a bit more flexible on the type of events emitted to account for the different standards.
-fix precision test 
- - shouldn't allow 0 balance assetnew
+- Fixed inconsistent TXIDs due to uninitialized CAmount in OP_RETURN
+- Fixed issue that allowed assetnew to have a supply balance of 0 
 
-### Core Consensus
-chain active check around syscoin consensus 
- - Since syscoin db is singleton around all chains (main or smaller ones) we cannot modify the database or reject a block with invalid syscoin tx if its not in the main chain. The idea is we let orphan or shorter chains build up to a point where the PoW will justify it being longer and replacing the previous main chain, which will then verify syscoin consensus and enforce validity. This also lets the miner build his own view state without regard of syscoin consensus in hopes of achieving a longer chain without losing syscoin txs if there are conflicts (once a reorg happens syscoin txs were not added back into block because smaller chain miner kept removing the invalid syscoin tx because it was rejected from another chain, but should have been allowed)
+### Masternode fixes
+- Fixed masternodes counting against outbound resulting in extra count
 
+### Bridge Fixes
+- Enabled support for all ERC-20 after set blockheight
 
 ### Auxpow Fixes
-Syned up auxpow code to the Bitcoin change where generate() is replaced by generatetoaddress()
+- Syned up auxpow code to the Bitcoin change where generate() is replaced by generatetoaddress()
+
+### New Syscoind Argument
+- `zmqpubrawmempooltx` has been added for publishing raw transactions in address when entering mempool only
+- `zmqpubrawmempooltxhwm` has been added for setting publish raw mempool transaction outbound message high water mark
+
 
 
 
