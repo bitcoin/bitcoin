@@ -168,10 +168,10 @@ BOOST_AUTO_TEST_CASE(mockforward)
     CScheduler::Function dummy = [&counter]{counter++;};
 
     // schedule jobs for 2, 5 & 8 minutes into the future
-    int64_t min_in_milli = 60*1000;
-    scheduler.scheduleFromNow(dummy, 2*min_in_milli);
-    scheduler.scheduleFromNow(dummy, 5*min_in_milli);
-    scheduler.scheduleFromNow(dummy, 8*min_in_milli);
+
+    scheduler.scheduleFromNow(dummy, std::chrono::minutes{2});
+    scheduler.scheduleFromNow(dummy, std::chrono::minutes{5});
+    scheduler.scheduleFromNow(dummy, std::chrono::minutes{8});
 
     // check taskQueue
     std::chrono::system_clock::time_point first, last;
@@ -181,10 +181,10 @@ BOOST_AUTO_TEST_CASE(mockforward)
     std::thread scheduler_thread([&]() { scheduler.serviceQueue(); });
 
     // bump the scheduler forward 5 minutes
-    scheduler.MockForward(std::chrono::seconds(5*60));
+    scheduler.MockForward(std::chrono::minutes{5});
 
     // ensure scheduler has chance to process all tasks queued for before 1 ms from now.
-    scheduler.scheduleFromNow([&scheduler]{ scheduler.stop(false); }, 1);
+    scheduler.scheduleFromNow([&scheduler] { scheduler.stop(false); }, std::chrono::milliseconds{1});
     scheduler_thread.join();
 
     // check that the queue only has one job remaining
