@@ -69,7 +69,7 @@ Syscoin Core Changes
 
 - RBF (replace-by-fee) has been added and updated to work properly with assetallocation transactions.
   This includes correcting the behavior of handling double spend for ZDAG transactions
-- Doubled the fee of ZDAG transaction 
+- Doubled the relay fee of ZDAG transaction 
 - Amended ZDAG rules for optimization
    - Sender balance has to be within the PoW balance within a block.  This allow us to avoid doing ordering algorithms in mempool and speed up the process
 - Refactored ZDAG code for optimization
@@ -77,7 +77,7 @@ Syscoin Core Changes
 
 ### Asset Protocol Fixes
 
-- Enabled detereminstic asset guid so someone cannot frontrun assets unknowingly to the user.  This change will occur after a set blockheight
+- Enabled detereminstic asset guid so someone cannot frontrun assets unknowingly to the user.  This change will kick in automatically after blockheight 448000
 - Fixed issue with re-org when disconnecting blocks that contain mint asset transactions
 remove resync on miner 
 - Fixed inconsistent TXIDs due to uninitialized CAmount in OP_RETURN
@@ -87,7 +87,7 @@ remove resync on miner
 - Fixed masternodes counting against outbound resulting in extra count
 
 ### Bridge Fixes
-- Enabled support for all ERC-20 after set blockheight
+- Added support for all ERC-20. Previously we were only bridging to openzeppelin standard ERC20's as a precautionary mechanism. This feature unlocks the bridge to all standard ERC-20 implementations.  This will be enabled automatically after blockheight 448000
 
 ### Auxpow Fixes
 - Syned up auxpow code to the Bitcoin change where generate() is replaced by generatetoaddress()
