@@ -359,6 +359,9 @@ Jonas Schnelli (6):
 - Merge #17937: gui: Remove WalletView and BitcoinGUI circular dependency
 - Qt: pass clientmodel changes from walletframe to walletviews
 
+John Newbery (1):
+- tests: simplify next_block() function in feature_block
+
 João Barbosa (9):
 - gui: Remove warning "unused variable 'wallet_model'"
 - wallet: Improve CWallet:MarkDestinationsDirty
@@ -385,6 +388,11 @@ Luke Dashjr (3):
 - Bugfix: GUI: Hide the HD/encrypt icons earlier so they get re-shown if another wallet is open
 
 MarcoFalke (29):
+- Merge #18350: test: Fix mining to an invalid target + ensure that a new block has the correct hash internally
+- Merge #18353: tests: Add fuzzing harnesses for classes CBlockHeader, CFeeRate and various functions
+- Merge #17319: Tests: remove bignum module
+- Merge #15283: log: Fix UB with bench on genesis block
+- Merge #18289: refactor: Make scheduler methods type safe
 - scripted-diff: Replace CCriticalSection with RecursiveMutex
 - scripted-diff: Bump copyright of files changed in 2020
 - Merge #17819: doc: developer notes guideline on RPCExamples addresses
@@ -495,6 +503,7 @@ Willy Ko (3):
 - Updated Geth Binaries to 1.9.11
 
 Wladimir J. van der Laan (36):
+- Merge #18364: random: remove getentropy() fallback for macOS < 10.12
 - Merge #16688: log: Add validation interface logging
 - Merge #16945: refactor: introduce CChainState::GetCoinsCacheSizeState
 - Merge #17823: scripts: Read suspicious hosts from a file instead of hardcoding
