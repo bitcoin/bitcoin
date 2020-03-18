@@ -132,7 +132,7 @@ public:
         // BIP147) are deployed together with P2SH.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000d9db446b03201ba9461642");
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000f4667e38d26078471315f0");
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x4c332acd53ca99ab78fb80a3dacffe234674674e0b682350c492d7fe839d128e"); // 419800
@@ -211,10 +211,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from rpc: getchaintxstats 4096 0000000000000000000f1c54590ee18d15ec70e68c8cd4cfbadb1b4f11697eee
-            /* nTime    */ 0,
-            /* nTxCount */ 0,
-            /* dTxRate  */ 0
+            // Data from rpc: getchaintxstats 43200 83460c100beedfdc467142fef347fc8369adc4a7feecbdc0462048f3493385f2 
+            /* nTime    */ 1584566854,
+            /* nTxCount */ 495978,
+            /* dTxRate  */ 0.01962572570795198 
         };
     }
 };
