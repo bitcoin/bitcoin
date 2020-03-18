@@ -96,7 +96,8 @@ remove resync on miner
 - `zmqpubrawmempooltx` has been added for publishing raw transactions in address when entering mempool only
 - `zmqpubrawmempooltxhwm` has been added for setting publish raw mempool transaction outbound message high water mark
 
-
+### Ethereum Client Version Upgrade
+- The Geth client bundled has been upgraded from v1.9.9 to v1.9.12
 
 
 P2P and network changes
