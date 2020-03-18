@@ -235,24 +235,27 @@ Tests
 4.1.3 Change Log
 ================
 
-0xb10c (1):
+4d55397500:
+- Update merkle.cpp
+
+0xb10c:
 - add: test that transactions expire from mempool
 
-Aaron Clauson (2):
+Aaron Clauson:
 - Ignore msvc linker warning and update to msvc build instructions.
 - Updated appveyor job to checkout a specific vcpkg commit ID.
 
-Amiti Uttarwar (5):
+Amiti Uttarwar:
 - [util] allow scheduler to be mocked
 - [test] unit test for new MockForward scheduler method
 - [test] add chainparams property to indicate chain allows time mocking
 - [lib] add scheduler to node context
 - [rpc] expose ability to mock scheduler via the rpc
 
-Andrew Toth (1):
+Andrew Toth:
 - Add missing supported rpcs to doc/descriptors.md
 
-Anthony Towns (1):
+Anthony Towns:
 - psbt_wallet_tests: use unique_ptr for GetSigningProvider
 - scheduler: don't rely on boost interrupt on shutdown
 - sync.h: add REVERSE_LOCK
@@ -261,7 +264,7 @@ Anthony Towns (1):
 - scheduler_tests: re-enable mockforward test
 - lint-cppcheck: Remove -DHAVE_WORKING_BOOST_SLEEP_FOR
 
-Ben Woosley (6):
+Ben Woosley:
 - Fix improper Doxygen inline comments
 - doc: Correct spelling errors in comments
 - refactor: Convert ping time from double to int64_t
@@ -269,33 +272,33 @@ Ben Woosley (6):
 - refactor: Convert ping wait time from double to int64_t
 - refactor: Cast ping values to double before output
 
-Carl Dong (2):
+Carl Dong:
 - guix: Pin Guix using `guix time-machine`
 - guix: Update documentation for time-machine
 
-Dan Gershony (1):
+Dan Gershony:
 - Add missing step in win deployment instructions
 
-Elichai Turkel (2):
+Elichai Turkel:
 - Replace coroutine with async def in p2p_invalid_messages.py
 - Fix benchmarks filters
 
-Fabian Jahr (1):
+Fabian Jahr:
 - doc: Improve fuzzing docs for macOS users
 
-Gloria Zhao (1):
+Gloria Zhao:
 - [rpc] changed MineBlocksOnDemand to IsMockableChain
 
-Gregory Sanders (2):
+Gregory Sanders:
 - IsUsedDestination shouldn't use key id as script id for ScriptHash
 - Don't allow implementers to think ScriptHash(Witness*()) results in nesting computation
 - Add some test logging to wallet_bumpfee.py
 - bumpfee test: exit loop at proper time with new fee value being compared
 
-Harris (1):
+Harris:
 - gui: hide HD & encryption icons when no wallet loaded
 
-Hennadii Stepanov (8):
+Hennadii Stepanov:
 - refactor: Remove never used default parameter
 - refactor: Simplify connection syntax
 - Revert "refactor: Simplify connection syntax"
@@ -305,7 +308,7 @@ Hennadii Stepanov (8):
 - Ignore only auto-generated .vcxproj files
 - gui: Throttle GUI update pace when -reindex
 
-Jon Atack (10):
+Jon Atack:
 - net: reference instead of copy in BlockConnected range loop
 - test: add feature_asmap functional tests
 - config: use default value in -asmap config
@@ -318,7 +321,7 @@ Jon Atack (10):
 - init: move asmap code earlier in init process
 - test: add logging to wallet_listsinceblock.py
 
-Jonas Schnelli (6):
+Jonas Schnelli:
 - Merge #17998: gui: Shortcut to close ModalOverlay
 - Merge #17096: gui: rename debug window
 - ZDAG fixes + miner code related to input conflicts
@@ -326,10 +329,10 @@ Jonas Schnelli (6):
 - Merge #17937: gui: Remove WalletView and BitcoinGUI circular dependency
 - Qt: pass clientmodel changes from walletframe to walletviews
 
-John Newbery (1):
+John Newbery:
 - tests: simplify next_block() function in feature_block
 
-João Barbosa (9):
+João Barbosa:
 - gui: Remove warning "unused variable 'wallet_model'"
 - wallet: Improve CWallet:MarkDestinationsDirty
 - gui: Add transactionClicked and coinsSent signals to WalletView
@@ -342,19 +345,22 @@ João Barbosa (9):
 - qa: Add getdescriptorinfo functional test
 - Fix missing header in sync.h
 
-Karl-Johan Alm (1):
+Karl-Johan Alm:
 - test: add missing #include to fix compiler errors
 - rpc/wallet: initialize nFeeRequired to avoid using garbage value on failure
 
-Larry Ruane (1):
+Larry Ruane:
 - on startup, write config options to debug.log
 
-Luke Dashjr (3):
+Luke Dashjr:
 - GUI: Use PACKAGE_NAME in modal overlay
 - bitcoin-wallet: Use PACKAGE_NAME in usage help
 - Bugfix: GUI: Hide the HD/encrypt icons earlier so they get re-shown if another wallet is open
 
-MarcoFalke (29):
+MarcoFalke:
+- Merge #18371: test: use fs namespace in dbwrapper unicodepath test
+- Merge #18155: tests: Add harness which fuzzes EvalScript and VerifyScript using a fuzzed signature checker
+- Merge #18300: fuzz: Add option to merge input dir to test runner
 - Merge #18350: test: Fix mining to an invalid target + ensure that a new block has the correct hash internally
 - Merge #18353: tests: Add fuzzing harnesses for classes CBlockHeader, CFeeRate and various functions
 - Merge #17319: Tests: remove bignum module
@@ -415,23 +421,23 @@ MarcoFalke (29):
 - test: Bump timeouts to avoid valgrind failures
 - Merge #17997: refactor: Remove mempool global from net
 
-Micky Yun Chan (1):
+Micky Yun Chan:
 - bump test timeouts so that functional tests run in valgrind
 
-Peter Bushnell (1):
+Peter Bushnell:
 - depends: Consistent use of package variable
 
-Pieter Wuille (4):
+Pieter Wuille:
 - Add custom vector-element formatter
 - Make std::vector and prevector reuse the VectorFormatter logic
 - Convert undo.h to new serialization framework
 - Get rid of VARINT default argument
 
-Russell Yanofsky (2):
+Russell Yanofsky:
 - gui: Set CConnman byte counters earlier to avoid uninitialized reads
 - gui: Fix race in WalletModel::pollBalanceChanged
 
-Samuel Dobson (9):
+Samuel Dobson:
 - Merge #17843: wallet: Reset reused transactions cache
 - Merge #17719: Document better -keypool as a look-ahead safety mechanism
 - Merge #17261: Make ScriptPubKeyMan an actual interface and the wallet to have multiple
@@ -443,7 +449,7 @@ Samuel Dobson (9):
 - Merge #18224: Make AnalyzePSBT next role calculation simple, correct
 - Merge #18115: wallet: Pass in transactions and messages for signing instead of exporting the private keys
 
-Sebastian Falbesoner (7):
+Sebastian Falbesoner:
 - test: rename test suite name "tx_validationcache_tests" to match filename
 - test: replace 'regtest' leftovers by self.chain
 - test: test OP_CSV empty stack fail in feature_csv_activation.py
@@ -452,7 +458,7 @@ Sebastian Falbesoner (7):
 - test: check specific reject reasons in feature_csv_activation.py
 - refactor: test/bench: dedup SetupDummyInputs()
 
-Sjors Provoost (8):
+Sjors Provoost:
 - [scripts] build earlier releases
 - [tests] check v0.17.1 and v0.18.1 backwards compatibility
 - [scripts] support release candidates of earlier releases
@@ -462,14 +468,14 @@ Sjors Provoost (8):
 - build: add Wreturn-type to Werror flags
 - ci: use --enable-werror on more hosts
 
-Suhas Daftuar (1):
+Suhas Daftuar:
 - Use rolling bloom filter of recent block tx's for AlreadyHave() check
 
-Willy Ko (3):
+Willy Ko:
 - Updated Geth Binaries to 1.9.10
 - Updated Geth Binaries to 1.9.11
 
-Wladimir J. van der Laan (36):
+Wladimir J. van der Laan:
 - Merge #18364: random: remove getentropy() fallback for macOS < 10.12
 - Merge #16688: log: Add validation interface logging
 - Merge #16945: refactor: introduce CChainState::GetCoinsCacheSizeState
@@ -520,10 +526,10 @@ Wladimir J. van der Laan (36):
 - Merge #18344: doc: Fix nit in getblockchaininfo
 - Merge #18346: rpc: Document an RPCResult for all calls; Enforce at compile time
 
-darosior (1):
+darosior:
 - src/init: correct a typo
 
-fanquake (34):
+fanquake:
 - Merge #17899: msvc: Ignore msvc linker warning and update to msvc build instructions.
 - Merge #17893: qa: Fix double-negative arg test
 - build: remove double LIBBITCOIN_SERVER linking
@@ -565,7 +571,7 @@ fanquake (34):
 - Merge #18320: guix: Remove now-unnecessary gcc make flag
 - Merge #18316: util: HelpExampleRpc formatting
 
-practicalswift (10):
+practicalswift:
 - tests: Update FuzzedDataProvider.h from upstream (LLVM)
 - tests: Add fuzzer strprintf to FUZZERS_MISSING_CORPORA (temporarily)
 - tests: Add fuzzing harness for strprintf(...)
@@ -606,7 +612,7 @@ practicalswift (10):
 - tests: Fuzz HasAllDesirableServiceFlags(...) and MayHaveUsefulAddressDB(...)
 - tests: Add fuzzing of CSubNet, CNetAddr and CService related functions
 
-sidhujag (50):
+sidhujag:
 - masternodes shouldn't count against extra outbound count
 - uninited camount shows up on opreturn giving in consistent txids
 - add raw tx zmq message for mempool inclusion specifically
@@ -657,7 +663,10 @@ sidhujag (50):
 - update slug
 - rpc: Document an RPCResult for all calls;
 
-wincss (1):
+Vasil Dimov:
+- net: fix use-after-free in tests
+
+wincss:
 - fix masternode list-conf bug
 
 
