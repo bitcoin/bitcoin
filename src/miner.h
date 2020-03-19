@@ -88,7 +88,8 @@ struct CompareTxIterByAncestorCount {
     {
         if (a->GetCountWithAncestors() != b->GetCountWithAncestors())
             return a->GetCountWithAncestors() < b->GetCountWithAncestors();
-        return CTxMemPool::CompareIteratorByHash()(a, b);
+        // SYSCOIN
+        return a->GetTime() < b->GetTime();
     }
 };
 
