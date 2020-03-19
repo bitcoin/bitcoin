@@ -27,6 +27,8 @@
 
 #include <bls/bls.h>
 
+#include "masternode/masternode-meta.h"
+
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
@@ -958,6 +960,9 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bo
     walletObj.push_back(Pair("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout)));
     walletObj.push_back(Pair("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout)));
     o.push_back(Pair("wallet", walletObj));
+
+    auto metaInfo = mmetaman.GetMetaInfo(dmn->proTxHash);
+    o.push_back(Pair("metaInfo", metaInfo->ToJson()));
 
     return o;
 }

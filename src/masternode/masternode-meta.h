@@ -9,6 +9,8 @@
 
 #include <evo/deterministicmns.h>
 
+#include "univalue.h"
+
 #include <memory>
 
 class CConnman;
@@ -61,6 +63,8 @@ public:
         READWRITE(lastOutboundAttempt);
         READWRITE(lastOutboundSuccess);
     }
+
+    UniValue ToJson() const;
 
 public:
     const uint256& GetProTxHash() const { LOCK(cs); return proTxHash; }
