@@ -136,7 +136,11 @@ public:
     CAmount getBalance(const CCoinControl *coinControl = nullptr) const;
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;
+    CAmount getAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfirmed) const;
     CAmount getAnonymizedBalance() const;
+    CAmount getDenominatedBalance(bool unconfirmed) const;
+    CAmount getNormalizedAnonymizedBalance() const;
+    CAmount getAverageAnonymizedRounds() const;
     bool haveWatchOnly() const;
     CAmount getWatchBalance() const;
     CAmount getWatchUnconfirmedBalance() const;
@@ -172,6 +176,8 @@ public:
 
     // Wallet backup
     bool backupWallet(const QString &filename);
+    bool autoBackupWallet(QString& strBackupWarningRet, QString& strBackupErrorRet);
+    int64_t getKeysLeftSinceAutoBackup() const;
 
     // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
@@ -223,6 +229,8 @@ public:
 
     int getDefaultConfirmTarget() const;
     int getNumISLocks() const;
+
+    int getRealOutpointPrivateSendRounds(const COutPoint& outpoint) const;
 
 private:
     CWallet *wallet;

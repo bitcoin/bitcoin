@@ -83,9 +83,29 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
 }
 
 
+CAmount WalletModel::getAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfirmed) const
+{
+    return wallet->GetAnonymizableBalance(fSkipDenominated, fSkipUnconfirmed);
+}
+
 CAmount WalletModel::getAnonymizedBalance() const
 {
     return wallet->GetAnonymizedBalance();
+}
+
+CAmount WalletModel::getDenominatedBalance(bool unconfirmed) const
+{
+    return wallet->GetDenominatedBalance(unconfirmed);
+}
+
+CAmount WalletModel::getNormalizedAnonymizedBalance() const
+{
+    return wallet->GetNormalizedAnonymizedBalance();
+}
+
+CAmount WalletModel::getAverageAnonymizedRounds() const
+{
+    return wallet->GetAverageAnonymizedRounds();
 }
 
 CAmount WalletModel::getUnconfirmedBalance() const
@@ -206,6 +226,11 @@ void WalletModel::updateChainLockHeight(int chainLockHeight)
 int WalletModel::getNumISLocks() const
 {
     return cachedNumISLocks;
+}
+
+int WalletModel::getRealOutpointPrivateSendRounds(const COutPoint& outpoint) const
+{
+    return wallet->GetRealOutpointPrivateSendRounds(outpoint);
 }
 
 void WalletModel::updateAddressBook(const QString &address, const QString &label,
@@ -504,6 +529,21 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
 bool WalletModel::backupWallet(const QString &filename)
 {
     return wallet->BackupWallet(filename.toLocal8Bit().data());
+}
+
+bool WalletModel::autoBackupWallet(QString& strBackupWarningRet, QString& strBackupErrorRet)
+{
+    std::string strBackupWarning;
+    std::string strBackupError;
+    bool result = AutoBackupWallet(wallet, "", strBackupWarning, strBackupError);
+    strBackupWarningRet = QString::fromStdString(strBackupWarning);
+    strBackupErrorRet = QString::fromStdString(strBackupError);
+    return result;
+}
+
+int64_t WalletModel::getKeysLeftSinceAutoBackup() const
+{
+    return wallet->nKeysLeftSinceAutoBackup;
 }
 
 // Handlers for core signals
