@@ -112,6 +112,8 @@
 #include <sys/stat.h>
 #endif
 
+#include <boost/signals2/signal.hpp>
+
 #if ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>

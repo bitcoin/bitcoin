@@ -94,7 +94,7 @@ void CDSNotificationInterface::TransactionRemovedFromMempool(const CTransactionR
     llmq_ctx->isman->TransactionRemovedFromMempool(ptx);
 }
 
-void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
+void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
     // TODO: Temporarily ensure that mempool removals are notified before
     // connected transactions.  This shouldn't matter, but the abandoned
@@ -104,9 +104,9 @@ void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock
     // to abandon a transaction and then have it inadvertently cleared by
     // the notification that the conflicted transaction was evicted.
 
-    llmq_ctx->isman->BlockConnected(pblock, pindex, vtxConflicted);
-    llmq_ctx->clhandler->BlockConnected(pblock, pindex, vtxConflicted);
-    CCoinJoin::BlockConnected(pblock, pindex, vtxConflicted);
+    llmq_ctx->isman->BlockConnected(pblock, pindex);
+    llmq_ctx->clhandler->BlockConnected(pblock, pindex);
+    CCoinJoin::BlockConnected(pblock, pindex);
 }
 
 void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)

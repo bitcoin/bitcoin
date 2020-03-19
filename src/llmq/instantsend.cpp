@@ -1180,16 +1180,10 @@ void CInstantSendManager::TransactionRemovedFromMempool(const CTransactionRef& t
     RemoveConflictingLock(::SerializeHash(*islock), *islock);
 }
 
-void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
+void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
     if (!IsInstantSendEnabled()) {
         return;
-    }
-
-    if (!vtxConflicted.empty()) {
-        for (const auto& tx : vtxConflicted) {
-            RemoveConflictedTx(*tx);
-        }
     }
 
     if (m_mn_sync->IsBlockchainSynced()) {
