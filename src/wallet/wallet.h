@@ -885,7 +885,7 @@ public:
     void LoadToWallet(CWalletTx& wtxIn) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     // SYSCOIN
     void TransactionAddedToMempool(const CTransactionRef& tx, bool fBlock) override;
-    void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& vtxConflicted, int height) override;
+    void BlockConnected(const CBlock& block, int height) override;
     void BlockDisconnected(const CBlock& block, int height) override;
     void UpdatedBlockTip() override;
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);

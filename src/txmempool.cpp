@@ -362,7 +362,6 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
 // SYSCOIN
 void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate, const bool &fSyscoinDuplicate, const std::string& fSyscoinSender, const AssetBalanceMap &mapAssetAllocationBalances)
 {
-    NotifyEntryAdded(entry.GetSharedTx());
     // Add to memory pool without checking anything.
     // Used by AcceptToMemoryPool(), which DOES do
     // all the appropriate checks.
@@ -419,10 +418,12 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
 
 void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 {
-    CTransactionRef ptx = it->GetSharedTx();
-    NotifyEntryRemoved(ptx, reason);
-    if (reason != MemPoolRemovalReason::BLOCK && reason != MemPoolRemovalReason::CONFLICT) {
-        GetMainSignals().TransactionRemovedFromMempool(ptx);
+    if (reason != MemPoolRemovalReason::BLOCK) {
+        // Notify clients that a transaction has been removed from the mempool
+        // for any reason except being included in a block. Clients interested
+        // in transactions included in blocks can subscribe to the BlockConnected
+        // notification.
+        GetMainSignals().TransactionRemovedFromMempool(it->GetSharedTx());
     }
 
     const uint256 hash = it->GetTx().GetHash();
@@ -447,7 +448,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     nTransactionsUpdated++;
     if (minerPolicyEstimator) {minerPolicyEstimator->removeTx(hash, false);}
     // SYSCOIN
-    RemoveZDAGTx(ptx);
+    RemoveZDAGTx(it->GetSharedTx());
 }
 
 // Calculates descendants of entry that are not already in setDescendants, and adds to
