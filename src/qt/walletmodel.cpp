@@ -40,6 +40,11 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0)
 {
+    {
+        const std::lock_guard<std::mutex> lock(g_loading_wallet_models_mutex);
+        g_loading_wallet_models_set.insert(this);
+    }
+
     fHaveWatchOnly = m_wallet->haveWatchOnly();
     addressTableModel = new AddressTableModel(this);
     transactionTableModel = new TransactionTableModel(platformStyle, this);

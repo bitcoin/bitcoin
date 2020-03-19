@@ -37,6 +37,11 @@
 
 #include <boost/signals2/signal.hpp>
 
+class WalletModel;
+extern std::set<WalletModel*> g_loading_wallet_models_set;
+extern std::condition_variable g_loading_wallet_models_cv;
+extern std::mutex g_loading_wallet_models_mutex;
+
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
 //! Explicitly unload and delete the wallet.

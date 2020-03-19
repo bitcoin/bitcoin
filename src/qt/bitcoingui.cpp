@@ -24,6 +24,7 @@
 #include <qt/walletframe.h>
 #include <qt/walletmodel.h>
 #include <qt/walletview.h>
+#include <wallet/wallet.h>
 #endif // ENABLE_WALLET
 
 #ifdef Q_OS_MAC
@@ -643,6 +644,11 @@ void BitcoinGUI::addWallet(WalletModel* walletModel)
         m_wallet_selector_label_action->setVisible(true);
         m_wallet_selector_action->setVisible(true);
     }
+
+    const std::lock_guard<std::mutex> lock(g_loading_wallet_models_mutex);
+    g_loading_wallet_models_set.erase(walletModel);
+    assert(g_loading_wallet_models_set.count(walletModel) == 0);
+    g_loading_wallet_models_cv.notify_all();
 }
 
 void BitcoinGUI::removeWallet(WalletModel* walletModel)

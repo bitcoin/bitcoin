@@ -35,6 +35,10 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
+std::set<WalletModel*> g_loading_wallet_models_set;
+std::condition_variable g_loading_wallet_models_cv;
+std::mutex g_loading_wallet_models_mutex;
+
 const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
     {WALLET_FLAG_AVOID_REUSE,
         "You need to rescan the blockchain in order to correctly mark used "
@@ -126,6 +130,11 @@ static void ReleaseWallet(CWallet* wallet)
 
 void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
 {
+    {
+        std::unique_lock<std::mutex> lock(g_loading_wallet_models_mutex);
+        g_loading_wallet_models_cv.wait(lock, []()->bool { return g_loading_wallet_models_set.empty(); });
+    }
+
     // Mark wallet for unloading.
     const std::string name = wallet->GetName();
     {
