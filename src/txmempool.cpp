@@ -566,7 +566,6 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
 {
     // Remove transactions which depend on inputs of tx, recursively
     AssertLockHeld(cs);
-    bool bRemoved = false;
     for (const CTxIn &txin : tx.vin) {
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
@@ -575,11 +574,9 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
             {
                 ClearPrioritisation(txConflict.GetHash());
                 removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
-                bRemoved = true;
             }
         }
     }
-    return bRemoved;
 }
 bool CTxMemPool::removeSyscoinConflicts(const CTransaction &tx)
 {
