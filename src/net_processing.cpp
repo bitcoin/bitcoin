@@ -1711,7 +1711,8 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
         CValidationState stateDummy;
 
         if (setMisbehaving.count(fromPeer)) continue;
-        if (AcceptToMemoryPool(mempool, stateDummy, porphanTx, true, &fMissingInputs2)) {
+        if (AcceptToMemoryPool(mempool, stateDummy, porphanTx, &fMissingInputs2 /* pfMissingInputs */,
+                false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             connman->RelayTransaction(orphanTx);
             for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
@@ -2516,16 +2517,18 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         bool fMissingInputs = false;
         CValidationState state;
 
-        if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, ptx, true, &fMissingInputs)) {
+        if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs /* pfMissingInputs */,
+                false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             // Process custom txes, this changes AlreadyHave to "true"
             if (nInvType == MSG_DSTX) {
                 LogPrint(BCLog::PRIVATESEND, "DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",
-                        tx.GetHash().ToString(), pfrom->GetId());
+                         tx.GetHash().ToString(), pfrom->GetId());
                 CPrivateSend::AddDSTX(dstx);
             }
 
             mempool.check(pcoinsTip.get());
             connman->RelayTransaction(tx);
+
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(inv.hash, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
@@ -2538,9 +2541,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             pfrom->nLastTXTime = GetTime();
 
             LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u txn, %u kB)\n",
-                pfrom->GetId(),
-                tx.GetHash().ToString(),
-                mempool.size(), mempool.DynamicMemoryUsage() / 1000);
+                     pfrom->GetId(),
+                     tx.GetHash().ToString(),
+                     mempool.size(), mempool.DynamicMemoryUsage() / 1000);
 
             // Recursively process any orphan transactions that depended on this one
             ProcessOrphanTx(connman, pfrom->orphan_work_set);

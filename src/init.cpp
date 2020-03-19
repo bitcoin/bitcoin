@@ -553,8 +553,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-debug=<category>", strprintf(_("Output debugging information (default: %u, supplying <category> is optional)"), 0) + ". " +
         _("If <category> is not supplied or if <category> = 1, output all debugging information.") + " " + _("<category> can be:") + " " + ListLogCategories() + ".");
     strUsage += HelpMessageOpt("-debugexclude=<category>", strprintf(_("Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.")));
-    if (showDebug)
-        strUsage += HelpMessageOpt("-nodebug", "Turn off debugging messages, same as -debug=0");
     strUsage += HelpMessageOpt("-help-debug", _("Show all debugging options (usage: --help -help-debug)"));
     strUsage += HelpMessageOpt("-logips", strprintf(_("Include IP addresses in debug output (default: %u)"), DEFAULT_LOGIPS));
     strUsage += HelpMessageOpt("-logtimestamps", strprintf(_("Prepend debug output with timestamp (default: %u)"), DEFAULT_LOGTIMESTAMPS));
@@ -800,11 +798,13 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
     if (!ActivateBestChain(state, chainparams)) {
         LogPrintf("Failed to connect best block (%s)\n", FormatStateMessage(state));
         StartShutdown();
+        return;
     }
 
     if (gArgs.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
         LogPrintf("Stopping after block import\n");
         StartShutdown();
+        return;
     }
     } // End scope of CImportingNow
 
@@ -1110,12 +1110,12 @@ bool AppInitParameterInteraction()
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
-
     if (gArgs.IsArgSet("-debug")) {
         // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
         const std::vector<std::string> categories = gArgs.GetArgs("-debug");
 
-        if (!(gArgs.GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), std::string("0")) != categories.end())) {
+        if (std::none_of(categories.begin(), categories.end(),
+            [](std::string cat){return cat == "0" || cat == "none";})) {
             for (const auto& cat : categories) {
                 uint64_t flag;
                 if (!GetLogCategory(&flag, &cat)) {
@@ -1807,9 +1807,15 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 pcoinsTip.reset();
                 pcoinsdbview.reset();
                 pcoinscatcher.reset();
+                // new CBlockTreeDB tries to delete the existing file, which
+                // fails if it's still open from the previous loop. Close it first:
+                pblocktree.reset();
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
                 llmq::DestroyLLMQSystem();
+                // Same logic as above with pblocktree
+                evoDb.reset();
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState));
+                deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
 
                 llmq::InitLLMQSystem(*evoDb, &scheduler, false, fReset || fReindexChainState);
@@ -2193,16 +2199,18 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Wait for genesis block to be processed
     {
         WaitableLock lock(cs_GenesisWait);
-        while (!fHaveGenesis) {
-            condvar_GenesisWait.wait(lock);
+        // We previously could hang here if StartShutdown() is called prior to
+        // ThreadImport getting started, so instead we just wait on a timer to
+        // check ShutdownRequested() regularly.
+        while (!fHaveGenesis && !ShutdownRequested()) {
+            condvar_GenesisWait.wait_for(lock, std::chrono::milliseconds(500));
         }
         uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
     }
 
     // As importing blocks can take several minutes, it's possible the user
     // requested to kill the GUI during one of the last operations. If so, exit.
-    if (fRequestShutdown)
-    {
+    if (ShutdownRequested()) {
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
     }
