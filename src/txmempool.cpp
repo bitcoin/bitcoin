@@ -418,12 +418,13 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
 
 void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 {
+    CTransactionRef ptx = it->GetSharedTx();
     if (reason != MemPoolRemovalReason::BLOCK) {
         // Notify clients that a transaction has been removed from the mempool
         // for any reason except being included in a block. Clients interested
         // in transactions included in blocks can subscribe to the BlockConnected
         // notification.
-        GetMainSignals().TransactionRemovedFromMempool(it->GetSharedTx());
+        GetMainSignals().TransactionRemovedFromMempool(ptx);
     }
 
     const uint256 hash = it->GetTx().GetHash();
@@ -443,12 +444,12 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     totalTxSize -= it->GetTxSize();
     cachedInnerUsage -= it->DynamicMemoryUsage();
     cachedInnerUsage -= memusage::DynamicUsage(mapLinks[it].parents) + memusage::DynamicUsage(mapLinks[it].children);
+    // SYSCOIN
+    RemoveZDAGTx(ptx);
     mapLinks.erase(it);
     mapTx.erase(it);
     nTransactionsUpdated++;
     if (minerPolicyEstimator) {minerPolicyEstimator->removeTx(hash, false);}
-    // SYSCOIN
-    RemoveZDAGTx(it->GetSharedTx());
 }
 
 // Calculates descendants of entry that are not already in setDescendants, and adds to
