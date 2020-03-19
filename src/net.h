@@ -407,7 +407,7 @@ public:
     bool RemoveAddedNode(const std::string& node);
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
 
-    bool AddPendingMasternode(const CService& addr);
+    bool AddPendingMasternode(const uint256& proTxHash);
     bool AddMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
     bool HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
     std::set<uint256> GetMasternodeQuorums(Consensus::LLMQType llmqType);
@@ -543,7 +543,7 @@ private:
     CCriticalSection cs_vOneShots;
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     CCriticalSection cs_vAddedNodes;
-    std::vector<CService> vPendingMasternodes;
+    std::vector<uint256> vPendingMasternodes;
     std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> masternodeQuorumNodes; // protected by cs_vPendingMasternodes
     mutable CCriticalSection cs_vPendingMasternodes;
     std::vector<CNode*> vNodes;

@@ -1081,7 +1081,7 @@ bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymize
         nSessionDenom = dsq.nDenom;
         mixingMasternode = dmn;
         pendingDsaRequest = CPendingDsaRequest(dmn->pdmnState->addr, CPrivateSendAccept(nSessionDenom, txMyCollateral));
-        connman.AddPendingMasternode(dmn->pdmnState->addr);
+        connman.AddPendingMasternode(dmn->proTxHash);
         // TODO: add new state POOL_STATE_CONNECTING and bump MIN_PRIVATESEND_PEER_PROTO_VERSION
         SetState(POOL_STATE_QUEUE);
         nTimeLastSuccessfulStep = GetTime();
@@ -1158,7 +1158,7 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, C
         }
 
         mixingMasternode = dmn;
-        connman.AddPendingMasternode(dmn->pdmnState->addr);
+        connman.AddPendingMasternode(dmn->proTxHash);
         pendingDsaRequest = CPendingDsaRequest(dmn->pdmnState->addr, CPrivateSendAccept(nSessionDenom, txMyCollateral));
         // TODO: add new state POOL_STATE_CONNECTING and bump MIN_PRIVATESEND_PEER_PROTO_VERSION
         SetState(POOL_STATE_QUEUE);

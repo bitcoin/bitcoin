@@ -2126,20 +2126,20 @@ void CConnman::ThreadOpenMasternodeConnections()
 
         // NOTE: Process only one pending masternode at a time
 
-        CService addr;
+        CDeterministicMNCPtr connectToDmn;
         { // don't hold lock while calling OpenMasternodeConnection as cs_main is locked deep inside
             LOCK2(cs_vNodes, cs_vPendingMasternodes);
 
             if (!vPendingMasternodes.empty()) {
-                auto addr2 = vPendingMasternodes.front();
+                auto dmn = mnList.GetValidMN(vPendingMasternodes.front());
                 vPendingMasternodes.erase(vPendingMasternodes.begin());
-                if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2)) {
-                    addr = addr2;
+                if (dmn && !connectedNodes.count(dmn->pdmnState->addr) && !IsMasternodeOrDisconnectRequested(dmn->pdmnState->addr)) {
+                    connectToDmn = dmn;
                 }
             }
 
-            if (addr == CService()) {
-                std::vector<CService> pending;
+            if (!connectToDmn) {
+                std::vector<CDeterministicMNCPtr> pending;
                 for (const auto& group : masternodeQuorumNodes) {
                     for (const auto& proRegTxHash : group.second) {
                         auto dmn = mnList.GetMN(proRegTxHash);
@@ -2153,24 +2153,24 @@ void CConnman::ThreadOpenMasternodeConnections()
                             if (addrInfo.IsValid() && nANow - addrInfo.nLastTry < 60) {
                                 continue;
                             }
-                            pending.emplace_back(addr2);
+                            pending.emplace_back(dmn);
                         }
                     }
                 }
 
                 if (!pending.empty()) {
-                    addr = pending[GetRandInt(pending.size())];
+                    connectToDmn = pending[GetRandInt(pending.size())];
                 }
             }
         }
 
-        if (addr == CService()) {
+        if (!connectToDmn) {
             continue;
         }
 
-        OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
+        OpenMasternodeConnection(CAddress(connectToDmn->pdmnState->addr, NODE_NETWORK));
         // should be in the list now if connection was opened
-        ForNode(addr, CConnman::AllNodes, [&](CNode* pnode) {
+        ForNode(connectToDmn->pdmnState->addr, CConnman::AllNodes, [&](CNode* pnode) {
             if (pnode->fDisconnect) {
                 return false;
             }
@@ -2782,15 +2782,14 @@ bool CConnman::RemoveAddedNode(const std::string& strNode)
     return false;
 }
 
-bool CConnman::AddPendingMasternode(const CService& service)
+bool CConnman::AddPendingMasternode(const uint256& proTxHash)
 {
     LOCK(cs_vPendingMasternodes);
-    for(const auto& s : vPendingMasternodes) {
-        if (service == s)
-            return false;
+    if (std::find(vPendingMasternodes.begin(), vPendingMasternodes.end(), proTxHash) != vPendingMasternodes.end()) {
+        return false;
     }
 
-    vPendingMasternodes.push_back(service);
+    vPendingMasternodes.push_back(proTxHash);
     return true;
 }
 
