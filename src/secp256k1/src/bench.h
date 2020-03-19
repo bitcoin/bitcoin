@@ -8,6 +8,7 @@
 #define SECP256K1_BENCH_H
 
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include "sys/time.h"
 
@@ -61,6 +62,21 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
     printf("us / max ");
     print_number(max * 1000000.0 / iter);
     printf("us\n");
+}
+
+int have_flag(int argc, char** argv, char *flag) {
+    char** argm = argv + argc;
+    argv++;
+    if (argv == argm) {
+        return 1;
+    }
+    while (argv != NULL && argv != argm) {
+        if (strcmp(*argv, flag) == 0) {
+            return 1;
+        }
+        argv++;
+    }
+    return 0;
 }
 
 #endif /* SECP256K1_BENCH_H */
