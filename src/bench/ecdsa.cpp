@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bench.h"
+#include <bench/bench.h>
 
-#include "key.h"
+#include <key.h>
 
 static void ECDSASign(benchmark::State& state)
 {

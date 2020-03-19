@@ -5,11 +5,11 @@
 #ifndef DASH_QUORUMS_CHAINLOCKS_H
 #define DASH_QUORUMS_CHAINLOCKS_H
 
-#include "llmq/quorums.h"
-#include "llmq/quorums_signing.h"
+#include <llmq/quorums.h>
+#include <llmq/quorums_signing.h>
 
-#include "net.h"
-#include "chainparams.h"
+#include <net.h>
+#include <chainparams.h>
 
 #include <atomic>
 #include <unordered_set>

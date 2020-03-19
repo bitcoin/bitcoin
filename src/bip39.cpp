@@ -24,10 +24,10 @@
 // Source:
 // https://github.com/trezor/trezor-crypto
 
-#include "bip39.h"
-#include "bip39_english.h"
-#include "crypto/sha256.h"
-#include "random.h"
+#include <bip39.h>
+#include <bip39_english.h>
+#include <crypto/sha256.h>
+#include <random.h>
 
 #include <openssl/evp.h>
 

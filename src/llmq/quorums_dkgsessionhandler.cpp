@@ -2,17 +2,17 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "quorums_dkgsessionhandler.h"
-#include "quorums_blockprocessor.h"
-#include "quorums_debug.h"
-#include "quorums_init.h"
-#include "quorums_utils.h"
+#include <llmq/quorums_dkgsessionhandler.h>
+#include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_debug.h>
+#include <llmq/quorums_init.h>
+#include <llmq/quorums_utils.h>
 
-#include "masternode/activemasternode.h"
-#include "chainparams.h"
-#include "init.h"
-#include "net_processing.h"
-#include "validation.h"
+#include <masternode/activemasternode.h>
+#include <chainparams.h>
+#include <init.h>
+#include <net_processing.h>
+#include <validation.h>
 
 namespace llmq
 {

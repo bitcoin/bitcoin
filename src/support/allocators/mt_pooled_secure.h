@@ -5,7 +5,7 @@
 #ifndef BITCOIN_SUPPORT_ALLOCATORS_MT_POOLED_SECURE_H
 #define BITCOIN_SUPPORT_ALLOCATORS_MT_POOLED_SECURE_H
 
-#include "pooled_secure.h"
+#include <support/allocators/pooled_secure.h>
 
 #include <thread>
 #include <mutex>

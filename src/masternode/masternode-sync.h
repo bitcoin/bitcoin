@@ -4,8 +4,8 @@
 #ifndef MASTERNODE_SYNC_H
 #define MASTERNODE_SYNC_H
 
-#include "chain.h"
-#include "net.h"
+#include <chain.h>
+#include <net.h>
 
 class CMasternodeSync;
 

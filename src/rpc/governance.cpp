@@ -2,23 +2,23 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "masternode/activemasternode.h"
-#include "consensus/validation.h"
-#include "core_io.h"
-#include "governance/governance.h"
-#include "governance/governance-vote.h"
-#include "governance/governance-classes.h"
-#include "governance/governance-validators.h"
-#include "init.h"
-#include "validation.h"
-#include "masternode/masternode-sync.h"
-#include "messagesigner.h"
-#include "rpc/server.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "wallet/rpcwallet.h" 
+#include <masternode/activemasternode.h>
+#include <consensus/validation.h>
+#include <core_io.h>
+#include <governance/governance.h>
+#include <governance/governance-vote.h>
+#include <governance/governance-classes.h>
+#include <governance/governance-validators.h>
+#include <init.h>
+#include <validation.h>
+#include <masternode/masternode-sync.h>
+#include <messagesigner.h>
+#include <rpc/server.h>
+#include <util.h>
+#include <utilmoneystr.h>
+#include <wallet/rpcwallet.h>
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
+#include <wallet/wallet.h>
 #endif // ENABLE_WALLET
 
 void gobject_count_help()

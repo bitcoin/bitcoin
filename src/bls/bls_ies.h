@@ -5,8 +5,8 @@
 #ifndef DASH_CRYPTO_BLS_IES_H
 #define DASH_CRYPTO_BLS_IES_H
 
-#include "bls.h"
-#include "streams.h"
+#include <bls/bls.h>
+#include <streams.h>
 
 class CBLSIESEncryptedBlob
 {

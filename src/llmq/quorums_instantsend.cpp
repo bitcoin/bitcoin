@@ -2,21 +2,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "quorums_chainlocks.h"
-#include "quorums_instantsend.h"
-#include "quorums_utils.h"
+#include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_instantsend.h>
+#include <llmq/quorums_utils.h>
 
-#include "bls/bls_batchverifier.h"
-#include "chainparams.h"
-#include "coins.h"
-#include "txmempool.h"
-#include "masternode/masternode-sync.h"
-#include "net_processing.h"
-#include "spork.h"
-#include "validation.h"
+#include <bls/bls_batchverifier.h>
+#include <chainparams.h>
+#include <coins.h>
+#include <txmempool.h>
+#include <masternode/masternode-sync.h>
+#include <net_processing.h>
+#include <spork.h>
+#include <validation.h>
 
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
+#include <wallet/wallet.h>
 #endif
 
 #include <boost/algorithm/string/replace.hpp>

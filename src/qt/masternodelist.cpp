@@ -1,18 +1,18 @@
-#include "masternodelist.h"
-#include "ui_masternodelist.h"
+#include <qt/masternodelist.h>
+#include <qt/forms/ui_masternodelist.h>
 
-#include "masternode/activemasternode.h"
-#include "clientmodel.h"
-#include "clientversion.h"
-#include "coins.h"
-#include "guiutil.h"
-#include "init.h"
-#include "masternode/masternode-sync.h"
-#include "netbase.h"
-#include "sync.h"
-#include "validation.h"
-#include "wallet/wallet.h"
-#include "walletmodel.h"
+#include <masternode/activemasternode.h>
+#include <qt/clientmodel.h>
+#include <clientversion.h>
+#include <coins.h>
+#include <qt/guiutil.h>
+#include <init.h>
+#include <masternode/masternode-sync.h>
+#include <netbase.h>
+#include <sync.h>
+#include <validation.h>
+#include <wallet/wallet.h>
+#include <qt/walletmodel.h>
 
 #include <univalue.h>
 

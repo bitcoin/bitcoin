@@ -5,11 +5,11 @@
 #ifndef PRIVATESENDCLIENT_H
 #define PRIVATESENDCLIENT_H
 
-#include "privatesend-util.h"
-#include "privatesend.h"
-#include "wallet/wallet.h"
+#include <privatesend/privatesend-util.h>
+#include <privatesend/privatesend.h>
+#include <wallet/wallet.h>
 
-#include "evo/deterministicmns.h"
+#include <evo/deterministicmns.h>
 
 class CPrivateSendClientManager;
 class CConnman;

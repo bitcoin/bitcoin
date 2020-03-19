@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_ADDRESSTABLEMODEL_H
 #define BITCOIN_QT_ADDRESSTABLEMODEL_H
 
-#include "base58.h"
+#include <base58.h>
 
 #include <QAbstractTableModel>
 #include <QStringList>

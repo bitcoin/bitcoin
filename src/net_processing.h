@@ -6,9 +6,9 @@
 #ifndef BITCOIN_NET_PROCESSING_H
 #define BITCOIN_NET_PROCESSING_H
 
-#include "net.h"
-#include "validationinterface.h"
-#include "consensus/params.h"
+#include <net.h>
+#include <validationinterface.h>
+#include <consensus/params.h>
 
 /** Default for -maxorphantxsize, maximum size in megabytes the orphan map can grow before entries are removed */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE = 10; // this allows around 100 TXs of max size (and many more of normal size)

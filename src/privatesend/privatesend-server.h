@@ -5,8 +5,8 @@
 #ifndef PRIVATESENDSERVER_H
 #define PRIVATESENDSERVER_H
 
-#include "net.h"
-#include "privatesend.h"
+#include <net.h>
+#include <privatesend/privatesend.h>
 
 class CPrivateSendServer;
 class UniValue;

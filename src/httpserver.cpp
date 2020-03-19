@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "httpserver.h"
+#include <httpserver.h>
 
-#include "init.h"
-#include "chainparamsbase.h"
-#include "compat.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "netbase.h"
-#include "rpc/protocol.h" // For HTTP status codes
-#include "sync.h"
-#include "ui_interface.h"
+#include <init.h>
+#include <chainparamsbase.h>
+#include <compat.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <netbase.h>
+#include <rpc/protocol.h> // For HTTP status codes
+#include <sync.h>
+#include <ui_interface.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +28,7 @@
 #include <event2/util.h>
 #include <event2/keyvalq_struct.h>
 
-#include "support/events.h"
+#include <support/events.h>
 
 #ifdef EVENT__HAVE_NETINET_IN_H
 #include <netinet/in.h>

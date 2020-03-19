@@ -5,10 +5,10 @@
 #ifndef DASH_CRYPTO_BLS_H
 #define DASH_CRYPTO_BLS_H
 
-#include "hash.h"
-#include "serialize.h"
-#include "uint256.h"
-#include "utilstrencodings.h"
+#include <hash.h>
+#include <serialize.h>
+#include <uint256.h>
+#include <utilstrencodings.h>
 
 #undef ERROR // chia BLS uses relic, which defines ERROR, which in turn causes win32/win64 builds to print many warnings
 #include <chiabls/bls.hpp>

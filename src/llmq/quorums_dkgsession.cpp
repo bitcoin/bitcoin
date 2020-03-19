@@ -2,25 +2,25 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "quorums_dkgsession.h"
+#include <llmq/quorums_dkgsession.h>
 
-#include "quorums_commitment.h"
-#include "quorums_debug.h"
-#include "quorums_dkgsessionmgr.h"
-#include "quorums_utils.h"
+#include <llmq/quorums_commitment.h>
+#include <llmq/quorums_debug.h>
+#include <llmq/quorums_dkgsessionmgr.h>
+#include <llmq/quorums_utils.h>
 
-#include "evo/specialtx.h"
+#include <evo/specialtx.h>
 
-#include "masternode/activemasternode.h"
-#include "chainparams.h"
-#include "init.h"
-#include "net.h"
-#include "netmessagemaker.h"
-#include "spork.h"
-#include "univalue.h"
-#include "validation.h"
+#include <masternode/activemasternode.h>
+#include <chainparams.h>
+#include <init.h>
+#include <net.h>
+#include <netmessagemaker.h>
+#include <spork.h>
+#include <univalue.h>
+#include <validation.h>
 
-#include "cxxtimer.hpp"
+#include <cxxtimer.hpp>
 
 namespace llmq
 {

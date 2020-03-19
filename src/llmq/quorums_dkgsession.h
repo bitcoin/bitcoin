@@ -5,16 +5,16 @@
 #ifndef DASH_QUORUMS_DKGSESSION_H
 #define DASH_QUORUMS_DKGSESSION_H
 
-#include "consensus/params.h"
-#include "net.h"
-#include "batchedlogger.h"
+#include <consensus/params.h>
+#include <net.h>
+#include <batchedlogger.h>
 
-#include "bls/bls_ies.h"
-#include "bls/bls_worker.h"
+#include <bls/bls_ies.h>
+#include <bls/bls_worker.h>
 
-#include "evo/deterministicmns.h"
+#include <evo/deterministicmns.h>
 
-#include "llmq/quorums_utils.h"
+#include <llmq/quorums_utils.h>
 
 class UniValue;
 

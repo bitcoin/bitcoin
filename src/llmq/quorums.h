@@ -5,17 +5,17 @@
 #ifndef DASH_QUORUMS_H
 #define DASH_QUORUMS_H
 
-#include "evo/evodb.h"
-#include "evo/deterministicmns.h"
-#include "llmq/quorums_commitment.h"
+#include <evo/evodb.h>
+#include <evo/deterministicmns.h>
+#include <llmq/quorums_commitment.h>
 
-#include "validationinterface.h"
-#include "consensus/params.h"
-#include "saltedhasher.h"
-#include "unordered_lru_cache.h"
+#include <validationinterface.h>
+#include <consensus/params.h>
+#include <saltedhasher.h>
+#include <unordered_lru_cache.h>
 
-#include "bls/bls.h"
-#include "bls/bls_worker.h"
+#include <bls/bls.h>
+#include <bls/bls_worker.h>
 
 namespace llmq
 {

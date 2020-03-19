@@ -3,29 +3,29 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include <config/dash-config.h>
 #endif
 
-#include "base58.h"
-#include "clientversion.h"
-#include "coins.h"
-#include "consensus/consensus.h"
-#include "core_io.h"
-#include "keystore.h"
-#include "policy/policy.h"
-#include "primitives/transaction.h"
-#include "script/script.h"
-#include "script/sign.h"
+#include <base58.h>
+#include <clientversion.h>
+#include <coins.h>
+#include <consensus/consensus.h>
+#include <core_io.h>
+#include <keystore.h>
+#include <policy/policy.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <script/sign.h>
 #include <univalue.h>
-#include "util.h"
-#include "utilmoneystr.h"
-#include "utilstrencodings.h"
+#include <util.h>
+#include <utilmoneystr.h>
+#include <utilstrencodings.h>
 
 #include <stdio.h>
 
 #include <boost/algorithm/string.hpp>
 
-#include "stacktraces.h"
+#include <stacktraces.h>
 
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;

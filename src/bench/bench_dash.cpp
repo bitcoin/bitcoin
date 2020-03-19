@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bench.h"
+#include <bench/bench.h>
 
-#include "crypto/sha256.h"
-#include "key.h"
-#include "stacktraces.h"
-#include "validation.h"
-#include "util.h"
-#include "random.h"
+#include <crypto/sha256.h>
+#include <key.h>
+#include <stacktraces.h>
+#include <validation.h>
+#include <util.h>
+#include <random.h>
 
-#include "bls/bls.h"
+#include <bls/bls.h>
 
 void InitBLSTests();
 void CleanupBLSTests();

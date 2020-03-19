@@ -2,19 +2,19 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "quorums.h"
-#include "quorums_chainlocks.h"
-#include "quorums_instantsend.h"
-#include "quorums_signing.h"
-#include "quorums_utils.h"
+#include <llmq/quorums.h>
+#include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_instantsend.h>
+#include <llmq/quorums_signing.h>
+#include <llmq/quorums_utils.h>
 
-#include "chain.h"
-#include "masternode/masternode-sync.h"
-#include "net_processing.h"
-#include "scheduler.h"
-#include "spork.h"
-#include "txmempool.h"
-#include "validation.h"
+#include <chain.h>
+#include <masternode/masternode-sync.h>
+#include <net_processing.h>
+#include <scheduler.h>
+#include <spork.h>
+#include <txmempool.h>
+#include <validation.h>
 
 namespace llmq
 {

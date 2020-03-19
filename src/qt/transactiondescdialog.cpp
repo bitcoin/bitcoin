@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "guiutil.h"
-#include "transactiondescdialog.h"
-#include "ui_transactiondescdialog.h"
+#include <qt/guiutil.h>
+#include <qt/transactiondescdialog.h>
+#include <qt/forms/ui_transactiondescdialog.h>
 
-#include "transactiontablemodel.h"
+#include <qt/transactiontablemodel.h>
 
 #include <QModelIndex>
 #include <QSettings>

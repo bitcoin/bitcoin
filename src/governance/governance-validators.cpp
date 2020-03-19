@@ -2,12 +2,12 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "governance-validators.h"
+#include <governance/governance-validators.h>
 
-#include "base58.h"
-#include "timedata.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
+#include <base58.h>
+#include <timedata.h>
+#include <tinyformat.h>
+#include <utilstrencodings.h>
 
 #include <algorithm>
 

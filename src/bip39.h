@@ -24,7 +24,7 @@
 #ifndef DASH_BIP39_H
 #define DASH_BIP39_H
 
-#include "support/allocators/secure.h"
+#include <support/allocators/secure.h>
 
 class CMnemonic
 {

@@ -2,21 +2,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpcnestedtests.h"
+#include <qt/test/rpcnestedtests.h>
 
-#include "chainparams.h"
-#include "consensus/validation.h"
-#include "fs.h"
-#include "validation.h"
-#include "rpc/register.h"
-#include "rpc/server.h"
-#include "rpcconsole.h"
-#include "test/test_dash.h"
-#include "univalue.h"
-#include "util.h"
+#include <chainparams.h>
+#include <consensus/validation.h>
+#include <fs.h>
+#include <validation.h>
+#include <rpc/register.h>
+#include <rpc/server.h>
+#include <qt/rpcconsole.h>
+#include <test/test_dash.h>
+#include <univalue.h>
+#include <util.h>
 
-#include "evo/deterministicmns.h"
-#include "llmq/quorums_init.h"
+#include <evo/deterministicmns.h>
+#include <llmq/quorums_init.h>
 
 #include <QDir>
 #include <QtGlobal>

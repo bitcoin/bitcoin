@@ -4,11 +4,11 @@
 #ifndef GOVERNANCE_CLASSES_H
 #define GOVERNANCE_CLASSES_H
 
-#include "base58.h"
-#include "governance.h"
-#include "key.h"
-#include "script/standard.h"
-#include "util.h"
+#include <base58.h>
+#include <governance/governance.h>
+#include <key.h>
+#include <script/standard.h>
+#include <util.h>
 
 class CSuperblock;
 class CGovernanceTriggerManager;

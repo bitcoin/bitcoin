@@ -5,13 +5,13 @@
 #ifndef DASH_QUORUMS_BLOCKPROCESSOR_H
 #define DASH_QUORUMS_BLOCKPROCESSOR_H
 
-#include "llmq/quorums_commitment.h"
-#include "llmq/quorums_utils.h"
+#include <llmq/quorums_commitment.h>
+#include <llmq/quorums_utils.h>
 
-#include "consensus/params.h"
-#include "primitives/transaction.h"
-#include "saltedhasher.h"
-#include "sync.h"
+#include <consensus/params.h>
+#include <primitives/transaction.h>
+#include <saltedhasher.h>
+#include <sync.h>
 
 #include <map>
 #include <unordered_map>

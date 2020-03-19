@@ -1739,7 +1739,7 @@
   <customwidget>
    <class>TrafficGraphWidget</class>
    <extends>QWidget</extends>
-   <header>trafficgraphwidget.h</header>
+   <header>qt/trafficgraphwidget.h</header>
    <container>1</container>
    <slots>
     <slot>clear()</slot>

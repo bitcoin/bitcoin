@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bench.h"
+#include <bench/bench.h>
 
-#include "chainparams.h"
-#include "validation.h"
-#include "streams.h"
-#include "consensus/validation.h"
+#include <chainparams.h>
+#include <validation.h>
+#include <streams.h>
+#include <consensus/validation.h>
 
-#include "bench/data/block813851.raw.h"
+#include <bench/data/block813851.raw.h>
 
 // These are the two major time-sinks which happen after we have fully received
 // a block off the wire, but before we can relay the block on to peers using

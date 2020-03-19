@@ -3,13 +3,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "networkstyle.h"
+#include <qt/networkstyle.h>
 
-#include "guiconstants.h"
-#include "guiutil.h"
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
 
-#include "chainparams.h"
-#include "tinyformat.h"
+#include <chainparams.h>
+#include <tinyformat.h>
 
 #include <QApplication>
 

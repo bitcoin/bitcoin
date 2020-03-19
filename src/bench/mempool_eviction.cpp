@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bench.h"
-#include "policy/policy.h"
-#include "txmempool.h"
+#include <bench/bench.h>
+#include <policy/policy.h>
+#include <txmempool.h>
 
 #include <list>
 #include <vector>

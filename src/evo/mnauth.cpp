@@ -2,15 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "mnauth.h"
+#include <evo/mnauth.h>
 
-#include "masternode/activemasternode.h"
-#include "evo/deterministicmns.h"
-#include "masternode/masternode-sync.h"
-#include "net.h"
-#include "net_processing.h"
-#include "netmessagemaker.h"
-#include "validation.h"
+#include <masternode/activemasternode.h>
+#include <evo/deterministicmns.h>
+#include <masternode/masternode-sync.h>
+#include <net.h>
+#include <net_processing.h>
+#include <netmessagemaker.h>
+#include <validation.h>
 
 #include <unordered_set>
 

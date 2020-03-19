@@ -5,7 +5,7 @@
 #ifndef BITCOIN_DSNOTIFICATIONINTERFACE_H
 #define BITCOIN_DSNOTIFICATIONINTERFACE_H
 
-#include "validationinterface.h"
+#include <validationinterface.h>
 
 class CDSNotificationInterface : public CValidationInterface
 {

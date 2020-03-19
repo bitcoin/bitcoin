@@ -9,7 +9,7 @@
 #include <list>
 #include <cstddef>
 
-#include "serialize.h"
+#include <serialize.h>
 
 /**
  * Serializable structure for key/value items

@@ -5,80 +5,80 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include <config/dash-config.h>
 #endif
 
-#include "init.h"
+#include <init.h>
 
-#include "addrman.h"
-#include "amount.h"
-#include "base58.h"
-#include "chain.h"
-#include "chainparams.h"
-#include "checkpoints.h"
-#include "compat/sanity.h"
-#include "consensus/validation.h"
-#include "fs.h"
-#include "httpserver.h"
-#include "httprpc.h"
-#include "key.h"
-#include "validation.h"
-#include "miner.h"
-#include "netbase.h"
-#include "net.h"
-#include "net_processing.h"
-#include "policy/feerate.h"
-#include "policy/fees.h"
-#include "policy/policy.h"
-#include "rpc/server.h"
-#include "rpc/register.h"
-#include "rpc/safemode.h"
-#include "rpc/blockchain.h"
-#include "script/standard.h"
-#include "script/sigcache.h"
-#include "scheduler.h"
-#include "timedata.h"
-#include "txdb.h"
-#include "txmempool.h"
-#include "torcontrol.h"
-#include "ui_interface.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "validationinterface.h"
+#include <addrman.h>
+#include <amount.h>
+#include <base58.h>
+#include <chain.h>
+#include <chainparams.h>
+#include <checkpoints.h>
+#include <compat/sanity.h>
+#include <consensus/validation.h>
+#include <fs.h>
+#include <httpserver.h>
+#include <httprpc.h>
+#include <key.h>
+#include <validation.h>
+#include <miner.h>
+#include <netbase.h>
+#include <net.h>
+#include <net_processing.h>
+#include <policy/feerate.h>
+#include <policy/fees.h>
+#include <policy/policy.h>
+#include <rpc/server.h>
+#include <rpc/register.h>
+#include <rpc/safemode.h>
+#include <rpc/blockchain.h>
+#include <script/standard.h>
+#include <script/sigcache.h>
+#include <scheduler.h>
+#include <timedata.h>
+#include <txdb.h>
+#include <txmempool.h>
+#include <torcontrol.h>
+#include <ui_interface.h>
+#include <util.h>
+#include <utilmoneystr.h>
+#include <validationinterface.h>
 #ifdef ENABLE_WALLET
-#include "wallet/init.h"
+#include <wallet/init.h>
 #endif
 
-#include "masternode/activemasternode.h"
-#include "dsnotificationinterface.h"
-#include "flat-database.h"
-#include "governance/governance.h"
+#include <masternode/activemasternode.h>
+#include <dsnotificationinterface.h>
+#include <flat-database.h>
+#include <governance/governance.h>
 #ifdef ENABLE_WALLET
-#include "keepass.h"
+#include <keepass.h>
 #endif
-#include "masternode/masternode-meta.h"
-#include "masternode/masternode-payments.h"
-#include "masternode/masternode-sync.h"
-#include "masternode/masternode-utils.h"
-#include "messagesigner.h"
-#include "netfulfilledman.h"
+#include <masternode/masternode-meta.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
+#include <masternode/masternode-utils.h>
+#include <messagesigner.h>
+#include <netfulfilledman.h>
 #ifdef ENABLE_WALLET
-#include "privatesend/privatesend-client.h"
+#include <privatesend/privatesend-client.h>
 #endif // ENABLE_WALLET
-#include "privatesend/privatesend-server.h"
-#include "spork.h"
-#include "warnings.h"
+#include <privatesend/privatesend-server.h>
+#include <spork.h>
+#include <warnings.h>
 
-#include "evo/deterministicmns.h"
-#include "llmq/quorums_init.h"
+#include <evo/deterministicmns.h>
+#include <llmq/quorums_init.h>
 
-#include "llmq/quorums_init.h"
+#include <llmq/quorums_init.h>
 
 #include <stdint.h>
 #include <stdio.h>
 #include <memory>
 
-#include "bls/bls.h"
+#include <bls/bls.h>
 
 #ifndef WIN32
 #include <signal.h>
@@ -93,7 +93,7 @@
 #include <openssl/crypto.h>
 
 #if ENABLE_ZMQ
-#include "zmq/zmqnotificationinterface.h"
+#include <zmq/zmqnotificationinterface.h>
 #endif
 
 bool fFeeEstimatesInitialized = false;

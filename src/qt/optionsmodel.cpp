@@ -4,26 +4,26 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include <config/dash-config.h>
 #endif
 
-#include "optionsmodel.h"
+#include <qt/optionsmodel.h>
 
-#include "bitcoinunits.h"
-#include "guiutil.h"
+#include <qt/bitcoinunits.h>
+#include <qt/guiutil.h>
 
-#include "amount.h"
-#include "init.h"
-#include "validation.h" // For DEFAULT_SCRIPTCHECK_THREADS
-#include "net.h"
-#include "netbase.h"
-#include "txdb.h" // for -dbcache defaults
+#include <amount.h>
+#include <init.h>
+#include <validation.h> // For DEFAULT_SCRIPTCHECK_THREADS
+#include <net.h>
+#include <netbase.h>
+#include <txdb.h> // for -dbcache defaults
 
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
-#include "wallet/walletdb.h"
+#include <wallet/wallet.h>
+#include <wallet/walletdb.h>
 
-#include "privatesend/privatesend-client.h"
+#include <privatesend/privatesend-client.h>
 #endif
 
 #include <QNetworkProxy>
@@ -496,14 +496,14 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 settings.setValue("digits", value);
                 setRestartRequired(true);
             }
-            break;            
+            break;
 #endif // ENABLE_WALLET
         case Theme:
             if (settings.value("theme") != value) {
                 settings.setValue("theme", value);
                 setRestartRequired(true);
             }
-            break;            
+            break;
         case Language:
             if (settings.value("language") != value) {
                 settings.setValue("language", value);

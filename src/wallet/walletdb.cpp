@@ -4,19 +4,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/walletdb.h"
+#include <wallet/walletdb.h>
 
-#include "base58.h"
-#include "consensus/tx_verify.h"
-#include "consensus/validation.h"
-#include "fs.h"
-#include "protocol.h"
-#include "serialize.h"
-#include "sync.h"
-#include "util.h"
-#include "utiltime.h"
-#include "wallet/wallet.h"
-#include "validation.h"
+#include <base58.h>
+#include <consensus/tx_verify.h>
+#include <consensus/validation.h>
+#include <fs.h>
+#include <protocol.h>
+#include <serialize.h>
+#include <sync.h>
+#include <util.h>
+#include <utiltime.h>
+#include <wallet/wallet.h>
+#include <validation.h>
 
 #include <atomic>
 

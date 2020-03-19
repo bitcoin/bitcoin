@@ -5,19 +5,19 @@
 #ifndef GOVERNANCE_H
 #define GOVERNANCE_H
 
-#include "bloom.h"
-#include "cachemap.h"
-#include "cachemultimap.h"
-#include "chain.h"
-#include "governance-exceptions.h"
-#include "governance-object.h"
-#include "governance-vote.h"
-#include "net.h"
-#include "sync.h"
-#include "timedata.h"
-#include "util.h"
+#include <bloom.h>
+#include <cachemap.h>
+#include <cachemultimap.h>
+#include <chain.h>
+#include <governance/governance-exceptions.h>
+#include <governance/governance-object.h>
+#include <governance/governance-vote.h>
+#include <net.h>
+#include <sync.h>
+#include <timedata.h>
+#include <util.h>
 
-#include "evo/deterministicmns.h"
+#include <evo/deterministicmns.h>
 
 #include <univalue.h>
 

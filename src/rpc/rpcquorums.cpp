@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chainparams.h"
-#include "server.h"
-#include "validation.h"
+#include <chainparams.h>
+#include <rpc/server.h>
+#include <validation.h>
 
-#include "masternode/activemasternode.h"
+#include <masternode/activemasternode.h>
 
-#include "llmq/quorums.h"
-#include "llmq/quorums_blockprocessor.h"
-#include "llmq/quorums_debug.h"
-#include "llmq/quorums_dkgsession.h"
-#include "llmq/quorums_signing.h"
+#include <llmq/quorums.h>
+#include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_debug.h>
+#include <llmq/quorums_dkgsession.h>
+#include <llmq/quorums_signing.h>
 
 void quorum_list_help()
 {

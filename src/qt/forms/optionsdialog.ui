@@ -969,12 +969,12 @@ https://www.transifex.com/projects/p/dash/</string>
   <customwidget>
    <class>QValidatedLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>qvalidatedlineedit.h</header>
+   <header>qt/qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
    <class>QValueComboBox</class>
    <extends>QComboBox</extends>
-   <header>qvaluecombobox.h</header>
+   <header>qt/qvaluecombobox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

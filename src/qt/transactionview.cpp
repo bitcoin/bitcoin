@@ -2,23 +2,23 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "transactionview.h"
+#include <qt/transactionview.h>
 
-#include "addresstablemodel.h"
-#include "bitcoinunits.h"
-#include "csvmodelwriter.h"
-#include "editaddressdialog.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "platformstyle.h"
-#include "qrdialog.h"
-#include "transactiondescdialog.h"
-#include "transactionfilterproxy.h"
-#include "transactionrecord.h"
-#include "transactiontablemodel.h"
-#include "walletmodel.h"
+#include <qt/addresstablemodel.h>
+#include <qt/bitcoinunits.h>
+#include <qt/csvmodelwriter.h>
+#include <qt/editaddressdialog.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/platformstyle.h>
+#include <qt/qrdialog.h>
+#include <qt/transactiondescdialog.h>
+#include <qt/transactionfilterproxy.h>
+#include <qt/transactionrecord.h>
+#include <qt/transactiontablemodel.h>
+#include <qt/walletmodel.h>
 
-#include "ui_interface.h"
+#include <ui_interface.h>
 
 #include <QComboBox>
 #include <QDateTimeEdit>

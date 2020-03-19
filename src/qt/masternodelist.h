@@ -1,12 +1,12 @@
 #ifndef MASTERNODELIST_H
 #define MASTERNODELIST_H
 
-#include "platformstyle.h"
-#include "primitives/transaction.h"
-#include "sync.h"
-#include "util.h"
+#include <qt/platformstyle.h>
+#include <primitives/transaction.h>
+#include <sync.h>
+#include <util.h>
 
-#include "evo/deterministicmns.h"
+#include <evo/deterministicmns.h>
 
 #include <QMenu>
 #include <QTimer>

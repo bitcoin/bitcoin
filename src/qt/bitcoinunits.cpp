@@ -3,9 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bitcoinunits.h"
-#include "chainparams.h"
-#include "primitives/transaction.h"
+#include <qt/bitcoinunits.h>
+#include <chainparams.h>
+#include <primitives/transaction.h>
 
 #include <QSettings>
 #include <QStringList>

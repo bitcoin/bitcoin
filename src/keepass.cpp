@@ -2,21 +2,21 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "keepass.h"
+#include <keepass.h>
 
-#include "wallet/crypter.h"
-#include "clientversion.h"
-#include "protocol.h"
-#include "random.h"
-#include "rpc/protocol.h"
+#include <wallet/crypter.h>
+#include <clientversion.h>
+#include <protocol.h>
+#include <random.h>
+#include <rpc/protocol.h>
 
 // Necessary to prevent compile errors due to forward declaration of
 //CScript in serialize.h (included from crypter.h)
-#include "script/script.h"
-#include "script/standard.h"
+#include <script/script.h>
+#include <script/standard.h>
 
-#include "util.h"
-#include "utilstrencodings.h"
+#include <util.h>
+#include <utilstrencodings.h>
 
 #include <event2/event.h>
 #include <event2/http.h>
@@ -26,7 +26,7 @@
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
-#include "support/cleanse.h" // for OPENSSL_cleanse()
+#include <support/cleanse.h> // for OPENSSL_cleanse()
 
 const char* CKeePassIntegrator::KEEPASS_HTTP_HOST = "localhost";
 

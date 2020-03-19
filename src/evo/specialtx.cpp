@@ -2,20 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chainparams.h"
-#include "clientversion.h"
-#include "consensus/validation.h"
-#include "hash.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
-#include "validation.h"
+#include <chainparams.h>
+#include <clientversion.h>
+#include <consensus/validation.h>
+#include <hash.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <validation.h>
 
-#include "cbtx.h"
-#include "deterministicmns.h"
-#include "specialtx.h"
+#include <evo/cbtx.h>
+#include <evo/deterministicmns.h>
+#include <evo/specialtx.h>
 
-#include "llmq/quorums_commitment.h"
-#include "llmq/quorums_blockprocessor.h"
+#include <llmq/quorums_commitment.h>
+#include <llmq/quorums_blockprocessor.h>
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {

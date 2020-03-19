@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "trafficgraphwidget.h"
-#include "clientmodel.h"
+#include <qt/trafficgraphwidget.h>
+#include <qt/clientmodel.h>
 
 #include <boost/bind.hpp>
 

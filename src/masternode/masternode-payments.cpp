@@ -2,20 +2,20 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "masternode/activemasternode.h"
-#include "consensus/validation.h"
-#include "governance/governance-classes.h"
-#include "init.h"
-#include "masternode/masternode-payments.h"
-#include "masternode/masternode-sync.h"
-#include "messagesigner.h"
-#include "netfulfilledman.h"
-#include "netmessagemaker.h"
-#include "spork.h"
-#include "util.h"
-#include "validation.h"
+#include <masternode/activemasternode.h>
+#include <consensus/validation.h>
+#include <governance/governance-classes.h>
+#include <init.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
+#include <messagesigner.h>
+#include <netfulfilledman.h>
+#include <netmessagemaker.h>
+#include <spork.h>
+#include <util.h>
+#include <validation.h>
 
-#include "evo/deterministicmns.h"
+#include <evo/deterministicmns.h>
 
 #include <string>
 

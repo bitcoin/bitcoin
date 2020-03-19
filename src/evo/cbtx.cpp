@@ -2,18 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "cbtx.h"
-#include "deterministicmns.h"
-#include "llmq/quorums.h"
-#include "llmq/quorums_blockprocessor.h"
-#include "llmq/quorums_commitment.h"
-#include "simplifiedmns.h"
-#include "specialtx.h"
+#include <evo/cbtx.h>
+#include <evo/deterministicmns.h>
+#include <llmq/quorums.h>
+#include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_commitment.h>
+#include <evo/simplifiedmns.h>
+#include <evo/specialtx.h>
 
-#include "chainparams.h"
-#include "consensus/merkle.h"
-#include "univalue.h"
-#include "validation.h"
+#include <chainparams.h>
+#include <consensus/merkle.h>
+#include <univalue.h>
+#include <validation.h>
 
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {

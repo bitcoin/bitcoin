@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "walletframe.h"
+#include <qt/walletframe.h>
 
-#include "bitcoingui.h"
-#include "walletview.h"
+#include <qt/bitcoingui.h>
+#include <qt/walletview.h>
 
 #include <cassert>
 #include <cstdio>

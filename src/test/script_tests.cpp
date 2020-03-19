@@ -2,20 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "data/script_tests.json.h"
+#include <test/data/script_tests.json.h>
 
-#include "core_io.h"
-#include "key.h"
-#include "keystore.h"
-#include "script/script.h"
-#include "script/script_error.h"
-#include "script/sign.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "test/test_dash.h"
+#include <core_io.h>
+#include <key.h>
+#include <keystore.h>
+#include <script/script.h>
+#include <script/script_error.h>
+#include <script/sign.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <test/test_dash.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
-#include "script/dashconsensus.h"
+#include <script/dashconsensus.h>
 #endif
 
 #include <fstream>

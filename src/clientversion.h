@@ -6,7 +6,7 @@
 #define BITCOIN_CLIENTVERSION_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include <config/dash-config.h>
 #endif //HAVE_CONFIG_H
 
 // Check that required client information is defined

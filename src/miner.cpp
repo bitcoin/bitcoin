@@ -4,39 +4,39 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "miner.h"
+#include <miner.h>
 
-#include "amount.h"
-#include "chain.h"
-#include "chainparams.h"
-#include "coins.h"
-#include "consensus/consensus.h"
-#include "consensus/tx_verify.h"
-#include "consensus/merkle.h"
-#include "consensus/validation.h"
-#include "hash.h"
-#include "validation.h"
-#include "net.h"
-#include "policy/feerate.h"
-#include "policy/policy.h"
-#include "pow.h"
-#include "primitives/transaction.h"
-#include "script/standard.h"
-#include "timedata.h"
-#include "txmempool.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "masternode/masternode-payments.h"
-#include "masternode/masternode-sync.h"
-#include "validationinterface.h"
+#include <amount.h>
+#include <chain.h>
+#include <chainparams.h>
+#include <coins.h>
+#include <consensus/consensus.h>
+#include <consensus/tx_verify.h>
+#include <consensus/merkle.h>
+#include <consensus/validation.h>
+#include <hash.h>
+#include <validation.h>
+#include <net.h>
+#include <policy/feerate.h>
+#include <policy/policy.h>
+#include <pow.h>
+#include <primitives/transaction.h>
+#include <script/standard.h>
+#include <timedata.h>
+#include <txmempool.h>
+#include <util.h>
+#include <utilmoneystr.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
+#include <validationinterface.h>
 
-#include "evo/specialtx.h"
-#include "evo/cbtx.h"
-#include "evo/simplifiedmns.h"
-#include "evo/deterministicmns.h"
+#include <evo/specialtx.h>
+#include <evo/cbtx.h>
+#include <evo/simplifiedmns.h>
+#include <evo/deterministicmns.h>
 
-#include "llmq/quorums_blockprocessor.h"
-#include "llmq/quorums_chainlocks.h"
+#include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_chainlocks.h>
 
 #include <algorithm>
 #include <queue>

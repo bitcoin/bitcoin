@@ -6,10 +6,10 @@
 #ifndef BITCOIN_WALLET_WALLETDB_H
 #define BITCOIN_WALLET_WALLETDB_H
 
-#include "amount.h"
-#include "wallet/db.h"
-#include "hdchain.h"
-#include "key.h"
+#include <amount.h>
+#include <wallet/db.h>
+#include <hdchain.h>
+#include <key.h>
 
 #include <list>
 #include <stdint.h>

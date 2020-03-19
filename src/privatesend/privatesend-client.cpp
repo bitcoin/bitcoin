@@ -2,21 +2,21 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "privatesend-client.h"
+#include <privatesend/privatesend-client.h>
 
-#include "consensus/validation.h"
-#include "core_io.h"
-#include "init.h"
-#include "masternode/masternode-payments.h"
-#include "masternode/masternode-sync.h"
-#include "masternode/masternode-meta.h"
-#include "netmessagemaker.h"
-#include "script/sign.h"
-#include "txmempool.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "validation.h"
-#include "wallet/coincontrol.h"
+#include <consensus/validation.h>
+#include <core_io.h>
+#include <init.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
+#include <masternode/masternode-meta.h>
+#include <netmessagemaker.h>
+#include <script/sign.h>
+#include <txmempool.h>
+#include <util.h>
+#include <utilmoneystr.h>
+#include <validation.h>
+#include <wallet/coincontrol.h>
 
 #include <memory>
 #include <univalue.h>

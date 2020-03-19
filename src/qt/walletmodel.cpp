@@ -3,31 +3,31 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "walletmodel.h"
+#include <qt/walletmodel.h>
 
-#include "addresstablemodel.h"
-#include "consensus/validation.h"
-#include "guiconstants.h"
-#include "guiutil.h"
-#include "paymentserver.h"
-#include "recentrequeststablemodel.h"
-#include "transactiontablemodel.h"
+#include <qt/addresstablemodel.h>
+#include <consensus/validation.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
+#include <qt/paymentserver.h>
+#include <qt/recentrequeststablemodel.h>
+#include <qt/transactiontablemodel.h>
 
-#include "base58.h"
-#include "chain.h"
-#include "keystore.h"
-#include "validation.h"
-#include "net.h" // for g_connman
-#include "sync.h"
-#include "ui_interface.h"
-#include "util.h" // for GetBoolArg
-#include "wallet/coincontrol.h"
-#include "wallet/wallet.h"
-#include "wallet/walletdb.h" // for BackupWallet
+#include <base58.h>
+#include <chain.h>
+#include <keystore.h>
+#include <validation.h>
+#include <net.h> // for g_connman
+#include <sync.h>
+#include <ui_interface.h>
+#include <util.h> // for GetBoolArg
+#include <wallet/coincontrol.h>
+#include <wallet/wallet.h>
+#include <wallet/walletdb.h> // for BackupWallet
 
-#include "spork.h"
-#include "privatesend/privatesend-client.h"
-#include "llmq/quorums_instantsend.h"
+#include <spork.h>
+#include <privatesend/privatesend-client.h>
+#include <llmq/quorums_instantsend.h>
 
 #include <stdint.h>
 

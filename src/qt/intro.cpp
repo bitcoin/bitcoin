@@ -4,16 +4,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include <config/dash-config.h>
 #endif
 
-#include "fs.h"
-#include "intro.h"
-#include "ui_intro.h"
+#include <fs.h>
+#include <qt/intro.h>
+#include <qt/forms/ui_intro.h>
 
-#include "guiutil.h"
+#include <qt/guiutil.h>
 
-#include "util.h"
+#include <util.h>
 
 #include <QFileDialog>
 #include <QSettings>
@@ -61,7 +61,7 @@ private:
     Intro *intro;
 };
 
-#include "intro.moc"
+#include <qt/intro.moc>
 
 FreespaceChecker::FreespaceChecker(Intro *_intro)
 {

@@ -2,20 +2,20 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "quorums_init.h"
+#include <llmq/quorums_init.h>
 
-#include "quorums.h"
-#include "quorums_blockprocessor.h"
-#include "quorums_commitment.h"
-#include "quorums_chainlocks.h"
-#include "quorums_debug.h"
-#include "quorums_dkgsessionmgr.h"
-#include "quorums_instantsend.h"
-#include "quorums_signing.h"
-#include "quorums_signing_shares.h"
+#include <llmq/quorums.h>
+#include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_commitment.h>
+#include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_debug.h>
+#include <llmq/quorums_dkgsessionmgr.h>
+#include <llmq/quorums_instantsend.h>
+#include <llmq/quorums_signing.h>
+#include <llmq/quorums_signing_shares.h>
 
-#include "dbwrapper.h"
-#include "scheduler.h"
+#include <dbwrapper.h>
+#include <scheduler.h>
 
 namespace llmq
 {

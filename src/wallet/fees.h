@@ -6,7 +6,7 @@
 #ifndef BITCOIN_WALLET_FEES_H
 #define BITCOIN_WALLET_FEES_H
 
-#include "amount.h"
+#include <amount.h>
 
 class CBlockPolicyEstimator;
 class CCoinControl;

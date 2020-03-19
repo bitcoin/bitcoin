@@ -2,20 +2,20 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "quorums_blockprocessor.h"
-#include "quorums_commitment.h"
-#include "quorums_debug.h"
-#include "quorums_utils.h"
+#include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_commitment.h>
+#include <llmq/quorums_debug.h>
+#include <llmq/quorums_utils.h>
 
-#include "evo/specialtx.h"
+#include <evo/specialtx.h>
 
-#include "chain.h"
-#include "chainparams.h"
-#include "consensus/validation.h"
-#include "net.h"
-#include "net_processing.h"
-#include "primitives/block.h"
-#include "validation.h"
+#include <chain.h>
+#include <chainparams.h>
+#include <consensus/validation.h>
+#include <net.h>
+#include <net_processing.h>
+#include <primitives/block.h>
+#include <validation.h>
 
 namespace llmq
 {

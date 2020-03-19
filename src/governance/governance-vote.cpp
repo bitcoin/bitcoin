@@ -2,14 +2,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "governance-vote.h"
-#include "governance-object.h"
-#include "masternode/masternode-sync.h"
-#include "messagesigner.h"
-#include "spork.h"
-#include "util.h"
+#include <governance/governance-vote.h>
+#include <governance/governance-object.h>
+#include <masternode/masternode-sync.h>
+#include <messagesigner.h>
+#include <spork.h>
+#include <util.h>
 
-#include "evo/deterministicmns.h"
+#include <evo/deterministicmns.h>
 
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {

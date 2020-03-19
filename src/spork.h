@@ -5,10 +5,10 @@
 #ifndef SPORK_H
 #define SPORK_H
 
-#include "hash.h"
-#include "net.h"
-#include "utilstrencodings.h"
-#include "key.h"
+#include <hash.h>
+#include <net.h>
+#include <utilstrencodings.h>
+#include <key.h>
 
 #include <unordered_map>
 #include <unordered_set>

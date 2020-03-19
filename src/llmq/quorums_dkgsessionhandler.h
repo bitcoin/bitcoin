@@ -5,11 +5,11 @@
 #ifndef DASH_QUORUMS_DKGSESSIONHANDLER_H
 #define DASH_QUORUMS_DKGSESSIONHANDLER_H
 
-#include "llmq/quorums_dkgsession.h"
+#include <llmq/quorums_dkgsession.h>
 
-#include "validation.h"
+#include <validation.h>
 
-#include "ctpl.h"
+#include <ctpl.h>
 
 namespace llmq
 {

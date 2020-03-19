@@ -6,8 +6,8 @@
 #ifndef BITCOIN_ADDRESSINDEX_H
 #define BITCOIN_ADDRESSINDEX_H
 
-#include "uint256.h"
-#include "amount.h"
+#include <uint256.h>
+#include <amount.h>
 
 struct CMempoolAddressDelta
 {

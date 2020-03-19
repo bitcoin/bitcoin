@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "evodb.h"
+#include <evo/evodb.h>
 
 std::unique_ptr<CEvoDB> evoDb;
 

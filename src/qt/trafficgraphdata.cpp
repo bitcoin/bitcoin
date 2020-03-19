@@ -1,4 +1,4 @@
-#include "trafficgraphdata.h"
+#include <qt/trafficgraphdata.h>
 
 const int TrafficGraphData::RangeMinutes[] = {5,10,15,30,60,120,180,360,720,1440};
 const int TrafficGraphData::DESIRED_DATA_SAMPLES = 800;

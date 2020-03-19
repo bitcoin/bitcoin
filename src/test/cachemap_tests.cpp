@@ -1,8 +1,8 @@
 // Copyright (c) 2014-2019 The Dash Core developers
 
-#include "cachemap.h"
+#include <cachemap.h>
 
-#include "test/test_dash.h"
+#include <test/test_dash.h>
 
 #include <boost/test/unit_test.hpp>
 

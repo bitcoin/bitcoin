@@ -5,9 +5,9 @@
 #ifndef MASTERNODE_META_H
 #define MASTERNODE_META_H
 
-#include "serialize.h"
+#include <serialize.h>
 
-#include "evo/deterministicmns.h"
+#include <evo/deterministicmns.h>
 
 #include <memory>
 

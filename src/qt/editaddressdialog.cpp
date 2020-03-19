@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "editaddressdialog.h"
-#include "ui_editaddressdialog.h"
+#include <qt/editaddressdialog.h>
+#include <qt/forms/ui_editaddressdialog.h>
 
-#include "addresstablemodel.h"
-#include "guiutil.h"
+#include <qt/addresstablemodel.h>
+#include <qt/guiutil.h>
 
 #include <QDataWidgetMapper>
 #include <QMessageBox>

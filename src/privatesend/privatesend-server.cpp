@@ -2,23 +2,23 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "privatesend-server.h"
+#include <privatesend/privatesend-server.h>
 
-#include "masternode/activemasternode.h"
-#include "consensus/validation.h"
-#include "core_io.h"
-#include "init.h"
-#include "masternode/masternode-meta.h"
-#include "masternode/masternode-sync.h"
-#include "net_processing.h"
-#include "netmessagemaker.h"
-#include "script/interpreter.h"
-#include "txmempool.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "validation.h"
+#include <masternode/activemasternode.h>
+#include <consensus/validation.h>
+#include <core_io.h>
+#include <init.h>
+#include <masternode/masternode-meta.h>
+#include <masternode/masternode-sync.h>
+#include <net_processing.h>
+#include <netmessagemaker.h>
+#include <script/interpreter.h>
+#include <txmempool.h>
+#include <util.h>
+#include <utilmoneystr.h>
+#include <validation.h>
 
-#include "llmq/quorums_instantsend.h"
+#include <llmq/quorums_instantsend.h>
 
 #include <univalue.h>
 

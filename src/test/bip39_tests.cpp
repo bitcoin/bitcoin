@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "data/bip39_vectors.json.h"
-#include "key.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "test/test_dash.h"
-#include "bip39.h"
+#include <base58.h>
+#include <test/data/bip39_vectors.json.h>
+#include <key.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <test/test_dash.h>
+#include <bip39.h>
 
 #include <boost/test/unit_test.hpp>
 

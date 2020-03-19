@@ -2,22 +2,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_dash.h"
+#include <test/test_dash.h>
 
-#include "script/interpreter.h"
-#include "script/standard.h"
-#include "script/sign.h"
-#include "validation.h"
-#include "base58.h"
-#include "netbase.h"
-#include "messagesigner.h"
-#include "policy/policy.h"
-#include "keystore.h"
-#include "spork.h"
+#include <script/interpreter.h>
+#include <script/standard.h>
+#include <script/sign.h>
+#include <validation.h>
+#include <base58.h>
+#include <netbase.h>
+#include <messagesigner.h>
+#include <policy/policy.h>
+#include <keystore.h>
+#include <spork.h>
 
-#include "evo/specialtx.h"
-#include "evo/providertx.h"
-#include "evo/deterministicmns.h"
+#include <evo/specialtx.h>
+#include <evo/providertx.h>
+#include <evo/deterministicmns.h>
 
 #include <boost/test/unit_test.hpp>
 

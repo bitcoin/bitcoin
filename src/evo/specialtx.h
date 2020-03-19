@@ -5,9 +5,9 @@
 #ifndef DASH_SPECIALTX_H
 #define DASH_SPECIALTX_H
 
-#include "primitives/transaction.h"
-#include "streams.h"
-#include "version.h"
+#include <primitives/transaction.h>
+#include <streams.h>
+#include <version.h>
 
 class CBlock;
 class CBlockIndex;

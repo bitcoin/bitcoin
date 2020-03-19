@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include "assert.h"
+#include <assert.h>
 
 class scriptnum10_error : public std::runtime_error
 {

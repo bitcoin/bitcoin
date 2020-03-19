@@ -6,8 +6,8 @@
 #ifndef BITCOIN_QT_CLIENTMODEL_H
 #define BITCOIN_QT_CLIENTMODEL_H
 
-#include "evo/deterministicmns.h"
-#include "sync.h"
+#include <evo/deterministicmns.h>
+#include <sync.h>
 
 #include <QObject>
 #include <QDateTime>

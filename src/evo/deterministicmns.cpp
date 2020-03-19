@@ -2,19 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "deterministicmns.h"
-#include "specialtx.h"
+#include <evo/deterministicmns.h>
+#include <evo/specialtx.h>
 
-#include "base58.h"
-#include "chainparams.h"
-#include "core_io.h"
-#include "script/standard.h"
-#include "ui_interface.h"
-#include "validation.h"
-#include "validationinterface.h"
+#include <base58.h>
+#include <chainparams.h>
+#include <core_io.h>
+#include <script/standard.h>
+#include <ui_interface.h>
+#include <validation.h>
+#include <validationinterface.h>
 
-#include "llmq/quorums_commitment.h"
-#include "llmq/quorums_utils.h"
+#include <llmq/quorums_commitment.h>
+#include <llmq/quorums_utils.h>
 
 #include <univalue.h>
 

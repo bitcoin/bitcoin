@@ -2,11 +2,11 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "governance-classes.h"
-#include "core_io.h"
-#include "init.h"
-#include "utilstrencodings.h"
-#include "validation.h"
+#include <governance/governance-classes.h>
+#include <core_io.h>
+#include <init.h>
+#include <utilstrencodings.h>
+#include <validation.h>
 
 #include <boost/algorithm/string.hpp>
 

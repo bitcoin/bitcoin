@@ -5,9 +5,9 @@
 #ifndef DASH_QUORUMS_DEBUG_H
 #define DASH_QUORUMS_DEBUG_H
 
-#include "consensus/params.h"
-#include "sync.h"
-#include "univalue.h"
+#include <consensus/params.h>
+#include <sync.h>
+#include <univalue.h>
 
 #include <set>
 

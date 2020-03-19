@@ -5,11 +5,11 @@
 #ifndef DASH_QUORUMS_DKGSESSIONMGR_H
 #define DASH_QUORUMS_DKGSESSIONMGR_H
 
-#include "llmq/quorums_dkgsessionhandler.h"
+#include <llmq/quorums_dkgsessionhandler.h>
 
-#include "validation.h"
+#include <validation.h>
 
-#include "ctpl.h"
+#include <ctpl.h>
 
 class UniValue;
 

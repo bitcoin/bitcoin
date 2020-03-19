@@ -5,12 +5,12 @@
 #ifndef DASH_SIMPLIFIEDMNS_H
 #define DASH_SIMPLIFIEDMNS_H
 
-#include "bls/bls.h"
-#include "merkleblock.h"
-#include "netaddress.h"
-#include "pubkey.h"
-#include "serialize.h"
-#include "version.h"
+#include <bls/bls.h>
+#include <merkleblock.h>
+#include <netaddress.h>
+#include <pubkey.h>
+#include <serialize.h>
+#include <version.h>
 
 class UniValue;
 class CDeterministicMNList;

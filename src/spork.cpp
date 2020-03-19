@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "spork.h"
+#include <spork.h>
 
-#include "base58.h"
-#include "chainparams.h"
-#include "validation.h"
-#include "messagesigner.h"
-#include "net_processing.h"
-#include "netmessagemaker.h"
+#include <base58.h>
+#include <chainparams.h>
+#include <validation.h>
+#include <messagesigner.h>
+#include <net_processing.h>
+#include <netmessagemaker.h>
 
 #include <string>
 

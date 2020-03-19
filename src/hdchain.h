@@ -3,8 +3,8 @@
 #ifndef DASH_HDCHAIN_H
 #define DASH_HDCHAIN_H
 
-#include "key.h"
-#include "sync.h"
+#include <key.h>
+#include <sync.h>
 
 /* hd account data model */
 class CHDAccount
