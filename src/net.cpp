@@ -25,6 +25,7 @@
 #include <utilstrencodings.h>
 #include <validation.h>
 
+#include <masternode/masternode-meta.h>
 #include <masternode/masternode-sync.h>
 #include <privatesend/privatesend.h>
 #include <evo/deterministicmns.h>
@@ -2149,9 +2150,9 @@ void CConnman::ThreadOpenMasternodeConnections()
                         }
                         const auto& addr2 = dmn->pdmnState->addr;
                         if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
-                            auto addrInfo = addrman.GetAddressInfo(addr2);
+                            int64_t lastAttempt = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastOutboundAttempt();
                             // back off trying connecting to an address if we already tried recently
-                            if (addrInfo.IsValid() && nANow - addrInfo.nLastTry < 60) {
+                            if (nANow - lastAttempt < 60) {
                                 continue;
                             }
                             pending.emplace_back(dmn);
@@ -2169,6 +2170,8 @@ void CConnman::ThreadOpenMasternodeConnections()
         if (!connectToDmn) {
             continue;
         }
+
+        mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundAttempt(nANow);
 
         OpenMasternodeConnection(CAddress(connectToDmn->pdmnState->addr, NODE_NETWORK));
         // should be in the list now if connection was opened
