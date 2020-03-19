@@ -1273,7 +1273,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
             }
-            if (theAsset.nBalance > theAsset.nMaxSupply || theAsset.nBalance <= 0)
+            if (theAsset.nBalance > theAsset.nMaxSupply || (theAsset.nBalance <= 0 && nHeight >= Params().GetConsensus().nDeterministicAssetStartBlock))
             {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bSanityCheck);
             }
