@@ -17,10 +17,13 @@ gpg --refresh-keys
 ```
 
 To fetch keys of Gitian builders and active developers, feed the list of
-fingerprints of the primary keys into gpg:
+fingerprints of the primary keys into gpg.
+
+Two different keyservers are used to make sure the latest version of the key is fetched.
 
 ```sh
-while read fingerprint keyholder_name; do gpg --keyserver hkp://subset.pool.sks-keyservers.net --recv-keys ${fingerprint}; done < ./keys.txt
+while read fingerprint keyholder_name; do gpg --keyserver hkps://keys.openpgp.org    --recv-keys ${fingerprint}; done < ./keys.txt
+while read fingerprint keyholder_name; do gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys ${fingerprint}; done < ./keys.txt
 ```
 
 Add your key to the list if you provided Gitian signatures for two major or
