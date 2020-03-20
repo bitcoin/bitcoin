@@ -129,7 +129,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     const size_t &itemCount = rlpReceiptLogsValue.itemCount();
     // just sanity checks for bounds
-    if(nHeight >= Params().GetConsensus().nDeterministicAssetStartBlock) {
+    if(nHeight >= Params().GetConsensus().nERC20StartBlock) {
         if (itemCount < 1 || itemCount > 10){
             return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-logs-count", bSanityCheck);
         }
