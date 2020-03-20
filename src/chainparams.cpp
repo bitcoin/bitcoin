@@ -271,7 +271,7 @@ public:
         consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
         consensus.vchTokenFreezeMethod = ParseHex("aabab1db49e504b5156edf3f99042aeecb9607a08f392589571cd49743aaba8d");
         consensus.nBridgeStartBlock = 1000;
-        consensus.nDeterministicAssetStartBlock = 125000;
+        consensus.nDeterministicAssetStartBlock = 80000;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
         pchMessageStart[2] = 0xca;
