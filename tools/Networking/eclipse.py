@@ -23,6 +23,15 @@ successful_IPs = []
 
 
 def initialize_connection(ip):
+	sport = pkt[TCP].sport
+	dport = pkt[TCP].dport
+	seq = pkt[TCP].seq
+	ack = pkt[TCP].ack
+
+	ip = IP(src = '10.0.2.12', dst = '10.0.2.7')
+	tcp = TCP(sport=sport, dport=dport, flags='PA', seq=seq, ack =ack)
+	
+	new_packet = ip/tcp/pld_VERSION
 	pass
 
 def packet_received(packet):
@@ -40,7 +49,7 @@ def packet_received(packet):
 	#if not packet[IP].dst in unprocessed_IPs:
 	#	return
 
-	packet.show()
+	#packet.show()
 	#packet.show2()
 	msgtype = packet.load[4:16].decode()
 	#print(packet.dst)
