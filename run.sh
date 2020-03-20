@@ -5,13 +5,16 @@ then
     cd ..
 fi
 
-if [ -d "/media/sf_Bitcoin" ]
+if [ -d "/media/sf_Bitcoin/" ]
 then
+	echo "datadir = /media/sf_Bitcoin"
     src/bitcoind -datadir=/media/sf_Bitcoin/ -debug=researcher # Virtual machine shared folder
-elif [ -d "/media/sf_Bitcoin" ]
+elif [ -d "/media/sim/BITCOIN/" ]
 then
+	echo "datadir = /media/sim/BITCOIN/"
     src/bitcoind -datadir=/media/sim/BITCOIN/ -debug=researcher
 else
+	echo "datadir = ~/.bitcoin"
     echo "Running without blockchain (keeping only 550 blocks)"
     src/bitcoind -debug=researcher -prune=550
 fi
