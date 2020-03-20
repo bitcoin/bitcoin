@@ -43,6 +43,7 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QSettings>
+#include <QString>
 #include <QThread>
 #include <QTimer>
 #include <QTranslator>
@@ -396,6 +397,7 @@ WId BitcoinApplication::getMainWinId() const
 static void SetupUIArgs()
 {
     gArgs.AddArg("-choosedatadir", strprintf("Choose data directory on startup (default: %u)", DEFAULT_CHOOSE_DATADIR), ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
+    gArgs.AddArg("-guisettingsdir=<path>", "Choose a custom data directory especially for the Qt Settings", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
     gArgs.AddArg("-lang=<lang>", "Set language, for example \"de_DE\" (default: system locale)", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
     gArgs.AddArg("-min", "Start minimized", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
     gArgs.AddArg("-resetguisettings", "Reset all settings changed in the GUI", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
@@ -469,6 +471,11 @@ int GuiMain(int argc, char* argv[])
     QApplication::setOrganizationName(QAPP_ORG_NAME);
     QApplication::setOrganizationDomain(QAPP_ORG_DOMAIN);
     QApplication::setApplicationName(QAPP_APP_NAME_DEFAULT);
+    const std::string qt_settings_path = gArgs.GetArg("-guisettingsdir", "");
+    if (!qt_settings_path.empty()) {
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QString::fromStdString(qt_settings_path));
+    }
 
     /// 4. Initialization of translations, so that intro dialog is in user's language
     // Now that QSettings are accessible, initialize translations
@@ -489,6 +496,21 @@ int GuiMain(int argc, char* argv[])
     bool prune = false; // Intro dialog prune check box
     // Gracefully exit if the user cancels
     if (!Intro::showIfNeeded(*node, did_show_intro, prune)) return EXIT_SUCCESS;
+    // Now check if the custom config files are accecible
+    // If you run Bitcoin Qt the first time (no datadir) it will simply create the config files at that location
+    if(!qt_settings_path.empty()) {
+        QSettings settings;
+        std::string settingspath = settings.fileName().toUtf8().constData();
+        // TODO: After C++17 move, port this to std::filesystem
+        std::fstream f;
+        f.open(settingspath.c_str());
+        // File could not be opened
+        if (f.fail()) {
+            QMessageBox::critical(nullptr, PACKAGE_NAME,
+                QObject::tr("Error: Cannot open config file at \"%1\"").arg(QString::fromStdString(qt_settings_path)));
+            return EXIT_FAILURE;
+        }
+    }
 
     /// 6. Determine availability of data directory and parse bitcoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
