@@ -707,6 +707,7 @@ public:
     CAddress addrBind;
     // In case this is a verified MN, this value is the proTx of the MN
     uint256 verifiedProRegTxHash;
+    bool fMasternode;
 };
 
 
