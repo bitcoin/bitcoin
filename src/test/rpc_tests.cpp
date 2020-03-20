@@ -335,6 +335,18 @@ BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
     BOOST_CHECK_EQUAL(result[2].get_int(), 9);
 }
 
+BOOST_AUTO_TEST_CASE(rpc_convert_named_values_generatetoaddress)
+{
+    UniValue result;
+
+    BOOST_CHECK_NO_THROW(result = RPCConvertNamedValues("generatetoaddress", { "nblocks=10", "address=2N7xz1EnWubTbQmWFcVpCvT2RwKeDuzWr5g", "maxtries=50" }));
+    BOOST_CHECK_EQUAL(result[0].get_int(), 10);
+    BOOST_CHECK_EQUAL(result[1].get_str(), "2N7xz1EnWubTbQmWFcVpCvT2RwKeDuzWr5g");
+    BOOST_CHECK_EQUAL(result[2].get_int(), 50);
+    // Throws an exception when the receiving address is missing.
+    BOOST_CHECK_THROW(RPCConvertNamedValues("generatetoaddress", { "nblocks=10", "address" }), std::runtime_error);
+}
+
 BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
 {
     int64_t total_weight = 200;
