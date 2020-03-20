@@ -6,14 +6,14 @@ import readline
 
 
 
-datadir = '/media/sim/BITCOIN/' # Virtual machine shared folder
+datadir = '' # Virtual machine shared folder
 if os.path.exists('/media/sf_Bitcoin'):
-	datadir = '/media/sf_Bitcoin' # Virtual machine shared folder
-elif os.path.exists('../blocks'):
-	datadir = '..' # Super computer shared folder
+	datadir = ' -datadir=/media/sf_Bitcoin' # Virtual machine shared folder
+elif os.path.exists('/media/sim/BITCOIN'):
+	datadir = ' -datadir=/media/sim/BITCOIN'
 
 def bitcoin(cmd):
-	return os.popen(f'src/bitcoin-cli -datadir={datadir} {cmd}').read()
+	return os.popen(f'src/bitcoin-cli{datadir} {cmd}').read()
 
 
 def console(width):
@@ -22,7 +22,7 @@ def console(width):
 	print('Bitcoin Console'.center(width))
 	print('-' * width)
 	count = 1
-	commands = {}
+	lastCmd = ''
 	while True:
 		numTimes = 1
 		cmd = input(str(count).ljust(4) + '>   ')
@@ -32,15 +32,11 @@ def console(width):
 			numTimes = int(cmds[1])
 
 		if len(cmd) == 0:
-			cmd = count - 1
+			cmd = lastCmd
+
 		elif cmd == 'clear':
 			os.system('clear')
 			continue
-		elif re.match(r'^[0-9]+$', cmd):
-			cmd = int(cmd)
-		if(cmd in commands):
-			cmd = commands[cmd]
-			print('    >   ' + cmd)
 		elif str(cmd).endswith('*'): # Infinite loop
 			cmd = str(cmd[:-1])
 			print(cmd)
@@ -49,7 +45,7 @@ def console(width):
 			return
 		else:
 			cmd = str(cmd)
-			commands[count] = cmd
+			lastCmd = cmd
 			count += 1
 		print()
 

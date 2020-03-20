@@ -8,9 +8,10 @@ fi
 if [ -d "/media/sf_Bitcoin" ]
 then
     src/bitcoind -datadir=/media/sf_Bitcoin/ -debug=researcher # Virtual machine shared folder
-elif [ -d "../blocks" ]
+elif [ -d "/media/sf_Bitcoin" ]
 then
-    src/bitcoind -datadir=.. -debug=researcher # Super computer shared folder
-else
     src/bitcoind -datadir=/media/sim/BITCOIN/ -debug=researcher
+else
+    echo "Running without blockchain (keeping only 550 blocks)"
+    src/bitcoind -debug=researcher -prune=550
 fi
