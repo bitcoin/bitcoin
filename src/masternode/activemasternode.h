@@ -52,7 +52,7 @@ private:
 public:
     virtual void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload);
 
-    void Init();
+    void Init(const CBlockIndex* pindex);
 
     std::string GetStateString() const;
     std::string GetStatus() const;
