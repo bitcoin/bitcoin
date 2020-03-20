@@ -39,8 +39,68 @@ UniValue CallRPC(std::string args)
     }
 }
 
-
 BOOST_FIXTURE_TEST_SUITE(rpc_tests, TestingSetup)
+
+BOOST_AUTO_TEST_CASE(rpc_object_parsing)
+{
+    UniValue r;
+    JSONRPCRequest jsonrpcrequest;
+    UniValue request(UniValue::VOBJ);
+    UniValue params(UniValue::VARR);
+    UniValue id(1);
+    request.pushKV("method", "getnetworkinfo");
+    request.pushKV("params", NullUniValue);
+    request.pushKV("id", id);
+    // Should parse valid request object.
+    BOOST_CHECK_NO_THROW(jsonrpcrequest.parse(request));
+    // Should construct valid request object.
+    BOOST_CHECK_NO_THROW(r = JSONRPCRequestObj("getnetworkinfo", params, id));
+    
+    const UniValue result(100);
+    r = JSONRPCReplyObj(result, NullUniValue, id);
+    auto queried_result = find_value(r, "result");
+    // Should construct valid reply object containing "result" field
+    // when given error-object is NullUniValue.
+    BOOST_CHECK_EQUAL(queried_result.get_int(), 100);
+    
+    const UniValue error(UniValue::VSTR, "ERROR");
+    r = JSONRPCReplyObj(result, error, id);
+    std::string queried_error;
+    // Should construct valid reply object containing "error" field
+    // when given error-object is not NullUniValue.
+    BOOST_CHECK_NO_THROW(queried_error = r["error"].get_str());
+    // Should return the message from object's "error" field.
+    BOOST_CHECK_EQUAL(queried_error, "ERROR");
+
+    int error_code = 23;
+    int returned_code;
+    // Should construct a valid error object.
+    BOOST_CHECK_NO_THROW(r = JSONRPCError(error_code, "This is an error message"));
+    // Should return an error code.
+    BOOST_CHECK_NO_THROW(returned_code = r["code"].get_int());
+    // Should have returned the original error code.
+    BOOST_CHECK_EQUAL(returned_code, error_code);
+
+    std::string json_string;
+    // Should return a serialized object.
+    BOOST_CHECK_NO_THROW(json_string = JSONRPCReply(request, NullUniValue, id));
+    // Should have returned a non-empty string.
+    BOOST_CHECK(json_string.length() > 0);
+
+    UniValue a_batch(UniValue::VARR);
+    UniValue one = JSONRPCReplyObj(UniValue("result_1"), NullUniValue, UniValue(UniValue::VNUM, "1"));
+    UniValue two = JSONRPCReplyObj(UniValue("result_2"), NullUniValue, UniValue(UniValue::VNUM, "2"));
+    UniValue three = JSONRPCReplyObj(UniValue("result_3"), NullUniValue, UniValue(UniValue::VNUM, "3"));
+
+    a_batch.push_back(one);
+    a_batch.push_back(two);
+    a_batch.push_back(three);
+    std::vector<UniValue> jsons;
+    // Should return a vector of UniValue objects
+    BOOST_CHECK_NO_THROW(jsons = JSONRPCProcessBatchReply(a_batch, 4));
+    // Should have returned a vector that is not empty
+    BOOST_CHECK(jsons.size() > 0);
+}
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
 {
