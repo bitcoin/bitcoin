@@ -45,7 +45,8 @@ def spoof(src_ip, dst_ip):
 	dst_port = victim_port
 
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
-	s = socket.socket()
+	s = socket.socket()#socket.AF_INET, socket.SOCK_STREAM)
+	#s.bind((src_ip, 0))
 	s.connect((dst_ip, dst_port))
 	# Send version packet
 	s.send(version_pkt(src_ip, dst_ip, dst_port).to_bytes())
@@ -61,7 +62,7 @@ def spoof(src_ip, dst_ip):
 
 	print('\n\n*** ')
 	print('CONNECTION ESTABLISHED')
-	
+
 	time.sleep(5)
 	s.close()
 
