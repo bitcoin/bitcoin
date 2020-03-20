@@ -1,0 +1,11 @@
+*.sw?
+*.pyc
+
+local*.cfg
+
+.coverage
+.tox/
+build/
+htmlcov/
+python_bitcoinlib.egg-info/
+dist/
