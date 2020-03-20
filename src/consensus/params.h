@@ -55,6 +55,7 @@ struct Params {
     double nSeniorityLevel2;
     int nBridgeStartBlock;
     int nDeterministicAssetStartBlock;
+    int nERC20StartBlock;
         
     int nSuperblockStartBlock;
     int nSuperblockCycle; // in blocks
