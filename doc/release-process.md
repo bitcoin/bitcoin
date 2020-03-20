@@ -69,24 +69,24 @@ Check out the source code in the following directory hierarchy.
 
 ### Write the release notes
 
-Open a draft of the release notes for collaborative editing at https://github.com/bitcoin-core/bitcoin-devwiki/wiki.
+Open a draft of the release notes for collaborative editing at https://github.com/syscoin-core/syscoin-devwiki/wiki.
 
 For the period during which the notes are being edited on the wiki, the version on the branch should be wiped and replaced with a link to the wiki which should be used for all announcements until `-final`.
 
 Write the release notes. `git shortlog` helps a lot, for example:
 
-    git shortlog --no-merges v(current version, e.g. 0.19.2)..v(new version, e.g. 0.20.0)
+    git shortlog --no-merges v(current version, e.g. 0.19.2)..v(new version, e.g. 4.1.3)
 
 (or ping @wumpus on IRC, he has specific tooling to generate the list of merged pulls
 and sort them into categories based on labels).
 
 Generate list of authors:
 
-    git log --format='- %aN' v(current version, e.g. 0.20.0)..v(new version, e.g. 0.20.1) | sort -fiu
+    git log --format='- %aN' v(current version, e.g. 4.1.3)..v(new version, e.g. 4.1.3) | sort -fiu
 
 Tag the version (or release candidate) in git:
 
-    git tag -s v(new version, e.g. 0.20.0)
+    git tag -s v(new version, e.g. 4.1.3)
 
 ### Setup and perform Gitian builds
 
@@ -96,7 +96,7 @@ Setup Gitian descriptors:
 
     pushd ./syscoin
     export SIGNER="(your Gitian key, ie bluematt, sipa, etc)"
-    export VERSION=(new version, e.g. 0.20.0)
+    export VERSION=(new version, e.g. 4.1.3)
     git fetch
     git checkout v${VERSION}
     popd
