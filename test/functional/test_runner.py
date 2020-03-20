@@ -19,9 +19,8 @@ import datetime
 import os
 import time
 import shutil
-import signal
-import sys
 import subprocess
+import sys
 import tempfile
 import re
 import logging
@@ -366,11 +365,10 @@ def main():
         args=passon_args,
         combined_logs_len=args.combinedlogslen,
         failfast=args.failfast,
-        runs_ci=args.ci,
         use_term_control=args.ansi,
     )
 
-def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, runs_ci, use_term_control):
+def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control):
     args = args or []
 
     # Warn if bitcoind is already running
@@ -412,7 +410,6 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
         tmpdir=tmpdir,
         test_list=test_list,
         flags=flags,
-        timeout_duration=40 * 60 if runs_ci else float('inf'),  # in seconds
         use_term_control=use_term_control,
     )
     start_time = time.time()
@@ -497,12 +494,11 @@ class TestHandler:
     Trigger the test scripts passed in via the list.
     """
 
-    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, timeout_duration, use_term_control):
+    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, use_term_control):
         assert num_tests_parallel >= 1
         self.num_jobs = num_tests_parallel
         self.tests_dir = tests_dir
         self.tmpdir = tmpdir
-        self.timeout_duration = timeout_duration
         self.test_list = test_list
         self.flags = flags
         self.num_running = 0
@@ -543,10 +539,6 @@ class TestHandler:
             time.sleep(.5)
             for job in self.jobs:
                 (name, start_time, proc, testdir, log_out, log_err) = job
-                if int(time.time() - start_time) > self.timeout_duration:
-                    # Timeout individual tests if timeout is specified (to stop
-                    # tests hanging and not providing useful output).
-                    proc.send_signal(signal.SIGINT)
                 if proc.poll() is not None:
                     log_out.seek(0), log_err.seek(0)
                     [stdout, stderr] = [log_file.read().decode('utf-8') for log_file in (log_out, log_err)]
