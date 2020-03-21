@@ -270,7 +270,7 @@ static UniValue waitforblock(const JSONRPCRequest& request)
                         {RPCResult::Type::NUM, "height", "Block height"},
                     }},
                 RPCExamples{
-                    HelpExampleCli("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\", 1000")
+                    HelpExampleCli("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\" 1000")
             + HelpExampleRpc("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\", 1000")
                 },
             }.Check(request);
@@ -314,8 +314,8 @@ static UniValue waitforblockheight(const JSONRPCRequest& request)
                         {RPCResult::Type::NUM, "height", "Block height"},
                     }},
                 RPCExamples{
-                    HelpExampleCli("waitforblockheight", "\"100\", 1000")
-            + HelpExampleRpc("waitforblockheight", "\"100\", 1000")
+                    HelpExampleCli("waitforblockheight", "100 1000")
+            + HelpExampleRpc("waitforblockheight", "100, 1000")
                 },
             }.Check(request);
     int timeout = 0;
