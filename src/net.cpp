@@ -943,7 +943,7 @@ size_t CConnman::SocketSendData(CNode *pnode) const
                 int nErr = WSAGetLastError();
                 if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
                 {
-                    LogPrintf("socket send error %s\n", NetworkErrorString(nErr));
+                    LogPrintf("socket send error %s (peer=%d)\n", NetworkErrorString(nErr), pnode->GetId());
                     pnode->fDisconnect = true;
                 }
             }
