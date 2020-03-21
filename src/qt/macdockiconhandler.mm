@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "macdockiconhandler.h"
+#include <qt/macdockiconhandler.h>
 
-#include <AppKit/AppKit.h>
-#include <objc/runtime.h>
+#import <AppKit/NSApplication.h>
+#import <objc/runtime.h>
 
 static MacDockIconHandler *s_instance = nullptr;
 

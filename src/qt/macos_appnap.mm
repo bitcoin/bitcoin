@@ -2,11 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "macos_appnap.h"
+#include <qt/macos_appnap.h>
 
-#include <AvailabilityMacros.h>
-#include <Foundation/NSProcessInfo.h>
-#include <Foundation/Foundation.h>
+#import <Foundation/NSObject.h>
+#import <Foundation/NSProcessInfo.h>
 
 class CAppNapInhibitor::CAppNapImpl
 {

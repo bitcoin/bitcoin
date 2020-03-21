@@ -2,11 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "macnotificationhandler.h"
+#include <qt/macnotificationhandler.h>
 
-#undef slots
+#import <Foundation/NSBundle.h>
+#import <Foundation/NSObjCRuntime.h>
+#import <Foundation/NSString.h>
+#import <Foundation/NSUserNotification.h>
 #import <objc/runtime.h>
-#include <Cocoa/Cocoa.h>
 
 // Add an obj-c category (extension) to return the expected bundle identifier
 @implementation NSBundle(returnCorrectIdentifier)
