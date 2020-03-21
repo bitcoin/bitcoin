@@ -31,12 +31,73 @@ extern ArrivalTimesSet setToRemoveFromMempool;
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 extern std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
 using namespace std;
+UniValue convertaddress(const JSONRPCRequest& request)	
+{	
+
+    RPCHelpMan{"convertaddress",	
+        "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3.\n",	
+        {	
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."}	
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "v3address", "The syscoin 3 address validated"},
+                {RPCResult::Type::STR, "v4address", "The syscoin 4 address validated"},
+            }},	
+        RPCExamples{	
+            HelpExampleCli("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")	
+            + HelpExampleRpc("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")	
+        }	
+    }.Check(request);	
+
+    UniValue ret(UniValue::VOBJ);	
+    CTxDestination dest = DecodeDestination(request.params[0].get_str());	
+    // Make sure the destination is valid	
+    if (!IsValidDestination(dest)) {	
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");	
+    }	
+    std::string currentV4Address = "";	
+    std::string currentV3Address = "";	
+    CTxDestination v4Dest;	
+    if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {	
+        v4Dest = dest;	
+        currentV4Address =  EncodeDestination(v4Dest);	
+        currentV3Address =  EncodeDestination(PKHash(*witness_id));	
+    }	
+    else if (auto key_id = boost::get<PKHash>(&dest)) {	
+        v4Dest = WitnessV0KeyHash(*key_id);	
+        currentV4Address =  EncodeDestination(v4Dest);	
+        currentV3Address =  EncodeDestination(*key_id);	
+    }	
+    else if (auto script_id = boost::get<ScriptHash>(&dest)) {	
+        v4Dest = *script_id;	
+        currentV4Address =  EncodeDestination(v4Dest);	
+        currentV3Address =  currentV4Address;	
+    }	
+    else if (boost::get<WitnessV0ScriptHash>(&dest)) {	
+        v4Dest = dest;	
+        currentV4Address =  EncodeDestination(v4Dest);	
+        currentV3Address =  currentV4Address;	
+    } 	
+
+
+    ret.pushKV("v3address", currentV3Address);	
+    ret.pushKV("v4address", currentV4Address); 	
+    return ret;	
+}
 
 CWitnessAddress DescribeWitnessAddress(const std::string& strAddress){
     string witnessProgramHex = "";
     unsigned char witnessVersion = 0;
     if(strAddress != "burn"){
-        const CTxDestination &dest = DecodeDestination(strAddress);
+        UniValue requestParam(UniValue::VARR);
+        requestParam.push_back(strAddress);	
+        JSONRPCRequest jsonRequest;	
+        jsonRequest.params = requestParam;	
+        const UniValue &convertedAddressValue = convertaddress(jsonRequest);	
+        const std::string & v4address = find_value(convertedAddressValue.get_obj(), "v4address").get_str();	
+        const CTxDestination &dest = DecodeDestination(v4address);
         UniValue detail = DescribeAddress(dest);
         if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Address must be a segwit based address");
@@ -1407,6 +1468,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "syscoingettxroots",                &syscoingettxroots,             {"height"} },
     { "syscoin",            "getblockhashbytxid",               &getblockhashbytxid,            {"txid"} },
     { "syscoin",            "syscoingetspvproof",               &syscoingetspvproof,            {"txid"} },
+    { "syscoin",            "convertaddress",                   &convertaddress,                {"address"} },
     { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {}},
     { "syscoin",            "addressbalance",                   &addressbalance,                {}},
     { "syscoin",            "assetinfo",                        &assetinfo,                     {"asset_guid"}},
