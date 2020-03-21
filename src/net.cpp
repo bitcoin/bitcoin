@@ -2103,6 +2103,8 @@ void CConnman::ThreadOpenMasternodeConnections()
     if (gArgs.IsArgSet("-connect") && gArgs.GetArgs("-connect").size() > 0)
         return;
 
+    auto& chainParams = Params();
+
     while (!interruptNet)
     {
         if (!interruptNet.sleep_for(std::chrono::milliseconds(1000)))
@@ -2152,7 +2154,7 @@ void CConnman::ThreadOpenMasternodeConnections()
                         if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
                             int64_t lastAttempt = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastOutboundAttempt();
                             // back off trying connecting to an address if we already tried recently
-                            if (nANow - lastAttempt < 60) {
+                            if (nANow - lastAttempt < chainParams.LLMQConnectionRetryTimeout()) {
                                 continue;
                             }
                             pending.emplace_back(dmn);
