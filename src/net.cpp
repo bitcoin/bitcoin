@@ -48,6 +48,9 @@ static_assert(MINIUPNPC_API_VERSION >= 10, "miniUPnPc API version >= 10 assumed"
 // How often to dump addresses to peers.dat
 static constexpr std::chrono::minutes DUMP_PEERS_INTERVAL{15};
 
+/** How often to make a DNS caches updating query. */
+static constexpr std::chrono::minutes DNS_CACHES_UPDATE_INTERVAL{60};
+
 /** Number of DNS seeds to query when the number of connections is low. */
 static constexpr int DNSSEEDS_TO_QUERY_AT_ONCE = 3;
 
@@ -1576,8 +1579,53 @@ void StopMapPort()
 #endif
 
 
+void CConnman::DNSCachesUpdate() const
+{
+    // Only reachable nodes do this, because those are already easy to find.
+    // Unless the node is explicitly set to be non-reachable (-listen=0),
+    // the only way to check if it is reachable is to observe inbound connections.
+    // This check is made every time, because a node may become non-reachable
+    // due to external factors (e.g. local network settings update).
+    if (CountInboundConnections() == 0) return;
 
+    // Every time a new widely-requests service bit is deployed, this list should be
+    // updated to invalide records for that service bit.
+    std::vector<uint64_t> SERVICE_BITS_COMBINATIONS{
+        // Legacy nodes
+        NODE_NETWORK,
+        NODE_NETWORK_LIMITED,
+        // Segwit-supporting nodes
+        NODE_NETWORK | NODE_WITNESS,
+        NODE_NETWORK_LIMITED | NODE_WITNESS,
+        // Nodes supporting Bloom Filters per BIP 111
+        NODE_BLOOM,
+        NODE_NETWORK | NODE_BLOOM,
+        NODE_NETWORK_LIMITED | NODE_BLOOM,
+        NODE_NETWORK | NODE_WITNESS | NODE_BLOOM,
+        NODE_NETWORK_LIMITED | NODE_WITNESS | NODE_BLOOM};
 
+    for (const std::string& seed : Params().DNSSeeds()) {
+        if (interruptNet) {
+            return;
+        }
+
+        // first query as if client doesn't support service bits first
+        std::vector<CNetAddr> ips;
+        LookupHost(seed, ips, 1, true);
+        // TODO: Here and below, make sure downloaded IPs are not very different
+        // from what stored locally, to identify AddrMan or DNS poisoning.
+
+        // query for all widely used combinations of service bits
+        for (uint64_t service_bits_combination : SERVICE_BITS_COMBINATIONS) {
+            if (interruptNet) {
+                return;
+            }
+            std::string host = strprintf("x%x.%s", ServiceFlags(service_bits_combination), seed);
+            LookupHost(host, ips, 1, true);
+        }
+    }
+    LogPrintf("DNS requests were made to update caches.\n");
+}
 
 
 void CConnman::ThreadDNSAddressSeed()
@@ -2327,8 +2375,13 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 
     if (!gArgs.GetBoolArg("-dnsseed", true))
         LogPrintf("DNS seeding disabled\n");
-    else
+    else {
         threadDNSAddressSeed = std::thread(&TraceThread<std::function<void()> >, "dnsseed", std::function<void()>(std::bind(&CConnman::ThreadDNSAddressSeed, this)));
+        if (fListen && fNameLookup && !HaveNameProxy()) {
+            LogPrintf("Proactive querying DNS servers to update caches is enabled\n");
+            scheduler.scheduleEvery([this] { DNSCachesUpdate(); }, DNS_CACHES_UPDATE_INTERVAL);
+        }
+    }
 
     // Initiate outbound connections from -addnode
     threadOpenAddedConnections = std::thread(&TraceThread<std::function<void()> >, "addcon", std::function<void()>(std::bind(&CConnman::ThreadOpenAddedConnections, this)));
