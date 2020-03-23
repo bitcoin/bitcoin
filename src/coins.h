@@ -284,10 +284,10 @@ public:
     const Coin& AccessCoin(const COutPoint &output) const;
 
     /**
-     * Add a coin. Set potential_overwrite to true if an unspent version may
+     * Add a coin. Set possible_overwrite to true if an unspent version may
      * already exist in the cache.
      */
-    void AddCoin(const COutPoint& outpoint, Coin&& coin, bool potential_overwrite);
+    void AddCoin(const COutPoint& outpoint, Coin&& coin, bool possible_overwrite);
 
     /**
      * Spend a coin. Pass moveto in order to get the deleted data.

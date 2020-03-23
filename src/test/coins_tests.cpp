@@ -751,9 +751,9 @@ BOOST_AUTO_TEST_CASE(ccoins_add)
     /* Check AddCoin behavior, requesting a new coin from a cache view,
      * writing a modification to the coin, and then checking the resulting
      * entry in the cache after the modification. Verify behavior with the
-     * with the AddCoin potential_overwrite argument set to false, and to true.
+     * AddCoin possible_overwrite argument set to false, and to true.
      *
-     *           Cache   Write   Result  Cache        Result       potential_overwrite
+     *           Cache   Write   Result  Cache        Result       possible_overwrite
      *           Value   Value   Value   Flags        Flags
      */
     CheckAddCoin(ABSENT, VALUE3, VALUE3, NO_ENTRY   , DIRTY|FRESH, false);
