@@ -290,14 +290,14 @@ public:
         }
         return false;
     }
-    bool disconnect(const CNetAddr& net_addr) override
+    bool disconnectByAddress(const CNetAddr& net_addr) override
     {
         if (m_context->connman) {
             return m_context->connman->DisconnectNode(net_addr);
         }
         return false;
     }
-    bool disconnect(NodeId id) override
+    bool disconnectById(NodeId id) override
     {
         if (m_context->connman) {
             return m_context->connman->DisconnectNode(id);
@@ -498,32 +498,32 @@ public:
     virtual ~NotificationsProxy() = default;
     void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) override
     {
-        m_notifications->TransactionAddedToMempool(tx, nAcceptTime);
+        m_notifications->transactionAddedToMempool(tx, nAcceptTime);
     }
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override
     {
-        m_notifications->TransactionRemovedFromMempool(tx, reason);
+        m_notifications->transactionRemovedFromMempool(tx, reason);
     }
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->BlockConnected(*block, index->nHeight);
+        m_notifications->blockConnected(*block, index->nHeight);
     }
     void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->BlockDisconnected(*block, index->nHeight);
+        m_notifications->blockDisconnected(*block, index->nHeight);
     }
     void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
-        m_notifications->UpdatedBlockTip();
+        m_notifications->updatedBlockTip();
     }
-    void ChainStateFlushed(const CBlockLocator& locator) override { m_notifications->ChainStateFlushed(locator); }
+    void ChainStateFlushed(const CBlockLocator& locator) override { m_notifications->chainStateFlushed(locator); }
     void NotifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) override
     {
-        m_notifications->NotifyChainLock(pindexChainLock, clsig);
+        m_notifications->notifyChainLock(pindexChainLock, clsig);
     }
     void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) override
     {
-        m_notifications->NotifyTransactionLock(tx, islock);
+        m_notifications->notifyTransactionLock(tx, islock);
     }
     std::shared_ptr<Chain::Notifications> m_notifications;
 };
@@ -727,7 +727,7 @@ public:
         auto it = m_node.mempool->GetIter(txid);
         return it && (*it)->GetCountWithDescendants() > 1;
     }
-    bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) override
+    bool broadcastTransaction(const CTransactionRef& tx, const CAmount& max_tx_fee, bool relay, std::string& err_string) override
     {
         const TransactionError err = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, relay, /*wait_callback*/ false);
         // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
@@ -843,7 +843,7 @@ public:
         if (!m_node.mempool) return;
         LOCK2(::cs_main, m_node.mempool->cs);
         for (const CTxMemPoolEntry& entry : m_node.mempool->mapTx) {
-            notifications.TransactionAddedToMempool(entry.GetSharedTx(), 0);
+            notifications.transactionAddedToMempool(entry.GetSharedTx(), 0);
         }
     }
     NodeContext& m_node;
