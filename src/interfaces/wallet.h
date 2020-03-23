@@ -193,11 +193,11 @@ public:
         int& num_blocks) = 0;
 
     //! Fill PSBT.
-    virtual TransactionError fillPSBT(PartiallySignedTransaction& psbtx,
-        bool& complete,
-        int sighash_type = 1 /* SIGHASH_ALL */,
-        bool sign = true,
-        bool bip32derivs = false) const = 0;
+    virtual TransactionError fillPSBT(int sighash_type,
+        bool sign,
+        bool bip32derivs,
+        PartiallySignedTransaction& psbtx,
+        bool& complete) = 0;
 
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
@@ -247,10 +247,10 @@ public:
     virtual bool hdEnabled() = 0;
 
     // Return whether the wallet is blank.
-    virtual bool canGetAddresses() const = 0;
+    virtual bool canGetAddresses() = 0;
 
-    // check if a certain wallet flag is set.
-    virtual bool IsWalletFlagSet(uint64_t flag) = 0;
+    // Return whether private keys enabled.
+    virtual bool privateKeysDisabled() = 0;
 
     // Get default address type.
     virtual OutputType getDefaultAddressType() = 0;

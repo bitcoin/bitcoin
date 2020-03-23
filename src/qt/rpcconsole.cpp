@@ -1191,7 +1191,7 @@ void RPCConsole::disconnectSelectedNode()
         // Get currently selected peer address
         NodeId id = nodes.at(i).data().toLongLong();
         // Find the node, disconnect it and clear the selected node
-        if(m_node.disconnect(id))
+        if(m_node.disconnectById(id))
             clearSelectedNode();
     }
 }
@@ -1216,7 +1216,7 @@ void RPCConsole::banSelectedNode(int bantime)
         const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
         if (stats) {
             m_node.ban(stats->nodeStats.addr, BanReasonManuallyAdded, bantime);
-            m_node.disconnect(stats->nodeStats.addr);
+            m_node.disconnectByAddress(stats->nodeStats.addr);
         }
     }
     clearSelectedNode();

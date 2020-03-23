@@ -154,7 +154,10 @@ public:
     //! Transaction is added to memory pool, if the transaction fee is below the
     //! amount specified by max_tx_fee, and broadcast to all peers if relay is set to true.
     //! Return false if the transaction could not be added due to the fee or for another reason.
-    virtual bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) = 0;
+    virtual bool broadcastTransaction(const CTransactionRef& tx,
+        const CAmount& max_tx_fee,
+        bool relay,
+        std::string& err_string) = 0;
 
     //! Calculate mempool ancestor and descendant counts for the given transaction.
     virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) = 0;
@@ -217,12 +220,12 @@ public:
     {
     public:
         virtual ~Notifications() {}
-        virtual void TransactionAddedToMempool(const CTransactionRef& tx) {}
-        virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx) {}
-        virtual void BlockConnected(const CBlock& block, int height) {}
-        virtual void BlockDisconnected(const CBlock& block, int height) {}
-        virtual void UpdatedBlockTip() {}
-        virtual void ChainStateFlushed(const CBlockLocator& locator) {}
+        virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
+        virtual void transactionRemovedFromMempool(const CTransactionRef& ptx) {}
+        virtual void blockConnected(const CBlock& block, int height) {}
+        virtual void blockDisconnected(const CBlock& block, int height) {}
+        virtual void updatedBlockTip() {}
+        virtual void chainStateFlushed(const CBlockLocator& locator) {}
     };
 
     //! Register handler for notifications.
@@ -245,7 +248,7 @@ public:
     //! Current RPC serialization flags.
     virtual int rpcSerializationFlags() = 0;
 
-    //! Synchronously send TransactionAddedToMempool notifications about all
+    //! Synchronously send transactionAddedToMempool notifications about all
     //! current mempool transactions to the specified handler and return after
     //! the last one is sent. These notifications aren't coordinated with async
     //! notifications sent by handleNotifications, so out of date async

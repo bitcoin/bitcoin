@@ -43,6 +43,7 @@ Developer Notes
         - [Suggestions and examples](#suggestions-and-examples)
     - [Release notes](#release-notes)
     - [RPC interface guidelines](#rpc-interface-guidelines)
+    - [Internal interface guidelines](#internal-interface-guidelines)
 
 <!-- markdown-toc end -->
 
@@ -1100,3 +1101,124 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   timestamps in the documentation.
 
   - *Rationale*: User-facing consistency.
+
+Internal interface guidelines
+-----------------------------
+
+Internal interfaces between parts of the codebase that are meant to be
+independent (node, wallet, GUI), are defined in
+[`src/interfaces/`](../src/interfaces/). The main interface classes defined
+there are [`interfaces::Chain`](../src/interfaces/chain.h), used by wallet to
+access the node's latest chain state,
+[`interfaces::Node`](../src/interfaces/node.h), used by the GUI to control the
+node, and [`interfaces::Wallet`](../src/interfaces/wallet.h), used by the GUI
+to control an individual wallet. There are also more specialized interface
+types like [`interfaces::Handler`](../src/interfaces/handler.h)
+[`interfaces::ChainClient`](../src/interfaces/chain.h) passed to and from
+various interface methods.
+
+Interface classes are written in a particular style so node, wallet, and GUI
+code doesn't need to run in the same process, and so the class declarations
+work more easily with tools and libraries supporting interprocess
+communication:
+
+- Interface classes should be abstract and have methods that are [pure
+  virtual](https://en.cppreference.com/w/cpp/language/abstract_class). This
+  allows multiple implementations to inherit from the same interface class,
+  particularly so one implementation can execute functionality in the local
+  process, and other implementations can forward calls to remote processes.
+
+- Interface method definitions should wrap existing functionality instead of
+  implementing new functionality. Any substantial new node or wallet
+  functionality should be implemented in [`src/node/`](../src/node/) or
+  [`src/wallet/`](../src/wallet/) and just exposed in
+  [`src/interfaces/`](../src/interfaces/) instead of being implemented there,
+  so it can be more modular and accessible to unit tests.
+
+- Interface method parameter and return types should either be serializable or
+  be other interface classes. Interface methods shouldn't pass references to
+  objects that can't be serialized or accessed from another process.
+
+  Examples:
+
+  ```c++
+  // Good: takes string argument and returns interface class pointer
+  virtual unique_ptr<interfaces::Wallet> loadWallet(std::string filename) = 0;
+
+  // Bad: returns CWallet reference that can't be used from another process
+  virtual CWallet& loadWallet(std::string filename) = 0;
+  ```
+
+  ```c++
+  // Good: accepts and returns primitive types
+  virtual bool findBlock(const uint256& hash, int& out_height, int64_t& out_time) = 0;
+
+  // Bad: returns pointer to internal node in a linked list inaccessible to
+  // other processes
+  virtual const CBlockIndex* findBlock(const uint256& hash) = 0;
+  ```
+
+  ```c++
+  // Good: takes plain callback type and returns interface pointer
+  using TipChangedFn = std::function<void(int block_height, int64_t block_time)>;
+  virtual std::unique_ptr<interfaces::Handler> handleTipChanged(TipChangedFn fn) = 0;
+
+  // Bad: returns boost connection specific to local process
+  using TipChangedFn = std::function<void(int block_height, int64_t block_time)>;
+  virtual boost::signals2::scoped_connection connectTipChanged(TipChangedFn fn) = 0;
+  ```
+
+- For consistency and friendliness to code generation tools, interface method
+  input and inout parameters should be ordered first and output parameters
+  should come last.
+
+  Example:
+
+  ```c++
+  // Good: error output param is last
+  virtual bool broadcastTransaction(const CTransactionRef& tx, CAmount max_fee, std::string& error) = 0;
+
+  // Bad: error output param is between input params
+  virtual bool broadcastTransaction(const CTransactionRef& tx, std::string& error, CAmount max_fee) = 0;
+  ```
+
+- For friendliness to code generation tools, interface methods should not be
+  overloaded:
+
+  Example:
+
+  ```c++
+  // Good: method names are unique
+  virtual bool disconnectByAddress(const CNetAddr& net_addr) = 0;
+  virtual bool disconnectById(NodeId id) = 0;
+
+  // Bad: methods are overloaded by type
+  virtual bool disconnect(const CNetAddr& net_addr) = 0;
+  virtual bool disconnect(NodeId id) = 0;
+  ```
+
+- For consistency and friendliness to code generation tools, interface method
+  names should be `lowerCamelCase` and standalone function names should be
+  `UpperCamelCase`.
+
+  Examples:
+
+  ```c++
+  // Good: lowerCamelCase method name
+  virtual void blockConnected(const CBlock& block, int height) = 0;
+
+  // Bad: uppercase class method
+  virtual void BlockConnected(const CBlock& block, int height) = 0;
+  ```
+
+  ```c++
+  // Good: UpperCamelCase standalone function name
+  std::unique_ptr<Node> MakeNode(LocalInit& init);
+
+  // Bad: lowercase standalone function
+  std::unique_ptr<Node> makeNode(LocalInit& init);
+  ```
+
+  Note: This last convention isn't generally followed outside of
+  [`src/interfaces/`](../src/interfaces/), though it did come up for discussion
+  before in [#14635](https://github.com/bitcoin/bitcoin/pull/14635).
