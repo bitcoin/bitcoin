@@ -169,6 +169,13 @@ std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string&
     return LoadWallet(chain, WalletLocation(name), error, warnings);
 }
 
+bool CWallet::AbortRescan()
+{
+    if (!fScanningWallet || fAbortRescan) return false;
+    fAbortRescan = true;
+    return true;
+}
+
 WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::vector<std::string>& warnings, std::shared_ptr<CWallet>& result)
 {
     // Indicate that the wallet is actually supposed to be blank and not just blank to make it encrypted
@@ -1576,15 +1583,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
 
 }
 
-/**
- * Scan active chain for relevant transactions after importing keys. This should
- * be called whenever new keys are added to the wallet, with the oldest key
- * creation time.
- *
- * @return Earliest timestamp that could be successfully scanned from. Timestamp
- * returned will be higher than startTime if relevant blocks could not be read.
- */
-int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update)
+CWallet::ScanResult CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update)
 {
     // Find starting block. May be null if nCreateTime is greater than the
     // highest blockchain timestamp, in which case there is nothing that needs
@@ -1598,40 +1597,13 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
     }
 
     if (!start_block.IsNull()) {
-        // TODO: this should take into account failure by ScanResult::USER_ABORT
-        ScanResult result = ScanForWalletTransactions(start_block, {} /* stop_block */, reserver, update);
-        if (result.status == ScanResult::FAILURE) {
-            int64_t time_max;
-            if (!chain().findBlock(result.last_failed_block, nullptr /* block */, nullptr /* time */, &time_max)) {
-                throw std::logic_error("ScanForWalletTransactions returned invalid block hash");
-            }
-            return time_max + TIMESTAMP_WINDOW + 1;
-        }
+        return ScanForWalletTransactions(start_block, {} /* stop_block */, reserver, update);
     }
-    return startTime;
+    ScanResult result;
+    result.status = ScanResult::SUCCESS;
+    return result;
 }
 
-/**
- * Scan the block chain (starting in start_block) for transactions
- * from or to us. If fUpdate is true, found transactions that already
- * exist in the wallet will be updated.
- *
- * @param[in] start_block Scan starting block. If block is not on the active
- *                        chain, the scan will return SUCCESS immediately.
- * @param[in] stop_block  Scan ending block. If block is not on the active
- *                        chain, the scan will continue until it reaches the
- *                        chain tip.
- *
- * @return ScanResult returning scan information and indicating success or
- *         failure. Return status will be set to SUCCESS if scan was
- *         successful. FAILURE if a complete rescan was not possible (due to
- *         pruning or corruption). USER_ABORT if the rescan was aborted before
- *         it could complete.
- *
- * @pre Caller needs to make sure start_block (and the optional stop_block) are on
- * the main chain after to the addition of any new keys you want to detect
- * transactions for.
- */
 CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_block, const uint256& stop_block, const WalletRescanReserver& reserver, bool fUpdate)
 {
     int64_t nNow = GetTime();

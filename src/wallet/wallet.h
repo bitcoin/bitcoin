@@ -830,11 +830,13 @@ public:
     void UnlockAllCoins() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ListLockedCoins(std::vector<COutPoint>& vOutpts) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    /*
-     * Rescan abort properties
+    /**
+     * Abort wallet rescan
+     *
+     * @return true if the abort was effectual, i.e. the wallet was scanning
+     * and was not already aborting
      */
-    void AbortRescan() { fAbortRescan = true; }
-    bool IsAbortingRescan() const { return fAbortRescan; }
+    bool AbortRescan();
     bool IsScanning() const { return fScanningWallet; }
     int64_t ScanningDuration() const { return fScanningWallet ? GetTimeMillis() - m_scanning_start : 0; }
     double ScanningProgress() const { return fScanningWallet ? (double) m_scanning_progress : 0; }
@@ -879,7 +881,6 @@ public:
     void BlockConnected(const CBlock& block, int height) override;
     void BlockDisconnected(const CBlock& block, int height) override;
     void UpdatedBlockTip() override;
-    int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
 
     struct ScanResult {
         enum { SUCCESS, FAILURE, USER_ABORT } status = SUCCESS;
@@ -896,7 +897,42 @@ public:
         //! USER_ABORT.
         uint256 last_failed_block;
     };
+
+    /**
+     * Scan the block chain (starting in start_block) for transactions
+     * from or to us. If fUpdate is true, found transactions that already
+     * exist in the wallet will be updated.
+     *
+     * @param[in] start_block Scan starting block. If block is not on the active
+     *                        chain, the scan will return SUCCESS immediately.
+     * @param[in] stop_block  Scan ending block. If block is not on the active
+     *                        chain, the scan will continue until it reaches the
+     *                        chain tip.
+     *
+     * @return ScanResult returning scan information and indicating success or
+     *         failure. Return status will be set to SUCCESS if scan was
+     *         successful. FAILURE if a complete rescan was not possible (due to
+     *         pruning or corruption). USER_ABORT if the rescan was aborted before
+     *         it could complete.
+     *
+     * @pre Caller needs to make sure start_block (and the optional stop_block) are on
+     * the main chain after to the addition of any new keys you want to detect
+     * transactions for.
+     */
     ScanResult ScanForWalletTransactions(const uint256& first_block, const uint256& last_block, const WalletRescanReserver& reserver, bool fUpdate);
+
+    /**
+     * Scan active chain for relevant transactions after importing keys. This should
+     * be called whenever new keys are added to the wallet, with the oldest key
+     * creation time.
+     *
+     * @return ScanResult returning scan information and indicating success or
+     *         failure. Return status will be set to SUCCESS if scan was
+     *         successful. FAILURE if a complete rescan was not possible (due to
+     *         pruning or corruption). USER_ABORT if the rescan was aborted before
+     *         it could complete.
+     */
+    ScanResult RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
     void TransactionRemovedFromMempool(const CTransactionRef &ptx) override;
     void ReacceptWalletTransactions() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ResendWalletTransactions();
