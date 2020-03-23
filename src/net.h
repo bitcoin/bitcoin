@@ -351,6 +351,7 @@ private:
     void ProcessOneShot();
     void ThreadOpenConnections(std::vector<std::string> connect);
     void ThreadMessageHandler();
+    int CountInboundConnections() const;
     void AcceptConnection(const ListenSocket& hListenSocket);
     void DisconnectNodes();
     void NotifyNumConnectionsChanged();

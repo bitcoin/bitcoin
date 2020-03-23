@@ -937,6 +937,16 @@ bool CConnman::AttemptToEvictConnection()
     return false;
 }
 
+int CConnman::CountInboundConnections() const
+{
+    int inbounds = 0;
+    LOCK(cs_vNodes);
+    for (const CNode* node : vNodes) {
+        if (node->fInbound) inbounds++;
+    }
+    return inbounds;
+}
+
 void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
@@ -964,12 +974,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         legacyWhitelisted = true;
     }
 
-    {
-        LOCK(cs_vNodes);
-        for (const CNode* pnode : vNodes) {
-            if (pnode->fInbound) nInbound++;
-        }
-    }
+    nInbound = CountInboundConnections();
 
     if (hSocket == INVALID_SOCKET)
     {
