@@ -17,7 +17,7 @@ SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 # across time.
 time-machine() {
     guix time-machine --url=https://github.com/dongcarl/guix.git \
-                      --commit=b3a7c72c8b2425f8ddb0fc6e3b1caeed40f86dee \
+                      --commit=cf347affd642c709f7e423f7111794ffdb09f5a6 \
                       -- "$@"
 }
 
