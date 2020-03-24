@@ -89,13 +89,13 @@ public:
     explicit NotificationsHandlerImpl(std::shared_ptr<Chain::Notifications> notifications)
         : m_proxy(std::make_shared<NotificationsProxy>(std::move(notifications)))
     {
-        RegisterSharedValidationInterface(m_proxy);
+        RegisterValidationInterface(m_proxy);
     }
     ~NotificationsHandlerImpl() override { disconnect(); }
     void disconnect() override
     {
         if (m_proxy) {
-            UnregisterSharedValidationInterface(m_proxy);
+            UnregisterValidationInterface(m_proxy);
             m_proxy.reset();
         }
     }

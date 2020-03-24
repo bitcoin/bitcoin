@@ -90,7 +90,7 @@ struct DBHashKey {
 
 }; // namespace
 
-static std::map<BlockFilterType, BlockFilterIndex> g_filter_indexes;
+static std::map<BlockFilterType, std::shared_ptr<BlockFilterIndex>> g_filter_indexes;
 
 BlockFilterIndex::BlockFilterIndex(BlockFilterType filter_type,
                                    size_t n_cache_size, bool f_memory, bool f_wipe)
@@ -450,13 +450,13 @@ bool BlockFilterIndex::LookupFilterHashRange(int start_height, const CBlockIndex
     return true;
 }
 
-BlockFilterIndex* GetBlockFilterIndex(BlockFilterType filter_type)
+std::shared_ptr<BlockFilterIndex> GetBlockFilterIndex(BlockFilterType filter_type)
 {
     auto it = g_filter_indexes.find(filter_type);
-    return it != g_filter_indexes.end() ? &it->second : nullptr;
+    return it != g_filter_indexes.end() ? it->second : nullptr;
 }
 
-void ForEachBlockFilterIndex(std::function<void (BlockFilterIndex&)> fn)
+void ForEachBlockFilterIndex(std::function<void (std::shared_ptr<BlockFilterIndex>)> fn)
 {
     for (auto& entry : g_filter_indexes) fn(entry.second);
 }
@@ -464,11 +464,11 @@ void ForEachBlockFilterIndex(std::function<void (BlockFilterIndex&)> fn)
 bool InitBlockFilterIndex(BlockFilterType filter_type,
                           size_t n_cache_size, bool f_memory, bool f_wipe)
 {
-    auto result = g_filter_indexes.emplace(std::piecewise_construct,
-                                           std::forward_as_tuple(filter_type),
-                                           std::forward_as_tuple(filter_type,
-                                                                 n_cache_size, f_memory, f_wipe));
-    return result.second;
+    if (g_filter_indexes.count(filter_type))
+        return false;
+    g_filter_indexes.emplace(filter_type, std::make_shared<BlockFilterIndex>(filter_type, n_cache_size,
+                                                                             f_memory, f_wipe));
+    return true;
 }
 
 bool DestroyBlockFilterIndex(BlockFilterType filter_type)

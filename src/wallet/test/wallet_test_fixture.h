@@ -22,7 +22,7 @@ struct WalletTestingSetup : public TestingSetup {
 
     std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain(m_node);
     std::unique_ptr<interfaces::WalletClient> m_wallet_client = interfaces::MakeWalletClient(*m_chain, *Assert(m_node.args));
-    CWallet m_wallet;
+    std::shared_ptr<CWallet> m_wallet;
     std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
 };
 

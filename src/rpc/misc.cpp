@@ -683,8 +683,8 @@ static RPCHelpMan getindexinfo()
         result.pushKVs(SummaryToJSON(g_txindex->GetSummary(), index_name));
     }
 
-    ForEachBlockFilterIndex([&result, &index_name](const BlockFilterIndex& index) {
-        result.pushKVs(SummaryToJSON(index.GetSummary(), index_name));
+    ForEachBlockFilterIndex([&result, &index_name](std::shared_ptr<BlockFilterIndex> index) {
+        result.pushKVs(SummaryToJSON(index->GetSummary(), index_name));
     });
 
     return result;

@@ -2153,7 +2153,7 @@ static bool PrepareBlockFilterRequest(CNode& peer, const CChainParams& chain_par
                                       BlockFilterType filter_type, uint32_t start_height,
                                       const uint256& stop_hash, uint32_t max_height_diff,
                                       const CBlockIndex*& stop_index,
-                                      BlockFilterIndex*& filter_index)
+                                      std::shared_ptr<BlockFilterIndex>& filter_index)
 {
     const bool supported_filter_type =
         (filter_type == BlockFilterType::BASIC &&
@@ -2224,7 +2224,7 @@ static void ProcessGetCFilters(CNode& peer, CDataStream& vRecv, const CChainPara
     const BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
 
     const CBlockIndex* stop_index;
-    BlockFilterIndex* filter_index;
+    std::shared_ptr<BlockFilterIndex> filter_index;
     if (!PrepareBlockFilterRequest(peer, chain_params, filter_type, start_height, stop_hash,
                                    MAX_GETCFILTERS_SIZE, stop_index, filter_index)) {
         return;
@@ -2266,7 +2266,7 @@ static void ProcessGetCFHeaders(CNode& peer, CDataStream& vRecv, const CChainPar
     const BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
 
     const CBlockIndex* stop_index;
-    BlockFilterIndex* filter_index;
+    std::shared_ptr<BlockFilterIndex> filter_index;
     if (!PrepareBlockFilterRequest(peer, chain_params, filter_type, start_height, stop_hash,
                                    MAX_GETCFHEADERS_SIZE, stop_index, filter_index)) {
         return;
@@ -2320,7 +2320,7 @@ static void ProcessGetCFCheckPt(CNode& peer, CDataStream& vRecv, const CChainPar
     const BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
 
     const CBlockIndex* stop_index;
-    BlockFilterIndex* filter_index;
+    std::shared_ptr<BlockFilterIndex> filter_index;
     if (!PrepareBlockFilterRequest(peer, chain_params, filter_type, /*start_height=*/0, stop_hash,
                                    /*max_height_diff=*/std::numeric_limits<uint32_t>::max(),
                                    stop_index, filter_index)) {

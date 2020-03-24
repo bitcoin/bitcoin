@@ -2304,7 +2304,7 @@ static RPCHelpMan getblockfilter()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown filtertype");
     }
 
-    BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
+    auto index = GetBlockFilterIndex(filtertype);
     if (!index) {
         throw JSONRPCError(RPC_MISC_ERROR, "Index is not enabled for filtertype " + filtertype_name);
     }

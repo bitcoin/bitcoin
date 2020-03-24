@@ -299,9 +299,6 @@ void BaseIndex::Interrupt()
 
 void BaseIndex::Start()
 {
-    // Need to register this ValidationInterface before running Init(), so that
-    // callbacks are not missed if Init sets m_synced to true.
-    RegisterValidationInterface(this);
     if (!Init()) {
         FatalError("%s: %s failed to initialize", __func__, GetName());
         return;
@@ -313,8 +310,6 @@ void BaseIndex::Start()
 
 void BaseIndex::Stop()
 {
-    UnregisterValidationInterface(this);
-
     if (m_thread_sync.joinable()) {
         m_thread_sync.join();
     }

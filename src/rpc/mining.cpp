@@ -972,9 +972,9 @@ static RPCHelpMan submitblock()
 
     bool new_block;
     auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
-    RegisterSharedValidationInterface(sc);
+    RegisterValidationInterface(sc);
     bool accepted = EnsureChainman(request.context).ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
-    UnregisterSharedValidationInterface(sc);
+    UnregisterValidationInterface(sc);
     if (!new_block && accepted) {
         return "duplicate";
     }

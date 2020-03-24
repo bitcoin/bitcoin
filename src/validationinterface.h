@@ -24,20 +24,11 @@ class CScheduler;
 enum class MemPoolRemovalReason;
 
 /** Register subscriber */
-void RegisterValidationInterface(CValidationInterface* callbacks);
-/** Unregister subscriber. DEPRECATED. This is not safe to use when the RPC server or main message handler thread is running. */
-void UnregisterValidationInterface(CValidationInterface* callbacks);
+void RegisterValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
+/** Unregister subscriber */
+void UnregisterValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
 /** Unregister all subscribers */
 void UnregisterAllValidationInterfaces();
-
-// Alternate registration functions that release a shared_ptr after the last
-// notification is sent. These are useful for race-free cleanup, since
-// unregistration is nonblocking and can return before the last notification is
-// processed.
-/** Register subscriber */
-void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
-/** Unregister subscriber */
-void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
 
 /**
  * Pushes a function to callback onto the notification queue, guaranteeing any
@@ -181,8 +172,8 @@ class CMainSignals {
 private:
     std::unique_ptr<MainSignalsInstance> m_internals;
 
-    friend void ::RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface>);
-    friend void ::UnregisterValidationInterface(CValidationInterface*);
+    friend void ::RegisterValidationInterface(std::shared_ptr<CValidationInterface>);
+    friend void ::UnregisterValidationInterface(std::shared_ptr<CValidationInterface>);
     friend void ::UnregisterAllValidationInterfaces();
     friend void ::CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
 
