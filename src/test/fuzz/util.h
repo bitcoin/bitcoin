@@ -13,6 +13,7 @@
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <uint256.h>
 #include <version.h>
 
 #include <cstdint>
@@ -70,9 +71,15 @@ NODISCARD inline CScriptNum ConsumeScriptNum(FuzzedDataProvider& fuzzed_data_pro
     return CScriptNum{fuzzed_data_provider.ConsumeIntegral<int64_t>()};
 }
 
-<<<<<<< HEAD
-#endif // SYSCOIN_TEST_FUZZ_UTIL_H
-=======
+NODISCARD inline uint256 ConsumeUInt256(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    const std::vector<unsigned char> v256 = fuzzed_data_provider.ConsumeBytes<unsigned char>(sizeof(uint256));
+    if (v256.size() != sizeof(uint256)) {
+        return {};
+    }
+    return uint256{v256};
+}
+
 template <typename T>
 bool MultiplicationOverflow(T i, T j)
 {
@@ -96,5 +103,4 @@ bool MultiplicationOverflow(T i, T j)
     }
 }
 
-#endif // BITCOIN_TEST_FUZZ_UTIL_H
->>>>>>> d2d0a04a6... Merge #18353: tests: Add fuzzing harnesses for classes CBlockHeader, CFeeRate and various functions
+#endif // SYSCOIN_TEST_FUZZ_UTIL_H
