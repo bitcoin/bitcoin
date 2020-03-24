@@ -116,25 +116,18 @@ def check_ELF_Canary(executable):
             ok = True
     return ok
 
-def get_PE_dll_characteristics(executable):
-    '''
-    Get PE DllCharacteristics bits.
-    Returns a tuple (arch,bits) where arch is 'i386:x86-64' or 'i386'
-    and bits is the DllCharacteristics value.
-    '''
+def get_PE_dll_characteristics(executable) -> int:
+    '''Get PE DllCharacteristics bits'''
     p = subprocess.Popen([OBJDUMP_CMD, '-x',  executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Error opening file')
-    arch = ''
     bits = 0
     for line in stdout.splitlines():
         tokens = line.split()
-        if len(tokens)>=2 and tokens[0] == 'architecture:':
-            arch = tokens[1].rstrip(',')
         if len(tokens)>=2 and tokens[0] == 'DllCharacteristics':
             bits = int(tokens[1],16)
-    return (arch,bits)
+    return bits
 
 IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA = 0x0020
 IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE    = 0x0040
@@ -142,21 +135,15 @@ IMAGE_DLL_CHARACTERISTICS_NX_COMPAT       = 0x0100
 
 def check_PE_DYNAMIC_BASE(executable):
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
-    (arch,bits) = get_PE_dll_characteristics(executable)
-    reqbits = IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE
-    return (bits & reqbits) == reqbits
+    bits = get_PE_dll_characteristics(executable)
+    return (bits & IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE) == IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE
 
-# On 64 bit, must support high-entropy 64-bit address space layout randomization in addition to DYNAMIC_BASE
-# to have secure ASLR.
+# Must support high-entropy 64-bit address space layout randomization
+# in addition to DYNAMIC_BASE to have secure ASLR.
 def check_PE_HIGH_ENTROPY_VA(executable):
     '''PIE: DllCharacteristics bit 0x20 signifies high-entropy ASLR'''
-    (arch,bits) = get_PE_dll_characteristics(executable)
-    if arch == 'i386:x86-64':
-        reqbits = IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA
-    else: # Unnecessary on 32-bit
-        assert(arch == 'i386')
-        reqbits = 0
-    return (bits & reqbits) == reqbits
+    bits = get_PE_dll_characteristics(executable)
+    return (bits & IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA) == IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA
 
 def check_PE_RELOC_SECTION(executable) -> bool:
     '''Check for a reloc section. This is required for functional ASLR.'''
@@ -171,7 +158,7 @@ def check_PE_RELOC_SECTION(executable) -> bool:
 
 def check_PE_NX(executable):
     '''NX: DllCharacteristics bit 0x100 signifies nxcompat (DEP)'''
-    (arch,bits) = get_PE_dll_characteristics(executable)
+    bits = get_PE_dll_characteristics(executable)
     return (bits & IMAGE_DLL_CHARACTERISTICS_NX_COMPAT) == IMAGE_DLL_CHARACTERISTICS_NX_COMPAT
 
 def get_MACHO_executable_flags(executable):
