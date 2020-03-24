@@ -761,6 +761,7 @@ void CNode::copyStats(CNodeStats &stats)
         LOCK(cs_mnauth);
         X(verifiedProRegTxHash);
     }
+    X(fMasternode);
 }
 #undef X
 
@@ -2947,22 +2948,26 @@ void CConnman::RelayTransaction(const CTransaction& tx)
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes)
     {
+        if (pnode->fMasternode)
+            continue;
         pnode->PushInventory(inv);
     }
 }
 
-void CConnman::RelayInv(CInv &inv, const int minProtoVersion) {
+void CConnman::RelayInv(CInv &inv, const int minProtoVersion, bool fAllowMasternodeConnections) {
     LOCK(cs_vNodes);
-    for (const auto& pnode : vNodes)
-        if(pnode->nVersion >= minProtoVersion)
-            pnode->PushInventory(inv);
+    for (const auto& pnode : vNodes) {
+        if (pnode->nVersion < minProtoVersion || (pnode->fMasternode && !fAllowMasternodeConnections))
+            continue;
+        pnode->PushInventory(inv);
+    }
 }
 
-void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const int minProtoVersion)
+void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const int minProtoVersion, bool fAllowMasternodeConnections)
 {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
-        if(pnode->nVersion < minProtoVersion)
+        if (pnode->nVersion < minProtoVersion || (pnode->fMasternode && !fAllowMasternodeConnections))
             continue;
         {
             LOCK(pnode->cs_filter);
@@ -2973,11 +2978,12 @@ void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const 
     }
 }
 
-void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const int minProtoVersion)
+void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const int minProtoVersion, bool fAllowMasternodeConnections)
 {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
-        if(pnode->nVersion < minProtoVersion) continue;
+        if (pnode->nVersion < minProtoVersion || (pnode->fMasternode && !fAllowMasternodeConnections))
+            continue;
         {
             LOCK(pnode->cs_filter);
             if(pnode->pfilter && !pnode->pfilter->contains(relatedTxHash)) continue;

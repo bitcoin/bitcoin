@@ -97,6 +97,7 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
             "    \"subver\": \"/Dash Core:x.x.x/\",  (string) The string version\n"
             "    \"inbound\": true|false,     (boolean) Inbound (true) or Outbound (false)\n"
             "    \"addnode\": true|false,     (boolean) Whether connection was due to addnode/-connect or if it was an automatic/inbound connection\n"
+            "    \"masternode\": true|false,  (boolean) Whether connection was due to masternode connection attempt\n"
             "    \"startingheight\": n,       (numeric) The starting height (block) of the peer\n"
             "    \"banscore\": n,             (numeric) The ban score\n"
             "    \"synced_headers\": n,       (numeric) The last header we have in common with this peer\n"
@@ -164,6 +165,7 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("subver", stats.cleanSubVer));
         obj.push_back(Pair("inbound", stats.fInbound));
         obj.push_back(Pair("addnode", stats.m_manual_connection));
+        obj.push_back(Pair("masternode", stats.fMasternode));
         obj.push_back(Pair("startingheight", stats.nStartingHeight));
         if (fStateStats) {
             obj.push_back(Pair("banscore", statestats.nMisbehavior));

@@ -23,6 +23,13 @@ class LLMQChainLocksTest(DashTestFramework):
 
     def run_test(self):
 
+        # Connect all nodes to node1 so that we always have the whole network connected
+        # Otherwise only masternode connections will be established between nodes, which won't propagate TXs/blocks
+        # Usually node0 is the one that does this, but in this test we isolate it multiple times
+        for i in range(len(self.nodes)):
+            if i != 1:
+                connect_nodes(self.nodes[i], 1)
+
         self.log.info("Wait for dip0008 activation")
 
         while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":

@@ -321,7 +321,7 @@ void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
     }
 
     connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge));
+            nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->fMasternode));
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
@@ -955,6 +955,7 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
         }
         // Relay inventory, but don't relay old inventory during initial block download.
         connman->ForEachNode([nNewHeight, &vHashes](CNode* pnode) {
+            if (pnode->fMasternode) return;
             if (nNewHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 0)) {
                 for (const uint256& hash : reverse_iterate(vHashes)) {
                     pnode->PushBlockHash(hash);
@@ -1870,6 +1871,21 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             LOCK(pfrom->cs_mnauth);
             vRecv >> pfrom->receivedMNAuthChallenge;
         }
+        if (!vRecv.empty()) {
+            bool fOtherMasternode = false;
+            vRecv >> fOtherMasternode;
+            if (pfrom->fInbound) {
+                pfrom->fMasternode = fOtherMasternode;
+                if (fOtherMasternode) {
+                    LogPrint(BCLog::NET, "peer=%d is an inbound masternode connection, not relaying anything to it\n", pfrom->GetId());
+                    if (!fMasternodeMode) {
+                        LogPrint(BCLog::NET, "but we're not a masternode, disconnecting\n");
+                        pfrom->fDisconnect = true;
+                        return true;
+                    }
+                }
+            }
+        }
         // Disconnect if we connected to ourself
         if (pfrom->fInbound && !connman->CheckIncomingNonce(nNonce))
         {
@@ -2309,7 +2325,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 LogPrint(BCLog::NET, " getblocks stopping, pruned or too old block at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
                 break;
             }
-            pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
+            if (!pfrom->fMasternode) {
+                pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
+            }
             if (--nLimit <= 0)
             {
                 // When this block is requested, we'll send an inv that'll
@@ -3606,7 +3624,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         if (pindexBestHeader == nullptr)
             pindexBestHeader = chainActive.Tip();
         bool fFetch = state.fPreferredDownload || (nPreferredDownload == 0 && !pto->fClient && !pto->fOneShot); // Download if this is a nice peer, or we have no nice peers and this one might do.
-        if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex) {
+        if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex && !pto->fMasternode) {
             // Only actively request headers from a single peer, unless we're close to end of initial download.
             if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - nMaxTipAge) {
                 state.fSyncStarted = true;
