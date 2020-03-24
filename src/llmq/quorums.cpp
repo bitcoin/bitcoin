@@ -187,38 +187,14 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
     auto curDkgBlock = pindexNew->GetAncestor(curDkgHeight)->GetBlockHash();
     connmanQuorumsToDelete.erase(curDkgBlock);
 
+    bool allowWatch = gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS);
     for (auto& quorum : lastQuorums) {
-        if (!quorum->IsMember(myProTxHash) && !gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS)) {
+        if (!quorum->IsMember(myProTxHash) && !allowWatch) {
             continue;
         }
 
-        if (!g_connman->HasMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash)) {
-            std::set<uint256> connections;
-            if (quorum->IsMember(myProTxHash)) {
-                connections = CLLMQUtils::GetQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash);
-            } else {
-                auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(llmqType, quorum->pindexQuorum, quorum->members.size(), 1);
-                for (auto idx : cindexes) {
-                    connections.emplace(quorum->members[idx]->proTxHash);
-                }
-            }
-            if (!connections.empty()) {
-                if (LogAcceptCategory(BCLog::LLMQ)) {
-                    auto mnList = deterministicMNManager->GetListAtChainTip();
-                    std::string debugMsg = strprintf("CQuorumManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, quorum->qc.quorumHash.ToString());
-                    for (auto& c : connections) {
-                        auto dmn = mnList.GetValidMN(c);
-                        if (!dmn) {
-                            debugMsg += strprintf("  %s (not in valid MN set anymore)\n", c.ToString());
-                        } else {
-                            debugMsg += strprintf("  %s (%s)\n", c.ToString(), dmn->pdmnState->addr.ToString(false));
-                        }
-                    }
-                    LogPrint(BCLog::LLMQ, debugMsg.c_str());
-                }
-                g_connman->AddMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash, connections);
-            }
-        }
+        CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash, allowWatch);
+
         connmanQuorumsToDelete.erase(quorum->qc.quorumHash);
     }
 

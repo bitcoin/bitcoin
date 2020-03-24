@@ -500,33 +500,7 @@ void CDKGSessionHandler::HandleDKGRound()
         return changed;
     });
 
-    if (curSession->AreWeMember() || gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS)) {
-        std::set<uint256> connections;
-        if (curSession->AreWeMember()) {
-            connections = CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash);
-        } else {
-            auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(params.type, pindexQuorum, curSession->members.size(), 1);
-            for (auto idx : cindexes) {
-                connections.emplace(curSession->members[idx]->dmn->proTxHash);
-            }
-        }
-        if (!connections.empty()) {
-            if (LogAcceptCategory(BCLog::LLMQ_DKG)) {
-                std::string debugMsg = strprintf("CDKGSessionManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, curSession->pindexQuorum->GetBlockHash().ToString());
-                auto mnList = deterministicMNManager->GetListAtChainTip();
-                for (const auto& c : connections) {
-                    auto dmn = mnList.GetValidMN(c);
-                    if (!dmn) {
-                        debugMsg += strprintf("  %s (not in valid MN set anymore)\n", c.ToString());
-                    } else {
-                        debugMsg += strprintf("  %s (%s)\n", c.ToString(), dmn->pdmnState->addr.ToString(false));
-                    }
-                }
-                LogPrint(BCLog::LLMQ_DKG, debugMsg.c_str());
-            }
-            g_connman->AddMasternodeQuorumNodes(params.type, curQuorumHash, connections);
-        }
-    }
+    CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash, gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS));
 
     WaitForNextPhase(QuorumPhase_Initialized, QuorumPhase_Contribute, curQuorumHash, []{return false;});
 
