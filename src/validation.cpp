@@ -54,6 +54,7 @@
 #include <llmq/quorums_chainlocks.h>
 
 #include <atomic>
+#include <future>
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -2848,6 +2849,14 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
     int nStopAtHeight = gArgs.GetArg("-stopatheight", DEFAULT_STOPATHEIGHT);
     do {
         boost::this_thread::interruption_point();
+
+        if (GetMainSignals().CallbacksPending() > 10) {
+            // Block until the validation queue drains. This should largely
+            // never happen in normal operation, however may happen during
+            // reindex, causing memory blowup  if we run too far ahead.
+            SyncWithValidationInterfaceQueue();
+        }
+
 
         const CBlockIndex *pindexFork;
         bool fInitialDownload;
