@@ -210,8 +210,6 @@ BitcoinApplication::~BitcoinApplication()
 
     delete window;
     window = nullptr;
-    delete optionsModel;
-    optionsModel = nullptr;
     delete platformStyle;
     platformStyle = nullptr;
 }
@@ -225,7 +223,7 @@ void BitcoinApplication::createPaymentServer()
 
 void BitcoinApplication::createOptionsModel(bool resetSettings)
 {
-    optionsModel = new OptionsModel(m_node, nullptr, resetSettings);
+    optionsModel = new OptionsModel(m_node, this, resetSettings);
 }
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
