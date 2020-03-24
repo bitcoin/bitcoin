@@ -33,6 +33,8 @@ private:
     // KEEP TRACK OF GOVERNANCE ITEMS EACH MASTERNODE HAS VOTE UPON FOR RECALCULATION
     std::map<uint256, int> mapGovernanceObjectsVotedOn;
 
+    int64_t lastOutboundAttempt = 0;
+
 public:
     CMasternodeMetaInfo() {}
     explicit CMasternodeMetaInfo(const uint256& _proTxHash) : proTxHash(_proTxHash) {}
@@ -40,7 +42,8 @@ public:
         proTxHash(ref.proTxHash),
         nLastDsq(ref.nLastDsq),
         nMixingTxCount(ref.nMixingTxCount),
-        mapGovernanceObjectsVotedOn(ref.mapGovernanceObjectsVotedOn)
+        mapGovernanceObjectsVotedOn(ref.mapGovernanceObjectsVotedOn),
+        lastOutboundAttempt(ref.lastOutboundAttempt)
     {
     }
 
@@ -53,6 +56,7 @@ public:
         READWRITE(nLastDsq);
         READWRITE(nMixingTxCount);
         READWRITE(mapGovernanceObjectsVotedOn);
+        READWRITE(lastOutboundAttempt);
     }
 
 public:
@@ -66,6 +70,9 @@ public:
     void AddGovernanceVote(const uint256& nGovernanceObjectHash);
 
     void RemoveGovernanceObject(const uint256& nGovernanceObjectHash);
+
+    void SetLastOutboundAttempt(int64_t t) { LOCK(cs); lastOutboundAttempt = t; }
+    int64_t GetLastOutboundAttempt() const { LOCK(cs); return lastOutboundAttempt; }
 };
 typedef std::shared_ptr<CMasternodeMetaInfo> CMasternodeMetaInfoPtr;
 
