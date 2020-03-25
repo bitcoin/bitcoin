@@ -221,7 +221,7 @@ public:
     public:
         virtual ~Notifications() {}
         // SYSCOIN
-        virtual void transactionAddedToMempool(const CTransactionRef& tx bool fBlock) {}
+        virtual void transactionAddedToMempool(const CTransactionRef& tx, bool fBlock) {}
         virtual void transactionRemovedFromMempool(const CTransactionRef& ptx) {}
         virtual void blockConnected(const CBlock& block, int height) {}
         virtual void blockDisconnected(const CBlock& block, int height) {}
