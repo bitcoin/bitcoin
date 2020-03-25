@@ -638,7 +638,12 @@ AC_ARG_WITH([daemon],
 case $host in
   *mingw*)
      TARGET_OS=windows
+
+     dnl Some versions of MinGW may require libmingwthrd linked for a thread-safe stdlib implementation
+     dnl Normally, this is automatically linked by GCC's -mthreads flag, but for some reason (lost in the dust of time), that doesn't work when static linking
+     dnl See also: https://en.bitcoin.it/wiki/Common_Vulnerabilities_and_Exposures#CVE-2012-1910
      AC_CHECK_LIB([mingwthrd],[main],                    [], [AC_MSG_ERROR([libmingwthrd missing])])
+
      AC_CHECK_LIB([kernel32], [GetModuleFileNameA],      [], [AC_MSG_ERROR([libkernel32 missing])])
      AC_CHECK_LIB([user32],   [main],                    [], [AC_MSG_ERROR([libuser32 missing])])
      AC_CHECK_LIB([gdi32],    [main],                    [], [AC_MSG_ERROR([libgdi32 missing])])
@@ -668,6 +673,7 @@ case $host in
        AC_MSG_ERROR([windres not found])
      fi
 
+     dnl As with above, _MT is required and normally defined by -mthreads
      CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -D_WIN32_WINNT=0x0601 -D_WIN32_IE=0x0501 -DWIN32_LEAN_AND_MEAN"
 
      dnl libtool insists upon adding -nostdlib and a list of objects/libs to link against.
