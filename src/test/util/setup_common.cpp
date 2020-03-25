@@ -24,6 +24,7 @@
 #include <txdb.h>
 #include <util/memory.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
