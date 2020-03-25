@@ -109,7 +109,7 @@ certain symbols and are only linked against allowed libraries.
 For Linux this means checking for allowed gcc, glibc and libstdc++ version symbols.
 This makes sure they are still compatible with the minimum supported distribution versions.
 
-For macOS we check that the executables are only linked against libraries we allow.
+For macOS and Windows we check that the executables are only linked against libraries we allow.
 
 Example usage after a gitian build:
 
