@@ -13,6 +13,7 @@
 #include <random.h>
 #include <scheduler.h>
 #include <txmempool.h>
+#include <util/string.h>
 
 #include <type_traits>
 
