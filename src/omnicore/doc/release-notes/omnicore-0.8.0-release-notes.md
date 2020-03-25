@@ -1,13 +1,13 @@
-Omni Core v0.8.01
+Omni Core v0.8.0
 ================
 
-v0.8.1 is a minor release and incooperates significant performance improvements for the initial synchronization and upgrading from older versions of Omni Core.
+v0.8.0 is a major release and an upgrade is required.
 
-A consensus affecting issue in an earlier version of Omni Core has been identified, which may cause some transactions to be executed twice. This has been addressed and fixed in the previous major version 0.8.0.
+A consensus affecting issue in an earlier version of Omni Core has been identified, which may cause some transactions to be executed twice. This has been addressed and fixed in this release.
 
-The first time you start this version from a version older than 0.8.0, the internal database for Omni Layer transactions is reconstructed, which may consume several hours or even more than a day. Please plan your downtime accordingly.
+More information about this issue will be announced on https://blog.omni.foundation/.
 
-Upgrading from 0.8.0 does not require a rescan and can be done very fast without interruption.
+The first time you start this version, the internal database for Omni Layer transactions is reconstructed, which may consume several hours or even more than a day. Please plan your downtime accordingly.
 
 Please report bugs using the issue tracker on GitHub:
 
@@ -17,13 +17,12 @@ Please report bugs using the issue tracker on GitHub:
 Table of contents
 =================
 
-- [Omni Core v0.8.1](#omni-core-v071)
+- [Omni Core v0.8.0](#omni-core-v071)
 - [Upgrading and downgrading](#upgrading-and-downgrading)
   - [How to upgrade](#how-to-upgrade)
   - [Downgrading](#downgrading)
   - [Compatibility with Bitcoin Core](#compatibility-with-bitcoin-core)
 - [Imported notes](#imported-notes)
-  - [Performance improvements](#performance-improvements)
   - [Transaction replays](#transaction-replays)
   - [Searching for affected transactions](#searching-for-affected-transactions)
 - [Change log](#change-log)
@@ -38,9 +37,9 @@ How to upgrade
 
 If you are running Bitcoin Core or an older version of Omni Core, shut it down. Wait until it has completely shut down, then copy the new version of `omnicored`, `omnicore-cli` and `omnicore-qt`. On Microsoft Windows the setup routine can be used to automate these steps.
 
-When upgrading from an older version than 0.8.0, the database of Omni Core is reconstructed, which can easily consume several hours. During the first startup historical Omni Layer transactions are reprocessed and Omni Core will not be usable for several hours up to more than a day. The progress of the initial scan is reported on the console, the GUI and written to the `debug.log`. The scan may be interrupted and can be resumed.
+When upgrading from an older version, the database is reconstructed, which can easily consume several hours.
 
-Upgrading from 0.8.0 does not require a rescan and can be done very fast without interruption.
+During the first startup historical Omni transactions are reprocessed and Omni Core will not be usable for several hours up to more than a day. The progress of the initial scan is reported on the console, the GUI and written to the `debug.log`. The scan may be interrupted, but can not be resumed, and then needs to start from the beginning.
 
 Downgrading
 -----------
@@ -57,14 +56,6 @@ However, it is not advised to upgrade or downgrade to versions other than Bitcoi
 
 Imported notes
 ==============
-
-Performance improvements
-------------------------
-
-Due to persistence optimiziations the initial time to synchronize a new Omni Core node, upgrading from an older version than 0.8.0 or rebuilding Omni Core's database with the `-startclean` startup option is significantly improvemed.
-
-In our tests, the time to build the internal database of Omni Core was reduced by a factor up to 4x.
-
 
 Transaction replays
 -------------------
@@ -120,25 +111,6 @@ Footnote: If your hot wallet utilizes the send all transaction type for sweeping
   * The transaction amount matches the amount you recorded/processed in your database `response['amount']`
   * Note: If your service supports deposits from 'send_all' transactions you will need to adjust the amount field to check for all `amounts` in the `response['subsends']` array of the transaction
   * For any transaction that does not match the previous two conditions, flag it for manual followup and check the discrepancy between the updated client output and the details of what you processed in the database.
-
-
-Change log
-==========
-
-The following list includes relevant pull requests merged into this release:
-
-```
-- #1077 Move mastercore_handler_block_begin and use chain height
-- #1079 Bump DB version to force reparse
-- #1080 Bump version to 0.8.0
-- #1082 Update release notes for Omni Core 0.8.0
-- #1084 Avoid MakeWallet() when compiled without wallet
-- #1086 Remove redundant function declaration in test
-- #1090 Only evaluate fee cache, when it's activated
-- #1091 Don't store state every block, when syncing or rescanning
-- #1095 Bump version to Omni Core 0.8.1
-- #1097 Update release notes for Omni Core 0.8.1
-```
 
 
 Credits
