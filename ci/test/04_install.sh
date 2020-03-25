@@ -102,7 +102,9 @@ else
 fi
 
 if [ ! -d ${DIR_QA_ASSETS} ]; then
+ if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   DOCKER_EXEC git clone https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
+ fi
 fi
 export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
 
