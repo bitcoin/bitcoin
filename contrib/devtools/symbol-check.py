@@ -4,8 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 A script to check that the (Linux) release executables only contain
-allowed gcc and glibc version symbols. This makes sure they are still compatible
-with the minimum supported Linux distribution versions.
+certain symbols and are only linked against allowed libraries.
 
 Example usage:
 
@@ -57,6 +56,7 @@ IGNORE_EXPORTS = {
 'environ', '_environ', '__environ',
 }
 CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
+OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
 OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
 
 # Allowed NEEDED libraries
@@ -105,6 +105,30 @@ MACHO_ALLOWED_LIBRARIES = {
 'Metal', # 3D graphics
 'Security', # access control and authentication
 'QuartzCore', # animation
+}
+
+PE_ALLOWED_LIBRARIES = {
+'ADVAPI32.dll', # security & registry
+'IPHLPAPI.DLL', # IP helper API
+'KERNEL32.dll', # win32 base APIs
+'msvcrt.dll', # C standard library for MSVC
+'SHELL32.dll', # shell API
+'USER32.dll', # user interface
+'WS2_32.dll', # sockets
+'bcrypt.dll',
+# bitcoin-qt only
+'dwmapi.dll', # desktop window manager
+'GDI32.dll', # graphics device interface
+'IMM32.dll', # input method editor
+'NETAPI32.dll',
+'ole32.dll', # component object model
+'OLEAUT32.dll', # OLE Automation API
+'SHLWAPI.dll', # light weight shell API
+'USERENV.dll',
+'UxTheme.dll',
+'VERSION.dll', # version checking
+'WINMM.dll', # WinMM audio API
+'WTSAPI32.dll',
 }
 
 class CPPFilt(object):
@@ -200,6 +224,26 @@ def check_MACHO_libraries(filename) -> bool:
             ok = False
     return ok
 
+def pe_read_libraries(filename) -> List[str]:
+    p = subprocess.Popen([OBJDUMP_CMD, '-x', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+    libraries = []
+    for line in stdout.splitlines():
+        if 'DLL Name:' in line:
+            tokens = line.split(': ')
+            libraries.append(tokens[1])
+    return libraries
+
+def check_PE_libraries(filename) -> bool:
+    ok = True
+    for dylib in pe_read_libraries(filename):
+        if dylib not in PE_ALLOWED_LIBRARIES:
+            print('{} is not in ALLOWED_LIBRARIES!'.format(dylib))
+            ok = False
+    return ok
+
 CHECKS = {
 'ELF': [
     ('IMPORTED_SYMBOLS', check_imported_symbols),
@@ -208,6 +252,9 @@ CHECKS = {
 ],
 'MACHO': [
     ('DYNAMIC_LIBRARIES', check_MACHO_libraries)
+],
+'PE' : [
+    ('DYNAMIC_LIBRARIES', check_PE_libraries)
 ]
 }
 
