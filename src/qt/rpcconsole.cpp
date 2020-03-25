@@ -1238,15 +1238,16 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStats.m_ping_wait_usec));
     ui->peerMinPing->setText(GUIUtil::formatPingTime(stats->nodeStats.m_min_ping_usec));
     ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->nodeStats.nTimeOffset));
-    ui->peerVersion->setText(QString("%1").arg(QString::number(stats->nodeStats.nVersion)));
+    ui->peerVersion->setText(QString::number(stats->nodeStats.nVersion));
     ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
     ui->peerDirection->setText(stats->nodeStats.fInbound
             ? tr("Inbound")
             : stats->nodeStats.fRelayTxes
                 ? tr("Outbound")
                 : tr("Outbound block-relay"));
-    ui->peerHeight->setText(QString("%1").arg(QString::number(stats->nodeStats.nStartingHeight)));
+    ui->peerHeight->setText(QString::number(stats->nodeStats.nStartingHeight));
     ui->peerWhitelisted->setText(stats->nodeStats.m_legacyWhitelisted ? tr("Yes") : tr("No"));
+    ui->peerMappedAS->setText(stats->nodeStats.m_mapped_as != 0 ? QString::number(stats->nodeStats.m_mapped_as) : tr("N/A"));
     auto dmn = clientModel->getMasternodeList().GetMNByService(stats->nodeStats.addr);
     if (dmn == nullptr) {
         ui->peerNodeType->setText(tr("Regular"));
