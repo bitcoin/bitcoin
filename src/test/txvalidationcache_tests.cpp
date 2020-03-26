@@ -206,8 +206,9 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
     // under other (eg consensus) flags.
     // spend_tx is invalid according to DERSIG
     {
-        CValidationState state;
         LOCK(cs_main);
+
+        CValidationState state;
         PrecomputedTransactionData ptd_spend_tx(spend_tx);
 
         BOOST_CHECK(!CheckInputs(spend_tx, state, pcoinsTip.get(), true, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_DERSIG, true, true, ptd_spend_tx, nullptr));
