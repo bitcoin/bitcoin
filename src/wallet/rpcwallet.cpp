@@ -3342,12 +3342,11 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                 "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
                 "An opt-in RBF transaction with the given txid must be in the wallet.\n"
                 "The command will pay the additional fee by reducing change outputs or adding inputs when necessary. It may add a new change output if one does not already exist.\n"
-                "If `totalFee` (DEPRECATED) is given, adding inputs is not supported, so there must be a single change output that is big enough or it will fail.\n"
                 "All inputs in the original transaction will be included in the replacement transaction.\n"
                 "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
                 "By default, the new fee will be calculated automatically using estimatesmartfee.\n"
                 "The user can specify a confirmation target for estimatesmartfee.\n"
-                "Alternatively, the user can specify totalFee (DEPRECATED), or fee_rate (" + CURRENCY_UNIT + " per kB) for the new transaction .\n"
+                "Alternatively, the user can specify a fee_rate (" + CURRENCY_UNIT + " per kB) for the new transaction.\n"
                 "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"
                 "returned by getnetworkinfo) to enter the node's mempool.\n",
                 {
@@ -3355,11 +3354,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                     {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                         {
                             {"confTarget", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks)"},
-                            {"totalFee", RPCArg::Type::NUM, /* default */ "fallback to 'confTarget'", "Total fee (NOT feerate) to pay, in satoshis. (DEPRECATED)\n"
-            "                         In rare cases, the actual fee paid might be slightly higher than the specified\n"
-            "                         totalFee if the tx change output has to be removed because it is too close to\n"
-            "                         the dust threshold."},
-                            {"fee_rate", RPCArg::Type::NUM, /* default */ "fallback to 'confTarget'", "FeeRate (NOT total fee) to pay, in " + CURRENCY_UNIT + " per kB\n"
+                            {"fee_rate", RPCArg::Type::NUM, /* default */ "fall back to 'confTarget'", "fee rate (NOT total fee) to pay, in " + CURRENCY_UNIT + " per kB\n"
             "                         Specify a fee rate instead of relying on the built-in fee estimator.\n"
                                      "Must be at least 0.0001 " + CURRENCY_UNIT + " per kB higher than the current transaction fee rate.\n"},
                             {"replaceable", RPCArg::Type::BOOL, /* default */ "true", "Whether the new transaction should still be\n"
@@ -3400,7 +3395,6 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     CCoinControl coin_control;
     coin_control.fAllowWatchOnly = pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     // optional parameters
-    CAmount totalFee = 0;
     coin_control.m_signal_bip125_rbf = true;
 
     if (!request.params[1].isNull()) {
@@ -3408,26 +3402,15 @@ static UniValue bumpfee(const JSONRPCRequest& request)
         RPCTypeCheckObj(options,
             {
                 {"confTarget", UniValueType(UniValue::VNUM)},
-                {"totalFee", UniValueType(UniValue::VNUM)},
                 {"fee_rate", UniValueType(UniValue::VNUM)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
             },
             true, true);
-        if (options.exists("confTarget") && (options.exists("totalFee") || options.exists("fee_rate"))) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget can't be set with totalFee or fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
-        } else if (options.exists("fee_rate") && options.exists("totalFee")) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "fee_rate can't be set along with totalFee.");
+        if (options.exists("confTarget") && options.exists("fee_rate")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget can't be set with fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
         } else if (options.exists("confTarget")) { // TODO: alias this to conf_target
             coin_control.m_confirm_target = ParseConfirmTarget(options["confTarget"], pwallet->chain().estimateMaxBlocks());
-        } else if (options.exists("totalFee")) {
-            if (!pwallet->chain().rpcEnableDeprecated("totalFee")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "totalFee argument has been deprecated and will be removed in 0.20. Please use -deprecatedrpc=totalFee to continue using this argument until removal.");
-            }
-            totalFee = options["totalFee"].get_int64();
-            if (totalFee <= 0) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid totalFee %s (must be greater than 0)", FormatMoney(totalFee)));
-            }
         } else if (options.exists("fee_rate")) {
             CFeeRate fee_rate(AmountFromValue(options["fee_rate"]));
             if (fee_rate <= CFeeRate(0)) {
@@ -3460,13 +3443,8 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     CAmount new_fee;
     CMutableTransaction mtx;
     feebumper::Result res;
-    if (totalFee > 0) {
-        // Targeting total fee bump. Requires a change output of sufficient size.
-        res = feebumper::CreateTotalBumpTransaction(pwallet, hash, coin_control, totalFee, errors, old_fee, new_fee, mtx);
-    } else {
-        // Targeting feerate bump.
-        res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx);
-    }
+    // Targeting feerate bump.
+    res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx);
     if (res != feebumper::Result::OK) {
         switch(res) {
             case feebumper::Result::INVALID_ADDRESS_OR_KEY:
@@ -4196,7 +4174,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                             },
                             {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Marks this transaction as BIP125 replaceable.\n"
                             "                              Allows this transaction to be replaced by a transaction with higher fees"},
-                            {"conf_target", RPCArg::Type::NUM, /* default */ "Fallback to wallet's confirmation target", "Confirmation target (in blocks)"},
+                            {"conf_target", RPCArg::Type::NUM, /* default */ "fall back to wallet's confirmation target (txconfirmtarget)", "Confirmation target (in blocks)"},
                             {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
                             "         \"UNSET\"\n"
                             "         \"ECONOMICAL\"\n"
