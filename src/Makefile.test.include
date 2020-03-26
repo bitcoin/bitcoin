@@ -83,6 +83,7 @@ FUZZ_TARGETS = \
   test/fuzz/process_message_tx \
   test/fuzz/process_message_verack \
   test/fuzz/process_message_version \
+  test/fuzz/protocol \
   test/fuzz/psbt \
   test/fuzz/psbt_input_deserialize \
   test/fuzz/psbt_output_deserialize \
@@ -765,6 +766,12 @@ test_fuzz_process_message_version_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_version_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_version_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_process_message_version_SOURCES = $(FUZZ_SUITE) test/fuzz/process_message.cpp
+
+test_fuzz_protocol_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_protocol_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_protocol_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_protocol_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_protocol_SOURCES = $(FUZZ_SUITE) test/fuzz/protocol.cpp
 
 test_fuzz_psbt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_psbt_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
