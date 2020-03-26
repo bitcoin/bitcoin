@@ -1030,7 +1030,8 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
             "have been observed to make an estimate for any number of blocks."},
                     }},
                 RPCExamples{
-                    HelpExampleCli("estimatesmartfee", "6")
+                    HelpExampleCli("estimatesmartfee", "6") +
+                    HelpExampleRpc("estimatesmartfee", "6")
                 },
             }.Check(request);
 
