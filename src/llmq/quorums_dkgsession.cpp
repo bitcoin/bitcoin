@@ -60,12 +60,12 @@ static bool ShouldSimulateError(const std::string& type)
 }
 
 CDKGLogger::CDKGLogger(const CDKGSession& _quorumDkg, const std::string& _func) :
-    CDKGLogger(_quorumDkg.params.type, _quorumDkg.pindexQuorum->GetBlockHash(), _quorumDkg.pindexQuorum->nHeight, _quorumDkg.AreWeMember(), _func)
+    CDKGLogger(_quorumDkg.params.name, _quorumDkg.pindexQuorum->GetBlockHash(), _quorumDkg.pindexQuorum->nHeight, _quorumDkg.AreWeMember(), _func)
 {
 }
 
-CDKGLogger::CDKGLogger(Consensus::LLMQType _llmqType, const uint256& _quorumHash, int _height, bool _areWeMember, const std::string& _func) :
-    CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%d, height=%d, member=%d, func=%s)", _llmqType, _height, _areWeMember, _func))
+CDKGLogger::CDKGLogger(const std::string& _llmqTypeName, const uint256& _quorumHash, int _height, bool _areWeMember, const std::string& _func) :
+    CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, height=%d, member=%d, func=%s)", _llmqTypeName, _height, _areWeMember, _func))
 {
 }
 
@@ -90,10 +90,6 @@ CDKGMember::CDKGMember(CDeterministicMNCPtr _dmn, size_t _idx) :
 
 bool CDKGSession::Init(const CBlockIndex* _pindexQuorum, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash)
 {
-    if (mns.size() < params.minSize) {
-        return false;
-    }
-
     pindexQuorum = _pindexQuorum;
 
     members.resize(mns.size());
@@ -119,11 +115,16 @@ bool CDKGSession::Init(const CBlockIndex* _pindexQuorum, const std::vector<CDete
         }
     }
 
+    CDKGLogger logger(*this, __func__);
+
+    if (mns.size() < params.minSize) {
+        logger.Batch("not enough members (%d < %d), aborting init", mns.size(), params.minSize);
+        return false;
+    }
+
     if (!myProTxHash.IsNull()) {
         quorumDKGDebugManager->InitLocalSessionStatus(params.type, pindexQuorum->GetBlockHash(), pindexQuorum->nHeight);
     }
-
-    CDKGLogger logger(*this, __func__);
 
     if (myProTxHash.IsNull()) {
         logger.Batch("initialized as observer. mns=%d", mns.size());

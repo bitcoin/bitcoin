@@ -30,7 +30,7 @@ class CDKGLogger : public CBatchedLogger
 {
 public:
     CDKGLogger(const CDKGSession& _quorumDkg, const std::string& _func);
-    CDKGLogger(Consensus::LLMQType _llmqType, const uint256& _quorumHash, int _height, bool _areWeMember, const std::string& _func);
+    CDKGLogger(const std::string& _llmqTypeName, const uint256& _quorumHash, int _height, bool _areWeMember, const std::string& _func);
 };
 
 class CDKGContribution
