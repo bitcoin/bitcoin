@@ -44,12 +44,19 @@ uint256 CLLMQUtils::BuildSignHash(Consensus::LLMQType llmqType, const uint256& q
     return h.GetHash();
 }
 
-std::set<uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember)
+std::set<uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound)
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
     auto mns = GetAllQuorumMembers(llmqType, pindexQuorum);
     std::set<uint256> result;
+
+    if (!onlyOutbound) {
+        for (auto& dmn : mns) {
+            result.emplace(dmn->proTxHash);
+        }
+        return result;
+    }
 
     if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
         for (auto& dmn : mns) {
@@ -125,7 +132,7 @@ void CLLMQUtils::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBl
 
     std::set<uint256> connections;
     if (isMember) {
-        connections = CLLMQUtils::GetQuorumConnections(llmqType, pindexQuorum, myProTxHash);
+        connections = CLLMQUtils::GetQuorumConnections(llmqType, pindexQuorum, myProTxHash, true);
     } else {
         auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(llmqType, pindexQuorum, members.size(), 1);
         for (auto idx : cindexes) {
