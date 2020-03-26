@@ -22,7 +22,7 @@ For more information, as well as an immediately usable, binary version Crown see
 
 Crown is ultimately a community-driven platform. Its potential to bring social and technological growth is contingent on the ideas and support its users provide. We invite you to lend your voice and imagination to this burgeoning platform and share in its success. Together, there’s no limit to what we can accomplish.
 
-* Crown Forum: https://forum.crownplatform.com
+* Crown Forum: https://forum.crown.tech
 * Discord: https://discord.gg/Tcrkazc
 * Telegram: https://t.me/crownplatform
 * Guides & How-to: https://forum.crownplatform.com/index.php?board=5.0
@@ -61,7 +61,7 @@ Bugs can be reported via the Gitlab issues page: https://gitlab.crownplatform.co
 When describing a bug please include following information:
 * **Issue summary** - an issue header which outlines the actual defect to be solved
 * **Product** - for example *Desktop Wallet x64, Windows 10*
-* **Build Found In** - for example *0.13.0.0*; this is very important as you may be using an old build and the issue may already have been resolved.
+* **Build Found In** - for example *0.13.4.0*; this is very important as you may be using an old build and the issue may already have been resolved.
 * **Steps to reproduce** - the steps to recreate exactly how the error occurred when you found the issue
 * **Expected behavior** -  what you would expect to see instead of the issue; this can be useful as it may trigger a conversation between yourself and the developer (or the team) about a better fix or possible solutions.
 

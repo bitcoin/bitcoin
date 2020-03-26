@@ -1,5 +1,5 @@
 ### Summary
-(Summarise the symptoms of the bug you encountered.)
+(Summarize the symptoms of the bug you encountered.)
 
 ### Steps to reproduce
 (How one can reproduce the issue, step by step.)
@@ -14,7 +14,7 @@
 (The OS version, like Ubuntu 16.04.)
 
 ### Crown-core application info
-(The wallet version, like v0.14.0; link to the pipeline/build if possible.)
+(The wallet version, like v0.12.4.1; link to the pipeline/build if possible.)
 
 ### Relevant logs, dumps and/or screenshots
 (Paste any relevant logs - please use code blocks (```) to format console output,

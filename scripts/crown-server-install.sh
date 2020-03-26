@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2018-2019 The Crown developers
+# Copyright (c) 2018-2020 The Crown developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 #
 # Setup crown server or update existing one
 
-LATEST_RELEASE="0.13.4.0"
+LATEST_RELEASE="0.14.0.0"
 
 systemnode=false
 masternode=false
@@ -208,9 +208,9 @@ download_package() {
         echo "Downloading pipeline job $job"
         wget "https://gitlab.crownplatform.com/crown/crown-core/-/jobs/$job/artifacts/download" -O $dir/crown.zip
     else
-        # Change this later to take latest release version.
+        # Pull the latest release version.
         echo "Downloading $BITS bit Crown package version $LATEST_RELEASE."
-        wget "https://github.com/Crowndev/crowncoin/releases/download/v$LATEST_RELEASE/Crown-$LATEST_RELEASE-Linux$BITS.zip" -O $dir/crown.zip
+        wget "https://github.com/Crowndev/crowncoin/releases/download/v$LATEST_RELEASE-Emerald/Crown-$LATEST_RELEASE-Linux$BITS.zip" -O $dir/crown.zip
     fi
     wget "https://raw.githubusercontent.com/Crowndev/crowncoin/master/scripts/crownwatch.sh" -O $dir/crownwatch.sh
     if [ -s "$dir/crown.zip" ]; then
@@ -270,6 +270,11 @@ configure_conf() {
     elif [ "$masternode" = true ] ; then
         echo "masternode=1" >>.crown/crown.conf
         echo "masternodeprivkey="$privkey >>.crown/crown.conf
+    fi
+    if [ "$LATEST_RELEASE" = "0.13.4.0" ] ; then
+        echo "addnode=92.60.44.40" >>.crown/crown.conf
+        echo "addnode=149.248.53.3" >>.crown/crown.conf
+        echo "addnode=139.180.141.215" >>.crown/crown.conf
     fi
     echo "This is the config file:"
     cat .crown/crown.conf

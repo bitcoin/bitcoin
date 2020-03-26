@@ -60,7 +60,7 @@ void CActiveMasternode::ManageStatus()
         }
 
         if(pwalletMain->GetBalance() == 0){
-            notCapableReason = "Hot node, waiting for remote activation.";
+            notCapableReason = "Masternode configured correctly and ready, please use your local wallet to start it -Start alias-.";
             LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
             return;
         }

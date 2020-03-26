@@ -253,14 +253,21 @@ public:
         assert(hashGenesisBlock == uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"));
         assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
-        vSeeds.push_back(CDNSSeedData("fra-crwdns", "fra-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("blr-crwdns", "blr-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("sgp-crwdns", "sgp-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("lon-crwdns", "lon-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("nyc-crwdns", "nyc-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("tor-crwdns", "tor-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("sfo-crwdns", "sfo-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("ams-crwdns", "ams-crwdns.crowndns.info"));
+/** Main net nameservers defined here, they are geographic strategic and redundant through 2 domains.
+* The nameservers are location-XXseedNS.crownplatform. net/org they will point to main net dns seed VPS's
+* through location-XX.seeder.crowncoin.net which can be set up by community members, and also wil be set up by the infra team.
+* Community members wanting to contribute a VPS will request (outside of public view) for a DNS entry to be made to the main nameservers for their dns seed's IP,
+* getting help setting it up from the infra team.
+*/
+
+
+        vSeeds.push_back(CDNSSeedData("eur1-crwdns", "europe-01seedns.crowncoin.org"));
+        vSeeds.push_back(CDNSSeedData("eur2-crwdns", "europe-02seedns.crowncoin.net"));
+        vSeeds.push_back(CDNSSeedData("nam1-crwdns", "canada-01seedns.crowncoin.org"));
+        vSeeds.push_back(CDNSSeedData("ltm1-crwdns", "latam-01seedns.crowncoin.net"));
+        vSeeds.push_back(CDNSSeedData("sea1-crwdns", "SEAsia-01seedns.crowncoin.org"));
+        vSeeds.push_back(CDNSSeedData("pac1-crwdns", "pacific-01seedns.crowncoin.net"));
+
 
         // Crown addresses start with 'CRW'
         base58Prefixes[PUBKEY_ADDRESS] = list_of(0x01)(0x75)(0x07).convert_to_container<std::vector<unsigned char> >();
@@ -382,7 +389,7 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-
+// Testnet seeders update is outside of current hotfix scope
         vSeeds.push_back(CDNSSeedData("fra-testnet-crwdns", "fra-testnet-crwdns.crowndns.info"));
         vSeeds.push_back(CDNSSeedData("blr-testnet-crwdns", "blr-testnet-crwdns.crowndns.info"));
         vSeeds.push_back(CDNSSeedData("sgp-testnet-crwdns", "sgp-testnet-crwdns.crowndns.info"));
