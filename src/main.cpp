@@ -682,9 +682,29 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
 bool IsStandardTx(const CTransaction& tx, string& reason)
 {
     AssertLockHeld(cs_main);
-    if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
-        reason = "version";
+
+    if (tx.nVersion < 1) {
+        reason = "invalid-version";
         return false;
+    }
+
+    if (tx.nVersion >= 3) {
+        if (!IsSporkActive(SPORK_17_NFT_TX)) {
+            reason = "nft-spork-not-active";
+            return false;
+        }
+
+        if (tx.nType != TRANSACTION_NORMAL &&
+            tx.nType != TRANSACTION_GOVERNANCE_VOTE &&
+            tx.nType != TRANSACTION_NF_TOKEN_REGISTER &&
+            tx.nType != TRANSACTION_NF_TOKEN_PROTOCOL_REGISTER) {
+            reason = "bad-tx-type";
+            return false;
+        }
+        if (tx.IsCoinBase() && tx.nType != TRANSACTION_NORMAL) {
+            reason = "inalid-coinbase-tx";
+            return false;
+        }
     }
 
     // Treat non-final transactions as non-standard to prevent a specific type
