@@ -27,6 +27,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h> // for CRecipient
 
+#include <locale>
 #include <stdint.h>
 
 #include <QDebug>
@@ -469,6 +470,7 @@ bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t 
     CTxDestination dest = DecodeDestination(sAddress);
 
     std::stringstream ss;
+    ss.imbue(std::locale::classic());
     ss << nId;
     std::string key = "rr" + ss.str(); // "rr" prefix = "receive request" in destdata
 

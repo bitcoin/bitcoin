@@ -8,6 +8,7 @@
 #include <util/strencodings.h>
 #include <util/translation.h>
 
+#include <locale>
 #include <stdint.h>
 
 #ifndef WIN32
@@ -453,6 +454,7 @@ bool BerkeleyEnvironment::Salvage(const std::string& strFile, bool fAggressive, 
         flags |= DB_AGGRESSIVE;
 
     std::stringstream strDump;
+    strDump.imbue(std::locale::classic());
 
     Db db(dbenv.get(), 0);
     int result = db.verify(strFile.c_str(), nullptr, &strDump, flags);

@@ -50,6 +50,7 @@ const uint160 MaxS = uint160(std::vector<unsigned char>(MaxArray,MaxArray+20));
 static std::string ArrayToString(const unsigned char A[], unsigned int width)
 {
     std::stringstream Stream;
+    Stream.imbue(std::locale::classic());
     Stream << std::hex;
     for (unsigned int i = 0; i < width; ++i)
     {

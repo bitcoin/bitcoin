@@ -6,6 +6,7 @@
 
 #include <tinyformat.h>
 
+#include <locale>
 
 /**
  * Name of client reported in the 'version' message. Report the same name
@@ -87,6 +88,7 @@ std::string FormatFullVersion()
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
 {
     std::ostringstream ss;
+    ss.imbue(std::locale::classic());
     ss << "/";
     ss << name << ":" << FormatVersion(nClientVersion);
     if (!comments.empty())

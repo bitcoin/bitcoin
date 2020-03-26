@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <locale>
 #include <mutex>
 #include <sstream>
 #include <set>
@@ -213,6 +214,7 @@ const std::string& ListBlockFilterTypes()
     static std::once_flag flag;
     std::call_once(flag, []() {
             std::stringstream ret;
+            ret.imbue(std::locale::classic());
             bool first = true;
             for (auto entry : g_filter_types) {
                 if (!first) ret << ", ";

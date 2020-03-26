@@ -19,6 +19,7 @@
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 
+#include <locale>
 #include <stdint.h>
 #include <tuple>
 
@@ -32,6 +33,7 @@ using interfaces::FoundBlock;
 
 std::string static EncodeDumpString(const std::string &str) {
     std::stringstream ret;
+    ret.imbue(std::locale::classic());
     for (const unsigned char c : str) {
         if (c <= 32 || c >= 128 || c == '%') {
             ret << '%' << HexStr(&c, &c + 1);
@@ -44,6 +46,7 @@ std::string static EncodeDumpString(const std::string &str) {
 
 static std::string DecodeDumpString(const std::string &str) {
     std::stringstream ret;
+    ret.imbue(std::locale::classic());
     for (unsigned int pos = 0; pos < str.length(); pos++) {
         unsigned char c = str[pos];
         if (c == '%' && pos+2 < str.length()) {

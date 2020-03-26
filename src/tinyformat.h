@@ -143,6 +143,7 @@ namespace tfm = tinyformat;
 // Implementation details.
 #include <algorithm>
 #include <iostream>
+#include <locale>    // Added for Bitcoin Core
 #include <sstream>
 #include <stdexcept> // Added for Bitcoin Core
 
@@ -288,6 +289,7 @@ template<typename T>
 inline void formatTruncated(std::ostream& out, const T& value, int ntrunc)
 {
     std::ostringstream tmp;
+    tmp.imbue(std::locale::classic()); // Added for Bitcoin Core
     tmp << value;
     std::string result = tmp.str();
     out.write(result.c_str(), (std::min)(ntrunc, static_cast<int>(result.size())));
@@ -912,6 +914,7 @@ inline void formatImpl(std::ostream& out, const char* fmt,
             // it crudely by formatting into a temporary string stream and
             // munging the resulting string.
             std::ostringstream tmpStream;
+            tmpStream.imbue(std::locale::classic()); // Added for Bitcoin Core
             tmpStream.copyfmt(out);
             tmpStream.setf(std::ios::showpos);
             arg.format(tmpStream, fmt, fmtEnd, ntrunc);
@@ -1070,6 +1073,7 @@ template<typename... Args>
 std::string format(const char* fmt, const Args&... args)
 {
     std::ostringstream oss;
+    oss.imbue(std::locale::classic()); // Added for Bitcoin Core
     format(oss, fmt, args...);
     return oss.str();
 }
@@ -1099,6 +1103,7 @@ inline void format(std::ostream& out, const char* fmt)
 inline std::string format(const char* fmt)
 {
     std::ostringstream oss;
+    oss.imbue(std::locale::classic()); // Added for Bitcoin Core
     format(oss, fmt);
     return oss.str();
 }
@@ -1126,6 +1131,7 @@ template<TINYFORMAT_ARGTYPES(n)>                                          \
 std::string format(const char* fmt, TINYFORMAT_VARARGS(n))                \
 {                                                                         \
     std::ostringstream oss;                                               \
+    oss.imbue(std::locale::classic()); /* Added for Bitcoin Core */       \
     format(oss, fmt, TINYFORMAT_PASSARGS(n));                             \
     return oss.str();                                                     \
 }                                                                         \
@@ -1152,9 +1158,7 @@ TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_FORMAT_FUNCS)
 template<typename... Args>
 std::string format(const std::string &fmt, const Args&... args)
 {
-    std::ostringstream oss;
-    format(oss, fmt.c_str(), args...);
-    return oss.str();
+    return format(fmt.c_str(), args...);
 }
 
 } // namespace tinyformat

@@ -13,6 +13,7 @@
 #include <cstring>
 #include <errno.h>
 #include <limits>
+#include <locale>
 
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -369,6 +370,7 @@ bool ParseDouble(const std::string& str, double *out)
 std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
 {
     std::stringstream out;
+    out.imbue(std::locale::classic());
     size_t ptr = 0;
     size_t indented = 0;
     while (ptr < in.size())

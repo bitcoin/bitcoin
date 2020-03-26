@@ -9,10 +9,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include <cmath>
+#include <cstdint>
 #include <iomanip>
 #include <limits>
+#include <locale>
 #include <sstream>
-#include <stdint.h>
 #include <string>
 
 BOOST_FIXTURE_TEST_SUITE(arith_uint256_tests, BasicTestingSetup)
@@ -57,6 +58,7 @@ const arith_uint256 HalfL = (OneL << 255);
 static std::string ArrayToString(const unsigned char A[], unsigned int width)
 {
     std::stringstream Stream;
+    Stream.imbue(std::locale::classic());
     Stream << std::hex;
     for (unsigned int i = 0; i < width; ++i)
     {
