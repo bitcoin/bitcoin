@@ -153,8 +153,20 @@ jobs:
       name: 'macOS 10.14 native [GOAL: install] [GUI] [no depends]'
       os: osx
       # Use the most recent version:
-      # Xcode 11.2.1, macOS 10.14, JDK 13.0.1, SDK 10.15
+      # Xcode 11.3.1, macOS 10.14, SDK 10.15
       # https://docs.travis-ci.com/user/reference/osx/#macos-version
-      osx_image: xcode11.2
+      osx_image: xcode11.3
+      addons:
+        homebrew:
+          packages:
+          - libtool
+          - berkeley-db4
+          - boost
+          - miniupnpc
+          - qt
+          - qrencode
+          - python3
+          - ccache
+          - zeromq
       env: >-
         FILE_ENV="./ci/test/00_setup_env_mac_host.sh"
