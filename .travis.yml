@@ -25,6 +25,8 @@
 # [1] https://docs.travis-ci.com/user/caching/#build-phases
 # [2] https://docs.travis-ci.com/user/customizing-the-build#build-timeouts
 
+version: ~> 1.0
+
 dist: xenial
 os: linux
 language: minimal
@@ -84,19 +86,19 @@ jobs:
 
     - stage: test
       name: 'ARM  [GOAL: install]  [buster]  [unit tests, functional tests]'
-      arch: arm64
+      arch: arm64  # Can disable QEMU_USER_CMD and run the tests natively without qemu
       env: >-
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
-        QEMU_USER_CMD=""  # Can run the tests natively without qemu
+        QEMU_USER_CMD=""
 
 # s390 build was disabled temporarily because of disk space issues on the Travis VM
 #
 #    - stage: test
 #      name: 'S390x  [GOAL: install]  [buster]  [unit tests, functional tests]'
-#      arch: s390x
+#      arch: s390x  # Can disable QEMU_USER_CMD and run the tests natively without qemu
 #      env: >-
 #        FILE_ENV="./ci/test/00_setup_env_s390x.sh"
-#        QEMU_USER_CMD=""  # Can run the tests natively without qemu
+#        QEMU_USER_CMD=""
 
     - stage: test
       name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
