@@ -2103,10 +2103,17 @@ void CConnman::ThreadOpenMasternodeConnections()
 
     auto& chainParams = Params();
 
+    bool didConnect = false;
     while (!interruptNet)
     {
-        if (!interruptNet.sleep_for(std::chrono::milliseconds(1000)))
+        int sleepTime = 1000;
+        if (didConnect) {
+            sleepTime = 100;
+        }
+        if (!interruptNet.sleep_for(std::chrono::milliseconds(sleepTime)))
             return;
+
+        didConnect = false;
 
         std::set<CService> connectedNodes;
         std::set<uint256> connectedProRegTxHashes;
@@ -2170,6 +2177,8 @@ void CConnman::ThreadOpenMasternodeConnections()
         if (!connectToDmn) {
             continue;
         }
+
+        didConnect = true;
 
         mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundAttempt(nANow);
 
