@@ -20,6 +20,7 @@
 #include <util/strencodings.h>
 #include <services/rpc/assetrpc.h>
 #include <services/assetconsensus.h>
+#include <util/string.h>
 using namespace std;
 extern UniValue read_json(const std::string& jsondata);
 BOOST_FIXTURE_TEST_SUITE(syscoin_asset_tests, BasicSyscoinTestingSetup)
@@ -656,12 +657,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         BOOST_CHECK_NO_THROW(CallExtRPC(receiver, "mnsync", "\"next\"", false));
     }
     for (auto &sender : senders){
-        BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestadd",  i64tostr(tpstarttime)));
+        BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestadd",  ToString(tpstarttime)));
         BOOST_CHECK_NO_THROW(r = CallExtRPC(sender, "tpstestinfo"));
         BOOST_CHECK_EQUAL(find_value(r.get_obj(), "testinitiatetime").get_int64(), tpstarttime);
     }
     for (auto &receiver : receivers){
-        BOOST_CHECK_NO_THROW(CallExtRPC(receiver, "tpstestadd", i64tostr(tpstarttime)));
+        BOOST_CHECK_NO_THROW(CallExtRPC(receiver, "tpstestadd", ToString(tpstarttime)));
         BOOST_CHECK_EQUAL(find_value(r.get_obj(), "testinitiatetime").get_int64(), tpstarttime);
     }
 
