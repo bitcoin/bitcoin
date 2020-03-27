@@ -31,8 +31,9 @@ public:
 
 class CEvoDB
 {
-private:
+public:
     CCriticalSection cs;
+private:
     CDBWrapper db;
 
     typedef CDBTransaction<CDBWrapper, CDBBatch> RootTransaction;
@@ -53,6 +54,7 @@ public:
 
     CurTransaction& GetCurTransaction()
     {
+        AssertLockHeld(cs); // lock must be held from outside as long as the DB transaction is used
         return curDBTransaction;
     }
 
