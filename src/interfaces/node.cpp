@@ -87,7 +87,15 @@ public:
         Interrupt(m_context);
         Shutdown(m_context);
     }
-    void startShutdown() override { StartShutdown(); }
+    void startShutdown() override
+    {
+        StartShutdown();
+        // Stop RPC for clean shutdown if any of waitfor* commands is executed.
+        if (gArgs.GetBoolArg("-server", false)) {
+            InterruptRPC();
+            StopRPC();
+        }
+    }
     bool shutdownRequested() override { return ShutdownRequested(); }
     void mapPort(bool use_upnp) override
     {
