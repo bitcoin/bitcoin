@@ -185,7 +185,7 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 
         if (fMasternodeMode) {
             const CBlockIndex* pindexQuorum = chainActive[tipHeight - (tipHeight % params.dkgInterval)];
-            auto expectedConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash);
+            auto expectedConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, false);
             std::map<uint256, CAddress> foundConnections;
             g_connman->ForEachNode([&](const CNode* pnode) {
                 if (!pnode->verifiedProRegTxHash.IsNull() && expectedConnections.count(pnode->verifiedProRegTxHash)) {

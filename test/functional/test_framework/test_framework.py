@@ -930,6 +930,16 @@ class DashTestFramework(BitcoinTestFramework):
 
         return new_quorum
 
+    def get_quorum_masternodes(self, q):
+        qi = self.nodes[0].quorum('info', 100, q)
+        result = []
+        for m in qi['members']:
+            for mn in self.mninfo:
+                if mn.proTxHash == m['proTxHash']:
+                    result.append(mn)
+                    break
+        return result
+
     def wait_for_mnauth(self, node, count, timeout=10):
         def test():
             pi = node.getpeerinfo()

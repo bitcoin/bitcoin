@@ -6,6 +6,7 @@
 
 #include <masternode/activemasternode.h>
 #include <evo/deterministicmns.h>
+#include <masternode/masternode-meta.h>
 #include <masternode/masternode-sync.h>
 #include <net.h>
 #include <net_processing.h>
@@ -110,6 +111,16 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             // malicious actor (DoSing us), we'll ban him soon.
             Misbehaving(pnode->GetId(), 10, "mnauth signature verification failed");
             return;
+        }
+
+        if (!pnode->fInbound) {
+            mmetaman.GetMetaInfo(mnauth.proRegTxHash)->SetLastOutboundSuccess(GetAdjustedTime());
+            if (pnode->fMasternodeProbe) {
+                LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- masternode probe successful for %s, disconnecting. peer=%d\n",
+                         mnauth.proRegTxHash.ToString(), pnode->GetId());
+                pnode->fDisconnect = true;
+                return;
+            }
         }
 
         connman.ForEachNode([&](CNode* pnode2) {

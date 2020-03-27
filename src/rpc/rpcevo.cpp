@@ -27,6 +27,8 @@
 
 #include <bls/bls.h>
 
+#include "masternode/masternode-meta.h"
+
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
@@ -950,14 +952,21 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bo
         ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
     }
 
-    UniValue walletObj(UniValue::VOBJ);
-    walletObj.push_back(Pair("hasOwnerKey", hasOwnerKey));
-    walletObj.push_back(Pair("hasOperatorKey", hasOperatorKey));
-    walletObj.push_back(Pair("hasVotingKey", hasVotingKey));
-    walletObj.push_back(Pair("ownsCollateral", ownsCollateral));
-    walletObj.push_back(Pair("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout)));
-    walletObj.push_back(Pair("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout)));
-    o.push_back(Pair("wallet", walletObj));
+#ifdef ENABLE_WALLET
+    if (pwallet) {
+        UniValue walletObj(UniValue::VOBJ);
+        walletObj.push_back(Pair("hasOwnerKey", hasOwnerKey));
+        walletObj.push_back(Pair("hasOperatorKey", hasOperatorKey));
+        walletObj.push_back(Pair("hasVotingKey", hasVotingKey));
+        walletObj.push_back(Pair("ownsCollateral", ownsCollateral));
+        walletObj.push_back(Pair("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout)));
+        walletObj.push_back(Pair("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout)));
+        o.push_back(Pair("wallet", walletObj));
+    }
+#endif
+
+    auto metaInfo = mmetaman.GetMetaInfo(dmn->proTxHash);
+    o.push_back(Pair("metaInfo", metaInfo->ToJson()));
 
     return o;
 }
