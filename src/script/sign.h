@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_SIGN_H
 #define BITCOIN_SCRIPT_SIGN_H
 
+#include <coins.h>
 #include <hash.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
@@ -167,5 +168,8 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script);
 
 /** Check whether a scriptPubKey is known to be segwit. */
 bool IsSegWitOutput(const SigningProvider& provider, const CScript& script);
+
+/** Sign the CMutableTransaction */
+bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* provider, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors);
 
 #endif // BITCOIN_SCRIPT_SIGN_H

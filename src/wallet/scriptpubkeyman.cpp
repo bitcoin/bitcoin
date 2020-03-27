@@ -5,8 +5,10 @@
 #include <key_io.h>
 #include <outputtype.h>
 #include <script/descriptor.h>
+#include <script/sign.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/translation.h>
 #include <wallet/scriptpubkeyman.h>
 
@@ -358,7 +360,7 @@ bool LegacyScriptPubKeyMan::IsHDEnabled() const
     return !hdChain.seed_id.IsNull();
 }
 
-bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal)
+bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal) const
 {
     LOCK(cs_KeyStore);
     // Check if the keypool has keys
@@ -441,7 +443,7 @@ static int64_t GetOldestKeyTimeInPool(const std::set<int64_t>& setKeyPool, Walle
     return keypool.nTime;
 }
 
-int64_t LegacyScriptPubKeyMan::GetOldestKeyPoolTime()
+int64_t LegacyScriptPubKeyMan::GetOldestKeyPoolTime() const
 {
     LOCK(cs_KeyStore);
 
@@ -459,7 +461,7 @@ int64_t LegacyScriptPubKeyMan::GetOldestKeyPoolTime()
     return oldestKey;
 }
 
-size_t LegacyScriptPubKeyMan::KeypoolCountExternalKeys()
+size_t LegacyScriptPubKeyMan::KeypoolCountExternalKeys() const
 {
     LOCK(cs_KeyStore);
     return setExternalKeyPool.size() + set_pre_split_keypool.size();
@@ -477,7 +479,7 @@ int64_t LegacyScriptPubKeyMan::GetTimeFirstKey() const
     return nTimeFirstKey;
 }
 
-std::unique_ptr<SigningProvider> LegacyScriptPubKeyMan::GetSigningProvider(const CScript& script) const
+std::unique_ptr<SigningProvider> LegacyScriptPubKeyMan::GetSolvingProvider(const CScript& script) const
 {
     return MakeUnique<LegacySigningProvider>(*this);
 }
@@ -503,6 +505,67 @@ bool LegacyScriptPubKeyMan::CanProvide(const CScript& script, SignatureData& sig
         }
         return false;
     }
+}
+
+bool LegacyScriptPubKeyMan::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const
+{
+    return ::SignTransaction(tx, this, coins, sighash, input_errors);
+}
+
+SigningResult LegacyScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
+{
+    CKeyID key_id(pkhash);
+    CKey key;
+    if (!GetKey(key_id, key)) {
+        return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+    }
+
+    if (MessageSign(key, message, str_sig)) {
+        return SigningResult::OK;
+    }
+    return SigningResult::SIGNING_FAILED;
+}
+
+TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, int sighash_type, bool sign, bool bip32derivs) const
+{
+    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
+        const CTxIn& txin = psbtx.tx->vin[i];
+        PSBTInput& input = psbtx.inputs.at(i);
+
+        if (PSBTInputSigned(input)) {
+            continue;
+        }
+
+        // Verify input looks sane. This will check that we have at most one uxto, witness or non-witness.
+        if (!input.IsSane()) {
+            return TransactionError::INVALID_PSBT;
+        }
+
+        // Get the Sighash type
+        if (sign && input.sighash_type > 0 && input.sighash_type != sighash_type) {
+            return TransactionError::SIGHASH_MISMATCH;
+        }
+
+        // Check non_witness_utxo has specified prevout
+        if (input.non_witness_utxo) {
+            if (txin.prevout.n >= input.non_witness_utxo->vout.size()) {
+                return TransactionError::MISSING_INPUTS;
+            }
+        } else if (input.witness_utxo.IsNull()) {
+            // There's no UTXO so we can just skip this now
+            continue;
+        }
+        SignatureData sigdata;
+        input.FillSignatureData(sigdata);
+        SignPSBTInput(HidingSigningProvider(this, !sign, !bip32derivs), psbtx, i, sighash_type);
+    }
+
+    // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
+    for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
+        UpdatePSBTOutput(HidingSigningProvider(this, true, !bip32derivs), psbtx, i);
+    }
+
+    return TransactionError::OK;
 }
 
 const CKeyMetadata* LegacyScriptPubKeyMan::GetMetadata(const CTxDestination& dest) const
@@ -927,7 +990,7 @@ void LegacyScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& 
         // example: 1 | BIP32_HARDENED_KEY_LIMIT == 0x80000001 == 2147483649
         if (internal) {
             chainChildKey.Derive(childKey, hdChain.nInternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
-            metadata.hdKeypath = "m/0'/1'/" + std::to_string(hdChain.nInternalChainCounter) + "'";
+            metadata.hdKeypath = "m/0'/1'/" + ToString(hdChain.nInternalChainCounter) + "'";
             metadata.key_origin.path.push_back(0 | BIP32_HARDENED_KEY_LIMIT);
             metadata.key_origin.path.push_back(1 | BIP32_HARDENED_KEY_LIMIT);
             metadata.key_origin.path.push_back(hdChain.nInternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
@@ -935,7 +998,7 @@ void LegacyScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& 
         }
         else {
             chainChildKey.Derive(childKey, hdChain.nExternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
-            metadata.hdKeypath = "m/0'/0'/" + std::to_string(hdChain.nExternalChainCounter) + "'";
+            metadata.hdKeypath = "m/0'/0'/" + ToString(hdChain.nExternalChainCounter) + "'";
             metadata.key_origin.path.push_back(0 | BIP32_HARDENED_KEY_LIMIT);
             metadata.key_origin.path.push_back(0 | BIP32_HARDENED_KEY_LIMIT);
             metadata.key_origin.path.push_back(hdChain.nExternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
@@ -973,7 +1036,7 @@ void LegacyScriptPubKeyMan::LoadKeyPool(int64_t nIndex, const CKeyPool &keypool)
         mapKeyMetadata[keyid] = CKeyMetadata(keypool.nTime);
 }
 
-bool LegacyScriptPubKeyMan::CanGenerateKeys()
+bool LegacyScriptPubKeyMan::CanGenerateKeys() const
 {
     // A wallet can generate keys if it has an HD seed (IsHDEnabled) or it is a non-HD wallet (pre FEATURE_HD)
     LOCK(cs_KeyStore);

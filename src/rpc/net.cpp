@@ -20,6 +20,7 @@
 #include <sync.h>
 #include <timedata.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <validation.h>
 #include <version.h>
@@ -61,7 +62,7 @@ static UniValue ping(const JSONRPCRequest& request)
                 "Results provided in getpeerinfo, pingtime and pingwait fields are decimal seconds.\n"
                 "Ping command is handled in queue with all other commands, so it measures processing backlog, not just network ping.\n",
                 {},
-                RPCResults{},
+                RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("ping", "")
             + HelpExampleRpc("ping", "")
@@ -247,7 +248,7 @@ static UniValue addnode(const JSONRPCRequest& request)
                     {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The node (see getpeerinfo for nodes)"},
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
                 },
-                RPCResults{},
+                RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\"")
             + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\"")
@@ -290,7 +291,7 @@ static UniValue disconnectnode(const JSONRPCRequest& request)
                     {"address", RPCArg::Type::STR, /* default */ "fallback to nodeid", "The IP address/port of the node"},
                     {"nodeid", RPCArg::Type::NUM, /* default */ "fallback to address", "The node ID (see getpeerinfo for node IDs)"},
                 },
-                RPCResults{},
+                RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("disconnectnode", "\"192.168.0.6:8333\"")
             + HelpExampleCli("disconnectnode", "\"\" 1")
@@ -560,7 +561,7 @@ static UniValue setban(const JSONRPCRequest& request)
                     {"bantime", RPCArg::Type::NUM, /* default */ "0", "time in seconds how long (or until when if [absolute] is set) the IP is banned (0 or empty means using the default time of 24h which can also be overwritten by the -bantime startup argument)"},
                     {"absolute", RPCArg::Type::BOOL, /* default */ "false", "If set, the bantime must be an absolute timestamp expressed in " + UNIX_EPOCH_TIME},
                 },
-                RPCResults{},
+                RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("setban", "\"192.168.0.6\" \"add\" 86400")
                             + HelpExampleCli("setban", "\"192.168.0.0/24\" \"add\"")
@@ -635,7 +636,16 @@ static UniValue listbanned(const JSONRPCRequest& request)
             RPCHelpMan{"listbanned",
                 "\nList all banned IPs/Subnets.\n",
                 {},
-                RPCResults{},
+        RPCResult{RPCResult::Type::ARR, "", "",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "address", ""},
+                        {RPCResult::Type::NUM_TIME, "banned_until", ""},
+                        {RPCResult::Type::NUM_TIME, "ban_created", ""},
+                        {RPCResult::Type::STR, "ban_reason", ""},
+                    }},
+            }},
                 RPCExamples{
                     HelpExampleCli("listbanned", "")
                             + HelpExampleRpc("listbanned", "")
@@ -670,7 +680,7 @@ static UniValue clearbanned(const JSONRPCRequest& request)
             RPCHelpMan{"clearbanned",
                 "\nClear all banned IPs.\n",
                 {},
-                RPCResults{},
+                RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("clearbanned", "")
                             + HelpExampleRpc("clearbanned", "")
@@ -692,7 +702,7 @@ static UniValue setnetworkactive(const JSONRPCRequest& request)
                 {
                     {"state", RPCArg::Type::BOOL, RPCArg::Optional::NO, "true to enable networking, false to disable"},
                 },
-                RPCResults{},
+                RPCResult{RPCResult::Type::BOOL, "", "The value that was passed in"},
                 RPCExamples{""},
             }.Check(request);
 
@@ -710,7 +720,7 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
             RPCHelpMan{"getnodeaddresses",
                 "\nReturn known addresses which can potentially be used to find new nodes in the network\n",
                 {
-                    {"count", RPCArg::Type::NUM, /* default */ "1", "How many addresses to return. Limited to the smaller of " + std::to_string(ADDRMAN_GETADDR_MAX) + " or " + std::to_string(ADDRMAN_GETADDR_MAX_PCT) + "% of all known addresses."},
+                    {"count", RPCArg::Type::NUM, /* default */ "1", "How many addresses to return. Limited to the smaller of " + ToString(ADDRMAN_GETADDR_MAX) + " or " + ToString(ADDRMAN_GETADDR_MAX_PCT) + "% of all known addresses."},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "",

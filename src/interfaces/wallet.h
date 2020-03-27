@@ -10,6 +10,7 @@
 #include <script/standard.h>           // For CTxDestination
 #include <support/allocators/secure.h> // For SecureString
 #include <ui_interface.h>              // For ChangeType
+#include <util/message.h>
 
 #include <functional>
 #include <map>
@@ -84,8 +85,8 @@ public:
     //! Get public key.
     virtual bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) = 0;
 
-    //! Get private key.
-    virtual bool getPrivKey(const CScript& script, const CKeyID& address, CKey& key) = 0;
+    //! Sign message
+    virtual SigningResult signMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) = 0;
 
     //! Return whether wallet has private key.
     virtual bool isSpendable(const CTxDestination& dest) = 0;
@@ -154,7 +155,6 @@ public:
     //! Create bump transaction.
     virtual bool createBumpTransaction(const uint256& txid,
         const CCoinControl& coin_control,
-        CAmount total_fee,
         std::vector<std::string>& errors,
         CAmount& old_fee,
         CAmount& new_fee,
@@ -192,11 +192,11 @@ public:
         int& num_blocks) = 0;
 
     //! Fill PSBT.
-    virtual TransactionError fillPSBT(PartiallySignedTransaction& psbtx,
-        bool& complete,
-        int sighash_type = 1 /* SIGHASH_ALL */,
-        bool sign = true,
-        bool bip32derivs = false) = 0;
+    virtual TransactionError fillPSBT(int sighash_type,
+        bool sign,
+        bool bip32derivs,
+        PartiallySignedTransaction& psbtx,
+        bool& complete) = 0;
 
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
@@ -248,8 +248,8 @@ public:
     // Return whether the wallet is blank.
     virtual bool canGetAddresses() = 0;
 
-    // check if a certain wallet flag is set.
-    virtual bool IsWalletFlagSet(uint64_t flag) = 0;
+    // Return whether private keys enabled.
+    virtual bool privateKeysDisabled() = 0;
 
     // Get default address type.
     virtual OutputType getDefaultAddressType() = 0;

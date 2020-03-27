@@ -60,7 +60,7 @@ class BIP65Test(BitcoinTestFramework):
             '-acceptnonstdtxn=1',  # cltv_invalidate is nonstandard
         ]]
         self.setup_clean_chain = True
-        self.rpc_timeout = 120
+        self.rpc_timeout = 480
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

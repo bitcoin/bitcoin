@@ -124,10 +124,10 @@ public:
     virtual bool unban(const CSubNet& ip) = 0;
 
     //! Disconnect node by address.
-    virtual bool disconnect(const CNetAddr& net_addr) = 0;
+    virtual bool disconnectByAddress(const CNetAddr& net_addr) = 0;
 
     //! Disconnect node by id.
-    virtual bool disconnect(NodeId id) = 0;
+    virtual bool disconnectById(NodeId id) = 0;
 
     //! Get total bytes recv.
     virtual int64_t getTotalBytesRecv() = 0;
@@ -204,7 +204,7 @@ public:
     virtual std::unique_ptr<Wallet> loadWallet(const std::string& name, std::string& error, std::vector<std::string>& warnings) = 0;
 
     //! Create a wallet from file
-    virtual WalletCreationStatus createWallet(const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::vector<std::string>& warnings, std::unique_ptr<Wallet>& result) = 0;
+    virtual std::unique_ptr<Wallet> createWallet(const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::vector<std::string>& warnings, WalletCreationStatus& status) = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;

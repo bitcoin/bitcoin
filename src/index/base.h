@@ -64,8 +64,7 @@ private:
     bool Commit();
 
 protected:
-    void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
-                        const std::vector<CTransactionRef>& txn_conflicted) override;
+    void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
 
     void ChainStateFlushed(const CBlockLocator& locator) override;
 
@@ -97,7 +96,7 @@ public:
     /// sync once and only needs to process blocks in the ValidationInterface
     /// queue. If the index is catching up from far behind, this method does
     /// not block and immediately returns false.
-    bool BlockUntilSyncedToCurrentChain();
+    bool BlockUntilSyncedToCurrentChain() const;
 
     void Interrupt();
 

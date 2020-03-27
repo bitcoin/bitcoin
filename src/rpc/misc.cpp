@@ -45,8 +45,8 @@ static UniValue validateaddress(const JSONRPCRequest& request)
                     }
                 },
                 RPCExamples{
-                    HelpExampleCli("validateaddress", EXAMPLE_ADDRESS) +
-                    HelpExampleRpc("validateaddress", EXAMPLE_ADDRESS)
+                    HelpExampleCli("validateaddress", "\"" + EXAMPLE_ADDRESS[0] + "\"") +
+                    HelpExampleRpc("validateaddress", "\"" + EXAMPLE_ADDRESS[0] + "\"")
                 },
             }.Check(request);
 
@@ -76,7 +76,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
                 "It returns a json object with the address and redeemScript.\n",
                 {
                     {"nrequired", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of required signatures out of the n keys."},
-                    {"keys", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json array of hex-encoded public keys.",
+                    {"keys", RPCArg::Type::ARR, RPCArg::Optional::NO, "The hex-encoded public keys.",
                         {
                             {"key", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The hex-encoded public key"},
                         }},
@@ -347,7 +347,7 @@ static UniValue setmocktime(const JSONRPCRequest& request)
                     {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, UNIX_EPOCH_TIME + "\n"
             "   Pass 0 to go back to using the system time."},
                 },
-                RPCResults{},
+                RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{""},
             }.Check(request);
 
@@ -375,7 +375,7 @@ static UniValue mockscheduler(const JSONRPCRequest& request)
         {
             {"delta_time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of seconds to forward the scheduler into the future." },
         },
-        RPCResults{},
+        RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{""},
     }.Check(request);
 
@@ -393,7 +393,7 @@ static UniValue mockscheduler(const JSONRPCRequest& request)
     // protect against null pointer dereference
     CHECK_NONFATAL(g_rpc_node);
     CHECK_NONFATAL(g_rpc_node->scheduler);
-    g_rpc_node->scheduler->MockForward(boost::chrono::seconds(delta_seconds));
+    g_rpc_node->scheduler->MockForward(std::chrono::seconds(delta_seconds));
 
     return NullUniValue;
 }
@@ -515,11 +515,11 @@ UniValue logging(const JSONRPCRequest& request)
             "  - \"none\", \"0\" : even if other logging categories are specified, ignore all of them.\n"
             ,
                 {
-                    {"include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "A json array of categories to add debug logging",
+                    {"include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The categories to add to debug logging",
                         {
                             {"include_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
                         }},
-                    {"exclude", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "A json array of categories to remove debug logging",
+                    {"exclude", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The categories to remove from debug logging",
                         {
                             {"exclude_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
                         }},
@@ -579,7 +579,7 @@ static UniValue echo(const JSONRPCRequest& request)
                 "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
                 "bitcoin-cli and the GUI. There is no server-side difference.",
                 {},
-                RPCResults{},
+                RPCResult{RPCResult::Type::NONE, "", "Returns whatever was passed in"},
                 RPCExamples{""},
             }.ToString()
         );

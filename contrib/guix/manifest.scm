@@ -21,17 +21,6 @@
              (guix profiles)
              (guix utils))
 
-(define (make-ssp-fixed-gcc xgcc)
-  "Given a XGCC package, return a modified package that uses the SSP function
-from glibc instead of from libssp.so. Taken from:
-http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
-  (package
-   (inherit xgcc)
-   (arguments
-    (substitute-keyword-arguments (package-arguments xgcc)
-      ((#:make-flags flags)
-       `(cons "gcc_cv_libc_provides_ssp=yes" ,flags))))))
-
 (define (make-gcc-rpath-link xgcc)
   "Given a XGCC package, return a modified package that replace each instance of
 -rpath in the default system spec that's inserted by Guix with -rpath-link"
@@ -104,8 +93,7 @@ chain for " target " development."))
                                   (base-gcc-for-libc gcc-5)
                                   (base-kernel-headers linux-libre-headers-4.19)
                                   (base-libc glibc-2.27)
-                                  (base-gcc (make-gcc-rpath-link
-                                             (make-ssp-fixed-gcc gcc-9))))
+                                  (base-gcc (make-gcc-rpath-link gcc-9)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
   (make-cross-toolchain target

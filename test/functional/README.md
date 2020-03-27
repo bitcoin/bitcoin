@@ -51,10 +51,13 @@ don't have test cases for.
 
 #### General test-writing advice
 
+- Instead of inline comments or no test documentation at all, log the comments to the test log, e.g.
+  `self.log.info('Create enough transactions to fill a block')`. Logs make the test code easier to read and the test
+  logic easier [to debug](/test/README.md#test-logging).
 - Set `self.num_nodes` to the minimum number of nodes necessary for the test.
   Having additional unrequired nodes adds to the execution time of the test as
   well as memory/CPU/disk requirements (which is important when running tests in
-  parallel or on Travis).
+  parallel).
 - Avoid stop-starting the nodes multiple times during the test if possible. A
   stop-start takes several seconds, so doing it several times blows up the
   runtime of the test.
@@ -130,9 +133,6 @@ Utilities for manipulating transaction scripts (originally from python-bitcoinli
 
 #### [key.py](test_framework/key.py)
 Test-only secp256k1 elliptic curve implementation
-
-#### [bignum.py](test_framework/bignum.py)
-Helpers for script.py
 
 #### [blocktools.py](test_framework/blocktools.py)
 Helper functions for creating blocks and transactions.

@@ -51,9 +51,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Prune: last wallet synchronisation goes beyond pruned data. You need to -"
 "reindex (download the whole blockchain again in case of pruned node)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Rescans are not possible in pruned mode. You will need to use -reindex which "
-"will download the whole blockchain again."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "The block database contains a block which appears to be from the future. "
 "This may be due to your computer's date and time being set incorrectly. Only "
 "rebuild the block database if you are sure that your computer's date and "
@@ -68,10 +65,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "at this level"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "This is the transaction fee you may pay when fee estimates are not available."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"This product includes software developed by the OpenSSL Project for use in "
-"the OpenSSL Toolkit %s and cryptographic software written by Eric Young and "
-"UPnP software written by Thomas Bernard."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Total length of network version string (%i) exceeds maximum length (%i). "
 "Reduce the number or size of uacomments."),
@@ -107,6 +100,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Change index out of range"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Config setting for %s only applied on %s network when in [%s] section."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Copyright (C) %i-%i"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Corrupted block database detected"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Could not find asmap file %s"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Could not parse asmap file %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Do you want to rebuild the block database now?"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Done loading"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error initializing block database"),

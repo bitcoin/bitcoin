@@ -630,17 +630,19 @@ class FullBlockTest(BitcoinTestFramework):
 
         self.log.info("Reject a block with invalid work")
         self.move_tip(44)
-        b47 = self.next_block(47, solve=False)
+        b47 = self.next_block(47)
         target = uint256_from_compact(b47.nBits)
-        while b47.sha256 < target:
+        while b47.sha256 <= target:
+            # Rehash nonces until an invalid too-high-hash block is found.
             b47.nNonce += 1
             b47.rehash()
         self.send_blocks([b47], False, force_send=True, reject_reason='high-hash', reconnect=True)
 
         self.log.info("Reject a block with a timestamp >2 hours in the future")
         self.move_tip(44)
-        b48 = self.next_block(48, solve=False)
+        b48 = self.next_block(48)
         b48.nTime = int(time.time()) + 60 * 60 * 3
+        # Header timestamp has changed. Re-solve the block.
         b48.solve()
         self.send_blocks([b48], False, force_send=True, reject_reason='time-too-new')
 
@@ -1261,7 +1263,7 @@ class FullBlockTest(BitcoinTestFramework):
             self.save_spendable_output()
             spend = self.get_spendable_output()
 
-        self.send_blocks(blocks, True, timeout=1920)
+        self.send_blocks(blocks, True, timeout=2440)
         chain1_tip = i
 
         # now create alt chain of same length
@@ -1273,14 +1275,14 @@ class FullBlockTest(BitcoinTestFramework):
 
         # extend alt chain to trigger re-org
         block = self.next_block("alt" + str(chain1_tip + 1), version=4)
-        self.send_blocks([block], True, timeout=1920)
+        self.send_blocks([block], True, timeout=2440)
 
         # ... and re-org back to the first chain
         self.move_tip(chain1_tip)
         block = self.next_block(chain1_tip + 1, version=4)
         self.send_blocks([block], False, force_send=True)
         block = self.next_block(chain1_tip + 2, version=4)
-        self.send_blocks([block], True, timeout=1920)
+        self.send_blocks([block], True, timeout=2440)
 
         self.log.info("Reject a block with an invalid block header version")
         b_v1 = self.next_block('b_v1', version=1)
@@ -1321,7 +1323,7 @@ class FullBlockTest(BitcoinTestFramework):
         tx.rehash()
         return tx
 
-    def next_block(self, number, spend=None, additional_coinbase_value=0, script=CScript([OP_TRUE]), solve=True, *, version=1):
+    def next_block(self, number, spend=None, additional_coinbase_value=0, script=CScript([OP_TRUE]), *, version=1):
         if self.tip is None:
             base_block_hash = self.genesis_hash
             block_time = int(time.time()) + 1
@@ -1343,8 +1345,8 @@ class FullBlockTest(BitcoinTestFramework):
             self.sign_tx(tx, spend)
             self.add_transactions_to_block(block, [tx])
             block.hashMerkleRoot = block.calc_merkle_root()
-        if solve:
-            block.solve()
+        # Block is created. Find a valid nonce.
+        block.solve()
         self.tip = block
         self.block_heights[block.sha256] = height
         assert number not in self.blocks

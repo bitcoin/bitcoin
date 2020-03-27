@@ -14,28 +14,8 @@ if [[ $QEMU_USER_CMD == qemu-s390* ]]; then
 fi
 
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-  set +o errexit
-  pushd /usr/local/Homebrew || exit 1
-  git reset --hard origin/master
-  popd || exit 1
-  set -o errexit
-  ${CI_RETRY_EXE} brew unlink python@2
-  ${CI_RETRY_EXE} brew update
-  # brew upgrade returns an error if any of the packages is already up to date
-  # Failure is safe to ignore, unless we really need an update.
-  brew upgrade $BREW_PACKAGES || true
-
-  # install new packages (brew install returns an error if already installed)
-  for i in $BREW_PACKAGES; do
-    if ! brew list | grep -q $i; then
-      ${CI_RETRY_EXE} brew install $i
-    fi
-  done
-
   export PATH="/usr/local/opt/ccache/libexec:$PATH"
-
   ${CI_RETRY_EXE} pip3 install $PIP_PACKAGES
-
 fi
 
 mkdir -p "${BASE_SCRATCH_DIR}"
@@ -102,7 +82,9 @@ else
 fi
 
 if [ ! -d ${DIR_QA_ASSETS} ]; then
+ if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   DOCKER_EXEC git clone https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
+ fi
 fi
 export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
 
