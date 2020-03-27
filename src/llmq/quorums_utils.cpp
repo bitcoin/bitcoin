@@ -73,25 +73,32 @@ std::set<uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType,
 
     // TODO remove this after activation of SPORK_21_QUORUM_ALL_CONNECTED
 
+    auto calcOutbound = [&](size_t i, const uint256 proTxHash) {
+        // Connect to nodes at indexes (i+2^k)%n, where
+        //   k: 0..max(1, floor(log2(n-1))-1)
+        //   n: size of the quorum/ring
+        std::set<uint256> r;
+        int gap = 1;
+        int gap_max = (int)mns.size() - 1;
+        int k = 0;
+        while ((gap_max >>= 1) || k <= 1) {
+            size_t idx = (i + gap) % mns.size();
+            auto& otherDmn = mns[idx];
+            if (otherDmn->proTxHash == proTxHash) {
+                continue;
+            }
+            r.emplace(otherDmn->proTxHash);
+            gap <<= 1;
+            k++;
+        }
+        return r;
+    };
+
     for (size_t i = 0; i < mns.size(); i++) {
         auto& dmn = mns[i];
         if (dmn->proTxHash == forMember) {
-            // Connect to nodes at indexes (i+2^k)%n, where
-            //   k: 0..max(1, floor(log2(n-1))-1)
-            //   n: size of the quorum/ring
-            int gap = 1;
-            int gap_max = (int)mns.size() - 1;
-            int k = 0;
-            while ((gap_max >>= 1) || k <= 1) {
-                size_t idx = (i + gap) % mns.size();
-                auto& otherDmn = mns[idx];
-                if (otherDmn == dmn) {
-                    continue;
-                }
-                result.emplace(otherDmn->proTxHash);
-                gap <<= 1;
-                k++;
-            }
+            auto r = calcOutbound(i, dmn->proTxHash);
+            result.insert(r.begin(), r.end());
             // there can be no two members with the same proTxHash, so return early
             break;
         }
