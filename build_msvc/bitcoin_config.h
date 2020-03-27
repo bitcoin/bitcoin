@@ -304,9 +304,6 @@
 /* Define this symbol to build in assembly routines */
 //#define USE_ASM 1
 
-/* Define this symbol if coverage is enabled */
-/* #undef USE_COVERAGE */
-
 /* Define if dbus support should be compiled in */
 /* #undef USE_DBUS */
 
