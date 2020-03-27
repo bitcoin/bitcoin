@@ -1922,7 +1922,9 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             if (stack.size() != 2) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH); // 2 items in witness
             }
-            CScript exec_script = CScript() << OP_DUP << OP_HASH160 << program << OP_EQUALVERIFY << OP_CHECKSIG;
+            //! The script "OP_DUP OP_HASH160 <program> OP_EQUALVERIFY OP_CHECKSIG".
+            unsigned char exec_script[25] = {OP_DUP, OP_HASH160, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, OP_EQUALVERIFY, OP_CHECKSIG};
+            std::copy(program.begin(), program.end(), exec_script + 3);
             return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::WITNESS_V0, checker, execdata, serror);
         } else {
             return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WRONG_LENGTH);
@@ -2058,8 +2060,7 @@ bool VerifyScript(Span<const unsigned char> scriptSig, Span<const unsigned char>
         if (flags & SCRIPT_VERIFY_WITNESS) {
             if (IsWitnessProgram(pubKey2, witnessversion, witnessprogram)) {
                 hadWitness = true;
-                const CScript expected_scriptsig = CScript() << pubKey2;
-                if (scriptSig != expected_scriptsig) {
+                if (scriptSig.size() != pubKey2.size() + 1 || scriptSig[0] != pubKey2.size()) {
                     // The scriptSig must be _exactly_ a single push of the redeemScript. Otherwise we
                     // reintroduce malleability.
                     return set_error(serror, SCRIPT_ERR_WITNESS_MALLEATED_P2SH);
