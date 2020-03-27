@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
@@ -56,7 +56,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     const int64_t random_int64 = fuzzed_data_provider.ConsumeIntegral<int64_t>();
     const std::string i64tostr_without_locale = i64tostr(random_int64);
     const int32_t random_int32 = fuzzed_data_provider.ConsumeIntegral<int32_t>();
-    const std::string itostr_without_locale = itostr(random_int32);
     const std::string strprintf_int_without_locale = strprintf("%d", random_int64);
     const double random_double = fuzzed_data_provider.ConsumeFloatingPoint<double>();
     const std::string strprintf_double_without_locale = strprintf("%f", random_double);
@@ -84,8 +83,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     assert(atoi_without_locale == atoi_with_locale);
     const std::string i64tostr_with_locale = i64tostr(random_int64);
     assert(i64tostr_without_locale == i64tostr_with_locale);
-    const std::string itostr_with_locale = itostr(random_int32);
-    assert(itostr_without_locale == itostr_with_locale);
     const std::string strprintf_int_with_locale = strprintf("%d", random_int64);
     assert(strprintf_int_without_locale == strprintf_int_with_locale);
     const std::string strprintf_double_with_locale = strprintf("%f", random_double);

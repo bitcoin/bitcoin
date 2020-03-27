@@ -13,9 +13,9 @@
 #include <util/strencodings.h>
 #include <util/threadnames.h>
 
-#include <system_error>
 #include <map>
 #include <set>
+#include <system_error>
 
 #ifdef DEBUG_LOCKCONTENTION
 #if !defined(HAVE_THREAD_LOCAL)
@@ -57,7 +57,7 @@ struct CLockLocation {
     {
         return strprintf(
             "%s %s:%s%s (in thread %s)",
-            mutexName, sourceFile, itostr(sourceLine), (fTry ? " (TRY)" : ""), m_thread_name);
+            mutexName, sourceFile, sourceLine, (fTry ? " (TRY)" : ""), m_thread_name);
     }
 
     std::string Name() const
