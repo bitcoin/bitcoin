@@ -219,6 +219,12 @@
     "description": "Parses a transaction with no inputs and a single output script (output in json)"
   },
   { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:123badscript"],
+    "return_code": 1,
+    "error_txt": "error: script parse error",
+    "description": "Create a new transaction with an invalid output script"
+  },
+  { "exec": "./bitcoin-tx",
     "args": ["-create", "outscript=0:OP_DROP", "nversion=1"],
     "output_cmp": "txcreatescript1.hex",
     "description": "Create a new transaction with a single output script (OP_DROP)"
