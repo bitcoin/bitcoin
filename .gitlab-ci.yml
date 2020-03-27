@@ -3,66 +3,70 @@ image: "ubuntu:bionic"
 variables:
   DOCKER_DRIVER: overlay2
 
-cache:
-  # Cache by branch/tag and job name
-  # Gitlab can't use caches from parent pipelines when doing the first build in a PR, so we use artifacts to copy
-  # caches into PRs
-  key: ${CI_COMMIT_REF_SLUG}-${CI_JOB_NAME}${CI_EXTERNAL_PULL_REQUEST_IID}
-  paths:
-    - $CI_PROJECT_DIR/cache
-
 stages:
+  - builder-image
+  - build-depends
   - build
+  - test
 
-.build_template: &build_template
-  stage: build
+builder-image:
+  stage: builder-image
+  image: docker:19.03.5
+  services:
+    - docker:19.03.5-dind
+  variables:
+    DOCKER_HOST: "tcp://docker:2375"
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
   before_script:
-    - export BUILD_TARGET="$CI_JOB_NAME"
+    - echo $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
+  script:
+    - cd ci
+    - docker pull $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG || true
+    - docker pull $CI_REGISTRY_IMAGE:builder-develop || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG --cache-from $CI_REGISTRY_IMAGE:builder-develop -t $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG -f Dockerfile.builder .
+    - docker push $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
+
+.build-depends-template:
+  stage: build-depends
+  image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
+  variables:
+    SDK_URL: https://bitcoincore.org/depends-sources/sdks
+    OSX_SDK: "10.11"
+    MAKEJOBS: -j4
+  before_script:
+    - echo HOST=$HOST
+    - |
+      if [ "$HOST" = "x86_64-apple-darwin11" ]; then
+        echo "Downloading MacOS SDK"
+        mkdir -p depends/SDKs
+        mkdir -p depends/sdk-sources
+        if [ ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then
+          curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz
+        fi
+        tar -C depends/SDKs -xf depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz
+      fi
+  script:
+    - make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
+  cache:
+    # Let all branches share the same cache, which is ok because the depends subsystem is able to handle this properly (it works with hashes of all scripts)
+    key: ${CI_JOB_NAME}
+    paths:
+      - $CI_PROJECT_DIR/depends/built
+      - $CI_PROJECT_DIR/depends/sdk-sources
+  artifacts:
+    name: depends
+    when: on_success
+    paths:
+      - $CI_PROJECT_DIR/depends/$HOST
+      - $CI_PROJECT_DIR/depends/SDKs
+
+.base-template:
+  image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
+  before_script:
+    - export CACHE_DIR=$CI_PROJECT_DIR/cache
     - echo BUILD_TARGET=$BUILD_TARGET
     - source ./ci/matrix.sh
-
-    # The ubuntu base image has apt configured to delete caches after each invocation, which is something that is not desirable for us
-    - rm /etc/apt/apt.conf.d/docker-clean
-    - apt-get update
-    - apt-get install -y wget unzip
-
-    # Init cache
-    - export CACHE_DIR=$CI_PROJECT_DIR/cache
-    - mkdir -p $CACHE_DIR
-    - |
-      if [ "$CI_COMMIT_REF_SLUG" != "develop" -a "$CI_COMMIT_TAG" == "" ]; then
-        if [ ! -d $CACHE_DIR/ccache ]; then
-          echo "Downloading cache from develop branch"
-          mkdir cache-artifact
-          cd cache-artifact
-          if wget --quiet -O cache-artifact.zip https://gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME/-/jobs/artifacts/develop/download?job=$CI_JOB_NAME; then
-            unzip -q cache-artifact.zip
-            rm cache-artifact.zip
-            mv cache-artifact/* $CACHE_DIR/ || true
-          else
-            echo "Failed to download cache"
-          fi
-          cd ..
-          rm -rf cache-artifact
-        else
-          echo "Not touching cache (was initialized from previous build)"
-        fi
-      else
-        echo "Not touching cache (building develop branch or tag)"
-      fi
-    # Create missing cache dirs
-    - mkdir -p $CACHE_DIR/ccache && mkdir -p $CACHE_DIR/depends && mkdir -p $CACHE_DIR/sdk-sources && mkdir -p $CACHE_DIR/apt
-    # Keep this as it makes caching related debugging easier
-    - ls -lah $CACHE_DIR && ls -lah $CACHE_DIR/depends && ls -lah $CACHE_DIR/ccache && ls -lah $CACHE_DIR/apt
-    - mv $CACHE_DIR/apt/* /var/cache/apt/archives/ || true
-
-    # Install base packages
-    - apt-get dist-upgrade -y
-    - apt-get install -y git g++ autotools-dev libtool m4 automake autoconf pkg-config zlib1g-dev libssl1.0-dev curl ccache bsdmainutils cmake
-    - apt-get install -y python3 python3-dev python3-pip
-
-    # jinja2 is needed for combine_logs.py
-    - pip3 install jinja2
 
     # Setup some environment variables
     - |
@@ -87,73 +91,146 @@ stages:
     - echo PULL_REQUEST=$PULL_REQUEST COMMIT_RANGE=$COMMIT_RANGE HOST_SRC_DIR=$HOST_SRC_DIR CACHE_DIR=$CACHE_DIR
     - echo "Commit log:" && git log --format=fuller -1
 
-    # Build dash_hash
-    - git clone https://github.com/dashpay/dash_hash
-    - cd dash_hash && python3 setup.py install
-
-    # Install build target specific packages
-    - echo PACKAGES=$PACKAGES
-    - if [ -n "$DPKG_ADD_ARCH" ]; then dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
-    - if [ -n "$PACKAGES" ]; then apt-get update && apt-get install -y --no-install-recommends --no-upgrade $PACKAGES; fi
-
-    # Move apt packages into cache
-    - mv /var/cache/apt/archives/* $CACHE_DIR/apt/ || true
-
-    # Make mingw use correct threading libraries
-    - update-alternatives --set i686-w64-mingw32-gcc /usr/bin/i686-w64-mingw32-gcc-posix || true
-    - update-alternatives --set i686-w64-mingw32-g++  /usr/bin/i686-w64-mingw32-g++-posix || true
-    - update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix || true
-    - update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix || true
-
+.build-template:
+  stage: build
+  extends: .base-template
   script:
-    - export BUILD_TARGET="$CI_JOB_NAME"
-    - cd $CI_PROJECT_DIR
-    - ./ci/build_depends.sh
     - ./ci/build_src.sh
-    - ./ci/test_unittests.sh
-    - ./ci/test_integrationtests.sh --extended --exclude pruning,dbcrash
-
-  after_script:
-    # Copy all cache files into cache-artifact so that they get uploaded. We only do this for develop so that artifacts
-    # stay minimal for PRs and branches (we never need them)
-    - mkdir -p $CI_PROJECT_DIR/cache-artifact
-    - mkdir -p $CI_PROJECT_DIR/testlogs
-    - |
-      if [ "$CI_COMMIT_REF_SLUG" = "develop" ]; then
-        cp -ra $CI_PROJECT_DIR/cache/* $CI_PROJECT_DIR/cache-artifact/
-      fi
-
-  # We're actually only interested in the develop branch creating the cache artifact, but there is no way to control this
-  # until https://gitlab.com/gitlab-org/gitlab-foss/issues/25478 gets implemented. Until then, we use an expiration time of
-  # 3 days and rely on daily builds to refresh the cache artifacts. We also keep non-develop artifacts at minimum size
+    - ./ci/test_unittests.sh # Run unit tests in build stage to avoid creating too many parallel jobs
+  cache:
+    # Let all branches share the same cache, which is ok because ccache is able to handle it
+    key: ${CI_JOB_NAME}
+    paths:
+      - $CI_PROJECT_DIR/cache/ccache
   artifacts:
-    name: cache-artifact
+    name: binaries
     when: always
     paths:
-      - $CI_PROJECT_DIR/cache-artifact
+      - $CI_PROJECT_DIR/build-ci
+    expire_in: 3 days
+
+.test-template:
+  stage: test
+  extends: .base-template
+  script:
+    - ./ci/test_integrationtests.sh --extended --exclude pruning,dbcrash
+  after_script:
+    - mkdir -p $CI_PROJECT_DIR/testlogs
+  artifacts:
+    name: testlogs
+    when: always
+    paths:
       - $CI_PROJECT_DIR/testlogs
     expire_in: 3 days
 
-arm-linux:
-  <<: *build_template
+###
 
-win32:
-  <<: *build_template
+arm-linux-gnueabihf:
+  extends: .build-depends-template
+  variables:
+    HOST: arm-linux-gnueabihf
 
-win64:
-  <<: *build_template
+i686-w64-mingw32:
+  extends: .build-depends-template
+  variables:
+    HOST: i686-w64-mingw32
 
-linux32:
-  <<: *build_template
+x86_64-w64-mingw32:
+  extends: .build-depends-template
+  variables:
+    HOST: x86_64-w64-mingw32
 
-linux64:
-  <<: *build_template
+i686-pc-linux-gnu:
+  extends: .build-depends-template
+  variables:
+    HOST: i686-pc-linux-gnu
 
-linux64_nowallet:
-  <<: *build_template
+x86_64-unknown-linux-gnu:
+  extends: .build-depends-template
+  variables:
+    HOST: x86_64-unknown-linux-gnu
 
-linux64_release:
-  <<: *build_template
+x86_64-unknown-linux-gnu-debug:
+  extends: .build-depends-template
+  variables:
+    HOST: x86_64-unknown-linux-gnu
+    DEP_OPTS: "DEBUG=1"
 
-mac:
-  <<: *build_template
+x86_64-apple-darwin11:
+  extends: .build-depends-template
+  variables:
+    HOST: x86_64-apple-darwin11
+
+###
+
+arm-linux-build:
+  extends: .build-template
+  needs:
+    - arm-linux-gnueabihf
+  variables:
+    BUILD_TARGET: arm-linux
+
+win32-build:
+  extends: .build-template
+  needs:
+    - i686-w64-mingw32
+  variables:
+    BUILD_TARGET: win32
+
+win64-build:
+  extends: .build-template
+  needs:
+    - x86_64-w64-mingw32
+  variables:
+    BUILD_TARGET: win64
+
+linux32-build:
+  extends: .build-template
+  needs:
+    - i686-pc-linux-gnu
+  variables:
+    BUILD_TARGET: linux32
+
+linux64-build:
+  extends: .build-template
+  needs:
+    - x86_64-unknown-linux-gnu-debug
+  variables:
+    BUILD_TARGET: linux64
+
+linux64_nowallet-build:
+  extends: .build-template
+  needs:
+    - x86_64-unknown-linux-gnu
+  variables:
+    BUILD_TARGET: linux64_nowallet
+
+linux64_release-build:
+  extends: .build-template
+  needs:
+    - x86_64-unknown-linux-gnu
+  variables:
+    BUILD_TARGET: linux64_release
+
+mac-build:
+  extends: .build-template
+  needs:
+    - x86_64-apple-darwin11
+  variables:
+    BUILD_TARGET: mac
+
+###
+
+linux32-test:
+  extends: .test-template
+  needs:
+    - linux32-build
+  variables:
+    BUILD_TARGET: linux32
+
+linux64-test:
+  extends: .test-template
+  needs:
+    - linux64-build
+  variables:
+    BUILD_TARGET: linux64

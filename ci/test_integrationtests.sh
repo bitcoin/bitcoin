@@ -18,7 +18,7 @@ export LD_LIBRARY_PATH=$BUILD_DIR/depends/$HOST/lib
 cd build-ci/dashcore-$BUILD_TARGET
 
 set +e
-./test/functional/test_runner.py --ci --coverage --quiet --failfast --nocleanup --tmpdir=$(pwd)/testdatadirs $PASS_ARGS
+./test/functional/test_runner.py --ci --coverage --failfast --nocleanup --tmpdir=$(pwd)/testdatadirs $PASS_ARGS
 RESULT=$?
 set -e
 

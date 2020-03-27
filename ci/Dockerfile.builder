@@ -4,13 +4,13 @@ FROM ubuntu:bionic
 # (zlib1g-dev and libssl-dev are needed for the Qt host binary builds, but should not be used by target binaries)
 # We split this up into multiple RUN lines as we might need to retry multiple times on Travis. This way we allow better
 # cache usage.
-RUN apt-get update
-RUN apt-get update && apt-get install -y git
-RUN apt-get update && apt-get install -y g++
-RUN apt-get update && apt-get install -y autotools-dev libtool m4 automake autoconf pkg-config
-RUN apt-get update && apt-get install -y zlib1g-dev libssl1.0-dev curl ccache bsdmainutils cmake
-RUN apt-get update && apt-get install -y python3 python3-dev
-RUN apt-get update && apt-get install -y python3-pip
+ENV APT_ARGS="-y --no-install-recommends --no-upgrade"
+RUN apt-get update && apt-get install $APT_ARGS git wget unzip && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS g++ && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS autotools-dev libtool m4 automake autoconf pkg-config && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS zlib1g-dev libssl1.0-dev curl ccache bsdmainutils cmake && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS python3 python3-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS python3-pip python3-setuptools && rm -rf /var/lib/apt/lists/*
 
 # Python stuff
 RUN pip3 install pyzmq # really needed?
@@ -29,15 +29,23 @@ ENV GROUP_ID ${GROUP_ID}
 RUN groupadd -g ${GROUP_ID} dash
 RUN useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /dash dash
 
-# Extra packages
-ARG BUILD_TARGET=linux64
-ADD matrix.sh /tmp/matrix.sh
-RUN . /tmp/matrix.sh && \
-  if [ -n "$DPKG_ADD_ARCH" ]; then dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi && \
-  if [ -n "$PACKAGES" ]; then apt-get update && apt-get install -y --no-install-recommends --no-upgrade $PACKAGES; fi
+# Packages needed for all target builds
+RUN dpkg --add-architecture i386
+RUN apt-get update && apt-get install $APT_ARGS g++-7-multilib && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS g++-arm-linux-gnueabihf && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS g++-mingw-w64-i686 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS g++-mingw-w64-x86-64 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS wine-stable wine32 wine64 bc nsis && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS python3-zmq && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install $APT_ARGS imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools && rm -rf /var/lib/apt/lists/*
+
+# This is a hack. It is needed because gcc-multilib and g++-multilib are conflicting with g++-arm-linux-gnueabihf. This is
+# due to gcc-multilib installing the following symbolic link, which is needed for -m32 support. However, this causes
+# arm builds to also have the asm folder implicitely in the include search path. This is kind of ok, because the asm folder
+# for arm has precedence.
+RUN ln -s x86_64-linux-gnu/asm /usr/include/asm
 
 # Make sure std::thread and friends is available
-# Will fail on non-win builds, but we ignore this
 RUN \
   update-alternatives --set i686-w64-mingw32-gcc /usr/bin/i686-w64-mingw32-gcc-posix; \
   update-alternatives --set i686-w64-mingw32-g++  /usr/bin/i686-w64-mingw32-g++-posix; \
