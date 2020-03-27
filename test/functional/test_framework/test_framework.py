@@ -790,7 +790,7 @@ class DashTestFramework(BitcoinTestFramework):
             return all_ok
         wait_until(check_quorum_connections, timeout=timeout, sleep=0.1)
 
-    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, timeout=30):
+    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, timeout=30, wait_proc=None, sleep=0.1):
         def check_dkg_session():
             all_ok = True
             member_count = 0
@@ -814,9 +814,11 @@ class DashTestFramework(BitcoinTestFramework):
                         all_ok = False
                         break
             if all_ok and member_count != expected_member_count:
-                return False
+                all_ok = False
+            if not all_ok and wait_proc is not None:
+                wait_proc()
             return all_ok
-        wait_until(check_dkg_session, timeout=timeout, sleep=0.1)
+        wait_until(check_dkg_session, timeout=timeout, sleep=sleep)
 
     def wait_for_quorum_commitment(self, quorum_hash, timeout = 15):
         def check_dkg_comitments():
@@ -862,7 +864,10 @@ class DashTestFramework(BitcoinTestFramework):
         q = self.nodes[0].getbestblockhash()
 
         self.log.info("Waiting for phase 1 (init)")
-        self.wait_for_quorum_phase(q, 1, expected_members, None, 0)
+        def bump_time():
+            self.bump_mocktime(30)
+            set_node_times(self.nodes, self.mocktime)
+        self.wait_for_quorum_phase(q, 1, expected_members, None, 0, wait_proc=bump_time, sleep=0.5)
         self.wait_for_quorum_connections(expected_connections=expected_connections)
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
