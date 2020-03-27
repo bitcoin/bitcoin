@@ -21,9 +21,15 @@ class LLMQSigningTest(DashTestFramework):
         self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
 
+    def add_options(self, parser):
+        parser.add_option("--spork21", dest="spork21", default=False, action="store_true",
+                          help="Test with spork21 enabled")
+
     def run_test(self):
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        if self.options.spork21:
+            self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
 
         self.mine_quorum()
