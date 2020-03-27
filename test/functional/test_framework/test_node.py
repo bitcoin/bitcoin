@@ -18,6 +18,7 @@ from .authproxy import JSONRPCException
 from .mininode import NodeConn
 from .util import (
     assert_equal,
+    delete_cookie_file,
     get_rpc_proxy,
     rpc_url,
     wait_until,
@@ -74,8 +75,19 @@ class TestNode():
         self.rpc = None
         self.url = None
         self.log = logging.getLogger('TestFramework.node%d' % i)
+        self.cleanup_on_exit = True # Whether to kill the node when this object goes away
 
         self.p2ps = []
+
+    def __del__(self):
+        # Ensure that we don't leave any bitcoind processes lying around after
+        # the test ends
+        if self.process and self.cleanup_on_exit:
+            # Should only happen on test failure
+            # Avoid using logger, as that may have already been shutdown when
+            # this destructor is called.
+            print("Cleaning up leftover process")
+            self.process.kill()
 
     def __getattr__(self, name):
         """Dispatches any unrecognised messages to the RPC connection or a CLI instance."""
@@ -91,6 +103,10 @@ class TestNode():
             extra_args = self.extra_args
         if stderr is None:
             stderr = self.stderr
+        # Delete any existing cookie file -- if such a file exists (eg due to
+        # unclean shutdown), it will get overwritten anyway by bitcoind, and
+        # potentially interfere with our attempt to authenticate
+        delete_cookie_file(self.datadir)
         self.process = subprocess.Popen(self.args + extra_args, stderr=stderr, *args, **kwargs)
         self.running = True
         self.log.debug("dashd started, waiting for RPC to come up")
