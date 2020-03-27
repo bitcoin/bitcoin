@@ -45,6 +45,7 @@ FUZZ_TARGETS = \
   test/fuzz/key_origin_info_deserialize \
   test/fuzz/locale \
   test/fuzz/merkle_block_deserialize \
+  test/fuzz/merkleblock \
   test/fuzz/messageheader_deserialize \
   test/fuzz/multiplication_overflow \
   test/fuzz/net_permissions \
@@ -540,6 +541,12 @@ test_fuzz_merkle_block_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_merkle_block_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_merkle_block_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_merkle_block_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_merkleblock_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_merkleblock_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_merkleblock_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_merkleblock_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_merkleblock_SOURCES = $(FUZZ_SUITE) test/fuzz/merkleblock.cpp
 
 test_fuzz_messageheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGEHEADER_DESERIALIZE=1
 test_fuzz_messageheader_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
