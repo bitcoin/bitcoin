@@ -100,6 +100,7 @@ FUZZ_TARGETS = \
   test/fuzz/service_deserialize \
   test/fuzz/signature_checker \
   test/fuzz/snapshotmetadata_deserialize \
+  test/fuzz/span \
   test/fuzz/spanparsing \
   test/fuzz/string \
   test/fuzz/strprintf \
@@ -871,6 +872,12 @@ test_fuzz_snapshotmetadata_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_snapshotmetadata_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_snapshotmetadata_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_snapshotmetadata_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_span_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_span_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_span_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_span_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_span_SOURCES = $(FUZZ_SUITE) test/fuzz/span.cpp
 
 test_fuzz_spanparsing_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_spanparsing_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
