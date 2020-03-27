@@ -100,6 +100,36 @@ static UniValue getnetworkhashps(const JSONRPCRequest& request)
     return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1);
 }
 
+static bool GenerateBlock(CBlock& block, uint64_t& max_tries, unsigned int& extra_nonce, uint256& block_hash)
+{
+    block_hash.SetNull();
+
+    {
+        LOCK(cs_main);
+        IncrementExtraNonce(&block, ::ChainActive().Tip(), extra_nonce);
+    }
+
+    CChainParams chainparams(Params());
+
+    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus()) && !ShutdownRequested()) {
+        ++block.nNonce;
+        --max_tries;
+    }
+    if (max_tries == 0 || ShutdownRequested()) {
+        return false;
+    }
+    if (block.nNonce == std::numeric_limits<uint32_t>::max()) {
+        return true;
+    }
+
+    std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
+    if (!ProcessNewBlock(chainparams, shared_pblock, true, nullptr))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+
+    block_hash = block.GetHash();
+    return true;
+}
+
 static UniValue generateBlocks(const CTxMemPool& mempool, const CScript& coinbase_script, int nGenerate, uint64_t nMaxTries)
 {
     int nHeightEnd = 0;
@@ -118,27 +148,52 @@ static UniValue generateBlocks(const CTxMemPool& mempool, const CScript& coinbas
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
-        {
-            LOCK(cs_main);
-            IncrementExtraNonce(pblock, ::ChainActive().Tip(), nExtraNonce);
-        }
-        while (nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
-            ++pblock->nNonce;
-            --nMaxTries;
-        }
-        if (nMaxTries == 0 || ShutdownRequested()) {
+
+        uint256 block_hash;
+        if (!GenerateBlock(*pblock, nMaxTries, nExtraNonce, block_hash)) {
             break;
         }
-        if (pblock->nNonce == std::numeric_limits<uint32_t>::max()) {
-            continue;
+
+        if (!block_hash.IsNull()) {
+            ++nHeight;
+            blockHashes.push_back(block_hash.GetHex());
         }
-        std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-        if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
-        ++nHeight;
-        blockHashes.push_back(pblock->GetHash().GetHex());
     }
     return blockHashes;
+}
+
+static bool getScriptFromDescriptor(const std::string& descriptor, CScript& script, std::string& error)
+{
+    FlatSigningProvider key_provider;
+    const auto desc = Parse(descriptor, key_provider, error, /* require_checksum = */ false);
+    if (desc) {
+        if (desc->IsRange()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Ranged descriptor not accepted. Maybe pass through deriveaddresses first?");
+        }
+
+        FlatSigningProvider provider;
+        std::vector<CScript> scripts;
+        if (!desc->Expand(0, key_provider, scripts, provider)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys"));
+        }
+
+        // Combo desriptors can have 2 or 4 scripts, so we can't just check scripts.size() == 1
+        CHECK_NONFATAL(scripts.size() > 0 && scripts.size() <= 4);
+
+        if (scripts.size() == 1) {
+            script = scripts.at(0);
+        } else if (scripts.size() == 4) {
+            // For uncompressed keys, take the 3rd script, since it is p2wpkh
+            script = scripts.at(2);
+        } else {
+            // Else take the 2nd script, since it is p2pkh
+            script = scripts.at(1);
+        }
+
+        return true;
+    } else {
+        return false;
+    }
 }
 
 static UniValue generatetodescriptor(const JSONRPCRequest& request)
@@ -165,27 +220,15 @@ static UniValue generatetodescriptor(const JSONRPCRequest& request)
     const int num_blocks{request.params[0].get_int()};
     const int64_t max_tries{request.params[2].isNull() ? 1000000 : request.params[2].get_int()};
 
-    FlatSigningProvider key_provider;
+    CScript coinbase_script;
     std::string error;
-    const auto desc = Parse(request.params[1].get_str(), key_provider, error, /* require_checksum = */ false);
-    if (!desc) {
+    if (!getScriptFromDescriptor(request.params[1].get_str(), coinbase_script, error)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
-    }
-    if (desc->IsRange()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Ranged descriptor not accepted. Maybe pass through deriveaddresses first?");
-    }
-
-    FlatSigningProvider provider;
-    std::vector<CScript> coinbase_script;
-    if (!desc->Expand(0, key_provider, coinbase_script, provider)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys"));
     }
 
     const CTxMemPool& mempool = EnsureMemPool();
 
-    CHECK_NONFATAL(coinbase_script.size() == 1);
-
-    return generateBlocks(mempool, coinbase_script.at(0), num_blocks, max_tries);
+    return generateBlocks(mempool, coinbase_script, num_blocks, max_tries);
 }
 
 static UniValue generatetoaddress(const JSONRPCRequest& request)
@@ -226,6 +269,113 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
     CScript coinbase_script = GetScriptForDestination(destination);
 
     return generateBlocks(mempool, coinbase_script, nGenerate, nMaxTries);
+}
+
+static UniValue generateblock(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"generateblock",
+        "\nMine a block with a set of ordered transactions immediately to a specified address or descriptor (before the RPC call returns)\n",
+        {
+            {"address/descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The address or descriptor to send the newly generated bitcoin to."},
+            {"transactions", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings which are either txids or raw transactions.\n"
+                "Txids must reference transactions currently in the mempool.\n"
+                "All transactions must be valid and in valid order, otherwise the block will be rejected.",
+                {
+                    {"rawtx/txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
+                },
+            }
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_HEX, "hash", "hash of generated block"}
+            }
+        },
+        RPCExamples{
+            "\nGenerate a block to myaddress, with txs rawtx and mempool_txid\n"
+            + HelpExampleCli("generateblock", R"("myaddress" '["rawtx", "mempool_txid"]')")
+        },
+    }.Check(request);
+
+    const auto address_or_descriptor = request.params[0].get_str();
+    CScript coinbase_script;
+    std::string error;
+
+    if (!getScriptFromDescriptor(address_or_descriptor, coinbase_script, error)) {
+        const auto destination = DecodeDestination(address_or_descriptor);
+        if (!IsValidDestination(destination)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address or descriptor");
+        }
+
+        coinbase_script = GetScriptForDestination(destination);
+    }
+
+    const CTxMemPool& mempool = EnsureMemPool();
+
+    std::vector<CTransactionRef> txs;
+    const auto raw_txs_or_txids = request.params[1].get_array();
+    for (size_t i = 0; i < raw_txs_or_txids.size(); i++) {
+        const auto str(raw_txs_or_txids[i].get_str());
+
+        uint256 hash;
+        CMutableTransaction mtx;
+        if (ParseHashStr(str, hash)) {
+
+            const auto tx = mempool.get(hash);
+            if (!tx) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Transaction %s not in mempool.", str));
+            }
+
+            txs.emplace_back(tx);
+
+        } else if (DecodeHexTx(mtx, str)) {
+            txs.push_back(MakeTransactionRef(std::move(mtx)));
+
+        } else {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Transaction decode failed for %s", str));
+        }
+    }
+
+    CChainParams chainparams(Params());
+    CBlock block;
+
+    {
+        LOCK(cs_main);
+
+        CTxMemPool empty_mempool;
+        std::unique_ptr<CBlockTemplate> blocktemplate(BlockAssembler(empty_mempool, chainparams).CreateNewBlock(coinbase_script));
+        if (!blocktemplate) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
+        }
+        block = blocktemplate->block;
+    }
+
+    CHECK_NONFATAL(block.vtx.size() == 1);
+
+    // Add transactions
+    block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
+    RegenerateCommitments(block);
+
+    {
+        LOCK(cs_main);
+
+        BlockValidationState state;
+        if (!TestBlockValidity(state, chainparams, block, LookupBlockIndex(block.hashPrevBlock), false, false)) {
+            throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", state.ToString()));
+        }
+    }
+
+    uint256 block_hash;
+    uint64_t max_tries{1000000};
+    unsigned int extra_nonce{0};
+
+    if (!GenerateBlock(block, max_tries, extra_nonce, block_hash) || block_hash.IsNull()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Failed to make block.");
+    }
+
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("hash", block_hash.GetHex());
+    return obj;
 }
 
 static UniValue getmininginfo(const JSONRPCRequest& request)
@@ -1035,6 +1185,7 @@ static const CRPCCommand commands[] =
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
     { "generating",         "generatetodescriptor",   &generatetodescriptor,   {"num_blocks","descriptor","maxtries"} },
+    { "generating",         "generateblock",          &generateblock,    {"address","transactions"} },
 
     { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
