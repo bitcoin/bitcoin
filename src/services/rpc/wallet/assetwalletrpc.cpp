@@ -25,7 +25,6 @@ extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool
 extern ArrivalTimesSetImpl arrivalTimesSet; 
 extern RecursiveMutex cs_assetallocationarrival;
 extern AssetPrevTxMap mapAssetPrevTxSender;
-extern AssetPrevTxMap mapSenderLockedOutPoints;
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern RecursiveMutex cs_assetallocationmempoolbalance;
 extern RecursiveMutex cs_setethstatus;
@@ -165,14 +164,9 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     COutPoint outPointLastSender;
-    auto itSenderLocked = mapSenderLockedOutPoints.find(strAddress);
-    if(itSenderLocked != mapSenderLockedOutPoints.end()){
-        outPointLastSender = itSenderLocked->second;
-    }else {
-        auto itSender = mapAssetPrevTxSender.find(strAddress);
-        if(itSender != mapAssetPrevTxSender.end()){
-            outPointLastSender = itSender->second;
-        }
+    auto itSender = mapAssetPrevTxSender.find(strAddress);
+    if(itSender != mapAssetPrevTxSender.end()){
+        outPointLastSender = itSender->second;
     }
     {
         LOCK(cs_main);
@@ -209,7 +203,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         }
         {
             LOCK(pwallet->cs_wallet);
-            if (pwallet->IsLockedCoin(vin.prevout.hash, vin.prevout.n) && (itSenderLocked == mapSenderLockedOutPoints.end() || vin.prevout != outPointLastSender)){
+            if (pwallet->IsLockedCoin(vin.prevout.hash, vin.prevout.n) && vin.prevout != outPointLastSender){
                 continue;
             }
         }
@@ -292,10 +286,6 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
                     continue;
             }
             if (!IsOutpointMature(outPoint))
-                continue;
-            bool locked = false;
-            // spending while using a locked outpoint should be invalid
-            if (plockedoutpointsdb->ReadOutpoint(outPoint, locked) && locked)
                 continue;
             // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs every time we call this function
             if(fTPSTest && fTPSTestEnabled){
@@ -877,9 +867,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-	const COutPoint lockedOutpoint = dbAssetAllocation.lockedOutpoint;
-    if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
-        throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
 
 	theAssetAllocation.SetNull();
     theAssetAllocation.assetAllocationTuple.nAsset = assetAllocationTuple.nAsset;
@@ -937,10 +924,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);	
-    if(!lockedOutpoint.IsNull()){
-        // this will let syscointxfund try to select this outpoint as the input
-        mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
-    }
 	return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ALLOCATION_SEND, strWitness, vecSend);
 }
 template <typename T>
@@ -1010,13 +993,6 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     }  
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''"){
-        const COutPoint lockedOutpoint = dbAssetAllocation.lockedOutpoint;
-        if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
-            throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
-        if(!lockedOutpoint.IsNull()){
-            // this will let syscointxfund try to select this outpoint as the input
-            mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
-        }
         theAssetAllocation.SetNull();
         theAssetAllocation.assetAllocationTuple.nAsset = assetAllocationTuple.nAsset;
         theAssetAllocation.assetAllocationTuple.witnessAddress = assetAllocationTuple.witnessAddress; 
@@ -1223,81 +1199,6 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 }
 
 
-UniValue assetallocationlock(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-	const UniValue &params = request.params;
-    RPCHelpMan{"assetallocationlock",
-    "\nLock an asset allocation to a specific UTXO (txid/output). This is useful for things such as hashlock and CLTV type operations where script checks are done on UTXO prior to spending which extend to an assetallocationsend.\n",
-    {
-        {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
-        {"addressfrom", RPCArg::Type::STR, RPCArg::Optional::NO, "Address that owns this asset allocation"},
-        {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "Transaction hash"},
-        {"output_index", RPCArg::Type::NUM, RPCArg::Optional::NO, "Output index inside the transaction output array"},
-        {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction"}
-    },
-    RPCResult{
-        RPCResult::Type::OBJ, "", "",
-        {
-            {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
-        }},
-    RPCExamples{
-    HelpExampleCli("assetallocationlock", "\"asset_guid\" \"addressfrom\" \"txid\" \"output_index\" \"\"")
-    + HelpExampleRpc("assetallocationlock", "\"asset_guid\",\"addressfrom\",\"txid\",\"output_index\",\"\"")
-    }
-    }.Check(request);
-            
-	// gather & validate inputs
-	const uint32_t &nAsset = params[0].get_uint();
-	string strAddress = params[1].get_str();
-	uint256 txid = uint256S(params[2].get_str());
-	uint32_t outputIndex = params[3].get_uint();
-	vector<unsigned char> vchWitness;
-	string strWitness = params[4].get_str();
-
-    const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress); 
-    strAddress = witnessAddress.ToString();  	
-	CAssetAllocation theAssetAllocation;
-    CAssetAllocationDBEntry dbAssetAllocation;
-	const CAssetAllocationTuple assetAllocationTuple(nAsset, witnessAddress);
-	if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
-		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset allocation with this key");
-
-    
-	const COutPoint lockedOutpoint = dbAssetAllocation.lockedOutpoint;
-    if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
-        throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
-    if(!lockedOutpoint.IsNull()){
-        // this will let syscointxfund try to select this outpoint as the input
-        mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
-    }
-
-	theAssetAllocation.SetNull();
-	theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
-	theAssetAllocation.assetAllocationTuple.witnessAddress = std::move(assetAllocationTuple.witnessAddress);
-	theAssetAllocation.lockedOutpoint = COutPoint(txid, outputIndex);
-    if(!IsOutpointMature(theAssetAllocation.lockedOutpoint))
-        throw JSONRPCError(RPC_MISC_ERROR, "Outpoint not mature");
-    Coin pcoin;
-    GetUTXOCoin(theAssetAllocation.lockedOutpoint, pcoin);
-    CTxDestination address;
-    if (!ExtractDestination(pcoin.out.scriptPubKey, address))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not extract destination from outpoint");
-        
-    const string& strAddressDest = EncodeDestination(address);
-    if(strAddress != strAddressDest)    
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Outpoint address must match allocation owner address");
-    vector<unsigned char> data;
-    theAssetAllocation.Serialize(data);    
-	vector<CRecipient> vecSend;
-
-	CScript scriptData;
-	scriptData << OP_RETURN << data;
-	CRecipient fee;
-	CreateFeeRecipient(scriptData, fee);
-	vecSend.push_back(fee);
-	return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ALLOCATION_LOCK, strWitness, vecSend);
-}
 UniValue sendfrom(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -1452,7 +1353,6 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address","witness"}},
     { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","inputs"}},
-    { "syscoinwallet",            "assetallocationlock",              &assetallocationlock,           {"asset_guid","address","txid","output_index","witness"}},
     { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address_sender","address_receiver","amount"}},
     { "syscoinwallet",            "assetallocationsendmany",          &assetallocationsendmany,       {"asset_guid","address","inputs","witness"}},
     { "syscoinwallet",            "sendfrom",                         &sendfrom,                      {"funding_address","address","amount"}},

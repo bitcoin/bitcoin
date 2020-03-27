@@ -136,10 +136,6 @@ unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
             const uint32_t& nOut = find_value(utxoObj, "vout").get_uint();
 
             const COutPoint &outPointToCheck = COutPoint(txid, nOut);
-            bool locked = false;
-            // spending as non allocation send while using a locked outpoint should be invalid
-            if (plockedoutpointsdb->ReadOutpoint(outPointToCheck, locked) && locked)
-                continue;
             if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
                 continue;
             if (outpoint.IsNull())

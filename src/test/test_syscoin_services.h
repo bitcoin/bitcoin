@@ -36,7 +36,6 @@ string AssetNew(const string& node, const string& address, string pubdata = "''"
 string AssetUpdate(const string& node, const string& guid, const string& pubdata = "''", const string& supply = "''",  const string& updateflags = "31",  const string& contract="''", const string& witness = "''",  bool confirm = true, const string& auxfees = "{}");
 void AssetTransfer(const string& node, const string &tonode, const string& guid, const string& toaddress, const string& witness = "''", bool bRegtest = true);
 string BurnAssetAllocation(const string& node, const string &guid, const string &address,const string &amount, bool confirm=true, string contract = "0x931d387731bbbc988b312206c74f77d004d6b84b");
-void LockAssetAllocation(const string& node, const string &guid, const string &address,const string &txid,const string &index, bool confirm = true);
 string AssetSend(const string& node, const string& name, const string& inputs, const string& witness = "''", bool completetx=true, bool bRegtest = true, bool confirm = true);
 string AssetAllocationTransfer(const bool usezdag, const string& node, const string& name, const string& fromaddress, const string& inputs, const string& witness = "''");
 bool AreTwoTransactionsLinked(const string &node, const string& inputTxid, const string &outputTxid);

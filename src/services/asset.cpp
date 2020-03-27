@@ -384,33 +384,6 @@ bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, c
 	return false;
 }
 
-bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress &witnessAddressToMatch, const COutPoint& lockedOutpoint) {
-    if (lockedOutpoint.IsNull()){
-		return FindAssetOwnerInTx(inputs, tx, witnessAddressToMatch);
-    }
-    if(tx.vin.empty())
-        return false;
-	CTxDestination dest;
-    int witnessversion;
-    bool foundOutPoint = false;
-    bool foundOwner = false;
-    std::vector<unsigned char> witnessprogram;
-    const Coin& prevCoins = inputs.AccessCoin(tx.vin[0].prevout);
-    if (prevCoins.IsSpent() || prevCoins.IsCoinBase()) {
-        return false;
-    }
-    if (lockedOutpoint == tx.vin[0].prevout){
-        foundOutPoint = true;
-    }
-    if(prevCoins.out.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram) && witnessAddressToMatch.vchWitnessProgram == witnessprogram && witnessAddressToMatch.nVersion == (unsigned char)witnessversion){
-        foundOwner = true;
-    }
-    if(foundOwner && foundOutPoint)
-        return true;
-	
-	return false;
-}
-
 bool IsSyscoinMintTx(const int &nVersion){
     return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT;
 }

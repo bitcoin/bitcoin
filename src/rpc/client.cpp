@@ -178,8 +178,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "voteraw", 5, "time" },
     { "sendfrom", 2, "amount" },
     { "convertaddresswallet", 2, "rescan" },
-    { "assetallocationlock", 0, "asset_guid" },
-    { "assetallocationlock", 3, "output_index" },
     { "assetallocationsend", 0, "asset_guid" },
     { "assetallocationsend", 3, "amount" },
     { "assetallocationsendmany", 0, "asset_guid" },

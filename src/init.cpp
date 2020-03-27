@@ -319,7 +319,6 @@ void Shutdown(NodeContext& node)
     pethereumtxmintdb.reset();
     passetindexdb.reset();
     pblockindexdb.reset();
-	plockedoutpointsdb.reset();
     {
         LOCK(cs_main);
         if (g_chainstate && g_chainstate->CanFlushToDisk()) {
@@ -1651,8 +1650,6 @@ bool AppInitMain(NodeContext& node)
                 passetindexdb.reset();
                 pethereumtxmintdb.reset();
                 pblockindexdb.reset();
-				plockedoutpointsdb.reset();
-				plockedoutpointsdb.reset(new CLockedOutpointsDB(nCoinDBCache * 16, false, fReset));
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState));
                 passetallocationdb.reset(new CAssetAllocationDB(nCoinDBCache*32, false, fReset || fReindexChainState));
                 passetallocationmempooldb.reset(new CAssetAllocationMempoolDB(0, false, fReset || fReindexChainState));

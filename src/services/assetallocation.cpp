@@ -109,8 +109,6 @@ string assetAllocationFromTx(const int &nVersion) {
 		return "syscoinburntoassetallocation";            
     case SYSCOIN_TX_VERSION_ALLOCATION_MINT:
         return "assetallocationmint";   
-	case SYSCOIN_TX_VERSION_ALLOCATION_LOCK:
-		return "assetallocationlock";
     default:
         return "<unknown assetallocation op>";
     }
@@ -304,8 +302,6 @@ bool BuildAssetAllocationJson(const CAssetAllocationDBEntry& assetallocation, co
 	oAssetAllocation.__pushKV("address",  assetallocation.assetAllocationTuple.witnessAddress.ToString());
 	oAssetAllocation.__pushKV("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision));
     oAssetAllocation.__pushKV("balance_zdag", ValueFromAssetAmount(nBalanceZDAG, asset.nPrecision));
-    if(!assetallocation.lockedOutpoint.IsNull())
-        oAssetAllocation.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
 	return true;
 }
 // TODO: clean this up copied to support disable-wallet build
@@ -372,8 +368,6 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, const CWal
          entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
          entry.__pushKV("ethereum_contract", "0x" + HexStr(vchEthContract));
     }
-	else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
-		entry.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
     return true;
 }
 #endif
@@ -434,8 +428,6 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
          entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
          entry.__pushKV("ethereum_contract", "0x" + HexStr(vchEthContract));
     }
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
-        entry.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
     return true;
 }
 bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation)
@@ -479,9 +471,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
          entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
          entry.__pushKV("ethereum_contract", "0x" + HexStr(vchEthContract));
-    }
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
-        entry.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());         
+    }        
     return true;
 }
 
@@ -852,15 +842,12 @@ void CAssetAllocation::SerializationOp(Stream& s, Operation ser_action) {
     READWRITE(listSendingAllocationAmounts);
     if(::ChainActive().Tip()->nHeight <= Params().GetConsensus().nBridgeStartBlock){
         CAmount nBalance = 0;
+        COutPoint lockedOutpoint;
         READWRITE(nBalance);
         READWRITE(lockedOutpoint);
     }
     else{
-        if(!ser_action.ForRead())
-            lockedOutpointSet = lockedOutpoint.n == COutPoint::NULL_INDEX? 0: 1;
-        READWRITE(lockedOutpointSet);
-        if(lockedOutpointSet == 1)
-            READWRITE(lockedOutpoint);
+        READWRITE((unsigned char)0);
     }
 }
 template <typename Stream, typename Operation>
@@ -869,15 +856,12 @@ void CAssetAllocationDBEntry::SerializationOp(Stream& s, Operation ser_action) {
     READWRITE(nBalance);
     if(::ChainActive().Tip()->nHeight <= Params().GetConsensus().nBridgeStartBlock){
         RangeAmountTuples listSendingAllocationAmounts;
+        COutPoint lockedOutpoint;
         READWRITE(listSendingAllocationAmounts);
         READWRITE(lockedOutpoint);
     }
     else{
-        if(!ser_action.ForRead())
-            lockedOutpointSet = lockedOutpoint.n == COutPoint::NULL_INDEX? 0: 1;
-        READWRITE(lockedOutpointSet);
-        if(lockedOutpointSet == 1)
-            READWRITE(lockedOutpoint);
+        READWRITE((unsigned char)0);
     }
 }
 std::string GetSenderOfZdagTx(const CTransaction &tx){

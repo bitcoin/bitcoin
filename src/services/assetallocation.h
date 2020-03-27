@@ -90,8 +90,6 @@ class CAssetAllocation {
 public:
 	CAssetAllocationTuple assetAllocationTuple;
 	RangeAmountTuples listSendingAllocationAmounts;
-	COutPoint lockedOutpoint;
-	unsigned char lockedOutpointSet; // use bit to control read/write of lockedOutpoint (saves 39 bytes on bandwidth on non-locked asset txs)
 	template <typename Stream, typename Operation>
 	void SerializationOp(Stream& s, Operation ser_action);
 	CAssetAllocation() {
@@ -104,7 +102,6 @@ public:
 	inline void ClearAssetAllocation()
 	{
 		listSendingAllocationAmounts.clear();
-		lockedOutpoint.SetNull();
 	}
 	ADD_SERIALIZE_METHODS;
 
@@ -129,16 +126,10 @@ class CAssetAllocationDBEntry {
 public:
 	CAssetAllocationTuple assetAllocationTuple;
 	CAmount nBalance;
-	COutPoint lockedOutpoint;
-	unsigned char lockedOutpointSet; // use bit to control read/write of lockedOutpoint (saves 39 bytes on bandwidth on non-locked asset txs)
 	template <typename Stream, typename Operation>
 	void SerializationOp(Stream& s, Operation ser_action);
 	CAssetAllocationDBEntry() {
 		SetNull();
-	}
-	inline void ClearAssetAllocation()
-	{
-		lockedOutpoint.SetNull();
 	}
 	ADD_SERIALIZE_METHODS;
 
@@ -154,7 +145,7 @@ public:
 	inline friend bool operator!=(const CAssetAllocationDBEntry &a, const CAssetAllocationDBEntry &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { ClearAssetAllocation(); nBalance = 0;}
+	inline void SetNull() { nBalance = 0;}
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	void Serialize(std::vector<unsigned char>& vchData);
 };
