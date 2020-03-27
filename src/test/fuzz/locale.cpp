@@ -6,6 +6,7 @@
 #include <test/fuzz/fuzz.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 
 #include <cassert>
 #include <clocale>
@@ -54,7 +55,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     const int atoi_without_locale = atoi(random_string);
     const int64_t atoi64c_without_locale = atoi64(random_string.c_str());
     const int64_t random_int64 = fuzzed_data_provider.ConsumeIntegral<int64_t>();
-    const std::string i64tostr_without_locale = i64tostr(random_int64);
+    const std::string tostring_without_locale = ToString(random_int64);
     const int32_t random_int32 = fuzzed_data_provider.ConsumeIntegral<int32_t>();
     const std::string strprintf_int_without_locale = strprintf("%d", random_int64);
     const double random_double = fuzzed_data_provider.ConsumeFloatingPoint<double>();
@@ -81,8 +82,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     assert(atoi64c_without_locale == atoi64c_with_locale);
     const int atoi_with_locale = atoi(random_string);
     assert(atoi_without_locale == atoi_with_locale);
-    const std::string i64tostr_with_locale = i64tostr(random_int64);
-    assert(i64tostr_without_locale == i64tostr_with_locale);
+    const std::string tostring_with_locale = ToString(random_int64);
+    assert(tostring_without_locale == tostring_with_locale);
     const std::string strprintf_int_with_locale = strprintf("%d", random_int64);
     assert(strprintf_int_without_locale == strprintf_int_with_locale);
     const std::string strprintf_double_with_locale = strprintf("%f", random_double);
