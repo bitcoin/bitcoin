@@ -8,6 +8,8 @@
 #include <attributes.h>
 
 #include <cstring>
+#include <locale>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -50,6 +52,18 @@ inline std::string Join(const std::vector<std::string>& list, const std::string&
 NODISCARD inline bool ValidAsCString(const std::string& str) noexcept
 {
     return str.size() == strlen(str.c_str());
+}
+
+/**
+ * Locale-independent version of std::to_string
+ */
+template <typename T>
+std::string ToString(const T& t)
+{
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss << t;
+    return oss.str();
 }
 
 #endif // BITCOIN_UTIL_STRENCODINGS_H

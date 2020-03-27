@@ -157,7 +157,7 @@ public:
 
     /** Back up the entire database to a file.
      */
-    bool Backup(const std::string& strDest);
+    bool Backup(const std::string& strDest) const;
 
     /** Make sure all changes are flushed to disk.
      */
@@ -193,7 +193,7 @@ private:
      * Only to be used at a low level, application should ideally not care
      * about this.
      */
-    bool IsDummy() { return env == nullptr; }
+    bool IsDummy() const { return env == nullptr; }
 };
 
 /** RAII class that provides access to a Berkeley database */

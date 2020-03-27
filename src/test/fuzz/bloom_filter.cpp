@@ -27,7 +27,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     while (fuzzed_data_provider.remaining_bytes() > 0) {
         switch (fuzzed_data_provider.ConsumeIntegralInRange(0, 6)) {
         case 0: {
-            const std::vector<unsigned char>& b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+            const std::vector<unsigned char> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
             (void)bloom_filter.contains(b);
             bloom_filter.insert(b);
             const bool present = bloom_filter.contains(b);

@@ -14,6 +14,7 @@
 #include <netbase.h>
 #include <policy/settings.h>
 #include <pow.h>
+#include <protocol.h>
 #include <pubkey.h>
 #include <rpc/util.h>
 #include <script/signingprovider.h>
@@ -22,13 +23,16 @@
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <time.h>
 #include <uint256.h>
+#include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <version.h>
 
 #include <cassert>
+#include <chrono>
 #include <limits>
 #include <vector>
 
@@ -76,11 +80,19 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)DecompressAmount(u64);
     (void)FormatISO8601Date(i64);
     (void)FormatISO8601DateTime(i64);
+    // FormatMoney(i) not defined when i == std::numeric_limits<int64_t>::min()
+    if (i64 != std::numeric_limits<int64_t>::min()) {
+        int64_t parsed_money;
+        if (ParseMoney(FormatMoney(i64), parsed_money)) {
+            assert(parsed_money == i64);
+        }
+    }
     (void)GetSizeOfCompactSize(u64);
     (void)GetSpecialScriptSize(u32);
     // (void)GetVirtualTransactionSize(i64, i64); // function defined only for a subset of int64_t inputs
     // (void)GetVirtualTransactionSize(i64, i64, u32); // function defined only for a subset of int64_t/uint32_t inputs
     (void)HexDigit(ch);
+    (void)MoneyRange(i64);
     (void)i64tostr(i64);
     (void)IsDigit(ch);
     (void)IsSpace(ch);
@@ -106,6 +118,16 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)SipHashUint256(u64, u64, u256);
     (void)SipHashUint256Extra(u64, u64, u256, u32);
     (void)ToLower(ch);
+    (void)ToUpper(ch);
+    // ValueFromAmount(i) not defined when i == std::numeric_limits<int64_t>::min()
+    if (i64 != std::numeric_limits<int64_t>::min()) {
+        int64_t parsed_money;
+        if (ParseMoney(ValueFromAmount(i64).getValStr(), parsed_money)) {
+            assert(parsed_money == i64);
+        }
+    }
+    const std::chrono::seconds seconds{i64};
+    assert(count_seconds(seconds) == i64);
 
     const arith_uint256 au256 = UintToArith256(u256);
     assert(ArithToUint256(au256) == u256);
@@ -198,5 +220,51 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         stream << b;
         stream >> deserialized_b;
         assert(b == deserialized_b && stream.empty());
+    }
+
+    {
+        const ServiceFlags service_flags = (ServiceFlags)u64;
+        (void)HasAllDesirableServiceFlags(service_flags);
+        (void)MayHaveUsefulAddressDB(service_flags);
+    }
+
+    {
+        CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
+
+        ser_writedata64(stream, u64);
+        const uint64_t deserialized_u64 = ser_readdata64(stream);
+        assert(u64 == deserialized_u64 && stream.empty());
+
+        ser_writedata32(stream, u32);
+        const uint32_t deserialized_u32 = ser_readdata32(stream);
+        assert(u32 == deserialized_u32 && stream.empty());
+
+        ser_writedata32be(stream, u32);
+        const uint32_t deserialized_u32be = ser_readdata32be(stream);
+        assert(u32 == deserialized_u32be && stream.empty());
+
+        ser_writedata16(stream, u16);
+        const uint16_t deserialized_u16 = ser_readdata16(stream);
+        assert(u16 == deserialized_u16 && stream.empty());
+
+        ser_writedata16be(stream, u16);
+        const uint16_t deserialized_u16be = ser_readdata16be(stream);
+        assert(u16 == deserialized_u16be && stream.empty());
+
+        ser_writedata8(stream, u8);
+        const uint8_t deserialized_u8 = ser_readdata8(stream);
+        assert(u8 == deserialized_u8 && stream.empty());
+    }
+
+    {
+        CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
+
+        WriteCompactSize(stream, u64);
+        try {
+            const uint64_t deserialized_u64 = ReadCompactSize(stream);
+            assert(u64 == deserialized_u64 && stream.empty());
+        }
+        catch (const std::ios_base::failure&) {
+        }
     }
 }

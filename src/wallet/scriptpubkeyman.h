@@ -5,8 +5,11 @@
 #ifndef BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 #define BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 
+#include <psbt.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
+#include <util/error.h>
+#include <util/message.h>
 #include <wallet/crypter.h>
 #include <wallet/ismine.h>
 #include <wallet/walletdb.h>
@@ -184,7 +187,7 @@ public:
     virtual bool IsHDEnabled() const { return false; }
 
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
-    virtual bool CanGetAddresses(bool internal = false) { return false; }
+    virtual bool CanGetAddresses(bool internal = false) const { return false; }
 
     /** Upgrades the wallet to the specified version */
     virtual bool Upgrade(int prev_version, std::string& error) { return false; }
@@ -194,21 +197,28 @@ public:
     //! The action to do when the DB needs rewrite
     virtual void RewriteDB() {}
 
-    virtual int64_t GetOldestKeyPoolTime() { return GetTime(); }
+    virtual int64_t GetOldestKeyPoolTime() const { return GetTime(); }
 
-    virtual size_t KeypoolCountExternalKeys() { return 0; }
+    virtual size_t KeypoolCountExternalKeys() const { return 0; }
     virtual unsigned int GetKeyPoolSize() const { return 0; }
 
     virtual int64_t GetTimeFirstKey() const { return 0; }
 
     virtual const CKeyMetadata* GetMetadata(const CTxDestination& dest) const { return nullptr; }
 
-    virtual std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script) const { return nullptr; }
+    virtual std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const { return nullptr; }
 
-    /** Whether this ScriptPubKeyMan can provide a SigningProvider (via GetSigningProvider) that, combined with
-      * sigdata, can produce a valid signature.
+    /** Whether this ScriptPubKeyMan can provide a SigningProvider (via GetSolvingProvider) that, combined with
+      * sigdata, can produce solving data.
       */
     virtual bool CanProvide(const CScript& script, SignatureData& sigdata) { return false; }
+
+    /** Creates new signatures and adds them to the transaction. Returns whether all inputs were signed */
+    virtual bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const { return false; }
+    /** Sign a message with the given script */
+    virtual SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const { return SigningResult::SIGNING_FAILED; };
+    /** Adds script and derivation path information to a PSBT, and optionally signs it. */
+    virtual TransactionError FillPSBT(PartiallySignedTransaction& psbt, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false) const { return TransactionError::INVALID_PSBT; }
 
     virtual uint256 GetID() const { return uint256(); }
 
@@ -336,19 +346,23 @@ public:
 
     void RewriteDB() override;
 
-    int64_t GetOldestKeyPoolTime() override;
-    size_t KeypoolCountExternalKeys() override;
+    int64_t GetOldestKeyPoolTime() const override;
+    size_t KeypoolCountExternalKeys() const override;
     unsigned int GetKeyPoolSize() const override;
 
     int64_t GetTimeFirstKey() const override;
 
     const CKeyMetadata* GetMetadata(const CTxDestination& dest) const override;
 
-    bool CanGetAddresses(bool internal = false) override;
+    bool CanGetAddresses(bool internal = false) const override;
 
-    std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script) const override;
+    std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const override;
 
     bool CanProvide(const CScript& script, SignatureData& sigdata) override;
+
+    bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const override;
+    SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
+    TransactionError FillPSBT(PartiallySignedTransaction& psbt, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false) const override;
 
     uint256 GetID() const override;
 
@@ -410,7 +424,7 @@ public:
     bool ImportScriptPubKeys(const std::set<CScript>& script_pub_keys, const bool have_solving_data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     /* Returns true if the wallet can generate new keys */
-    bool CanGenerateKeys();
+    bool CanGenerateKeys() const;
 
     /* Generates a new HD seed (will not be activated) */
     CPubKey GenerateNewSeed();
@@ -447,7 +461,7 @@ public:
     std::set<CKeyID> GetKeys() const override;
 };
 
-/** Wraps a LegacyScriptPubKeyMan so that it can be returned in a new unique_ptr */
+/** Wraps a LegacyScriptPubKeyMan so that it can be returned in a new unique_ptr. Does not provide privkeys */
 class LegacySigningProvider : public SigningProvider
 {
 private:
@@ -458,8 +472,8 @@ public:
     bool GetCScript(const CScriptID &scriptid, CScript& script) const override { return m_spk_man.GetCScript(scriptid, script); }
     bool HaveCScript(const CScriptID &scriptid) const override { return m_spk_man.HaveCScript(scriptid); }
     bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const override { return m_spk_man.GetPubKey(address, pubkey); }
-    bool GetKey(const CKeyID &address, CKey& key) const override { return m_spk_man.GetKey(address, key); }
-    bool HaveKey(const CKeyID &address) const override { return m_spk_man.HaveKey(address); }
+    bool GetKey(const CKeyID &address, CKey& key) const override { return false; }
+    bool HaveKey(const CKeyID &address) const override { return false; }
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override { return m_spk_man.GetKeyOrigin(keyid, info); }
 };
 

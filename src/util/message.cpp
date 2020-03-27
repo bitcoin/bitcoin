@@ -76,3 +76,17 @@ uint256 MessageHash(const std::string& message)
 
     return hasher.GetHash();
 }
+
+std::string SigningResultString(const SigningResult res)
+{
+    switch (res) {
+        case SigningResult::OK:
+            return "No error";
+        case SigningResult::PRIVATE_KEY_NOT_AVAILABLE:
+            return "Private key not available";
+        case SigningResult::SIGNING_FAILED:
+            return "Sign failed";
+        // no default case, so the compiler can warn about missing cases
+    }
+    assert(false);
+}

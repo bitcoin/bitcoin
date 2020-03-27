@@ -12,60 +12,18 @@ import sys
 import subprocess
 import logging
 
-# Fuzzers known to lack a seed corpus in https://github.com/bitcoin-core/qa-assets/tree/master/fuzz_seed_corpus
-FUZZERS_MISSING_CORPORA = [
-    "addr_info_deserialize",
-    "asmap",
-    "base_encode_decode",
-    "block",
-    "block_file_info_deserialize",
-    "block_filter_deserialize",
-    "block_header_and_short_txids_deserialize",
-    "bloom_filter",
-    "decode_tx",
-    "fee_rate_deserialize",
-    "flat_file_pos_deserialize",
-    "float",
-    "hex",
-    "integer",
-    "key",
-    "key_origin_info_deserialize",
-    "merkle_block_deserialize",
-    "out_point_deserialize",
-    "p2p_transport_deserializer",
-    "parse_hd_keypath",
-    "parse_numbers",
-    "parse_script",
-    "parse_univalue",
-    "partial_merkle_tree_deserialize",
-    "partially_signed_transaction_deserialize",
-    "prefilled_transaction_deserialize",
-    "psbt_input_deserialize",
-    "psbt_output_deserialize",
-    "pub_key_deserialize",
-    "rolling_bloom_filter",
-    "script_deserialize",
-    "strprintf",
-    "sub_net_deserialize",
-    "tx_in",
-    "tx_in_deserialize",
-    "tx_out",
-]
-
 
 def main():
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description='''Run the fuzz targets with all inputs from the seed_dir once.''',
+    )
     parser.add_argument(
         "-l",
         "--loglevel",
         dest="loglevel",
         default="INFO",
         help="log events at this level and higher to the console. Can be set to DEBUG, INFO, WARNING, ERROR or CRITICAL. Passing --loglevel DEBUG will output all logs to console.",
-    )
-    parser.add_argument(
-        '--export_coverage',
-        action='store_true',
-        help='If true, export coverage information to files in the seed corpus',
     )
     parser.add_argument(
         '--valgrind',
@@ -85,6 +43,10 @@ def main():
         'target',
         nargs='*',
         help='The target(s) to run. Default is to run all targets.',
+    )
+    parser.add_argument(
+        '--m_dir',
+        help='Merge inputs from this directory into the seed_dir. Needs /target subdirectory.',
     )
 
     args = parser.parse_args()
@@ -130,6 +92,20 @@ def main():
 
     logging.info("{} of {} detected fuzz target(s) selected: {}".format(len(test_list_selection), len(test_list_all), " ".join(test_list_selection)))
 
+    test_list_seedless = []
+    for t in test_list_selection:
+        corpus_path = os.path.join(args.seed_dir, t)
+        if not os.path.exists(corpus_path) or len(os.listdir(corpus_path)) == 0:
+            test_list_seedless.append(t)
+    test_list_seedless.sort()
+    if test_list_seedless:
+        logging.info(
+            "Fuzzing harnesses lacking a seed corpus: {}".format(
+                " ".join(test_list_seedless)
+            )
+        )
+        logging.info("Please consider adding a fuzz seed corpus at https://github.com/bitcoin-core/qa-assets")
+
     try:
         help_output = subprocess.run(
             args=[
@@ -148,20 +124,42 @@ def main():
         logging.error("subprocess timed out: Currently only libFuzzer is supported")
         sys.exit(1)
 
+    if args.m_dir:
+        merge_inputs(
+            corpus=args.seed_dir,
+            test_list=test_list_selection,
+            build_dir=config["environment"]["BUILDDIR"],
+            merge_dir=args.m_dir,
+        )
+
     run_once(
         corpus=args.seed_dir,
         test_list=test_list_selection,
         build_dir=config["environment"]["BUILDDIR"],
-        export_coverage=args.export_coverage,
         use_valgrind=args.valgrind,
     )
 
 
-def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
+def merge_inputs(*, corpus, test_list, build_dir, merge_dir):
+    logging.info("Merge the inputs in the passed dir into the seed_dir. Passed dir {}".format(merge_dir))
+    for t in test_list:
+        args = [
+            os.path.join(build_dir, 'src', 'test', 'fuzz', t),
+            '-merge=1',
+            os.path.join(corpus, t),
+            os.path.join(merge_dir, t),
+        ]
+        os.makedirs(os.path.join(corpus, t), exist_ok=True)
+        os.makedirs(os.path.join(merge_dir, t), exist_ok=True)
+        logging.debug('Run {} with args {}'.format(t, args))
+        output = subprocess.run(args, check=True, stderr=subprocess.PIPE, universal_newlines=True).stderr
+        logging.debug('Output: {}'.format(output))
+
+
+def run_once(*, corpus, test_list, build_dir, use_valgrind):
     for t in test_list:
         corpus_path = os.path.join(corpus, t)
-        if t in FUZZERS_MISSING_CORPORA:
-            os.makedirs(corpus_path, exist_ok=True)
+        os.makedirs(corpus_path, exist_ok=True)
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', t),
             '-runs=1',
@@ -182,13 +180,6 @@ def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
                 logging.info(e.stderr)
             logging.info("Target \"{}\" failed with exit code {}: {}".format(t, e.returncode, " ".join(args)))
             sys.exit(1)
-        if not export_coverage:
-            continue
-        for l in output.splitlines():
-            if 'INITED' in l:
-                with open(os.path.join(corpus, t + '_coverage'), 'w', encoding='utf-8') as cov_file:
-                    cov_file.write(l)
-                    break
 
 
 def parse_test_list(makefile):
