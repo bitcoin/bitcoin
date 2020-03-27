@@ -1193,24 +1193,7 @@ string BurnAssetAllocation(const string& node, const string &guid, const string 
 	string txid = find_value(r.get_obj(), "txid").get_str();
 	return txid;
 }
-void LockAssetAllocation(const string& node, const string &guid, const string &address,const string &txid, const string &index, bool confirm){
-    UniValue r;
-    string outpointStr = txid+"-"+index;
-    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationlock" , guid + ",\"" + address + "\",\"" + txid + "\"," + index + ",\"''\""));
-    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet" , "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
-    string hexStr = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "decoderawtransaction" , "\"" + hexStr + "\""));
-    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "sendrawtransaction" , "\"" + hexStr + "\""));  
-    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "syscoindecoderawtransaction" ,"\"" + hexStr + "\""));
 
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txtype").get_str(), "assetallocationlock");
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "locked_outpoint").get_str() , outpointStr);  
-	if(confirm){
-		GenerateBlocks(5, "node1");
-		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationinfo",  guid + ",\"" + address + "\""));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "locked_outpoint").get_str() , outpointStr);  
-	}
-}
 string AssetSend(const string& node, const string& guid, const string& inputs, const string& witness, bool completetx, bool bRegtest, bool confirm)
 {
 	UniValue r;

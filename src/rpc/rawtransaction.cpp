@@ -861,10 +861,6 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     } else if (!request.params[1].isNull()) {
         max_raw_tx_fee_rate = CFeeRate(AmountFromValue(request.params[1]));
     }
-	// SYSCOIN
-    TxValidationState state;
-	if (!CheckSyscoinLockedOutpoints(tx, state))
-		throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, state.GetRejectReason());
 
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
     CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);

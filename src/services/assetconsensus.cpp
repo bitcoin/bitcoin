@@ -22,10 +22,8 @@ extern RecursiveMutex cs_assetallocationmempoolbalance;
 extern RecursiveMutex cs_assetallocationarrival;
 extern RecursiveMutex cs_assetallocationconflicts;
 std::unique_ptr<CBlockIndexDB> pblockindexdb;
-std::unique_ptr<CLockedOutpointsDB> plockedoutpointsdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
-AssetPrevTxMap mapSenderLockedOutPoints;
 AssetPrevTxMap mapAssetPrevTxSender;
 RecursiveMutex cs_assetallocationmempoolremovetx;
 ArrivalTimesSet setToRemoveFromMempool GUARDED_BY(cs_assetallocationmempoolremovetx);
@@ -339,11 +337,10 @@ bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidat
 {
     AssetMap mapAssets;
     EthereumMintTxVec vecMintKeys;
-    std::vector<COutPoint> vecLockedOutpoints;
     AssetAllocationMap mapAssetAllocations;
-    return CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, nTime, uint256(), bSanityCheck, mapAssetAllocations, mapAssetAllocationBalances, mapAssets, vecMintKeys, vecLockedOutpoints);
+    return CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, nTime, uint256(), bSanityCheck, mapAssetAllocations, mapAssetAllocationBalances, mapAssets, vecMintKeys);
 }
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetAllocationMap &mapAssetAllocations, AssetBalanceMap &mapAssetAllocationBalances, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetAllocationMap &mapAssetAllocations, AssetBalanceMap &mapAssetAllocationBalances, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys)
 {
     bool good = true;
     try{
@@ -353,7 +350,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
             if(theAssetAllocation.assetAllocationTuple.IsNull()){
                 return FormatSyscoinErrorMessage(state, "assetallocation-unserialize", bSanityCheck);
             }
-            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, fJustCheck, nHeight, blockHash, mapAssetAllocations, mapAssetAllocationBalances, vecLockedOutpoints, bSanityCheck);
+            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, fJustCheck, nHeight, blockHash, mapAssetAllocations, mapAssetAllocationBalances, bSanityCheck);
         }
         else if (IsAssetTx(tx.nVersion))
         {
@@ -663,7 +660,7 @@ CAmount FindBurnAmountFromTx(const CTransaction& tx){
     return 0;
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, const CAssetAllocation &theAssetAllocation, TxValidationState &state, const CCoinsViewCache &inputs,
-        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, AssetBalanceMap &mapAssetAllocationBalances, std::vector<COutPoint> &vecLockedOutpoints, const bool &bSanityCheck) {
+        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, AssetBalanceMap &mapAssetAllocationBalances, const bool &bSanityCheck) {
     if (passetallocationdb == nullptr)
         return false;
     if (!bSanityCheck)
@@ -685,18 +682,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             {
                 return FormatSyscoinErrorMessage(state, "assetallocation-too-many-receivers", bSanityCheck);
             }
-			if (!theAssetAllocation.lockedOutpoint.IsNull())
-			{
-                return FormatSyscoinErrorMessage(state, "assetallocation-cannot-include-lockpoint", bSanityCheck);
-			}
             break; 
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
         case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
-			if (!theAssetAllocation.lockedOutpoint.IsNull())
-			{
-                return FormatSyscoinErrorMessage(state, "assetallocation-cannot-include-lockpoint", bSanityCheck);
-			}
             if(theAssetAllocation.listSendingAllocationAmounts.empty())
 			{
                 return FormatSyscoinErrorMessage(state, "assetallocation-empty", bSanityCheck);
@@ -707,15 +696,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
 			}
             break;            
 		case SYSCOIN_TX_VERSION_ALLOCATION_LOCK:
-			if (theAssetAllocation.lockedOutpoint.IsNull())
-			{
-                return FormatSyscoinErrorMessage(state, "assetallocation-missing-lockpoint", bSanityCheck);
-			}
-            if(!theAssetAllocation.listSendingAllocationAmounts.empty())
-			{
-                return FormatSyscoinErrorMessage(state, "assetallocation-too-many-receivers", bSanityCheck);
-			}
-			break;
+			return true;
         default:
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-op", bSanityCheck);
         }
@@ -781,13 +762,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         if (!FindAssetOwnerInTx(inputs, tx, receiverAllocationTuple.witnessAddress))
         {
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bSanityCheck);
-        }
-        // ensure lockedOutpoint is cleared on PoW, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
-		if (!bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
-			// this will flag the batch write function on plockedoutpointsdb to erase this outpoint
-			vecLockedOutpoints.emplace_back(emptyPoint);
-			storedSenderAllocationRef.lockedOutpoint.SetNull();
-		}              
+        }            
         const int &nOut = GetSyscoinDataOutput(tx);
         if(nOut < 0)
         {
@@ -874,20 +849,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         {
             return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-address", bSanityCheck);
         } 
-        if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, storedSenderAllocationRef.lockedOutpoint))
+        if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1))
         {     
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bSanityCheck);
         }       
         if (nBurnAmount <= 0 || (dbAsset.nTotalSupply > 0 && nBurnAmount > dbAsset.nTotalSupply))
         {
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
-        }        
-  		// ensure lockedOutpoint is cleared on PoW, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
-		if (!bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
-			// this will flag the batch write function on plockedoutpointsdb to erase this outpoint
-			vecLockedOutpoints.emplace_back(emptyPoint);
-			storedSenderAllocationRef.lockedOutpoint.SetNull();
-		}      
+        }            
         if(dbAsset.vchContract.empty())
         {
             return FormatSyscoinErrorMessage(state, "assetallocation-missing-contract", bSanityCheck);
@@ -923,30 +892,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             }                                 
         }
     }
-	else if (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
-	{
-		if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, storedSenderAllocationRef.lockedOutpoint))
-		{             
-			return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bSanityCheck);
-		}
-        if (!bSanityCheck && !fJustCheck){
-    		storedSenderAllocationRef.lockedOutpoint = theAssetAllocation.lockedOutpoint;
-    		// this will batch write the outpoint in the calling function, we save the outpoint so that we cannot spend this outpoint without creating an SYSCOIN_TX_VERSION_ALLOCATION_SEND transaction
-    		vecLockedOutpoints.emplace_back(std::move(theAssetAllocation.lockedOutpoint));
-        }
-	}
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND)
 	{
-        if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, storedSenderAllocationRef.lockedOutpoint))
+        if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1))
         {     
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bSanityCheck);
         }
-		// ensure lockedOutpoint is cleared on PoW if it was set once a send happens, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
-		if (!bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
-			// this will flag the batch write function on plockedoutpointsdb to erase this outpoint
-			vecLockedOutpoints.emplace_back(emptyPoint);
-			storedSenderAllocationRef.lockedOutpoint.SetNull();
-		}
         // check balance is sufficient on sender
         CAmount nTotal = 0;
         for (const auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
@@ -1546,75 +1497,6 @@ bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint256> > &
     }
     LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", blockIndex.size());
     return WriteBatch(batch);
-}
-bool CLockedOutpointsDB::FlushErase(const std::vector<COutPoint> &lockedOutpoints) {
-	if (lockedOutpoints.empty())
-		return true;
-
-	CDBBatch batch(*this);
-	for (const auto &outpoint : lockedOutpoints) {
-		batch.Erase(outpoint);
-	}
-	LogPrint(BCLog::SYS, "Flushing %d locked outpoints removals\n", lockedOutpoints.size());
-	return WriteBatch(batch);
-}
-bool CLockedOutpointsDB::FlushWrite(const std::vector<COutPoint> &lockedOutpoints) {
-	if (lockedOutpoints.empty())
-		return true;
-	CDBBatch batch(*this);
-	int write = 0;
-	int erase = 0;
-	for (const auto &outpoint : lockedOutpoints) {
-		if (outpoint.IsNull()) {
-			erase++;
-			batch.Erase(outpoint);
-		}
-		else {
-			write++;
-			batch.Write(outpoint, true);
-		}
-	}
-	LogPrint(BCLog::SYS, "Flushing %d locked outpoints (erased %d, written %d)\n", lockedOutpoints.size(), erase, write);
-	return WriteBatch(batch);
-}
-bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, TxValidationState &state) {
-	// SYSCOIN
-	const CTransaction &myTx = (*tx);
-    bool assetAllocationVersion = IsAssetAllocationTx(myTx.nVersion);
-    CAssetAllocation theAssetAllocation(myTx);
-	// if not an allocation send ensure the outpoint locked isn't being spent
-	if (!assetAllocationVersion && theAssetAllocation.assetAllocationTuple.IsNull()) {
-		for (unsigned int i = 0; i < myTx.vin.size(); i++)
-		{
-			bool locked = false;
-			// spending as non allocation send while using a locked outpoint should be invalid
-			if (plockedoutpointsdb && plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
-                return FormatSyscoinErrorMessage(state, "lock-non-allocation-input", true, false);
-			}
-		}
-	}
-	// ensure that the locked outpoint is being spent
-	else if(assetAllocationVersion){
-		CAssetAllocationDBEntry assetAllocationDB;
-		if (!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, assetAllocationDB)) {
-            return FormatSyscoinErrorMessage(state, "lock-non-existing-allocation", true, false);
-		}
-		bool found = assetAllocationDB.lockedOutpoint.IsNull();
-        
-		for (unsigned int i = 0; i < myTx.vin.size(); i++)
-		{
-			bool locked = false;
-			// spending as allocation send while using a locked outpoint should be invalid if tx doesn't include locked outpoint
-			if (!found && assetAllocationDB.lockedOutpoint == myTx.vin[i].prevout && plockedoutpointsdb && plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-            return FormatSyscoinErrorMessage(state, "lock-missing-lockpoint", false, false);
-		}
-	}
-	return true;
 }
 bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     LOCK(cs_setethstatus);

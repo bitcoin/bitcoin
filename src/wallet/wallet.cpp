@@ -3121,10 +3121,6 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
 }
 void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm)
 {
-    // SYSCOIN
-    TxValidationState state;
-	if (!CheckSyscoinLockedOutpoints(tx, state))
-        return;
     auto locked_chain = chain().lock();
     LOCK(cs_wallet);
 

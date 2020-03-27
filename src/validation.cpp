@@ -1913,7 +1913,6 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     AssetAllocationMap mapAssetAllocations;
     EthereumMintTxVec vecMintKeys;
     std::vector<uint256> vecTXIDs;
-	std::vector<COutPoint> vecOutpoints;
     std::vector<uint256> vecBlocks;
     bool fClean = true;
 
@@ -1961,7 +1960,6 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out);
                 if (res == DISCONNECT_FAILED) return DISCONNECT_FAILED;
                 fClean = fClean && res != DISCONNECT_UNCLEAN;
-				vecOutpoints.emplace_back(std::move(out));
             }
             // At this point, all of txundo.vprevout should have been moved out.
         }
@@ -1971,7 +1969,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     } 
     // SYSCOIN 
     if(passetdb != nullptr){
-        if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !pblockindexdb->FlushErase(vecTXIDs) || !plockedoutpointsdb->FlushErase(vecOutpoints) || !pethereumtxmintdb->FlushErase(vecMintKeys)){
+        if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !pblockindexdb->FlushErase(vecTXIDs) || !pethereumtxmintdb->FlushErase(vecMintKeys)){
             error("DisconnectBlock(): Error flushing to asset dbs on disconnect");
             return DISCONNECT_FAILED;
         }
@@ -2243,7 +2241,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
     EthereumMintTxVec vecMintKeys;
-    std::vector<COutPoint> vecLockedOutpoints;
     std::vector<std::pair<uint256, uint256> > blockIndex; 
     const uint256& blockHash = block.GetHash();
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
@@ -2315,7 +2312,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 TxValidationState tx_state;
                 // just temp var not used in !fJustCheck mode
                 AssetBalanceMap mapAssetAllocationBalances;
-                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssetAllocations, mapAssetAllocationBalances, mapAssets, vecMintKeys, vecLockedOutpoints)){
+                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssetAllocations, mapAssetAllocationBalances, mapAssets, vecMintKeys)){
                     if(syscoinTxFailed != nullptr)
                         *syscoinTxFailed = tx;
                     // Any transaction validation failure in ConnectBlock is a block consensus failure
@@ -2374,7 +2371,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         return true;
  
     if(pblockindexdb){
-        if(!pblockindexdb->FlushWrite(blockIndex) || !passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !plockedoutpointsdb->FlushWrite(vecLockedOutpoints) || !pethereumtxmintdb->FlushWrite(vecMintKeys)){
+        if(!pblockindexdb->FlushWrite(blockIndex) || !passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushWrite(vecMintKeys)){
             return error("Error flushing to asset dbs");
         }
     }

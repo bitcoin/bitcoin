@@ -19,16 +19,6 @@ public:
     bool FlushWrite(const std::vector<std::pair<uint256, uint256> > &blockIndex);
     bool FlushErase(const std::vector<uint256> &vecTXIDs);
 };
-class CLockedOutpointsDB : public CDBWrapper {
-public:
-	CLockedOutpointsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "lockedoutpoints", nCacheSize, fMemory, fWipe) {}
-
-	bool ReadOutpoint(const COutPoint& outpoint, bool& locked) {
-		return Read(outpoint, locked);
-	}
-	bool FlushWrite(const std::vector<COutPoint> &lockedOutpoints);
-	bool FlushErase(const std::vector<COutPoint> &lockedOutpoints);
-};
 class EthereumTxRoot {
     public:
     std::vector<unsigned char> vchBlockHash;
@@ -81,7 +71,6 @@ public:
     bool FlushWrite(const EthereumMintTxVec &vecMintKeys);
 };
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
-extern std::unique_ptr<CLockedOutpointsDB> plockedoutpointsdb;
 extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 extern std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
@@ -94,10 +83,9 @@ int ResetAssetAllocation(const std::string &senderStr);
 bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys);
 bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate,const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, const bool &bSanityCheck=false);
 bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, AssetBalanceMap &mapAssetAllocationBalances, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime,const bool &bSanityCheck);
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetAllocationMap &mapAssetAllocations, AssetBalanceMap &mapAssetAllocationBalances, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints);
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetAllocationMap &mapAssetAllocations, AssetBalanceMap &mapAssetAllocationBalances, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys);
 static CAssetAllocationDBEntry emptyAllocation;
-bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, TxValidationState &tstate);
-bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, const CAssetAllocation &theAssetAllocation, TxValidationState &tstate, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, AssetBalanceMap &mapAssetAllocationBalances, std::vector<COutPoint> &vecLockedOutpoints,  const bool &bSanityCheck = false);
+bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, const CAssetAllocation &theAssetAllocation, TxValidationState &tstate, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, AssetBalanceMap &mapAssetAllocationBalances, const bool &bSanityCheck = false);
 bool FormatSyscoinErrorMessage(TxValidationState &state, const std::string errorMessage, bool bErrorNotInvalid = true, bool bConsensus = true);
 void RemoveZDAGTx(const CTransactionRef &zdagTx);
 void AddZDAGTx(const CTransactionRef &zdagTx, const AssetBalanceMap &mapAssetAllocationBalances);
