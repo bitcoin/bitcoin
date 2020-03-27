@@ -4,10 +4,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netaddress.h>
+
 #include <hash.h>
-#include <util/strencodings.h>
-#include <util/asmap.h>
 #include <tinyformat.h>
+#include <util/asmap.h>
+#include <util/strencodings.h>
+#include <util/string.h>
 
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
@@ -735,7 +737,7 @@ std::vector<unsigned char> CService::GetKey() const
 
 std::string CService::ToStringPort() const
 {
-    return strprintf("%u", port);
+    return ::ToString(port);
 }
 
 std::string CService::ToStringIPPort() const
@@ -865,7 +867,7 @@ std::string CSubNet::ToString() const
     /* Format output */
     std::string strNetmask;
     if (valid_cidr) {
-        strNetmask = strprintf("%u", cidr);
+        strNetmask = ::ToString(cidr);
     } else {
         if (network.IsIPv4())
             strNetmask = strprintf("%u.%u.%u.%u", netmask[12], netmask[13], netmask[14], netmask[15]);

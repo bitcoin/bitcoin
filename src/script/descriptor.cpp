@@ -8,12 +8,12 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <script/standard.h>
-
 #include <span.h>
 #include <util/bip32.h>
 #include <util/spanparsing.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/string.h>
+#include <util/system.h>
 #include <util/vector.h>
 
 #include <memory>
@@ -678,7 +678,7 @@ class MultisigDescriptor final : public DescriptorImpl
     const int m_threshold;
     const bool m_sorted;
 protected:
-    std::string ToStringExtra() const override { return strprintf("%i", m_threshold); }
+    std::string ToStringExtra() const override { return ::ToString(m_threshold); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, const CScript*, FlatSigningProvider&) const override {
         if (m_sorted) {
             std::vector<CPubKey> sorted_keys(keys);

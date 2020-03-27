@@ -402,7 +402,7 @@ public:
         mapValueCopy["fromaccount"] = "";
         WriteOrderPos(nOrderPos, mapValueCopy);
         if (nTimeSmart) {
-            mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
+            mapValueCopy["timesmart"] = ToString(nTimeSmart);
         }
 
         std::vector<char> dummy_vector1; //!< Used to be vMerkleBranch

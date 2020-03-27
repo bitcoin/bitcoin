@@ -4222,7 +4222,7 @@ static UniValue upgradewallet(const JSONRPCRequest& request)
         "\nUpgrade the wallet. Upgrades to the latest version if no version number is specified\n"
         "New keys may be generated and a new wallet backup will need to be made.",
         {
-            {"version", RPCArg::Type::NUM, /* default */ strprintf("%d", FEATURE_LATEST), "The version number to upgrade to. Default is the latest wallet version"}
+            {"version", RPCArg::Type::NUM, /* default */ ToString(FEATURE_LATEST), "The version number to upgrade to. Default is the latest wallet version"}
         },
         RPCResults{},
         RPCExamples{

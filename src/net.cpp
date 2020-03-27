@@ -14,13 +14,14 @@
 #include <clientversion.h>
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
-#include <netbase.h>
 #include <net_permissions.h>
+#include <netbase.h>
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
 #include <ui_interface.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/translation.h>
 
 #ifdef WIN32
@@ -1471,7 +1472,7 @@ static CThreadInterrupt g_upnp_interrupt;
 static std::thread g_upnp_thread;
 static void ThreadMapPort()
 {
-    std::string port = strprintf("%u", GetListenPort());
+    std::string port = ToString(GetListenPort());
     const char * multicastif = nullptr;
     const char * minissdpdpath = nullptr;
     struct UPNPDev * devlist = nullptr;
