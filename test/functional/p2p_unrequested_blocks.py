@@ -158,7 +158,9 @@ class AcceptBlockTest(BitcoinTestFramework):
             tip = next_block
 
         # Now send the block at height 5 and check that it wasn't accepted (missing header)
-        test_node.send_and_ping(msg_block(all_blocks[1]))
+        test_node.send_message(msg_block(all_blocks[1]))
+        test_node.wait_for_disconnect()
+        test_node = self.nodes[0].add_p2p_connection(P2PInterface(), node_outgoing=True)
         assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getblock, all_blocks[1].hash)
         assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getblockheader, all_blocks[1].hash)
 
