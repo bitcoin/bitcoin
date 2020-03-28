@@ -91,6 +91,7 @@ FUZZ_TARGETS = \
   test/fuzz/psbt_input_deserialize \
   test/fuzz/psbt_output_deserialize \
   test/fuzz/pub_key_deserialize \
+  test/fuzz/random \
   test/fuzz/rolling_bloom_filter \
   test/fuzz/script \
   test/fuzz/script_deserialize \
@@ -818,6 +819,12 @@ test_fuzz_pub_key_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_pub_key_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_pub_key_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_pub_key_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_random_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_random_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_random_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_random_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_random_SOURCES = $(FUZZ_SUITE) test/fuzz/random.cpp
 
 test_fuzz_rolling_bloom_filter_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_rolling_bloom_filter_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
