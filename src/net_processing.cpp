@@ -1924,7 +1924,7 @@ void static ProcessOrphanTx(CConnman* connman, CTxMemPool& mempool, std::set<uin
 }
 
 // Header for the masked ProcessMessage
-bool ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
+bool ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc);
 
 bool _ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
 {
@@ -3274,7 +3274,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vR
   clock_t begin = clock();
 
   // Execute the real ProcessMessage protocol
-  bool result = _ProcessMessage(pfrom, strCommand, vRecv, nTimeReceived, chainparams, connman, banman, interruptMsgProc);
+  bool result = _ProcessMessage(pfrom, strCommand, vRecv, nTimeReceived, chainparams, mempool, connman, banman, interruptMsgProc);
 
   // Timer end
   clock_t end = clock();
