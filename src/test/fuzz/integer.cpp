@@ -97,6 +97,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)IsDigit(ch);
     (void)IsSpace(ch);
     (void)IsSwitchChar(ch);
+    (void)itostr(i32);
     (void)memusage::DynamicUsage(ch);
     (void)memusage::DynamicUsage(i16);
     (void)memusage::DynamicUsage(i32);
