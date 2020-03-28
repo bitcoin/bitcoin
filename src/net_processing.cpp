@@ -1370,10 +1370,6 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
         });
         connman->WakeMessageHandler();
     }
-
-    if (connman->GetLocalServices() & NODE_COMPACT_FILTERS) {
-        ForEachBlockFilterIndex([](BlockFilterIndex& index) { UpdateCFHeadersCache(index); });
-    }
 }
 
 /**
@@ -2175,6 +2171,8 @@ static bool ProcessGetCFCheckPt(CNode* pfrom, CDataStream& vRecv, const CChainPa
         // Return true because the issue with the invalid request has already been logged.
         return true;
     }
+
+    UpdateCFHeadersCache(*filter_index);
 
     std::vector<uint256> headers(stop_index->nHeight / CFCHECKPT_INTERVAL);
     {
