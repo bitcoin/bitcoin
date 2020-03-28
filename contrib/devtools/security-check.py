@@ -197,6 +197,15 @@ def check_MACHO_NOUNDEFS(executable) -> bool:
         return True
     return False
 
+def check_MACHO_NX(executable) -> bool:
+    '''
+    Check for no stack execution
+    '''
+    flags = get_MACHO_executable_flags(executable)
+    if 'ALLOW_STACK_EXECUTION' in flags:
+        return False
+    return True
+
 CHECKS = {
 'ELF': [
     ('PIE', check_ELF_PIE),
@@ -212,6 +221,7 @@ CHECKS = {
 'MACHO': [
     ('PIE', check_MACHO_PIE),
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
+    ('NX', check_MACHO_NX)
 ]
 }
 
