@@ -557,17 +557,20 @@ static void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman* connma
         }
         connman->ForNode(nodeid, [connman](CNode* pfrom){
             AssertLockHeld(cs_main);
-            uint64_t nCMPCTBLOCKVersion = (pfrom->GetLocalServices() & NODE_WITNESS) ? 2 : 1;
+            // Never try to upgrade a pre-segwit node to high-bandwidth compact block provider
+            if (!(pfrom->GetLocalServices() & NODE_WITNESS)) return true;
             if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
                 // As per BIP152, we only get 3 of our peers to announce
                 // blocks using compact encodings.
-                connman->ForNode(lNodesAnnouncingHeaderAndIDs.front(), [connman, nCMPCTBLOCKVersion](CNode* pnodeStop){
+                connman->ForNode(lNodesAnnouncingHeaderAndIDs.front(), [connman](CNode* pnodeStop){
                     AssertLockHeld(cs_main);
+                    const uint64_t nCMPCTBLOCKVersion = (pnodeStop->GetLocalServices() & NODE_WITNESS) ? 2 : 1;
                     connman->PushMessage(pnodeStop, CNetMsgMaker(pnodeStop->GetSendVersion()).Make(NetMsgType::SENDCMPCT, /*fAnnounceUsingCMPCTBLOCK=*/false, nCMPCTBLOCKVersion));
                     return true;
                 });
                 lNodesAnnouncingHeaderAndIDs.pop_front();
             }
+            const uint64_t nCMPCTBLOCKVersion = 2;
             connman->PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::SENDCMPCT, /*fAnnounceUsingCMPCTBLOCK=*/true, nCMPCTBLOCKVersion));
             lNodesAnnouncingHeaderAndIDs.push_back(pfrom->GetId());
             return true;
