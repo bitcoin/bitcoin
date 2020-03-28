@@ -2390,8 +2390,6 @@ static UniValue getbalances(const JSONRPCRequest& request)
     auto locked_chain = wallet.chain().lock();
     LOCK(wallet.cs_wallet);
 
-    UniValue obj(UniValue::VOBJ);
-
     const auto bal = wallet.GetBalance();
     UniValue balances{UniValue::VOBJ};
     {
