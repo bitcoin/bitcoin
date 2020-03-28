@@ -14,6 +14,7 @@
 class CTxMemPool;
 
 extern RecursiveMutex cs_main;
+extern RecursiveMutex g_cs_orphans;
 
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;

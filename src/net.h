@@ -188,16 +188,13 @@ public:
     ~CConnman();
     bool Start(CScheduler& scheduler, const Options& options);
 
-    // TODO: Remove NO_THREAD_SAFETY_ANALYSIS. Lock cs_vNodes before reading the variable vNodes.
-    //
-    // When removing NO_THREAD_SAFETY_ANALYSIS be aware of the following lock order requirements:
-    // * CheckForStaleTipAndEvictPeers locks cs_main before indirectly calling GetExtraOutboundCount
-    //   which locks cs_vNodes.
-    // * ProcessMessage locks cs_main and g_cs_orphans before indirectly calling ForEachNode which
-    //   locks cs_vNodes.
-    //
-    // Thus the implicit locking order requirement is: (1) cs_main, (2) g_cs_orphans, (3) cs_vNodes.
-    void Stop() NO_THREAD_SAFETY_ANALYSIS;
+    void StopThreads();
+    void StopNodes();
+    void Stop()
+    {
+        StopThreads();
+        StopNodes();
+    };
 
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
