@@ -99,10 +99,9 @@ class WalletDumpTest(BitcoinTestFramework):
         # Should be a no-op:
         self.nodes[0].keypoolrefill()
 
-        # Test scripts dump by adding a P2SH witness and a 1-of-1 multisig address
-        witness_addr = self.nodes[0].addwitnessaddress(addrs[0]["address"], True)
+        # Test scripts dump by adding a 1-of-1 multisig address
         multisig_addr = self.nodes[0].addmultisigaddress(1, [addrs[1]["address"]])
-        script_addrs = [witness_addr, multisig_addr]
+        script_addrs = [multisig_addr]
 
         # dump unencrypted wallet
         self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
@@ -110,7 +109,8 @@ class WalletDumpTest(BitcoinTestFramework):
         found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
             read_dump(tmpdir + "/node0/wallet.unencrypted.dump", addrs, script_addrs, None)
         assert_equal(found_addr, test_addr_count)  # all keys must be in the dump
-        assert_equal(found_script_addr, 2)  # all scripts must be in the dump
+        # This is 1, not 2 because we aren't testing for witness scripts
+        assert_equal(found_script_addr, 1)  # all scripts must be in the dump
         assert_equal(found_addr_chg, 50)  # 50 blocks where mined
         assert_equal(found_addr_rsv, 180)  # keypool size (external+internal)
 
@@ -125,8 +125,9 @@ class WalletDumpTest(BitcoinTestFramework):
         found_addr, found_script_addr, found_addr_chg, found_addr_rsv, _ = \
             read_dump(tmpdir + "/node0/wallet.encrypted.dump", addrs, script_addrs, hd_master_addr_unenc)
         assert_equal(found_addr, test_addr_count)
-        assert_equal(found_script_addr, 2)
-    # TODO clarify if we want the behavior that is tested below in Dash (only when HD seed was generated and not user-provided)
+        # This is 1, not 2 because we aren't testing for witness scripts
+        assert_equal(found_script_addr, 1)
+        # TODO clarify if we want the behavior that is tested below in Dash (only when HD seed was generated and not user-provided)
         # assert_equal(found_addr_chg, 180 + 50)  # old reserve keys are marked as change now
         assert_equal(found_addr_rsv, 180)  # keypool size
 
