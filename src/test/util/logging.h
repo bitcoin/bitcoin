@@ -11,6 +11,9 @@
 #include <list>
 #include <string>
 
+/** Insert log from a test */
+void LogPrintTest(const std::string& info);
+
 class DebugLogHelper
 {
     const std::string m_message;

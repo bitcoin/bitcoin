@@ -8,14 +8,20 @@
 #include <chainparams.h>
 #include <net.h>
 #include <net_processing.h>
+#include <netmessagemaker.h>
+#include <pow.h>
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <serialize.h>
+#include <test/util/logging.h>
+#include <test/util/mining.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/wallet.h>
 #include <timedata.h>
+#include <txorphanage.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/time.h>
@@ -33,7 +39,7 @@ static CService ip(uint32_t i)
     return CService(CNetAddr(s), Params().GetDefaultPort());
 }
 
-BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, RegTestingSetup)
 
 // Test eviction of an outbound peer whose chain never advances
 // Mock a node connection, and use mocktime to simulate a peer
@@ -139,6 +145,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     options.nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
     options.m_max_outbound_full_relay = max_outbound_full_relay;
     options.nMaxFeeler = MAX_FEELER_CONNECTIONS;
+    options.m_msgproc = peerLogic.get();
 
     const auto time_init{GetTime<std::chrono::seconds>()};
     SetMockTime(time_init);
@@ -162,7 +169,11 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 
     // Now tip should definitely be stale, and we should look for an extra
     // outbound peer
-    peerLogic->CheckForStaleTipAndEvictPeers();
+    {
+        ASSERT_DEBUG_LOG("Potential stale tip detected, will try using extra outbound peer (last tip update: 1801 seconds ago)");
+        ASSERT_DEBUG_LOG("setting try another outbound peer=true");
+        peerLogic->CheckForStaleTipAndEvictPeers();
+    }
     BOOST_CHECK(connman->GetTryNewOutboundPeer());
 
     // Still no peers should be marked for disconnection
@@ -177,7 +188,11 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
     SetMockTime(time_later);
 
-    peerLogic->CheckForStaleTipAndEvictPeers();
+    {
+        ASSERT_DEBUG_LOG("disconnecting extra outbound peer=8 (last block announcement received at time 0)");
+        ASSERT_DEBUG_LOG("setting try another outbound peer=false");
+        peerLogic->CheckForStaleTipAndEvictPeers();
+    }
     for (int i = 0; i < max_outbound_full_relay; ++i) {
         BOOST_CHECK(vNodes[i]->fDisconnect == false);
     }
@@ -190,12 +205,64 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     // peer, and check that the next newest node gets evicted.
     peerLogic->UpdateLastBlockAnnounceTime(vNodes.back()->GetId(), GetTime());
 
-    peerLogic->CheckForStaleTipAndEvictPeers();
+    {
+        ASSERT_DEBUG_LOG("disconnecting extra outbound peer=7 (last block announcement received at time 0)");
+        ASSERT_DEBUG_LOG("setting try another outbound peer=false");
+        peerLogic->CheckForStaleTipAndEvictPeers();
+    }
     for (int i = 0; i < max_outbound_full_relay - 1; ++i) {
         BOOST_CHECK(vNodes[i]->fDisconnect == false);
     }
     BOOST_CHECK(vNodes[max_outbound_full_relay-1]->fDisconnect == true);
     BOOST_CHECK(vNodes.back()->fDisconnect == false);
+
+    vNodes[max_outbound_full_relay - 1]->fDisconnect = false;
+    peerLogic->UpdateLastBlockAnnounceTime(vNodes.back()->GetId(), 0);
+
+    // Set CanDirectFetch() to true by generating a block
+    {
+        auto block = PrepareBlock(m_node, CScript{OP_TRUE});
+        block->nTime = Ticks<std::chrono::seconds>(time_later);
+        SolvePow(*block);
+        m_node.chainman->ProcessNewBlock(block, true, nullptr);
+    }
+    // Last node pretends to send a block
+    std::vector<CBlock> headers;
+    {
+        {
+            LOCK(m_node.chainman->GetMutex());
+            const auto tip = m_node.chainman->ActiveTip();
+            CBlock dummy{tip->GetBlockHeader()};
+            dummy.hashPrevBlock = tip->GetBlockHash();
+            dummy.nTime = Ticks<std::chrono::seconds>(time_later + 1s);
+            SolvePow(dummy);
+
+            headers.emplace_back(dummy);
+        }
+
+        connman->ReceiveMsgFrom(*vNodes.back(), NetMsgType::HEADERS, headers);
+
+        vNodes.back()->fPauseSend = false;
+        vNodes.back()->nVersion = PROTOCOL_VERSION;
+    }
+    {
+        LogPrintTest("Check that node is protected when it pretends to have a block");
+        LOCK(vNodes.back()->cs_sendProcessing);
+        ASSERT_DEBUG_LOG("received: headers (82 bytes) peer=8");
+        //ASSERT_DEBUG_LOG("sending getdata (37 bytes) peer=8");
+        //ASSERT_DEBUG_LOG("Requesting block " + headers.front().GetHash().ToString() + " from  peer=8");
+        ASSERT_DEBUG_LOG("Protecting outbound peer=8 from eviction");
+        connman->ProcessMessagesOnce(*vNodes.back());
+    }
+    {
+        ASSERT_DEBUG_LOG("disconnecting extra outbound peer=7 (last block announcement received at time 0)");
+        ASSERT_DEBUG_LOG("setting try another outbound peer=false");
+        peerLogic->CheckForStaleTipAndEvictPeers();
+    }
+    for (int i = 0; i < max_outbound_full_relay; ++i) {
+        const bool is_8th{i == 7};
+        BOOST_CHECK(vNodes[i]->fDisconnect == is_8th);
+    }
 
     for (const CNode *node : vNodes) {
         peerLogic->FinalizeNode(*node);

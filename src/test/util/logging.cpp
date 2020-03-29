@@ -10,6 +10,11 @@
 
 #include <stdexcept>
 
+void LogPrintTest(const std::string& info)
+{
+    LogPrintf("[test] %s\n", info);
+}
+
 DebugLogHelper::DebugLogHelper(std::string message, MatchFn match)
     : m_message{std::move(message)}, m_match(std::move(match))
 {
