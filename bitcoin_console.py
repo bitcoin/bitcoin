@@ -9,6 +9,10 @@ import readline
 datadir = '' # Virtual machine shared folder
 if os.path.exists('/media/sf_Bitcoin'):
 	datadir = ' -datadir=/media/sf_Bitcoin' # Virtual machine shared folder
+elif os.path.exists('/media/sf_BitcoinVictim'):
+	datadir = ' -datadir=/media/sf_BitcoinVictim'
+elif os.path.exists('/media/sf_BitcoinAttacker'):
+	datadir = ' -datadir=/media/sf_BitcoinAttacker'
 elif os.path.exists('/media/sim/BITCOIN'):
 	datadir = ' -datadir=/media/sim/BITCOIN'
 
