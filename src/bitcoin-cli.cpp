@@ -230,7 +230,7 @@ public:
     const int ID_NETWORKINFO = 0;
     const int ID_BLOCKCHAININFO = 1;
     const int ID_WALLETINFO = 2;
-    const int ID_BALANCES = 3;
+    const int ID_WALLETBALANCES = 3;
 
     /** Create a simulated `getinfo` request. */
     UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
@@ -242,7 +242,7 @@ public:
         result.push_back(JSONRPCRequestObj("getnetworkinfo", NullUniValue, ID_NETWORKINFO));
         result.push_back(JSONRPCRequestObj("getblockchaininfo", NullUniValue, ID_BLOCKCHAININFO));
         result.push_back(JSONRPCRequestObj("getwalletinfo", NullUniValue, ID_WALLETINFO));
-        result.push_back(JSONRPCRequestObj("getbalances", NullUniValue, ID_BALANCES));
+        result.push_back(JSONRPCRequestObj("getwalletbalances", NullUniValue, ID_WALLETBALANCES));
         return result;
     }
 
@@ -252,7 +252,7 @@ public:
         UniValue result(UniValue::VOBJ);
         std::vector<UniValue> batch = JSONRPCProcessBatchReply(batch_in, batch_in.size());
         // Errors in getnetworkinfo() and getblockchaininfo() are fatal, pass them on;
-        // getwalletinfo() and getbalances() are allowed to fail if there is no wallet.
+        // getwalletinfo() and getwalletbalances() are allowed to fail if there is no wallet.
         if (!batch[ID_NETWORKINFO]["error"].isNull()) {
             return batch[ID_NETWORKINFO];
         }
@@ -275,10 +275,10 @@ public:
             }
             result.pushKV("paytxfee", batch[ID_WALLETINFO]["result"]["paytxfee"]);
         }
-        if (!batch[ID_BALANCES]["result"].isNull()) {
-            result.pushKV("balance", batch[ID_BALANCES]["result"]["mine"]["trusted"]);
-        }
         result.pushKV("relayfee", batch[ID_NETWORKINFO]["result"]["relayfee"]);
+        if (!batch[ID_WALLETBALANCES]["result"].isNull()) {
+            result.pushKV("balances", batch[ID_WALLETBALANCES]["result"]);
+        }
         result.pushKV("warnings", batch[ID_NETWORKINFO]["result"]["warnings"]);
         return JSONRPCReplyObj(result, NullUniValue, 1);
     }

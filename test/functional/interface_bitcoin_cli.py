@@ -65,7 +65,7 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         if self.is_wallet_compiled():
             self.log.info("Test -getinfo and bitcoin-cli getwalletinfo return expected wallet info")
-            assert_equal(cli_get_info['balance'], BALANCE)
+            assert_equal(cli_get_info['balances'], {'': BALANCE})
             wallet_info = self.nodes[0].getwalletinfo()
             assert_equal(cli_get_info['keypoolsize'], wallet_info['keypoolsize'])
             assert_equal(cli_get_info['unlocked_until'], wallet_info['unlocked_until'])
