@@ -18,11 +18,12 @@ template<typename C>
 class Span
 {
     C* m_data;
-    std::ptrdiff_t m_size;
+    std::size_t m_size;
 
 public:
     constexpr Span() noexcept : m_data(nullptr), m_size(0) {}
-    constexpr Span(C* data, std::ptrdiff_t size) noexcept : m_data(data), m_size(size) {}
+    constexpr Span(C* data, std::size_t size) noexcept : m_data(data), m_size(size) {}
+
     constexpr Span(C* data, C* end) noexcept : m_data(data), m_size(end - data) {}
 
     /** Implicit conversion of spans between compatible types.
@@ -47,13 +48,13 @@ public:
     constexpr C* end() const noexcept { return m_data + m_size; }
     constexpr C& front() const noexcept { return m_data[0]; }
     constexpr C& back() const noexcept { return m_data[m_size - 1]; }
-    constexpr std::ptrdiff_t size() const noexcept { return m_size; }
-    constexpr C& operator[](std::ptrdiff_t pos) const noexcept { return m_data[pos]; }
+    constexpr std::size_t size() const noexcept { return m_size; }
+    constexpr C& operator[](std::size_t pos) const noexcept { return m_data[pos]; }
 
-    constexpr Span<C> subspan(std::ptrdiff_t offset) const noexcept { return Span<C>(m_data + offset, m_size - offset); }
-    constexpr Span<C> subspan(std::ptrdiff_t offset, std::ptrdiff_t count) const noexcept { return Span<C>(m_data + offset, count); }
-    constexpr Span<C> first(std::ptrdiff_t count) const noexcept { return Span<C>(m_data, count); }
-    constexpr Span<C> last(std::ptrdiff_t count) const noexcept { return Span<C>(m_data + m_size - count, count); }
+    constexpr Span<C> subspan(std::size_t offset) const noexcept { return Span<C>(m_data + offset, m_size - offset); }
+    constexpr Span<C> subspan(std::size_t offset, std::size_t count) const noexcept { return Span<C>(m_data + offset, count); }
+    constexpr Span<C> first(std::size_t count) const noexcept { return Span<C>(m_data, count); }
+    constexpr Span<C> last(std::size_t count) const noexcept { return Span<C>(m_data + m_size - count, count); }
 
     friend constexpr bool operator==(const Span& a, const Span& b) noexcept { return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin()); }
     friend constexpr bool operator!=(const Span& a, const Span& b) noexcept { return !(a == b); }
