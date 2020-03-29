@@ -22,9 +22,22 @@ class Span
 
 public:
     constexpr Span() noexcept : m_data(nullptr), m_size(0) {}
-    constexpr Span(C* data, std::size_t size) noexcept : m_data(data), m_size(size) {}
 
-    constexpr Span(C* data, C* end) noexcept : m_data(data), m_size(end - data) {}
+    /** Construct a span from a begin pointer and a size.
+     *
+     * This implements a subset of the iterator-based std::span constructor in C++20,
+     * which is hard to implement without std::address_of.
+     */
+    template <typename T, typename std::enable_if<std::is_convertible<T (*)[], C (*)[]>::value, int>::type = 0>
+    constexpr Span(T* begin, std::size_t size) noexcept : m_data(begin), m_size(size) {}
+
+    /** Construct a span from a begin and end pointer.
+     *
+     * This implements a subset of the iterator-based std::span constructor in C++20,
+     * which is hard to implement without std::address_of.
+     */
+    template <typename T, typename std::enable_if<std::is_convertible<T (*)[], C (*)[]>::value, int>::type = 0>
+    constexpr Span(T* begin, T* end) noexcept : m_data(begin), m_size(end - begin) {}
 
     /** Implicit conversion of spans between compatible types.
      *
