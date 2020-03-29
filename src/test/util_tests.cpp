@@ -175,8 +175,8 @@ struct TestArgsManager : public ArgsManager
     TestArgsManager() { m_network_only_args.clear(); }
     void ReadConfigString(const std::string str_config)
     {
-        std::istringstream streamConfig(str_config);
-        streamConfig.imbue(std::locale::classic());
+        std::stringstream streamConfig = LocaleIndependentStringStream();
+        streamConfig << str_config;
         {
             LOCK(cs_args);
             m_settings.ro_config.clear();
@@ -952,8 +952,8 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
             conf += conf_val;
             conf += "\n";
         }
-        std::istringstream conf_stream(conf);
-        conf_stream.imbue(std::locale::classic());
+        std::stringstream conf_stream = LocaleIndependentStringStream();
+        conf_stream << conf;
         BOOST_CHECK(parser.ReadConfigStream(conf_stream, "filepath", error));
         BOOST_CHECK_EQUAL(error, "");
 
@@ -1090,8 +1090,8 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
             conf += argstr + 1;
             conf += "\n";
         }
-        std::istringstream conf_stream(conf);
-        conf_stream.imbue(std::locale::classic());
+        std::stringstream conf_stream = LocaleIndependentStringStream();
+        conf_stream << conf;
         BOOST_CHECK(parser.ReadConfigStream(conf_stream, "filepath", error));
         BOOST_CHECK_EQUAL(error, "");
 

@@ -5,6 +5,7 @@
 #include <arith_uint256.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/string.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -57,8 +58,7 @@ const arith_uint256 MaxL = arith_uint256V(std::vector<unsigned char>(MaxArray,Ma
 const arith_uint256 HalfL = (OneL << 255);
 static std::string ArrayToString(const unsigned char A[], unsigned int width)
 {
-    std::stringstream Stream;
-    Stream.imbue(std::locale::classic());
+    std::stringstream Stream = LocaleIndependentStringStream();
     Stream << std::hex;
     for (unsigned int i = 0; i < width; ++i)
     {

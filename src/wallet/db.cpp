@@ -6,10 +6,10 @@
 #include <wallet/db.h>
 
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/translation.h>
 
-#include <locale>
-#include <stdint.h>
+#include <cstdint>
 
 #ifndef WIN32
 #include <sys/stat.h>
@@ -453,8 +453,7 @@ bool BerkeleyEnvironment::Salvage(const std::string& strFile, bool fAggressive, 
     if (fAggressive)
         flags |= DB_AGGRESSIVE;
 
-    std::stringstream strDump;
-    strDump.imbue(std::locale::classic());
+    std::stringstream strDump = LocaleIndependentStringStream();
 
     Db db(dbenv.get(), 0);
     int result = db.verify(strFile.c_str(), nullptr, &strDump, flags);

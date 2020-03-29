@@ -23,12 +23,12 @@
 #include <key_io.h>
 #include <psbt.h>
 #include <ui_interface.h>
+#include <util/string.h>
 #include <util/system.h> // for GetBoolArg
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h> // for CRecipient
 
-#include <locale>
-#include <stdint.h>
+#include <cstdint>
 
 #include <QDebug>
 #include <QMessageBox>
@@ -469,8 +469,7 @@ bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t 
 {
     CTxDestination dest = DecodeDestination(sAddress);
 
-    std::stringstream ss;
-    ss.imbue(std::locale::classic());
+    std::stringstream ss = LocaleIndependentStringStream();
     ss << nId;
     std::string key = "rr" + ss.str(); // "rr" prefix = "receive request" in destdata
 

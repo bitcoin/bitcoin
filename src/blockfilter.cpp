@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <locale>
 #include <mutex>
 #include <sstream>
 #include <set>
@@ -14,6 +13,7 @@
 #include <script/script.h>
 #include <streams.h>
 #include <util/golombrice.h>
+#include <util/string.h>
 
 /// SerType used to serialize parameters in GCS filter encoding.
 static constexpr int GCS_SER_TYPE = SER_NETWORK;
@@ -213,8 +213,7 @@ const std::string& ListBlockFilterTypes()
 
     static std::once_flag flag;
     std::call_once(flag, []() {
-            std::stringstream ret;
-            ret.imbue(std::locale::classic());
+            std::stringstream ret = LocaleIndependentStringStream();
             bool first = true;
             for (auto entry : g_filter_types) {
                 if (!first) ret << ", ";

@@ -54,15 +54,10 @@ NODISCARD inline bool ValidAsCString(const std::string& str) noexcept
     return str.size() == strlen(str.c_str());
 }
 
-template <typename T>
-NODISCARD inline T LocaleIndependentStream() noexcept {
-    T stream;
-    stream.imbue(std::locale::classic());
-    return stream;
-}
-
 NODISCARD inline std::stringstream LocaleIndependentStringStream() noexcept {
-    return LocaleIndependentStream<std::stringstream>();
+    std::stringstream ss;
+    ss.imbue(std::locale::classic());
+    return ss;
 }
 
 /**
@@ -71,8 +66,7 @@ NODISCARD inline std::stringstream LocaleIndependentStringStream() noexcept {
 template <typename T>
 std::string ToString(const T& t)
 {
-    std::ostringstream oss;
-    oss.imbue(std::locale::classic());
+    std::stringstream oss = LocaleIndependentStringStream();
     oss << t;
     return oss.str();
 }

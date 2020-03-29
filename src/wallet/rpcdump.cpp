@@ -13,13 +13,13 @@
 #include <script/standard.h>
 #include <sync.h>
 #include <util/bip32.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 
-#include <locale>
 #include <stdint.h>
 #include <tuple>
 
@@ -32,8 +32,7 @@
 using interfaces::FoundBlock;
 
 std::string static EncodeDumpString(const std::string &str) {
-    std::stringstream ret;
-    ret.imbue(std::locale::classic());
+    std::stringstream ret = LocaleIndependentStringStream();
     for (const unsigned char c : str) {
         if (c <= 32 || c >= 128 || c == '%') {
             ret << '%' << HexStr(&c, &c + 1);
@@ -45,8 +44,7 @@ std::string static EncodeDumpString(const std::string &str) {
 }
 
 static std::string DecodeDumpString(const std::string &str) {
-    std::stringstream ret;
-    ret.imbue(std::locale::classic());
+    std::stringstream ret = LocaleIndependentStringStream();
     for (unsigned int pos = 0; pos < str.length(); pos++) {
         unsigned char c = str[pos];
         if (c == '%' && pos+2 < str.length()) {

@@ -6,6 +6,7 @@
 #include <streams.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/string.h>
 #include <version.h>
 
 #include <boost/test/unit_test.hpp>
@@ -49,8 +50,7 @@ const uint160 MaxS = uint160(std::vector<unsigned char>(MaxArray,MaxArray+20));
 
 static std::string ArrayToString(const unsigned char A[], unsigned int width)
 {
-    std::stringstream Stream;
-    Stream.imbue(std::locale::classic());
+    std::stringstream Stream = LocaleIndependentStringStream();
     Stream << std::hex;
     for (unsigned int i = 0; i < width; ++i)
     {

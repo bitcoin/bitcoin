@@ -9,11 +9,10 @@
 #include <tinyformat.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
-#include <errno.h>
 #include <limits>
-#include <locale>
 
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -359,8 +358,8 @@ bool ParseDouble(const std::string& str, double *out)
         return false;
     if (str.size() >= 2 && str[0] == '0' && str[1] == 'x') // No hexadecimal floats allowed
         return false;
-    std::istringstream text(str);
-    text.imbue(std::locale::classic());
+    std::stringstream text = LocaleIndependentStringStream();
+    text << str;
     double result;
     text >> result;
     if(out) *out = result;
@@ -369,8 +368,7 @@ bool ParseDouble(const std::string& str, double *out)
 
 std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
 {
-    std::stringstream out;
-    out.imbue(std::locale::classic());
+    std::stringstream out = LocaleIndependentStringStream();
     size_t ptr = 0;
     size_t indented = 0;
     while (ptr < in.size())
