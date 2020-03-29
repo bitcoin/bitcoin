@@ -78,7 +78,8 @@ class MultiWalletTest(BitcoinTestFramework):
         #   w7_symlink - to verify symlinked wallet path is initialized correctly
         #   w8         - to verify existing wallet file is loaded correctly
         #   ''         - to verify default wallet file is created correctly
-        wallet_names = ['w1', 'w2', 'w3', 'w', 'sub/w5', os.path.join(self.options.tmpdir, 'extern/w6'), 'w7_symlink', 'w8', '']
+        extern_w6 = os.path.join(self.options.tmpdir, 'extern/w6')
+        wallet_names = ['w1', 'w2', 'w3', 'w', 'sub/w5', extern_w6, 'w7_symlink', 'w8', '']
         extra_args = ['-wallet={}'.format(n) for n in wallet_names]
         self.start_node(0, extra_args)
         assert_equal(sorted(map(lambda w: w['name'], self.nodes[0].listwalletdir()['wallets'])), ['', os.path.join('sub', 'w5'), 'w', 'w1', 'w2', 'w3', 'w7', 'w7_symlink', 'w8'])
@@ -150,6 +151,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         self.restart_node(0, extra_args)
 
+        self.log.info("Test multiwallet names and balances")
         assert_equal(sorted(map(lambda w: w['name'], self.nodes[0].listwalletdir()['wallets'])), ['', os.path.join('sub', 'w5'), 'w', 'w1', 'w2', 'w3', 'w7', 'w7_symlink', 'w8', 'w8_copy'])
 
         wallets = [wallet(w) for w in wallet_names]
@@ -170,17 +172,32 @@ class MultiWalletTest(BitcoinTestFramework):
 
         w1, w2, w3, w4, *_ = wallets
         node.generatetoaddress(nblocks=101, address=w1.getnewaddress())
-        assert_equal(w1.getbalance(), 100)
-        assert_equal(w2.getbalance(), 0)
-        assert_equal(w3.getbalance(), 0)
+        expected_balances = {'':           Decimal('0E-8'),
+                             extern_w6:    Decimal('0E-8'),
+                             'sub/w5':     Decimal('0E-8'),
+                             'w':          Decimal('0E-8'),
+                             'w1':         Decimal('100.00000000'),
+                             'w2':         Decimal('0E-8'),
+                             'w3':         Decimal('0E-8'),
+                             'w7_symlink': Decimal('0E-8'),
+                             'w8':         Decimal('0E-8')}
+        assert_equal(self.nodes[0].getwalletbalances(), expected_balances)
         assert_equal(w4.getbalance(), 0)
 
         w1.sendtoaddress(w2.getnewaddress(), 1)
         w1.sendtoaddress(w3.getnewaddress(), 2)
         w1.sendtoaddress(w4.getnewaddress(), 3)
         node.generatetoaddress(nblocks=1, address=w1.getnewaddress())
-        assert_equal(w2.getbalance(), 1)
-        assert_equal(w3.getbalance(), 2)
+        expected_balances = {'':           Decimal('0E-8'),
+                             extern_w6:    Decimal('0E-8'),
+                             'sub/w5':     Decimal('0E-8'),
+                             'w':          Decimal('3.00000000'),
+                             'w1':         Decimal('143.99991540'),
+                             'w2':         Decimal('1.00000000'),
+                             'w3':         Decimal('2.00000000'),
+                             'w7_symlink': Decimal('0E-8'),
+                             'w8':         Decimal('0E-8')}
+        assert_equal(self.nodes[0].getwalletbalances(), expected_balances)
         assert_equal(w4.getbalance(), 3)
 
         batch = w1.batch([w1.getblockchaininfo.get_request(), w1.getwalletinfo.get_request()])

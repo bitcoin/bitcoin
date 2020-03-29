@@ -700,6 +700,28 @@ static UniValue getreceivedbylabel(const JSONRPCRequest& request)
 }
 
 
+/**
+ * Called by CLI -getinfo to fetch multiwallet balances (mine.trusted).
+ */
+static UniValue getwalletbalances(const JSONRPCRequest& request)
+{
+    UniValue obj{UniValue::VOBJ};
+    for (const std::shared_ptr<CWallet>& rpc_wallet : GetWallets()) {
+        if (!EnsureWalletIsAvailable(rpc_wallet.get(), request.fHelp)) {
+            return NullUniValue;
+        }
+        CWallet& wallet = *rpc_wallet;
+        wallet.BlockUntilSyncedToCurrentChain();
+
+        auto locked_chain = wallet.chain().lock();
+        LOCK(wallet.cs_wallet);
+
+        obj.pushKV(wallet.GetName(), ValueFromAmount(wallet.GetBalance().m_mine_trusted));
+    }
+    return obj;
+}
+
+
 static UniValue getbalance(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -4299,6 +4321,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
     { "wallet",             "getaddressesbylabel",              &getaddressesbylabel,           {"label"} },
     { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
+    { "wallet",             "getwalletbalances",                &getwalletbalances,             {} },
     { "wallet",             "getbalance",                       &getbalance,                    {"dummy","minconf","include_watchonly","avoid_reuse"} },
     { "wallet",             "getnewaddress",                    &getnewaddress,                 {"label","address_type"} },
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {"address_type"} },
