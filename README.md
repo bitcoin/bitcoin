@@ -1,4 +1,4 @@
-Bitcoin Core integration/staging tree
+Bitcoin Core Research Toolkit
 =====================================
 
 https://bitcoincore.org
