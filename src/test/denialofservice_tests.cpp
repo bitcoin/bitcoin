@@ -34,8 +34,6 @@ static CService ip(uint32_t i)
     return CService(CNetAddr(s), Params().GetDefaultPort());
 }
 
-static NodeId id = 0;
-
 void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds);
 
 BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
@@ -59,6 +57,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 
     // Mock an outbound peer
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
+    NodeId id{0};
     CNode dummyNode1{id++,
                      ServiceFlags(NODE_NETWORK | NODE_WITNESS),
                      /*sock=*/nullptr,
@@ -114,7 +113,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     peerLogic->FinalizeNode(dummyNode1);
 }
 
-static void AddRandomOutboundPeer(std::vector<CNode*>& vNodes, PeerManager& peerLogic, ConnmanTestMsg& connman, ConnectionType connType)
+static void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerManager& peerLogic, ConnmanTestMsg& connman, ConnectionType connType)
 {
     CAddress addr(ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE);
     vNodes.emplace_back(new CNode{id++,
@@ -138,6 +137,7 @@ static void AddRandomOutboundPeer(std::vector<CNode*>& vNodes, PeerManager& peer
 
 BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 {
+    NodeId id{0};
     const CChainParams& chainparams = Params();
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 
     // Mock some outbound peers
     for (int i = 0; i < max_outbound_full_relay; ++i) {
-        AddRandomOutboundPeer(vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
+        AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
     }
 
     peerLogic->CheckForStaleTipAndEvictPeers();
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     // on the next check (since we're mocking the time to be in the future, the
     // required time connected check should be satisfied).
     SetMockTime(time_init);
-    AddRandomOutboundPeer(vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
+    AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
     SetMockTime(time_later);
 
     peerLogic->CheckForStaleTipAndEvictPeers();
@@ -215,6 +215,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 
 BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
 {
+    NodeId id{0};
     const CChainParams& chainparams = Params();
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
@@ -232,7 +233,7 @@ BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
 
     // Add block-relay-only peers up to the limit
     for (int i = 0; i < max_outbound_block_relay; ++i) {
-        AddRandomOutboundPeer(vNodes, *peerLogic, *connman, ConnectionType::BLOCK_RELAY);
+        AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::BLOCK_RELAY);
     }
     peerLogic->CheckForStaleTipAndEvictPeers();
 
@@ -241,7 +242,7 @@ BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
     }
 
     // Add an extra block-relay-only peer breaking the limit (mocks logic in ThreadOpenConnections)
-    AddRandomOutboundPeer(vNodes, *peerLogic, *connman, ConnectionType::BLOCK_RELAY);
+    AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::BLOCK_RELAY);
     peerLogic->CheckForStaleTipAndEvictPeers();
 
     // The extra peer should only get marked for eviction after MINIMUM_CONNECT_TIME
@@ -297,6 +298,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     std::array<CNode*, 3> nodes;
 
     banman->ClearBanned();
+    NodeId id{0};
     nodes[0] = new CNode{id++,
                          NODE_NETWORK,
                          /*sock=*/nullptr,
@@ -403,6 +405,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     SetMockTime(nStartTime); // Overrides future calls to GetTime()
 
     CAddress addr(ip(0xa0b0c001), NODE_NONE);
+    NodeId id{0};
     CNode dummyNode{id++,
                     NODE_NETWORK,
                     /*sock=*/nullptr,
