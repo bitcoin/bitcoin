@@ -35,6 +35,7 @@ FUZZ_TARGETS = \
   test/fuzz/fee_rate \
   test/fuzz/fee_rate_deserialize \
   test/fuzz/flat_file_pos_deserialize \
+  test/fuzz/flatfile \
   test/fuzz/float \
   test/fuzz/hex \
   test/fuzz/integer \
@@ -44,6 +45,7 @@ FUZZ_TARGETS = \
   test/fuzz/key_origin_info_deserialize \
   test/fuzz/locale \
   test/fuzz/merkle_block_deserialize \
+  test/fuzz/merkleblock \
   test/fuzz/messageheader_deserialize \
   test/fuzz/multiplication_overflow \
   test/fuzz/net_permissions \
@@ -89,6 +91,7 @@ FUZZ_TARGETS = \
   test/fuzz/psbt_input_deserialize \
   test/fuzz/psbt_output_deserialize \
   test/fuzz/pub_key_deserialize \
+  test/fuzz/random \
   test/fuzz/rolling_bloom_filter \
   test/fuzz/script \
   test/fuzz/script_deserialize \
@@ -98,6 +101,7 @@ FUZZ_TARGETS = \
   test/fuzz/service_deserialize \
   test/fuzz/signature_checker \
   test/fuzz/snapshotmetadata_deserialize \
+  test/fuzz/span \
   test/fuzz/spanparsing \
   test/fuzz/string \
   test/fuzz/strprintf \
@@ -480,6 +484,12 @@ test_fuzz_flat_file_pos_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_flat_file_pos_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_flat_file_pos_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 
+test_fuzz_flatfile_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_flatfile_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_flatfile_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_flatfile_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_flatfile_SOURCES = $(FUZZ_SUITE) test/fuzz/flatfile.cpp
+
 test_fuzz_float_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_float_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_float_LDADD = $(FUZZ_SUITE_LD_COMMON)
@@ -533,6 +543,12 @@ test_fuzz_merkle_block_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_merkle_block_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_merkle_block_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_merkle_block_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_merkleblock_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_merkleblock_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_merkleblock_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_merkleblock_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_merkleblock_SOURCES = $(FUZZ_SUITE) test/fuzz/merkleblock.cpp
 
 test_fuzz_messageheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGEHEADER_DESERIALIZE=1
 test_fuzz_messageheader_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -804,6 +820,12 @@ test_fuzz_pub_key_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_pub_key_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_pub_key_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 
+test_fuzz_random_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_random_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_random_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_random_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_random_SOURCES = $(FUZZ_SUITE) test/fuzz/random.cpp
+
 test_fuzz_rolling_bloom_filter_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_rolling_bloom_filter_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_rolling_bloom_filter_LDADD = $(FUZZ_SUITE_LD_COMMON)
@@ -857,6 +879,12 @@ test_fuzz_snapshotmetadata_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_snapshotmetadata_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_snapshotmetadata_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_snapshotmetadata_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_span_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_span_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_span_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_span_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_span_SOURCES = $(FUZZ_SUITE) test/fuzz/span.cpp
 
 test_fuzz_spanparsing_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_spanparsing_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)

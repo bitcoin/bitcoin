@@ -3,8 +3,10 @@ Reduce Traffic
 
 Some node operators need to deal with bandwidth caps imposed by their ISPs.
 
-By default, Bitcoin Core allows up to 125 connections to different peers, 8 of
-which are outbound. You can therefore, have at most 117 inbound connections.
+By default, Bitcoin Core allows up to 125 connections to different peers, 10 of
+which are outbound. You can therefore, have at most 115 inbound connections.
+Of the 10 outbound peers, there can be 8 full outgoing connections and 2 with
+the -blocksonly mode turned on. You can therefore, have at most 115 inbound connections.
 
 The default settings can result in relatively significant traffic consumption.
 
@@ -26,7 +28,7 @@ calculating the target.
 
 ## 2. Disable "listening" (`-listen=0`)
 
-Disabling listening will result in fewer nodes connected (remember the maximum of 8
+Disabling listening will result in fewer nodes connected (remember the maximum of 10
 outbound peers). Fewer nodes will result in less traffic usage as you are relaying
 blocks and transactions to fewer nodes.
 
@@ -44,7 +46,11 @@ with other peers, you can disable transaction relay.
 Be reminded of the effects of this setting.
 
 - Fee estimation will no longer work.
-- Not relaying other's transactions could hurt your privacy if used while a
-  wallet is loaded or if you use the node to broadcast transactions.
+- It sets the flag "-walletbroadcast" to be "0", only if it is currently unset.
+  Doing so disables the automatic broadcasting of transactions from wallet. Not
+  relaying other's transactions could hurt your privacy if used while a wallet
+  is loaded or if you use the node to broadcast transactions.
+- If a peer is whitelisted and "-whitelistforcerelay" is set to "1" (which will
+  also set "whitelistrelay" to "1"), we will still receive and relay their transactions.
 - It makes block propagation slower because compact block relay can only be
   used when transaction relay is enabled.

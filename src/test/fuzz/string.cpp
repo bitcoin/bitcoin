@@ -12,6 +12,8 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#include <serialize.h>
+#include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -24,6 +26,7 @@
 #include <util/system.h>
 #include <util/translation.h>
 #include <util/url.h>
+#include <version.h>
 
 #include <cstdint>
 #include <string>
@@ -86,4 +89,30 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)urlDecode(random_string_1);
     (void)ValidAsCString(random_string_1);
     (void)_(random_string_1.c_str());
+
+    {
+        CDataStream data_stream{SER_NETWORK, INIT_PROTO_VERSION};
+        std::string s;
+        LimitedString<10> limited_string = LIMITED_STRING(s, 10);
+        data_stream << random_string_1;
+        try {
+            data_stream >> limited_string;
+            assert(data_stream.empty());
+            assert(s.size() <= random_string_1.size());
+            assert(s.size() <= 10);
+            if (!random_string_1.empty()) {
+                assert(!s.empty());
+            }
+        } catch (const std::ios_base::failure&) {
+        }
+    }
+    {
+        CDataStream data_stream{SER_NETWORK, INIT_PROTO_VERSION};
+        const LimitedString<10> limited_string = LIMITED_STRING(random_string_1, 10);
+        data_stream << limited_string;
+        std::string deserialized_string;
+        data_stream >> deserialized_string;
+        assert(data_stream.empty());
+        assert(deserialized_string == random_string_1);
+    }
 }

@@ -20,13 +20,13 @@
 #include <string>
 #include <vector>
 
-NODISCARD inline std::vector<uint8_t> ConsumeRandomLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, size_t max_length = 4096) noexcept
+NODISCARD inline std::vector<uint8_t> ConsumeRandomLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
 {
     const std::string s = fuzzed_data_provider.ConsumeRandomLengthString(max_length);
     return {s.begin(), s.end()};
 }
 
-NODISCARD inline std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider& fuzzed_data_provider, size_t max_vector_size = 16, size_t max_string_length = 16) noexcept
+NODISCARD inline std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_vector_size = 16, const size_t max_string_length = 16) noexcept
 {
     const size_t n_elements = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
     std::vector<std::string> r;
@@ -37,7 +37,18 @@ NODISCARD inline std::vector<std::string> ConsumeRandomLengthStringVector(Fuzzed
 }
 
 template <typename T>
-NODISCARD inline Optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, size_t max_length = 4096) noexcept
+NODISCARD inline std::vector<T> ConsumeRandomLengthIntegralVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_vector_size = 16) noexcept
+{
+    const size_t n_elements = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
+    std::vector<T> r;
+    for (size_t i = 0; i < n_elements; ++i) {
+        r.push_back(fuzzed_data_provider.ConsumeIntegral<T>());
+    }
+    return r;
+}
+
+template <typename T>
+NODISCARD inline Optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
 {
     const std::vector<uint8_t> buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
     CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
@@ -81,7 +92,7 @@ NODISCARD inline uint256 ConsumeUInt256(FuzzedDataProvider& fuzzed_data_provider
 }
 
 template <typename T>
-bool MultiplicationOverflow(T i, T j)
+NODISCARD bool MultiplicationOverflow(const T i, const T j) noexcept
 {
     static_assert(std::is_integral<T>::value, "Integral required.");
     if (std::numeric_limits<T>::is_signed) {

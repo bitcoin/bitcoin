@@ -103,7 +103,8 @@ void RandAddEvent(const uint32_t event_info) noexcept;
  *
  * This class is not thread-safe.
  */
-class FastRandomContext {
+class FastRandomContext
+{
 private:
     bool requires_seed;
     ChaCha20 rng;
@@ -155,7 +156,8 @@ public:
     }
 
     /** Generate a random (bits)-bit integer. */
-    uint64_t randbits(int bits) noexcept {
+    uint64_t randbits(int bits) noexcept
+    {
         if (bits == 0) {
             return 0;
         } else if (bits > 32) {
@@ -169,7 +171,9 @@ public:
         }
     }
 
-    /** Generate a random integer in the range [0..range). */
+    /** Generate a random integer in the range [0..range).
+     * Precondition: range > 0.
+     */
     uint64_t randrange(uint64_t range) noexcept
     {
         assert(range);
@@ -210,7 +214,7 @@ public:
  * debug mode detects and panics on. This is a known issue, see
  * https://stackoverflow.com/questions/22915325/avoiding-self-assignment-in-stdshuffle
  */
-template<typename I, typename R>
+template <typename I, typename R>
 void Shuffle(I first, I last, R&& rng)
 {
     while (first != last) {
@@ -233,7 +237,7 @@ static const int NUM_OS_RANDOM_BYTES = 32;
 /** Get 32 bytes of system entropy. Do not use this in application code: use
  * GetStrongRandBytes instead.
  */
-void GetOSRand(unsigned char *ent32);
+void GetOSRand(unsigned char* ent32);
 
 /** Check that OS randomness is available and returning the requested number
  * of bytes.
