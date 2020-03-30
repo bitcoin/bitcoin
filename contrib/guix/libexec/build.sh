@@ -211,7 +211,7 @@ export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
     make -C src --jobs=1 check-security ${V:+V=1}
 
     case "$HOST" in
-        *linux*)
+        *linux*|*mingw*)
             # Check that executables only contain allowed gcc, glibc and libstdc++
             # version symbols for Linux distro back-compatibility.
             make -C src --jobs=1 check-symbols  ${V:+V=1}

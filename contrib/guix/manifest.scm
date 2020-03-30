@@ -26,7 +26,10 @@
 
 (define (make-ssp-fixed-gcc xgcc)
   "Given a XGCC package, return a modified package that uses the SSP function
-from glibc instead of from libssp.so. Taken from:
+from glibc instead of from libssp.so. Our `symbol-check' script will complain if
+we link against libssp.so, and thus will ensure that this works properly.
+
+Taken from:
 http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
   (package
    (inherit xgcc)
