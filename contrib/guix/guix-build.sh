@@ -21,12 +21,29 @@ time-machine() {
                       -- "$@"
 }
 
+# Function to be called when building for host ${1} and the user interrupts the
+# build
+int_trap() {
+cat << EOF
+** INT received while building ${1}, you may want to clean up the relevant
+   output, deploy, and distsrc-* directories before rebuilding
+
+Hint: To blow everything away, you may want to use:
+
+  $ git clean -xdff --exclude='/depends/SDKs/*'
+
+Specifically, this will remove all files without an entry in the index,
+excluding the SDK directory. Practically speaking, this means that all ignored
+and untracked files and directories will be wiped, allowing you to start anew.
+EOF
+}
+
 # Deterministically build Bitcoin Core for HOSTs (overridable by environment)
 # shellcheck disable=SC2153
 for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu x86_64-w64-mingw32}; do
 
     # Display proper warning when the user interrupts the build
-    trap 'echo "** INT received while building ${host}, you may want to clean up the relevant output and distsrc-* directories before rebuilding"' INT
+    trap 'int_trap ${host}' INT
 
     (
         # Required for 'contrib/guix/manifest.scm' to output the right manifest
