@@ -38,6 +38,7 @@ from test_framework.messages import (
     msg_cfilter,
     msg_clsig,
     msg_cmpctblock,
+    msg_filterload,
     msg_getaddr,
     msg_getblocks,
     msg_getblocktxn,
@@ -52,6 +53,7 @@ from test_framework.messages import (
     msg_isdlock,
     msg_mempool,
     msg_mnlistdiff,
+    msg_merkleblock,
     msg_notfound,
     msg_ping,
     msg_pong,
@@ -84,6 +86,7 @@ MESSAGEMAP = {
     b"cfheaders": msg_cfheaders,
     b"cfilter": msg_cfilter,
     b"cmpctblock": msg_cmpctblock,
+    b"filterload": msg_filterload,
     b"getaddr": msg_getaddr,
     b"getblocks": msg_getblocks,
     b"getblocktxn": msg_getblocktxn,
@@ -94,6 +97,7 @@ MESSAGEMAP = {
     b"headers2": msg_headers2,
     b"inv": msg_inv,
     b"mempool": msg_mempool,
+    b"merkleblock": msg_merkleblock,
     b"ping": msg_ping,
     b"pong": msg_pong,
     b"sendaddrv2": msg_sendaddrv2,
@@ -388,6 +392,7 @@ class P2PInterface(P2PConnection):
     def on_cfilter(self, message): pass
     def on_cmpctblock(self, message): pass
     def on_feefilter(self, message): pass
+    def on_filterload(self, message): pass
     def on_getaddr(self, message): pass
     def on_getblocks(self, message): pass
     def on_getblocktxn(self, message): pass
@@ -397,6 +402,7 @@ class P2PInterface(P2PConnection):
     def on_headers(self, message): pass
     def on_headers2(self, message): pass
     def on_mempool(self, message): pass
+    def on_merkleblock(self, message): pass
     def on_notfound(self, message): pass
     def on_pong(self, message): pass
     def on_sendaddrv2(self, message): pass
@@ -470,6 +476,18 @@ class P2PInterface(P2PConnection):
             return last_headers.headers[0].rehash() == blockhash
 
         self.wait_until(test_function, timeout=timeout)
+
+    def wait_for_merkleblock(self, timeout=60):
+        def test_function():
+            assert self.is_connected
+            last_filtered_block = self.last_message.get('merkleblock')
+            if not last_filtered_block:
+                return False
+            # TODO change this method to take a hash value and only return true if the correct block has been received
+            return True
+
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
 
     def wait_for_getdata(self, hash_list, timeout=60):
         """Waits for a getdata message.
