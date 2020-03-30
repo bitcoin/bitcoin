@@ -606,13 +606,6 @@ class DashTestFramework(BitcoinTestFramework):
         self.add_nodes(self.mn_count)
         executor = ThreadPoolExecutor(max_workers=20)
 
-        def do_start(idx):
-            args = ['-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args[idx + start_idx]
-            self.start_node(idx + start_idx, extra_args=args)
-            self.mninfo[idx].nodeIdx = idx + start_idx
-            self.mninfo[idx].node = self.nodes[idx + start_idx]
-            force_finish_mnsync(self.mninfo[idx].node)
-
         def do_connect(idx):
             # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
             connect_nodes(self.mninfo[idx].node, 0)
@@ -621,7 +614,8 @@ class DashTestFramework(BitcoinTestFramework):
 
         # start up nodes in parallel
         for idx in range(0, self.mn_count):
-            jobs.append(executor.submit(do_start, idx))
+            self.mninfo[idx].nodeIdx = idx + start_idx
+            jobs.append(executor.submit(self.start_masternode, self.mninfo[idx]))
 
         # wait for all nodes to start up
         for job in jobs:
@@ -638,6 +632,14 @@ class DashTestFramework(BitcoinTestFramework):
         jobs.clear()
 
         executor.shutdown()
+
+    def start_masternode(self, mninfo, extra_args=None):
+        args = ['-masternodeblsprivkey=%s' % mninfo.keyOperator] + self.extra_args[mninfo.nodeIdx]
+        if extra_args is not None:
+            args += extra_args
+        self.start_node(mninfo.nodeIdx, extra_args=args)
+        mninfo.node = self.nodes[mninfo.nodeIdx]
+        force_finish_mnsync(mninfo.node)
 
     def setup_network(self):
         self.log.info("Creating and starting controller node")
