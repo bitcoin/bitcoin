@@ -267,22 +267,22 @@ public:
     virtual ~ChainClient() {}
 
     //! Register rpcs.
-    virtual void registerRpcs() = 0;
+    virtual void registerRpcs() {}
 
     //! Check for errors before loading.
-    virtual bool verify() = 0;
+    virtual bool verify() { return true; }
 
     //! Load saved state.
-    virtual bool load() = 0;
+    virtual bool load() { return true; }
 
     //! Start client execution and provide a scheduler.
-    virtual void start(CScheduler& scheduler) = 0;
+    virtual void start(CScheduler& scheduler) {}
 
     //! Save state to disk.
-    virtual void flush() = 0;
+    virtual void flush() {}
 
     //! Shut down client.
-    virtual void stop() = 0;
+    virtual void stop() {}
 };
 
 //! Return implementation of Chain interface.
