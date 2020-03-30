@@ -32,15 +32,15 @@ class LLMQSimplePoSeTest(DashTestFramework):
             assert(not self.check_punished(mn) and not self.check_banned(mn))
 
         # Now lets kill MNs one by one and verify that punishment/banning happens
-        for i in range(len(self.mninfo), len(self.mninfo) - 2, -1):
-            mn = self.mninfo[len(self.mninfo) - 1]
-            self.mninfo.remove(mn)
+        online_mninfos = self.mninfo.copy()
+        for i in range(len(online_mninfos), len(online_mninfos) - 2, -1):
+            mn = online_mninfos[len(online_mninfos) - 1]
+            online_mninfos.remove(mn)
             self.stop_node(mn.nodeIdx)
-            self.nodes.remove(mn.node)
 
             t = time.time()
             while (not self.check_punished(mn) or not self.check_banned(mn)) and (time.time() - t) < 120:
-                self.mine_quorum(expected_connections=1, expected_members=i-1, expected_contributions=i-1, expected_complaints=i-1, expected_commitments=i-1)
+                self.mine_quorum(expected_connections=1, expected_members=i-1, expected_contributions=i-1, expected_complaints=i-1, expected_commitments=i-1, mninfos=online_mninfos)
 
             assert(self.check_punished(mn) and self.check_banned(mn))
 
