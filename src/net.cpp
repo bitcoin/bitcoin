@@ -2285,6 +2285,12 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
+
+        if (!fNetworkActive) {
+            // there is a small chance of fNetworkActive becoming false between the start of this method
+            // and the successful lock of cs_vNodes
+            pnode->CloseSocketDisconnect();
+        }
     }
 }
 
