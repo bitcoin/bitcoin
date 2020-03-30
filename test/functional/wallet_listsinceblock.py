@@ -111,23 +111,21 @@ class ListSinceBlockTest(BitcoinTestFramework):
         senttx = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
 
         # generate on both sides
-        lastblockhash = self.nodes[1].generate(6)[5]
-        self.nodes[2].generate(7)
-        self.log.debug('lastblockhash={}'.format(lastblockhash))
+        nodes1_last_blockhash = self.nodes[1].generate(6)[-1]
+        nodes2_first_blockhash = self.nodes[2].generate(7)[0]
+        self.log.debug("nodes[1] last blockhash = {}".format(nodes1_last_blockhash))
+        self.log.debug("nodes[2] first blockhash = {}".format(nodes2_first_blockhash))
 
         self.sync_all(self.nodes[:2])
         self.sync_all(self.nodes[2:])
 
         self.join_network()
 
-        # listsinceblock(lastblockhash) should now include tx, as seen from nodes[0]
-        lsbres = self.nodes[0].listsinceblock(lastblockhash)
-        found = False
-        for tx in lsbres['transactions']:
-            if tx['txid'] == senttx:
-                found = True
-                break
-        assert found
+        # listsinceblock(nodes1_last_blockhash) should now include tx as seen from nodes[0]
+        # and return the block height which listsinceblock now exposes since a5e7795.
+        transactions = self.nodes[0].listsinceblock(nodes1_last_blockhash)['transactions']
+        found = next(tx for tx in transactions if tx['txid'] == senttx)
+        assert_equal(found['blockheight'], self.nodes[0].getblockheader(nodes2_first_blockhash)['height'])
 
     def test_double_spend(self):
         '''
