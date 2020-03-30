@@ -29,7 +29,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         for i in range(3):
             self.mine_quorum()
         for mn in self.mninfo:
-            assert(not self.check_punished(mn) and not self.check_punished(mn))
+            assert(not self.check_punished(mn) and not self.check_banned(mn))
 
         # Now lets kill MNs one by one and verify that punishment/banning happens
         for i in range(len(self.mninfo), len(self.mninfo) - 2, -1):
