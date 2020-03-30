@@ -32,7 +32,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         def isolate_mn(mn):
             mn.node.setnetworkactive(False)
             wait_until(lambda: mn.node.getconnectioncount() == 0)
-        self.test_banning(isolate_mn)
+        self.test_banning(isolate_mn, False, True, False)
 
     def test_no_banning(self, expected_connections=1, expected_probes=0):
         for i in range(3):
@@ -40,16 +40,24 @@ class LLMQSimplePoSeTest(DashTestFramework):
         for mn in self.mninfo:
             assert(not self.check_punished(mn) and not self.check_banned(mn))
 
-    def test_banning(self, invalidate_proc):
+    def test_banning(self, invalidate_proc, check_probes, expect_contribution_to_fail, expect_probes_to_fail):
         online_mninfos = self.mninfo.copy()
-        for i in range(len(online_mninfos), len(online_mninfos) - 2, -1):
+        for i in range(2):
             mn = online_mninfos[len(online_mninfos) - 1]
             online_mninfos.remove(mn)
             invalidate_proc(mn)
 
             t = time.time()
             while (not self.check_punished(mn) or not self.check_banned(mn)) and (time.time() - t) < 120:
-                self.mine_quorum(expected_connections=1, expected_members=i-1, expected_contributions=i-1, expected_complaints=i-1, expected_commitments=i-1, mninfos=online_mninfos)
+                expected_probes = 0
+                expected_contributors = len(online_mninfos) + 1
+                if check_probes:
+                    expected_probes = len(online_mninfos)
+                    if expect_probes_to_fail:
+                        expected_probes -= 1
+                if expect_contribution_to_fail:
+                    expected_contributors -= 1
+                self.mine_quorum(expected_connections=1, expected_probes=expected_probes, expected_members=len(online_mninfos), expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos=online_mninfos)
 
             assert(self.check_punished(mn) and self.check_banned(mn))
 
