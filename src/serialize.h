@@ -538,14 +538,15 @@ struct CustomUintFormatter
 
     template <typename Stream, typename I> void Unser(Stream& s, I& v)
     {
-        static_assert(std::numeric_limits<I>::max() >= MAX && std::numeric_limits<I>::min() <= 0, "CustomUintFormatter type too small");
+        using U = typename std::conditional<std::is_enum<I>::value, std::underlying_type<I>, std::common_type<I>>::type::type;
+        static_assert(std::numeric_limits<U>::max() >= MAX && std::numeric_limits<U>::min() <= 0, "Assigned type too small");
         uint64_t raw = 0;
         if (BigEndian) {
             s.read(((char*)&raw) + 8 - Bytes, Bytes);
-            v = be64toh(raw);
+            v = static_cast<I>(be64toh(raw));
         } else {
             s.read((char*)&raw, Bytes);
-            v = le64toh(raw);
+            v = static_cast<I>(le64toh(raw));
         }
     }
 };
