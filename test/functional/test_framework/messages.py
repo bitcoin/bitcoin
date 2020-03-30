@@ -1356,6 +1356,23 @@ class msg_filterload:
             self.data, self.nHashFuncs, self.nTweak, self.nFlags)
 
 
+class msg_filterclear:
+    __slots__ = ()
+    command = b"filterclear"
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return b""
+
+    def __repr__(self):
+        return "msg_filterclear()"
+
+
 class msg_feefilter:
     __slots__ = ("feerate",)
     command = b"feefilter"
