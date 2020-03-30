@@ -16,7 +16,7 @@ from test_framework.mininode import (
     P2PInterface,
     mininode_lock,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 
 
 class FilterNode(P2PInterface):
@@ -48,7 +48,7 @@ class FilterNode(P2PInterface):
         self.tx_received = True
 
 
-class FilterTest(BitcoinTestFramework):
+class FilterTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1
