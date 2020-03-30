@@ -26,18 +26,26 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.wait_for_sporks_same()
 
         # check if mining quorums with all nodes being online succeeds without punishment/banning
+        self.test_no_banning()
+
+        # Now lets isolate MNs one by one and verify that punishment/banning happens
+        def isolate_mn(mn):
+            mn.node.setnetworkactive(False)
+            wait_until(lambda: mn.node.getconnectioncount() == 0)
+        self.test_banning(isolate_mn)
+
+    def test_no_banning(self, expected_connections=1, expected_probes=0):
         for i in range(3):
-            self.mine_quorum()
+            self.mine_quorum(expected_connections=expected_connections, expected_probes=expected_probes)
         for mn in self.mninfo:
             assert(not self.check_punished(mn) and not self.check_banned(mn))
 
-        # Now lets isolate MNs one by one and verify that punishment/banning happens
+    def test_banning(self, invalidate_proc):
         online_mninfos = self.mninfo.copy()
         for i in range(len(online_mninfos), len(online_mninfos) - 2, -1):
             mn = online_mninfos[len(online_mninfos) - 1]
             online_mninfos.remove(mn)
-            mn.node.setnetworkactive(False)
-            wait_until(lambda: mn.node.getconnectioncount() == 0)
+            invalidate_proc(mn)
 
             t = time.time()
             while (not self.check_punished(mn) or not self.check_banned(mn)) and (time.time() - t) < 120:
