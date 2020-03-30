@@ -21,7 +21,7 @@ time-machine() {
                       -- "$@"
 }
 
-# Deterministically build Bitcoin Core for HOSTs (overriable by environment)
+# Deterministically build Bitcoin Core for HOSTs (overridable by environment)
 # shellcheck disable=SC2153
 for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu x86_64-w64-mingw32}; do
 
@@ -67,7 +67,7 @@ for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv
         #                     into.
         #
         #     While we don't want to map our current working directory to the
-        #     same exact path (as this introduces irrepreducibility), we do want
+        #     same exact path (as this introduces irreproducibility), we do want
         #     it to be at a _fixed_ path _somewhere_ inside the isolated
         #     container so that we have something to build. '/bitcoin' was
         #     chosen arbitrarily.
