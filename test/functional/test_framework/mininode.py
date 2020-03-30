@@ -30,6 +30,7 @@ from test_framework.messages import (
     msg_blocktxn,
     msg_cmpctblock,
     msg_feefilter,
+    msg_filterload,
     msg_getaddr,
     msg_getblocks,
     msg_getblocktxn,
@@ -38,6 +39,7 @@ from test_framework.messages import (
     msg_headers,
     msg_inv,
     msg_mempool,
+    msg_merkleblock,
     msg_notfound,
     msg_ping,
     msg_pong,
@@ -62,6 +64,7 @@ MESSAGEMAP = {
     b"blocktxn": msg_blocktxn,
     b"cmpctblock": msg_cmpctblock,
     b"feefilter": msg_feefilter,
+    b"filterload": msg_filterload,
     b"getaddr": msg_getaddr,
     b"getblocks": msg_getblocks,
     b"getblocktxn": msg_getblocktxn,
@@ -70,6 +73,7 @@ MESSAGEMAP = {
     b"headers": msg_headers,
     b"inv": msg_inv,
     b"mempool": msg_mempool,
+    b"merkleblock": msg_merkleblock,
     b"notfound": msg_notfound,
     b"ping": msg_ping,
     b"pong": msg_pong,
@@ -318,6 +322,7 @@ class P2PInterface(P2PConnection):
     def on_blocktxn(self, message): pass
     def on_cmpctblock(self, message): pass
     def on_feefilter(self, message): pass
+    def on_filterload(self, message): pass
     def on_getaddr(self, message): pass
     def on_getblocks(self, message): pass
     def on_getblocktxn(self, message): pass
@@ -325,6 +330,7 @@ class P2PInterface(P2PConnection):
     def on_getheaders(self, message): pass
     def on_headers(self, message): pass
     def on_mempool(self, message): pass
+    def on_merkleblock(self, message): pass
     def on_notfound(self, message): pass
     def on_pong(self, message): pass
     def on_reject(self, message): pass
@@ -382,6 +388,17 @@ class P2PInterface(P2PConnection):
             if not last_headers:
                 return False
             return last_headers.headers[0].rehash() == blockhash
+
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
+    def wait_for_merkleblock(self, timeout=60):
+        def test_function():
+            assert self.is_connected
+            last_filtered_block = self.last_message.get('merkleblock')
+            if not last_filtered_block:
+                return False
+            # TODO change this method to take a hash value and only return true if the correct block has been received
+            return True
 
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
