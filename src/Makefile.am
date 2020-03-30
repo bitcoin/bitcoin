@@ -315,6 +315,7 @@ libbitcoin_server_a_SOURCES = \
   txdb.cpp \
   txmempool.cpp \
   ui_interface.cpp \
+  util/url.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
@@ -466,7 +467,6 @@ libbitcoin_consensus_a_SOURCES = \
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
-  util/url.cpp \
   base58.cpp \
   bech32.cpp \
   bloom.cpp \
