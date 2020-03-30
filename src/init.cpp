@@ -1459,7 +1459,7 @@ bool AppInitParameterInteraction()
     }
 
     if (gArgs.IsArgSet("-masternodeblsprivkey")) {
-        if (!gArgs.GetBoolArg("-listen", DEFAULT_LISTEN)) {
+        if (!gArgs.GetBoolArg("-listen", DEFAULT_LISTEN) && Params().NetworkIDString() != CBaseChainParams::REGTEST) {
             return InitError("Masternode must accept connections from outside, set -listen=1");
         }
         if (!gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
