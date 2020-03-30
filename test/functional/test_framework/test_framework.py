@@ -797,6 +797,22 @@ class DashTestFramework(BitcoinTestFramework):
             return all_ok
         wait_until(check_quorum_connections, timeout=timeout, sleep=1)
 
+    def wait_for_masternode_probes(self, expected_probes, mninfos, timeout = 30, wait_proc=None):
+        def check_probes():
+            for mn in mninfos:
+                l = mn.node.protx('list', 'registered', 1)
+                cnt = 0
+                for mn2 in l:
+                    if mn2['proTxHash'] != mn.proTxHash:
+                        if mn2['metaInfo']['lastOutboundSuccessElapsed'] <= 60:
+                            cnt += 1
+                if cnt < expected_probes:
+                    if wait_proc is not None:
+                        wait_proc()
+                    return False
+            return True
+        wait_until(check_probes, timeout=timeout, sleep=1)
+
     def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, timeout=30, sleep=0.1):
         def check_dkg_session():
             all_ok = True
@@ -844,7 +860,7 @@ class DashTestFramework(BitcoinTestFramework):
             return all_ok
         wait_until(check_dkg_comitments, timeout=timeout, sleep=0.1)
 
-    def mine_quorum(self, expected_members=None, expected_connections=2, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos=None):
+    def mine_quorum(self, expected_members=None, expected_connections=2, expected_probes=0, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos=None):
         if expected_members is None:
             expected_members = self.llmq_size
         if expected_contributions is None:
@@ -854,8 +870,8 @@ class DashTestFramework(BitcoinTestFramework):
         if mninfos is None:
             mninfos = self.mninfo
 
-        self.log.info("Mining quorum: expected_members=%d, expected_contributions=%d, expected_complaints=%d, expected_justifications=%d, "
-                      "expected_commitments=%d" % (expected_members, expected_contributions, expected_complaints,
+        self.log.info("Mining quorum: expected_members=%d, expected_connections=%d, expected_probes=%d, expected_contributions=%d, expected_complaints=%d, expected_justifications=%d, "
+                      "expected_commitments=%d" % (expected_members, expected_connections, expected_probes, expected_contributions, expected_complaints,
                                                    expected_justifications, expected_commitments))
 
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos]
@@ -878,6 +894,7 @@ class DashTestFramework(BitcoinTestFramework):
             set_node_times(nodes, self.mocktime)
         self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos)
         self.wait_for_quorum_connections(expected_connections, nodes, wait_proc=bump_time)
+        self.wait_for_masternode_probes(expected_probes, mninfos, wait_proc=bump_time)
         self.bump_mocktime(1)
         set_node_times(nodes, self.mocktime)
         self.nodes[0].generate(2)
