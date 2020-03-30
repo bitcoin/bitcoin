@@ -939,11 +939,14 @@ class DashTestFramework(BitcoinTestFramework):
         qi = self.nodes[0].quorum('info', 100, q)
         result = []
         for m in qi['members']:
-            for mn in self.mninfo:
-                if mn.proTxHash == m['proTxHash']:
-                    result.append(mn)
-                    break
+            result.append(self.get_mninfo(m['proTxHash']))
         return result
+
+    def get_mninfo(self, proTxHash):
+        for mn in self.mninfo:
+            if mn.proTxHash == proTxHash:
+                return mn
+        return None
 
     def wait_for_mnauth(self, node, count, timeout=10):
         def test():
