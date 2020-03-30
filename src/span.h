@@ -56,6 +56,20 @@ public:
     /** Default assignment operator. */
     Span& operator=(const Span& other) noexcept = default;
 
+    /** Construct a Span from an array. This matches the corresponding C++20 std::span constructor. */
+    template <int N>
+    constexpr Span(C (&a)[N]) noexcept : m_data(a), m_size(N) {}
+
+    /** Construct a Span for objects with .data() and .size() (std::string, std::array, std::vector, ...).
+     *
+     * This implements a subset of the functionality provided by the C++20 std::span range-based constructor.
+     *
+     * To prevent surprises, only Spans for constant value types are supported when passing in temporaries.
+     * Note that this restriction does not exist when converting arrays or other Spans (see above).
+     */
+    template <typename V, typename std::enable_if<(std::is_const<C>::value || std::is_lvalue_reference<V>::value) && std::is_convertible<typename std::remove_pointer<decltype(std::declval<V&>().data())>::type (*)[], C (*)[]>::value && std::is_convertible<decltype(std::declval<V&>().size()), std::size_t>::value, int>::type = 0>
+    constexpr Span(V&& v) noexcept : m_data(v.data()), m_size(v.size()) {}
+
     constexpr C* data() const noexcept { return m_data; }
     constexpr C* begin() const noexcept { return m_data; }
     constexpr C* end() const noexcept { return m_data + m_size; }
@@ -79,19 +93,13 @@ public:
     template <typename O> friend class Span;
 };
 
-/** Create a span to a container exposing data() and size().
- *
- * This correctly deals with constness: the returned Span's element type will be
- * whatever data() returns a pointer to. If either the passed container is const,
- * or its element type is const, the resulting span will have a const element type.
- *
- * std::span will have a constructor that implements this functionality directly.
- */
-template<typename A, int N>
-constexpr Span<A> MakeSpan(A (&a)[N]) { return Span<A>(a, N); }
-
-template<typename V>
-constexpr Span<typename std::remove_pointer<decltype(std::declval<V>().data())>::type> MakeSpan(V& v) { return Span<typename std::remove_pointer<decltype(std::declval<V>().data())>::type>(v.data(), v.size()); }
+// MakeSpan helps constructing a Span of the right type automatically.
+/** MakeSpan for arrays: */
+template <typename A, int N> Span<A> constexpr MakeSpan(A (&a)[N]) { return Span<A>(a, N); }
+/** MakeSpan for temporaries / rvalue references, only supporting const output. */
+template <typename V> constexpr auto MakeSpan(V&& v) -> typename std::enable_if<!std::is_lvalue_reference<V>::value, Span<const typename std::remove_pointer<decltype(v.data())>::type>>::type { return std::forward<V>(v); }
+/** MakeSpan for (lvalue) references, supporting mutable output. */
+template <typename V> constexpr auto MakeSpan(V& v) -> Span<typename std::remove_pointer<decltype(v.data())>::type> { return v; }
 
 /** Pop the last element off a span, and return a reference to that element. */
 template <typename T>
