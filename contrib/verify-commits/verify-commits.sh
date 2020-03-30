@@ -12,8 +12,6 @@ VERIFIED_ROOT=$(cat "${DIR}/trusted-git-root")
 VERIFIED_SHA512_ROOT=$(cat "${DIR}/trusted-sha512-root-commit")
 REVSIG_ALLOWED=$(cat "${DIR}/allow-revsig-commits")
 
-HAVE_FAILED=false
-
 HAVE_GNU_SHA512=1
 [ ! -x "$(which sha512sum)" ] && HAVE_GNU_SHA512=0
 
