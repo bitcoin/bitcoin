@@ -100,5 +100,24 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum("sign", 100, id, msgHash)
         wait_for_sigs(True, False, True, 15)
 
+        id = "0000000000000000000000000000000000000000000000000000000000000002"
+
+        if self.options.spork21:
+            # Isolate the node that is responsible for the recovery of a signature and assert that recovery fails
+            q = self.nodes[0].quorum('selectquorum', 100, id)
+            mn = self.get_mninfo(q['recoveryMembers'][0])
+            mn.node.setnetworkactive(False)
+            wait_until(lambda: mn.node.getconnectioncount() == 0)
+            for i in range(4):
+                self.mninfo[i].node.quorum("sign", 100, id, msgHash)
+            assert_sigs_nochange(False, False, False, 3)
+            # Need to re-connect so that it later gets the recovered sig
+            mn.node.setnetworkactive(True)
+            connect_nodes(mn.node, 0)
+            # Let 1 second pass so that the next node is used for recovery, which should succeed
+            self.bump_mocktime(1)
+            set_node_times(self.nodes, self.mocktime)
+            wait_for_sigs(True, False, True, 5)
+
 if __name__ == '__main__':
     LLMQSigningTest().main()
