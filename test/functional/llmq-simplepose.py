@@ -31,12 +31,13 @@ class LLMQSimplePoSeTest(DashTestFramework):
         for mn in self.mninfo:
             assert(not self.check_punished(mn) and not self.check_banned(mn))
 
-        # Now lets kill MNs one by one and verify that punishment/banning happens
+        # Now lets isolate MNs one by one and verify that punishment/banning happens
         online_mninfos = self.mninfo.copy()
         for i in range(len(online_mninfos), len(online_mninfos) - 2, -1):
             mn = online_mninfos[len(online_mninfos) - 1]
             online_mninfos.remove(mn)
-            self.stop_node(mn.nodeIdx)
+            mn.node.setnetworkactive(False)
+            wait_until(lambda: mn.node.getconnectioncount() == 0)
 
             t = time.time()
             while (not self.check_punished(mn) or not self.check_banned(mn)) and (time.time() - t) < 120:
