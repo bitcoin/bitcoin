@@ -12,5 +12,6 @@ WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
     m_wallet.LoadWallet(fFirstRun);
     m_wallet.handleNotifications();
 
-    m_chain_client->registerRpcs();
+    m_walletrpcs_client = MakeWalletRPCsClient(*m_chain);
+    m_walletrpcs_client->registerRpcs();
 }

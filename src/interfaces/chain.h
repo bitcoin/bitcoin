@@ -297,6 +297,7 @@ std::unique_ptr<Chain> MakeChain(NodeContext& node);
 //! MakeXXXClient functions returning their implementations of the ChainClient
 //! interface.
 std::unique_ptr<ChainClient> MakeWalletClient(Chain& chain, std::vector<std::string> wallet_filenames);
+std::unique_ptr<ChainClient> MakeWalletRPCsClient(Chain& chain);
 
 } // namespace interfaces
 

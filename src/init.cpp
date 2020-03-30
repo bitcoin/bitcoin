@@ -1285,6 +1285,8 @@ bool AppInitMain(NodeContext& node)
     // when load() and start() interface methods are called below.
     g_wallet_init_interface.Construct(node);
 
+    node.chain_clients.emplace_back(interfaces::MakeWalletRPCsClient(*node.chain));
+
     /* Register RPC commands regardless of -server setting so they will be
      * available in the GUI RPC console even if external calls are disabled.
      */
