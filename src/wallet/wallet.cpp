@@ -754,22 +754,29 @@ bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
     const CWalletTx* srctx = GetWalletTx(hash);
     if (srctx) {
         assert(srctx->tx->vout.size() > n);
-        LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
-        // When descriptor wallets arrive, these additional checks are
-        // likely superfluous and can be optimized out
-        assert(spk_man != nullptr);
-        for (const auto& keyid : GetAffectedKeys(srctx->tx->vout[n].scriptPubKey, *spk_man)) {
-            WitnessV0KeyHash wpkh_dest(keyid);
-            if (GetDestData(wpkh_dest, "used", nullptr)) {
-                return true;
-            }
-            ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
-            if (GetDestData(sh_wpkh_dest, "used", nullptr)) {
-                return true;
-            }
-            PKHash pkh_dest(keyid);
-            if (GetDestData(pkh_dest, "used", nullptr)) {
-                return true;
+        CTxDestination dest;
+        if (!ExtractDestination(srctx->tx->vout[n].scriptPubKey, dest)) {
+            return false;
+        }
+        if (GetDestData(dest, "used", nullptr)) {
+            return true;
+        }
+        if (IsLegacy()) {
+            LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
+            assert(spk_man != nullptr);
+            for (const auto& keyid : GetAffectedKeys(srctx->tx->vout[n].scriptPubKey, *spk_man)) {
+                WitnessV0KeyHash wpkh_dest(keyid);
+                if (GetDestData(wpkh_dest, "used", nullptr)) {
+                    return true;
+                }
+                ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
+                if (GetDestData(sh_wpkh_dest, "used", nullptr)) {
+                    return true;
+                }
+                PKHash pkh_dest(keyid);
+                if (GetDestData(pkh_dest, "used", nullptr)) {
+                    return true;
+                }
             }
         }
     }
