@@ -857,9 +857,9 @@ CDeterministicMNCPtr CSigSharesManager::SelectMemberForRecovery(const CQuorumCPt
 
     std::vector<std::pair<uint256, CDeterministicMNCPtr>> v;
     v.reserve(quorum->members.size());
-    for (size_t i = 0; i < quorum->members.size(); i++) {
-        auto h = ::SerializeHash(std::make_pair(quorum->members[i]->proTxHash, id));
-        v.emplace_back(h, quorum->members[i]);
+    for (const auto& dmn : quorum->members) {
+        auto h = ::SerializeHash(std::make_pair(dmn->proTxHash, id));
+        v.emplace_back(h, dmn);
     }
     std::sort(v.begin(), v.end());
 
