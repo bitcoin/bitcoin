@@ -17,26 +17,31 @@ and tests weren't explicitly disabled.
 
 After configuring, they can be run with `make check`.
 
-To run the syscoind tests manually, launch `src/test/test_syscoin`. To recompile
+To run the unit tests manually, launch `src/test/test_syscoin`. To recompile
 after a test file was modified, run `make` and then run the test again. If you
 modify a non-test file, use `make -C src/test` to recompile only what's needed
-to run the syscoind tests.
+to run the unit tests.
 
-To add more syscoind tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
+To add more unit tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
 .cpp files in the `test/` directory or add new .cpp files that
 implement new `BOOST_AUTO_TEST_SUITE` sections.
 
-To run the syscoin-qt tests manually, launch `src/qt/test/test_syscoin-qt`
+To run the GUI unit tests manually, launch `src/qt/test/test_syscoin-qt`
 
-To add more syscoin-qt tests, add them to the `src/qt/test/` directory and
+To add more GUI unit tests, add them to the `src/qt/test/` directory and
 the `src/qt/test/test_main.cpp` file.
 
 ### Running individual tests
 
-test_syscoin has some built-in command-line arguments; for
-example, to run just the getarg_tests verbosely:
+`test_syscoin` has some built-in command-line arguments; for
+example, to run just the `getarg_tests` verbosely:
 
-    test_syscoin --log_level=all --run_test=getarg_tests
+    test_syscoin --log_level=all --run_test=getarg_tests -- DEBUG_LOG_OUT
+
+`log_level` controls the verbosity of the test framework, which logs when a
+test case is entered, for example. The `DEBUG_LOG_OUT` after the two dashes
+redirects the debug log, which would normally go to a file in the test datadir
+(`BasicTestingSetup::m_path_root`), to the standard terminal output.
 
 ... or to run just the doubledash test:
 
@@ -56,11 +61,15 @@ see `uint256_tests.cpp`.
 
 ### Logging and debugging in unit tests
 
+`make check` will write to a log file `foo_tests.cpp.log` and display this file
+on failure. For running individual tests verbosely, refer to the section
+[above](#running-individual-tests).
+
 To write to logs from unit tests you need to use specific message methods
 provided by Boost. The simplest is `BOOST_TEST_MESSAGE`.
 
-For debugging you can launch the test_syscoin executable with `gdb`or `lldb` and
-start debugging, just like you would with syscoind:
+For debugging you can launch the `test_syscoin` executable with `gdb`or `lldb` and
+start debugging, just like you would with any other program:
 
 ```bash
 gdb src/test/test_syscoin
