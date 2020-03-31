@@ -1136,7 +1136,7 @@ static UniValue mine(const JSONRPCRequest& request)
       }
     }
     clock_t end = clock(); // End timer
-    int elapsedTime = end - begin;
+    double elapsedTime = (double)(end - begin) / CLOCKS_PER_SEC;
     if(elapsedTime < 0) elapsedTime = -elapsedTime; // absolute value
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
@@ -1144,10 +1144,10 @@ static UniValue mine(const JSONRPCRequest& request)
     try {
       success = ProcessNewBlock(Params(), shared_pblock, true, nullptr);
     } catch (...) {}
-    result.pushKV("Num Hashes", numHashes);
-    result.pushKV("Elapsed Time", elapsedTime);
-    result.pushKV("Block found", success);
-    result.pushKV("Block hashe", pblock->GetHash().GetHex());
+    result.pushKV("Hashes per second", numHashes / elapsedTime);
+    result.pushKV("Number of hashes", numHashes);
+    result.pushKV("Elapsed time (seconds)", elapsedTime);
+    result.pushKV("Blocks found", success ? pblock->GetHash().GetHex() : "None");
 
     return result;
     // return generateBlocks(mempool, coinbase_script, nGenerate, nMaxTries);
