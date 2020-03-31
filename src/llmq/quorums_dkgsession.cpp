@@ -438,15 +438,17 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
     logger.Batch("verified contributions. time=%d", t1.count());
     logger.Flush();
 
-    if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
-        VerifyConnectionAndMinProtoVersions();
-    }
+    VerifyConnectionAndMinProtoVersions();
 
     SendComplaint(pendingMessages);
 }
 
 void CDKGSession::VerifyConnectionAndMinProtoVersions()
 {
+    if (!sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
+        return;
+    }
+
     CDKGLogger logger(*this, __func__);
 
     std::unordered_map<uint256, int, StaticSaltedHasher> protoMap;
