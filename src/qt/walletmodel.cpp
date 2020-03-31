@@ -101,22 +101,19 @@ void WalletModel::pollBalanceChanged()
     // rescan.
     interfaces::WalletBalances new_balances;
     uint256 block_hash;
-    if (!m_wallet->tryGetBalances(new_balances, block_hash)) {
+    if (!m_wallet->tryGetBalances(new_balances, block_hash, fForceCheckBalanceChanged, m_cached_last_update_tip)) {
         return;
     }
 
-    if (fForceCheckBalanceChanged || block_hash != m_cached_last_update_tip || node().coinJoinOptions().getRounds() != cachedCoinJoinRounds)
-    {
-        fForceCheckBalanceChanged = false;
+    fForceCheckBalanceChanged = false;
 
-        // Balance and number of transactions might have changed
-        m_cached_last_update_tip = block_hash;
-        cachedCoinJoinRounds = node().coinJoinOptions().getRounds();
+    // Balance and number of transactions might have changed
+    m_cached_last_update_tip = block_hash;
+    cachedCoinJoinRounds = node().coinJoinOptions().getRounds();
 
-        checkBalanceChanged(new_balances);
-        if(transactionTableModel)
-            transactionTableModel->updateConfirmations();
-    }
+    checkBalanceChanged(new_balances);
+    if(transactionTableModel)
+        transactionTableModel->updateConfirmations();
 }
 
 void WalletModel::checkBalanceChanged(const interfaces::WalletBalances& new_balances)

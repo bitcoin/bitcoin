@@ -434,13 +434,14 @@ public:
         }
         return result;
     }
-    bool tryGetBalances(WalletBalances& balances, uint256& block_hash) override
+    bool tryGetBalances(WalletBalances& balances, uint256& block_hash, bool force, const uint256& cached_last_update_tip) override
     {
+        block_hash = m_wallet->GetLastBlockHash();
+        if (!force && block_hash == cached_last_update_tip) return false;
         TRY_LOCK(m_wallet->cs_wallet, locked_wallet);
         if (!locked_wallet) {
             return false;
         }
-        block_hash = m_wallet->GetLastBlockHash();
         balances = getBalances();
         return true;
     }
