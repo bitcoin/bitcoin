@@ -8,6 +8,7 @@
 
 #include <coins.h>
 #include <hash.h>
+#include <optional.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/keyorigin.h>
@@ -170,6 +171,6 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script);
 bool IsSegWitOutput(const SigningProvider& provider, const CScript& script);
 
 /** Sign the CMutableTransaction */
-bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* provider, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors);
+bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* provider, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors, Optional<CAmount>* inputs_amount_sum = nullptr);
 
 #endif // BITCOIN_SCRIPT_SIGN_H
