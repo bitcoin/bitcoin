@@ -1022,6 +1022,137 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
     return result;
 }
 
+static UniValue mine(const JSONRPCRequest& request)
+{
+            RPCHelpMan{"mine",
+                "\nMine blocks immediately to a specified address (before the RPC call returns)\n",
+                {
+                    {"duration", RPCArg::Type::STR, RPCArg::Optional::NO, "Duration"},
+                    {"times/seconds/clocks", RPCArg::Type::STR, RPCArg::Optional::NO, "Unit"},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated bitcoin to."},
+                    {"use_random", RPCArg::Type::STR, RPCArg::Optional::NO, "(true/false) Generate random nonces, or increment from zero."},
+                },
+                RPCResult{
+                    RPCResult::Type::ARR, "", "hashes of blocks generated",
+                    {
+                        {RPCResult::Type::STR_HEX, "", "blockhash"},
+                    }},
+                RPCExamples{
+            "\nMine for 5 seconds to myaddress using random nonces\n"
+            + HelpExampleCli("mine", "5 seconds \"myaddress\" true")
+            + "If you are running the bitcoin core wallet, you can get a new address to send the newly generated bitcoin to with:\n"
+            + HelpExampleCli("getnewaddress", "")
+                },
+            }.Check(request);
+
+    std::string durationStr = request.params[0].get_str();
+    unsigned int duration = 0;
+    try {
+      duration = std::stoi(durationStr);
+    } catch (...) {}
+
+    std::string unit = request.params[1].get_str();
+
+    CTxDestination destination = DecodeDestination(request.params[2].get_str());
+    if (!IsValidDestination(destination)) {
+      throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
+    }
+
+    std::string useRandomStr = request.params[3].get_str();
+    bool useRandom = false;
+    if (!request.params[3].isNull()) {
+      useRandom = (useRandomStr == "true");
+    }
+
+    const CTxMemPool& mempool = EnsureMemPool();
+
+    CScript coinbase_script = GetScriptForDestination(destination);
+
+    {   // Don't keep cs_main locked
+        LOCK(cs_main);
+    }
+
+    unsigned int nExtraNonce = 0;
+    UniValue result(UniValue::VOBJ);
+
+    std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(mempool, Params()).CreateNewBlock(coinbase_script));
+    if (!pblocktemplate.get())
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
+    CBlock *pblock = &pblocktemplate->block;
+    {
+        LOCK(cs_main);
+        IncrementExtraNonce(pblock, ::ChainActive().Tip(), nExtraNonce);
+    }
+    int numHashes = 0;
+    clock_t begin;
+    if(useRandom) { // Random nonce selection
+      if(unit == "time" || unit == "times") {
+        begin = clock(); // Start timer
+        unsigned int nMaxTries = duration;
+        while(nMaxTries > 0 && clock() - begin < duration * CLOCKS_PER_SEC && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+          GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
+          ++numHashes;
+        }
+      } else if(unit == "clock" || unit == "clocks") {
+        begin = clock(); // Start timer
+        while(clock() - begin < duration && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+          GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
+          ++numHashes;
+        }
+      } else if(unit == "second" || unit == "seconds") {
+        begin = clock(); // Start timer
+        unsigned int durationClocks = duration * CLOCKS_PER_SEC;
+        while(clock() - begin < durationClocks && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+          GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
+          ++numHashes;
+        }
+      } else {
+        return "Unit of measurement unknown.";
+      }
+
+    } else { // Incremental nonce selection
+      if(unit == "time" || unit == "times") {
+        begin = clock(); // Start timer
+        unsigned int nMaxTries = duration;
+        while(nMaxTries > 0 && clock() - begin < duration * CLOCKS_PER_SEC && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+          ++pblock->nNonce;
+          ++numHashes;
+        }
+      } else if(unit == "clock" || unit == "clocks") {
+        begin = clock(); // Start timer
+        while(clock() - begin < duration && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+          ++pblock->nNonce;
+          ++numHashes;
+        }
+      } else if(unit == "second" || unit == "seconds") {
+        begin = clock(); // Start timer
+        unsigned int durationClocks = duration * CLOCKS_PER_SEC;
+        while(clock() - begin < durationClocks && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+          ++pblock->nNonce;
+          ++numHashes;
+        }
+      } else {
+        return "Unit of measurement unknown.";
+      }
+    }
+    clock_t end = clock(); // End timer
+    int elapsedTime = end - begin;
+    if(elapsedTime < 0) elapsedTime = -elapsedTime; // absolute value
+
+    std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
+    bool success = false;
+    try {
+      success = ProcessNewBlock(Params(), shared_pblock, true, nullptr);
+    } catch (...) {}
+    result.pushKV("Num Hashes", numHashes);
+    result.pushKV("Elapsed Time", elapsedTime);
+    result.pushKV("Block found", success);
+    result.pushKV("Block hashe", pblock->GetHash().GetHex());
+
+    return result;
+    // return generateBlocks(mempool, coinbase_script, nGenerate, nMaxTries);
+}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -1040,6 +1171,7 @@ static const CRPCCommand commands[] =
     { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
     { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
+    { "z Researcher",       "mine",                   &mine,                   {"duration", "times/seconds/clocks", "address", "use_random"} },
 };
 // clang-format on
 
