@@ -2318,7 +2318,8 @@ static UniValue settxfee(const JSONRPCRequest& request)
     }
 
             RPCHelpMan{"settxfee",
-                "\nSet the transaction fee per kB for this wallet. Overrides the global -paytxfee command line parameter.\n",
+                "\nSet the transaction fee per kB for this wallet. Overrides the global -paytxfee command line parameter.\n"
+                "Can be deactivated by passing 0 as the fee. In that case automatic fee selection will be used by default.\n",
                 {
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee in " + CURRENCY_UNIT + "/kB"},
                 },
