@@ -11,6 +11,7 @@ from test_framework.messages import (
     MSG_FILTERED_BLOCK,
     msg_getdata,
     msg_filterload,
+    msg_filterclear,
 )
 from test_framework.mininode import (
     P2PInterface,
@@ -96,6 +97,13 @@ class FilterTest(BitcoinTestFramework):
         txid = self.nodes[0].sendtoaddress(filter_address, 90)
         filter_node.wait_for_tx(txid)
         assert not filter_node.merkleblock_received
+
+        self.log.info('Check that after deleting filter all txs get relayed again')
+        filter_node.send_message(msg_filterclear())
+        filter_node.sync_with_ping()
+        for _ in range(5):
+            txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 7)
+            filter_node.wait_for_tx(txid)
 
 
 if __name__ == '__main__':
