@@ -395,4 +395,15 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS],[
       PKG_CHECK_MODULES([QT_DBUS], [${qt_lib_prefix}DBus $qt_version], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
     fi
   ])
+
+  BITCOIN_QT_CHECK([
+    if test "x$TARGET_OS" = xwindows; then
+      PKG_CHECK_MODULES([QT_WINEXTRAS], [${qt_lib_prefix}WinExtras $qt_version], [
+        QT_INCLUDES="$QT_INCLUDES $QT_WINEXTRAS_CFLAGS"
+        QT_LIBS="$QT_LIBS $QT_WINEXTRAS_LIBS"
+      ],[
+        BITCOIN_QT_FAIL([${qt_lib_prefix}WinExtras $qt_version not found])
+      ])
+    fi
+  ])
 ])
