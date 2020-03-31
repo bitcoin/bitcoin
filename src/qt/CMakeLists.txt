@@ -231,6 +231,13 @@ endif()
 if(WITH_DBUS)
   target_link_libraries(bitcoinqt PRIVATE "Qt${WITH_QT_VERSION}::DBus")
 endif()
+if(WITH_TASKBAR_PROGRESS)
+  target_link_libraries(bitcoinqt
+    PRIVATE
+      "Qt${WITH_QT_VERSION}::WinExtras"
+      $<$<PLATFORM_ID:Windows>:dwmapi>
+  )
+endif()
 
 if(qt_lib_type STREQUAL "STATIC_LIBRARY")
   # We want to define static plugins to link ourselves, thus preventing
