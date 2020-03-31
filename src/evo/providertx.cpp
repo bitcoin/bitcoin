@@ -23,7 +23,7 @@ static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidati
     if (!proTx.addr.IsValid()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
     }
-    if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !proTx.addr.IsRoutable()) {
+    if (Params().RequireRoutableExternalIP() && !proTx.addr.IsRoutable()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
     }
 
