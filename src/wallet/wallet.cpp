@@ -928,7 +928,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Co
                     range.first++;
                 }
             }
-        }
+        } //TODO: if transaction is already signaled as conflicted
 
         bool fExisted = mapWallet.count(tx.GetHash()) != 0;
         if (fExisted && !fUpdate) return false;

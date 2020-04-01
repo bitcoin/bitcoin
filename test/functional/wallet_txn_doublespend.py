@@ -12,6 +12,7 @@ from test_framework.util import (
     disconnect_nodes,
     find_output,
 )
+from test_framework.messages import BIP125_SEQUENCE_NUMBER
 
 class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -138,6 +139,63 @@ class TxnMallTest(BitcoinTestFramework):
 
         # Node1's balance should be its initial balance (1250 for 25 block rewards) plus the doublespend:
         assert_equal(self.nodes[1].getbalance(), 1250 + 1240)
+
+        self.log.info("Test conflicted non-directly-connected wallet-txn")
+        # Following test limb check that if a transaction of concern conflicted due to its parent
+        # or anterior transaction being conflicted, wallet is able to detect it, independently of
+        # reason (either block or mempool)
+
+        # Get a "blind" address from node0
+        connect_nodes(self.nodes[0], 1)
+        node0_address_blind = self.nodes[0].getnewaddress()
+        txid_origin = self.nodes[1].sendtoaddress(self.nodes[1].getnewaddress(), Decimal("10"))
+        self.nodes[1].generate(1)
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
+
+        # Build parent conflicted tx from node1 to node1
+        nA = next(tx_out["vout"] for tx_out in self.nodes[1].gettransaction(txid_origin)["details"] if tx_out["amount"] == Decimal("10"))
+        inputs_parent_conflicted_tx = []
+        inputs_parent_conflicted_tx.append({"txid": txid_origin, "vout": nA, "sequence": BIP125_SEQUENCE_NUMBER})
+        outputs_parent_conflicted_tx = {}
+        outputs_parent_conflicted_tx[self.nodes[1].getnewaddress()] = Decimal("9.99998")
+
+        # Broadcast parent conflicted tx
+        parent_conflicted_tx = self.nodes[1].signrawtransactionwithwallet(self.nodes[1].createrawtransaction(inputs_parent_conflicted_tx, outputs_parent_conflicted_tx))
+        parent_conflicted_txid = self.nodes[1].sendrawtransaction(parent_conflicted_tx["hex"])
+
+        # Build children conflicted tx
+        inputs_children_conflicted_tx = []
+        inputs_children_conflicted_tx.append({"txid": parent_conflicted_txid, "vout": 0})
+        outputs_children_conflicted_tx = {}
+        outputs_children_conflicted_tx[node0_address_blind] = Decimal("9.99996")
+
+        #Broadcast children conflicted tx
+        node1s_children_conflicted_tx = self.nodes[1].signrawtransactionwithwallet(self.nodes[1].createrawtransaction(inputs_children_conflicted_tx, outputs_children_conflicted_tx))
+        children_conflicted_txid = self.nodes[1].sendrawtransaction(node1s_children_conflicted_tx["hex"])
+        self.sync_mempools([self.nodes[0], self.nodes[1]])
+
+        # Verify node0 sees conflicted paying back
+        node0s_children_conflicted_tx = self.nodes[0].gettransaction(children_conflicted_txid)
+
+        assert_equal(node0s_children_conflicted_tx["confirmations"], 0)
+        assert_equal(node0s_children_conflicted_tx["details"][0]["category"], "receive")
+
+        # Build conflicting tx, double-spending parent conflicted
+        inputs_conflicting_tx = []
+        inputs_conflicting_tx.append({"txid": txid_origin, "vout": nA})
+        outputs_conflicting_tx = {}
+        outputs_conflicting_tx[self.nodes[1].getnewaddress()] = Decimal("9.99980")
+
+        # Broadcast conflicting tx to node1 mempool and generate a block
+        conflicting_tx = self.nodes[1].signrawtransactionwithwallet(self.nodes[1].createrawtransaction(inputs_conflicting_tx, outputs_conflicting_tx))
+        self.nodes[1].sendrawtransaction(conflicting_tx["hex"])
+        self.nodes[1].generate(1)
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
+
+        # Verify node0 sees children as conflicted
+        conflicted_tx = self.nodes[0].gettransaction(children_conflicted_txid)
+
+        assert_equal(conflicted_tx["conflicted"], True)
 
 if __name__ == '__main__':
     TxnMallTest().main()
