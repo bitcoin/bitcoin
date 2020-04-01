@@ -1,4 +1,4 @@
-<TS language="be_BY" version="2.1">
+<TS language="be" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -70,10 +70,6 @@
         <translation>Тут знаходзяцца Біткойн-адрасы для высылання плацяжоў. Заўсёды спраўджвайце колькасць і адрас прызначэння перад здзяйсненнем транзакцыі.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Тут знаходзяцца Біткойн-адрасы для прымання плацяжоў. Пажадана выкарыстоўваць новы адрас для кожнай транзакцыі.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>Капіяваць адрас</translation>
     </message>
@@ -136,10 +132,6 @@
         <translation>Паўтарыце новую кодавую фразу</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Увядзіце новы пароль для гаманца.&lt;br/&gt;Парольная фраза павинна складацца&lt;b&gt; не меньш чым з дзесяці сімвалаў&lt;/b&gt;, ці &lt;b&gt;больш чым з васьмі слоў&lt;/b&gt;.</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>Зашыфраваць гаманец.</translation>
     </message>
@@ -162,10 +154,6 @@
     <message>
         <source>Change passphrase</source>
         <translation>Змяніць пароль</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Увядзіце стары пароль і новы пароль для гаманца.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -238,10 +226,6 @@
         <translation>Агляд</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Вузел</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Паказвае агульныя звесткі аб гаманцы</translation>
     </message>
@@ -286,14 +270,6 @@
         <translation>&amp;Change Passphrase...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>Адрасы дасылання...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Адрасы прымання...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Адчыниць &amp;URI...</translation>
     </message>
@@ -314,24 +290,8 @@
         <translation>Змяніць пароль шыфравання гаманца</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>Вакно адладкі</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Адкрыць кансоль дыягностыкі і адладкі</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>Праверыць паведамленне...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Біткойн</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Гаманец</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -384,10 +344,6 @@
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Паказаць спіс адрасоў і метак для прымання</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Адкрыць біткойн: URI ці запыт плацяжу</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -592,6 +548,12 @@
     </message>
     </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -644,10 +606,6 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-біт)</translation>
-    </message>
-    <message>
         <source>Command-line options</source>
         <translation>Опцыі каманднага радка</translation>
     </message>
@@ -676,20 +634,15 @@
     </context>
 <context>
     <name>OpenURIDialog</name>
-    <message>
-        <source>Open URI</source>
-        <translation>Адкрыць URI</translation>
-    </message>
+    </context>
+<context>
+    <name>OpenWalletActivity</name>
     </context>
 <context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
         <translation>Опцыі</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>Мб</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
@@ -729,9 +682,6 @@
     </message>
 </context>
 <context>
-    <name>QObject::QObject</name>
-    </context>
-<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -739,10 +689,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>Інфармацыя</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Вакно адладкі</translation>
     </message>
     </context>
 <context>
@@ -790,7 +736,7 @@
         <source>Wallet</source>
         <translation>Гаманец</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -931,14 +877,7 @@
         <source>Memo:</source>
         <translation>Памятка:</translation>
     </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Увядзіце пазнаку гэтаму адрасу, каб дадаць яго ў адрасную кнігу</translation>
-    </message>
 </context>
-<context>
-    <name>SendConfirmationDialog</name>
-    </context>
 <context>
     <name>ShutdownWindow</name>
     </context>
@@ -957,13 +896,6 @@
         <translation>Alt+P</translation>
     </message>
     </context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-</context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -1203,6 +1135,9 @@
     <name>UnitDisplayStatusBarControl</name>
     </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
     </context>
 <context>
@@ -1226,10 +1161,6 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Ці жадаеце вы перабудаваць зараз базу звестак блокаў?</translation>
     </message>
@@ -1250,10 +1181,6 @@
         <translation>Памылка адчынення базы звестак блокаў</translation>
     </message>
     <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Памылка: Замала вольнага месца на дыску!</translation>
-    </message>
-    <message>
         <source>Importing...</source>
         <translation>Імпартаванне...</translation>
     </message>
@@ -1264,10 +1191,6 @@
     <message>
         <source>Verifying blocks...</source>
         <translation>Праверка блокаў...</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Інфармацыя</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -1284,10 +1207,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Транзакцыя занадта вялікая</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Увага</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
@@ -1312,10 +1231,6 @@
     <message>
         <source>Done loading</source>
         <translation>Загрузка выканана</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Памылка</translation>
     </message>
 </context>
 </TS>

@@ -70,6 +70,10 @@
         <translation>אלו הן כתובות הביטקוין שלך לשליחת תשלומים. חשוב לבדוק את הסכום ואת הכתובת המקבלת לפני שליחת מטבעות.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>אלה כתובות הביטקוין שלך לקבלת תשלומים. השתמש בלחצן 'צור כתובת קבלה חדשה' בכרטיסייה קבלה כדי ליצור כתובות חדשות.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;העתק כתובת</translation>
     </message>
@@ -130,6 +134,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>חזור על הסיסמה החדשה</translation>
+    </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation>הצג סיסמה</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -334,14 +342,6 @@
         <translation>שנה את הסיסמא המשמשת להצפנת הארנק</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>חלון &amp;ניפוי</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>פתיחת לוח הבקרה לאבחון ולניפוי</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;אימות הודעה…</translation>
     </message>
@@ -400,10 +400,6 @@
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>הצגת רשימת הכתובות והתוויות הנמצאות בשימוש</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>פתיחת ביטקוין: כתובת משאב או בקשת תשלום</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -832,10 +828,6 @@
         <translation>גרסה</translation>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-סיביות)</translation>
-    </message>
-    <message>
         <source>About %1</source>
         <translation>אודות %1</translation>
     </message>
@@ -969,24 +961,8 @@
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open URI</source>
-        <translation>פתיחת כתובת משאב</translation>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation>פתיחת בקשת תשלום מכתובת משאב או מקובץ</translation>
-    </message>
-    <message>
         <source>URI:</source>
         <translation>כתובת משאב:</translation>
-    </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>בחירת קובץ בקשת תשלום</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>בחירת קובץ בקשת תשלום לפתיחה</translation>
     </message>
 </context>
 <context>
@@ -1080,7 +1056,7 @@
     </message>
     <message>
         <source>Prune &amp;block storage to</source>
-        <translation> יש לגזום את &amp;מאגר הבלוקים אל</translation>
+        <translation>יש לגזום את &amp;מאגר הבלוקים אל</translation>
     </message>
     <message>
         <source>GB</source>
@@ -1369,18 +1345,6 @@
         <translation>'//:bitcoin' אינה כתובת URI תקינה. השתמשו במקום ב ':bitcoin'.</translation>
     </message>
     <message>
-        <source>You are using a BIP70 URL which will be unsupported in the future.</source>
-        <translation>אתם משתמשים בכתובת אינטרנט BIP70 אשר לא תתמך בעתיד</translation>
-    </message>
-    <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>כתובת ה URL של בקשת התשלום אינה תקינה : %1</translation>
-    </message>
-    <message>
-        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
-        <translation>אין אפשרות לבצע עיבוד בקשת תשלום כיון שהתמיכה ב BIP70 אינה כלולה בקוד.</translation>
-    </message>
-    <message>
         <source>Invalid payment address %1</source>
         <translation>כתובת תשלום שגויה %1</translation>
     </message>
@@ -1391,66 +1355,6 @@
     <message>
         <source>Payment request file handling</source>
         <translation>טיפול בקבצי בקשות תשלום</translation>
-    </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>לא ניתן לקרוא את קובץ בקשת התשלום! מצב כזה יכול לקרות בעקבות קובץ בקשת תשלום פגום.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>בקשת התשלום נדחתה</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>רשת בקשת התשלום אינה תואמת לרשת הלקוח.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>בקשת התשלום פגה.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>בקשת התשלום לא הופעלה.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>בקשות תשלום לתסריטי תשלום מותאמים אישית שלא עברו וידוא אינן נתמכות.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>בקשת תשלום שגויה.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>הסכום על סך %1 הנדרש לתשלום קטן מדי (נחשב לאבק)</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>זיכוי מאת %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>בקשת התשלום %1 גדולה מדי (%2 בתים, מורשה %3 בתים).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>שגיאה בעת יצירת קשר עם %1:‏ %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>לא ניתן לפענח את בקשת התשלום!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>תגובה שגויה מהשרת %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>שגיאת בקשת רשת</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>התשלום אושר</translation>
     </message>
 </context>
 <context>
@@ -1623,10 +1527,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>מי&amp;דע</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>חלון ניפוי</translation>
     </message>
     <message>
         <source>General</source>
@@ -2165,10 +2065,6 @@
         <translation>אזהרה</translation>
     </message>
     <message>
-        <source>collapse fee-settings</source>
-        <translation>צמצום הגדרות עמלה</translation>
-    </message>
-    <message>
         <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
 
 Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 satoshis.</source>
@@ -2214,7 +2110,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>כאשר יש פחות נפח עסקאות מאשר מקום בבלוק, כורים וכן צמתות מקשרות יכולות להכתיב עמלות מינימום. התשלום של עמלת מינימום הנו תקין, אך יש לקחת בחשבון שהדבר יכול לגרום לעסקה שלא תאושר ברגע שיש יותר ביקוש לעסקאות ביטקוין מאשר הרשת יכולה לעבד. </translation>
+        <translation>כאשר יש פחות נפח עסקאות מאשר מקום בבלוק, כורים וכן צמתות מקשרות יכולות להכתיב עמלות מינימום. התשלום של עמלת מינימום הנו תקין, אך יש לקחת בחשבון שהדבר יכול לגרום לעסקה שלא תאושר ברגע שיש יותר ביקוש לעסקאות ביטקוין מאשר הרשת יכולה לעבד.</translation>
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
@@ -2341,10 +2237,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>יצירת ההעברה נכשלה!</translation>
     </message>
     <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>ההעברה נדחתה מהסיבות הבאות: %1</translation>
-    </message>
-    <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>עמלה מעל לסכום של %1 נחשבת לעמלה גבוהה באופן מוגזם.</translation>
     </message>
@@ -2394,10 +2286,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Choose previously used address</source>
         <translation>בחירת כתובת שהייתה בשימוש</translation>
-    </message>
-    <message>
-        <source>This is a normal payment.</source>
-        <translation>זהו תשלום רגיל.</translation>
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
@@ -2458,17 +2346,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Memo:</source>
         <translation>תזכורת:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>נא להזין תווית לכתובת זו כדי להוסיף אותה לספר הכתובות שלך</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>כן</translation>
     </message>
 </context>
 <context>
@@ -3198,10 +3075,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>גיזום: הסינכרון האחרון של הארנק עובר את היקף הנתונים שנגזמו. יש לבצע חידוש אידקסציה (נא להוריד את כל שרשרת הבלוקים שוב במקרה של צומת מקוצצת)</translation>
     </message>
     <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>סריקה מחודשת אינה אפשרית בצומת מקוצצת. יש להשתמש באינדקסציה מחודשת reindex- אשר תוריד את כל שרשרת הבלוקים מחדש.</translation>
-    </message>
-    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>שגיאה: סניה קלמה קריטית פנימית קרטה, פנה ל debug.log לפרטים</translation>
     </message>
@@ -3255,7 +3128,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
-        <translation> שידור-חוזר של הבלוקים לא הצליח. תצטרכו לבצע בנייה מחדש של מאגר הנתונים באמצעות הדגל reindex-chainstate-.</translation>
+        <translation>שידור-חוזר של הבלוקים לא הצליח. תצטרכו לבצע בנייה מחדש של מאגר הנתונים באמצעות הדגל reindex-chainstate-.</translation>
     </message>
     <message>
         <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
@@ -3382,6 +3255,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>טעינת כתובות P2P...</translation>
     </message>
     <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>שגיאה: שטח הדיסק נמוך מדי!
+ </translation>
+    </message>
+    <message>
         <source>Loading banlist...</source>
         <translation>טוען רשימת חסומים...</translation>
     </message>
@@ -3495,7 +3373,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Section [%s] is not recognized.</source>
-        <translation> הפסקה [%s] אינה מזוהה.</translation>
+        <translation>הפסקה [%s] אינה מזוהה.</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -3566,10 +3444,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>זוהי עמלת העסקה שתוכל לשלם כאשר אמדן גובה העמלה אינו זמין.</translation>
-    </message>
-    <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>מוצר זה כולל תוכנה שפותחה בפרויקט OpenSSL לטובת השימוש ב OpenSSL Toolkit %s ותוכנת קריפטוגרפיה שנכתבה ע"י   Eric Young ותוכנת UPnP שנכתבה ע"יי Thomas Bernard.</translation>
     </message>
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>

@@ -126,7 +126,7 @@
     <name>CoinControlDialog</name>
     <message>
         <source>Amount</source>
-        <translation>Marii </translation>
+        <translation>Marii</translation>
     </message>
     <message>
         <source>Date</source>
@@ -184,7 +184,7 @@
     <name>QObject</name>
     <message>
         <source>Amount</source>
-        <translation>Marii </translation>
+        <translation>Marii</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
@@ -212,7 +212,7 @@
     </message>
     <message>
         <source>N/A</source>
-        <translation>Hapana </translation>
+        <translation>Hapana</translation>
     </message>
     </context>
 <context>
@@ -222,7 +222,7 @@
     <name>RPCConsole</name>
     <message>
         <source>N/A</source>
-        <translation>Hapana </translation>
+        <translation>Hapana</translation>
     </message>
     </context>
 <context>
@@ -236,7 +236,7 @@
     </message>
     <message>
         <source>Amount</source>
-        <translation>Marii </translation>
+        <translation>Marii</translation>
     </message>
     <message>
         <source>Label</source>
@@ -273,9 +273,6 @@
     <name>SendCoinsEntry</name>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
-    </context>
-<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
@@ -292,7 +289,7 @@
     </message>
     <message>
         <source>Amount</source>
-        <translation>Marii </translation>
+        <translation>Marii</translation>
     </message>
     </context>
 <context>
