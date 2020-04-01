@@ -1117,6 +1117,7 @@ static UniValue mine(const JSONRPCRequest& request)
         while(nMaxTries > 0 && clock() - begin < duration * CLOCKS_PER_SEC && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
           ++pblock->nNonce;
           ++numHashes;
+          --nMaxTries;
         }
       } else if(unit == "clock" || unit == "clocks") {
         begin = clock(); // Start timer
