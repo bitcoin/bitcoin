@@ -156,7 +156,7 @@
         <translation>確認錢包加密</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR SYSCOINS&lt;/b&gt;!</source>
         <translation>警告: 如果你將錢包加密後又忘記密碼，你就會&lt;b&gt;失去所有 Syscoin 了&lt;/b&gt;！</translation>
     </message>
     <message>
@@ -304,14 +304,6 @@
     <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>改變錢包加密用的密碼</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>除錯視窗 &amp;D</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>開啓除錯和診斷主控台</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -523,10 +515,6 @@
         <translation>資訊 &amp;I</translation>
     </message>
     <message>
-        <source>Debug window</source>
-        <translation>除錯視窗</translation>
-    </message>
-    <message>
         <source>General</source>
         <translation>一般</translation>
     </message>
@@ -581,9 +569,6 @@
 </context>
 <context>
     <name>SendCoinsEntry</name>
-    </context>
-<context>
-    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
