@@ -64,8 +64,7 @@ class FilterTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info('Add filtered P2P connection to the node')
         filter_node = self.nodes[0].add_p2p_connection(FilterNode())
-        filter_node.send_message(filter_node.watch_filter_init)
-        filter_node.sync_with_ping()
+        filter_node.send_and_ping(filter_node.watch_filter_init)
         filter_address = self.nodes[0].decodescript(filter_node.watch_script_pubkey)['addresses'][0]
 
         self.log.info('Check that we receive merkleblock and tx if the filter matches a tx in a block')
@@ -99,8 +98,7 @@ class FilterTest(BitcoinTestFramework):
         assert not filter_node.merkleblock_received
 
         self.log.info('Check that after deleting filter all txs get relayed again')
-        filter_node.send_message(msg_filterclear())
-        filter_node.sync_with_ping()
+        filter_node.send_and_ping(msg_filterclear())
         for _ in range(5):
             txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 7)
             filter_node.wait_for_tx(txid)
