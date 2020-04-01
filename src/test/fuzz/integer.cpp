@@ -267,4 +267,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         catch (const std::ios_base::failure&) {
         }
     }
+
+    {
+        CScriptNum::serialize(i64);
+    }
 }
