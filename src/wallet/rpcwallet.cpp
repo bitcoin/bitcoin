@@ -38,6 +38,7 @@
 
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
+static const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
 
 static inline bool GetAvoidReuseFlag(const CWallet* const pwallet, const UniValue& param) {
     bool can_avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
@@ -96,13 +97,6 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
 
     std::vector<std::shared_ptr<CWallet>> wallets = GetWallets();
     return wallets.size() == 1 || (request.fHelp && wallets.size() > 0) ? wallets[0] : nullptr;
-}
-
-std::string HelpRequiringPassphrase(const CWallet* pwallet)
-{
-    return pwallet && pwallet->IsCrypted()
-        ? "\nRequires wallet passphrase to be set with walletpassphrase call."
-        : "";
 }
 
 bool EnsureWalletIsAvailable(const CWallet* pwallet, bool avoidException)
@@ -369,7 +363,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
 
             RPCHelpMan{"sendtoaddress",
                 "\nSend an amount to a given address." +
-                    HelpRequiringPassphrase(pwallet) + "\n",
+        HELP_REQUIRING_PASSPHRASE,
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to send to."},
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
@@ -527,7 +521,7 @@ static UniValue signmessage(const JSONRPCRequest& request)
 
             RPCHelpMan{"signmessage",
                 "\nSign a message with the private key of an address" +
-                    HelpRequiringPassphrase(pwallet) + "\n",
+        HELP_REQUIRING_PASSPHRASE,
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to use for the private key."},
                     {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message to create a signature of."},
@@ -810,7 +804,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
 
     RPCHelpMan{"sendmany",
                 "\nSend multiple times. Amounts are double-precision floating point numbers." +
-                    HelpRequiringPassphrase(pwallet) + "\n",
+        HELP_REQUIRING_PASSPHRASE,
                 {
                     {"dummy", RPCArg::Type::STR, RPCArg::Optional::NO, "Must be set to \"\" for backwards compatibility.", "\"\""},
                     {"amounts", RPCArg::Type::OBJ, RPCArg::Optional::NO, "The addresses and amounts",
@@ -1851,7 +1845,7 @@ static UniValue keypoolrefill(const JSONRPCRequest& request)
 
             RPCHelpMan{"keypoolrefill",
                 "\nFills the keypool."+
-                    HelpRequiringPassphrase(pwallet) + "\n",
+        HELP_REQUIRING_PASSPHRASE,
                 {
                     {"newsize", RPCArg::Type::NUM, /* default */ "100", "The new keypool size"},
                 },
@@ -3245,7 +3239,7 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
                 "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
                 "The second optional argument (may be null) is an array of previous transaction outputs that\n"
                 "this transaction depends on but may not yet be in the block chain." +
-                    HelpRequiringPassphrase(pwallet) + "\n",
+        HELP_REQUIRING_PASSPHRASE,
                 {
                     {"hexstring", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction hex string"},
                     {"prevtxs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The previous dependent transaction outputs",
@@ -3980,7 +3974,7 @@ UniValue sethdseed(const JSONRPCRequest& request)
                 "\nSet or generate a new HD wallet seed. Non-HD wallets will not be upgraded to being a HD wallet. Wallets that are already\n"
                 "HD will have a new HD seed set so that new keys added to the keypool will be derived from this new seed.\n"
                 "\nNote that you will need to MAKE A NEW BACKUP of your wallet after setting the HD wallet seed." +
-                    HelpRequiringPassphrase(pwallet) + "\n",
+        HELP_REQUIRING_PASSPHRASE,
                 {
                     {"newkeypool", RPCArg::Type::BOOL, /* default */ "true", "Whether to flush old unused addresses, including change addresses, from the keypool and regenerate it.\n"
             "                             If true, the next address from getnewaddress and change address from getrawchangeaddress will be from this new seed.\n"
@@ -4057,7 +4051,7 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
             RPCHelpMan{"walletprocesspsbt",
                 "\nUpdate a PSBT with input information from our wallet and then sign inputs\n"
                 "that we can sign for." +
-                    HelpRequiringPassphrase(pwallet) + "\n",
+        HELP_REQUIRING_PASSPHRASE,
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
                     {"sign", RPCArg::Type::BOOL, /* default */ "true", "Also sign the transaction when updating"},
