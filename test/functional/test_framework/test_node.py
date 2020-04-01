@@ -475,7 +475,7 @@ class TestNode():
                     assert_msg = "bitcoind should have exited with expected error " + expected_msg
                 self._raise_assertion_error(assert_msg)
 
-    def add_p2p_connection(self, p2p_conn, *, wait_for_verack=True, **kwargs):
+    def add_p2p_connection(self, p2p_conn, *, wait_for_verack=True, sync_with_ping=True, **kwargs):
         """Add a p2p connection to the node.
 
         This method adds the p2p connection to the self.p2ps list and also
@@ -500,7 +500,11 @@ class TestNode():
             #
             # So syncing here is redundant when we only want to send a message, but the cost is low (a few milliseconds)
             # in comparision to the upside of making tests less fragile and unexpected intermittent errors less likely.
-            p2p_conn.sync_with_ping()
+            #
+            # If a caller needs to open a partial connection for testing purposes or follows this call with send_with_ping
+            # (or send_message + sync_with_ping), it may avoid syncing here by passing sync_with_ping=False.
+            if sync_with_ping:
+                p2p_conn.sync_with_ping()
 
         return p2p_conn
 
