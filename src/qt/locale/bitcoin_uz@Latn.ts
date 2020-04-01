@@ -1,13 +1,41 @@
-<TS language="yo" version="2.1">
+<TS language="uz@Latn" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Create a new address</source>
+        <translation>Yangi manzil yaratish</translation>
+    </message>
+    <message>
         <source>&amp;New</source>
-        <translation>&amp;ati tuntun</translation>
+        <translation>&amp;Yangi</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;Nusxalash</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>Yo&amp;pish</translation>
+    </message>
+    <message>
+        <source>&amp;Delete</source>
+        <translation>&amp;O'chirish</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Manzillarni nusxalash</translation>
     </message>
     </context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Yorliq</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Manzil</translation>
+    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -17,29 +45,9 @@
     </context>
 <context>
     <name>BitcoinGUI</name>
-    <message>
-        <source>Open Wallet</source>
-        <translation>sii apamowo</translation>
-    </message>
-    <message>
-        <source>Open a wallet</source>
-        <translation>sii apamowo</translation>
-    </message>
-    <message>
-        <source>Close Wallet...</source>
-        <translation>ti apamowo</translation>
-    </message>
-    <message>
-        <source>Close wallet</source>
-        <translation>Ti Apamowo</translation>
-    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
-    <message>
-        <source>Date</source>
-        <translation>Ojo</translation>
-    </message>
     </context>
 <context>
     <name>CreateWalletActivity</name>
@@ -52,20 +60,12 @@
     </context>
 <context>
     <name>FreespaceChecker</name>
-    <message>
-        <source>name</source>
-        <translation>oruko</translation>
-    </message>
     </context>
 <context>
     <name>HelpMessageDialog</name>
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Welcome</source>
-        <translation>Ka bo</translation>
-    </message>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -78,10 +78,6 @@
     </context>
 <context>
     <name>OptionsDialog</name>
-    <message>
-        <source>&amp;OK</source>
-        <translation>&amp;o da</translation>
-    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -97,21 +93,9 @@
     </context>
 <context>
     <name>QRImageWidget</name>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>fi aworan &amp;pamo</translation>
-    </message>
     </context>
 <context>
     <name>RPCConsole</name>
-    <message>
-        <source>Name</source>
-        <translation>Oruko</translation>
-    </message>
-    <message>
-        <source>1 &amp;year</source>
-        <translation>okan ati &amp;odun</translation>
-    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -119,15 +103,19 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>fi aworan &amp;pamo</translation>
+        <source>Address</source>
+        <translation>Manzil</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Yorliq</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
-        <source>Date</source>
-        <translation>Ojo</translation>
+        <source>Label</source>
+        <translation>Yorliq</translation>
     </message>
     </context>
 <context>
@@ -147,14 +135,6 @@
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message>
-        <source>Date</source>
-        <translation>Ojo</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation>wo nikan</translation>
-    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -162,23 +142,19 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <source>Date</source>
-        <translation>Ojo</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation>wo nikan</translation>
+        <source>Label</source>
+        <translation>Yorliq</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
-        <source>This year</source>
-        <translation>Odun yi</translation>
+        <source>Label</source>
+        <translation>Yorliq</translation>
     </message>
     <message>
-        <source>Date</source>
-        <translation>Ojo</translation>
+        <source>Address</source>
+        <translation>Manzil</translation>
     </message>
     </context>
 <context>
@@ -186,10 +162,6 @@
     </context>
 <context>
     <name>WalletController</name>
-    <message>
-        <source>Close wallet</source>
-        <translation>Ti Apamowo</translation>
-    </message>
     </context>
 <context>
     <name>WalletFrame</name>
