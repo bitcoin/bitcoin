@@ -1386,7 +1386,7 @@ class FullBlockTest(BitcoinTestFramework):
         """Add a P2P connection to the node.
 
         Helper to connect and wait for version handshake."""
-        self.nodes[0].add_p2p_connection(P2PDataStore())
+        self.nodes[0].add_p2p_connection(P2PDataStore(), sync_with_ping=False)
         # We need to wait for the initial getheaders from the peer before we
         # start populating our blockstore. If we don't, then we may run ahead
         # to the next subtest before we receive the getheaders. We'd then send

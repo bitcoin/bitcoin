@@ -65,15 +65,15 @@ class FilterTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        filter_node = self.nodes[0].add_p2p_connection(FilterNode())
+        filter_node = self.nodes[0].add_p2p_connection(FilterNode(), sync_with_ping=False)
 
-        self.log.info('Check that too large filter is rejected')
+        self.log.info('Check that too-large filter is rejected')
         with self.nodes[0].assert_debug_log(['Misbehaving']):
             filter_node.send_and_ping(msg_filterload(data=b'\xaa', nHashFuncs=MAX_BLOOM_HASH_FUNCS+1))
         with self.nodes[0].assert_debug_log(['Misbehaving']):
             filter_node.send_and_ping(msg_filterload(data=b'\xbb'*(MAX_BLOOM_FILTER_SIZE+1)))
 
-        self.log.info('Check that too large data element to add to the filter is rejected')
+        self.log.info('Check that too-large data element to add to the filter is rejected')
         with self.nodes[0].assert_debug_log(['Misbehaving']):
             filter_node.send_and_ping(msg_filteradd(data=b'\xcc'*(MAX_SCRIPT_ELEMENT_SIZE+1)))
 

@@ -81,9 +81,9 @@ class AcceptBlockTest(BitcoinTestFramework):
     def run_test(self):
         # Setup the p2p connections
         # test_node connects to node0 (not whitelisted)
-        test_node = self.nodes[0].add_p2p_connection(P2PInterface())
+        test_node = self.nodes[0].add_p2p_connection(P2PInterface(), sync_with_ping=False)
         # min_work_node connects to node1 (whitelisted)
-        min_work_node = self.nodes[1].add_p2p_connection(P2PInterface())
+        min_work_node = self.nodes[1].add_p2p_connection(P2PInterface(), sync_with_ping=False)
 
         # 1. Have nodes mine a block (leave IBD)
         [n.generatetoaddress(1, n.get_deterministic_priv_key().address) for n in self.nodes]
@@ -198,7 +198,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
         self.nodes[1].disconnect_p2ps()
 
-        test_node = self.nodes[0].add_p2p_connection(P2PInterface())
+        test_node = self.nodes[0].add_p2p_connection(P2PInterface(), sync_with_ping=False)
 
         test_node.send_and_ping(msg_block(block_h1f))
         assert_equal(self.nodes[0].getblockcount(), 2)

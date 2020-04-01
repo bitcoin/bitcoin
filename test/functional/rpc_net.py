@@ -140,7 +140,7 @@ class NetTest(BitcoinTestFramework):
             assert_net_servicesnames(int(info[0]["services"], 0x10), info[0]["servicesnames"])
 
     def _test_getnodeaddresses(self):
-        self.nodes[0].add_p2p_connection(P2PInterface())
+        self.nodes[0].add_p2p_connection(P2PInterface(), sync_with_ping=False)
 
         # send some addresses to the node via the p2p message addr
         msg = msg_addr()

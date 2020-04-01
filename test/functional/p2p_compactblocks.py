@@ -796,9 +796,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     def run_test(self):
         # Setup the p2p connections
-        self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=2))
-        self.old_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=1), services=NODE_NETWORK)
-        self.additional_segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=2))
+        self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=2), sync_with_ping=False)
+        self.old_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=1), services=NODE_NETWORK, sync_with_ping=False)
+        self.additional_segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=2), sync_with_ping=False)
 
         # We will need UTXOs to construct transactions in later tests.
         self.make_utxos()

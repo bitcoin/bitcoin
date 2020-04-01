@@ -55,8 +55,8 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
         node = self.nodes[0]
         self.node = node
-        node.add_p2p_connection(P2PDataStore())
-        conn2 = node.add_p2p_connection(P2PDataStore())
+        node.add_p2p_connection(P2PDataStore(), sync_with_ping=False)
+        conn2 = node.add_p2p_connection(P2PDataStore(), sync_with_ping=False)
 
         msg_limit = 4 * 1000 * 1000  # 4MB, per MAX_PROTOCOL_MESSAGE_LENGTH
         valid_data_limit = msg_limit - 5  # Account for the 4-byte length prefix
@@ -163,7 +163,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             self.nodes[0].disconnect_p2ps()
 
     def test_checksum(self):
-        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
+        conn = self.nodes[0].add_p2p_connection(P2PDataStore(), sync_with_ping=False)
         with self.nodes[0].assert_debug_log(['CHECKSUM ERROR (badmsg, 2 bytes), expected 78df0a04 was ffffffff']):
             msg = conn.build_message(msg_unrecognized(str_data="d"))
             cut_len = (
@@ -192,7 +192,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             self.nodes[0].disconnect_p2ps()
 
     def test_msgtype(self):
-        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
+        conn = self.nodes[0].add_p2p_connection(P2PDataStore(), sync_with_ping=False)
         with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: ERRORS IN HEADER']):
             msg = msg_unrecognized(str_data="d")
             msg.msgtype = b'\xff' * 12

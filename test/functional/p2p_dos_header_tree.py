@@ -46,7 +46,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.headers_fork = [FromHex(CBlockHeader(), h) for h in self.headers_fork]
 
         self.log.info("Feed all non-fork headers, including and up to the first checkpoint")
-        self.nodes[0].add_p2p_connection(P2PInterface())
+        self.nodes[0].add_p2p_connection(P2PInterface(), sync_with_ping=False)
         self.nodes[0].p2p.send_and_ping(msg_headers(self.headers))
         assert {
             'height': 546,
@@ -63,7 +63,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.log.info("Feed all fork headers (succeeds without checkpoint)")
         # On node 0 it succeeds because checkpoints are disabled
         self.restart_node(0, extra_args=['-nocheckpoints'])
-        self.nodes[0].add_p2p_connection(P2PInterface())
+        self.nodes[0].add_p2p_connection(P2PInterface(), sync_with_ping=False)
         self.nodes[0].p2p.send_and_ping(msg_headers(self.headers_fork))
         assert {
             "height": 2,
@@ -73,7 +73,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         } in self.nodes[0].getchaintips()
 
         # On node 1 it succeeds because no checkpoint has been reached yet by a chain tip
-        self.nodes[1].add_p2p_connection(P2PInterface())
+        self.nodes[1].add_p2p_connection(P2PInterface(), sync_with_ping=False)
         self.nodes[1].p2p.send_and_ping(msg_headers(self.headers_fork))
         assert {
             "height": 2,
