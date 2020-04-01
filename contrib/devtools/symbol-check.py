@@ -101,7 +101,7 @@ MACHO_ALLOWED_LIBRARIES = {
 'libobjc.A.dylib', # Objective-C runtime library
 }
 
-PE_ALLOWED_LIBRARIES = {
+PE_ALLOWED_LIBRARIES = {libname.lower() for libname in (
 'ADVAPI32.dll', # security & registry
 'IPHLPAPI.DLL', # IP helper API
 'KERNEL32.dll', # win32 base APIs
@@ -119,7 +119,7 @@ PE_ALLOWED_LIBRARIES = {
 'UxTheme.dll',
 'VERSION.dll', # version checking
 'WINMM.dll', # WinMM audio API
-}
+)}
 
 class CPPFilt(object):
     '''
@@ -253,7 +253,7 @@ def pe_read_libraries(filename) -> List[str]:
 def check_PE_libraries(filename) -> bool:
     ok = True
     for dylib in pe_read_libraries(filename):
-        if dylib not in PE_ALLOWED_LIBRARIES:
+        if dylib.lower() not in PE_ALLOWED_LIBRARIES:
             print('{} is not in ALLOWED_LIBRARIES!'.format(dylib))
             ok = False
     return ok
