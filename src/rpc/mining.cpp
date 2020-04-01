@@ -1029,8 +1029,8 @@ static UniValue mine(const JSONRPCRequest& request)
                 {
                     {"duration", RPCArg::Type::STR, RPCArg::Optional::NO, "Duration"},
                     {"times/seconds/clocks", RPCArg::Type::STR, RPCArg::Optional::NO, "Unit"},
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated bitcoin to."},
-                    {"use_random", RPCArg::Type::STR, RPCArg::Optional::NO, "(true/false) Generate random nonces, or increment from zero."},
+                    {"address", RPCArg::Type::STR, /* optional */ true, "The address to send the newly generated bitcoin to."},
+                    {"use_random", RPCArg::Type::STR, /* optional */ true, "(true/false) Generate random nonces, or increment from zero."},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "hashes of blocks generated",
@@ -1038,7 +1038,7 @@ static UniValue mine(const JSONRPCRequest& request)
                         {RPCResult::Type::STR_HEX, "", "blockhash"},
                     }},
                 RPCExamples{
-            "\nMine for 5 seconds to myaddress using random nonces\n"
+            "\nMine for 5 seconds to 1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc\n"
             + HelpExampleCli("mine", "5 seconds \"myaddress\" true")
             + "If you are running the bitcoin core wallet, you can get a new address to send the newly generated bitcoin to with:\n"
             + HelpExampleCli("getnewaddress", "")
@@ -1053,7 +1053,12 @@ static UniValue mine(const JSONRPCRequest& request)
 
     std::string unit = request.params[1].get_str();
 
-    CTxDestination destination = DecodeDestination(request.params[2].get_str());
+    std::string address = "1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc";
+    if (!request.params[2].isNull()) {
+        address = request.params[2].get_str();
+    }
+    CTxDestination destination = DecodeDestination(address);
+
     if (!IsValidDestination(destination)) {
       throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
     }
