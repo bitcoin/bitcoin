@@ -100,9 +100,9 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum("sign", 100, id, msgHash)
         wait_for_sigs(True, False, True, 15)
 
-        id = "0000000000000000000000000000000000000000000000000000000000000002"
-
         if self.options.spork21:
+            id = "0000000000000000000000000000000000000000000000000000000000000002"
+
             # Isolate the node that is responsible for the recovery of a signature and assert that recovery fails
             q = self.nodes[0].quorum('selectquorum', 100, id)
             mn = self.get_mninfo(q['recoveryMembers'][0])
