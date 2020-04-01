@@ -114,6 +114,8 @@ class AuthServiceProxy():
             return self._get_response()
         except OSError as e:
             retry = (
+                '[WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted'
+                in str(e) or
                 '[WinError 10053] An established connection was aborted by the software in your host machine' in str(e))
             if retry:
                 self.__conn.close()

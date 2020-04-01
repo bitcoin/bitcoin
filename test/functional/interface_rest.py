@@ -60,11 +60,26 @@ class RESTTest (BitcoinTestFramework):
 
         conn = http.client.HTTPConnection(self.url.hostname, self.url.port)
         self.log.debug('%s %s %s', http_method, rest_uri, body)
-        if http_method == 'GET':
-            conn.request('GET', rest_uri)
-        elif http_method == 'POST':
-            conn.request('POST', rest_uri, body)
-        resp = conn.getresponse()
+
+        def request():
+            if http_method == 'GET':
+                conn.request('GET', rest_uri)
+            elif http_method == 'POST':
+                conn.request('POST', rest_uri, body)
+            return conn.getresponse()
+
+        try:
+            resp = request()
+        except OSError as e:
+            retry = (
+                '[WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted'
+                in str(e) or
+                '[WinError 10053] An established connection was aborted by the software in your host machine' in str(e))
+            if retry:
+                conn.close()
+                resp = request()
+            else:
+                raise
 
         assert_equal(resp.status, status)
 
