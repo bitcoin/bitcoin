@@ -9,6 +9,8 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
+#include <assert.h>
+
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString()/*.substr(0,10)*/, n);
@@ -99,10 +101,11 @@ CAmount CTransaction::GetValueOut() const
 {
     CAmount nValueOut = 0;
     for (const auto& tx_out : vout) {
-        nValueOut += tx_out.nValue;
-        if (!MoneyRange(tx_out.nValue) || !MoneyRange(nValueOut))
+        if (!MoneyRange(tx_out.nValue) || !MoneyRange(nValueOut + tx_out.nValue))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
+        nValueOut += tx_out.nValue;
     }
+    assert(MoneyRange(nValueOut));
     return nValueOut;
 }
 
