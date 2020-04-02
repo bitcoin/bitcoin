@@ -1029,8 +1029,8 @@ static UniValue mine(const JSONRPCRequest& request)
                 {
                     {"duration", RPCArg::Type::STR, RPCArg::Optional::NO, "Duration"},
                     {"times/seconds/clocks", RPCArg::Type::STR, RPCArg::Optional::NO, "Unit"},
-                    {"address", RPCArg::Type::STR, /* optional */ true, "The address to send the newly generated bitcoin to."},
-                    {"use_random", RPCArg::Type::STR, /* optional */ true, "(true/false) Generate random nonces, or increment from zero."},
+                    {"address", RPCArg::Type::STR, /* optional */ "1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc", "The address to send the newly generated bitcoin to."},
+                    {"use_random", RPCArg::Type::STR, /* optional */ false, "(true/false) Generate random nonces, or increment from zero."},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "hashes of blocks generated",
@@ -1053,10 +1053,7 @@ static UniValue mine(const JSONRPCRequest& request)
 
     std::string unit = request.params[1].get_str();
 
-    std::string address = "1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc";
-    if (!request.params[2].isNull()) {
-        address = request.params[2].get_str();
-    }
+    std::string address = request.params[2].get_str();
     CTxDestination destination = DecodeDestination(address);
 
     if (!IsValidDestination(destination)) {
@@ -1064,10 +1061,7 @@ static UniValue mine(const JSONRPCRequest& request)
     }
 
     std::string useRandomStr = request.params[3].get_str();
-    bool useRandom = false;
-    if (!request.params[3].isNull()) {
-      useRandom = (useRandomStr == "true");
-    }
+    bool useRandom = (useRandomStr == "true");
 
     const CTxMemPool& mempool = EnsureMemPool();
 
