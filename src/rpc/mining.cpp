@@ -1032,11 +1032,7 @@ static UniValue mine(const JSONRPCRequest& request)
                     {"address", RPCArg::Type::STR, /* optional */ "1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc", "The address to send the newly generated bitcoin to."},
                     {"use_random", RPCArg::Type::STR, /* optional */ "false", "(true/false) Generate random nonces, or increment from zero."},
                 },
-                RPCResult{
-                    RPCResult::Type::ARR, "", "hashes of blocks generated",
-                    {
-                        {RPCResult::Type::STR_HEX, "", "blockhash"},
-                    }},
+                RPCResults{},
                 RPCExamples{
             "\nMine for 5 seconds to 1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc\n"
             + HelpExampleCli("mine", "5 seconds \"myaddress\" true")
