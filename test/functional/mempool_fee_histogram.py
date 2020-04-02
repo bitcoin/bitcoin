@@ -54,7 +54,7 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         (non_empty_groups, empty_groups, total_fees) = self.histogram_stats(info['fee_histogram'])
         assert_equal(1, non_empty_groups)
         assert_equal(3, empty_groups)
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['5']['count'])
+        assert_equal(1, info['fee_histogram']['5']['count'])
         assert_equal(total_fees, info['fee_histogram']['total_fees'])
 
         self.log.info("Send tx2 transaction with 14 sat/vB fee rate (spends tx1 utxo)")
@@ -67,7 +67,7 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         (non_empty_groups, empty_groups, total_fees) = self.histogram_stats(info['fee_histogram'])
         assert_equal(1, non_empty_groups)
         assert_equal(14, empty_groups)
-        assert_equal(2, info['fee_histogram']['fee_rate_groups']['8']['count'])
+        assert_equal(2, info['fee_histogram']['8']['count'])
         assert_equal(total_fees, info['fee_histogram']['total_fees'])
 
         # Unlock the second UTXO which we locked
@@ -83,9 +83,9 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         (non_empty_groups, empty_groups, total_fees) = self.histogram_stats(info['fee_histogram'])
         assert_equal(3, non_empty_groups)
         assert_equal(12, empty_groups)
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['6']['count'])
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['7']['count'])
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['8']['count'])
+        assert_equal(1, info['fee_histogram']['6']['count'])
+        assert_equal(1, info['fee_histogram']['7']['count'])
+        assert_equal(1, info['fee_histogram']['8']['count'])
         assert_equal(total_fees, info['fee_histogram']['total_fees'])
 
         self.log.info("Test fee rate histogram with default groups")
@@ -95,9 +95,9 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         (non_empty_groups, empty_groups, total_fees) = self.histogram_stats(info['fee_histogram'])
         assert_equal(3, non_empty_groups)
         assert_equal(42, empty_groups)
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['6']['count'])
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['7']['count'])
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['8']['count'])
+        assert_equal(1, info['fee_histogram']['6']['count'])
+        assert_equal(1, info['fee_histogram']['7']['count'])
+        assert_equal(1, info['fee_histogram']['8']['count'])
         assert_equal(total_fees, info['fee_histogram']['total_fees'])
 
         self.log.info("Test getmempoolinfo(with_fee_histogram=False) does not return fee histogram")
@@ -109,16 +109,23 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         empty_count = 0
         non_empty_count = 0
 
-        for key, bin in histogram['fee_rate_groups'].items():
-            assert_equal(int(key), bin['from'])
+        for key, bin in histogram.items():
+            if key == 'total_fees':
+                continue
+            assert_equal(int(key), bin['from_feerate'])
             if bin['fees'] > 0:
                 assert_greater_than(bin['count'], 0)
             else:
                 assert_equal(bin['count'], 0)
             assert_greater_than_or_equal(bin['fees'], 0)
-            assert_greater_than_or_equal(bin['size'], 0)
-            if bin['to'] is not None:
-                assert_greater_than_or_equal(bin['to'], bin['from'])
+            assert_greater_than_or_equal(bin['sizes'], 0)
+            if bin['to_feerate'] is not None:
+                assert_greater_than_or_equal(bin['to_feerate'], bin['from_feerate'])
+                for next_key in sorted((*(int(a) for a in histogram.keys() if a != 'total_fees'), 0x7fffffffffffffff)):
+                    if int(next_key) <= int(key):
+                        continue
+                    assert_equal(bin['to_feerate'], int(next_key))
+                    break
             total_fees += bin['fees']
 
             if bin['count'] == 0:
