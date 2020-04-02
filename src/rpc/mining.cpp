@@ -37,6 +37,9 @@
 #include <memory>
 #include <stdint.h>
 
+#include <chrono> // Cybersecurity Lab
+#include <thread> // Cybersecurity Lab
+
 /**
  * Return average network hashes per second based on the last 'lookup' blocks,
  * or from the last difficulty change if 'lookup' is nonpositive.
@@ -1029,13 +1032,13 @@ static UniValue mine(const JSONRPCRequest& request)
                 {
                     {"duration", RPCArg::Type::STR, RPCArg::Optional::NO, "Duration"},
                     {"times/seconds/clocks", RPCArg::Type::STR, RPCArg::Optional::NO, "Unit"},
+                    {"delayBetweenNonces", RPCArg::Type::STR, /* optional */ "0", "Delay in microseconds between each nonce"},
                     {"address", RPCArg::Type::STR, /* optional */ "1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc", "The address to send the newly generated bitcoin to."},
-                    {"use_random", RPCArg::Type::STR, /* optional */ "false", "(true/false) Generate random nonces, or increment from zero."},
                 },
                 RPCResults{},
                 RPCExamples{
             "\nMine for 5 seconds to 1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc\n"
-            + HelpExampleCli("mine", "5 seconds \"myaddress\" true")
+            + HelpExampleCli("mine", "5 seconds)
             + "If you are running the bitcoin core wallet, you can get a new address to send the newly generated bitcoin to with:\n"
             + HelpExampleCli("getnewaddress", "")
                 },
@@ -1049,21 +1052,23 @@ static UniValue mine(const JSONRPCRequest& request)
 
     std::string unit = request.params[1].get_str();
 
+    unsigned int delayBetweenNonces = 0;
+    if(!requests.params[2].isNull()) {
+      std::string delayBetweenNoncesStr = request.params[2].get_str();
+      try {
+        delayBetweenNonces = std::stoi(delayBetweenNoncesStr);
+      } catch(...){}
+    }
+
     std::string address = "1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc";
-    if(!request.params[2].isNull()) {
-      address = request.params[2].get_str();
+    if(!request.params[3].isNull()) {
+      address = request.params[3].get_str();
     }
     CTxDestination destination = DecodeDestination(address);
 
     if (!IsValidDestination(destination)) {
       throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
     }
-
-    std::string useRandomStr = "false";
-    if(!request.params[3].isNull()) {
-      useRandomStr = request.params[3].get_str();
-    }
-    bool useRandom = (useRandomStr == "true");
 
     const CTxMemPool& mempool = EnsureMemPool();
 
@@ -1086,59 +1091,39 @@ static UniValue mine(const JSONRPCRequest& request)
     }
     int numHashes = 0;
     clock_t begin;
-    if(useRandom) { // Random nonce selection
-      if(unit == "time" || unit == "times") {
-        begin = clock(); // Start timer
-        unsigned int nMaxTries = duration;
+    if(unit == "time" || unit == "times") {
+      begin = clock(); // Start timer
+      unsigned int nMaxTries = duration;
+      if(delayBetweenNonces == 0) {
         while(nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
           GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
           --nMaxTries;
         }
-      } else if(unit == "clock" || unit == "clocks") {
-        begin = clock(); // Start timer
-        while(clock() - begin < duration && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
-          GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
-          ++numHashes;
-        }
-      } else if(unit == "second" || unit == "seconds") {
-        begin = clock(); // Start timer
-        unsigned int durationClocks = duration * CLOCKS_PER_SEC;
-        while(clock() - begin < durationClocks && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
-          GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
-          ++numHashes;
-        }
       } else {
-        result.pushKV("ERROR", "Unit of measurement unknown");
-        return result;
-      }
-
-    } else { // Incremental nonce selection
-      if(unit == "time" || unit == "times") {
-        begin = clock(); // Start timer
-        unsigned int nMaxTries = duration;
         while(nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
-          ++pblock->nNonce;
+          GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
           --nMaxTries;
+          this_thread::sleep_for(delayBetweenNonces);
         }
-      } else if(unit == "clock" || unit == "clocks") {
-        begin = clock(); // Start timer
-        while(clock() - begin < duration && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
-          ++pblock->nNonce;
-          ++numHashes;
-        }
-      } else if(unit == "second" || unit == "seconds") {
-        begin = clock(); // Start timer
-        unsigned int durationClocks = duration * CLOCKS_PER_SEC;
-        while(clock() - begin < durationClocks && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
-          ++pblock->nNonce;
-          ++numHashes;
-        }
-      } else {
-        result.pushKV("ERROR", "Unit of measurement unknown");
-        return result;
       }
+    } else if(unit == "clock" || unit == "clocks") {
+      begin = clock(); // Start timer
+      while(clock() - begin < duration && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+        GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
+        ++numHashes;
+      }
+    } else if(unit == "second" || unit == "seconds") {
+      begin = clock(); // Start timer
+      unsigned int durationClocks = duration * CLOCKS_PER_SEC;
+      while(clock() - begin < durationClocks && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+        GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
+        ++numHashes;
+      }
+    } else {
+      result.pushKV("ERROR", "Unit of measurement unknown");
+      return result;
     }
     clock_t end = clock(); // End timer
     double elapsedTime = (double)(end - begin) / CLOCKS_PER_SEC;
