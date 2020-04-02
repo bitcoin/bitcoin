@@ -307,8 +307,7 @@ class SendHeadersTest(BitcoinTestFramework):
                 new_block.solve()
                 test_node.send_header_for_blocks([new_block])
                 test_node.wait_for_getdata([new_block.sha256])
-                test_node.send_message(msg_block(new_block))
-                test_node.sync_with_ping()  # make sure this block is processed
+                test_node.send_and_ping(msg_block(new_block))  # make sure this block is processed
                 wait_until(lambda: inv_node.block_announced, timeout=60, lock=mininode_lock)
                 inv_node.clear_block_announcements()
                 test_node.clear_block_announcements()
