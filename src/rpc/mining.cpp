@@ -1105,7 +1105,7 @@ static UniValue mine(const JSONRPCRequest& request)
           GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
           --nMaxTries;
-          this_thread::sleep_for(delayBetweenNonces);
+          std::this_thread::sleep_for(delayBetweenNonces);
         }
       }
     } else if(unit == "clock" || unit == "clocks") {
