@@ -15,8 +15,8 @@ from test_framework.util import assert_equal, assert_raises_rpc_error
 class MultiWalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 1
-        self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3', '-wallet=w']]
+        self.num_nodes = 2
+        self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3', '-wallet=w'], []]
         self.supports_cli = True
 
     def run_test(self):
@@ -28,7 +28,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         assert_equal(set(node.listwallets()), {"w1", "w2", "w3", "w"})
 
-        self.stop_node(0)
+        self.stop_nodes()
 
         self.assert_start_raises_init_error(0, ['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" does not exist')
         self.assert_start_raises_init_error(0, ['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" is a relative path', cwd=data_dir())
@@ -63,19 +63,21 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_equal(set(node.listwallets()), {"w4", "w5"})
         w5 = wallet("w5")
         w5.generate(1)
-        self.stop_node(0)
 
         # now if wallets/ exists again, but the rootdir is specified as the walletdir, w4 and w5 should still be loaded
         os.rename(wallet_dir2, wallet_dir())
-        self.start_node(0, ['-wallet=w4', '-wallet=w5', '-walletdir=' + data_dir()])
+        self.restart_node(0, ['-wallet=w4', '-wallet=w5', '-walletdir=' + data_dir()])
         assert_equal(set(node.listwallets()), {"w4", "w5"})
         w5 = wallet("w5")
         w5_info = w5.getwalletinfo()
         assert_equal(w5_info['immature_balance'], 500)
 
-        self.stop_node(0)
+        competing_wallet_dir = os.path.join(self.options.tmpdir, 'competing_walletdir')
+        os.mkdir(competing_wallet_dir)
+        self.restart_node(0, ['-walletdir='+competing_wallet_dir])
+        self.assert_start_raises_init_error(1, ['-walletdir='+competing_wallet_dir], 'Error initializing wallet database environment')
 
-        self.start_node(0, self.extra_args[0])
+        self.restart_node(0, self.extra_args[0])
 
         w1 = wallet("w1")
         w2 = wallet("w2")

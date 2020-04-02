@@ -1,5 +1,5 @@
 [Desktop Entry]
-Encoding=UTF-8
+Version=1.0
 Name=Dash Core
 Comment=Dash P2P Cryptocurrency
 Comment[de]=Verbinde mit dem Dash peer-to-peer Netzwerk
@@ -11,3 +11,4 @@ Type=Application
 Icon=dash128
 MimeType=x-scheme-handler/dash;
 Categories=Office;Finance;
+StartupWMClass=Dash-qt

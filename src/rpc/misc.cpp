@@ -303,18 +303,26 @@ UniValue validateaddress(const JSONRPCRequest& request)
             ret.push_back(Pair("account", pwallet->mapAddressBook[dest].name));
         }
         if (pwallet) {
-            const auto& meta = pwallet->mapKeyMetadata;
+            const CKeyMetadata* meta = nullptr;
             const CKeyID *keyID = boost::get<CKeyID>(&dest);
-            auto it = keyID ? meta.find(*keyID) : meta.end();
-            if (it == meta.end()) {
-                it = meta.find(CScriptID(scriptPubKey));
+            if (const CKeyID* key_id = boost::get<CKeyID>(&dest)) {
+                auto it = pwallet->mapKeyMetadata.find(*key_id);
+                if (it != pwallet->mapKeyMetadata.end()) {
+                    meta = &it->second;
+                }
             }
-            if (it != meta.end()) {
-                ret.push_back(Pair("timestamp", it->second.nCreateTime));
+            if (!meta) {
+                auto it = pwallet->m_script_metadata.find(CScriptID(scriptPubKey));
+                if (it != pwallet->m_script_metadata.end()) {
+                    meta = &it->second;
+                }
+            }
+            if (meta) {
+                ret.push_back(Pair("timestamp", meta->nCreateTime));
             }
 
             CHDChain hdChainCurrent;
-            if (keyID && pwallet->mapHdPubKeys.count(*keyID) && pwallet->GetHDChain(hdChainCurrent)) {
+            if (pwallet->mapHdPubKeys.count(*keyID) && pwallet->GetHDChain(hdChainCurrent)) {
                 ret.push_back(Pair("hdkeypath", pwallet->mapHdPubKeys[*keyID].GetKeyPath()));
                 ret.push_back(Pair("hdchainid", hdChainCurrent.GetID().GetHex()));
             }

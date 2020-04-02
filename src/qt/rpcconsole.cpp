@@ -12,7 +12,6 @@
 
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
-#include <qt/guiutil.h>
 #include <qt/platformstyle.h>
 #include <chainparams.h>
 #include <netbase.h>
@@ -37,7 +36,6 @@
 #include <QScrollBar>
 #include <QSettings>
 #include <QSignalMapper>
-#include <QThread>
 #include <QTime>
 #include <QTimer>
 #include <QStringList>

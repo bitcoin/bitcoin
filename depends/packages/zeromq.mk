@@ -29,5 +29,6 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
+  sed -i.old "s/ -lstdc++//" lib/pkgconfig/libzmq.pc && \
   rm -rf bin share
 endef

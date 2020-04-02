@@ -37,6 +37,7 @@ public:
     //! Support for BIP 0013 : see https://github.com/bitcoin/bips/blob/master/bip-0013.mediawiki
     virtual bool AddCScript(const CScript& redeemScript) =0;
     virtual bool HaveCScript(const CScriptID &hash) const =0;
+    virtual std::set<CScriptID> GetCScripts() const =0;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const =0;
 
     //! Support for Watch-only addresses
@@ -70,6 +71,7 @@ public:
     bool GetKey(const CKeyID &address, CKey &keyOut) const override;
     bool AddCScript(const CScript& redeemScript) override;
     bool HaveCScript(const CScriptID &hash) const override;
+    std::set<CScriptID> GetCScripts() const override;
     bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
 
     bool AddWatchOnly(const CScript &dest) override;

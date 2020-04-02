@@ -5,8 +5,6 @@
 
 #include <keystore.h>
 
-#include <key.h>
-#include <pubkey.h>
 #include <util.h>
 
 bool CKeyStore::AddKey(const CKey &key) {
@@ -77,6 +75,16 @@ bool CBasicKeyStore::HaveCScript(const CScriptID& hash) const
 {
     LOCK(cs_KeyStore);
     return mapScripts.count(hash) > 0;
+}
+
+std::set<CScriptID> CBasicKeyStore::GetCScripts() const
+{
+    LOCK(cs_KeyStore);
+    std::set<CScriptID> set_script;
+    for (const auto& mi : mapScripts) {
+        set_script.insert(mi.first);
+    }
+    return set_script;
 }
 
 bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const

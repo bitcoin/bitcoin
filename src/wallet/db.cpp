@@ -6,7 +6,6 @@
 #include <wallet/db.h>
 
 #include <addrman.h>
-#include <fs.h>
 #include <hash.h>
 #include <protocol.h>
 #include <util.h>
@@ -96,7 +95,7 @@ void CDBEnv::Close()
     EnvShutdown();
 }
 
-bool CDBEnv::Open(const fs::path& pathIn)
+bool CDBEnv::Open(const fs::path& pathIn, bool retry)
 {
     if (fDbEnvInit)
         return true;
@@ -104,6 +103,11 @@ bool CDBEnv::Open(const fs::path& pathIn)
     boost::this_thread::interruption_point();
 
     strPath = pathIn.string();
+    if (!LockDirectory(pathIn, ".walletlock")) {
+        LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of bitcoin may be using it.\n", strPath);
+        return false;
+    }
+
     fs::path pathLogDir = pathIn / "database";
     TryCreateDirectories(pathLogDir);
     fs::path pathErrorFile = pathIn / "db.log";
@@ -135,7 +139,24 @@ bool CDBEnv::Open(const fs::path& pathIn)
                          S_IRUSR | S_IWUSR);
     if (ret != 0) {
         dbenv->close(0);
-        return error("CDBEnv::Open: Error %d opening database environment: %s\n", ret, DbEnv::strerror(ret));
+        LogPrintf("CDBEnv::Open: Error %d opening database environment: %s\n", ret, DbEnv::strerror(ret));
+        if (retry) {
+            // try moving the database env out of the way
+            fs::path pathDatabaseBak = pathIn / strprintf("database.%d.bak", GetTime());
+            try {
+                fs::rename(pathLogDir, pathDatabaseBak);
+                LogPrintf("Moved old %s to %s. Retrying.\n", pathLogDir.string(), pathDatabaseBak.string());
+            } catch (const fs::filesystem_error&) {
+                // failure is ok (well, not really, but it's not worse than what we started with)
+            }
+            // try opening it again one more time
+            if (!Open(pathIn, false)) {
+                // if it still fails, it probably means we can't even create the database env
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     fDbEnvInit = true;
@@ -270,25 +291,11 @@ bool CDB::VerifyEnvironment(const std::string& walletFile, const fs::path& walle
         return false;
     }
 
-    if (!bitdb.Open(walletDir))
-    {
-        // try moving the database env out of the way
-        fs::path pathDatabase = walletDir / "database";
-        fs::path pathDatabaseBak = walletDir / strprintf("database.%d.bak", GetTime());
-        try {
-            fs::rename(pathDatabase, pathDatabaseBak);
-            LogPrintf("Moved old %s to %s. Retrying.\n", pathDatabase.string(), pathDatabaseBak.string());
-        } catch (const fs::filesystem_error&) {
-            // failure is ok (well, not really, but it's not worse than what we started with)
-        }
-
-        // try again
-        if (!bitdb.Open(walletDir)) {
-            // if it still fails, it probably means we can't even create the database env
-            errorStr = strprintf(_("Error initializing wallet database environment %s!"), walletDir);
-            return false;
-        }
+    if (!bitdb.Open(walletDir, true)) {
+        errorStr = strprintf(_("Error initializing wallet database environment %s!"), walletDir);
+        return false;
     }
+
     return true;
 }
 

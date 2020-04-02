@@ -1032,6 +1032,10 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
         }
     } else if (fHaveChain) {
         throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in block chain");
+    } else {
+        // Make sure we don't block forever if re-sending
+        // a transaction already in mempool.
+        promise.set_value();
     }
 
     } // cs_main

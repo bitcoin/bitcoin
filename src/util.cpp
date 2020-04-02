@@ -4,21 +4,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
-#endif
-
 #include <util.h>
 
 #include <support/allocators/secure.h>
 #include <chainparamsbase.h>
 #include <ctpl.h>
-#include <fs.h>
 #include <random.h>
 #include <serialize.h>
 #include <stacktraces.h>
 #include <utilstrencodings.h>
-#include <utiltime.h>
 
 #include <stdarg.h>
 
@@ -85,6 +79,7 @@
 #include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/program_options/detail/config_file.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/thread.hpp>
@@ -472,6 +467,27 @@ int LogPrintStr(const std::string &str)
         }
     }
     return ret;
+}
+
+bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only)
+{
+    fs::path pathLockFile = directory / lockfile_name;
+    FILE* file = fsbridge::fopen(pathLockFile, "a"); // empty lock file; created if it doesn't exist.
+    if (file) fclose(file);
+
+    try {
+        static std::map<std::string, boost::interprocess::file_lock> locks;
+        boost::interprocess::file_lock& lock = locks.emplace(pathLockFile.string(), pathLockFile.string().c_str()).first->second;
+        if (!lock.try_lock()) {
+            return false;
+        }
+        if (probe_only) {
+            lock.unlock();
+        }
+    } catch (const boost::interprocess::interprocess_exception& e) {
+        return error("Error while attempting to lock directory %s: %s", directory.string(), e.what());
+    }
+    return true;
 }
 
 /** Interpret string as boolean, for argument parsing */

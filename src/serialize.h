@@ -1001,8 +1001,8 @@ template<typename Stream, typename Map>
 void SerializeMap(Stream& os, const Map& m)
 {
     WriteCompactSize(os, m.size());
-    for (auto mi = m.begin(); mi != m.end(); ++mi)
-        Serialize(os, (*mi));
+    for (const auto& entry : m)
+        Serialize(os, entry);
 }
 
 template<typename Stream, typename Map>
