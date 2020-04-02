@@ -85,6 +85,10 @@ void WalletModel::updateStatus()
 
 void WalletModel::pollBalanceChanged()
 {
+    // Avoid recomputing wallet balances unless a TransactionChanged or
+    // BlockTip notification was received.
+    if (!fForceCheckBalanceChanged && cachedNumBlocks == m_client_model->getNumBlocks()) return;
+
     // Try to get balances and return early if locks can't be acquired. This
     // avoids the GUI from getting stuck on periodical polls if the core is
     // holding the locks for a longer time - for example, during a wallet
