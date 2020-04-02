@@ -7,7 +7,7 @@
 #
 # Setup crown server or update existing one
 
-LATEST_RELEASE="0.14.0.0"
+LATEST_RELEASE="0.14.0.1"
 
 systemnode=false
 masternode=false
@@ -271,11 +271,9 @@ configure_conf() {
         echo "masternode=1" >>.crown/crown.conf
         echo "masternodeprivkey="$privkey >>.crown/crown.conf
     fi
-    if [ "$LATEST_RELEASE" = "0.13.4.0" ] ; then
-        echo "addnode=92.60.44.40" >>.crown/crown.conf
-        echo "addnode=149.248.53.3" >>.crown/crown.conf
-        echo "addnode=139.180.141.215" >>.crown/crown.conf
-    fi
+    echo "addnode=92.60.44.40" >>.crown/crown.conf
+    echo "addnode=149.248.53.3" >>.crown/crown.conf
+    echo "addnode=139.180.141.215" >>.crown/crown.conf
     echo "This is the config file:"
     cat .crown/crown.conf
     echo
