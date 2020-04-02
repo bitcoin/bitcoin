@@ -1027,7 +1027,7 @@ static UniValue mine(const JSONRPCRequest& request)
             RPCHelpMan{"mine",
                 "\nMine blocks immediately to a specified address (before the RPC call returns)\n",
                 {
-                    {"duration", RPCArg::Type::NUM, RPCArg::Optional::NO, "Duration"},
+                    {"duration", RPCArg::Type::STR, RPCArg::Optional::NO, "Duration"},
                     {"times/seconds/clocks", RPCArg::Type::STR, RPCArg::Optional::NO, "Unit"},
                     {"address", RPCArg::Type::STR, /* optional */ "1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc", "The address to send the newly generated bitcoin to."},
                     {"use_random", RPCArg::Type::STR, /* optional */ "false", "(true/false) Generate random nonces, or increment from zero."},
@@ -1041,7 +1041,11 @@ static UniValue mine(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    unsigned int duration = request.params[0].get_int();
+    int durationStr = request.params[0].get_str();
+    unsigned int duration = 0;
+    try {
+      duration = std::stoi(durationStr);
+    } catch(...){}
 
     std::string unit = request.params[1].get_str();
 
