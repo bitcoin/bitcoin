@@ -351,14 +351,13 @@ public:
         }
         return result;
     }
-    bool tryGetBalances(WalletBalances& balances, int& num_blocks, bool force, int cached_num_blocks) override
+    bool tryGetBalances(WalletBalances& balances, int& num_blocks) override
     {
         TRY_LOCK(m_wallet->cs_wallet, locked_wallet);
         if (!locked_wallet) {
             return false;
         }
         num_blocks = m_wallet->GetLastBlockHeight();
-        if (!force && num_blocks == cached_num_blocks) return false;
         balances = getBalances();
         return true;
     }
