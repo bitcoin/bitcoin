@@ -1053,7 +1053,7 @@ static UniValue mine(const JSONRPCRequest& request)
     std::string unit = request.params[1].get_str();
 
     unsigned int delayBetweenNonces = 0;
-    if(!requests.params[2].isNull()) {
+    if(!request.params[2].isNull()) {
       std::string delayBetweenNoncesStr = request.params[2].get_str();
       try {
         delayBetweenNonces = std::stoi(delayBetweenNoncesStr);
