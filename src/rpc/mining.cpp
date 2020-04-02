@@ -1038,7 +1038,7 @@ static UniValue mine(const JSONRPCRequest& request)
                 RPCResults{},
                 RPCExamples{
             "\nMine for 5 seconds to 1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc\n"
-            + HelpExampleCli("mine", "5 seconds)
+            + HelpExampleCli("mine", "5 seconds")
             + "If you are running the bitcoin core wallet, you can get a new address to send the newly generated bitcoin to with:\n"
             + HelpExampleCli("getnewaddress", "")
                 },
@@ -1161,7 +1161,7 @@ static const CRPCCommand commands[] =
     { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
     { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
-    { "z Researcher",       "mine",                   &mine,                   {"duration", "times/seconds/clocks", "address", "use_random"} },
+    { "z Researcher",       "mine",                   &mine,                   {"duration", "times/seconds/clocks", "delayBetweenNonces", "address"} },
 };
 // clang-format on
 
