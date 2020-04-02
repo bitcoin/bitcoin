@@ -606,11 +606,11 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
     switch (m_type) {
     case Type::ELISION: {
         // If the inner result is empty, use three dots for elision
-        sections.PushSection({indent_next + "...", m_description});
+        sections.PushSection({indent + "..." + maybe_separator, m_description});
         return;
     }
     case Type::NONE: {
-        sections.PushSection({indent + "None", Description("json null")});
+        sections.PushSection({indent + "None" + maybe_separator, Description("json null")});
         return;
     }
     case Type::STR: {
