@@ -1027,7 +1027,7 @@ static UniValue mine(const JSONRPCRequest& request)
             RPCHelpMan{"mine",
                 "\nMine blocks immediately to a specified address (before the RPC call returns)\n",
                 {
-                    {"duration", RPCArg::Type::STR, RPCArg::Optional::NO, "Duration"},
+                    {"duration", RPCArg::Type::NUM, RPCArg::Optional::NO, "Duration"},
                     {"times/seconds/clocks", RPCArg::Type::STR, RPCArg::Optional::NO, "Unit"},
                     {"address", RPCArg::Type::STR, /* optional */ "1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc", "The address to send the newly generated bitcoin to."},
                     {"use_random", RPCArg::Type::STR, /* optional */ "false", "(true/false) Generate random nonces, or increment from zero."},
@@ -1045,11 +1045,7 @@ static UniValue mine(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    std::string durationStr = request.params[0].get_str();
-    unsigned int duration = 0;
-    try {
-      duration = std::stoi(durationStr);
-    } catch (...) {}
+    unsigned int duration = request.params[0].get_int();
 
     std::string unit = request.params[1].get_str();
 
@@ -1088,9 +1084,10 @@ static UniValue mine(const JSONRPCRequest& request)
       if(unit == "time" || unit == "times") {
         begin = clock(); // Start timer
         unsigned int nMaxTries = duration;
-        while(nMaxTries > 0 && clock() - begin < duration * CLOCKS_PER_SEC && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+        while(nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
           GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
+          --nMaxTries;
         }
       } else if(unit == "clock" || unit == "clocks") {
         begin = clock(); // Start timer
@@ -1106,7 +1103,8 @@ static UniValue mine(const JSONRPCRequest& request)
           ++numHashes;
         }
       } else {
-        return "Unit of measurement unknown.";
+        result.pushKV("ERROR", "Unit of measurement unknown");
+        return result;
       }
 
     } else { // Incremental nonce selection
@@ -1132,7 +1130,8 @@ static UniValue mine(const JSONRPCRequest& request)
           ++numHashes;
         }
       } else {
-        return "Unit of measurement unknown.";
+        result.pushKV("ERROR", "Unit of measurement unknown");
+        return result;
       }
     }
     clock_t end = clock(); // End timer
