@@ -1032,7 +1032,7 @@ static UniValue mine(const JSONRPCRequest& request)
                 {
                     {"duration", RPCArg::Type::STR, RPCArg::Optional::NO, "Duration"},
                     {"times/seconds/clocks", RPCArg::Type::STR, RPCArg::Optional::NO, "Unit"},
-                    {"delayBetweenNonces", RPCArg::Type::STR, /* optional */ "0", "Delay in microseconds between each nonce"},
+                    {"delayBetweenNonces", RPCArg::Type::STR, /* optional */ "0", "Delay in milliseconds between each nonce"},
                     {"address", RPCArg::Type::STR, /* optional */ "1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc", "The address to send the newly generated bitcoin to."},
                 },
                 RPCResults{},
@@ -1105,7 +1105,7 @@ static UniValue mine(const JSONRPCRequest& request)
           GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
           --nMaxTries;
-          std::this_thread::sleep_for(delayBetweenNonces);
+          std::this_thread::sleep_for(std::chrono::milliseconds(delayBetweenNonces));
         }
       }
     } else if(unit == "clock" || unit == "clocks") {
