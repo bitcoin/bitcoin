@@ -66,19 +66,23 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
 
 bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
 {
-    for (const std::string& walletFile : wallet_files) {
-        std::string error;
-        std::vector<std::string> warnings;
-        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile), error, warnings);
-        if (!warnings.empty()) chain.initWarning(Join(warnings, "\n"));
-        if (!pwallet) {
-            chain.initError(error);
-            return false;
+    try {
+        for (const std::string& walletFile : wallet_files) {
+            std::string error;
+            std::vector<std::string> warnings;
+            std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile), error, warnings);
+            if (!warnings.empty()) chain.initWarning(Join(warnings, "\n"));
+            if (!pwallet) {
+                chain.initError(error);
+                return false;
+            }
+            AddWallet(pwallet);
         }
-        AddWallet(pwallet);
+        return true;
+    } catch (const std::runtime_error& e) {
+        chain.initError(e.what());
+        return false;
     }
-
-    return true;
 }
 
 void StartWallets(CScheduler& scheduler)
