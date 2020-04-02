@@ -719,26 +719,17 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool, const std::optional<MempoolHi
 
         // Track total amount of available fees in fee rate groups
         CAmount total_fees = 0;
-        UniValue groups(UniValue::VOBJ);
+        UniValue info(UniValue::VOBJ);
         for (size_t i = 0; i < floors.size(); ++i) {
             UniValue info_sub(UniValue::VOBJ);
-            info_sub.pushKV("size", sizes.at(i));
+            info_sub.pushKV("sizes", sizes[i]);
             info_sub.pushKV("count", count.at(i));
             info_sub.pushKV("fees", fees.at(i));
-            info_sub.pushKV("from", floors.at(i));
-
-            if (i == floors.size() - 1) {
-                info_sub.pushKV("to", NullUniValue);
-            } else {
-                info_sub.pushKV("to", floors[i + 1] - 1);
-            }
-
+            info_sub.pushKV("from_feerate", floors[i]);
+            info_sub.pushKV("to_feerate", i == floors.size() - 1 ? std::numeric_limits<int64_t>::max() : floors[i + 1]);
             total_fees += fees.at(i);
-            groups.pushKV(ToString(floors.at(i)), info_sub);
+            info.pushKV(ToString(floors[i]), info_sub);
         }
-
-        UniValue info(UniValue::VOBJ);
-        info.pushKV("fee_rate_groups", groups);
         info.pushKV("total_fees", total_fees);
         ret.pushKV("fee_histogram", info);
     }
@@ -773,18 +764,17 @@ static RPCHelpMan getmempoolinfo()
                 {RPCResult::Type::BOOL, "fullrbf", "True if the mempool accepts RBF without replaceability signaling inspection"},
                 {RPCResult::Type::OBJ, "fee_histogram", /*optional=*/true, "",
                     {
-                        {RPCResult::Type::OBJ_DYN, "fee_rate_groups", "",
-                        {
-                            {RPCResult::Type::OBJ, "<fee_rate_group>", "Fee rate group named by its lower bound (in " + CURRENCY_ATOM + "/vB), identical to the \"from\" field below",
+                        {RPCResult::Type::OBJ, "<fee_rate_group>", "Fee rate group named by its lower bound (in " + CURRENCY_ATOM + "/vB), identical to the \"from_feerate\" field below",
                             {
-                                {RPCResult::Type::NUM, "size", "Cumulative size of all transactions in the fee rate group (in vBytes)"},
+                                {RPCResult::Type::NUM, "sizes", "Cumulative size of all transactions in the fee rate group (in vBytes)"},
                                 {RPCResult::Type::NUM, "count", "Number of transactions in the fee rate group"},
                                 {RPCResult::Type::NUM, "fees", "Cumulative fees of all transactions in the fee rate group (in " + CURRENCY_ATOM + ")"},
-                                {RPCResult::Type::NUM, "from", "Group contains transactions with fee rates equal or greater than this value (in " + CURRENCY_ATOM + "/vB)"},
-                                {RPCResult::Type::ANY, "to", "Group contains transactions with fee rates equal or less than this value (in " + CURRENCY_ATOM + "/vB)"},
-                            }}}},
+                                {RPCResult::Type::NUM, "from_feerate", "Group contains transactions with fee rates equal or greater than this value (in " + CURRENCY_ATOM + "/vB)"},
+                                {RPCResult::Type::ANY, "to_feerate", "Group contains transactions with fee rates equal or less than this value (in " + CURRENCY_ATOM + "/vB)"},
+                            }},
+                        {RPCResult::Type::ELISION, "", ""},
                         {RPCResult::Type::NUM, "total_fees", "Total available fees in mempool (in " + CURRENCY_ATOM + ")"},
-                    }},
+                    }, /*skip_type_check=*/ true},
             }},
         RPCExamples{
             HelpExampleCli("getmempoolinfo", "") +

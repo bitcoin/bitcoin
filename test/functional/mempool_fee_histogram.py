@@ -61,10 +61,10 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         assert_equal(0, total_fees)
 
         for i in ['1', '2', '3']:
-            assert_equal(0, info['fee_histogram']['fee_rate_groups'][i]['size'])
-            assert_equal(0, info['fee_histogram']['fee_rate_groups'][i]['count'])
-            assert_equal(0, info['fee_histogram']['fee_rate_groups'][i]['fees'])
-            assert_equal(int(i), info['fee_histogram']['fee_rate_groups'][i]['from'])
+            assert_equal(0, info['fee_histogram'][i]['sizes'])
+            assert_equal(0, info['fee_histogram'][i]['count'])
+            assert_equal(0, info['fee_histogram'][i]['fees'])
+            assert_equal(int(i), info['fee_histogram'][i]['from_feerate'])
 
         self.log.info("Test that we have two spendable UTXOs and lock the second one")
         utxos = node.listunspent()
@@ -80,28 +80,28 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         (non_empty_groups, empty_groups, total_fees) = self.histogram_stats(info['fee_histogram'])
         assert_equal(1, non_empty_groups)
         assert_equal(3, empty_groups)
-        assert_equal(1, info['fee_histogram']['fee_rate_groups'][tx1_info['feerate']]['count'])
+        assert_equal(1, info['fee_histogram'][tx1_info['feerate']]['count'])
         assert_equal(total_fees, info['fee_histogram']['total_fees'])
 
-        assert_equal(0, info['fee_histogram']['fee_rate_groups']['1']['size'])
-        assert_equal(0, info['fee_histogram']['fee_rate_groups']['1']['count'])
-        assert_equal(0, info['fee_histogram']['fee_rate_groups']['1']['fees'])
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['1']['from'])
+        assert_equal(0, info['fee_histogram']['1']['sizes'])
+        assert_equal(0, info['fee_histogram']['1']['count'])
+        assert_equal(0, info['fee_histogram']['1']['fees'])
+        assert_equal(1, info['fee_histogram']['1']['from_feerate'])
 
-        assert_equal(0, info['fee_histogram']['fee_rate_groups']['3']['size'])
-        assert_equal(0, info['fee_histogram']['fee_rate_groups']['3']['count'])
-        assert_equal(0, info['fee_histogram']['fee_rate_groups']['3']['fees'])
-        assert_equal(3, info['fee_histogram']['fee_rate_groups']['3']['from'])
+        assert_equal(0, info['fee_histogram']['3']['sizes'])
+        assert_equal(0, info['fee_histogram']['3']['count'])
+        assert_equal(0, info['fee_histogram']['3']['fees'])
+        assert_equal(3, info['fee_histogram']['3']['from_feerate'])
 
-        assert_equal(188, info['fee_histogram']['fee_rate_groups']['5']['size'])
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['5']['count'])
-        assert_equal(940, info['fee_histogram']['fee_rate_groups']['5']['fees'])
-        assert_equal(5, info['fee_histogram']['fee_rate_groups']['5']['from'])
+        assert_equal(188, info['fee_histogram']['5']['sizes'])
+        assert_equal(1, info['fee_histogram']['5']['count'])
+        assert_equal(940, info['fee_histogram']['5']['fees'])
+        assert_equal(5, info['fee_histogram']['5']['from_feerate'])
 
-        assert_equal(0, info['fee_histogram']['fee_rate_groups']['10']['size'])
-        assert_equal(0, info['fee_histogram']['fee_rate_groups']['10']['count'])
-        assert_equal(0, info['fee_histogram']['fee_rate_groups']['10']['fees'])
-        assert_equal(10, info['fee_histogram']['fee_rate_groups']['10']['from'])
+        assert_equal(0, info['fee_histogram']['10']['sizes'])
+        assert_equal(0, info['fee_histogram']['10']['count'])
+        assert_equal(0, info['fee_histogram']['10']['fees'])
+        assert_equal(10, info['fee_histogram']['10']['from_feerate'])
 
         self.log.info("Send tx2 transaction with 14 sat/vB fee rate (spends tx1 UTXO)")
         tx2_txid = node.sendtoaddress(address=node.getnewaddress(), amount=Decimal("25.0"), fee_rate=14, subtractfeefromamount=True)
@@ -115,7 +115,7 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         tx1p2_feerate = get_actual_fee_rate(tx1_info['fee'] + tx2_info['fee'], tx1_info['vsize'] + tx2_info['vsize'])
         assert_equal(1, non_empty_groups)
         assert_equal(14, empty_groups)
-        assert_equal(2, info['fee_histogram']['fee_rate_groups'][tx1p2_feerate]['count'])
+        assert_equal(2, info['fee_histogram'][tx1p2_feerate]['count'])
         assert_equal(total_fees, info['fee_histogram']['total_fees'])
 
         # Unlock the second UTXO which we locked
@@ -132,26 +132,27 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         # tx1 should be grouped with tx2 + tx3 (descendants)
         # tx2 should be grouped with tx1 (ancestors only)
         # tx3 should be alone
-        expected_histogram = {
-            'fee_rate_groups': dict( (
+        expected_histogram = dict(
+            tuple(
                 (str(n), {
-                    'from': n,
-                    'to': n,
+                    'from_feerate': n,
+                    'to_feerate': n + 1,
                     'count': 0,
                     'fees': 0,
-                    'size': 0,
+                    'sizes': 0,
                 }) for n in range(1, 16)
-            ) ),
-            'total_fees': tx1_info['fee'] + tx2_info['fee'] + tx3_info['fee'],
-        }
-        expected_frg = expected_histogram['fee_rate_groups']
-        expected_frg['15']['to'] = None
+            ) + (
+                ('total_fees', tx1_info['fee'] + tx2_info['fee'] + tx3_info['fee']),
+            )
+        )
+        expected_frg = expected_histogram
+        expected_frg['15']['to_feerate'] = 9223372036854775807
         tx1p2p3_feerate = get_actual_fee_rate(expected_histogram['total_fees'], tx1_info['vsize'] + tx2_info['vsize'] + tx3_info['vsize'])
         def inc_expected(feerate, txinfo):
             this_frg = expected_frg[feerate]
             this_frg['count'] += 1
             this_frg['fees'] += txinfo['fee']
-            this_frg['size'] += txinfo['vsize']
+            this_frg['sizes'] += txinfo['vsize']
         inc_expected(tx1p2p3_feerate, tx1_info)
         inc_expected(tx1p2_feerate, tx2_info)
         inc_expected(tx3_info['feerate'], tx3_info)
@@ -163,26 +164,23 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
 
         # Verify that the 6 sat/vB fee rate group has one transaction, and the 8-9 sat/vB fee rate group has two
         for collapse_n in (9, 11, 13, 15):
-            for field in ('count', 'size', 'fees'):
+            for field in ('count', 'sizes', 'fees'):
                 expected_frg[str(collapse_n - 1)][field] += expected_frg[str(collapse_n)][field]
-            expected_frg[str(collapse_n - 1)]['to'] += 1
+            expected_frg[str(collapse_n - 1)]['to_feerate'] += 1
             del expected_frg[str(collapse_n)]
-        expected_frg['14']['to'] += 1  # 16 is also skipped
+        expected_frg['14']['to_feerate'] += 1  # 16 is also skipped
 
         for new_n in (17, 20, 25) + tuple(range(30, 90, 10)) + (100, 120, 140, 170, 200, 250) + tuple(range(300, 900, 100)) + (1000, 1200, 1400, 1700, 2000, 2500) + tuple(range(3000, 9000, 1000)) + (10000,):
-            frinfo = info['fee_histogram']['fee_rate_groups'][str(new_n)]
-            if new_n == 10000:
-                assert frinfo['to'] is None
-            else:
-                assert frinfo['to'] > frinfo['from']
-            del frinfo['to']
+            frinfo = info['fee_histogram'][str(new_n)]
+            assert frinfo['to_feerate'] > frinfo['from_feerate']
+            del frinfo['to_feerate']
             assert_equal(frinfo, {
-                'from': new_n,
+                'from_feerate': new_n,
                 'count': 0,
                 'fees': 0,
-                'size': 0,
+                'sizes': 0,
             })
-            del info['fee_histogram']['fee_rate_groups'][str(new_n)]
+            del info['fee_histogram'][str(new_n)]
         assert_equal(expected_histogram, info['fee_histogram'])
 
         self.log.info("Test getmempoolinfo(with_fee_histogram=False) does not return fee histogram")
@@ -193,16 +191,23 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         empty_count = 0
         non_empty_count = 0
 
-        for key, bin in histogram['fee_rate_groups'].items():
-            assert_equal(int(key), bin['from'])
+        for key, bin in histogram.items():
+            if key == 'total_fees':
+                continue
+            assert_equal(int(key), bin['from_feerate'])
             if bin['fees'] > 0:
                 assert_greater_than(bin['count'], 0)
             else:
                 assert_equal(bin['count'], 0)
             assert_greater_than_or_equal(bin['fees'], 0)
-            assert_greater_than_or_equal(bin['size'], 0)
-            if bin['to'] is not None:
-                assert_greater_than_or_equal(bin['to'], bin['from'])
+            assert_greater_than_or_equal(bin['sizes'], 0)
+            if bin['to_feerate'] is not None:
+                assert_greater_than_or_equal(bin['to_feerate'], bin['from_feerate'])
+                for next_key in sorted((*(int(a) for a in histogram.keys() if a != 'total_fees'), 0x7fffffffffffffff)):
+                    if int(next_key) <= int(key):
+                        continue
+                    assert_equal(bin['to_feerate'], int(next_key))
+                    break
             total_fees += bin['fees']
 
             if bin['count'] == 0:
