@@ -8,6 +8,7 @@
 #include <hash.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
+#include <assert.h>
 // SYSCOIN
 const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 0x7400;
 std::string COutPoint::ToString() const
@@ -104,10 +105,11 @@ CAmount CTransaction::GetValueOut() const
             bFirstOutput = false;
             continue;
         }
-        nValueOut += tx_out.nValue;
-        if (!MoneyRange(tx_out.nValue) || !MoneyRange(nValueOut))
+        if (!MoneyRange(tx_out.nValue) || !MoneyRange(nValueOut + tx_out.nValue))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
+        nValueOut += tx_out.nValue;
     }
+    assert(MoneyRange(nValueOut));
     return nValueOut;
 }
 
