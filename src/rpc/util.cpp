@@ -610,7 +610,7 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         return;
     }
     case Type::NONE: {
-        sections.PushSection({indent + "None" + maybe_separator, Description("json null")});
+        sections.PushSection({indent + "null" + maybe_separator, Description("json null")});
         return;
     }
     case Type::STR: {
