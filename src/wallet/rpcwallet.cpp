@@ -77,9 +77,9 @@ bool HaveKey(const SigningProvider& wallet, const CKey& key)
 
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
-    if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
+    if (URL_DECODE && request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
         // wallet endpoint was used
-        wallet_name = urlDecode(request.URI.substr(WALLET_ENDPOINT_BASE.size()));
+        wallet_name = URL_DECODE(request.URI.substr(WALLET_ENDPOINT_BASE.size()));
         return true;
     }
     return false;
