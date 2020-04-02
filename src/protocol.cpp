@@ -69,6 +69,7 @@ const char *QSIGSHARESINV="qsigsinv";
 const char *QGETSIGSHARES="qgetsigs";
 const char *QBSIGSHARES="qbsigs";
 const char *QSIGREC="qsigrec";
+const char *QSIGSHARE="qsigshare";
 const char *CLSIG="clsig";
 const char *ISLOCK="islock";
 const char *MNAUTH="mnauth";
@@ -135,6 +136,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QGETSIGSHARES,
     NetMsgType::QBSIGSHARES,
     NetMsgType::QSIGREC,
+    NetMsgType::QSIGSHARE,
     NetMsgType::CLSIG,
     NetMsgType::ISLOCK,
     NetMsgType::MNAUTH,

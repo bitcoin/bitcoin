@@ -21,9 +21,15 @@ class LLMQSigningTest(DashTestFramework):
         self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
 
+    def add_options(self, parser):
+        parser.add_option("--spork21", dest="spork21", default=False, action="store_true",
+                          help="Test with spork21 enabled")
+
     def run_test(self):
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        if self.options.spork21:
+            self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
 
         self.mine_quorum()
@@ -93,6 +99,25 @@ class LLMQSigningTest(DashTestFramework):
         for i in range(2, 5):
             self.mninfo[i].node.quorum("sign", 100, id, msgHash)
         wait_for_sigs(True, False, True, 15)
+
+        if self.options.spork21:
+            id = "0000000000000000000000000000000000000000000000000000000000000002"
+
+            # Isolate the node that is responsible for the recovery of a signature and assert that recovery fails
+            q = self.nodes[0].quorum('selectquorum', 100, id)
+            mn = self.get_mninfo(q['recoveryMembers'][0])
+            mn.node.setnetworkactive(False)
+            wait_until(lambda: mn.node.getconnectioncount() == 0)
+            for i in range(4):
+                self.mninfo[i].node.quorum("sign", 100, id, msgHash)
+            assert_sigs_nochange(False, False, False, 3)
+            # Need to re-connect so that it later gets the recovered sig
+            mn.node.setnetworkactive(True)
+            connect_nodes(mn.node, 0)
+            # Let 1 second pass so that the next node is used for recovery, which should succeed
+            self.bump_mocktime(1)
+            set_node_times(self.nodes, self.mocktime)
+            wait_for_sigs(True, False, True, 5)
 
 if __name__ == '__main__':
     LLMQSigningTest().main()

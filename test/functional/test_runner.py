@@ -69,6 +69,7 @@ BASE_SCRIPTS= [
     'listtransactions.py',
     'multikeysporks.py',
     'llmq-signing.py', # NOTE: needs dash_hash to pass
+    'llmq-signing.py --spork21', # NOTE: needs dash_hash to pass
     'llmq-chainlocks.py', # NOTE: needs dash_hash to pass
     'llmq-connections.py', # NOTE: needs dash_hash to pass
     'llmq-simplepose.py', # NOTE: needs dash_hash to pass
