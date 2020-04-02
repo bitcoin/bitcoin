@@ -1040,8 +1040,8 @@ static UniValue mine(const JSONRPCRequest& request)
             + HelpExampleCli("getnewaddress", "")
                 },
             }.Check(request);
-
-    int durationStr = request.params[0].get_str();
+,
+    std::string durationStr = request.params[0].get_str();
     unsigned int duration = 0;
     try {
       duration = std::stoi(durationStr);
