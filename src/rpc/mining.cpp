@@ -1049,14 +1049,20 @@ static UniValue mine(const JSONRPCRequest& request)
 
     std::string unit = request.params[1].get_str();
 
-    std::string address = request.params[2].get_str();
+    std::string address = "1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc";
+    if(!request.params[2].isNull()) {
+      address = request.params[2].get_str();
+    }
     CTxDestination destination = DecodeDestination(address);
 
     if (!IsValidDestination(destination)) {
       throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
     }
 
-    std::string useRandomStr = request.params[3].get_str();
+    std::string useRandomStr = "false";
+    if(!request.params[3].isNull()) {
+      useRandomStr = request.params[3].get_str();
+    }
     bool useRandom = (useRandomStr == "true");
 
     const CTxMemPool& mempool = EnsureMemPool();
