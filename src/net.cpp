@@ -2197,7 +2197,7 @@ void CConnman::ThreadOpenMasternodeConnections()
 
                     int64_t lastAttempt = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastOutboundAttempt();
                     // back off trying connecting to an address if we already tried recently
-                    if (nANow - lastAttempt < 60) {
+                    if (nANow - lastAttempt < chainParams.LLMQConnectionRetryTimeout()) {
                         continue;
                     }
                     pending.emplace_back(dmn);
@@ -2285,6 +2285,12 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
+
+        if (!fNetworkActive) {
+            // there is a small chance of fNetworkActive becoming false between the start of this method
+            // and the successful lock of cs_vNodes
+            pnode->CloseSocketDisconnect();
+        }
     }
 }
 

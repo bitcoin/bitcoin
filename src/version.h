@@ -22,6 +22,9 @@ static const int GETHEADERS_VERSION = 70077;
 //! disconnect from peers older than this proto version
 static const int MIN_PEER_PROTO_VERSION = 70213;
 
+//! minimum proto version of masternode to accept in DKGs
+static const int MIN_MASTERNODE_PROTO_VERSION = 70217;
+
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this
 static const int CADDR_TIME_VERSION = 31402;
