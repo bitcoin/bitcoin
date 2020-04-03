@@ -1356,6 +1356,25 @@ class msg_filterload:
             self.data, self.nHashFuncs, self.nTweak, self.nFlags)
 
 
+class msg_filteradd:
+    __slots__ = ("data")
+    command = b"filteradd"
+
+    def __init__(self, data):
+        self.data = data
+
+    def deserialize(self, f):
+        self.data = deser_string(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_string(self.data)
+        return r
+
+    def __repr__(self):
+        return "msg_filteradd(data={})".format(self.data)
+
+
 class msg_filterclear:
     __slots__ = ()
     command = b"filterclear"
