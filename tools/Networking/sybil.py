@@ -11,7 +11,8 @@ from bitcoin.net import CAddress
 
 
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
-eclipse_packet_drop_rate = 0.5
+eclipse_packet_drop_rate = 0
+
 
 num_identities = 3
 network_interface = 'enp0s3'
@@ -238,8 +239,9 @@ def packet_received(packet):
 					#custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
 					#rand_socket.send(custom.to_bytes())
 					rand_socket.send(packet[TCP].payload)
-				except:
+				except e ax Exception:
 					print('Relaying message FAILED')
+					print(e)
 
 	if msgtype == 'verack':
 		# Successful connection! Move from pending to successful
