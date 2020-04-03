@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Høyreklikk for å redigere adresse, eller beskrivelse</translation>
+        <translation>Høyreklikk for å redigere adressen eller beskrivelsen</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -338,14 +338,6 @@
         <translation>Endre passordsetningen for kryptering av lommeboken</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Feilsøkingsvindu</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Åpne konsoll for feilsøking og diagnostisering</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verifiser meldingen...</translation>
     </message>
@@ -404,10 +396,6 @@
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Vis lista over brukte mottakeradresser og merkelapper</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Åpne en bitcoin: URI eller betalingsforespørsel</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -832,10 +820,6 @@
         <translation>versjon</translation>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation> (%1-bit)</translation>
-    </message>
-    <message>
         <source>About %1</source>
         <translation>Om %1</translation>
     </message>
@@ -864,11 +848,11 @@
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation>Den initielle synkroniseringen er svært krevende, og kan forårsake problemer med maskinvaren i datamaskinen din som du tidligere ikke merket. Hver gang du kjører %1 vil den fortsette nedlastingen der den sluttet. </translation>
+        <translation>Den initielle synkroniseringen er svært krevende, og kan forårsake problemer med maskinvaren i datamaskinen din som du tidligere ikke merket. Hver gang du kjører %1 vil den fortsette nedlastingen der den sluttet.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation>Hvis du har valgt å begrense blokkjedelagring (beskjæring), må historiske data fortsatt lastes ned og behandles, men de vil bli slettet etterpå for å holde bruken av lagringsplass lav. </translation>
+        <translation>Hvis du har valgt å begrense blokkjedelagring (beskjæring), må historiske data fortsatt lastes ned og behandles, men de vil bli slettet etterpå for å holde bruken av lagringsplass lav.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -965,24 +949,8 @@
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open URI</source>
-        <translation>Åpne URI</translation>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Åpne betalingsetterspørring fra URI eller fil</translation>
-    </message>
-    <message>
         <source>URI:</source>
         <translation>URI:</translation>
-    </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>Velg fil for betalingsetterspørring</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Velg betalingsforespørselsfil å åpne</translation>
     </message>
 </context>
 <context>
@@ -1345,10 +1313,6 @@
         <translation>URI-håndtering</translation>
     </message>
     <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>Nettadressen for betalingsforespørselshenting er ugyldig: %1</translation>
-    </message>
-    <message>
         <source>Invalid payment address %1</source>
         <translation>Ugyldig betalingsadresse %1</translation>
     </message>
@@ -1359,66 +1323,6 @@
     <message>
         <source>Payment request file handling</source>
         <translation>Håndtering av betalingsforespørselsfil</translation>
-    </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Betalingsforespørselsfila kan ikke leses! Dette kan ha sitt opphav i at den er ugyldig.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Betalingsforespørsel avslått</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Betalingsforespørselsnettverket samsvarer ikke med klientnettverket.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Tidsavbrudd for betalingsforespørsel</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Betalingsforespørselen er ikke igangsatt.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Uverifiserte betalingsforespørsler til egentilpassede betalingsskript støttes ikke.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Ugyldig betalingsforespørsel.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Forespurt betalingsbeløp på %1 er for lite (betraktet som støv).</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Tilbakebetaling fra %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>Betalingsforespørsel %1 er for stor (%2 byte, %3 byte tillatt).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Feil under kommunikasjon med %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>Betalingsforespørselen kan ikke tolkes!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Feilaktig svar fra tjeneren %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Nettverksforespørselsfeil</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Betaling anerkjent</translation>
     </message>
 </context>
 <context>
@@ -1587,10 +1491,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Informasjon</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Feilsøkingsvindu</translation>
     </message>
     <message>
         <source>General</source>
@@ -2101,10 +2001,6 @@
         <translation>Advarsel: Gebyroverslag er ikke tilgjengelig for tiden.</translation>
     </message>
     <message>
-        <source>collapse fee-settings</source>
-        <translation>Legg ned gebyrinnstillinger</translation>
-    </message>
-    <message>
         <source>per kilobyte</source>
         <translation>per kilobyte</translation>
     </message>
@@ -2150,7 +2046,7 @@
     </message>
     <message>
         <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
-        <translation>Med Replace-By-Fee (BIP-125) kan du øke transaksjonens gebyr etter at den er sendt. Uten dette aktivert anbefales et høyere gebyr for å kompensere for risikoen for at transaksjonen blir forsinket. </translation>
+        <translation>Med Replace-By-Fee (BIP-125) kan du øke transaksjonens gebyr etter at den er sendt. Uten dette aktivert anbefales et høyere gebyr for å kompensere for risikoen for at transaksjonen blir forsinket.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2261,10 +2157,6 @@
         <translation>Opprettelse av transaksjon mislyktes!</translation>
     </message>
     <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>Transaksjonen ble avslått av følgende grunn: %1</translation>
-    </message>
-    <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>Et gebyr høyere enn %1 anses som absurd høyt.</translation>
     </message>
@@ -2314,10 +2206,6 @@
     <message>
         <source>Choose previously used address</source>
         <translation>Velg tidligere brukt adresse</translation>
-    </message>
-    <message>
-        <source>This is a normal payment.</source>
-        <translation>Dette er en normal betaling.</translation>
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
@@ -2378,17 +2266,6 @@
     <message>
         <source>Memo:</source>
         <translation>Memo:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Skriv inn en merkelapp for denne adressen for å legge den til i din adressebok</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>Ja</translation>
     </message>
 </context>
 <context>
@@ -3114,10 +2991,6 @@
         <translation>Beskjæring: siste lommeboksynkronisering går utenfor beskjærte data. Du må bruke -reindex (laster ned hele blokkjeden igjen for beskjærte noder)</translation>
     </message>
     <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Omsøk er ikke mulig i beskjært modus. Du vil måtte bruke -reindex som vil laste nede hele blokkjeden på nytt.</translation>
-    </message>
-    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Feil: En fatal intern feil oppstod, se debug.log for detaljer</translation>
     </message>
@@ -3139,7 +3012,7 @@
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>Kan ikke angi spesifikke tilkoblinger og ha addrman til å finne utgående tilkoblinger samtidig. </translation>
+        <translation>Kan ikke angi spesifikke tilkoblinger og ha addrman til å finne utgående tilkoblinger samtidig.</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
@@ -3458,10 +3331,6 @@
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>Dette er transaksjonsgebyret du kan betale når gebyranslag ikke er tilgjengelige.</translation>
-    </message>
-    <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Dette produktet inneholder programmet utviklet av OpenSSL-prosjektet for bruk i OpenSSL-verktøyssettet %s og kryptografisk programvare skrevet av Eric Young og UPnP-programvare skrevet av Thomas Bernard.</translation>
     </message>
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>

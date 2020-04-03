@@ -147,6 +147,7 @@ BASE_SCRIPTS = [
     'rpc_net.py',
     'wallet_keypool.py',
     'p2p_mempool.py',
+    'p2p_filter.py',
     'rpc_setban.py',
     'p2p_blocksonly.py',
     'mining_prioritisetransaction.py',

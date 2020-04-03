@@ -468,7 +468,19 @@ class TestNode():
         p2p_conn.peer_connect(**kwargs, net=self.chain)()
         self.p2ps.append(p2p_conn)
         if wait_for_verack:
+            # Wait for the node to send us the version and verack
             p2p_conn.wait_for_verack()
+            # At this point we have sent our version message and received the version and verack, however the full node
+            # has not yet received the verack from us (in reply to their version). So, the connection is not yet fully
+            # established (fSuccessfullyConnected).
+            #
+            # This shouldn't lead to any issues when sending messages, since the verack will be in-flight before the
+            # message we send. However, it might lead to races where we are expecting to receive a message. E.g. a
+            # transaction that will be added to the mempool as soon as we return here.
+            #
+            # So syncing here is redundant when we only want to send a message, but the cost is low (a few milliseconds)
+            # in comparision to the upside of making tests less fragile and unexpected intermittent errors less likely.
+            p2p_conn.sync_with_ping()
 
         return p2p_conn
 
@@ -487,6 +499,7 @@ class TestNode():
             p.peer_disconnect()
         del self.p2ps[:]
 
+
 class TestNodeCLIAttr:
     def __init__(self, cli, command):
         self.cli = cli
@@ -498,6 +511,7 @@ class TestNodeCLIAttr:
     def get_request(self, *args, **kwargs):
         return lambda: self(*args, **kwargs)
 
+
 def arg_to_cli(arg):
     if isinstance(arg, bool):
         return str(arg).lower()
@@ -505,6 +519,7 @@ def arg_to_cli(arg):
         return json.dumps(arg, default=EncodeDecimal)
     else:
         return str(arg)
+
 
 class TestNodeCLI():
     """Interface to bitcoin-cli for an individual node"""
