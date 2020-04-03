@@ -1392,6 +1392,16 @@ bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &s
         }
     }
 
+#ifndef WIN32
+    // We add a pipe to the read set so that the select() call can be woken up from the outside
+    // This is done when data is available for sending and at the same time optimistic sending was disabled
+    // when pushing the data.
+    // This is currently only implemented for POSIX compliant systems. This means that Windows will fall back to
+    // timing out after 50ms and then trying to send. This is ok as we assume that heavy-load daemons are usually
+    // run on Linux and friends.
+    recv_set.insert(wakeupPipe[0]);
+#endif
+
     return !recv_set.empty() || !send_set.empty() || !error_set.empty();
 }
 
@@ -1476,17 +1486,6 @@ void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_s
         hSocketMax = std::max(hSocketMax, hSocket);
     }
 
-#ifndef WIN32
-    // We add a pipe to the read set so that the select() call can be woken up from the outside
-    // This is done when data is available for sending and at the same time optimistic sending was disabled
-    // when pushing the data.
-    // This is currently only implemented for POSIX compliant systems. This means that Windows will fall back to
-    // timing out after 50ms and then trying to send. This is ok as we assume that heavy-load daemons are usually
-    // run on Linux and friends.
-    FD_SET(wakeupPipe[0], &fdsetRecv);
-    hSocketMax = std::max(hSocketMax, (SOCKET)wakeupPipe[0]);
-#endif
-
     wakeupSelectNeeded = true;
     int nSelect = select(hSocketMax + 1, &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
     wakeupSelectNeeded = false;
@@ -1504,19 +1503,6 @@ void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_s
         if (!interruptNet.sleep_for(std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS)))
             return;
     }
-
-#ifndef WIN32
-    // drain the wakeup pipe
-    if (FD_ISSET(wakeupPipe[0], &fdsetRecv)) {
-        char buf[128];
-        while (true) {
-            int r = read(wakeupPipe[0], buf, sizeof(buf));
-            if (r <= 0) {
-                break;
-            }
-        }
-    }
-#endif
 
     for (SOCKET hSocket : recv_select_set) {
         if (FD_ISSET(hSocket, &fdsetRecv)) {
@@ -1542,6 +1528,19 @@ void CConnman::SocketHandler()
 {
     std::set<SOCKET> recv_set, send_set, error_set;
     SocketEvents(recv_set, send_set, error_set);
+
+#ifndef WIN32
+    // drain the wakeup pipe
+    if (recv_set.count(wakeupPipe[0])) {
+        char buf[128];
+        while (true) {
+            int r = read(wakeupPipe[0], buf, sizeof(buf));
+            if (r <= 0) {
+                break;
+            }
+        }
+    }
+#endif
 
     if (interruptNet) return;
 
