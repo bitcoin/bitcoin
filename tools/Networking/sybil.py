@@ -242,7 +242,7 @@ def packet_received(packet):
 					tcp = TCP(sport=rand_port, dport=victim_port, flags='S')
 					new_packet = ip/tcp/packet[TCP].payload
 
-					rand_socket.send(new_packet)
+					rand_socket.send(bytes(new_packet))
 				except Exception as e:
 					print('Relaying message FAILED')
 					print(e)
