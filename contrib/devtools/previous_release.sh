@@ -139,7 +139,10 @@ pushd "$TARGET" || exit 1
         fi
         URL="https://bitcoin.org/$BIN_PATH/bitcoin-${tag:1}-$PLATFORM.tar.gz"
         echo "Fetching: $URL"
-        curl -O $URL
+        if ! curl -O -f $URL; then
+            echo "Download failed."
+            exit 1
+        fi
         tar -zxf "bitcoin-${tag:1}-$PLATFORM.tar.gz" -C "$tag" --strip-components=1 "bitcoin-${tag:1}"
         rm "bitcoin-${tag:1}-$PLATFORM.tar.gz"
       fi
