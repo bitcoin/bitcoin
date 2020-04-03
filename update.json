@@ -1,29 +1,29 @@
 {  
    "Linux32":{  
-      "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.14.0.0-Emerald/Crown-0.14.0.0-Linux32.zip",
-      "sha256sum":"fe8dc6fdd8af7c7be514baf4eb194025c41024e3e1b170316c47bae817a9c86f"
+      "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.14.0.1-Emerald/Crown-0.14.0.1-Linux32.zip",
+      "sha256sum":"68ad4dc9cf293c97b174316a72d9a971f3e72099b1c5a1aa39a9cfc2a4666660"
    },
    "Linux64":{  
-      "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.14.0.0-Emerald/Crown-0.14.0.0-Linux64.zip",
-      "sha256sum":"81c085975ab647574f54deb466ff2cc5b4f92f7b20de5067f0b8d53be5244dfb"
-   },
-   "Osx":{
-       "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.14.0.0-Emerald/Crown-0.14.0.0-Osx.zip",
-       "sha256sum":"82038fa65edd5e3ad39e9e0104bf3efede73e294d41f545c9dbeb7df29558456"
-   },
-   "Win32":{
-       "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.14.0.0-Emerald/Crown-0.14.0.0-Win32.zip",
-       "sha256sum":"859025705deca49aada84c6c403a6c275d73e93cc2ddb65ed850ca37160f2454"
-   },
-   "Win64":{
-       "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.14.0.0-Emerald/Crown-0.14.0.0-Win64.zip",
-       "sha256sum":"b5cbdb249546c7193e81036d0631102f0a3d5f2fde1dba912c3d37692353040f"
+      "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.14.0.1-Emerald/Crown-0.14.0.1-Linux64.zip",
+      "sha256sum":"07ef11bb51bd6b57b549abffa9af3b3138a260cb29b9eaa253bead3545dfdf32"
    },
    "Osx-dmg":{
-       "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.14.0.0-Emerald/Crown-0.14.0.0-Osx-dmg.zip",
-       "sha256sum":"a4a0cc434bfa7d0e0f7a4e4b92d40be3cb8636c2ff8e3d82311d8211547a3616"
+       "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.14.0.1-Emerald/Crown-0.14.0.1-Osx-dmg.zip",
+       "sha256sum":"3fb49870a0a2d952aa1e00a8120f62792062b6ba669e69c2fba6457040c6a025"
+   },
+   "Osx":{
+       "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.14.0.1-Emerald/Crown-0.14.0.1-Osx.zip",
+       "sha256sum":"15a30bc79b5ecd371aa5f2a09ef5dbf9d44ba92731f49095fbee6a6f99f621c5"
+   },
+   "Win32":{
+       "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.14.0.1-Emerald/Crown-0.14.0.1-Win32.zip",
+       "sha256sum":"65816a8d80437fdccd467b15bcd254c93359fea51eec6be0524952210af96979"
+   },
+   "Win64":{
+       "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.14.0.1-Emerald/Crown-0.14.0.1-Win64.zip",
+       "sha256sum":"e698bed33ca429f57eecbb7cd7e1c25011839859bdc77935df28223960d4245f"
    },
 
-   "Version":140000,
+   "Version":140001,
    "NeedToBeUpdated": true
 }
