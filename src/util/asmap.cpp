@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <map>
 #include <vector>
 #include <assert.h>
 #include <crypto/common.h>
@@ -117,4 +118,57 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
     }
     // Reached EOF without RETURN, or aborted (see any of the breaks above).
     return 0; // 0 is not a valid ASN
+}
+
+bool SanityCheckASMap(const std::vector<bool>& asmap, int bits)
+{
+    const std::vector<bool>::const_iterator begin = asmap.begin(), endpos = asmap.end();
+    std::vector<bool>::const_iterator pos = begin;
+    std::vector<std::pair<uint32_t, int>> jumps; // All future positions we may jump to (bit offset in asmap -> bits to consume left)
+    jumps.reserve(bits);
+    while (pos != endpos) {
+        uint32_t offset = pos - begin;
+        if (!jumps.empty() && offset >= jumps.back().first) return false; // There was a jump into the middle of the previous instruction
+        Instruction opcode = DecodeType(pos, endpos);
+        if (opcode == Instruction::RETURN) {
+            uint32_t asn = DecodeASN(pos, endpos);
+            if (asn == INVALID) return false; // ASN straddles EOF
+            if (jumps.empty()) {
+                // Nothing to execute anymore
+                if (endpos - pos > 7) return false; // Excessive padding
+                while (pos != endpos) {
+                    if (*pos) return false; // Nonzero padding bit
+                    ++pos;
+                }
+                return true; // Sanely reached EOF
+            } else {
+                // Continue by pretending we jumped to the next instruction
+                offset = pos - begin;
+                if (offset != jumps.back().first) return false; // Unreachable code
+                bits = jumps.back().second; // Restore the number of bits we would have had left after this jump
+                jumps.pop_back();
+            }
+        } else if (opcode == Instruction::JUMP) {
+            uint32_t jump = DecodeJump(pos, endpos);
+            if (jump == INVALID) return false; // Jump offset straddles EOF
+            if (jump > endpos - pos) return false; // Jump out of range
+            if (bits == 0) return false; // Consuming bits past the end of the input
+            --bits;
+            uint32_t jump_offset = pos - begin + jump;
+            if (!jumps.empty() && jump_offset >= jumps.back().first) return false; // Intersecting jumps
+            jumps.emplace_back(jump_offset, bits);
+        } else if (opcode == Instruction::MATCH) {
+            uint32_t match = DecodeMatch(pos, endpos);
+            if (match == INVALID) return false; // Match bits straddle EOF
+            int matchlen = CountBits(match) - 1;
+            if (bits < matchlen) return false; // Consuming bits past the end of the input
+            bits -= matchlen;
+        } else if (opcode == Instruction::DEFAULT) {
+            uint32_t asn = DecodeASN(pos, endpos);
+            if (asn == INVALID) return false; // ASN straddles EOF
+        } else {
+            return false; // Instruction straddles EOF
+        }
+    }
+    return false; // Reached EOF without RETURN instruction
 }
