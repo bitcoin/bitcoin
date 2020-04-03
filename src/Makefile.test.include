@@ -62,6 +62,7 @@ FUZZ_TARGETS = \
   test/fuzz/partially_signed_transaction_deserialize \
   test/fuzz/pow \
   test/fuzz/prefilled_transaction_deserialize \
+  test/fuzz/process_messages \
   test/fuzz/process_message \
   test/fuzz/process_message_addr \
   test/fuzz/process_message_block \
@@ -641,6 +642,12 @@ test_fuzz_prefilled_transaction_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAG
 test_fuzz_prefilled_transaction_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_prefilled_transaction_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_prefilled_transaction_deserialize_SOURCES = test/fuzz/deserialize.cpp
+
+test_fuzz_process_messages_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_process_messages_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_process_messages_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_process_messages_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_process_messages_SOURCES = test/fuzz/process_messages.cpp
 
 test_fuzz_process_message_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_process_message_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
