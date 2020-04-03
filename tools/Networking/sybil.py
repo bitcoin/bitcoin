@@ -17,10 +17,10 @@ num_identities = 3
 network_interface = 'enp0s3'
 ip_alias_network_interface = 'wlan0'
 
-victim_ip = '10.0.2.7'
+victim_ip = '10.0.2.4'
 victim_port = 8333
 
-attacker_ip = '10.0.2.6'
+attacker_ip = '10.0.2.15'
 attacker_port = random.randint(1024,65535)
 
 spoof_IP_and_ports = []
