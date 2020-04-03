@@ -125,8 +125,7 @@ def test_transaction_acceptance(node, p2p, tx, with_witness, accepted, reason=No
     - use the getrawmempool rpc to check for acceptance."""
     reason = [reason] if reason else []
     with node.assert_debug_log(expected_msgs=reason):
-        p2p.send_message(msg_tx(tx) if with_witness else msg_no_witness_tx(tx))
-        p2p.sync_with_ping()
+        p2p.send_and_ping(msg_tx(tx) if with_witness else msg_no_witness_tx(tx))
         assert_equal(tx.hash in node.getrawmempool(), accepted)
 
 
@@ -137,8 +136,7 @@ def test_witness_block(node, p2p, block, accepted, with_witness=True, reason=Non
     - use the getbestblockhash rpc to check for acceptance."""
     reason = [reason] if reason else []
     with node.assert_debug_log(expected_msgs=reason):
-        p2p.send_message(msg_block(block) if with_witness else msg_no_witness_block(block))
-        p2p.sync_with_ping()
+        p2p.send_and_ping(msg_block(block) if with_witness else msg_no_witness_block(block))
         assert_equal(node.getbestblockhash() == block.hash, accepted)
 
 
