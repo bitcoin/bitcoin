@@ -253,12 +253,18 @@ def test_dust_to_fee(self, rbf_node, dest_address):
     self.log.info('Test that bumped output that is dust is dropped to fee')
     rbfid = spend_one_input(rbf_node, dest_address)
     fulltx = rbf_node.getrawtransaction(rbfid, 1)
-    # size of transaction (p2wpkh, 1 input, 2 outputs): 141 vbytes
-    assert_equal(fulltx["vsize"], 141)
-    # bump with fee_rate of 0.00350000 BTC per 1000 vbytes
-    # expected bump fee of 141 vbytes * fee_rate 0.00350000 BTC / 1000 vbytes = 0.00049350 BTC
-    # but dust is dropped, so actual bump fee is 0.00050000
-    bumped_tx = rbf_node.bumpfee(rbfid, {"fee_rate": 0.0035})
+    # The DER formatting used by Bitcoin to serialize ECDSA signatures means that signatures can have a
+    # variable size of 70-72 bytes (or possibly even less), with most being 71 or 72 bytes. The signature
+    # in the witness is divided by 4 for the vsize, so this variance can take the weight across a 4-byte
+    # boundary. Thus expected transaction size (p2wpkh, 1 input, 2 outputs) is 140-141 vbytes, usually 141.
+    if not 140 <= fulltx["vsize"] <= 141:
+        print("Error: Invalid tx vsize of {} (140-141 expected), full tx: {}".format(fulltx["vsize"], fulltx))
+        raise AssertionError
+    # Bump with fee_rate of 0.00350250 BTC per 1000 vbytes to create dust.
+    # Expected fee is 141 vbytes * fee_rate 0.00350250 BTC / 1000 vbytes = 0.00049385 BTC.
+    # or occasionally 140 vbytes * fee_rate 0.00350250 BTC / 1000 vbytes = 0.00049035 BTC.
+    # Dust should be dropped to the fee, so actual bump fee is 0.00050000 BTC.
+    bumped_tx = rbf_node.bumpfee(rbfid, {"fee_rate": 0.00350250})
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
     assert_equal(bumped_tx["fee"], Decimal("0.00050000"))
     assert_equal(len(fulltx["vout"]), 2)
