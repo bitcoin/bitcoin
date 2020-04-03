@@ -134,12 +134,6 @@ AC_ARG_ENABLE(gui-tests,
     [use_gui_tests=$enableval],
     [use_gui_tests=$use_tests])
 
-AC_ARG_WITH([rapidcheck],
-  [AS_HELP_STRING([--with-rapidcheck],
-  [enable RapidCheck property-based tests (default is yes if librapidcheck is found)])],
-  [use_rapidcheck=$withval],
-  [use_rapidcheck=auto])
-
 AC_ARG_ENABLE(bench,
     AS_HELP_STRING([--disable-bench],[do not compile benchmarks (default is to compile)]),
     [use_bench=$enableval],
@@ -1327,22 +1321,6 @@ else
   fi
 fi
 
-dnl RapidCheck property-based testing
-
-enable_property_tests=no
-if test "x$use_rapidcheck" = xauto; then
-    AC_CHECK_HEADERS([rapidcheck.h], [enable_property_tests=yes])
-elif test "x$use_rapidcheck" != xno; then
-    enable_property_tests=yes
-fi
-
-RAPIDCHECK_LIBS=
-if test "x$enable_property_tests" = xyes; then
-   RAPIDCHECK_LIBS=-lrapidcheck
-fi
-AC_SUBST(RAPIDCHECK_LIBS)
-AM_CONDITIONAL([ENABLE_PROPERTY_TESTS], [test x$enable_property_tests = xyes])
-
 dnl univalue check
 
 need_bundled_univalue=yes
@@ -1679,7 +1657,6 @@ fi
 echo "  with zmq      = $use_zmq"
 echo "  with test     = $use_tests"
 if test x$use_tests != xno; then
-    echo "    with prop   = $enable_property_tests"
     echo "    with fuzz   = $enable_fuzz"
 fi
 echo "  with bench    = $use_bench"
