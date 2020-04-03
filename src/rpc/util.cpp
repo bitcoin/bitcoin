@@ -606,11 +606,11 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
     switch (m_type) {
     case Type::ELISION: {
         // If the inner result is empty, use three dots for elision
-        sections.PushSection({indent_next + "...", m_description});
+        sections.PushSection({indent + "..." + maybe_separator, m_description});
         return;
     }
     case Type::NONE: {
-        sections.PushSection({indent + "None", Description("json null")});
+        sections.PushSection({indent + "null" + maybe_separator, Description("json null")});
         return;
     }
     case Type::STR: {
@@ -643,10 +643,10 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         for (const auto& i : m_inner) {
             i.ToSections(sections, OuterType::ARR, current_indent + 2);
         }
-        if (m_type == Type::ARR) {
+        CHECK_NONFATAL(!m_inner.empty());
+        if (m_type == Type::ARR && m_inner.back().m_type != Type::ELISION) {
             sections.PushSection({indent_next + "...", ""});
         } else {
-            CHECK_NONFATAL(!m_inner.empty());
             // Remove final comma, which would be invalid JSON
             sections.m_sections.back().m_left.pop_back();
         }
@@ -659,11 +659,11 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         for (const auto& i : m_inner) {
             i.ToSections(sections, OuterType::OBJ, current_indent + 2);
         }
-        if (m_type == Type::OBJ_DYN) {
+        CHECK_NONFATAL(!m_inner.empty());
+        if (m_type == Type::OBJ_DYN && m_inner.back().m_type != Type::ELISION) {
             // If the dictionary keys are dynamic, use three dots for continuation
             sections.PushSection({indent_next + "...", ""});
         } else {
-            CHECK_NONFATAL(!m_inner.empty());
             // Remove final comma, which would be invalid JSON
             sections.m_sections.back().m_left.pop_back();
         }
