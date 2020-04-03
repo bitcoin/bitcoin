@@ -116,7 +116,7 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
             break; // Instruction straddles EOF
         }
     }
-    // Reached EOF without RETURN, or aborted (see any of the breaks above).
+    assert(false); // Reached EOF without RETURN, or aborted (see any of the breaks above) - should have been caught by SanityCheckASMap below
     return 0; // 0 is not a valid ASN
 }
 
