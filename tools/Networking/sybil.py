@@ -237,7 +237,9 @@ def packet_received(packet):
 
 				try:
 					custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
-					rand_socket.send(custom.to_bytes())
+					if custom is not None:
+						rand_socket.send(custom.to_bytes())
+						
 					"""ip = IP(src = rand_ip, dst = victim_ip)
 					tcp = TCP(sport=rand_port, dport=victim_port, flags='S')
 					new_packet = ip/tcp/packet[TCP].payload
@@ -313,7 +315,7 @@ if __name__ == '__main__':
 			'store':1
 		})
 	except:
-		print('Error: unable to start thread')
+		print('Error: unable to  start thread')
 
 	for i in range(1, num_identities + 1):
 		try:
