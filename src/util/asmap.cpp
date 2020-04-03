@@ -36,10 +36,18 @@ uint32_t DecodeBits(std::vector<bool>::const_iterator& bitpos, const std::vector
     return -1;
 }
 
-const std::vector<uint8_t> TYPE_BIT_SIZES{0, 0, 1};
-uint32_t DecodeType(std::vector<bool>::const_iterator& bitpos, const std::vector<bool>::const_iterator& endpos)
+enum class Instruction : uint32_t
 {
-    return DecodeBits(bitpos, endpos, 0, TYPE_BIT_SIZES);
+    RETURN = 0,
+    JUMP = 1,
+    MATCH = 2,
+    DEFAULT = 3,
+};
+
+const std::vector<uint8_t> TYPE_BIT_SIZES{0, 0, 1};
+Instruction DecodeType(std::vector<bool>::const_iterator& bitpos, const std::vector<bool>::const_iterator& endpos)
+{
+    return Instruction(DecodeBits(bitpos, endpos, 0, TYPE_BIT_SIZES));
 }
 
 const std::vector<uint8_t> ASN_BIT_SIZES{15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
@@ -70,12 +78,13 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
     const std::vector<bool>::const_iterator endpos = asmap.end();
     uint8_t bits = ip.size();
     uint32_t default_asn = 0;
-    uint32_t opcode, jump, match, matchlen;
+    uint32_t jump, match, matchlen;
+    Instruction opcode;
     while (pos != endpos) {
         opcode = DecodeType(pos, endpos);
-        if (opcode == 0) {
+        if (opcode == Instruction::RETURN) {
             return DecodeASN(pos, endpos);
-        } else if (opcode == 1) {
+        } else if (opcode == Instruction::JUMP) {
             jump = DecodeJump(pos, endpos);
             if (bits == 0) break;
             if (ip[ip.size() - bits]) {
@@ -83,7 +92,7 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
                 pos += jump;
             }
             bits--;
-        } else if (opcode == 2) {
+        } else if (opcode == Instruction::MATCH) {
             match = DecodeMatch(pos, endpos);
             matchlen = CountBits(match) - 1;
             for (uint32_t bit = 0; bit < matchlen; bit++) {
@@ -93,7 +102,7 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
                 }
                 bits--;
             }
-        } else if (opcode == 3) {
+        } else if (opcode == Instruction::DEFAULT) {
             default_asn = DecodeASN(pos, endpos);
         } else {
             break;
