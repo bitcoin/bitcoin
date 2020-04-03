@@ -1090,60 +1090,74 @@ static UniValue mine(const JSONRPCRequest& request)
         IncrementExtraNonce(pblock, ::ChainActive().Tip(), nExtraNonce);
     }
     int numHashes = 0;
-    clock_t begin;
+    clock_t begin, end;
     if(unit == "time" || unit == "times") {
-      begin = clock(); // Start timer
-      unsigned int nMaxTries = duration;
+    unsigned int nMaxTries = duration;
       if(delayBetweenNonces == 0) {
+        begin = clock(); // Start timer
         while(nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
-          GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
+          pblock->nNonce++;
+          //GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
           --nMaxTries;
         }
+        end = clock(); // End timer
       } else {
+        begin = clock(); // Start timer
         while(nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
-          GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
+          pblock->nNonce++;
+          //GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
           --nMaxTries;
           std::this_thread::sleep_for(std::chrono::milliseconds(delayBetweenNonces));
         }
+        end = clock(); // End timer
       }
     } else if(unit == "clock" || unit == "clocks") {
-      begin = clock(); // Start timer
       if(delayBetweenNonces == 0) {
+        begin = clock(); // Start timer
         while(clock() - begin < duration && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
-          GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
+          pblock->nNonce++;
+          //GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
         }
+        end = clock(); // End timer
       } else {
+        begin = clock(); // Start timer
         while(clock() - begin < duration && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
-          GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
+          pblock->nNonce++;
+          //GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
           std::this_thread::sleep_for(std::chrono::milliseconds(delayBetweenNonces));
         }
+        end = clock(); // End timer
       }
     } else if(unit == "second" || unit == "seconds") {
       unsigned int durationClocks = duration * CLOCKS_PER_SEC;
-      begin = clock(); // Start timer
       if(delayBetweenNonces == 0) {
+        begin = clock(); // Start timer
         while(clock() - begin < durationClocks && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
-          GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
+          pblock->nNonce++;
+          //GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
         }
+        end = clock(); // End timer
       } else {
+        begin = clock(); // Start timer
         while(clock() - begin < durationClocks && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
-          GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
+          pblock->nNonce++;
+          // GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
           std::this_thread::sleep_for(std::chrono::milliseconds(delayBetweenNonces));
         }
+        end = clock(); // End timer
       }
     } else {
       result.pushKV("ERROR", "Unit of measurement unknown");
       return result;
     }
-    clock_t end = clock(); // End timer
     double elapsedTime = (double)(end - begin) / CLOCKS_PER_SEC;
-    if(elapsedTime < 0) elapsedTime = -elapsedTime; // absolute value
+    //if(elapsedTime < 0) elapsedTime = -elapsedTime; // absolute value
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
     bool success = false;
