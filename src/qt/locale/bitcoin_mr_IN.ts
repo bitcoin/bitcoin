@@ -47,7 +47,7 @@
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>ज्या पत्त्यावर नाणी प्राप्त करायची आहेत तो </translation>
+        <translation>ज्या पत्त्यावर नाणी प्राप्त करायची आहेत तो</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -157,9 +157,6 @@
     <name>SendCoinsEntry</name>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
-    </context>
-<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
@@ -196,7 +193,7 @@
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;</translation>
+        <translation>&amp;एक्स्पोर्ट</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>

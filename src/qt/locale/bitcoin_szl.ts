@@ -334,14 +334,6 @@
         <translation>Pōmiyń hasło użyte do szyfrowaniŏ portmanyja</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>Ôkno &amp;debugowaniŏ</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Ôdewrzij kōnsolã debugowaniŏ i diagnostyki</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Weryfikuj wiadōmość...</translation>
     </message>
@@ -400,10 +392,6 @@
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Pokŏż wykŏz adres i etyket użytych do ôdbiyraniŏ</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Ôdewrzij URI bitcoin: abo żōndanie płatu</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -784,10 +772,6 @@
         <translation>wersyjŏ</translation>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
         <source>About %1</source>
         <translation>Ô %1</translation>
     </message>
@@ -917,24 +901,8 @@
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open URI</source>
-        <translation>Ôdewrzij URI</translation>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Ôdewrzij żōndanie płatu z URI abo zbioru</translation>
-    </message>
-    <message>
         <source>URI:</source>
         <translation>URI:</translation>
-    </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>Ôtwōrz żōndanie płatu ze zbioru</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Ôbier zbiōr żōndaniŏ płatu do ôdewrzyniŏ</translation>
     </message>
 </context>
 <context>
@@ -1172,27 +1140,7 @@
         <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
         <translation>'bitcoin://' to niyma nŏleżne URI. Użyj 'bitcoin:'.</translation>
     </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Nec żōndaniŏ płatu niy ôdpadŏ necu klijynta.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Niyzweryfikowane żōndaniŏ płatu do włŏsnych skryptōw płatu sōm niypodpiyrane.</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Feler kōmunikacyje z %1: %2</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Feler żōndaniŏ necu</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Płat przituplowany</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PeerTableModel</name>
     <message>
@@ -1297,10 +1245,6 @@
         <translation>Wersyjŏ klijynta</translation>
     </message>
     <message>
-        <source>Debug window</source>
-        <translation>Ôkno debugowaniŏ</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>Używanie wersyje BerkeleyDB</translation>
     </message>
@@ -1338,7 +1282,7 @@
     </message>
     <message>
         <source>Wallet: </source>
-        <translation>Portmanyj: </translation>
+        <translation>Portmanyj:</translation>
     </message>
     <message>
         <source>Received</source>
@@ -1656,10 +1600,6 @@
         <translation>&amp;Etyketa:</translation>
     </message>
     <message>
-        <source>This is a normal payment.</source>
-        <translation>To je normalny płat.</translation>
-    </message>
-    <message>
         <source>The Bitcoin address to send the payment to</source>
         <translation>Adresa Bitcoin, na kerõ chcesz posłać płat</translation>
     </message>
@@ -1684,13 +1624,6 @@
         <translation>Wiadōmość, kerŏ ôstała prziwstōnŏ do URI bitcoin:, kerŏ bydzie przechowowanŏ z transakcyjōm w cylach informacyjnych. Napōmniynie: Ta wiadōmość niy bydzie rozszyrzowanŏ w necu Bitcoin.</translation>
     </message>
     </context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>Ja</translation>
-    </message>
-</context>
 <context>
     <name>ShutdownWindow</name>
     </context>

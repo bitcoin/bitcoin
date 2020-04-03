@@ -334,14 +334,6 @@
         <translation>Мењање лозинке којом се шифрује новчаник</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Прозор за отклањање грешке</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Отвори конзолу за отклањање грешака и дијагностику</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Верификовање поруке...</translation>
     </message>
@@ -400,10 +392,6 @@
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Прегледајте листу коришћених адреса и етикета за пријем уплата</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Отворите биткоин: URI или захтев за плаћање</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -749,10 +737,6 @@
         <translation>верзија</translation>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
         <source>About %1</source>
         <translation>Приближно %1</translation>
     </message>
@@ -993,6 +977,10 @@
         <translation>Налепница</translation>
     </message>
     <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
+    </message>
+    <message>
         <source>Wallet</source>
         <translation>Новчаник</translation>
     </message>
@@ -1006,6 +994,10 @@
     <message>
         <source>Label</source>
         <translation>Налепница</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1115,13 +1107,6 @@
     </message>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>Da</translation>
-    </message>
-</context>
-<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
@@ -1141,12 +1126,36 @@
 <context>
     <name>TransactionDesc</name>
     <message>
+        <source>Open until %1</source>
+        <translation>Otvoreno do %1</translation>
+    </message>
+    <message>
+        <source>%1/unconfirmed</source>
+        <translation>%1/nepotvrdjeno</translation>
+    </message>
+    <message>
+        <source>%1 confirmations</source>
+        <translation>%1 potvrde</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>datum</translation>
     </message>
     <message>
         <source>unknown</source>
         <translation>nepoznato</translation>
+    </message>
+    <message>
+        <source>label</source>
+        <translation>етикета</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>transakcije</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -1167,16 +1176,124 @@
         <translation>datum</translation>
     </message>
     <message>
+        <source>Type</source>
+        <translation>tip</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Налепница</translation>
+    </message>
+    <message>
+        <source>Open until %1</source>
+        <translation>Otvoreno do %1</translation>
+    </message>
+    <message>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>Potvrdjena (%1 potvrdjenih)</translation>
+    </message>
+    <message>
+        <source>Generated but not accepted</source>
+        <translation>Generisan ali nije prihvaćen</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>Primljen sa</translation>
+    </message>
+    <message>
+        <source>Received from</source>
+        <translation>Primljeno od</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Poslat ka</translation>
+    </message>
+    <message>
+        <source>Payment to yourself</source>
+        <translation>Isplata samom sebi</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation>Minirano</translation>
+    </message>
+    <message>
+        <source>(n/a)</source>
+        <translation>(n/a)</translation>
     </message>
     <message>
         <source>(no label)</source>
         <translation>(без налепнице)</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation>Status vaše transakcije. Predjite mišem preko ovog polja da bi ste videli broj konfirmacija</translation>
+    </message>
+    <message>
+        <source>Date and time that the transaction was received.</source>
+        <translation>Datum i vreme primljene transakcije.</translation>
+    </message>
+    <message>
+        <source>Type of transaction.</source>
+        <translation>Tip transakcije</translation>
+    </message>
+    <message>
+        <source>Amount removed from or added to balance.</source>
+        <translation>Iznos odbijen ili dodat balansu.</translation>
+    </message>
+</context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>All</source>
+        <translation>Sve</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>Danas</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation>ove nedelje</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation>Ovog meseca</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation>Prošlog meseca</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation>Ove godine</translation>
+    </message>
+    <message>
+        <source>Range...</source>
+        <translation>Opseg...</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>Primljen sa</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Poslat ka</translation>
+    </message>
+    <message>
+        <source>To yourself</source>
+        <translation>Vama - samom sebi</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation>Minirano</translation>
+    </message>
+    <message>
+        <source>Other</source>
+        <translation>Drugi</translation>
+    </message>
+    <message>
+        <source>Min amount</source>
+        <translation>Min iznos</translation>
+    </message>
     <message>
         <source>Copy address</source>
         <translation>Копирај адресу</translation>
@@ -1195,6 +1312,10 @@
         <translation>Копирај идентификациони број трансакције</translation>
     </message>
     <message>
+        <source>Edit label</source>
+        <translation>promeni naziv</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Фајл раздојен тачком (*.csv)</translation>
     </message>
@@ -1205,6 +1326,10 @@
     <message>
         <source>Date</source>
         <translation>datum</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>tip</translation>
     </message>
     <message>
         <source>Label</source>
@@ -1218,7 +1343,15 @@
         <source>Exporting Failed</source>
         <translation>Извоз Неуспешан</translation>
     </message>
-    </context>
+    <message>
+        <source>Range:</source>
+        <translation>Opseg:</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>do</translation>
+    </message>
+</context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     </context>
@@ -1248,6 +1381,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Извези податке из одабране картице у фајлj</translation>
+    </message>
+    <message>
+        <source>Backup Wallet</source>
+        <translation>Backup новчаника</translation>
     </message>
     </context>
 <context>

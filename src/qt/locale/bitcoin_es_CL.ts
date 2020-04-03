@@ -48,11 +48,11 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Elija la dirección para enviar las monedas </translation>
+        <translation>Elija la dirección para enviar las monedas</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Elige la dirección para recibir las monedas </translation>
+        <translation>Elige la dirección para recibir las monedas</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -339,14 +339,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Cambiar la contraseña usando la encriptación de la billetera</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Ventana desarrollador</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Abrir consola de diagnóstico y desarrollo</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verificar Mensaje...</translation>
     </message>
@@ -405,10 +397,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Mostrar la lista de direcciones y etiquetas de recepción usadas</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Abra un bitcoin: URI o solicitud de pago</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -793,10 +781,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>versión</translation>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
         <source>About %1</source>
         <translation>Alrededor de %1</translation>
     </message>
@@ -924,30 +908,14 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
-        <translation>Desconocido. Sincronizando cabecesar (%1, %2%)...</translation>
+        <translation>Desconocido. Sincronizando cabeceras (%1, %2%)...</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open URI</source>
-        <translation>URI abierto</translation>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Abrir solicitud de pago de URI o archivo</translation>
-    </message>
-    <message>
         <source>URI:</source>
         <translation>URI:</translation>
-    </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>Seleccionar archivo de solicitud de pago</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Seleccione el archivo de solicitud de pago para abrir</translation>
     </message>
 </context>
 <context>
@@ -1137,7 +1105,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation> Unidad para mostrar montos en:</translation>
+        <translation>Unidad para mostrar montos en:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
@@ -1165,7 +1133,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>none</source>
-        <translation>ninguno </translation>
+        <translation>ninguno</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1294,10 +1262,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Manejo de URI</translation>
     </message>
     <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>La URL de búsqueda de solicitud de pago no es válida: %1</translation>
-    </message>
-    <message>
         <source>Invalid payment address %1</source>
         <translation>Dirección de pago inválida %1</translation>
     </message>
@@ -1308,66 +1272,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     <message>
         <source>Payment request file handling</source>
         <translation>Manejo de archivos de solicitud de pago</translation>
-    </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>¡El archivo de solicitud de pago no se puede leer! Esto puede deberse a un archivo de solicitud de pago no válido.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Solicitud de pago rechazada</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>La red de solicitud de pago no coincide con la red del cliente.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Solicitud de pago caducada.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>La solicitud de pago no está inicializada.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Las solicitudes de pago no verificadas para los scripts de pago personalizados no son compatibles.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Solicitud de pago inválida</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>El monto para la solicitud de pago de %1 es muy pequeño (considera el dust).</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Reembolso de %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>Solicitud de pago %1 es muy grande (Actualmente %2 bytes, máximo %3 bytes)</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Fallo al comunicar con %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>¡La solicitud de pago no se puede analizar!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Mala respuesta del servidor %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Error de solicitud de red</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Pago reconocido</translation>
     </message>
 </context>
 <context>
@@ -1534,10 +1438,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Información</translation>
     </message>
     <message>
-        <source>Debug window</source>
-        <translation>Ventana de depuración</translation>
-    </message>
-    <message>
         <source>General</source>
         <translation>General</translation>
     </message>
@@ -1563,7 +1463,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>Number of connections</source>
-        <translation>Número de conexiones </translation>
+        <translation>Número de conexiones</translation>
     </message>
     <message>
         <source>Block chain</source>
@@ -1703,7 +1603,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>Totals</source>
-        <translation>Totales </translation>
+        <translation>Totales</translation>
     </message>
     <message>
         <source>In:</source>
@@ -1783,7 +1683,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>never</source>
-        <translation>nunca </translation>
+        <translation>nunca</translation>
     </message>
     <message>
         <source>Inbound</source>
@@ -1795,7 +1695,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>Yes</source>
-        <translation>Si </translation>
+        <translation>Si</translation>
     </message>
     <message>
         <source>No</source>
@@ -2026,10 +1926,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Advertencia: En este momento no se puede estimar la cuota.</translation>
     </message>
     <message>
-        <source>collapse fee-settings</source>
-        <translation>Colapsar ajustes de comisión.</translation>
-    </message>
-    <message>
         <source>per kilobyte</source>
         <translation>por kilobyte</translation>
     </message>
@@ -2155,10 +2051,6 @@ Tarifa de copia</translation>
         <translation>¡Fallo al crear la transacción!</translation>
     </message>
     <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>Se ha rechazado la transacción por la siguiente razón: %1</translation>
-    </message>
-    <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>Una comisión mayor que %1 se considera como una comisión absurda-mente alta.</translation>
     </message>
@@ -2204,10 +2096,6 @@ Tarifa de copia</translation>
     <message>
         <source>Choose previously used address</source>
         <translation>Seleccionar dirección usada anteriormente</translation>
-    </message>
-    <message>
-        <source>This is a normal payment.</source>
-        <translation>Este es un pago normal</translation>
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
@@ -2256,17 +2144,6 @@ Tarifa de copia</translation>
     <message>
         <source>Memo:</source>
         <translation>Memo:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Introduce una etiqueta a esta dirección para añadirla a tu guía</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>Si </translation>
     </message>
 </context>
 <context>
@@ -2931,10 +2808,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation>La Poda se ha configurado por debajo del mínimo de %d MiB. Por favor utiliza un valor mas alto.</translation>
-    </message>
-    <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>No es es posible re-escanear en modo prune. Debes usar -reindex el cual descargara toda la blockchain de nuevo.</translation>
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>

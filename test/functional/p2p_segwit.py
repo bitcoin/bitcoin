@@ -303,8 +303,7 @@ class SegWitTest(BitcoinTestFramework):
 
         block = self.build_next_block(version=1)
         block.solve()
-        self.test_node.send_message(msg_no_witness_block(block))
-        self.test_node.sync_with_ping()  # make sure the block was processed
+        self.test_node.send_and_ping(msg_no_witness_block(block))  # make sure the block was processed
         txid = block.vtx[0].sha256
 
         self.nodes[0].generate(99)  # let the block mature
@@ -319,8 +318,7 @@ class SegWitTest(BitcoinTestFramework):
         # This is a sanity check of our testing framework.
         assert_equal(msg_no_witness_tx(tx).serialize(), msg_tx(tx).serialize())
 
-        self.test_node.send_message(msg_tx(tx))
-        self.test_node.sync_with_ping()  # make sure the tx was processed
+        self.test_node.send_and_ping(msg_tx(tx))  # make sure the block was processed
         assert tx.hash in self.nodes[0].getrawmempool()
         # Save this transaction for later
         self.utxo.append(UTXO(tx.sha256, 0, 49 * 100000000))
@@ -350,8 +348,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # But it should not be permanently marked bad...
         # Resend without witness information.
-        self.test_node.send_message(msg_no_witness_block(block))
-        self.test_node.sync_with_ping()
+        self.test_node.send_and_ping(msg_no_witness_block(block))  # make sure the block was processed
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         # Update our utxo list; we spent the first entry.
@@ -2054,16 +2051,14 @@ class SegWitTest(BitcoinTestFramework):
         tx = FromHex(CTransaction(), raw)
         assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, serialize_with_bogus_witness(tx).hex())
         with self.nodes[0].assert_debug_log(['Superfluous witness record']):
-            self.nodes[0].p2p.send_message(msg_bogus_tx(tx))
-            self.nodes[0].p2p.sync_with_ping()
+            self.nodes[0].p2p.send_and_ping(msg_bogus_tx(tx))
         raw = self.nodes[0].signrawtransactionwithwallet(raw)
         assert raw['complete']
         raw = raw['hex']
         tx = FromHex(CTransaction(), raw)
         assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, serialize_with_bogus_witness(tx).hex())
         with self.nodes[0].assert_debug_log(['Unknown transaction optional data']):
-            self.nodes[0].p2p.send_message(msg_bogus_tx(tx))
-            self.nodes[0].p2p.sync_with_ping()
+            self.nodes[0].p2p.send_and_ping(msg_bogus_tx(tx))
 
 
 if __name__ == '__main__':

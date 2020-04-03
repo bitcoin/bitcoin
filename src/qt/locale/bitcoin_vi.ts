@@ -338,14 +338,6 @@
         <translation>Thay đổi cụm mật khẩu cho ví đã mã hóa</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Debug window</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Mở trình gỡ lỗi và giao diện điều chỉnh chẩn đoán</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Lời nhắn xác nhận...</translation>
     </message>
@@ -406,12 +398,8 @@
         <translation>Hiển thị danh sách các địa chỉ và nhãn đã dùng để nhận</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Mở một bitcoin: URI hoặc yêu cầu thanh toán</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
-        <translation>&amp;Tùy chỉnh Command-line </translation>
+        <translation>&amp;Tùy chỉnh Command-line</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -491,7 +479,7 @@
     </message>
     <message>
         <source>No wallets available</source>
-        <translation>Không có ví nào </translation>
+        <translation>Không có ví nào</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -840,10 +828,6 @@
         <translation>phiên bản</translation>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
         <source>About %1</source>
         <translation>About %1</translation>
     </message>
@@ -969,28 +953,16 @@
         <source>Hide</source>
         <translation>Ẩn</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Không biết. Đang đồng bộ Headers (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open URI</source>
-        <translation>Mở URI</translation>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Mở payment request từ URI hoặc file</translation>
-    </message>
-    <message>
         <source>URI:</source>
         <translation>URI:</translation>
-    </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>Chọn payment request file</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Chọn file payment request để mở</translation>
     </message>
 </context>
 <context>
@@ -1373,18 +1345,6 @@
         <translation>'bitcoin://' không khả dụng URI. Dùng thay vì 'bitcoin:' .</translation>
     </message>
     <message>
-        <source>You are using a BIP70 URL which will be unsupported in the future.</source>
-        <translation>Bạn đang dùng một URL BIP70 cái này không hổ trợ trong tương lai.</translation>
-    </message>
-    <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>Payment request dẫn đến URL thì invalid: %1</translation>
-    </message>
-    <message>
-        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
-        <translation>Không thể tiến hành yêu cầu thanh toán bởi vì sự trợ giúp BIP70 không có biên dịch trong này.</translation>
-    </message>
-    <message>
         <source>Invalid payment address %1</source>
         <translation>Invalid payment address %1</translation>
     </message>
@@ -1395,66 +1355,6 @@
     <message>
         <source>Payment request file handling</source>
         <translation>Payment request file đang xử lý</translation>
-    </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Payment request file không thể đọc! Đây có thể gây ra bởi một invalid payment request file.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Payment request bị từ chối</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Payment request network chưa đúng với client network.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Payment request hết hạn.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Payment request đã không được khởi tạo.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Chưa xác nhận payment request đến custom payment scripts không được hỗ trợ.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Invalid payment request.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Yêu cầu payment với lượng của %1 thì quá nhỏ (xem như dust).</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Refund từ %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>Payment request %1 thì quá lớn (%2 bytes, cho phép %3 bytes).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Error giao thức với %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>Payment request không thể giải!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Phản hồi xấu từ server %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Mạng request error</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Payment được thừa nhận</translation>
     </message>
 </context>
 <context>
@@ -1633,10 +1533,6 @@
         <translation>&amp;Thông tin</translation>
     </message>
     <message>
-        <source>Debug window</source>
-        <translation>Debug window</translation>
-    </message>
-    <message>
         <source>General</source>
         <translation>Tổng thể</translation>
     </message>
@@ -1650,7 +1546,7 @@
     </message>
     <message>
         <source>To specify a non-default location of the data directory use the '%1' option.</source>
-        <translation>Để chỉ ra một nơi không mặt định của thư mục dữ liệu hãy dùng tùy chọn '%1' </translation>
+        <translation>Để chỉ ra một nơi không mặt định của thư mục dữ liệu hãy dùng tùy chọn '%1'</translation>
     </message>
     <message>
         <source>Blocksdir</source>
@@ -1658,7 +1554,7 @@
     </message>
     <message>
         <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
-        <translation>Để chỉ ra một nơi không mặt định của thư mục các khối hãy dùng tùy chọn '%1' </translation>
+        <translation>Để chỉ ra một nơi không mặt định của thư mục các khối hãy dùng tùy chọn '%1'</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1879,6 +1775,14 @@
     <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
         <translation>Use up and down arrows to navigate history, and %1 to clear screen.</translation>
+    </message>
+    <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Nhậ p %1 để biết tổng quan về các lệnh có sẵn.</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>Để biết thêm thông tin về việc sử dụng bảng điều khiển này, hãy nhập %1.</translation>
     </message>
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
@@ -2161,10 +2065,6 @@
         <translation>Warning: Fee ước tính hiện tại không khả thi.</translation>
     </message>
     <message>
-        <source>collapse fee-settings</source>
-        <translation>gộp fee-settings</translation>
-    </message>
-    <message>
         <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
 
 Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 satoshis.</source>
@@ -2314,7 +2214,7 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
     </message>
     <message>
         <source>Total Amount</source>
-        <translation>Tổng số </translation>
+        <translation>Tổng số</translation>
     </message>
     <message>
         <source>To review recipient list click "Show Details..."</source>
@@ -2347,10 +2247,6 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
     <message>
         <source>Transaction creation failed!</source>
         <translation>Transaction khởi tạo thất bại!</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>The transaction đã bị từ chối với lý do sau: %1</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
@@ -2402,10 +2298,6 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
     <message>
         <source>Choose previously used address</source>
         <translation>Chọn mới thì address</translation>
-    </message>
-    <message>
-        <source>This is a normal payment.</source>
-        <translation>Đây là một thông thường payment.</translation>
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
@@ -2466,17 +2358,6 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
     <message>
         <source>Memo:</source>
         <translation>Bản ghi nhớ:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Nhập một label cho address này để thêm vào address book</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>Yes</translation>
     </message>
 </context>
 <context>
@@ -3206,10 +3087,6 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</translation>
     </message>
     <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</translation>
-    </message>
-    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Error: A fatal internal error occurred, see debug.log for details</translation>
     </message>
@@ -3366,6 +3243,10 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Initialization sanity check failed. %s is shutting down.</translation>
     </message>
     <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Quyền P2P không hợp lệ: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Invalid amount for -%s=&lt;amount&gt;: '%s'</translation>
     </message>
@@ -3510,8 +3391,24 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Reducing -maxconnections from %d to %d, because of system limitations.</translation>
     </message>
     <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>Mục [%s] không được nhìn nhận.</translation>
+    </message>
+    <message>
         <source>Signing transaction failed</source>
         <translation>Signing transaction failed</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Thư mục ví được nêu  -walletdir "%s" không tồn tại</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>Chỉ định -walletdir "%s" là đường dẫn tương đối</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Chỉ định -walletdir "%s" không phải là một thư mục</translation>
     </message>
     <message>
         <source>The specified config file %s does not exist
@@ -3570,10 +3467,6 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>This is the transaction fee you may pay when fee estimates are not available.</translation>
-    </message>
-    <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</translation>
     </message>
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
