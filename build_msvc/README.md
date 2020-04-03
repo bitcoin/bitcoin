@@ -12,7 +12,7 @@ Quick Start
 The minimal steps required to build Syscoin Core with the msbuild toolchain are below. More detailed instructions are contained in the following sections.
 
 ```
-vcpkg install --triplet x64-windows-static berkeleydb boost-filesystem boost-multi-index boost-signals2 boost-test boost-thread libevent[thread] rapidcheck zeromq double-conversion
+vcpkg install --triplet x64-windows-static berkeleydb boost-filesystem boost-multi-index boost-signals2 boost-test boost-thread libevent[thread] zeromq double-conversion
 vcpkg integrate install
 py -3 build_msvc\msvc-autogen.py
 msbuild /m build_msvc\syscoin.sln /p:Platform=x64 /p:Configuration=Release /t:build
@@ -45,7 +45,6 @@ The [external dependencies](https://github.com/syscoin/syscoin/blob/master/doc/d
 - DoubleConversion
 - libevent
 - Qt5
-- RapidCheck
 - ZeroMQ
 
 Qt
