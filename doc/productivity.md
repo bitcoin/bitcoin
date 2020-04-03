@@ -172,11 +172,11 @@ When looking at other's pull requests, it may make sense to add the following se
 
 ```
 [remote "upstream-pull"]
-        fetch = +refs/pull/*:refs/remotes/upstream-pull/*
+        fetch = +refs/pull/*/head:refs/remotes/upstream-pull/*
         url = git@github.com:bitcoin/bitcoin.git
 ```
 
-This will add an `upstream-pull` remote to your git repository, which can be fetched using `git fetch --all` or `git fetch upstream-pull`. Afterwards, you can use `upstream-pull/NUMBER/head` in arguments to `git show`, `git checkout` and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.
+This will add an `upstream-pull` remote to your git repository, which can be fetched using `git fetch --all` or `git fetch upstream-pull`. It will download and store on disk quite a lot of data (all PRs, including merged and closed ones). Afterwards, you can use `upstream-pull/NUMBER/head` in arguments to `git show`, `git checkout` and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.
 
 ### Diff the diffs with `git range-diff`
 
