@@ -3472,7 +3472,7 @@ std::set<CTxDestination> CWallet::GetLabelAddresses(const std::string& label) co
     {
         if (item.second.IsChange()) continue;
         const CTxDestination& address = item.first;
-        const std::string& strName = item.second.name;
+        const std::string& strName = item.second.GetLabel();
         if (strName == label)
             result.insert(address);
     }
