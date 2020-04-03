@@ -8,6 +8,8 @@
 
 namespace {
 
+constexpr uint32_t INVALID = 0xFFFFFFFF;
+
 uint32_t DecodeBits(std::vector<bool>::const_iterator& bitpos, const std::vector<bool>::const_iterator& endpos, uint8_t minval, const std::vector<uint8_t> &bit_sizes)
 {
     uint32_t val = minval;
@@ -25,7 +27,7 @@ uint32_t DecodeBits(std::vector<bool>::const_iterator& bitpos, const std::vector
             val += (1 << *bit_sizes_it);
         } else {
             for (int b = 0; b < *bit_sizes_it; b++) {
-                if (bitpos == endpos) break;
+                if (bitpos == endpos) return INVALID; // Reached EOF in mantissa
                 bit = *bitpos;
                 bitpos++;
                 val += bit << (*bit_sizes_it - 1 - b);
@@ -33,7 +35,7 @@ uint32_t DecodeBits(std::vector<bool>::const_iterator& bitpos, const std::vector
             return val;
         }
     }
-    return -1;
+    return INVALID; // Reached EOF in exponent
 }
 
 enum class Instruction : uint32_t
@@ -83,9 +85,12 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
     while (pos != endpos) {
         opcode = DecodeType(pos, endpos);
         if (opcode == Instruction::RETURN) {
-            return DecodeASN(pos, endpos);
+            default_asn = DecodeASN(pos, endpos);
+            if (default_asn == INVALID) break; // ASN straddles EOF
+            return default_asn;
         } else if (opcode == Instruction::JUMP) {
             jump = DecodeJump(pos, endpos);
+            if (jump == INVALID) break; // Jump offset straddles EOF
             if (bits == 0) break;
             if (ip[ip.size() - bits]) {
                 if (jump >= endpos - pos) break;
@@ -94,6 +99,7 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
             bits--;
         } else if (opcode == Instruction::MATCH) {
             match = DecodeMatch(pos, endpos);
+            if (match == INVALID) break; // Match bits straddle EOF
             matchlen = CountBits(match) - 1;
             for (uint32_t bit = 0; bit < matchlen; bit++) {
                 if (bits == 0) break;
@@ -104,8 +110,9 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
             }
         } else if (opcode == Instruction::DEFAULT) {
             default_asn = DecodeASN(pos, endpos);
+            if (default_asn == INVALID) break; // ASN straddles EOF
         } else {
-            break;
+            break; // Instruction straddles EOF
         }
     }
     return 0; // 0 is not a valid ASN
