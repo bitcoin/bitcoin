@@ -182,7 +182,7 @@ public:
         std::vector<WalletAddress> result;
         for (const auto& item : m_wallet->m_address_book) {
             if (item.second.IsChange()) continue;
-            result.emplace_back(item.first, m_wallet->IsMine(item.first), item.second.name, item.second.purpose);
+            result.emplace_back(item.first, m_wallet->IsMine(item.first), item.second.GetLabel(), item.second.purpose);
         }
         return result;
     }
