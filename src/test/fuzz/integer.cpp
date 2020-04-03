@@ -126,8 +126,20 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             assert(parsed_money == i64);
         }
     }
+    if (i32 >= 0 && i32 <= 16) {
+        assert(i32 == CScript::DecodeOP_N(CScript::EncodeOP_N(i32)));
+    }
+
     const std::chrono::seconds seconds{i64};
     assert(count_seconds(seconds) == i64);
+
+    const CScriptNum script_num{i64};
+    (void)script_num.getint();
+    // Avoid negation failure:
+    // script/script.h:332:35: runtime error: negation of -9223372036854775808 cannot be represented in type 'int64_t' (aka 'long'); cast to an unsigned type to negate this value to itself
+    if (script_num != CScriptNum{std::numeric_limits<int64_t>::min()}) {
+        (void)script_num.getvch();
+    }
 
     const arith_uint256 au256 = UintToArith256(u256);
     assert(ArithToUint256(au256) == u256);
