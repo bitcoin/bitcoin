@@ -9,6 +9,7 @@
 #include <policy/policy.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
+#include <script/interpreter.h>
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
@@ -30,7 +31,10 @@ void initialize()
 
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
-    const CScript script(buffer.begin(), buffer.end());
+    FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    const Optional<CScript> script_opt = ConsumeDeserializable<CScript>(fuzzed_data_provider);
+    if (!script_opt) return;
+    const CScript script{*script_opt};
 
     std::vector<unsigned char> compressed;
     if (CompressScript(script, compressed)) {
@@ -89,12 +93,30 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     ScriptToUniv(script, o4, false);
 
     {
-        FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
         const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
-        // DecompressScript(..., ..., bytes) is not guaranteed to be defined if bytes.size() <= 23.
-        if (bytes.size() >= 24) {
+        // DecompressScript(..., ..., bytes) is not guaranteed to be defined if the bytes vector is too short
+        if (bytes.size() >= 32) {
             CScript decompressed_script;
             DecompressScript(decompressed_script, fuzzed_data_provider.ConsumeIntegral<unsigned int>(), bytes);
+        }
+    }
+
+    const Optional<CScript> other_script = ConsumeDeserializable<CScript>(fuzzed_data_provider);
+    if (other_script) {
+        {
+            CScript script_mut{script};
+            (void)FindAndDelete(script_mut, *other_script);
+        }
+        const std::vector<std::string> random_string_vector = ConsumeRandomLengthStringVector(fuzzed_data_provider);
+        const uint32_t u32{fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
+        const uint32_t flags{u32 | SCRIPT_VERIFY_P2SH};
+        {
+            CScriptWitness wit;
+            for (const auto& s : random_string_vector) {
+                wit.stack.emplace_back(s.begin(), s.end());
+            }
+            (void)CountWitnessSigOps(script, *other_script, &wit, flags);
+            wit.SetNull();
         }
     }
 }
