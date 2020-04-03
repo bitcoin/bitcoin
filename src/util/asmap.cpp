@@ -91,9 +91,9 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
         } else if (opcode == Instruction::JUMP) {
             jump = DecodeJump(pos, endpos);
             if (jump == INVALID) break; // Jump offset straddles EOF
-            if (bits == 0) break;
+            if (bits == 0) break; // No input bits left
+            if (jump >= endpos - pos) break; // Jumping past EOF
             if (ip[ip.size() - bits]) {
-                if (jump >= endpos - pos) break;
                 pos += jump;
             }
             bits--;
@@ -101,8 +101,8 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
             match = DecodeMatch(pos, endpos);
             if (match == INVALID) break; // Match bits straddle EOF
             matchlen = CountBits(match) - 1;
+            if (bits < matchlen) break; // Not enough input bits
             for (uint32_t bit = 0; bit < matchlen; bit++) {
-                if (bits == 0) break;
                 if ((ip[ip.size() - bits]) != ((match >> (matchlen - 1 - bit)) & 1)) {
                     return default_asn;
                 }
@@ -115,5 +115,6 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
             break; // Instruction straddles EOF
         }
     }
+    // Reached EOF without RETURN, or aborted (see any of the breaks above).
     return 0; // 0 is not a valid ASN
 }
