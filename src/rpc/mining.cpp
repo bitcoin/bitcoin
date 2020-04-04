@@ -1037,8 +1037,8 @@ static UniValue mine(const JSONRPCRequest& request)
                 },
                 RPCResults{},
                 RPCExamples{
-            "\nMine for 5 seconds to 1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc\n"
-            + HelpExampleCli("mine", "5 seconds 0 1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc")
+            "\nMine for 1 million nonces to 1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc\n"
+            + HelpExampleCli("mine", "1000000 times 0 1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc")
             + "If you are running the bitcoin core wallet, you can get a new address to send the newly generated bitcoin to with:\n"
             + HelpExampleCli("getnewaddress", "")
                 },
@@ -1175,10 +1175,6 @@ static UniValue mine(const JSONRPCRequest& request)
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
     bool success = false;
-
-
-    if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
 
     if (blockFound) {
       try {
