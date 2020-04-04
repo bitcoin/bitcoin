@@ -1091,7 +1091,7 @@ static UniValue mine(const JSONRPCRequest& request)
     }
     int numHashes = 0;
     clock_t begin, end;
-    bool.blockFound = false;
+    bool blockFound = false;
     if(unit == "time" || unit == "times") {
     unsigned int nMaxTries = duration;
       if(delayBetweenNonces == 0) {
