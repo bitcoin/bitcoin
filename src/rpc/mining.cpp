@@ -1030,27 +1030,34 @@ static UniValue mine(const JSONRPCRequest& request)
             RPCHelpMan{"mine",
                 "\nMine blocks immediately to a specified address (before the RPC call returns)\n",
                 {
-                    {"duration", RPCArg::Type::STR, RPCArg::Optional::NO, "Duration"},
-                    {"times/seconds/clocks", RPCArg::Type::STR, RPCArg::Optional::NO, "Unit"},
+                    {"duration", RPCArg::Type::STR, "1000000", "Duration"},
+                    {"times/seconds/clocks", RPCArg::Type::STR, "times", "Unit"},
                     {"delayBetweenNonces", RPCArg::Type::STR, /* optional */ "0", "Delay in milliseconds between each nonce"},
                     {"address", RPCArg::Type::STR, /* optional */ "1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc", "The address to send the newly generated bitcoin to."},
                 },
                 RPCResults{},
                 RPCExamples{
             "\nMine for 5 seconds to 1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc\n"
-            + HelpExampleCli("mine", "5 seconds")
+            + HelpExampleCli("mine", "5 seconds 0 1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc")
             + "If you are running the bitcoin core wallet, you can get a new address to send the newly generated bitcoin to with:\n"
             + HelpExampleCli("getnewaddress", "")
                 },
             }.Check(request);
 
-    std::string durationStr = request.params[0].get_str();
+
+    std::string durationStr = "1000000";
+    if(!request.params[0].isNull()) {
+      std::string durationStr = request.params[0].get_str();
+    }
     unsigned int duration = 0;
     try {
       duration = std::stoi(durationStr);
     } catch(...){}
 
-    std::string unit = request.params[1].get_str();
+    std::string unit = "times";
+    if(!request.params[1].isNull()) {
+      unit = request.params[1].get_str();
+    }
 
     unsigned int delayBetweenNonces = 0;
     if(!request.params[2].isNull()) {
@@ -1168,21 +1175,16 @@ static UniValue mine(const JSONRPCRequest& request)
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
     bool success = false;
-    /*
 
-    if (nMaxTries == 0 || ShutdownRequested()) {
-        break;
-    }
-    if (pblock->nNonce == std::numeric_limits<uint32_t>::max()) {
-        continue;
-    }
-    std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
+
     if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
-    */
-    try {
-      success = ProcessNewBlock(Params(), shared_pblock, true, nullptr);
-    } catch (...) {}
+
+    if (blockFound) {
+      try {
+        success = ProcessNewBlock(Params(), shared_pblock, true, nullptr);
+      } catch (...) {}
+    }
     result.pushKV("Hashes per second", numHashes / elapsedTime);
     result.pushKV("Number of hashes", numHashes);
     result.pushKV("Elapsed time (seconds)", elapsedTime);
