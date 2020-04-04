@@ -25,68 +25,61 @@ class prevector_tester {
     pretype pre_vector_alt;
 
     typedef typename pretype::size_type Size;
-    bool passed = true;
 
-    template <typename A, typename B>
-    void local_check_equal(A a, B b)
-    {
-        local_check(a == b);
-    }
-
-    void local_check(bool b)
-    {
-        passed &= b;
-    }
     void test() {
         const pretype& const_pre_vector = pre_vector;
-        local_check_equal(real_vector.size(), pre_vector.size());
-        local_check_equal(real_vector.empty(), pre_vector.empty());
+        assert(real_vector.size() == pre_vector.size());
+        assert(real_vector.empty() == pre_vector.empty());
         for (Size s = 0; s < real_vector.size(); s++) {
-             local_check(real_vector[s] == pre_vector[s]);
-             local_check(&(pre_vector[s]) == &(pre_vector.begin()[s]));
-             local_check(&(pre_vector[s]) == &*(pre_vector.begin() + s));
-             local_check(&(pre_vector[s]) == &*((pre_vector.end() + s) - real_vector.size()));
+             assert(real_vector[s] == pre_vector[s]);
+             assert(&(pre_vector[s]) == &(pre_vector.begin()[s]));
+             assert(&(pre_vector[s]) == &*(pre_vector.begin() + s));
+             assert(&(pre_vector[s]) == &*((pre_vector.end() + s) - real_vector.size()));
         }
-        // local_check(realtype(pre_vector) == real_vector);
-        local_check(pretype(real_vector.begin(), real_vector.end()) == pre_vector);
-        local_check(pretype(pre_vector.begin(), pre_vector.end()) == pre_vector);
+        // assert(realtype(pre_vector) == real_vector);
+        assert(pretype(real_vector.begin(), real_vector.end()) == pre_vector);
+        assert(pretype(pre_vector.begin(), pre_vector.end()) == pre_vector);
         size_t pos = 0;
         for (const T& v : pre_vector) {
-             local_check(v == real_vector[pos++]);
+             assert(v == real_vector[pos]);
+             ++pos;
         }
         for (const T& v : reverse_iterate(pre_vector)) {
-             local_check(v == real_vector[--pos]);
+             --pos;
+             assert(v == real_vector[pos]);
         }
         for (const T& v : const_pre_vector) {
-             local_check(v == real_vector[pos++]);
+             assert(v == real_vector[pos]);
+             ++pos;
         }
         for (const T& v : reverse_iterate(const_pre_vector)) {
-             local_check(v == real_vector[--pos]);
+             --pos;
+             assert(v == real_vector[pos]);
         }
         CDataStream ss1(SER_DISK, 0);
         CDataStream ss2(SER_DISK, 0);
         ss1 << real_vector;
         ss2 << pre_vector;
-        local_check_equal(ss1.size(), ss2.size());
+        assert(ss1.size() == ss2.size());
         for (Size s = 0; s < ss1.size(); s++) {
-            local_check_equal(ss1[s], ss2[s]);
+            assert(ss1[s] == ss2[s]);
         }
     }
 
 public:
     void resize(Size s) {
         real_vector.resize(s);
-        local_check_equal(real_vector.size(), s);
+        assert(real_vector.size() == s);
         pre_vector.resize(s);
-        local_check_equal(pre_vector.size(), s);
+        assert(pre_vector.size() == s);
         test();
     }
 
     void reserve(Size s) {
         real_vector.reserve(s);
-        local_check(real_vector.capacity() >= s);
+        assert(real_vector.capacity() >= s);
         pre_vector.reserve(s);
-        local_check(pre_vector.capacity() >= s);
+        assert(pre_vector.capacity() >= s);
         test();
     }
 
@@ -198,10 +191,6 @@ public:
             ++p;
         }
         test();
-    }
-
-    ~prevector_tester() {
-        assert(passed);
     }
 };
 
