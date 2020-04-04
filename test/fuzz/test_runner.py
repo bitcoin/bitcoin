@@ -131,6 +131,7 @@ def main():
             build_dir=config["environment"]["BUILDDIR"],
             merge_dir=args.m_dir,
         )
+        return
 
     run_once(
         corpus=args.seed_dir,
