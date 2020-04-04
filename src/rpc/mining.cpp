@@ -1091,44 +1091,49 @@ static UniValue mine(const JSONRPCRequest& request)
     }
     int numHashes = 0;
     clock_t begin, end;
+    bool.blockFound = false;
     if(unit == "time" || unit == "times") {
     unsigned int nMaxTries = duration;
       if(delayBetweenNonces == 0) {
         begin = clock(); // Start timer
-        while(nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+        while(nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !blockFound && !ShutdownRequested()) {
           pblock->nNonce++;
           //GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
           --nMaxTries;
+          blockFound = CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus());
         }
         end = clock(); // End timer
       } else {
         begin = clock(); // Start timer
-        while(nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+        while(nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !blockFound && !ShutdownRequested()) {
           pblock->nNonce++;
           //GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
           --nMaxTries;
           std::this_thread::sleep_for(std::chrono::milliseconds(delayBetweenNonces));
+          blockFound = CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus());
         }
         end = clock(); // End timer
       }
     } else if(unit == "clock" || unit == "clocks") {
       if(delayBetweenNonces == 0) {
         begin = clock(); // Start timer
-        while(clock() - begin < duration && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+        while(clock() - begin < duration && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !blockFound && !ShutdownRequested()) {
           pblock->nNonce++;
           //GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
+          blockFound = CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus());
         }
         end = clock(); // End timer
       } else {
         begin = clock(); // Start timer
-        while(clock() - begin < duration && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+        while(clock() - begin < duration && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !blockFound && !ShutdownRequested()) {
           pblock->nNonce++;
           //GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
           std::this_thread::sleep_for(std::chrono::milliseconds(delayBetweenNonces));
+          blockFound = CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus());
         }
         end = clock(); // End timer
       }
@@ -1136,19 +1141,21 @@ static UniValue mine(const JSONRPCRequest& request)
       unsigned int durationClocks = duration * CLOCKS_PER_SEC;
       if(delayBetweenNonces == 0) {
         begin = clock(); // Start timer
-        while(clock() - begin < durationClocks && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+        while(clock() - begin < durationClocks && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !blockFound && !ShutdownRequested()) {
           pblock->nNonce++;
           //GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
+          blockFound = CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus());
         }
         end = clock(); // End timer
       } else {
         begin = clock(); // Start timer
-        while(clock() - begin < durationClocks && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
+        while(clock() - begin < durationClocks && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !blockFound && !ShutdownRequested()) {
           pblock->nNonce++;
           // GetRandBytes((unsigned char*)&pblock->nNonce, sizeof(pblock->nNonce));
           ++numHashes;
           std::this_thread::sleep_for(std::chrono::milliseconds(delayBetweenNonces));
+          blockFound = CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus());
         }
         end = clock(); // End timer
       }
@@ -1161,6 +1168,18 @@ static UniValue mine(const JSONRPCRequest& request)
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
     bool success = false;
+    /*
+
+    if (nMaxTries == 0 || ShutdownRequested()) {
+        break;
+    }
+    if (pblock->nNonce == std::numeric_limits<uint32_t>::max()) {
+        continue;
+    }
+    std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
+    if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+    */
     try {
       success = ProcessNewBlock(Params(), shared_pblock, true, nullptr);
     } catch (...) {}
