@@ -106,11 +106,11 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     if (!privateSendClient.fEnablePrivateSend) {
         ui->checkUsePrivateSend->setChecked(false);
         ui->checkUsePrivateSend->setVisible(false);
-        CoinControlDialog::coinControl->UsePrivateSend(false);
+        CoinControlDialog::coinControl()->UsePrivateSend(false);
     } else {
         bool fUsePrivateSend = settings.value("bUsePrivateSend").toBool();
         ui->checkUsePrivateSend->setChecked(fUsePrivateSend);
-        CoinControlDialog::coinControl->UsePrivateSend(fUsePrivateSend);
+        CoinControlDialog::coinControl()->UsePrivateSend(fUsePrivateSend);
         connect(ui->checkUsePrivateSend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
     }
 
@@ -627,7 +627,7 @@ void SendCoinsDialog::updateDisplayUnit()
 {
     setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-    CoinControlDialog::coinControl->UsePrivateSend(ui->checkUsePrivateSend->isChecked());
+    CoinControlDialog::coinControl()->UsePrivateSend(ui->checkUsePrivateSend->isChecked());
     coinControlUpdateLabels();
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateMinFeeLabel();
@@ -962,7 +962,7 @@ void SendCoinsDialog::coinControlUpdateLabels()
         }
     }
 
-    ui->checkUsePrivateSend->setChecked(CoinControlDialog::coinControl->IsUsingPrivateSend());
+    ui->checkUsePrivateSend->setChecked(CoinControlDialog::coinControl()->IsUsingPrivateSend());
 
     if (CoinControlDialog::coinControl()->HasSelected())
     {
