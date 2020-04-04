@@ -1030,8 +1030,8 @@ static UniValue mine(const JSONRPCRequest& request)
             RPCHelpMan{"mine",
                 "\nMine blocks immediately to a specified address (before the RPC call returns)\n",
                 {
-                    {"duration", RPCArg::Type::STR, "1000000", "Duration"},
-                    {"times/seconds/clocks", RPCArg::Type::STR, "times", "Unit"},
+                    {"duration", RPCArg::Type::STR, /* optional */"1000000", "Duration"},
+                    {"times/seconds/clocks", RPCArg::Type::STR, /* optional */ "times", "Unit"},
                     {"delayBetweenNonces", RPCArg::Type::STR, /* optional */ "0", "Delay in milliseconds between each nonce"},
                     {"address", RPCArg::Type::STR, /* optional */ "1AiU47qqkHkfdVcq9sRu72NurAWeaJK3gc", "The address to send the newly generated bitcoin to."},
                 },
@@ -1044,15 +1044,14 @@ static UniValue mine(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-
-    std::string durationStr = "1000000";
+    unsigned int duration = 1000000;
     if(!request.params[0].isNull()) {
-      std::string durationStr = request.params[0].get_str();
+      std::string durationStr = "1000000";
+      durationStr = request.params[0].get_str();
+      try {
+        duration = std::stoi(durationStr);
+      } catch(...){}
     }
-    unsigned int duration = 0;
-    try {
-      duration = std::stoi(durationStr);
-    } catch(...){}
 
     std::string unit = "times";
     if(!request.params[1].isNull()) {
