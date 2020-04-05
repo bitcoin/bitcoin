@@ -38,7 +38,7 @@ class TestNode(NodeConnCB):
         inv = msg_inv([CInv(30, hash)])
         self.send_message(inv)
 
-    def on_getdata(self, conn, message):
+    def on_getdata(self, message):
         for inv in message.inv:
             if inv.hash in self.clsigs:
                 self.send_message(self.clsigs[inv.hash])

@@ -50,14 +50,14 @@ class BaseNode(NodeConnCB):
         # Stores a dictionary of all blocks received
         self.block_receive_map = defaultdict(int)
 
-    def on_block(self, conn, message):
+    def on_block(self, message):
         """Override the standard on_block callback
 
         Store the hash of a received block in the dictionary."""
         message.block.calc_sha256()
         self.block_receive_map[message.block.sha256] += 1
 
-    def on_inv(self, conn, message):
+    def on_inv(self, message):
         """Override the standard on_inv callback"""
         pass
 

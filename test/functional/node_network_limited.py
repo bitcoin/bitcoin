@@ -9,7 +9,7 @@ from test_framework.mininode import *
 class BaseNode(NodeConnCB):
     nServices = 0
     firstAddrnServices = 0
-    def on_version(self, conn, message):
+    def on_version(self, message):
         self.nServices = message.nServices
 
 class NodeNetworkLimitedTest(BitcoinTestFramework):

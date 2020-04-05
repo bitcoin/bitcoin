@@ -112,6 +112,7 @@ DIRECT_FETCH_RESPONSE_TIME = 0.05
 class BaseNode(NodeConnCB):
     def __init__(self):
         super().__init__()
+
         self.block_announced = False
         self.last_blockhash_announced = None
 
@@ -120,18 +121,18 @@ class BaseNode(NodeConnCB):
         msg = msg_getdata()
         for x in block_hashes:
             msg.inv.append(CInv(2, x))
-        self.connection.send_message(msg)
+        self.send_message(msg)
 
     def send_get_headers(self, locator, hashstop):
         msg = msg_getheaders()
         msg.locator.vHave = locator
         msg.hashstop = hashstop
-        self.connection.send_message(msg)
+        self.send_message(msg)
 
     def send_block_inv(self, blockhash):
         msg = msg_inv()
         msg.inv = [CInv(2, blockhash)]
-        self.connection.send_message(msg)
+        self.send_message(msg)
 
     def send_header_for_blocks(self, new_blocks):
         headers_message = msg_headers()
@@ -154,11 +155,11 @@ class BaseNode(NodeConnCB):
         test_function = lambda: self.last_blockhash_announced == block_hash
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
-    def on_inv(self, conn, message):
+    def on_inv(self, message):
         self.block_announced = True
         self.last_blockhash_announced = message.inv[-1].hash
 
-    def on_headers(self, conn, message):
+    def on_headers(self, message):
         if len(message.headers):
             self.block_announced = True
             message.headers[-1].calc_sha256()

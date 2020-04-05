@@ -69,7 +69,7 @@ class AssumeValidTest(BitcoinTestFramework):
     def send_blocks_until_disconnected(self, p2p_conn):
         """Keep sending blocks to the node until we're disconnected."""
         for i in range(len(self.blocks)):
-            if not p2p_conn.connection:
+            if p2p_conn.state != "connected":
                 break
             try:
                 p2p_conn.send_message(msg_block(self.blocks[i]))

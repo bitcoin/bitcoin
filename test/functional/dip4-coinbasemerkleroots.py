@@ -20,7 +20,7 @@ class TestNode(NodeConnCB):
         super().__init__()
         self.last_mnlistdiff = None
 
-    def on_mnlistdiff(self, conn, message):
+    def on_mnlistdiff(self, message):
         self.last_mnlistdiff = message
 
     def wait_for_mnlistdiff(self, timeout=30):

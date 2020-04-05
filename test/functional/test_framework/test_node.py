@@ -15,7 +15,6 @@ import subprocess
 import time
 
 from .authproxy import JSONRPCException
-from .mininode import NodeConn
 from .util import (
     assert_equal,
     delete_cookie_file,
@@ -190,7 +189,7 @@ class TestNode():
         self.encryptwallet(passphrase)
         self.wait_until_stopped()
 
-    def add_p2p_connection(self, p2p_conn, **kwargs):
+    def add_p2p_connection(self, p2p_conn, *args, **kwargs):
         """Add a p2p connection to the node.
 
         This method adds the p2p connection to the self.p2ps list and also
@@ -199,9 +198,9 @@ class TestNode():
             kwargs['dstport'] = p2p_port(self.index)
         if 'dstaddr' not in kwargs:
             kwargs['dstaddr'] = '127.0.0.1'
+
+        p2p_conn.peer_connect(*args, **kwargs)
         self.p2ps.append(p2p_conn)
-        kwargs.update({'callback': p2p_conn})
-        p2p_conn.add_connection(NodeConn(**kwargs))
 
         return p2p_conn
 
@@ -217,10 +216,8 @@ class TestNode():
     def disconnect_p2ps(self):
         """Close all p2p connections to the node."""
         for p in self.p2ps:
-            # Connection could have already been closed by other end.
-            if p.connection is not None:
-                p.connection.disconnect_node()
-        self.p2ps = []
+            p.peer_disconnect()
+        del self.p2ps[:]
 
 class TestNodeCLIAttr:
     def __init__(self, cli, command):
