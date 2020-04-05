@@ -11,6 +11,7 @@ from test_framework.messages import (
     MSG_FILTERED_BLOCK,
     msg_getdata,
     msg_filterload,
+    msg_filteradd,
     msg_filterclear,
 )
 from test_framework.mininode import (
@@ -102,6 +103,10 @@ class FilterTest(BitcoinTestFramework):
         for _ in range(5):
             txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 7)
             filter_node.wait_for_tx(txid)
+
+        self.log.info("Check that division-by-zero remote crash bug [CVE-2013-5700] is fixed")
+        filter_node.send_and_ping(msg_filterload(data=b'', nHashFuncs=1))
+        filter_node.send_and_ping(msg_filteradd(data=b'letstrytocrashthisnode'))
 
 
 if __name__ == '__main__':
