@@ -1813,6 +1813,8 @@ UniValue analyzepsbt(const JSONRPCRequest& request)
     return result;
 }
 
+void RegisterRawTransactionRPCCommands(CRPCTable &t)
+{
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                            actor (function)            argNames
@@ -1839,8 +1841,6 @@ static const CRPCCommand commands[] =
 };
 // clang-format on
 
-void RegisterRawTransactionRPCCommands(CRPCTable &t)
-{
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }
