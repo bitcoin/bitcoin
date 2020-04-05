@@ -1229,6 +1229,11 @@ void BitcoinGUI::changeEvent(QEvent *e)
                 QTimer::singleShot(0, this, SLOT(hide()));
                 e->ignore();
             }
+            else if((wsevt->oldState() & Qt::WindowMinimized) && !isMinimized())
+            {
+                QTimer::singleShot(0, this, SLOT(show()));
+                e->ignore();
+            }
         }
     }
 #endif

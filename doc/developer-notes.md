@@ -504,7 +504,7 @@ namespace {
   - *Rationale*: Avoids confusion about the namespace context
 
 - Prefer `#include <primitives/transaction.h>` bracket syntax instead of
-  `#include "primitives/transactions.h"`` quote syntax when possible.
+  `#include "primitives/transactions.h"` quote syntax when possible.
 
   - *Rationale*: Bracket syntax is less ambiguous because the preprocessor
     searches a fixed list of include directories without taking location of the

@@ -31,6 +31,8 @@
 
 const char *DEFAULT_GUI_PROXY_HOST = "127.0.0.1";
 
+static const QString GetDefaultProxyAddress();
+
 OptionsModel::OptionsModel(QObject *parent, bool resetSettings) :
     QAbstractListModel(parent)
 {
@@ -170,7 +172,7 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("fUseProxy"))
         settings.setValue("fUseProxy", false);
     if (!settings.contains("addrProxy"))
-        settings.setValue("addrProxy", QString("%1:%2").arg(DEFAULT_GUI_PROXY_HOST, DEFAULT_GUI_PROXY_PORT));
+        settings.setValue("addrProxy", GetDefaultProxyAddress());
     // Only try to set -proxy, if user has enabled fUseProxy
     if (settings.value("fUseProxy").toBool() && !gArgs.SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString()))
         addOverriddenOption("-proxy");
@@ -180,7 +182,7 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("fUseSeparateProxyTor"))
         settings.setValue("fUseSeparateProxyTor", false);
     if (!settings.contains("addrSeparateProxyTor"))
-        settings.setValue("addrSeparateProxyTor", QString("%1:%2").arg(DEFAULT_GUI_PROXY_HOST, DEFAULT_GUI_PROXY_PORT));
+        settings.setValue("addrSeparateProxyTor", GetDefaultProxyAddress());
     // Only try to set -onion, if user has enabled fUseSeparateProxyTor
     if (settings.value("fUseSeparateProxyTor").toBool() && !gArgs.SoftSetArg("-onion", settings.value("addrSeparateProxyTor").toString().toStdString()))
         addOverriddenOption("-onion");
@@ -261,6 +263,11 @@ static ProxySetting GetProxySetting(QSettings &settings, const QString &name)
 static void SetProxySetting(QSettings &settings, const QString &name, const ProxySetting &ip_port)
 {
     settings.setValue(name, ip_port.ip + ":" + ip_port.port);
+}
+
+static const QString GetDefaultProxyAddress()
+{
+    return QString("%1:%2").arg(DEFAULT_GUI_PROXY_HOST).arg(DEFAULT_GUI_PROXY_PORT);
 }
 
 // read QSettings values and return them
@@ -602,5 +609,17 @@ void OptionsModel::checkAndMigrate()
             settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
 
         settings.setValue(strSettingsVersionKey, CLIENT_VERSION);
+    }
+
+    // Overwrite the 'addrProxy' setting in case it has been set to an illegal
+    // default value (see issue #12623; PR #12650).
+    if (settings.contains("addrProxy") && settings.value("addrProxy").toString().endsWith("%2")) {
+        settings.setValue("addrProxy", GetDefaultProxyAddress());
+    }
+
+    // Overwrite the 'addrSeparateProxyTor' setting in case it has been set to an illegal
+    // default value (see issue #12623; PR #12650).
+    if (settings.contains("addrSeparateProxyTor") && settings.value("addrSeparateProxyTor").toString().endsWith("%2")) {
+        settings.setValue("addrSeparateProxyTor", GetDefaultProxyAddress());
     }
 }
