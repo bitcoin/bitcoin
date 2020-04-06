@@ -52,7 +52,7 @@ public:
     static void updateLabels(WalletModel*, QDialog*);
 
     static QList<CAmount> payAmounts;
-    static CCoinControl* coinControl;
+    static CCoinControl *coinControl();
     static bool fSubtractFeeFromAmount;
 
 private:

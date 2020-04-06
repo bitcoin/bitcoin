@@ -251,6 +251,8 @@ namespace GUIUtil
 
     QString formatBytes(uint64_t bytes);
 
+    qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize = 4, qreal startPointSize = 14);
+
     class ClickableLabel : public QLabel
     {
         Q_OBJECT

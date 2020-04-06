@@ -39,7 +39,8 @@ COIN = 100000000 # 1 btc in satoshis
 
 NODE_NETWORK = (1 << 0)
 # NODE_GETUTXO = (1 << 1)
-# NODE_BLOOM = (1 << 2)
+NODE_BLOOM = (1 << 2)
+NODE_NETWORK_LIMITED = (1 << 10)
 
 # Serialization/deserialization tools
 def sha256(s):
@@ -157,22 +158,6 @@ def ser_string_vector(l):
     r = ser_compact_size(len(l))
     for sv in l:
         r += ser_string(sv)
-    return r
-
-
-def deser_int_vector(f):
-    nit = deser_compact_size(f)
-    r = []
-    for i in range(nit):
-        t = struct.unpack("<i", f.read(4))[0]
-        r.append(t)
-    return r
-
-
-def ser_int_vector(l):
-    r = ser_compact_size(len(l))
-    for i in l:
-        r += struct.pack("<i", i)
     return r
 
 
