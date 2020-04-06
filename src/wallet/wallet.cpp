@@ -3221,7 +3221,10 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
     // If we want to delete receiving addresses, we need to take care that DestData "used" (and possibly newer DestData) gets preserved (and the "deleted" address transformed into a change entry instead of actually being deleted)
     // NOTE: This isn't a problem for sending addresses because they never have any DestData yet!
     // When adding new DestData, it should be considered here whether to retain or delete it (or move it?).
-    assert(!IsMine(address));
+    if (IsMine(address)) {
+        WalletLogPrintf("%s called with IsMine address, NOT SUPPORTED. Please report this bug! %s\n", __func__, PACKAGE_BUGREPORT);
+        return false;
+    }
 
     {
         LOCK(cs_wallet);
