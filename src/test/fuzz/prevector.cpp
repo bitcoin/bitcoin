@@ -193,9 +193,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         case 0:
             test.insert(prov.ConsumeIntegralInRange<size_t>(0, test.size()), prov.ConsumeIntegral<int>());
             break;
-        case 15:
-            test.erase(prov.ConsumeIntegralInRange<size_t>(0, test.size() - 1));
-            break;
         case 1:
             test.resize(std::max(0, std::min(30, (int)test.size() + prov.ConsumeIntegralInRange<int>(0, 4) - 2)));
             break;
@@ -211,9 +208,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         case 4:
             test.push_back(prov.ConsumeIntegral<int>());
             break;
-        case 16:
-            test.pop_back();
-            break;
         case 5: {
             int values[4];
             int num = 1 + prov.ConsumeIntegralInRange<int>(0, 3);
@@ -223,14 +217,20 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             test.insert_range(prov.ConsumeIntegralInRange<size_t>(0, test.size()), values, values + num);
             break;
         }
+        case 6: {
+            int num = 1 + prov.ConsumeIntegralInRange<int>(0, 15);
+            std::vector<int> values(num);
+            for (auto& v : values) {
+                v = prov.ConsumeIntegral<int>();
+            }
+            test.resize_uninitialized(values);
+            break;
+        }
         case 7:
             test.reserve(prov.ConsumeIntegralInRange<size_t>(0, 32767));
             break;
         case 8:
             test.shrink_to_fit();
-            break;
-        case 14:
-            test.update(prov.ConsumeIntegralInRange<size_t>(0, test.size() - 1), prov.ConsumeIntegral<int>());
             break;
         case 9:
             test.clear();
@@ -247,15 +247,15 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         case 13:
             test.move();
             break;
-        case 6: {
-            int num = 1 + prov.ConsumeIntegralInRange<int>(0, 15);
-            std::vector<int> values(num);
-            for (auto& v : values) {
-                v = prov.ConsumeIntegral<int>();
-            }
-            test.resize_uninitialized(values);
+        case 14:
+            test.update(prov.ConsumeIntegralInRange<size_t>(0, test.size() - 1), prov.ConsumeIntegral<int>());
             break;
-        }
+        case 15:
+            test.erase(prov.ConsumeIntegralInRange<size_t>(0, test.size() - 1));
+            break;
+        case 16:
+            test.pop_back();
+            break;
         }
     }
 
