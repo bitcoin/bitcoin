@@ -4,10 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test transaction signing using the signrawtransaction* RPCs."""
 
+from test_framework.address import check_script, script_to_p2sh
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes
+from test_framework.util import assert_equal, assert_raises_rpc_error, find_vout_for_address, hex_str_to_bytes
 from test_framework.messages import sha256
-from test_framework.script import CScript, OP_0
+from test_framework.script import CScript, OP_0, OP_CHECKSIG
 
 from decimal import Decimal
 
@@ -167,6 +168,44 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         # Check the signing completed successfully
         assert 'complete' in spending_tx_signed
         assert_equal(spending_tx_signed['complete'], True)
+
+        # Now try with a P2PKH script as the witnessScript
+        embedded_addr_info = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress('', 'legacy'))
+        embedded_privkey = self.nodes[1].dumpprivkey(embedded_addr_info['address'])
+        witness_script = embedded_addr_info['scriptPubKey']
+        redeem_script = CScript([OP_0, sha256(check_script(witness_script))]).hex()
+        addr = script_to_p2sh(redeem_script)
+        script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
+        # Fund that address
+        txid = self.nodes[0].sendtoaddress(addr, 10)
+        vout = find_vout_for_address(self.nodes[0], txid, addr)
+        self.nodes[0].generate(1)
+        # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
+        spending_tx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): Decimal("9.999")})
+        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10}])
+        # Check the signing completed successfully
+        assert 'complete' in spending_tx_signed
+        assert_equal(spending_tx_signed['complete'], True)
+        self.nodes[1].sendrawtransaction(spending_tx_signed['hex'])
+
+        # Now try with a P2PK script as the witnessScript
+        embedded_addr_info = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress('', 'legacy'))
+        embedded_privkey = self.nodes[1].dumpprivkey(embedded_addr_info['address'])
+        witness_script = CScript([hex_str_to_bytes(embedded_addr_info['pubkey']), OP_CHECKSIG]).hex()
+        redeem_script = CScript([OP_0, sha256(check_script(witness_script))]).hex()
+        addr = script_to_p2sh(redeem_script)
+        script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
+        # Fund that address
+        txid = self.nodes[0].sendtoaddress(addr, 10)
+        vout = find_vout_for_address(self.nodes[0], txid, addr)
+        self.nodes[0].generate(1)
+        # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
+        spending_tx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): Decimal("9.999")})
+        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10}])
+        # Check the signing completed successfully
+        assert 'complete' in spending_tx_signed
+        assert_equal(spending_tx_signed['complete'], True)
+        self.nodes[1].sendrawtransaction(spending_tx_signed['hex'])
 
     def run_test(self):
         self.successful_signing_test()
