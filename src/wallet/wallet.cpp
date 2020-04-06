@@ -3701,9 +3701,35 @@ bool CWallet::EraseDestData(WalletBatch& batch, const CTxDestination &dest, cons
     return batch.EraseDestData(EncodeDestination(dest), key);
 }
 
-void CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, const std::string &value)
+void CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, const std::string &value, const bool is_change)
 {
-    m_address_book[dest].destdata.insert(std::make_pair(key, value));
+    auto& destdata = m_address_book[dest].destdata;
+    destdata.insert(std::make_pair(key, value));
+    if (!is_change) destdata["_nonchange_destdata"] = std::string();
+}
+
+void CWallet::FixAddressBook(WalletBatch& batch)
+{
+    unsigned fixed_addresses = 0, migrated_keys = 0;
+    for (auto& addressbookdata_pair : m_address_book) {
+        auto& destdata = addressbookdata_pair.second.destdata;
+        if (!destdata.count("_nonchange_destdata")) continue;
+        destdata.erase("_nonchange_destdata");
+        if (!addressbookdata_pair.second.IsChange()) continue;
+
+        // We have a change address with [non-change] destdata set
+        // Migrate it to changedata keys
+        ++fixed_addresses;
+        const std::string strAddress = EncodeDestination(addressbookdata_pair.first);
+        for (const auto& item : destdata) {
+            ++migrated_keys;
+            batch.EraseDestData(strAddress, item.first);
+            batch.WriteDestData(strAddress, item.first, item.second, /* is_change */ true);
+        }
+    }
+    if (fixed_addresses) {
+        WalletLogPrintf("Fixed %u change address book entries (%u destdata entries)\n", fixed_addresses, migrated_keys);
+    }
 }
 
 bool CWallet::GetDestData(const CTxDestination &dest, const std::string &key, std::string *value) const
