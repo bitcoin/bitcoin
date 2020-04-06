@@ -15,7 +15,7 @@ Checks DIP4 merkle roots in coinbases
 
 '''
 
-class TestNode(NodeConnCB):
+class TestNode(P2PInterface):
     def __init__(self):
         super().__init__()
         self.last_mnlistdiff = None

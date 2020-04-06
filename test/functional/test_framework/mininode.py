@@ -478,7 +478,7 @@ def network_thread_join(timeout=10):
         thread.join(timeout)
         assert not thread.is_alive()
 
-class P2PDataStore(NodeConnCB):
+class P2PDataStore(P2PInterface):
     """A P2P data store class.
 
     Keeps a block and transaction store and responds correctly to getdata and getheaders requests."""
