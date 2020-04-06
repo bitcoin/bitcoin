@@ -36,7 +36,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         auto hash = ::SerializeHash(qc);
         {
             LOCK(cs_main);
-            connman.RemoveAskFor(hash);
+            EraseObjectRequest(hash);
         }
 
         if (qc.IsNull()) {

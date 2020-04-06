@@ -135,7 +135,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         {
             LOCK(cs_main);
-            connman.RemoveAskFor(nHash);
+            EraseObjectRequest(nHash);
         }
 
         if (pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) {
@@ -210,7 +210,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         {
             LOCK(cs_main);
-            connman.RemoveAskFor(nHash);
+            EraseObjectRequest(nHash);
         }
 
         if (pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) {

@@ -103,7 +103,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
 {
     {
         LOCK(cs_main);
-        g_connman->RemoveAskFor(hash);
+        EraseObjectRequest(hash);
     }
 
     {

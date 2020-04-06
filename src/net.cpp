@@ -3054,16 +3054,6 @@ void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const i
     }
 }
 
-void CConnman::RemoveAskFor(const uint256& hash)
-{
-    mapAlreadyAskedFor.erase(hash);
-
-    LOCK(cs_vNodes);
-    for (const auto& pnode : vNodes) {
-        pnode->RemoveAskFor(hash);
-    }
-}
-
 void CConnman::RecordBytesRecv(uint64_t bytes)
 {
     LOCK(cs_totalBytesRecv);
@@ -3267,14 +3257,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
 CNode::~CNode()
 {
     CloseSocket(hSocket);
-}
-
-void CNode::RemoveAskFor(const uint256& hash)
-{
-    setAskFor.erase(hash);
-    // we don't really remove it from queueAskFor as it would be too expensive to rebuild the heap
-    // instead, we're ignoring the entry later as it won't be found in setAskForInQueue anymore
-    setAskForInQueue.erase(hash);
 }
 
 bool CConnman::NodeFullyConnected(const CNode* pnode)
