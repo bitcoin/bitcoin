@@ -735,6 +735,16 @@ void RequestObject(NodeId nodeId, const CInv& inv, int64_t nNow) EXCLUSIVE_LOCKS
     RequestObject(state, inv, nNow);
 }
 
+size_t GetRequestedObjectCount(NodeId nodeId)
+{
+    AssertLockHeld(cs_main);
+    auto* state = State(nodeId);
+    if (!state) {
+        return 0;
+    }
+    return state->m_tx_download.m_tx_process_time.size();
+}
+
 // This function is used for testing the stale tip eviction logic, see
 // DoS_tests.cpp
 void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
