@@ -50,6 +50,7 @@
 #define DEFAULT_ALLOW_OPTIMISTIC_SEND true
 #else
 #define DEFAULT_ALLOW_OPTIMISTIC_SEND false
+#define USE_WAKEUP_PIPE
 #endif
 
 class CScheduler;
@@ -582,7 +583,7 @@ private:
 
     CThreadInterrupt interruptNet;
 
-#ifndef WIN32
+#ifdef USE_WAKEUP_PIPE
     /** a pipe which is added to select() calls to wakeup before the timeout */
     int wakeupPipe[2]{-1,-1};
 #endif

@@ -1392,7 +1392,7 @@ bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &s
         }
     }
 
-#ifndef WIN32
+#ifdef USE_WAKEUP_PIPE
     // We add a pipe to the read set so that the select() call can be woken up from the outside
     // This is done when data is available for sending and at the same time optimistic sending was disabled
     // when pushing the data.
@@ -1529,7 +1529,7 @@ void CConnman::SocketHandler()
     std::set<SOCKET> recv_set, send_set, error_set;
     SocketEvents(recv_set, send_set, error_set);
 
-#ifndef WIN32
+#ifdef USE_WAKEUP_PIPE
     // drain the wakeup pipe
     if (recv_set.count(wakeupPipe[0])) {
         char buf[128];
@@ -1671,7 +1671,7 @@ void CConnman::WakeMessageHandler()
 
 void CConnman::WakeSelect()
 {
-#ifndef WIN32
+#ifdef USE_WAKEUP_PIPE
     if (wakeupPipe[1] == -1) {
         return;
     }
@@ -2745,7 +2745,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         fMsgProcWake = false;
     }
 
-#ifndef WIN32
+#ifdef USE_WAKEUP_PIPE
     if (pipe(wakeupPipe) != 0) {
         wakeupPipe[0] = wakeupPipe[1] = -1;
         LogPrint(BCLog::NET, "pipe() for wakeupPipe failed\n");
@@ -2884,7 +2884,7 @@ void CConnman::Stop()
     semOutbound.reset();
     semAddnode.reset();
 
-#ifndef WIN32
+#ifdef USE_WAKEUP_PIPE
     if (wakeupPipe[0] != -1) close(wakeupPipe[0]);
     if (wakeupPipe[1] != -1) close(wakeupPipe[1]);
     wakeupPipe[0] = wakeupPipe[1] = -1;
