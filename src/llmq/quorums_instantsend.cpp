@@ -1345,7 +1345,7 @@ void CInstantSendManager::AskNodesForLockedTx(const uint256& txid)
                       txid.ToString(), pnode->GetId());
 
             CInv inv(MSG_TX, txid);
-            pnode->AskFor(inv);
+            RequestObject(pnode->GetId(), inv, GetTimeMicros());
         }
     }
     for (CNode* pnode : nodesToAskFor) {
