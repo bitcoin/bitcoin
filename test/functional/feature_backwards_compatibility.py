@@ -37,6 +37,9 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             ["-nowallet"], # v0.17.0.3
         ]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_nodes(self):
         if os.getenv("TEST_PREVIOUS_RELEASES") == "false":
             raise SkipTest("backwards compatibility tests")
