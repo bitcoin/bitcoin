@@ -241,7 +241,7 @@ public:
     bool WriteMinVersion(int nVersion);
 
     /// Write destination data key,value tuple to database
-    bool WriteDestData(const std::string &address, const std::string &key, const std::string &value);
+    bool WriteDestData(const std::string &address, const std::string &key, const std::string &value, bool is_change);
     /// Erase destination data tuple from wallet database
     bool EraseDestData(const std::string &address, const std::string &key);
 

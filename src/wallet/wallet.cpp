@@ -3204,7 +3204,11 @@ bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
             mi = m_address_book.emplace(address, CAddressBookData()).first;
         } else if (mi->second.IsChange()) {
             // Transforming change to non-change
-            // Nothing special to do here
+            // Move any changedata to destdata, so older versions see it
+            for (const auto& item : mi->second.destdata) {
+                batch.EraseDestData(strAddress, item.first);
+                batch.WriteDestData(strAddress, item.first, item.second, /* is_change */ false);
+            }
         } else {
             // Simply modifying label/purpose of existing normal address book entry
             fUpdated = true;
@@ -3687,7 +3691,7 @@ bool CWallet::AddDestData(WalletBatch& batch, const CTxDestination &dest, const 
         return false;
 
     m_address_book[dest].destdata.insert(std::make_pair(key, value));
-    return batch.WriteDestData(EncodeDestination(dest), key, value);
+    return batch.WriteDestData(EncodeDestination(dest), key, value, m_address_book[dest].IsChange());
 }
 
 bool CWallet::EraseDestData(WalletBatch& batch, const CTxDestination &dest, const std::string &key)
