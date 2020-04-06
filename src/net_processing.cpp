@@ -3198,7 +3198,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
         }
         LOCK(pfrom->m_tx_relay->cs_filter);
         if (pfrom->GetLocalServices() & NODE_BLOOM) {
-            pfrom->m_tx_relay->pfilter.reset(new CBloomFilter());
+            pfrom->m_tx_relay->pfilter = nullptr;
         }
         pfrom->m_tx_relay->fRelayTxes = true;
         return true;
