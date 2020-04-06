@@ -23,6 +23,7 @@ namespace DBKeys {
 const std::string ACENTRY{"acentry"};
 const std::string BESTBLOCK_NOMERKLE{"bestblock_nomerkle"};
 const std::string BESTBLOCK{"bestblock"};
+const std::string CHANGEDATA{"changedata"};
 const std::string CRYPTED_KEY{"ckey"};
 const std::string CSCRIPT{"cscript"};
 const std::string DEFAULTKEY{"defaultkey"};
@@ -384,7 +385,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             }
         } else if (strType == DBKeys::ORDERPOSNEXT) {
             ssValue >> pwallet->nOrderPosNext;
-        } else if (strType == DBKeys::DESTDATA) {
+        } else if (strType == DBKeys::DESTDATA || strType == DBKeys::CHANGEDATA) {
             std::string strAddress, strKey, strValue;
             ssKey >> strAddress;
             ssKey >> strKey;
