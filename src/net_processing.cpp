@@ -2314,6 +2314,13 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             if (interruptMsgProc)
                 return true;
 
+            // ignore INVs that don't match wtxidrelay setting
+            if (State(pfrom->GetId())->m_wtxid_relay) {
+                if (inv.type == MSG_TX) continue;
+            } else {
+                if (inv.type == MSG_WTX) continue;
+            }
+
             bool fAlreadyHave = AlreadyHave(inv, mempool);
             LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->GetId());
 
