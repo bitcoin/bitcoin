@@ -505,8 +505,9 @@ static UniValue listaddressgroupings(const JSONRPCRequest& request)
             addressInfo.push_back(EncodeDestination(address));
             addressInfo.push_back(ValueFromAmount(balances[address]));
             {
-                if (pwallet->mapAddressBook.find(address) != pwallet->mapAddressBook.end()) {
-                    addressInfo.push_back(pwallet->mapAddressBook.find(address)->second.name);
+                const auto* address_book_entry = pwallet->FindAddressBookEntry(address);
+                if (address_book_entry) {
+                    addressInfo.push_back(address_book_entry->name);
                 }
             }
             jsonGrouping.push_back(addressInfo);
@@ -1114,13 +1115,13 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, const CWalle
     UniValue ret(UniValue::VARR);
     std::map<std::string, tallyitem> label_tally;
 
-    // Create mapAddressBook iterator
+    // Create m_address_book iterator
     // If we aren't filtering, go from begin() to end()
-    auto start = pwallet->mapAddressBook.begin();
-    auto end = pwallet->mapAddressBook.end();
+    auto start = pwallet->m_address_book.begin();
+    auto end = pwallet->m_address_book.end();
     // If we are filtering, find() the applicable entry
     if (has_filtered_address) {
-        start = pwallet->mapAddressBook.find(filtered_address);
+        start = pwallet->m_address_book.find(filtered_address);
         if (start != end) {
             end = std::next(start);
         }
@@ -1128,6 +1129,7 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, const CWalle
 
     for (auto item_it = start; item_it != end; ++item_it)
     {
+        if (item_it->second.IsChange()) continue;
         const CTxDestination& address = item_it->first;
         // SYSCOIN we don't want to show send address book entries regardless of if fIncludeEmpty is set
         if(item_it->second.purpose == "send")
@@ -1335,10 +1337,11 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWallet* cons
             MaybePushAddress(entry, s.destination);
             entry.pushKV("category", "send");
             entry.pushKV("amount", ValueFromAmount(-s.amount));
-            if (pwallet->mapAddressBook.count(s.destination)) {
-                entry.pushKV("label", pwallet->mapAddressBook.at(s.destination).name);
+            const auto* address_book_entry = pwallet->FindAddressBookEntry(s.destination);
+            if (address_book_entry) {
+                entry.pushKV("label", address_book_entry->name);
                 // SYSCOIN support label as account for exchanges
-                entry.pushKV("account", pwallet->mapAddressBook.at(s.destination).name);
+                entry.pushKV("account", address_book_entry->name);
             }
             entry.pushKV("vout", s.vout);
             entry.pushKV("fee", ValueFromAmount(-nFee));
@@ -1363,8 +1366,9 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWallet* cons
         for (const COutputEntry& r : listReceived)
         {
             std::string label;
-            if (pwallet->mapAddressBook.count(r.destination)) {
-                label = pwallet->mapAddressBook.at(r.destination).name;
+            const auto* address_book_entry = pwallet->FindAddressBookEntry(r.destination);
+            if (address_book_entry) {
+                label = address_book_entry->name;
             }
             if (filter_label && label != *filter_label) {
                 continue;
@@ -1388,7 +1392,7 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWallet* cons
                 entry.pushKV("category", "receive");
             }
             entry.pushKV("amount", ValueFromAmount(r.amount));
-            if (pwallet->mapAddressBook.count(r.destination)) {
+            if (address_book_entry) {
                 entry.pushKV("label", label);
                 // SYSCOIN support label as account for exchanges
                 entry.pushKV("account", label);
@@ -3008,9 +3012,9 @@ static UniValue listunspent(const JSONRPCRequest& request)
         if (fValidAddress) {
             entry.pushKV("address", EncodeDestination(address));
 
-            auto i = pwallet->mapAddressBook.find(address);
-            if (i != pwallet->mapAddressBook.end()) {
-                entry.pushKV("label", i->second.name);
+            const auto* address_book_entry = pwallet->FindAddressBookEntry(address);
+            if (address_book_entry) {
+                entry.pushKV("label", address_book_entry->name);
             }
 
             std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(scriptPubKey);
@@ -3866,10 +3870,11 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     // DEPRECATED: Return label field if existing. Currently only one label can
     // be associated with an address, so the label should be equivalent to the
     // value of the name key/value pair in the labels array below.
-    if ((pwallet->chain().rpcEnableDeprecated("label")) && (pwallet->mapAddressBook.count(dest))) {
-        ret.pushKV("label", pwallet->mapAddressBook.at(dest).name);
+    const auto* address_book_entry = pwallet->FindAddressBookEntry(dest);
+    if (pwallet->chain().rpcEnableDeprecated("label") && address_book_entry) {
+        ret.pushKV("label", address_book_entry->name);
         // SYSCOIN support label as account for exchanges
-        ret.pushKV("account", pwallet->mapAddressBook.at(dest).name);
+        ret.pushKV("account", address_book_entry->name);
     }
 
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
@@ -3892,14 +3897,13 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     // stable if we allow multiple labels to be associated with an address in
     // the future.
     UniValue labels(UniValue::VARR);
-    std::map<CTxDestination, CAddressBookData>::const_iterator mi = pwallet->mapAddressBook.find(dest);
-    if (mi != pwallet->mapAddressBook.end()) {
+    if (address_book_entry) {
         // DEPRECATED: The previous behavior of returning an array containing a
         // JSON object of `name` and `purpose` key/value pairs is deprecated.
         if (pwallet->chain().rpcEnableDeprecated("labelspurpose")) {
-            labels.push_back(AddressBookDataToJSON(mi->second, true));
+            labels.push_back(AddressBookDataToJSON(*address_book_entry, true));
         } else {
-            labels.push_back(mi->second.name);
+            labels.push_back(address_book_entry->name);
         }
     }
     ret.pushKV("labels", std::move(labels));
@@ -3943,10 +3947,11 @@ static UniValue getaddressesbylabel(const JSONRPCRequest& request)
     // Find all addresses that have the given label
     UniValue ret(UniValue::VOBJ);
     std::set<std::string> addresses;
-    for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
+    for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->m_address_book) {
+        if (item.second.IsChange()) continue;
         if (item.second.name == label) {
             std::string address = EncodeDestination(item.first);
-            // CWallet::mapAddressBook is not expected to contain duplicate
+            // CWallet::m_address_book is not expected to contain duplicate
             // address strings, but build a separate set as a precaution just in
             // case it does.
             bool unique = addresses.emplace(address).second;
@@ -4007,7 +4012,8 @@ static UniValue listlabels(const JSONRPCRequest& request)
 
     // Add to a set to sort by label name, then insert into Univalue array
     std::set<std::string> label_set;
-    for (const std::pair<const CTxDestination, CAddressBookData>& entry : pwallet->mapAddressBook) {
+    for (const std::pair<const CTxDestination, CAddressBookData>& entry : pwallet->m_address_book) {
+        if (entry.second.IsChange()) continue;
         if (purpose.empty() || entry.second.purpose == purpose) {
             label_set.insert(entry.second.name);
         }
