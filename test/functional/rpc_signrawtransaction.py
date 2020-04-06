@@ -169,7 +169,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert 'complete' in spending_tx_signed
         assert_equal(spending_tx_signed['complete'], True)
 
-        # Now try with a P2PKH script as the witnessScript
+        self.log.info('Try with a P2PKH script as the witnessScript')
         embedded_addr_info = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress('', 'legacy'))
         embedded_privkey = self.nodes[1].dumpprivkey(embedded_addr_info['address'])
         witness_script = embedded_addr_info['scriptPubKey']
@@ -186,9 +186,9 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         # Check the signing completed successfully
         assert 'complete' in spending_tx_signed
         assert_equal(spending_tx_signed['complete'], True)
-        self.nodes[1].sendrawtransaction(spending_tx_signed['hex'])
+        self.nodes[0].sendrawtransaction(spending_tx_signed['hex'])
 
-        # Now try with a P2PK script as the witnessScript
+        self.log.info('Try with a P2PK script as the witnessScript')
         embedded_addr_info = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress('', 'legacy'))
         embedded_privkey = self.nodes[1].dumpprivkey(embedded_addr_info['address'])
         witness_script = CScript([hex_str_to_bytes(embedded_addr_info['pubkey']), OP_CHECKSIG]).hex()
@@ -205,7 +205,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         # Check the signing completed successfully
         assert 'complete' in spending_tx_signed
         assert_equal(spending_tx_signed['complete'], True)
-        self.nodes[1].sendrawtransaction(spending_tx_signed['hex'])
+        self.nodes[0].sendrawtransaction(spending_tx_signed['hex'])
 
     def run_test(self):
         self.successful_signing_test()
