@@ -169,29 +169,18 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert 'complete' in spending_tx_signed
         assert_equal(spending_tx_signed['complete'], True)
 
-        self.log.info('Try with a P2PKH script as the witnessScript')
-        embedded_addr_info = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress('', 'legacy'))
-        embedded_privkey = self.nodes[1].dumpprivkey(embedded_addr_info['address'])
-        witness_script = embedded_addr_info['scriptPubKey']
-        redeem_script = CScript([OP_0, sha256(check_script(witness_script))]).hex()
-        addr = script_to_p2sh(redeem_script)
-        script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
-        # Fund that address
-        txid = self.nodes[0].sendtoaddress(addr, 10)
-        vout = find_vout_for_address(self.nodes[0], txid, addr)
-        self.nodes[0].generate(1)
-        # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
-        spending_tx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): Decimal("9.999")})
-        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10}])
-        # Check the signing completed successfully
-        assert 'complete' in spending_tx_signed
-        assert_equal(spending_tx_signed['complete'], True)
-        self.nodes[0].sendrawtransaction(spending_tx_signed['hex'])
+        # Now test with P2PKH and P2PK scripts as the witnessScript
+        for tx_type in ['P2PKH', 'P2PK']:  # these tests are order-independent
+            self.verify_txn_with_witness_script(tx_type)
 
-        self.log.info('Try with a P2PK script as the witnessScript')
+    def verify_txn_with_witness_script(self, tx_type):
+        self.log.info("Test with a {} script as the witnessScript".format(tx_type))
         embedded_addr_info = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress('', 'legacy'))
         embedded_privkey = self.nodes[1].dumpprivkey(embedded_addr_info['address'])
-        witness_script = CScript([hex_str_to_bytes(embedded_addr_info['pubkey']), OP_CHECKSIG]).hex()
+        witness_script = {
+            'P2PKH': embedded_addr_info['scriptPubKey'],
+            'P2PK': CScript([hex_str_to_bytes(embedded_addr_info['pubkey']), OP_CHECKSIG]).hex()
+        }.get(tx_type, "Invalid tx_type")
         redeem_script = CScript([OP_0, sha256(check_script(witness_script))]).hex()
         addr = script_to_p2sh(redeem_script)
         script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
