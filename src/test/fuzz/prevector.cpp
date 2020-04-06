@@ -189,7 +189,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     prevector_tester<8, int> test;
 
     while (prov.remaining_bytes()) {
-        switch (prov.ConsumeIntegralInRange<int>(0, 14 + 3 * (test.size() > 0))) {
+        switch (prov.ConsumeIntegralInRange<int>(0, 13 + 3 * (test.size() > 0))) {
         case 0:
             test.insert(prov.ConsumeIntegralInRange<size_t>(0, test.size()), prov.ConsumeIntegral<int>());
             break;
@@ -203,7 +203,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             test.insert(prov.ConsumeIntegralInRange<size_t>(0, test.size()), 1 + prov.ConsumeBool(), prov.ConsumeIntegral<int>());
             break;
         case 3: {
-            int del = std::min<int>(test.size(), 1 + prov.ConsumeBool());
+            int del = prov.ConsumeIntegralInRange<int>(0, test.size());
             int beg = prov.ConsumeIntegralInRange<int>(0, test.size() - del);
             test.erase(beg, beg + del);
             break;
@@ -223,19 +223,13 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             test.insert_range(prov.ConsumeIntegralInRange<size_t>(0, test.size()), values, values + num);
             break;
         }
-        case 6: {
-            int del = std::min<int>(test.size(), 1 + prov.ConsumeIntegralInRange<int>(0, 3));
-            int beg = prov.ConsumeIntegralInRange<int>(0, test.size() - del);
-            test.erase(beg, beg + del);
-            break;
-        }
         case 7:
             test.reserve(prov.ConsumeIntegralInRange<size_t>(0, 32767));
             break;
         case 8:
             test.shrink_to_fit();
             break;
-        case 17:
+        case 14:
             test.update(prov.ConsumeIntegralInRange<size_t>(0, test.size() - 1), prov.ConsumeIntegral<int>());
             break;
         case 9:
@@ -253,7 +247,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         case 13:
             test.move();
             break;
-        case 14: {
+        case 6: {
             int num = 1 + prov.ConsumeIntegralInRange<int>(0, 15);
             std::vector<int> values(num);
             for (auto& v : values) {
