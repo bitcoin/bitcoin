@@ -67,8 +67,8 @@ static constexpr int64_t INBOUND_PEER_TX_DELAY = 2 * 1000000; // 2 seconds
 static constexpr int64_t GETDATA_TX_INTERVAL = 60 * 1000000; // 1 minute
 /** Maximum delay (in microseconds) for transaction requests to avoid biasing some peers over others. */
 static constexpr int64_t MAX_GETDATA_RANDOM_DELAY = 2 * 1000000; // 2 seconds
-/** How long to wait (in microseconds) before expiring an in-flight getdata request to a peer */
-static constexpr int64_t TX_EXPIRY_INTERVAL = 10 * GETDATA_TX_INTERVAL;
+/** How long to wait (expiry * factor microseconds) before expiring an in-flight getdata request to a peer */
+static constexpr int64_t TX_EXPIRY_INTERVAL_FACTOR = 10;
 static_assert(INBOUND_PEER_TX_DELAY >= MAX_GETDATA_RANDOM_DELAY,
 "To preserve security, MAX_GETDATA_RANDOM_DELAY should not exceed INBOUND_PEER_DELAY");
 /** Limit to avoid sending big packets. Not used in processing incoming GETDATA for compatibility */
@@ -685,18 +685,47 @@ void UpdateObjectRequestTime(const uint256& hash, int64_t request_time) EXCLUSIV
     }
 }
 
-int64_t CalculateObjectGetDataTime(const uint256& hash, int64_t current_time, bool use_inbound_delay) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+int64_t GetObjectInterval(int invType)
+{
+    // some messages need to be re-requested faster when the first announcing peer did not answer to GETDATA
+    switch(invType)
+    {
+        case MSG_QUORUM_RECOVERED_SIG:
+            return 15 * 1000000;
+        case MSG_CLSIG:
+            return 5 * 1000000;
+        case MSG_ISLOCK:
+            return 10 * 1000000;
+        default:
+            return GETDATA_TX_INTERVAL;
+    }
+}
+
+int64_t GetObjectExpiryInterval(int invType)
+{
+    return GetObjectInterval(invType) * TX_EXPIRY_INTERVAL_FACTOR;
+}
+
+int64_t GetObjectRandomDelay(int invType)
+{
+    if (invType == MSG_TX) {
+        return GetRand(MAX_GETDATA_RANDOM_DELAY);
+    }
+    return 0;
+}
+
+int64_t CalculateObjectGetDataTime(const CInv& inv, int64_t current_time, bool use_inbound_delay) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     int64_t process_time;
-    int64_t last_request_time = GetObjectRequestTime(hash);
+    int64_t last_request_time = GetObjectRequestTime(inv.hash);
     // First time requesting this tx
     if (last_request_time == 0) {
         process_time = current_time;
     } else {
         // Randomize the delay to avoid biasing some peers over others (such as due to
         // fixed ordering of peer processing in ThreadMessageHandler)
-        process_time = last_request_time + GETDATA_TX_INTERVAL + GetRand(MAX_GETDATA_RANDOM_DELAY);
+        process_time = last_request_time + GetObjectInterval(inv.type) + GetObjectRandomDelay(inv.type);
     }
 
     // We delay processing announcements from inbound peers
@@ -720,7 +749,7 @@ void RequestObject(CNodeState* state, const CInv& inv, int64_t nNow) EXCLUSIVE_L
 
     // Calculate the time to try requesting this transaction. Use
     // fPreferredDownload as a proxy for outbound peers.
-    int64_t process_time = CalculateObjectGetDataTime(inv.hash, nNow, !state->fPreferredDownload);
+    int64_t process_time = CalculateObjectGetDataTime(inv, nNow, !state->fPreferredDownload);
 
     peer_download_state.m_tx_process_time.emplace(process_time, inv);
 }
@@ -2424,19 +2453,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 } else if (!fAlreadyHave) {
                     bool allowWhileInIBD = allowWhileInIBDObjs.count(inv.type);
                     if (allowWhileInIBD || (!fImporting && !fReindex && !IsInitialBlockDownload())) {
-                        int64_t doubleRequestDelay = 2 * 60 * 1000000;
-                        // some messages need to be re-requested faster when the first announcing peer did not answer to GETDATA
-                        switch (inv.type) {
-                            case MSG_QUORUM_RECOVERED_SIG:
-                                doubleRequestDelay = 15 * 1000000;
-                                break;
-                            case MSG_CLSIG:
-                                doubleRequestDelay = 5 * 1000000;
-                                break;
-                            case MSG_ISLOCK:
-                                doubleRequestDelay = 10 * 1000000;
-                                break;
-                        }
                         RequestObject(State(pfrom->GetId()), inv, nNow);
                     }
                 }
@@ -4261,7 +4277,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         // conservative.
         if (state.m_tx_download.m_check_expiry_timer <= nNow) {
             for (auto it=state.m_tx_download.m_tx_in_flight.begin(); it != state.m_tx_download.m_tx_in_flight.end();) {
-                if (it->second <= nNow - TX_EXPIRY_INTERVAL) {
+                if (it->second <= nNow - GetObjectExpiryInterval(it->first.type)) {
                     LogPrint(BCLog::NET, "timeout of inflight tx %s from peer=%d\n", it->first.ToString(), pto->GetId());
                     state.m_tx_download.m_tx_announced.erase(it->first);
                     state.m_tx_download.m_tx_in_flight.erase(it++);
@@ -4271,7 +4287,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
             }
             // On average, we do this check every TX_EXPIRY_INTERVAL. Randomize
             // so that we're not doing this for all peers at the same time.
-            state.m_tx_download.m_check_expiry_timer = nNow + TX_EXPIRY_INTERVAL/2 + GetRand(TX_EXPIRY_INTERVAL);
+            state.m_tx_download.m_check_expiry_timer = nNow + GetObjectExpiryInterval(MSG_TX)/2 + GetRand(GetObjectExpiryInterval(MSG_TX));
         }
 
         // DASH this code also handles non-TXs (Dash specific messages)
@@ -4285,7 +4301,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                 // If this transaction was last requested more than 1 minute ago,
                 // then request.
                 int64_t last_request_time = GetObjectRequestTime(inv.hash);
-                if (last_request_time <= nNow - GETDATA_TX_INTERVAL) {
+                if (last_request_time <= nNow - GetObjectInterval(inv.type)) {
                     LogPrint(BCLog::NET, "Requesting %s peer=%d\n", inv.ToString(), pto->GetId());
                     vGetData.push_back(inv);
                     if (vGetData.size() >= MAX_GETDATA_SZ) {
@@ -4299,8 +4315,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                     // up processing to happen after the download times out
                     // (with a slight delay for inbound peers, to prefer
                     // requests to outbound peers).
-                    int64_t next_process_time = CalculateObjectGetDataTime(txid, nNow, !state.fPreferredDownload);
-                    tx_process_time.emplace(next_process_time, txid);
+                    int64_t next_process_time = CalculateObjectGetDataTime(inv, nNow, !state.fPreferredDownload);
+                    tx_process_time.emplace(next_process_time, inv);
                 }
             } else {
                 // We have already seen this transaction, no need to download.
