@@ -26,7 +26,8 @@ class prevector_tester {
 
     typedef typename pretype::size_type Size;
 
-    void test() {
+public:
+    void test() const {
         const pretype& const_pre_vector = pre_vector;
         assert(real_vector.size() == pre_vector.size());
         assert(real_vector.empty() == pre_vector.empty());
@@ -66,13 +67,11 @@ class prevector_tester {
         }
     }
 
-public:
     void resize(Size s) {
         real_vector.resize(s);
         assert(real_vector.size() == s);
         pre_vector.resize(s);
         assert(pre_vector.size() == s);
-        test();
     }
 
     void reserve(Size s) {
@@ -80,56 +79,47 @@ public:
         assert(real_vector.capacity() >= s);
         pre_vector.reserve(s);
         assert(pre_vector.capacity() >= s);
-        test();
     }
 
     void insert(Size position, const T& value) {
         real_vector.insert(real_vector.begin() + position, value);
         pre_vector.insert(pre_vector.begin() + position, value);
-        test();
     }
 
     void insert(Size position, Size count, const T& value) {
         real_vector.insert(real_vector.begin() + position, count, value);
         pre_vector.insert(pre_vector.begin() + position, count, value);
-        test();
     }
 
     template<typename I>
     void insert_range(Size position, I first, I last) {
         real_vector.insert(real_vector.begin() + position, first, last);
         pre_vector.insert(pre_vector.begin() + position, first, last);
-        test();
     }
 
     void erase(Size position) {
         real_vector.erase(real_vector.begin() + position);
         pre_vector.erase(pre_vector.begin() + position);
-        test();
     }
 
     void erase(Size first, Size last) {
         real_vector.erase(real_vector.begin() + first, real_vector.begin() + last);
         pre_vector.erase(pre_vector.begin() + first, pre_vector.begin() + last);
-        test();
     }
 
     void update(Size pos, const T& value) {
         real_vector[pos] = value;
         pre_vector[pos] = value;
-        test();
     }
 
     void push_back(const T& value) {
         real_vector.push_back(value);
         pre_vector.push_back(value);
-        test();
     }
 
     void pop_back() {
         real_vector.pop_back();
         pre_vector.pop_back();
-        test();
     }
 
     void clear() {
@@ -152,13 +142,11 @@ public:
 
     void shrink_to_fit() {
         pre_vector.shrink_to_fit();
-        test();
     }
 
     void swap() {
         real_vector.swap(real_vector_alt);
         pre_vector.swap(pre_vector_alt);
-        test();
     }
 
     void move() {
@@ -190,7 +178,6 @@ public:
             pre_vector[p] = v;
             ++p;
         }
-        test();
     }
 };
 
@@ -277,4 +264,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         }
         }
     }
+
+    test.test();
 }
