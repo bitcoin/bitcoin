@@ -3198,10 +3198,19 @@ bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
     {
         LOCK(cs_wallet);
         std::map<CTxDestination, CAddressBookData>::iterator mi = m_address_book.find(address);
-        fUpdated = (mi != m_address_book.end() && !mi->second.IsChange());
-        m_address_book[address].SetLabel(strName);
+        if (mi == m_address_book.end()) {
+            // Entirely new address book entry
+            mi = m_address_book.emplace(address, CAddressBookData()).first;
+        } else if (mi->second.IsChange()) {
+            // Transforming change to non-change
+            // Nothing special to do here
+        } else {
+            // Simply modifying label/purpose of existing normal address book entry
+            fUpdated = true;
+        }
+        mi->second.SetLabel(strName);
         if (!strPurpose.empty()) /* update purpose only if requested */
-            m_address_book[address].purpose = strPurpose;
+            mi->second.purpose = strPurpose;
     }
     NotifyAddressBookChanged(this, address, strName, IsMine(address) != ISMINE_NO,
                              strPurpose, (fUpdated ? CT_UPDATED : CT_NEW) );
