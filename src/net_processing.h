@@ -84,4 +84,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="");
 bool IsBanned(NodeId nodeid);
 
+void EraseObjectRequest(const uint256& hash);
+void RequestObject(NodeId nodeId, const CInv& inv, int64_t nNow);
+
 #endif // BITCOIN_NET_PROCESSING_H
