@@ -736,7 +736,7 @@ int64_t CalculateObjectGetDataTime(const CInv& inv, int64_t current_time, bool u
     return process_time;
 }
 
-void RequestObject(CNodeState* state, const CInv& inv, int64_t nNow) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void RequestObject(CNodeState* state, const CInv& inv, int64_t nNow, bool fForce = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     CNodeState::TxDownloadState& peer_download_state = state->m_tx_download;
@@ -754,16 +754,22 @@ void RequestObject(CNodeState* state, const CInv& inv, int64_t nNow) EXCLUSIVE_L
     int64_t process_time = CalculateObjectGetDataTime(inv, nNow, !state->fPreferredDownload);
 
     peer_download_state.m_tx_process_time.emplace(process_time, inv);
+
+    if (fForce) {
+        // make sure this object is actually requested ASAP
+        g_erased_object_requests.erase(inv.hash);
+        g_already_asked_for.erase(inv.hash);
+    }
 }
 
-void RequestObject(NodeId nodeId, const CInv& inv, int64_t nNow) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void RequestObject(NodeId nodeId, const CInv& inv, int64_t nNow, bool fForce) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     auto* state = State(nodeId);
     if (!state) {
         return;
     }
-    RequestObject(state, inv, nNow);
+    RequestObject(state, inv, nNow, fForce);
 }
 
 size_t GetRequestedObjectCount(NodeId nodeId)
