@@ -746,7 +746,7 @@ int64_t CalculateObjectGetDataTime(const CInv& inv, int64_t current_time, bool u
     }
 
     // We delay processing announcements from inbound peers
-    if (use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
+    if (inv.type == MSG_TX && !fMasternodeMode && use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
 
     return process_time;
 }
