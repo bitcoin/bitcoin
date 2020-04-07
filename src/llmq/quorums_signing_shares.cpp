@@ -652,6 +652,7 @@ bool CSigSharesManager::ProcessPendingSigShares(CConnman& connman)
     // which are not craftable by individual entities, making the rogue public key attack impossible
     CBLSBatchVerifier<NodeId, SigShareKey> batchVerifier(false, true);
 
+    cxxtimer::Timer prepareTimer(true);
     size_t verifyCount = 0;
     for (auto& p : sigSharesByNodes) {
         auto nodeId = p.first;
@@ -684,12 +685,13 @@ bool CSigSharesManager::ProcessPendingSigShares(CConnman& connman)
             verifyCount++;
         }
     }
+    prepareTimer.stop();
 
     cxxtimer::Timer verifyTimer(true);
     batchVerifier.Verify();
     verifyTimer.stop();
 
-    LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- verified sig shares. count=%d, vt=%d, nodes=%d\n", __func__, verifyCount, verifyTimer.count(), sigSharesByNodes.size());
+    LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- verified sig shares. count=%d, pt=%d, vt=%d, nodes=%d\n", __func__, verifyCount, prepareTimer.count(), verifyTimer.count(), sigSharesByNodes.size());
 
     for (auto& p : sigSharesByNodes) {
         auto nodeId = p.first;
@@ -1036,9 +1038,10 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::v
         if (curTime >= p.second.nextAttemptTime) {
             p.second.nextAttemptTime = curTime + SEND_FOR_RECOVERY_TIMEOUT;
             auto dmn = SelectMemberForRecovery(p.second.quorum, p.second.sigShare.id, p.second.attempt);
-            LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- sending to %s, signHash=%s\n", __func__,
-                     dmn->proTxHash.ToString(), p.second.sigShare.GetSignHash().ToString());
             p.second.attempt++;
+
+            LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- signHash=%s, sending to %s, attempt=%d\n", __func__,
+                     p.second.sigShare.GetSignHash().ToString(), dmn->proTxHash.ToString(), p.second.attempt);
 
             auto it = proTxToNode.find(dmn->proTxHash);
             if (it == proTxToNode.end()) {

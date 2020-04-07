@@ -63,6 +63,11 @@ public:
         messagesBySource.clear();
     }
 
+    size_t GetUniqueSourceCount() const
+    {
+        return messagesBySource.size();
+    }
+
     void Verify()
     {
         std::map<uint256, std::vector<MessageMapIterator>> byMessageHash;
