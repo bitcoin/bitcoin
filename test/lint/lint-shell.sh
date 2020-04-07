@@ -46,15 +46,17 @@ if ! command -v yq > /dev/null; then
 fi
 
 EXCLUDE_GITIAN=${EXCLUDE}",$(IFS=','; echo "${disabled_gitian[*]}")"
+SHELLCHECK_CMD="shellcheck --external-sources --check-sourced $EXCLUDE_GITIAN"
 for descriptor in $(git ls-files -- 'contrib/gitian-descriptors/*.yml')
 do
-    echo
-    echo "$descriptor"
+    script=$(basename "$descriptor")
     # Use #!/bin/bash as gitian-builder/bin/gbuild does to complete a script.
-    SCRIPT=$'#!/bin/bash\n'$(yq -r .script "$descriptor")
-    if ! echo "$SCRIPT" | shellcheck "$EXCLUDE_GITIAN" -; then
+    echo "#!/bin/bash" > $script
+    yq -r .script "$descriptor" >> $script
+    if ! $SHELLCHECK_CMD $script; then
         EXIT_CODE=1
     fi
+    rm $script
 done
 
 exit $EXIT_CODE
