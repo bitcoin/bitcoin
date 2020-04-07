@@ -103,7 +103,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
 {
     {
         LOCK(cs_main);
-        EraseObjectRequest(hash);
+        EraseObjectRequest(from, CInv(MSG_CLSIG, hash));
     }
 
     {

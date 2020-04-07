@@ -669,7 +669,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
 
     {
         LOCK(cs_main);
-        EraseObjectRequest(recoveredSig.GetHash());
+        EraseObjectRequest(nodeId, CInv(MSG_QUORUM_RECOVERED_SIG, recoveredSig.GetHash()));
     }
 
     if (db.HasRecoveredSigForHash(recoveredSig.GetHash())) {

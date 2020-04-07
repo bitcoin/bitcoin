@@ -40,13 +40,14 @@ public:
 
 private:
     mutable CCriticalSection cs;
+    int invType;
     size_t maxMessagesPerNode;
     std::list<BinaryMessage> pendingMessages;
     std::map<NodeId, size_t> messagesPerNode;
     std::set<uint256> seenMessages;
 
 public:
-    explicit CDKGPendingMessages(size_t _maxMessagesPerNode);
+    explicit CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType);
 
     void PushPendingMessage(NodeId from, CDataStream& vRecv);
     std::list<BinaryMessage> PopPendingMessages(size_t maxCount);

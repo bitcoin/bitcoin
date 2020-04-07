@@ -659,11 +659,26 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
 }
 } // namespace
 
-void EraseObjectRequest(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void EraseObjectRequest(CNodeState* nodestate, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    g_already_asked_for.erase(hash);
-    g_erased_object_requests.insert(std::make_pair(hash, GetTimeMillis()));
+    g_already_asked_for.erase(inv.hash);
+    g_erased_object_requests.insert(std::make_pair(inv.hash, GetTimeMillis()));
+
+    if (nodestate) {
+        nodestate->m_tx_download.m_tx_announced.erase(inv);
+        nodestate->m_tx_download.m_tx_in_flight.erase(inv);
+    }
+}
+
+void EraseObjectRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    AssertLockHeld(cs_main);
+    auto* state = State(nodeId);
+    if (!state) {
+        return;
+    }
+    EraseObjectRequest(state, inv);
 }
 
 int64_t GetObjectRequestTime(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -2746,10 +2761,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         bool fMissingInputs = false;
         CValidationState state;
 
-        CNodeState* nodestate = State(pfrom->GetId());
-        nodestate->m_tx_download.m_tx_announced.erase(inv);
-        nodestate->m_tx_download.m_tx_in_flight.erase(inv);
-        EraseObjectRequest(inv.hash);
+        EraseObjectRequest(pfrom->GetId(), inv);
 
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs /* pfMissingInputs */,
                 false /* bypass_limits */, 0 /* nAbsurdFee */)) {
