@@ -120,4 +120,19 @@ NODISCARD bool MultiplicationOverflow(const T i, const T j) noexcept
     }
 }
 
+<<<<<<< HEAD
 #endif // SYSCOIN_TEST_FUZZ_UTIL_H
+=======
+template <class T>
+NODISCARD bool AdditionOverflow(const T i, const T j) noexcept
+{
+    static_assert(std::is_integral<T>::value, "Integral required.");
+    if (std::numeric_limits<T>::is_signed) {
+        return (i > 0 && j > std::numeric_limits<T>::max() - i) ||
+               (i < 0 && j < std::numeric_limits<T>::min() - i);
+    }
+    return std::numeric_limits<T>::max() - i < j;
+}
+
+#endif // BITCOIN_TEST_FUZZ_UTIL_H
+>>>>>>> 7b9a2dc86... tests: Add fuzzing harness for AdditionOverflow(...)
