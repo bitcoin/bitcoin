@@ -4196,6 +4196,8 @@ static UniValue upgradewallet(const JSONRPCRequest& request)
     return error.original;
 }
 
+Span<const CRPCCommand> GetWalletRPCCommands()
+{
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           argNames
@@ -4266,7 +4268,5 @@ static const CRPCCommand commands[] =
 };
 // clang-format on
 
-Span<const CRPCCommand> GetWalletRPCCommands()
-{
     return MakeSpan(commands);
 }

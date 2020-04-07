@@ -1191,6 +1191,8 @@ static UniValue getsuperblockbudget(const JSONRPCRequest& request)
 
     return ValueFromAmount(CSuperblock::GetPaymentsLimit(nBlockHeight));
 }
+void RegisterGovernanceRPCCommands(CRPCTable &t)
+{
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -1203,8 +1205,6 @@ static const CRPCCommand commands[] =
 
 };
 // clang-format on
-void RegisterGovernanceRPCCommands(CRPCTable &t)
-{
     for (const auto& command : commands) {
         t.appendCommand(command.name, &command);
     }
