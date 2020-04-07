@@ -26,6 +26,7 @@
 #include <util/fees.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
+#include <util/check.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
@@ -3223,6 +3224,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
     // When adding new DestData, it should be considered here whether to retain or delete it (or move it?).
     if (IsMine(address)) {
         WalletLogPrintf("%s called with IsMine address, NOT SUPPORTED. Please report this bug! %s\n", __func__, PACKAGE_BUGREPORT);
+        ASSUME(false);
         return false;
     }
 
