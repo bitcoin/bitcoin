@@ -146,6 +146,7 @@ public:
     enum SocketEventsMode {
         SOCKETEVENTS_SELECT = 0,
         SOCKETEVENTS_POLL = 1,
+        SOCKETEVENTS_EPOLL = 2,
     };
 
     struct Options
@@ -485,6 +486,9 @@ private:
     void NotifyNumConnectionsChanged();
     void InactivityCheck(CNode *pnode);
     bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+#ifdef USE_EPOLL
+    void SocketEventsEpoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
+#endif
 #ifdef USE_POLL
     void SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
 #endif
@@ -528,6 +532,9 @@ private:
 
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);
+
+    void RegisterEvents(CNode* pnode);
+    void UnregisterEvents(CNode* pnode);
 
     // Network usage totals
     CCriticalSection cs_totalBytesRecv;
@@ -603,6 +610,9 @@ private:
     std::atomic<bool> wakeupSelectNeeded{false};
 
     SocketEventsMode socketEventsMode;
+#ifdef USE_EPOLL
+    int epollfd{-1};
+#endif
 
     /** Protected by cs_vNodes */
     std::unordered_map<NodeId, CNode*> mapReceivableNodes GUARDED_BY(cs_vNodes);

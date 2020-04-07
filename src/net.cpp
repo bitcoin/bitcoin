@@ -39,6 +39,10 @@
 #include <poll.h>
 #endif
 
+#ifdef USE_EPOLL
+#include <sys/epoll.h>
+#endif
+
 #ifdef USE_UPNP
 #include <miniupnpc/miniupnpc.h>
 #include <miniupnpc/miniwget.h>
@@ -539,6 +543,8 @@ void CNode::CloseSocketDisconnect(CConnman* connman)
             Release();
         }
     }
+
+    connman->UnregisterEvents(this);
 
     LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
     CloseSocket(hSocket);
@@ -1256,6 +1262,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
         mapSocketToNode.emplace(pnode->hSocket, pnode);
+        RegisterEvents(pnode);
         WakeSelect();
     }
 }
@@ -1443,6 +1450,33 @@ bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &s
     return !recv_set.empty() || !send_set.empty() || !error_set.empty();
 }
 
+#ifdef USE_EPOLL
+void CConnman::SocketEventsEpoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll)
+{
+    const size_t maxEvents = 64;
+    epoll_event events[maxEvents];
+
+    wakeupSelectNeeded = true;
+    int n = epoll_wait(epollfd, events, maxEvents, fOnlyPoll ? 0 : SELECT_TIMEOUT_MILLISECONDS);
+    wakeupSelectNeeded = false;
+    for (int i = 0; i < n; i++) {
+        auto& e = events[i];
+        if((e.events & EPOLLERR) || (e.events & EPOLLHUP)) {
+            error_set.insert((SOCKET)e.data.fd);
+            continue;
+        }
+
+        if (e.events & EPOLLIN) {
+            recv_set.insert((SOCKET)e.data.fd);
+        }
+
+        if (e.events & EPOLLOUT) {
+            send_set.insert((SOCKET)e.data.fd);
+        }
+    }
+}
+#endif
+
 #ifdef USE_POLL
 void CConnman::SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll)
 {
@@ -1570,6 +1604,11 @@ void CConnman::SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &
 void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll)
 {
     switch (socketEventsMode) {
+#ifdef USE_EPOLL
+        case SOCKETEVENTS_EPOLL:
+            SocketEventsEpoll(recv_set, send_set, error_set, fOnlyPoll);
+            break;
+#endif
 #ifdef USE_POLL
         case SOCKETEVENTS_POLL:
             SocketEventsPoll(recv_set, send_set, error_set, fOnlyPoll);
@@ -2623,6 +2662,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
+        RegisterEvents(pnode);
         WakeSelect();
     }
 }
@@ -2744,6 +2784,20 @@ bool CConnman::BindListenPort(const CService &addrBind, std::string& strError, b
         CloseSocket(hListenSocket);
         return false;
     }
+
+#ifdef USE_EPOLL
+    if (socketEventsMode == SOCKETEVENTS_EPOLL) {
+        epoll_event event;
+        event.data.fd = hListenSocket;
+        event.events = EPOLLIN;
+        if (epoll_ctl(epollfd, EPOLL_CTL_ADD, hListenSocket, &event) != 0) {
+            strError = strprintf(_("Error: failed to add socket to epollfd (epoll_ctl returned error %s)"), NetworkErrorString(WSAGetLastError()));
+            LogPrintf("%s\n", strError);
+            CloseSocket(hListenSocket);
+            return false;
+        }
+    }
+#endif
 
     vhListenSocket.push_back(ListenSocket(hListenSocket, fWhitelisted));
 
@@ -2886,6 +2940,16 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         nMaxOutboundCycleStartTime = 0;
     }
 
+#ifdef USE_EPOLL
+    if (socketEventsMode == SOCKETEVENTS_EPOLL) {
+        epollfd = epoll_create1(0);
+        if (epollfd == -1) {
+            LogPrintf("epoll_create1 failed\n");
+            return false;
+        }
+    }
+#endif
+
     if (fListen && !InitBinds(connOptions.vBinds, connOptions.vWhiteBinds)) {
         if (clientInterface) {
             clientInterface->ThreadSafeMessageBox(
@@ -2972,6 +3036,19 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         if (fcntl(wakeupPipe[1], F_SETFL, fFlags | O_NONBLOCK) == -1) {
             LogPrint(BCLog::NET, "fcntl for O_NONBLOCK on wakeupPipe failed\n");
         }
+#ifdef USE_EPOLL
+        if (socketEventsMode == SOCKETEVENTS_EPOLL) {
+            epoll_event event;
+            event.events = EPOLLIN;
+            event.data.fd = wakeupPipe[0];
+            int r = epoll_ctl(epollfd, EPOLL_CTL_ADD, wakeupPipe[0], &event);
+            if (r != 0) {
+                LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
+                         epollfd, EPOLL_CTL_DEL, wakeupPipe[0], NetworkErrorString(WSAGetLastError()));
+                return false;
+            }
+        }
+#endif
     }
 #endif
 
@@ -3085,9 +3162,15 @@ void CConnman::Stop()
             pnode->CloseSocketDisconnect(this);
     }
     for (ListenSocket& hListenSocket : vhListenSocket)
-        if (hListenSocket.socket != INVALID_SOCKET)
+        if (hListenSocket.socket != INVALID_SOCKET) {
+#ifdef USE_EPOLL
+            if (socketEventsMode == SOCKETEVENTS_EPOLL) {
+                epoll_ctl(epollfd, EPOLL_CTL_DEL, hListenSocket.socket, nullptr);
+            }
+#endif
             if (!CloseSocket(hListenSocket.socket))
                 LogPrintf("CloseSocket(hListenSocket) failed with error %s\n", NetworkErrorString(WSAGetLastError()));
+        }
 
     // clean up some globals (to help leak detection)
     for (CNode *pnode : vNodes) {
@@ -3107,6 +3190,16 @@ void CConnman::Stop()
     vhListenSocket.clear();
     semOutbound.reset();
     semAddnode.reset();
+
+#ifdef USE_EPOLL
+    if (socketEventsMode == SOCKETEVENTS_EPOLL && epollfd != -1) {
+#ifdef USE_WAKEUP_PIPE
+        epoll_ctl(epollfd, EPOLL_CTL_DEL, wakeupPipe[0], nullptr);
+#endif
+        close(epollfd);
+    }
+    epollfd = -1;
+#endif
 
 #ifdef USE_WAKEUP_PIPE
     if (wakeupPipe[0] != -1) close(wakeupPipe[0]);
@@ -3739,4 +3832,47 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
     std::vector<unsigned char> vchNetGroup(ad.GetGroup());
 
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
+}
+
+void CConnman::RegisterEvents(CNode *pnode)
+{
+#ifdef USE_EPOLL
+    if (socketEventsMode != SOCKETEVENTS_EPOLL) {
+        return;
+    }
+
+    LOCK(pnode->cs_hSocket);
+    assert(pnode->hSocket != INVALID_SOCKET);
+
+    epoll_event e;
+    // We're using edge-triggered mode, so it's important that we drain sockets even if no signals come in
+    e.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLERR | EPOLLHUP;
+    e.data.fd = pnode->hSocket;
+
+    int r = epoll_ctl(epollfd, EPOLL_CTL_ADD, pnode->hSocket, &e);
+    if (r != 0) {
+        LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
+                epollfd, EPOLL_CTL_ADD, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
+    }
+#endif
+}
+
+void CConnman::UnregisterEvents(CNode *pnode)
+{
+#ifdef USE_EPOLL
+    if (socketEventsMode != SOCKETEVENTS_EPOLL) {
+        return;
+    }
+
+    LOCK(pnode->cs_hSocket);
+    if (pnode->hSocket == INVALID_SOCKET) {
+        return;
+    }
+
+    int r = epoll_ctl(epollfd, EPOLL_CTL_DEL, pnode->hSocket, nullptr);
+    if (r != 0) {
+        LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
+                epollfd, EPOLL_CTL_DEL, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
+    }
+#endif
 }

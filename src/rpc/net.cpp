@@ -494,6 +494,9 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
             case CConnman::SOCKETEVENTS_POLL:
                 strSocketEvents = "poll";
                 break;
+            case CConnman::SOCKETEVENTS_EPOLL:
+                strSocketEvents = "epoll";
+                break;
             default:
                 assert(false);
         }

@@ -19,11 +19,13 @@ cd build-ci/dashcore-$BUILD_TARGET
 
 if [ "$SOCKETEVENTS" = "" ]; then
   # Let's switch socketevents mode to some random mode
-  R=$(($RANDOM%2))
+  R=$(($RANDOM%3))
   if [ "$R" == "0" ]; then
     SOCKETEVENTS="select"
-  else
+  elif [ "$R" == "1" ]; then
     SOCKETEVENTS="poll"
+  else
+    SOCKETEVENTS="epoll"
   fi
 fi
 echo "Using socketevents mode: $SOCKETEVENTS"

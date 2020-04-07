@@ -415,6 +415,9 @@ std::string GetSupportedSocketEventsStr()
 #ifdef USE_POLL
     strSupportedModes += ", 'poll'";
 #endif
+#ifdef USE_EPOLL
+    strSupportedModes += ", 'epoll'";
+#endif
     return strSupportedModes;
 }
 
@@ -2244,6 +2247,10 @@ bool AppInitMain()
 #ifdef USE_POLL
     } else if (strSocketEventsMode == "poll") {
         connOptions.socketEventsMode = CConnman::SOCKETEVENTS_POLL;
+#endif
+#ifdef USE_EPOLL
+    } else if (strSocketEventsMode == "epoll") {
+        connOptions.socketEventsMode = CConnman::SOCKETEVENTS_EPOLL;
 #endif
     } else {
         return InitError(strprintf(_("Invalid -socketevents ('%s') specified. Only these modes are supported: %s"), strSocketEventsMode, GetSupportedSocketEventsStr()));
