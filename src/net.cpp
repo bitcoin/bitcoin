@@ -1225,9 +1225,9 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     m_msgproc->InitializeNode(pnode);
 
     if (fLogIPs) {
-        LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToString());
+        LogPrint(BCLog::NET, "connection from %s accepted, peer=%d\n", addr.ToString(), pnode->GetId());
     } else {
-        LogPrint(BCLog::NET, "connection accepted\n");
+        LogPrint(BCLog::NET, "connection accepted, peer=%d\n", pnode->GetId());
     }
 
     {
@@ -2374,6 +2374,7 @@ void CConnman::ThreadOpenMasternodeConnections()
             return true;
         });
         if (!connected) {
+            LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
             // reset last outbound success
             mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundSuccess(0);
         }
@@ -2407,10 +2408,14 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     } else if (FindNode(std::string(pszDest)))
         return;
 
+    LogPrint(BCLog::NET, "CConnman::%s -- connecting to %s\n", __func__, addrConnect.ToString(false));
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure);
 
-    if (!pnode)
+    if (!pnode) {
+        LogPrint(BCLog::NET, "CConnman::%s -- ConnectNode failed for %s\n", __func__, addrConnect.ToString(false));
         return;
+    }
+    LogPrint(BCLog::NET, "CConnman::%s -- succesfully connected to %s, peer=%d\n", __func__, addrConnect.ToString(false), pnode->GetId());
     if (grantOutbound)
         grantOutbound->MoveTo(pnode->grantOutbound);
     if (fOneShot)
