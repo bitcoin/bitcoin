@@ -133,6 +133,7 @@ struct CSerializedNetMsg
 class NetEventsInterface;
 class CConnman
 {
+friend class CNode;
 public:
 
     enum NumConnections {
@@ -564,6 +565,7 @@ private:
     mutable CCriticalSection cs_vPendingMasternodes;
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;
+    std::unordered_map<SOCKET, CNode*> mapSocketToNode;
     mutable CCriticalSection cs_vNodes;
     mutable CCriticalSection cs_vNodesDisconnected;
     std::atomic<NodeId> nLastNodeId;
@@ -1053,7 +1055,7 @@ public:
         vBlockHashesToAnnounce.push_back(hash);
     }
 
-    void CloseSocketDisconnect();
+    void CloseSocketDisconnect(CConnman* connman);
 
     void copyStats(CNodeStats &stats);
 
