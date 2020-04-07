@@ -191,7 +191,7 @@ void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInd
 }
 // SYSCOIN
 void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx, bool fBlock) {
-    auto event = [ptx, this] {
+    auto event = [ptx, fBlock, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionAddedToMempool(ptx, fBlock); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s wtxid=%s", __func__,
