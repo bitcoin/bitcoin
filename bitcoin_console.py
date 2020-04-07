@@ -64,6 +64,8 @@ def console(width):
 
 			# External
 			t = re.search(r'That took ([0-9\.]+) clocks', output)
+			if t == None: # Support different timer formats (send, mine)
+				t = re.search(r'"Elapsed time \(seconds\)": ([0-9\.]+)', output)
 			if t != None:
 				internalTime += float(t.group(1))
 
