@@ -83,6 +83,7 @@ class AvoidReuseTest(BitcoinTestFramework):
 
         self.nodes[0].generate(110)
         self.sync_all()
+        self.test_change_remains_change(self.nodes[1])
         reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
         self.test_fund_send_fund_senddirty()
         reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
@@ -136,6 +137,30 @@ class AvoidReuseTest(BitcoinTestFramework):
 
         # Unload temp wallet
         self.nodes[1].unloadwallet(tempwallet)
+
+    def test_change_remains_change(self, node):
+        self.log.info("Test that change doesn't turn into non-change when spent")
+
+        reset_balance(node, node.getnewaddress())
+        addr = node.getnewaddress()
+        txid = node.sendtoaddress(addr, 1)
+        out = node.listunspent(minconf=0, query_options={'minimumAmount': 2})
+        assert_equal(len(out), 1)
+        assert_equal(out[0]['txid'], txid)
+        changeaddr = out[0]['address']
+
+        # Make sure it's starting out as change as expected
+        assert node.getaddressinfo(changeaddr)['ischange']
+        for logical_tx in node.listtransactions():
+            assert logical_tx.get('address') != changeaddr
+
+        # Spend it
+        reset_balance(node, node.getnewaddress())
+
+        # It should still be change
+        assert node.getaddressinfo(changeaddr)['ischange']
+        for logical_tx in node.listtransactions():
+            assert logical_tx.get('address') != changeaddr
 
     def test_fund_send_fund_senddirty(self):
         '''
