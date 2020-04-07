@@ -782,7 +782,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
     return true;
 }
 
-std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(int signHeight, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>>& pend, bool ban)
+std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(int signHeight, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>, StaticSaltedHasher>& pend, bool ban)
 {
     auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
 
