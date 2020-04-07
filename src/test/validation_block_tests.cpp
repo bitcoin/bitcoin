@@ -16,6 +16,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <future>
 #include <thread>
 
 static const std::vector<unsigned char> V_OP_TRUE{OP_TRUE};
@@ -340,4 +341,66 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         rpc_thread.join();
     }
 }
+
+// Test UnregisterSharedValidationInterface ensuring that if interface is
+// unregistered during the middle of a callback, interface is destroyed as soon
+// as callback returns.
+BOOST_AUTO_TEST_CASE(release_shared)
+{
+    enum State { CREATING, CREATED, CALLING, CALLED, UNREGISTERED, RETURNED, DESTROYED };
+    std::promise<bool> called;       // Wait for callback to be called before unregistering
+    std::promise<bool> unregistered; // Wait for interface to be unregistered before returning
+    std::promise<bool> destroyed;    // Wait for interface to be destroyed before ending test
+
+    class TestInterface : public CValidationInterface
+    {
+    public:
+        TestInterface(State& state,
+            std::promise<bool>& called,
+            std::promise<bool>& unregistered,
+            std::promise<bool>& destroyed)
+            : m_state(state), m_called(called), m_unregistered(unregistered), m_destroyed(destroyed)
+        {
+            BOOST_CHECK_EQUAL(m_state, CREATING);
+            m_state = CREATED;
+        }
+        void UpdatedBlockTip(const CBlockIndex*, const CBlockIndex*, bool) override
+        {
+            BOOST_CHECK_EQUAL(m_state, CALLING);
+            m_state = CALLED;
+            m_called.set_value(true);
+            BOOST_CHECK(m_unregistered.get_future().get());
+            BOOST_CHECK_EQUAL(m_state, UNREGISTERED);
+            m_state = RETURNED;
+        }
+        virtual ~TestInterface()
+        {
+            BOOST_CHECK_EQUAL(m_state, RETURNED);
+            m_state = DESTROYED;
+            m_destroyed.set_value(true);
+        }
+        State& m_state;
+        std::promise<bool>& m_called;
+        std::promise<bool>& m_unregistered;
+        std::promise<bool>& m_destroyed;
+    };
+
+    State state = CREATING;
+    auto test_interface = std::make_shared<TestInterface>(state, called, unregistered, destroyed);
+    BOOST_CHECK_EQUAL(state, CREATED);
+    state = CALLING;
+    RegisterSharedValidationInterface(test_interface);
+    GetMainSignals().UpdatedBlockTip(nullptr, nullptr, false);
+    BOOST_CHECK(called.get_future().get());
+    BOOST_CHECK_EQUAL(state, CALLED);
+    UnregisterSharedValidationInterface(std::move(test_interface));
+    BOOST_CHECK(!test_interface);
+    BOOST_CHECK_EQUAL(state, CALLED);
+    state = UNREGISTERED;
+    UnregisterAllValidationInterfaces();
+    unregistered.set_value(true);
+    BOOST_CHECK(destroyed.get_future().get());
+    BOOST_CHECK_EQUAL(state, DESTROYED);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
