@@ -67,8 +67,8 @@ public:
     void Clear()
     {
         LOCK(m_mutex);
-        for (auto it = m_list.begin(); it != m_list.end();) {
-            it = --it->count ? std::next(it) : m_list.erase(it);
+        for (const auto& entry : m_map) {
+            if (!--entry.second->count) m_list.erase(entry.second);
         }
         m_map.clear();
     }
