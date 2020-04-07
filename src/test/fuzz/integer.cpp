@@ -23,6 +23,7 @@
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/util.h>
 #include <time.h>
 #include <uint256.h>
 #include <util/moneystr.h>
@@ -90,8 +91,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
     (void)GetSizeOfCompactSize(u64);
     (void)GetSpecialScriptSize(u32);
-    // (void)GetVirtualTransactionSize(i64, i64); // function defined only for a subset of int64_t inputs
-    // (void)GetVirtualTransactionSize(i64, i64, u32); // function defined only for a subset of int64_t/uint32_t inputs
+    if (!MultiplicationOverflow(i64, static_cast<int64_t>(::nBytesPerSigOp)) && !AdditionOverflow(i64 * ::nBytesPerSigOp, static_cast<int64_t>(4))) {
+        (void)GetVirtualTransactionSize(i64, i64);
+    }
+    if (!MultiplicationOverflow(i64, static_cast<int64_t>(u32)) && !AdditionOverflow(i64, static_cast<int64_t>(4)) && !AdditionOverflow(i64 * u32, static_cast<int64_t>(4))) {
+        (void)GetVirtualTransactionSize(i64, i64, u32);
+    }
     (void)HexDigit(ch);
     (void)MoneyRange(i64);
     (void)ToString(i64);
