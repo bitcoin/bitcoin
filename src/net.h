@@ -604,6 +604,13 @@ private:
 
     SocketEventsMode socketEventsMode;
 
+    /** Protected by cs_vNodes */
+    std::unordered_map<NodeId, CNode*> mapReceivableNodes GUARDED_BY(cs_vNodes);
+    std::unordered_map<NodeId, CNode*> mapSendableNodes GUARDED_BY(cs_vNodes);
+    /** Protected by cs_mapNodesWithDataToSend */
+    std::unordered_map<NodeId, CNode*> mapNodesWithDataToSend GUARDED_BY(cs_mapNodesWithDataToSend);
+    mutable CCriticalSection cs_mapNodesWithDataToSend;
+
     std::thread threadDNSAddressSeed;
     std::thread threadSocketHandler;
     std::thread threadOpenAddedConnections;
@@ -852,6 +859,10 @@ public:
 
     std::atomic_bool fPauseRecv;
     std::atomic_bool fPauseSend;
+
+    std::atomic_bool fHasRecvData;
+    std::atomic_bool fCanSendData;
+
 protected:
 
     mapMsgCmdSize mapSendBytesPerMsgCmd;

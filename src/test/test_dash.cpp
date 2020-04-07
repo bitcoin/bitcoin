@@ -37,6 +37,11 @@ void CConnmanTest::ClearNodes()
     LOCK(g_connman->cs_vNodes);
     g_connman->vNodes.clear();
     g_connman->mapSocketToNode.clear();
+
+    g_connman->mapReceivableNodes.clear();
+    g_connman->mapSendableNodes.clear();
+    LOCK(g_connman->cs_mapNodesWithDataToSend);
+    g_connman->mapNodesWithDataToSend.clear();
 }
 
 uint256 insecure_rand_seed = GetRandHash();

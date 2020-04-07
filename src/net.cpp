@@ -522,7 +522,16 @@ void CNode::CloseSocketDisconnect(CConnman* connman)
         return;
     }
 
+    fHasRecvData = false;
+    fCanSendData = false;
+
     connman->mapSocketToNode.erase(hSocket);
+    connman->mapReceivableNodes.erase(GetId());
+    connman->mapSendableNodes.erase(GetId());
+    {
+        LOCK(connman->cs_mapNodesWithDataToSend);
+        connman->mapNodesWithDataToSend.erase(GetId());
+    }
 
     LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
     CloseSocket(hSocket);
@@ -946,6 +955,7 @@ size_t CConnman::SocketSendData(CNode *pnode) EXCLUSIVE_LOCKS_REQUIRED(pnode->cs
                 it++;
             } else {
                 // could not send full message; stop sending more
+                pnode->fCanSendData = false;
                 break;
             }
         } else {
@@ -959,6 +969,7 @@ size_t CConnman::SocketSendData(CNode *pnode) EXCLUSIVE_LOCKS_REQUIRED(pnode->cs
                 }
             }
             // couldn't send anything at all
+            pnode->fCanSendData = false;
             break;
         }
     }
@@ -1396,23 +1407,8 @@ bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &s
         LOCK(cs_vNodes);
         for (CNode* pnode : vNodes)
         {
-            // Implement the following logic:
-            // * If there is data to send, select() for sending data. As this only
-            //   happens when optimistic write failed, we choose to first drain the
-            //   write buffer in this case before receiving more. This avoids
-            //   needlessly queueing received data, if the remote peer is not themselves
-            //   receiving data. This means properly utilizing TCP flow control signalling.
-            // * Otherwise, if there is space left in the receive buffer, select() for
-            //   receiving data.
-            // * Hand off all complete messages to the processor, to be handled without
-            //   blocking here.
-
-            bool select_recv = !pnode->fPauseRecv;
-            bool select_send;
-            {
-                LOCK(pnode->cs_vSend);
-                select_send = !pnode->vSendMsg.empty();
-            }
+            bool select_recv = !pnode->fHasRecvData;
+            bool select_send = !pnode->fCanSendData;
 
             LOCK(pnode->cs_hSocket);
             if (pnode->hSocket == INVALID_SOCKET)
@@ -1421,7 +1417,6 @@ bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &s
             error_set.insert(pnode->hSocket);
             if (select_send) {
                 send_set.insert(pnode->hSocket);
-                continue;
             }
             if (select_recv) {
                 recv_set.insert(pnode->hSocket);
@@ -1612,48 +1607,136 @@ void CConnman::SocketHandler()
         }
     }
 
-    //
-    // Service each socket
-    //
-    std::vector<CNode*> vNodesCopy = CopyNodeVector();
-    for (CNode* pnode : vNodesCopy)
+    std::vector<CNode*> vErrorNodes;
+    std::vector<CNode*> vReceivableNodes;
+    std::vector<CNode*> vSendableNodes;
     {
-        if (interruptNet)
-            return;
-
-        //
-        // Receive
-        //
-        bool recvSet = false;
-        bool sendSet = false;
-        bool errorSet = false;
-        {
-            LOCK(pnode->cs_hSocket);
-            if (pnode->hSocket == INVALID_SOCKET)
+        LOCK(cs_vNodes);
+        for (auto hSocket : error_set) {
+            auto it = mapSocketToNode.find(hSocket);
+            if (it == mapSocketToNode.end()) {
                 continue;
-            recvSet = recv_set.count(pnode->hSocket) > 0;
-            sendSet = send_set.count(pnode->hSocket) > 0;
-            errorSet = error_set.count(pnode->hSocket) > 0;
+            }
+            it->second->AddRef();
+            vErrorNodes.emplace_back(it->second);
         }
-        if (!pnode->fDisconnect && (recvSet || errorSet))
-        {
-            SocketRecvData(pnode);
+        for (auto hSocket : recv_set) {
+            if (error_set.count(hSocket)) {
+                // no need to handle it twice
+                continue;
+            }
+
+            auto it = mapSocketToNode.find(hSocket);
+            if (it == mapSocketToNode.end()) {
+                continue;
+            }
+
+            auto jt = mapReceivableNodes.emplace(it->second->GetId(), it->second);
+            assert(jt.first->second == it->second);
+            it->second->fHasRecvData = true;
+        }
+        for (auto hSocket : send_set) {
+            auto it = mapSocketToNode.find(hSocket);
+            if (it == mapSocketToNode.end()) {
+                continue;
+            }
+
+            auto jt = mapSendableNodes.emplace(it->second->GetId(), it->second);
+            assert(jt.first->second == it->second);
+            it->second->fCanSendData = true;
         }
 
-        //
-        // Send
-        //
-        if (sendSet)
-        {
-            LOCK(pnode->cs_vSend);
-            size_t nBytes = SocketSendData(pnode);
-            if (nBytes) {
-                RecordBytesSent(nBytes);
+        // collect nodes that have a receivable socket
+        // also clean up mapReceivableNodes from nodes that were receivable in the last iteration but aren't anymore
+        vReceivableNodes.reserve(mapReceivableNodes.size());
+        for (auto it = mapReceivableNodes.begin(); it != mapReceivableNodes.end(); ) {
+            if (!it->second->fHasRecvData) {
+                it = mapReceivableNodes.erase(it);
+            } else {
+                // Implement the following logic:
+                // * If there is data to send, try sending data. As this only
+                //   happens when optimistic write failed, we choose to first drain the
+                //   write buffer in this case before receiving more. This avoids
+                //   needlessly queueing received data, if the remote peer is not themselves
+                //   receiving data. This means properly utilizing TCP flow control signalling.
+                // * Otherwise, if there is space left in the receive buffer (!fPauseRecv), try
+                //   receiving data (which should succeed as the socket signalled as receivable).
+                if (!it->second->fPauseRecv && it->second->nSendMsgSize == 0 && !it->second->fDisconnect) {
+                    it->second->AddRef();
+                    vReceivableNodes.emplace_back(it->second);
+                }
+                ++it;
             }
         }
 
+        // collect nodes that have data to send and have a socket with non-empty write buffers
+        // also clean up mapNodesWithDataToSend from nodes that had messages to send in the last iteration
+        // but don't have any in this iteration
+        LOCK(cs_mapNodesWithDataToSend);
+        vSendableNodes.reserve(mapNodesWithDataToSend.size());
+        for (auto it = mapNodesWithDataToSend.begin(); it != mapNodesWithDataToSend.end(); ) {
+            if (it->second->nSendMsgSize == 0) {
+                it = mapNodesWithDataToSend.erase(it);
+            } else {
+                if (it->second->fCanSendData) {
+                    it->second->AddRef();
+                    vSendableNodes.emplace_back(it->second);
+                }
+                ++it;
+            }
+        }
     }
-    ReleaseNodeVector(vNodesCopy);
+
+    for (CNode* pnode : vErrorNodes)
+    {
+        if (interruptNet) {
+            return;
+        }
+        // let recv() return errors and then handle it
+        SocketRecvData(pnode);
+    }
+
+    for (CNode* pnode : vReceivableNodes)
+    {
+        if (interruptNet) {
+            return;
+        }
+        if (pnode->fPauseRecv) {
+            continue;
+        }
+
+        SocketRecvData(pnode);
+    }
+
+    for (CNode* pnode : vSendableNodes) {
+        if (interruptNet) {
+            return;
+        }
+
+        LOCK(pnode->cs_vSend);
+        size_t nBytes = SocketSendData(pnode);
+        if (nBytes) {
+            RecordBytesSent(nBytes);
+        }
+    }
+
+    ReleaseNodeVector(vErrorNodes);
+    ReleaseNodeVector(vReceivableNodes);
+    ReleaseNodeVector(vSendableNodes);
+
+    {
+        LOCK(cs_vNodes);
+        // remove nodes from mapSendableNodes, so that the next iteration knows that there is no work to do
+        // (even if there are pending messages to be sent)
+        for (auto it = mapSendableNodes.begin(); it != mapSendableNodes.end(); ) {
+            if (!it->second->fCanSendData) {
+                LogPrint(BCLog::NET, "%s -- remove mapSendableNodes, peer=%d\n", __func__, it->second->GetId());
+                it = mapSendableNodes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
 }
 
 size_t CConnman::SocketRecvData(CNode *pnode)
@@ -1666,6 +1749,9 @@ size_t CConnman::SocketRecvData(CNode *pnode)
         if (pnode->hSocket == INVALID_SOCKET)
             return 0;
         nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
+        if (nBytes < (int)sizeof(pchBuf)) {
+            pnode->fHasRecvData = false;
+        }
     }
     if (nBytes > 0)
     {
@@ -2981,6 +3067,11 @@ void CConnman::Stop()
     }
     vNodes.clear();
     mapSocketToNode.clear();
+    mapReceivableNodes.clear();
+    {
+        LOCK(cs_mapNodesWithDataToSend);
+        mapNodesWithDataToSend.clear();
+    }
     vNodesDisconnected.clear();
     vhListenSocket.clear();
     semOutbound.reset();
@@ -3455,6 +3546,8 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     fPauseRecv = false;
     fPauseSend = false;
+    fHasRecvData = false;
+    fCanSendData = false;
     nProcessQueueSize = 0;
     nSendMsgSize = 0;
 
@@ -3508,6 +3601,11 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         if (nMessageSize)
             pnode->vSendMsg.push_back(std::move(msg.data));
         pnode->nSendMsgSize = pnode->vSendMsg.size();
+
+        {
+            LOCK(cs_mapNodesWithDataToSend);
+            mapNodesWithDataToSend.emplace(pnode->GetId(), pnode);
+        }
 
         // wake up select() call in case there was no pending data before (so it was not selecting this socket for sending)
         if (!hasPendingData && wakeupSelectNeeded)
