@@ -144,7 +144,6 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         RPCExamples{
             HelpExampleCli("syscointxfund", "<hexstring> \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\"")
             + HelpExampleRpc("syscointxfund", "<hexstring>, \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\"")
-            + HelpRequiringPassphrase(pwallet)
         }
     }.Check(request);
     const string &hexstring = params[0].get_str();
