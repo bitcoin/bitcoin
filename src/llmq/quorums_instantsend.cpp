@@ -731,7 +731,18 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
 
     {
         LOCK(cs);
-        pend = std::move(pendingInstantSendLocks);
+        // only process a max 32 locks at a time to avoid duplicate verification of recovered signatures which have been
+        // verified by CSigningManager in parallel
+        const size_t maxCount = 32;
+        if (pendingInstantSendLocks.size() <= maxCount) {
+            pend = std::move(pendingInstantSendLocks);
+        } else {
+            while (pend.size() < maxCount) {
+                auto it = pendingInstantSendLocks.begin();
+                pend.emplace(it->first, std::move(it->second));
+                pendingInstantSendLocks.erase(it);
+            }
+        }
     }
 
     if (pend.empty()) {
