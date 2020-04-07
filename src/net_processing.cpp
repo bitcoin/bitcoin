@@ -3922,7 +3922,14 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         // transactions become unconfirmed and spams other nodes.
         if (!fReindex && !fImporting && !IsInitialBlockDownload())
         {
-            GetMainSignals().Broadcast(nTimeBestReceived, connman);
+            static int64_t nLastBroadcastTime = 0;
+            // HACK: Call this only once every few seconds. SendMessages is called once per peer, which makes this signal very expensive
+            // The proper solution would be to move this out of here, but this is not worth the effort right now as bitcoin#15632 will later do this.
+            // Luckily, the Broadcast signal is not used for anything else then CWallet::ResendWalletTransactionsBefore.
+            if (nNow - nLastBroadcastTime >= 5000000) {
+                GetMainSignals().Broadcast(nTimeBestReceived, connman);
+                nLastBroadcastTime = nNow;
+            }
         }
 
         //
