@@ -963,6 +963,7 @@ size_t CConnman::SocketSendData(CNode *pnode) EXCLUSIVE_LOCKS_REQUIRED(pnode->cs
         assert(pnode->nSendSize == 0);
     }
     pnode->vSendMsg.erase(pnode->vSendMsg.begin(), it);
+    pnode->nSendMsgSize = pnode->vSendMsg.size();
     return nSentSize;
 }
 
@@ -3435,6 +3436,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     fPauseRecv = false;
     fPauseSend = false;
     nProcessQueueSize = 0;
+    nSendMsgSize = 0;
 
     for (const std::string &msg : getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;
@@ -3485,6 +3487,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         pnode->vSendMsg.push_back(std::move(serializedHeader));
         if (nMessageSize)
             pnode->vSendMsg.push_back(std::move(msg.data));
+        pnode->nSendMsgSize = pnode->vSendMsg.size();
 
         // wake up select() call in case there was no pending data before (so it was not selecting this socket for sending)
         if (!hasPendingData && wakeupSelectNeeded)

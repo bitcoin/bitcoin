@@ -788,6 +788,7 @@ public:
     size_t nSendOffset; // offset inside the first vSendMsg already sent
     uint64_t nSendBytes GUARDED_BY(cs_vSend);
     std::list<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
+    std::atomic<size_t> nSendMsgSize;
     CCriticalSection cs_vSend;
     CCriticalSection cs_hSocket;
     CCriticalSection cs_vRecv;
