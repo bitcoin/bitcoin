@@ -5,10 +5,13 @@
 """Test transaction signing using the signrawtransaction* RPCs."""
 
 from test_framework.address import check_script, script_to_p2sh
+from test_framework.key import ECKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, find_vout_for_address, hex_str_to_bytes
 from test_framework.messages import sha256
 from test_framework.script import CScript, OP_0, OP_CHECKSIG
+from test_framework.script_util import key_to_p2pkh_script, script_to_p2sh_p2wsh_script, script_to_p2wsh_script
+from test_framework.wallet_util import bytes_to_wif
 
 from decimal import Decimal
 
@@ -151,21 +154,24 @@ class SignRawTransactionsTest(BitcoinTestFramework):
     def witness_script_test(self):
         self.log.info("Test signing transaction to P2SH-P2WSH addresses without wallet")
         # Create a new P2SH-P2WSH 1-of-1 multisig address:
-        embedded_address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())
-        embedded_privkey = self.nodes[1].dumpprivkey(embedded_address["address"])
-        p2sh_p2wsh_address = self.nodes[1].addmultisigaddress(1, [embedded_address["pubkey"]], "", "p2sh-segwit")
+        eckey = ECKey()
+        eckey.generate()
+        embedded_privkey = bytes_to_wif(eckey.get_bytes())
+        embedded_pubkey = eckey.get_pubkey().get_bytes().hex()
+        p2sh_p2wsh_address = self.nodes[1].createmultisig(1, [embedded_pubkey], "p2sh-segwit")
         # send transaction to P2SH-P2WSH 1-of-1 multisig address
         self.nodes[0].generate(101)
         self.nodes[0].sendtoaddress(p2sh_p2wsh_address["address"], 49.999)
         self.nodes[0].generate(1)
         self.sync_all()
-        # Find the UTXO for the transaction node[1] should have received, check witnessScript matches
-        unspent_output = self.nodes[1].listunspent(0, 999999, [p2sh_p2wsh_address["address"]])[0]
-        assert_equal(unspent_output["witnessScript"], p2sh_p2wsh_address["redeemScript"])
-        p2sh_redeemScript = CScript([OP_0, sha256(hex_str_to_bytes(p2sh_p2wsh_address["redeemScript"]))])
-        assert_equal(unspent_output["redeemScript"], p2sh_redeemScript.hex())
+        # Get the UTXO info from scantxoutset
+        unspent_output = self.nodes[1].scantxoutset('start', [p2sh_p2wsh_address['descriptor']])['unspents'][0]
+        spk = script_to_p2sh_p2wsh_script(p2sh_p2wsh_address['redeemScript']).hex()
+        unspent_output['witnessScript'] = p2sh_p2wsh_address['redeemScript']
+        unspent_output['redeemScript'] = script_to_p2wsh_script(unspent_output['witnessScript']).hex()
+        assert_equal(spk, unspent_output['scriptPubKey'])
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
-        spending_tx = self.nodes[0].createrawtransaction([unspent_output], {self.nodes[1].getnewaddress(): Decimal("49.998")})
+        spending_tx = self.nodes[0].createrawtransaction([unspent_output], {self.nodes[1].get_wallet_rpc(self.default_wallet_name).getnewaddress(): Decimal("49.998")})
         spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [unspent_output])
         # Check the signing completed successfully
         assert 'complete' in spending_tx_signed
@@ -177,11 +183,13 @@ class SignRawTransactionsTest(BitcoinTestFramework):
 
     def verify_txn_with_witness_script(self, tx_type):
         self.log.info("Test with a {} script as the witnessScript".format(tx_type))
-        embedded_addr_info = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress('', 'legacy'))
-        embedded_privkey = self.nodes[1].dumpprivkey(embedded_addr_info['address'])
+        eckey = ECKey()
+        eckey.generate()
+        embedded_privkey = bytes_to_wif(eckey.get_bytes())
+        embedded_pubkey = eckey.get_pubkey().get_bytes().hex()
         witness_script = {
-            'P2PKH': embedded_addr_info['scriptPubKey'],
-            'P2PK': CScript([hex_str_to_bytes(embedded_addr_info['pubkey']), OP_CHECKSIG]).hex()
+            'P2PKH': key_to_p2pkh_script(embedded_pubkey).hex(),
+            'P2PK': CScript([hex_str_to_bytes(embedded_pubkey), OP_CHECKSIG]).hex()
         }.get(tx_type, "Invalid tx_type")
         redeem_script = CScript([OP_0, sha256(check_script(witness_script))]).hex()
         addr = script_to_p2sh(redeem_script)
