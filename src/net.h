@@ -510,6 +510,7 @@ private:
     NodeId GetNewNodeId();
 
     size_t SocketSendData(CNode *pnode);
+    size_t SocketRecvData(CNode* pnode);
     //!check is the banlist has unwritten changes
     bool BannedSetIsDirty();
     //!set the "dirty" flag for the banlist
