@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-export TZ=UTC
 export LC_ALL=C
 set -e -o pipefail
+export TZ=UTC
 
 # Check that environment variables assumed to be set by the environment are set
 echo "Building for platform triple ${HOST:?not set} with reference timestamp ${SOURCE_DATE_EPOCH:?not set}..."
