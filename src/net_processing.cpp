@@ -664,7 +664,7 @@ void EraseObjectRequest(CNodeState* nodestate, const CInv& inv) EXCLUSIVE_LOCKS_
     AssertLockHeld(cs_main);
     LogPrint(BCLog::NET, "%s -- inv=(%s)\n", __func__, inv.ToString());
     g_already_asked_for.erase(inv.hash);
-    g_erased_object_requests.insert(std::make_pair(inv.hash, GetTimeMillis()));
+    g_erased_object_requests.insert(std::make_pair(inv.hash, GetTime<std::chrono::microseconds>()));
 
     if (nodestate) {
         nodestate->m_tx_download.m_tx_announced.erase(inv);
@@ -709,11 +709,11 @@ std::chrono::microseconds GetObjectInterval(int invType)
     switch(invType)
     {
         case MSG_QUORUM_RECOVERED_SIG:
-            return 15 * 1000000;
+            return std::chrono::seconds{15};
         case MSG_CLSIG:
-            return 5 * 1000000;
+            return std::chrono::seconds{5};
         case MSG_ISLOCK:
-            return 10 * 1000000;
+            return std::chrono::seconds{10};
         default:
             return GETDATA_TX_INTERVAL;
     }
