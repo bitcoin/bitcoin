@@ -22,7 +22,7 @@ extern RecursiveMutex cs_setethstatus;
 extern bool AbortNode(const std::string& strMessage, const std::string& userMessage = "", unsigned int prefix = 0);
 using namespace std;
 bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string errorMessage, bool bErrorNotInvalid, bool bConsensus){
-        if(bErrorNotInvalid){
+        if(bErrorNotInvalid) {
             return state.Error(errorMessage);
         }
         else{
@@ -232,7 +232,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
    
     auto mapAsset = result.first;
     const bool& mapAssetNotFound = result.second;
-    if(mapAssetNotFound){
+    if(mapAssetNotFound) {
         if (!GetAsset(mintSyscoin.assetAllocation.listReceivingAssets[0].first, dbAsset)) {
             return FormatSyscoinErrorMessage(state, "mint-non-existing-asset", bSanityCheck);             
         } 
@@ -243,11 +243,11 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     uint32_t nAsset = 0;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     std::vector<unsigned char> vchERC20ContractAddress;
-    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, dbAsset.vchContract, outputAmount, nAsset, dbAsset.nPrecision)){
+    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, dbAsset.vchContract, outputAmount, nAsset, dbAsset.nPrecision)) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-data", bSanityCheck);
     }
     if(!fUnitTest) {
-        if(nAsset != mintSyscoin.assetAllocation.listReceivingAssets[0].first){
+        if(nAsset != mintSyscoin.assetAllocation.listReceivingAssets[0].first) {
             return FormatSyscoinErrorMessage(state, "mint-mismatch-asset", bSanityCheck);
         }
     } 
@@ -268,14 +268,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         return FormatSyscoinErrorMessage(state, "mint-insufficient-burn-balance", bSanityCheck);  
     }
     storedAssetRef.nBurnBalance -= nTotal;
-    if(!fJustCheck){
+    if(!fJustCheck) {
         if(!bSanityCheck && nHeight > 0) {   
-            LogPrint(BCLog::SYS,"CONNECTED ASSET MINT: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
+            LogPrint(BCLog::SYS,"CONNECTED ASSET MINT: op=%s asset=%d hash=%s height=%d fJustCheck=%s\n",
                 assetAllocationFromTx(tx.nVersion).c_str(),
-                senderTupleStr.c_str(),
+                mintSyscoin.assetAllocation.listReceivingAssets[0].first,
                 txHash.ToString().c_str(),
                 nHeight,
-                fJustCheck ? 1 : 0);      
+                fJustCheck ? "JUSTCHECK" : "BLOCK");      
         }           
     }               
     return true;
@@ -332,7 +332,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, Ethereum
    
     auto mapAsset = result.first;
     const bool& mapAssetNotFound = result.second;
-    if(mapAssetNotFound){
+    if(mapAssetNotFound) {
         CAsset dbAsset;
         if (!GetAsset(mintSyscoin.assetAllocation.listReceivingAssets[0].first, dbAsset)) {
             LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not get asset %d\n",mintSyscoin.assetAllocation.listReceivingAssets[0].first);
@@ -396,123 +396,96 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
     }
-    string retError = "";
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ALLOCATION_SEND:
-            if (theAssetAllocation.listReceivingAssets.empty()) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-empty", bSanityCheck);
+            const CAmount &nBurnAmount = theAssetAllocation.vecAssetInfo[nOut].nValue;
+            // if there were any burns we should adjust asset burn balance
+            if(nBurnAmount > 0) {
+                #if __cplusplus > 201402 
+                auto result = mapAssets.try_emplace(theAssetAllocation.vecAssetInfo[nOut].nAsset,  std::move(emptyAsset));
+                #else
+                auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.vecAssetInfo[nOut].nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+                #endif   
+            
+                auto mapAsset = result.first;
+                const bool& mapAssetNotFound = result.second;
+                if(mapAssetNotFound) {
+                    CAsset dbAsset;
+                    if (!GetAsset(theAssetAllocation.vecAssetInfo[nOut].nAsset, dbAsset)) {
+                        return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-asset", bSanityCheck);             
+                    } 
+                    mapAsset->second = std::move(dbAsset);                        
+                }
+                CAsset& storedAssetRef = mapAsset->second;
+                storedAssetRef.nBurnBalance += nBurnAmount;
+                if (storedAssetRef.nBurnBalance > storedAssetRef.nTotalSupply)) {
+                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-balance", bSanityCheck);
+                }
             }
             break; 
-        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
-        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
         case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
-            if(theAssetAllocation.listReceivingAssets.empty()) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-empty", bSanityCheck);
-			}
             if(theAssetAllocation.listReceivingAssets.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-invalid-asset-count", bSanityCheck);
             }
             if(theAssetAllocation.listReceivingAssets[0].second.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-invalid-asset-output-count", bSanityCheck);
             }
-            break;            
-        default:
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-op", bSanityCheck);
-    }
-    
-
-    if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){         
-        if(tx.vout.size() < 2) {
-            return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
-        }
-        const CAmount &nBurnAmount = tx.vout[nOut].nValue;
-        if(nBurnAmount <= 0) {
-            return FormatSyscoinErrorMessage(state, "assetallocation-positive-burn-amount", bSanityCheck);
-        }
-        // the burn amount in opreturn (sys) should match the asset output of index 0 (sysx)
-        if(nBurnAmount != theAssetAllocation.vecAssetInfo[0].nValue) {
-            return FormatSyscoinErrorMessage(state, "assetallocation-mismatch-burn-amount", bSanityCheck);
-        }
-        if(!fUnitTest && theAssetAllocation.vecAssetInfo[0].nAsset != Params().GetConsensus().nSYSXAsset) {
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bSanityCheck);
-        }
-        if (nBurnAmount <= 0 || nBurnAmount > storedSenderRef.nBurnBalance) {
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
-        }
-        #if __cplusplus > 201402 
-        auto result = mapAssets.try_emplace(theAssetAllocation.vecAssetInfo[0].nAsset,  std::move(emptyAsset));
-        #else
-        auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.vecAssetInfo[0].nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-        #endif   
-    
-        auto mapAsset = result.first;
-        const bool& mapAssetNotFound = result.second;
-        if(mapAssetNotFound){
-            CAsset dbAsset;
-            if (!GetAsset(theAssetAllocation.vecAssetInfo[0].nAsset, dbAsset)) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-asset", bSanityCheck);             
-            } 
-            mapAsset->second = std::move(dbAsset);                        
-        }
-        CAsset& storedAssetRef = mapAsset->second;  
-        storedAssetRef.nBurnBalance -= nBurnAmount;
-    }          
-    else if (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {     
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-            CBurnSyscoin burnSyscoin(tx);
-            if(burnSyscoin.IsNull()) {
-                 return FormatSyscoinErrorMessage(state, "assetallocation-parse-burn", bSanityCheck);
+            const CAmount &nBurnAmount = tx.vout[nOut].nValue;
+            if(nBurnAmount <= 0) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-positive-burn-amount", bSanityCheck);
             }
-            if(storedAssetRef.nPrecision != burnSyscoin.nPrecision) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-precision", bSanityCheck);
+            // the burn amount in opreturn (sys) should match the asset output of index 0 (sysx)
+            if(nBurnAmount != theAssetAllocation.vecAssetInfo[0].nValue) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-mismatch-burn-amount", bSanityCheck);
             }
-            if(storedAssetRef.vchContract.empty() || storedAssetRef.vchContract != burnSyscoin.vchEthContract) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-contract", bSanityCheck);
-            }        
-        }
-        if(tx.vout.size() < 2) {
-            return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
-        }
-        const CAmount &nBurnAmount = theAssetAllocation.vecAssetInfo[nOut].nValue;
-        if(nBurnAmount <= 0 || nBurnAmount > storedAssetRef.nTotalSupply) {
-            return FormatSyscoinErrorMessage(state, "assetallocation-positive-burn-amount", bSanityCheck);
-        }
-        #if __cplusplus > 201402 
-        auto result = mapAssets.try_emplace(theAssetAllocation.vecAssetInfo[nOut].nAsset,  std::move(emptyAsset));
-        #else
-        auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.vecAssetInfo[nOut].nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-        #endif   
-    
-        auto mapAsset = result.first;
-        const bool& mapAssetNotFound = result.second;
-        if(mapAssetNotFound) {
-            CAsset dbAsset;
-            if (!GetAsset(theAssetAllocation.vecAssetInfo[nOut].nAsset, dbAsset)) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-asset", bSanityCheck);             
-            } 
-            mapAsset->second = std::move(dbAsset);                        
-        }
-        CAsset& storedAssetRef = mapAsset->second;
-        storedAssetRef.nBurnBalance += nBurnAmount;
-        if (storedAssetRef.nBurnBalance > storedAssetRef.nTotalSupply)) {
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-balance", bSanityCheck);
-        }
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
-            // the burn of asset in opreturn should match the output value of index 0 (sys)
-            if(nBurnAmount != tx.vout[0].nValue) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
-            }  
-            if(!fUnitTest && theAssetAllocation.vecAssetInfo[nOut].nAsset != Params().GetConsensus().nSYSXAsset) {
+            if(!fUnitTest && theAssetAllocation.vecAssetInfo[0].nAsset != Params().GetConsensus().nSYSXAsset) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bSanityCheck);
-            }  
-        }            
-        if(storedAssetRef.vchContract.empty()) {
-            return FormatSyscoinErrorMessage(state, "assetallocation-missing-contract", bSanityCheck);
-        } 
-    } else if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_ALLOCATION_SEND) {
-        const CAmount &nBurnAmount = theAssetAllocation.vecAssetInfo[nOut].nValue;
-        // if there were any burns we should adjust asset burn balance
-        if(nBurnAmount > 0) {
+            }
+            if (nBurnAmount <= 0 || nBurnAmount > storedSenderRef.nBurnBalance) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
+            }
+            #if __cplusplus > 201402 
+            auto result = mapAssets.try_emplace(theAssetAllocation.vecAssetInfo[0].nAsset,  std::move(emptyAsset));
+            #else
+            auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.vecAssetInfo[0].nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+            #endif   
+        
+            auto mapAsset = result.first;
+            const bool& mapAssetNotFound = result.second;
+            if(mapAssetNotFound) {
+                CAsset dbAsset;
+                if (!GetAsset(theAssetAllocation.vecAssetInfo[0].nAsset, dbAsset)) {
+                    return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-asset", bSanityCheck);             
+                } 
+                mapAsset->second = std::move(dbAsset);                        
+            }
+            CAsset& storedAssetRef = mapAsset->second;  
+            storedAssetRef.nBurnBalance -= nBurnAmount;
+            break;
+        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
+        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
+            if(theAssetAllocation.listReceivingAssets.size() != 1) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-asset-count", bSanityCheck);
+            }
+            if(theAssetAllocation.listReceivingAssets[0].second.size() != 1) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-asset-output-count", bSanityCheck);
+            }
+            if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
+                CBurnSyscoin burnSyscoin(tx);
+                if(burnSyscoin.IsNull()) {
+                    return FormatSyscoinErrorMessage(state, "assetallocation-parse-burn", bSanityCheck);
+                }
+                if(storedAssetRef.nPrecision != burnSyscoin.nPrecision) {
+                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-precision", bSanityCheck);
+                }
+                if(storedAssetRef.vchContract.empty() || storedAssetRef.vchContract != burnSyscoin.vchEthContract) {
+                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-contract", bSanityCheck);
+                }        
+            }
+            const CAmount &nBurnAmount = theAssetAllocation.vecAssetInfo[nOut].nValue;
+            if(nBurnAmount <= 0 || nBurnAmount > storedAssetRef.nTotalSupply) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-positive-burn-amount", bSanityCheck);
+            }
             #if __cplusplus > 201402 
             auto result = mapAssets.try_emplace(theAssetAllocation.vecAssetInfo[nOut].nAsset,  std::move(emptyAsset));
             #else
@@ -533,19 +506,30 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if (storedAssetRef.nBurnBalance > storedAssetRef.nTotalSupply)) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-balance", bSanityCheck);
             }
-        }
-    }  
+            if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
+                // the burn of asset in opreturn should match the output value of index 0 (sys)
+                if(nBurnAmount != tx.vout[0].nValue) {
+                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
+                }  
+                if(!fUnitTest && theAssetAllocation.vecAssetInfo[nOut].nAsset != Params().GetConsensus().nSYSXAsset) {
+                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bSanityCheck);
+                }  
+            }            
+            if(storedAssetRef.vchContract.empty()) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-missing-contract", bSanityCheck);
+            } 
+            break;            
+        default:
+            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-op", bSanityCheck);
+    }
 
-    // write assetallocation  
-    // asset sends are the only ones confirming without PoW
     if(!fJustCheck){
         if(!bSanityCheck && nHeight > 0) {  
-            LogPrint(BCLog::SYS,"CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
+            LogPrint(BCLog::SYS,"CONNECTED ASSET ALLOCATION: op=%s hash=%s height=%d fJustCheck=%s\n",
                 assetAllocationFromTx(tx.nVersion).c_str(),
-                senderTupleStr.c_str(),
                 txHash.ToString().c_str(),
                 nHeight,
-                fJustCheck ? 1 : 0);      
+                fJustCheck ? "JUSTCHECK" : "BLOCK");      
         }             
     }  
     return true;
@@ -562,58 +546,31 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, Asse
         LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not decode asset allocation\n");
         return false;
     }
-    if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION) {  
-        const CAmount &nBurnAmount = tx.vout[nOut].nValue;
-        #if __cplusplus > 201402 
-        auto result = mapAssets.try_emplace(theAssetAllocation.vecAssetInfo[0].nAsset,  std::move(emptyAsset));
-        #else
-        auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.vecAssetInfo[0].nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-        #endif   
-    
-        auto mapAsset = result.first;
-        const bool& mapAssetNotFound = result.second;
-        if(mapAssetNotFound) {
-            CAsset dbAsset;
-            if (!GetAsset(theAssetAllocation.vecAssetInfo[0].nAsset, dbAsset)) {
-                LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not get asset %d\n",theAssetAllocation.vecAssetInfo[nOut].nAsset);
-                return false;                
-            } 
-            mapAsset->second = std::move(dbAsset);                        
-        }
-        CAsset& storedAssetRef = mapAsset->second;  
-        storedAssetRef.nBurnBalance += nBurnAmount;      
-    } else if (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)  {
-        if(tx.vout.size() < 2) {
-            LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Not enough outputs\n");
-            return false;   
-        }
-        const CAmount &nBurnAmount = theAssetAllocation.vecAssetInfo[nOut].nValue;
-        #if __cplusplus > 201402 
-        auto result = mapAssets.try_emplace(theAssetAllocation.vecAssetInfo[nOut].nAsset,  std::move(emptyAsset));
-        #else
-        auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.vecAssetInfo[nOut].nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-        #endif   
-    
-        auto mapAsset = result.first;
-        const bool& mapAssetNotFound = result.second;
-        if(mapAssetNotFound) {
-            CAsset dbAsset;
-            if (!GetAsset(theAssetAllocation.vecAssetInfo[nOut].nAsset, dbAsset)) {
-                LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not get asset %d\n",theAssetAllocation.vecAssetInfo[nOut].nAsset);
-                return false;               
-            } 
-            mapAsset->second = std::move(dbAsset);                        
-        }
-        CAsset& storedAssetRef = mapAsset->second;
-        if (nBurnAmount > storedAssetRef.nBurnBalance) {
-            LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Insufficient burn balance\n");
-            return false;
-        }
-        storedAssetRef.nBurnBalance -= nBurnAmount;
-    } else if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_ALLOCATION_SEND) {
-        const CAmount &nBurnAmount = theAssetAllocation.vecAssetInfo[nOut].nValue;
-        // if there were any burns we should adjust asset burn balance
-        if(nBurnAmount > 0) {
+    switch (tx.nVersion) {
+        case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
+            const CAmount &nBurnAmount = tx.vout[nOut].nValue;
+            #if __cplusplus > 201402 
+            auto result = mapAssets.try_emplace(theAssetAllocation.vecAssetInfo[0].nAsset,  std::move(emptyAsset));
+            #else
+            auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.vecAssetInfo[0].nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+            #endif   
+        
+            auto mapAsset = result.first;
+            const bool& mapAssetNotFound = result.second;
+            if(mapAssetNotFound) {
+                CAsset dbAsset;
+                if (!GetAsset(theAssetAllocation.vecAssetInfo[0].nAsset, dbAsset)) {
+                    LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not get asset %d\n",theAssetAllocation.vecAssetInfo[nOut].nAsset);
+                    return false;                
+                } 
+                mapAsset->second = std::move(dbAsset);                        
+            }
+            CAsset& storedAssetRef = mapAsset->second;  
+            storedAssetRef.nBurnBalance += nBurnAmount; 
+            break;  
+        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
+        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN: 
+            const CAmount &nBurnAmount = theAssetAllocation.vecAssetInfo[nOut].nValue;
             #if __cplusplus > 201402 
             auto result = mapAssets.try_emplace(theAssetAllocation.vecAssetInfo[nOut].nAsset,  std::move(emptyAsset));
             #else
@@ -626,16 +583,46 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, Asse
                 CAsset dbAsset;
                 if (!GetAsset(theAssetAllocation.vecAssetInfo[nOut].nAsset, dbAsset)) {
                     LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not get asset %d\n",theAssetAllocation.vecAssetInfo[nOut].nAsset);
-                    return false;                
+                    return false;               
                 } 
                 mapAsset->second = std::move(dbAsset);                        
             }
             CAsset& storedAssetRef = mapAsset->second;
-            if (storedAssetRef.nBurnBalance < nBurnAmount)) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-balance", bSanityCheck);
+            if (nBurnAmount > storedAssetRef.nBurnBalance) {
+                LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Insufficient burn balance\n");
+                return false;
             }
-            storedAssetRef.nBurnBalance -= nBurnAmount;
-        }
+            storedAssetRef.nBurnBalance -= nBurnAmount;  
+            break;
+        case SYSCOIN_TX_VERSION_SYSCOIN_ALLOCATION_SEND: 
+   
+            const CAmount &nBurnAmount = theAssetAllocation.vecAssetInfo[nOut].nValue;
+            // if there were any burns we should adjust asset burn balance
+            if(nBurnAmount > 0) {
+                #if __cplusplus > 201402 
+                auto result = mapAssets.try_emplace(theAssetAllocation.vecAssetInfo[nOut].nAsset,  std::move(emptyAsset));
+                #else
+                auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.vecAssetInfo[nOut].nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+                #endif   
+                auto mapAsset = result.first;
+                const bool& mapAssetNotFound = result.second;
+                if(mapAssetNotFound) {
+                    CAsset dbAsset;
+                    if (!GetAsset(theAssetAllocation.vecAssetInfo[nOut].nAsset, dbAsset)) {
+                        LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not get asset %d\n",theAssetAllocation.vecAssetInfo[nOut].nAsset);
+                        return false;                
+                    } 
+                    mapAsset->second = std::move(dbAsset);                        
+                }
+                CAsset& storedAssetRef = mapAsset->second;
+                if (storedAssetRef.nBurnBalance < nBurnAmount)) {
+                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-balance", bSanityCheck);
+                }
+                storedAssetRef.nBurnBalance -= nBurnAmount;
+            }
+            break;
+        default:
+            break;
     }
     return true;  
 }
@@ -700,7 +687,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
 
     auto mapAsset = result.first;
     const bool &mapAssetNotFound = result.second;
-    if(mapAssetNotFound){
+    if(mapAssetNotFound) {
         if (!GetAsset(nAsset, dbAsset)) {
             LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not get asset %d\n",nAsset);
             return false;               
@@ -753,17 +740,36 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         return FormatSyscoinErrorMessage(state, "asset-unserialize", bSanityCheck);
     }
     
-    
-    if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND) {
-        if (theAsset.vchPubData.size() > MAX_VALUE_LENGTH) {
-            return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
+    CAsset dbAsset;
+    const uint32_t &nAsset = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND ? theAssetAllocation.listReceivingAsset[0].first : theAsset.assetAllocation.listReceivingAsset[0].first;
+    #if __cplusplus > 201402 
+    auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
+    #else
+    auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    #endif  
+    auto mapAsset = result.first;
+    const bool & mapAssetNotFound = result.second;    
+    if (mapAssetNotFound) {
+        if (!GetAsset(nAsset, dbAsset)) {
+            if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+                return FormatSyscoinErrorMessage(state, "asset-non-existing-asset", bSanityCheck);
+            }
+            else
+                mapAsset->second = std::move(theAsset);      
+        }
+        else{
+            if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+                return FormatSyscoinErrorMessage(state, "asset-already-existing-asset", bSanityCheck);
+            }
+            mapAsset->second = std::move(dbAsset);      
         }
     }
+    CAsset &storedSenderAssetRef = mapAsset->second; 
+    if (theAsset.vchPubData.size() > MAX_VALUE_LENGTH) {
+        return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
+    } 
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
-            if (tx.vout.size() < 2) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-output-size", bSanityCheck);
-            }
             if(theAsset.assetAllocation.listReceivingAssets.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-asset-count", bSanityCheck);
             }
@@ -799,20 +805,35 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             } 
             if(!theAsset.witnessAddressTransfer.IsNull()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-transfer-address", bSanityCheck);
-            }      
+            }
+            if(!FillAssetInfo(storedSenderAssetRef.assetAllocation)) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-asset-info", bSanityCheck);
+            }
+            for(const auto& assetInfo: storedSenderAssetRef.assetAllocation.listReceivingAssets[0].second) {
+                if(assetInfo.second != 0) {
+                    return FormatSyscoinErrorMessage(state, "asset-output-not-zero", bSanityCheck);
+                }
+            }
+            const COutPoint& inputOutPoint = FindAssetOwnerOutPoint(inputs, tx, storedSenderAssetRef);
+            if (inputOutPoint.IsNull()) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-sender", bSanityCheck);
+            } 
+            if (nAsset != GenerateSyscoinGuid(inputOutPoint)) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-guid", bSanityCheck);
+            }         
+            // starting supply is the supplied balance upon init
+            storedSenderAssetRef.nTotalSupply = storedSenderAssetRef.nBalance;
+            storedSenderAssetRef.nBurnBalance = 0;  
             break;
 
         case SYSCOIN_TX_VERSION_ASSET_UPDATE:
-            if (tx.vout.size() < 2) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-output-size", bSanityCheck);
-            }
             if(theAsset.assetAllocation.listReceivingAssets.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-asset-count", bSanityCheck);
             }
             if(theAsset.assetAllocation.listReceivingAssets[0].second.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-asset-output-count", bSanityCheck);
             }
-            if (theAsset.nBalance < 0){
+            if (theAsset.nBalance < 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-balance", bSanityCheck);
             }
             if (theAsset.nBurnBalance != 0) {
@@ -824,8 +845,48 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }  
-            if(theAsset.nUpdateFlags > ASSET_UPDATE_ALL){
+            if(theAsset.nUpdateFlags > ASSET_UPDATE_ALL) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
+            }
+            if (theAsset.nPrecision != storedSenderAssetRef.nPrecision) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
+            }
+            if(theAsset.strSymbol != storedSenderAssetRef.strSymbol) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
+            }         
+            if (theAsset.nBalance > 0 && !(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_SUPPLY)) {
+                return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
+            }          
+            // increase total supply
+            storedSenderAssetRef.nTotalSupply += theAsset.nBalance;
+            storedSenderAssetRef.nBalance += theAsset.nBalance;
+            if (theAsset.nBalance < 0 || (theAsset.nBalance > 0 && !AssetRange(theAsset.nBalance))) {
+                return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
+            }
+            if (storedSenderAssetRef.nTotalSupply > 0 && !AssetRange(storedSenderAssetRef.nTotalSupply)) {
+                return FormatSyscoinErrorMessage(state, "asset-amount-out-of-range", bSanityCheck);
+            }
+            if (storedSenderAssetRef.nTotalSupply > storedSenderAssetRef.nMaxSupply) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
+            }
+            if (!theAsset.vchPubData.empty()) {
+                if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_DATA)) {
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
+                }
+                storedSenderAssetRef.vchPubData = theAsset.vchPubData;
+            }
+                                        
+            if (!theAsset.vchContract.empty()) {
+                if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT)) {
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
+                }
+                storedSenderAssetRef.vchContract = theAsset.vchContract;
+            }
+            if (theAsset.nUpdateFlags != storedSenderAssetRef.nUpdateFlags) {
+                if (theAsset.nUpdateFlags > 0 && !(storedSenderAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN))) {
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
+                }
+                storedSenderAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
             }             
             break;
             
@@ -833,139 +894,44 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (theAssetAllocation.listReceivingAssets.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-allocation-size", bSanityCheck);
             }
+            CAmount nTotal = 0;
+            for(const auto& assetInfo: theAssetAllocation.listReceivingAsset[0].second){
+                // the asset input (zero) value must be sent as change to an output, it will have 0 value
+                // so we allow 0 or up to max range
+                // even though we allow assetsend to output 0 values, it is still economically infeasible
+                // for someone to send 0 values because SYS fees are still applied to the tx
+                if (assetInfo.second == 0 || !AssetRange(assetInfo.second)) {
+                    return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
+                }
+                nTotal += assetInfo.second;
+            }
+            if (!AssetRange(nTotal)) {
+                return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
+            }
+            if (storedSenderAssetRef.nBalance < nTotal) {
+                return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bSanityCheck);
+            }
+            storedSenderAssetRef.nBalance -= nTotal;
+            const CAmount &nBurnAmount = theAssetAllocation.vecAssetInfo[nDataOut].nValue;
+            // if there were any burns we should adjust asset burn balance
+            if(nBurnAmount > 0) {
+                storedSenderAssetRef.nBurnBalance += nBurnAmount;
+                if (storedSenderAssetRef.nBurnBalance > storedSenderAssetRef.nTotalSupply)) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-burn-balance", bSanityCheck);
+                }
+            }            
             break;
         default:
             return FormatSyscoinErrorMessage(state, "asset-invalid-op", bSanityCheck);
     }
     
-
-    CAsset dbAsset;
-    const uint32_t &nAsset = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND ? theAssetAllocation.listReceivingAsset[0].first : theAsset.assetAllocation.listReceivingAsset[0].first;
-    #if __cplusplus > 201402 
-    auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
-    #else
-    auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif  
-    auto mapAsset = result.first;
-    const bool & mapAssetNotFound = result.second;    
-    if (mapAssetNotFound) {
-        if (!GetAsset(nAsset, dbAsset)) {
-            if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-                return FormatSyscoinErrorMessage(state, "asset-non-existing-asset", bSanityCheck);
-            }
-            else
-                mapAsset->second = std::move(theAsset);      
-        }
-        else{
-            if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-                return FormatSyscoinErrorMessage(state, "asset-already-existing-asset", bSanityCheck);
-            }
-            mapAsset->second = std::move(dbAsset);      
-        }
-    }
-    CAsset &storedSenderAssetRef = mapAsset->second;  
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE) {
-		if (theAsset.nPrecision != storedSenderAssetRef.nPrecision) {
-            return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
-		}
-        if(theAsset.strSymbol != storedSenderAssetRef.strSymbol) {
-            return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
-        }         
-        if (theAsset.nBalance > 0 && !(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_SUPPLY)) {
-            return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
-        }          
-        // increase total supply
-        storedSenderAssetRef.nTotalSupply += theAsset.nBalance;
-        storedSenderAssetRef.nBalance += theAsset.nBalance;
-        if (theAsset.nBalance < 0 || (theAsset.nBalance > 0 && !AssetRange(theAsset.nBalance))) {
-            return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
-        }
-        if (storedSenderAssetRef.nTotalSupply > 0 && !AssetRange(storedSenderAssetRef.nTotalSupply)) {
-            return FormatSyscoinErrorMessage(state, "asset-amount-out-of-range", bSanityCheck);
-        }
-        if (storedSenderAssetRef.nTotalSupply > storedSenderAssetRef.nMaxSupply) {
-            return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
-        }
-		if (!theAsset.vchPubData.empty()) {
-			if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_DATA)) {
-				return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
-			}
-			storedSenderAssetRef.vchPubData = theAsset.vchPubData;
-		}
-                                    
-		if (!theAsset.vchContract.empty()) {
-			if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT)) {
-				return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
-			}
-			storedSenderAssetRef.vchContract = theAsset.vchContract;
-		}
-        if (theAsset.nUpdateFlags != storedSenderAssetRef.nUpdateFlags) {
-			if (theAsset.nUpdateFlags > 0 && !(storedSenderAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN))) {
-				return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
-			}
-			storedSenderAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
-        } 
-    }      
-    else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
-        CAmount nTotal = 0;
-        for(const auto& assetInfo: theAssetAllocation.listReceivingAsset[0].second){
-            if(assetInfo.first >= tx.vout.size()){
-                return FormatSyscoinErrorMessage(state, "amount-invalid-out", bSanityCheck);
-            }
-            if (!AssetRange(assetInfo.second)) {
-                return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
-            }
-            nTotal += assetInfo.second;
-        }
-        if (!AssetRange(nTotal)) {
-            return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
-        }
-        if (storedSenderAssetRef.nBalance < nTotal) {
-            return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bSanityCheck);
-        }
-        storedSenderAssetRef.nBalance -= nTotal;
-
-        const CAmount &nBurnAmount = theAssetAllocation.vecAssetInfo[nDataOut].nValue;
-        // if there were any burns we should adjust asset burn balance
-        if(nBurnAmount > 0) {
-            if (!AssetRange(nBurnAmount)) {
-                return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
-            }
-            storedSenderAssetRef.nBurnBalance += nBurnAmount;
-            if (storedSenderAssetRef.nBurnBalance > storedSenderAssetRef.nTotalSupply)) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-burn-balance", bSanityCheck);
-            }
-        }
-    }
-    else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-        if(!FillAssetInfo(storedSenderAssetRef.assetAllocation)) {
-            return FormatSyscoinErrorMessage(state, "asset-invalid-asset-info", bSanityCheck);
-        }
-        for(const auto& assetInfo: storedSenderAssetRef.assetAllocation.listReceivingAssets[0].second) {
-            if(assetInfo.second != 0) {
-                return FormatSyscoinErrorMessage(state, "asset-output-not-zero", bSanityCheck);
-            }
-        }
-        const COutPoint& inputOutPoint = FindAssetOwnerOutPoint(inputs, tx, storedSenderAssetRef);
-        if (inputOutPoint.IsNull()) {
-             return FormatSyscoinErrorMessage(state, "asset-invalid-sender", bSanityCheck);
-        } 
-        if (nAsset != GenerateSyscoinGuid(inputOutPoint)) {
-            return FormatSyscoinErrorMessage(state, "asset-invalid-guid", bSanityCheck);
-        }         
-        // starting supply is the supplied balance upon init
-        storedSenderAssetRef.nTotalSupply = storedSenderAssetRef.nBalance;
-        storedSenderAssetRef.nBurnBalance = 0;
-    }
-
-    // write asset, if asset send, only write on pow since asset -> asset allocation is not 0-conf compatible
-    if (!bSanityCheck && !fJustCheck && nHeight > 0) {
-        LogPrint(BCLog::SYS,"CONNECTED ASSET: tx=%s symbol=%d hash=%s height=%d fJustCheck=%d\n",
+    if (!bSanityCheck) {
+        LogPrint(BCLog::SYS,"CONNECTED ASSET: tx=%s asset=%d hash=%s height=%d fJustCheck=%s\n",
                 assetFromTx(tx.nVersion).c_str(),
                 nAsset,
                 txHash.ToString().c_str(),
                 nHeight,
-                fJustCheck ? 1 : 0);
+                fJustCheck ? "JUSTCHECK" : "BLOCK");
     } 
     return true;
 }
