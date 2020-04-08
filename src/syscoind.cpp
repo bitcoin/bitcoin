@@ -56,7 +56,7 @@ static bool AppInit(int argc, char* argv[])
     // Parameters
     //
     // If Qt is used, parameters/syscoin.conf are parsed in qt/syscoin.cpp's main()
-    SetupServerArgs();
+    SetupServerArgs(node);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
         return InitError(strprintf("Error parsing command line arguments: %s\n", error));
