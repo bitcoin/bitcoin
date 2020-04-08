@@ -1918,6 +1918,16 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
         }
 
+        std::set<uint256> setConnectedMasternodes;
+        {
+            LOCK(cs_vNodes);
+            for (CNode* pnode : vNodes) {
+                if (!pnode->verifiedProRegTxHash.IsNull()) {
+                    setConnectedMasternodes.emplace(pnode->verifiedProRegTxHash);
+                }
+            }
+        }
+
         // Feeler Connections
         //
         // Design goals:
@@ -1950,10 +1960,15 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         {
             CAddrInfo addr = addrman.Select(fFeeler);
 
-            bool isMasternode = mnList.GetMNByService(addr) != nullptr;
+            auto dmn = mnList.GetMNByService(addr);
+            bool isMasternode = dmn != nullptr;
 
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup()))
+                break;
+
+            // don't try to connect to masternodes that we already have a connection to (most likely inbound)
+            if (isMasternode && setConnectedMasternodes.count(dmn->proTxHash))
                 break;
 
             // if we selected a local address, restart (local addresses are allowed in regtest and devnet)
