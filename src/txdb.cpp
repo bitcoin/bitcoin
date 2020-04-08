@@ -151,7 +151,7 @@ size_t CCoinsViewDB::EstimateSize() const
     return db.EstimateSize(DB_COIN, (char)(DB_COIN+1));
 }
 
-CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "blocks" / "index", nCacheSize, fMemory, fWipe) {
+CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "blocks" / "index", nCacheSize, fMemory, fWipe), mapHasTxIndexCache(10000, 20000) {
 }
 
 bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
@@ -241,18 +241,36 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
 }
 
 bool CBlockTreeDB::HasTxIndex(const uint256& txid) {
-    return Exists(std::make_pair(DB_TXINDEX, txid));
+    {
+        LOCK(cs);
+        auto it = mapHasTxIndexCache.find(txid);
+        if (it != mapHasTxIndexCache.end()) {
+            return it->second;
+        }
+    }
+    bool r = Exists(std::make_pair(DB_TXINDEX, txid));
+    LOCK(cs);
+    mapHasTxIndexCache.insert(std::make_pair(txid, r));
+    return r;
 }
 
 bool CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
-    return Read(std::make_pair(DB_TXINDEX, txid), pos);
+    bool r = Read(std::make_pair(DB_TXINDEX, txid), pos);
+    LOCK(cs);
+    mapHasTxIndexCache.insert_or_update(std::make_pair(txid, r));
+    return r;
 }
 
 bool CBlockTreeDB::WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> >&vect) {
     CDBBatch batch(*this);
     for (std::vector<std::pair<uint256,CDiskTxPos> >::const_iterator it=vect.begin(); it!=vect.end(); it++)
         batch.Write(std::make_pair(DB_TXINDEX, it->first), it->second);
-    return WriteBatch(batch);
+    bool ret = WriteBatch(batch);
+    LOCK(cs);
+    for (auto& p : vect) {
+        mapHasTxIndexCache.insert_or_update(std::make_pair(p.first, true));
+    }
+    return ret;
 }
 
 bool CBlockTreeDB::ReadSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value) {

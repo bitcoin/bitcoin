@@ -54,6 +54,14 @@ public:
         if (ret.second)
             prune();
     }
+    void insert_or_update(const value_type& x)
+    {
+        std::pair<iterator, bool> ret = map.insert(x);
+        if (ret.second)
+            prune();
+        else
+            ret.first->second = x.second;
+    }
     void erase(const key_type& k)
     {
         map.erase(k);
