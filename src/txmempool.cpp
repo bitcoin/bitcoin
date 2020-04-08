@@ -542,8 +542,7 @@ bool CTxMemPool::existsConflicts(const CTransaction &tx)
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
             const CTransaction &txConflict = *it->second;
-            if (txConflict != tx)
-            {
+            if (txConflict != tx) {
                 return true;
             }
         }
@@ -587,8 +586,7 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
         // if it is one of those transactions that propogated double spent input related to syscoin asset tx
         if (itConflict != mapNextTx.end() && assetAllocationConflicts.find(txin.prevout) != assetAllocationConflicts.end()) {
             const CTransaction &txConflict = *itConflict->second;
-            if (txConflict != tx)
-            {
+            if (txConflict != tx) {
                 txiter conflictit = mapTx.find(txConflict.GetHash());
                 assert(conflictit != mapTx.end());
                 // if conflicting transaction was received before the transaction in question

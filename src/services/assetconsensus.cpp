@@ -37,11 +37,12 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             fJustCheck ? "JUSTCHECK" : "BLOCK", bSanityCheck? 1: 0);
     // unserialize mint object from txn, check for valid
     CMintSyscoin mintSyscoin(tx);
-    if(mintSyscoin.IsNull())
-    {
+    if(mintSyscoin.IsNull()) {
         return FormatSyscoinErrorMessage(state, "mint-unserialize", bSanityCheck);
     } 
-     
+    if(!FillAssetInfo(mintSyscoin.assetAllocation)) {
+        return FormatSyscoinErrorMessage(state, "mint-invalid-asset-info", bSanityCheck);
+    }
     // do this check only when not in IBD (initial block download) or litemode
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     EthereumTxRoot txRootDB;
@@ -51,8 +52,8 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         LOCK(cs_setethstatus);
         // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
         // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
-        if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
-            if(ethTxRootShouldExist){
+        if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)) {
+            if(ethTxRootShouldExist) {
                 // we always want to pass state.Invalid() for txroot missing errors here meaning we flag the block as invalid and dos ban the sender maybe
                 // the check in contextualcheckblock that does this prevents us from getting a block that's invalid flagged as error so it won't propagate the block, but if block does arrive we should dos ban peer and invalidate the block itself from connect block
                 return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bSanityCheck);
@@ -82,7 +83,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     const std::vector<unsigned char> &vchReceiptParentNodes = mintSyscoin.vchReceiptParentNodes;
     dev::RLP rlpReceiptParentNodes(&vchReceiptParentNodes);
     std::vector<unsigned char> vchReceiptValue;
-    if(mintSyscoin.vchReceiptValue.size() == 2){
+    if(mintSyscoin.vchReceiptValue.size() == 2) {
         const uint16_t &posReceipt = (static_cast<uint16_t>(mintSyscoin.vchReceiptValue[1])) | (static_cast<uint16_t>(mintSyscoin.vchReceiptValue[0]) << 8);
         vchReceiptValue = std::vector<unsigned char>(mintSyscoin.vchReceiptParentNodes.begin()+posReceipt, mintSyscoin.vchReceiptParentNodes.end());
     }
@@ -91,54 +92,54 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     dev::RLP rlpReceiptValue(&vchReceiptValue);
     
-    if (!rlpReceiptValue.isList()){
+    if (!rlpReceiptValue.isList()) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-receipt", bSanityCheck);
     }
-    if (rlpReceiptValue.itemCount() != 4){
+    if (rlpReceiptValue.itemCount() != 4) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-receipt-count", bSanityCheck);
     }
     const uint64_t &nStatus = rlpReceiptValue[0].toInt<uint64_t>(dev::RLP::VeryStrict);
-    if (nStatus != 1){
+    if (nStatus != 1) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-receipt-status", bSanityCheck);
     } 
     dev::RLP rlpReceiptLogsValue(rlpReceiptValue[3]);
-    if (!rlpReceiptLogsValue.isList()){
+    if (!rlpReceiptLogsValue.isList()) {
         return FormatSyscoinErrorMessage(state, "mint-receipt-rlp-logs-list", bSanityCheck);
     }
     const size_t &itemCount = rlpReceiptLogsValue.itemCount();
     // just sanity checks for bounds
-    if (itemCount < 1 || itemCount > 10){
+    if (itemCount < 1 || itemCount > 10) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-logs-count", bSanityCheck);
     }
     // look for TokenFreeze event and get the last parameter which should be the BridgeTransferID
     uint32_t nBridgeTransferID = 0;
-    for(uint32_t i = 0;i<itemCount;i++){
+    for(uint32_t i = 0;i<itemCount;i++) {
         dev::RLP rlpReceiptLogValue(rlpReceiptLogsValue[i]);
-        if (!rlpReceiptLogValue.isList()){
+        if (!rlpReceiptLogValue.isList()) {
             return FormatSyscoinErrorMessage(state, "mint-receipt-log-rlp-list", bSanityCheck);
         }
         // ensure this log has at least the address to check against
-        if (rlpReceiptLogValue.itemCount() < 1){
+        if (rlpReceiptLogValue.itemCount() < 1) {
             return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-count", bSanityCheck);
         }
         const dev::Address &address160Log = rlpReceiptLogValue[0].toHash<dev::Address>(dev::RLP::VeryStrict);
-        if(Params().GetConsensus().vchSYSXERC20Manager == address160Log.asBytes()){
+        if(Params().GetConsensus().vchSYSXERC20Manager == address160Log.asBytes()) {
             // for mint log we should have exactly 3 entries in it, this event we control through our erc20manager contract
-            if (rlpReceiptLogValue.itemCount() != 3){
+            if (rlpReceiptLogValue.itemCount() != 3) {
                 return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-count-bridgeid", bSanityCheck);
             }
             // check topic
             dev::RLP rlpReceiptLogTopicsValue(rlpReceiptLogValue[1]);
-            if (!rlpReceiptLogTopicsValue.isList()){
+            if (!rlpReceiptLogTopicsValue.isList()) {
                 return FormatSyscoinErrorMessage(state, "mint-receipt-log-topics-rlp-list", bSanityCheck);
             }
-            if (rlpReceiptLogTopicsValue.itemCount() != 1){
+            if (rlpReceiptLogTopicsValue.itemCount() != 1) {
                 return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-topics-count", bSanityCheck);
             }
             // topic hash matches with TokenFreeze signature
-            if(Params().GetConsensus().vchTokenFreezeMethod == rlpReceiptLogTopicsValue[0].toBytes(dev::RLP::VeryStrict)){
+            if(Params().GetConsensus().vchTokenFreezeMethod == rlpReceiptLogTopicsValue[0].toBytes(dev::RLP::VeryStrict)) {
                 const std::vector<unsigned char> &dataValue = rlpReceiptLogValue[2].toBytes(dev::RLP::VeryStrict);
-                if(dataValue.size() < 96){
+                if(dataValue.size() < 96) {
                      return FormatSyscoinErrorMessage(state, "mint-receipt-log-data-invalid-size", bSanityCheck);
                 }
                 // get last data field which should be our BridgeTransferID
@@ -150,18 +151,18 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             }
         }
     }
-    if(nBridgeTransferID == 0){
+    if(nBridgeTransferID == 0) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-bridge-id", bSanityCheck);
     }
     // check transaction spv proofs
     dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
     dev::RLP rlpReceiptRoot(&mintSyscoin.vchReceiptRoot);
 
-    if(!txRootDB.vchTxRoot.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != txRootDB.vchTxRoot){
+    if(!txRootDB.vchTxRoot.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != txRootDB.vchTxRoot) {
         return FormatSyscoinErrorMessage(state, "mint-mismatching-txroot", bSanityCheck);
     }
 
-    if(!txRootDB.vchReceiptRoot.empty() && rlpReceiptRoot.toBytes(dev::RLP::VeryStrict) != txRootDB.vchReceiptRoot){
+    if(!txRootDB.vchReceiptRoot.empty() && rlpReceiptRoot.toBytes(dev::RLP::VeryStrict) != txRootDB.vchReceiptRoot) {
         return FormatSyscoinErrorMessage(state, "mint-mismatching-receiptroot", bSanityCheck);
     } 
     
@@ -170,12 +171,12 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::RLP rlpTxParentNodes(&vchTxParentNodes);
     dev::h256 hash;
     std::vector<unsigned char> vchTxValue;
-    if(mintSyscoin.vchTxValue.size() == 2){
+    if(mintSyscoin.vchTxValue.size() == 2) {
         const uint16_t &posTx = (static_cast<uint16_t>(mintSyscoin.vchTxValue[1])) | (static_cast<uint16_t>(mintSyscoin.vchTxValue[0]) << 8);
         vchTxValue = std::vector<unsigned char>(mintSyscoin.vchTxParentNodes.begin()+posTx, mintSyscoin.vchTxParentNodes.end());
         hash = dev::sha3(vchTxValue);
     }
-    else{
+    else {
         vchTxValue = mintSyscoin.vchTxValue;
         hash = dev::sha3(mintSyscoin.vchTxValue);
     }
@@ -184,43 +185,43 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::RLP rlpTxPath(&vchTxPath);
     const std::vector<unsigned char> &vchHash = hash.asBytes();
     // ensure eth tx not already spent
-    if(pethereumtxmintdb->ExistsKey(vchHash)){
+    if(pethereumtxmintdb->ExistsKey(vchHash)) {
         return FormatSyscoinErrorMessage(state, "mint-exists", bSanityCheck);
     } 
     // add the key to flush to db later
     vecMintKeys.emplace_back(std::make_pair(std::make_pair(vchHash, nBridgeTransferID), txHash));
     
     // verify receipt proof
-    if(!VerifyProof(&vchTxPath, rlpReceiptValue, rlpReceiptParentNodes, rlpReceiptRoot)){
+    if(!VerifyProof(&vchTxPath, rlpReceiptValue, rlpReceiptParentNodes, rlpReceiptRoot)) {
         return FormatSyscoinErrorMessage(state, "mint-verify-receipt-proof", bSanityCheck);
     } 
     // verify transaction proof
-    if(!VerifyProof(&vchTxPath, rlpTxValue, rlpTxParentNodes, rlpTxRoot)){
+    if(!VerifyProof(&vchTxPath, rlpTxValue, rlpTxParentNodes, rlpTxRoot)) {
         return FormatSyscoinErrorMessage(state, "mint-verify-tx-proof", bSanityCheck);
     } 
-    if (!rlpTxValue.isList()){
+    if (!rlpTxValue.isList()) {
         return FormatSyscoinErrorMessage(state, "mint-tx-rlp-list", bSanityCheck);
     }
-    if (rlpTxValue.itemCount() < 6){
+    if (rlpTxValue.itemCount() < 6) {
         return FormatSyscoinErrorMessage(state, "mint-tx-itemcount", bSanityCheck);
     }        
-    if (!rlpTxValue[5].isData()){
+    if (!rlpTxValue[5].isData()) {
         return FormatSyscoinErrorMessage(state, "mint-tx-array", bSanityCheck);
     }        
-    if (rlpTxValue[3].isEmpty()){
+    if (rlpTxValue[3].isEmpty()) {
         return FormatSyscoinErrorMessage(state, "mint-tx-invalid-receiver", bSanityCheck);
     }                       
     const dev::Address &address160 = rlpTxValue[3].toHash<dev::Address>(dev::RLP::VeryStrict);
 
     // ensure ERC20Manager is in the "to" field for the contract, meaning the function was called on this contract for freezing supply
-    if(Params().GetConsensus().vchSYSXERC20Manager != address160.asBytes()){
+    if(Params().GetConsensus().vchSYSXERC20Manager != address160.asBytes()) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-contract-manager", bSanityCheck);
     }
     CAsset dbAsset;
-    if(mintSyscoin.assetAllocation.listReceivingAssets.size() != 1){
+    if(mintSyscoin.assetAllocation.listReceivingAssets.size() != 1) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-asset-count", bSanityCheck);
     }
-    if(mintSyscoin.assetAllocation.listReceivingAssets[0].second.size() != 1){
+    if(mintSyscoin.assetAllocation.listReceivingAssets[0].second.size() != 1) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-asset-output-count", bSanityCheck);
     }
     #if __cplusplus > 201402 
@@ -245,25 +246,25 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, dbAsset.vchContract, outputAmount, nAsset, dbAsset.nPrecision)){
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-data", bSanityCheck);
     }
-    if(!fUnitTest){
+    if(!fUnitTest) {
         if(nAsset != mintSyscoin.assetAllocation.listReceivingAssets[0].first){
             return FormatSyscoinErrorMessage(state, "mint-mismatch-asset", bSanityCheck);
         }
     } 
-    if(outputAmount <= 0){
+    if(outputAmount <= 0) {
         return FormatSyscoinErrorMessage(state, "mint-value-negative", bSanityCheck);
     }
     CAmount nTotal = 0;
-    for(const auto& assetInfo: mintSyscoin.assetAllocation.listReceivingAssets[0].second){
+    for(const auto& assetInfo: mintSyscoin.assetAllocation.listReceivingAssets[0].second) {
         nTotal += assetInfo.second;
-        if (!AssetRange(nTotal) || !AssetRange(assetInfo.second)){
+        if (!AssetRange(nTotal) || !AssetRange(assetInfo.second)) {
             return FormatSyscoinErrorMessage(state, "mint-invalid-value", bSanityCheck);
         }
     }
-    if(outputAmount != nTotal){
+    if(outputAmount != nTotal) {
         return FormatSyscoinErrorMessage(state, "mint-mismatch-value", bSanityCheck);  
     }
-    if(nTotal > storedAssetRef.nBurnBalance){
+    if(nTotal > storedAssetRef.nBurnBalance) {
         return FormatSyscoinErrorMessage(state, "mint-insufficient-burn-balance", bSanityCheck);  
     }
     storedAssetRef.nBurnBalance -= nTotal;
@@ -293,7 +294,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
             good = CheckSyscoinMint(ibd, tx, txHash, state, fJustCheck, bSanityCheck, nHeight, nTime, blockHash, mapAssets, vecMintKeys);
         }
         else if (IsAssetAllocationTx(tx.nVersion)) {
-            good = CheckAssetAllocationInputs(tx, txHash, state, inputs, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck);
+            good = CheckAssetAllocationInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck);
         }
         else if (IsAssetTx(tx.nVersion)) {
             good = CheckAssetInputs(tx, txHash, state, inputs, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck);
@@ -353,7 +354,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
     if(tx.IsCoinBase())
         return true;
  
-    if(IsSyscoinMintTx(tx.nVersion)){
+    if(IsSyscoinMintTx(tx.nVersion)) {
         if(!DisconnectMintAsset(tx, txHash, vecMintKeys, mapAssets))
             return false;       
     }
@@ -362,8 +363,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
             if(!DisconnectAssetAllocationSend(tx, txHash, mapAssets))
                 return false;
         }
-        else if (IsAssetTx(tx.nVersion))
-        {
+        else if (IsAssetTx(tx.nVersion)) {
             if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
                 if(!DisconnectAssetSend(tx, txHash, mapAssets))
                     return false;
@@ -379,7 +379,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
     } 
     return true;       
 }
-bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state, const CCoinsViewCache &inputs,
+bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
         const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck) {
     if (passetallocationdb == nullptr)
         return false;
@@ -402,9 +402,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if (theAssetAllocation.listReceivingAssets.empty()) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-empty", bSanityCheck);
             }
-            if (theAssetAllocation.listReceivingAssets.size() > 250) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-too-many-receivers", bSanityCheck);
-            }
             break; 
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
@@ -412,9 +409,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if(theAssetAllocation.listReceivingAssets.empty()) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-empty", bSanityCheck);
 			}
-            if(theAssetAllocation.listReceivingAssets.size() > 1) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-too-many-receivers", bSanityCheck);
-			}
+            if(theAssetAllocation.listReceivingAssets.size() != 1) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-asset-count", bSanityCheck);
+            }
+            if(theAssetAllocation.listReceivingAssets[0].second.size() != 1) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-asset-output-count", bSanityCheck);
+            }
             break;            
         default:
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-op", bSanityCheck);
@@ -761,8 +761,14 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     }
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
-            if (tx.vout.size() < 2 || theAsset.assetAllocation.listReceivingAssets.size() != 1 || theAssetAllocation.listReceivingAssets[0].second.size() != 1) {
+            if (tx.vout.size() < 2) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-output-size", bSanityCheck);
+            }
+            if(theAsset.assetAllocation.listReceivingAssets.size() != 1) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-asset-count", bSanityCheck);
+            }
+            if(theAsset.assetAllocation.listReceivingAssets[0].second.size() != 1) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-asset-output-count", bSanityCheck);
             }
             if(!fUnitTest && tx.vout[nDataOut].nValue < 500*COIN) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
@@ -797,8 +803,14 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             break;
 
         case SYSCOIN_TX_VERSION_ASSET_UPDATE:
-            if (tx.vout.size() < 2 || theAsset.assetAllocation.listReceivingAssets.size() != 1 || theAssetAllocation.listReceivingAssets[0].second.size() != 1) {
+            if (tx.vout.size() < 2) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-output-size", bSanityCheck);
+            }
+            if(theAsset.assetAllocation.listReceivingAssets.size() != 1) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-asset-count", bSanityCheck);
+            }
+            if(theAsset.assetAllocation.listReceivingAssets[0].second.size() != 1) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-asset-output-count", bSanityCheck);
             }
             if (theAsset.nBalance < 0){
                 return FormatSyscoinErrorMessage(state, "asset-invalid-balance", bSanityCheck);
@@ -820,9 +832,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         case SYSCOIN_TX_VERSION_ASSET_SEND:
             if (theAssetAllocation.listReceivingAssets.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-allocation-size", bSanityCheck);
-            }
-            if (theAssetAllocation.listReceivingAssets[0].second.size() > tx.vout.size()) {
-                return FormatSyscoinErrorMessage(state, "asset-too-many-outputs", bSanityCheck);
             }
             break;
         default:
@@ -929,6 +938,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         }
     }
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+        if(!FillAssetInfo(storedSenderAssetRef.assetAllocation)) {
+            return FormatSyscoinErrorMessage(state, "asset-invalid-asset-info", bSanityCheck);
+        }
         for(const auto& assetInfo: storedSenderAssetRef.assetAllocation.listReceivingAssets[0].second) {
             if(assetInfo.second != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-output-not-zero", bSanityCheck);
