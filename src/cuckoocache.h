@@ -5,6 +5,7 @@
 #ifndef SYSCOIN_CUCKOOCACHE_H
 #define SYSCOIN_CUCKOOCACHE_H
 
+#include <algorithm> // std::find
 #include <array>
 #include <atomic>
 #include <cmath>
