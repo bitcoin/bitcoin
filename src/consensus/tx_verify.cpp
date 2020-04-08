@@ -165,6 +165,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                          strprintf("%s: inputs missing/spent", __func__));
     }
     const bool &isSyscoinWithInputTx = IsSyscoinWithInputTx(tx.nVersion);
+    const bool &isSyscoinAssetTx = IsAssetTx(tx.nVersion);
     std::unsorted_map<uint32_t, CAmount> mapAssetValueIn;
     CAmount nValueIn = 0;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
@@ -188,7 +189,13 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             if(!result.second){
                 result.first += coin.out.assetInfo.nValue;
             }
-            if (!AssetRange(coin.out.assetInfo.nValue) || !AssetRange(result.first)) {
+            // asset tx (update/send) should have input of asset guid but no value
+            // assetactivate rightfully won't get here because it won't pass isSyscoinWithInputTx check above
+            if(isSyscoinAssetTx && (coin.out.assetInfo.nValue != 0 || result.first != 0)) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputassetvalues-not-zero");
+            }
+            // otherwise validate the value as positive
+            else if (!AssetRange(coin.out.assetInfo.nValue) || !AssetRange(result.first)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputassetvalues-outofrange");
             }
         }
@@ -208,28 +215,34 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         size_t nTotalAssetOutputs = 0;
         std::unsorted_map<uint32_t, CAmount> mapAssetValueOut;
         CAssetAllocation allocation(tx);
-        if(tx.IsNull() || allocation.listReceivingAssets.empty()){
+        if(tx.IsNull()) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-invalid-allocation");
         }
-        for(const auto &allocationMapEntry: allocation.listReceivingAssets){
+        for(const auto &allocationMapEntry: allocation.listReceivingAssets) {
             const uint32_t & nAsset = allocationMapEntry.first;
             const std::map<int8_t, CAmount> & mapAssets = allocationMapEntry.second;
             nTotalAssetOutputs += mapAssets.size();
-            for(const auto &allocationEntry: mapAssets){
+            for(const auto &allocationEntry: mapAssets) {
                 #if __cplusplus > 201402 
                 auto result = mapAssetValueOut.try_emplace(nAsset,  std::move(allocationEntry.second.nValue));
                 #else
                 auto result = mapAssetValueOut.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(allocationEntry.second.nValue)));
                 #endif
-                if(!result.second){
+                if(!result.second) {
                     result.first += allocationEntry.second.nValue;
                 }
             }
         }
         // assets should have no fees, inputs must equal output
-        // new assets don't have any inputs so we allow this check to pass and later ensure it creates only 1 output with no value
-        if(mapAssetValueIn != mapAssetValueOut) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assets-io-mismatch");
+        // assetsend is special case because it uses input asset/value(zero) and output asset/value(zero) + []asset/value(non-zero)
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
+            // get the first asset in output, and ensure that it exists in input
+            if(mapAssetValueIn.find(allocation.listReceivingAssets[0].first) == mapAssetValueIn.end()) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assets-inputs-missingorspent");
+            }
+        }
+        else if(mapAssetValueIn != mapAssetValueOut) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assets-inputs-missingorspent");
         }
         if(nTotalAssetOutputs > tx.vout.size()) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assets-too-many-outputs");
