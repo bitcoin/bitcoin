@@ -3,6 +3,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 FUZZ_TARGETS = \
+  test/fuzz/addition_overflow \
   test/fuzz/addr_info_deserialize \
   test/fuzz/addrdb \
   test/fuzz/address_deserialize \
@@ -27,13 +28,16 @@ FUZZ_TARGETS = \
   test/fuzz/bloom_filter \
   test/fuzz/bloomfilter_deserialize \
   test/fuzz/chain \
+  test/fuzz/checkqueue \
   test/fuzz/coins_deserialize \
+  test/fuzz/cuckoocache \
   test/fuzz/decode_tx \
   test/fuzz/descriptor_parse \
   test/fuzz/diskblockindex_deserialize \
   test/fuzz/eval_script \
   test/fuzz/fee_rate \
   test/fuzz/fee_rate_deserialize \
+  test/fuzz/fees \
   test/fuzz/flat_file_pos_deserialize \
   test/fuzz/flatfile \
   test/fuzz/float \
@@ -280,6 +284,12 @@ endif
 
 if ENABLE_FUZZ
 
+test_fuzz_addition_overflow_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_addition_overflow_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_addition_overflow_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_addition_overflow_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_addition_overflow_SOURCES = test/fuzz/addition_overflow.cpp
+
 test_fuzz_addr_info_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DADDR_INFO_DESERIALIZE=1
 test_fuzz_addr_info_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_addr_info_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
@@ -424,11 +434,23 @@ test_fuzz_chain_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_chain_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_chain_SOURCES = test/fuzz/chain.cpp
 
+test_fuzz_checkqueue_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_checkqueue_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_checkqueue_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_checkqueue_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_checkqueue_SOURCES = test/fuzz/checkqueue.cpp
+
 test_fuzz_coins_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DCOINS_DESERIALIZE=1
 test_fuzz_coins_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_coins_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_coins_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_coins_deserialize_SOURCES = test/fuzz/deserialize.cpp
+
+test_fuzz_cuckoocache_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_cuckoocache_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_cuckoocache_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_cuckoocache_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_cuckoocache_SOURCES = test/fuzz/cuckoocache.cpp
 
 test_fuzz_decode_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_decode_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -465,6 +487,12 @@ test_fuzz_fee_rate_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_fee_rate_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_fee_rate_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_fee_rate_deserialize_SOURCES = test/fuzz/deserialize.cpp
+
+test_fuzz_fees_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_fees_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_fees_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_fees_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_fees_SOURCES = test/fuzz/fees.cpp
 
 test_fuzz_flat_file_pos_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DFLAT_FILE_POS_DESERIALIZE=1
 test_fuzz_flat_file_pos_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
