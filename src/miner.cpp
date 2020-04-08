@@ -91,7 +91,7 @@ void BlockAssembler::resetBlock()
 Optional<int64_t> BlockAssembler::m_last_block_num_txs{nullopt};
 Optional<int64_t> BlockAssembler::m_last_block_weight{nullopt};
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, std::unordered_set<uint256, SaltedTxidHasher> &txsToRemove)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
 {    
     int64_t nTimeStart = GetTimeMicros();
 
@@ -143,7 +143,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
-    addPackageTxs(nPackagesSelected, nDescendantsUpdated, txsToRemove);
+    addPackageTxs(nPackagesSelected, nDescendantsUpdated);
 
     int64_t nTime1 = GetTimeMicros();
 
@@ -194,45 +194,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
     BlockValidationState state;
-    bool bFoundError = false;
-    CTransaction txMissingInput;
-    CTransaction syscoinTxFailed;
-    for(auto &txid:txsToRemove){
-         LogPrintf("CreateNewBlock() txsToRemove size %d txid %s\n", txsToRemove.size(), txid.GetHex().c_str());
+    if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
+        throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
     }
-    // Do the sanity block check and report back, conflicting input set, non-existent input check or problematic syscoin tx check. 
-    // If problem, remove transactions based on policy for each of the cases and try creating block without it to remove the bottleneck
-    if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false, &txMissingInput, &syscoinTxFailed)) {
-        if(txMissingInput.IsNull() && syscoinTxFailed.IsNull())
-            throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
-        bFoundError = true;
-        if(!txMissingInput.IsNull()) {
-            // If conflicting inputs, remove one that is newer and keep oldest
-            if(mempool.existsConflicts(txMissingInput)) {
-                LogPrintf("CreateNewBlock(): TestBlockValidity removeSyscoinConflicts existsConflicts\n");
-                if(!mempool.removeSyscoinConflicts(txMissingInput)) {
-                    throw std::runtime_error(strprintf("%s: TestBlockValidity failed: removeSyscoinConflicts failed", __func__));
-                }
-            // tx was missing input(s) then we should remove it, maybe a stranded tx from a dbl spend case where inputs were duplicated but one got mined
-            // and other was left in the mempool, there is no conflict on it that would be caught be setConflicts yet it still fails the HaveInputs check,
-            // so we can safely remove it from our mempool and forget about it, try to create block without it  
-            } else {
-                LogPrintf("CreateNewBlock(): TestBlockValidity removeSyscoinConflicts missing inputs\n");
-                const uint256& txHash = txMissingInput.GetHash();
-                mempool.ClearPrioritisation(txHash);
-                mempool.removeRecursive(txMissingInput, MemPoolRemovalReason::CONFLICT);
-            }
-        }
-        if(!syscoinTxFailed.IsNull()) {
-            LogPrintf("CreateNewBlock(): TestBlockValidity syscoinTxFailed\n");
-            txsToRemove.insert(syscoinTxFailed.GetHash());
-        }
-    }
-    if(bFoundError){
-        LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed: %s. Removed %d transactions and trying again...\n", state.ToString(), txsToRemove.size());
-        return CreateNewBlock(scriptPubKeyIn, txsToRemove);
-    }
-    txsToRemove.clear();
     int64_t nTime2 = GetTimeMicros();
 
     LogPrint(BCLog::BENCH, "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n", 0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1), 0.001 * (nTime2 - nTimeStart));
@@ -267,16 +231,20 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 // - transaction finality (locktime)
 // - premature witness (in case segwit transactions are added to mempool before
 //   segwit activation)
-bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package, std::unordered_set<uint256, SaltedTxidHasher> &txsToRemove)
+bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package)
 {
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
         if (!fIncludeWitness && it->GetTx().HasWitness())
             return false;
-         // SYSCOIN
-        if(txsToRemove.count(it->GetTx().GetHash()) > 0)
-            return false;           
+        // SYSCOIN
+        // If conflicting inputs, skip this tx if its newer (prefer first tx based on time)
+        if(mempool.existsConflicts(it->GetTx())) {
+            if(!mempool.isSyscoinConflictIsFirstSeen(it->GetTx())) {
+                return false;
+            }
+        }        
     }
     return true;
 }
@@ -363,7 +331,7 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, std::unordered_set<uint256, SaltedTxidHasher> &txsToRemove)
+void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated)
 {
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
@@ -464,7 +432,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         ancestors.insert(iter);
 
         // Test if all tx's are Final
-        if (!TestPackageTransactions(ancestors, txsToRemove)) {
+        if (!TestPackageTransactions(ancestors)) {
             if (fUsingModified) {
                 mapModifiedTx.get<ancestor_score>().erase(modit);
                 failedTx.insert(iter);

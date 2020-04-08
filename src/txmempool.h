@@ -592,7 +592,7 @@ public:
     void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     // SYSCOIN
     bool existsConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool removeSyscoinConflicts(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool isSyscoinConflictIsFirstSeen(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void clear();
