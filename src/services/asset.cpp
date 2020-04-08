@@ -181,10 +181,10 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, co
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
     vector<vector<unsigned char> > vvch;
     bool found = false;
-    if(IsSyscoinMintTx(rawTx.nVersion)){
+    if(IsSyscoinMintTx(rawTx.nVersion)) {
         found = AssetMintTxToJson(rawTx, rawTx.GetHash(), output);
     }
-    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion)){
+    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion)) {
         found = SysTxToJSON(rawTx, output);
     }
     

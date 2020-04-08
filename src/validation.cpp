@@ -500,7 +500,7 @@ private:
     // of checking a given transaction.
     struct Workspace {
         //
-        Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {m_duplicate = false; m_sender = "";}
+        Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {}
         std::set<uint256> m_conflicts;
         CTxMemPool::setEntries m_all_conflicting;
         CTxMemPool::setEntries m_ancestors;
@@ -513,9 +513,6 @@ private:
 
         const CTransactionRef& m_ptx;
         const uint256& m_hash;
-        // SYSCOIN
-        bool m_duplicate;
-        std::string m_sender;
     };
 
     // Run the policy checks on a given transaction, excluding any script checks.
@@ -592,12 +589,15 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     CAmount& nModifiedFees = ws.m_modified_fees;
     CAmount& nConflictingFees = ws.m_conflicting_fees;
     size_t& nConflictingSize = ws.m_conflicting_size;
-    // SYSCOIN
-    std::string &sender = ws.m_sender;
-    bool & duplicate = ws.m_duplicate;
     if (!CheckTransaction(tx, state))
         return false; // state filled in by CheckTransaction
-        
+    // SYSCOIN
+    if(IsSyscoinTx(tx.nVersion)){
+        TxValidationState tx_state;
+        if (!CheckSyscoinInputs(tx, hash, tx_state, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast())) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx", tx_state.ToString()); 
+        } 
+    }     
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "coinbase");
@@ -815,13 +815,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         m_limit_descendant_size += conflict->GetSizeWithDescendants();
     }
     std::string errString;
-    // SYSCOIN
-    if(IsSyscoinTx(tx.nVersion)){
-        TxValidationState tx_state;
-        if (!CheckSyscoinInputs(tx, hash, tx_state, m_view, true, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), args.m_test_accept || args.m_bypass_limits)) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx", tx_state.ToString()); 
-        } 
-    } 
     if (!m_pool.CalculateMemPoolAncestors(*entry, setAncestors, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants, m_limit_descendant_size, errString, true)) {
         setAncestors.clear();
         // If CalculateMemPoolAncestors fails second time, we want the original error string.
@@ -1049,9 +1042,6 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     const size_t& nConflictingSize = ws.m_conflicting_size;
     const bool fReplacementTransaction = ws.m_replacement_transaction;
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
-    // SYSCOIN
-    const bool& duplicate = ws.m_duplicate;
-    const std::string& sender = ws.m_sender;
     // Remove conflicting transactions from the mempool
     for (CTxMemPool::txiter it : allConflicting)
     {
@@ -1070,9 +1060,7 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     // - it's not being re-added during a reorg which bypasses typical mempool fee limits
     // - the node is not behind
     // - the transaction is not dependent on any other transactions in the mempool
-    // SYSCOIN
-    // - the transaction does not have a duplicate input from an asset allocation transaction
-    bool validForFeeEstimation = !duplicate && !fReplacementTransaction && !bypass_limits && IsCurrentForFeeEstimation() && m_pool.HasNoInputsOf(tx);
+    bool validForFeeEstimation = !fReplacementTransaction && !bypass_limits && IsCurrentForFeeEstimation() && m_pool.HasNoInputsOf(tx);
 
     // Store transaction in memory
     m_pool.addUnchecked(*entry, setAncestors, validForFeeEstimation);

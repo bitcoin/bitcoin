@@ -489,19 +489,10 @@ UniValue assetnew(const JSONRPCRequest& request) {
     // decode as non-witness
     if (!DecodeHexTx(txIn, strHex, true, false))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not send raw transaction: Cannot decode transaction from hex string: " + strHex);
-    CTransaction txIn_t(txIn);
-    COutPoint inputOutPoint;
-    {
-        LOCK(cs_main);
-        inputOutPoint = FindAssetOwnerOutPoint(::ChainstateActive().CoinsTip(), txIn_t, witnessAddress);
-    }
-    if(inputOutPoint.IsNull()){
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "No input found to fund this transaction");
-    }
     data.clear();
     vecSend.clear();
     // generate deterministic guid based on input txid
-    newAsset.nAsset = GenerateSyscoinGuid(inputOutPoint);
+    newAsset.nAsset = GenerateSyscoinGuid(txIn.vin[0].prevout);
     newAsset.Serialize(data);
     scriptData.clear();
     scriptData << OP_RETURN << data;
