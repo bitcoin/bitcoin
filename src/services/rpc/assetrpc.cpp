@@ -371,7 +371,7 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
     return oAssetAllocation;
 }
 
-int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sender){
+int CheckActorsInTransactionGraph(const uint256& lookForTxHash){
     LOCK(cs_main);
     LOCK(mempool.cs);
     {
@@ -381,23 +381,24 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sen
             return ZDAG_NOT_FOUND;
         if(txRef->nVersion != SYSCOIN_TX_VERSION_ALLOCATION_SEND)
             return ZDAG_NOT_FOUND;
-        // the zdag tx or any others from this sender should be under MTU of IP packet
-        if(GetSerializeSize(txRef, PROTOCOL_VERSION) > 1100){
+        // the zdag tx should be under MTU of IP packet
+        if(GetSerializeSize(txRef, PROTOCOL_VERSION) > 1100)
             return ZDAG_WARNING_RBF;
-        }
         // check if any inputs are dbl spent, reject if so
         if(mempool.existsConflicts(*txRef))
             return ZDAG_MAJOR_CONFLICT;        
 
         // check this transaction isn't RBF enabled
         RBFTransactionState rbfState = IsRBFOptIn(*txRef, mempool, setAncestors);
-        if (rbfState == RBFTransactionState::UNKNOWN) {
+        if (rbfState == RBFTransactionState::UNKNOWN)
             return ZDAG_NOT_FOUND;
-        } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {
+        else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125)
             return ZDAG_WARNING_RBF;
-        }
         for (CTxMemPool::txiter it : setAncestors) {
             const CTransactionRef& ancestorTxRef = it->GetSharedTx();
+            // should be under MTU of IP packet
+            if(GetSerializeSize(ancestorTxRef, PROTOCOL_VERSION) > 1100)
+                return ZDAG_WARNING_RBF;
             // check if any ancestor inputs are dbl spent, reject if so
             if(mempool.existsConflicts(*ancestorTxRef))
                 return ZDAG_MAJOR_CONFLICT;
@@ -405,9 +406,8 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sen
     }
     return ZDAG_STATUS_OK;
 }
-int VerifyTransactionGraph(const uint256& lookForTxHash) {
-    std::string sender;    
-    int status = CheckActorsInTransactionGraph(lookForTxHash, sender);
+int VerifyTransactionGraph(const uint256& lookForTxHash) {  
+    int status = CheckActorsInTransactionGraph(lookForTxHash);
     if(status != ZDAG_STATUS_OK){
         return status;
     }

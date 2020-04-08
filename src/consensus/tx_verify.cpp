@@ -178,7 +178,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
-        if(coin.out.assetInfo.nAsset > 0 && isSyscoinWithInputTx){
+        if(coin.out.assetInfo.nAsset > 0 && isSyscoinWithInputTx) {
             #if __cplusplus > 201402 
             auto result = mapAssetValueIn.try_emplace(coin.out.assetInfo.nAsset,  std::move(coin.out.assetInfo.nValue));
             #else
@@ -186,7 +186,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             #endif
             // Check for negative or overflow input values
             // if found add balance
-            if(!result.second){
+            if(!result.second) {
                 result.first += coin.out.assetInfo.nValue;
             }
             // asset tx (update/send) should have input of asset guid but no value
