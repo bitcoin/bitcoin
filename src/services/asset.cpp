@@ -158,6 +158,12 @@ bool IsZdagTx(const int &nVersion){
 bool IsSyscoinTx(const int &nVersion){
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
 }
+// everything except mint asset, and activate asset
+bool IsSyscoinWithInputTx(const int &nVersion){
+    return nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE || nVersion == SYSCOIN_TX_VERSION_ASSET_SEND ||
+    nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || 
+    nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+}
 #ifdef ENABLE_WALLET
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, const CWallet* const pwallet, const isminefilter* filter_ismine){
     vector<vector<unsigned char> > vvch;

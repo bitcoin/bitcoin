@@ -23,14 +23,14 @@ class COutPoint;
 class CWallet;
 #endif
 
-const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 0x7400;
-const int SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION = 0x7401;
-const int SYSCOIN_TX_VERSION_ASSET_ACTIVATE = 0x7402;
-const int SYSCOIN_TX_VERSION_ASSET_UPDATE = 0x7403;
-const int SYSCOIN_TX_VERSION_ASSET_SEND = 0x7404;
-const int SYSCOIN_TX_VERSION_ALLOCATION_MINT = 0x7405;
-const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM = 0x7406;
-const int SYSCOIN_TX_VERSION_ALLOCATION_SEND = 0x7407;
+const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 128;
+const int SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION = 129;
+const int SYSCOIN_TX_VERSION_ASSET_ACTIVATE = 130;
+const int SYSCOIN_TX_VERSION_ASSET_UPDATE = 131;
+const int SYSCOIN_TX_VERSION_ASSET_SEND = 132;
+const int SYSCOIN_TX_VERSION_ALLOCATION_MINT = 133;
+const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM = 134;
+const int SYSCOIN_TX_VERSION_ALLOCATION_SEND = 135;
 
 static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_VALUE_LENGTH = 512;
@@ -54,6 +54,7 @@ COutPoint FindAssetOwnerOutPoint(const CCoinsViewCache &inputs, const CTransacti
 bool IsAssetAllocationTx(const int &nVersion);
 bool IsZdagTx(const int &nVersion);
 bool IsSyscoinTx(const int &nVersion);
+bool IsSyscoinWithInputTx(const int &nVersion);
 bool IsAssetTx(const int &nVersion);
 bool IsSyscoinMintTx(const int &nVersion);
 CAmount getaddressbalance(const std::string& strAddress);

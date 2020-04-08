@@ -166,7 +166,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent",
                          strprintf("%s: inputs missing/spent", __func__));
     }
-    const bool &isSyscoinTx = IsSyscoinTx(tx.nVersion);
+    const bool &isSyscoinWithInputTx = IsSyscoinWithInputTx(tx.nVersion);
     std::unsorted_map<uint32_t, CAmount> mapAssetValueIn;
     CAmount nValueIn = 0;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
@@ -179,7 +179,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
-        if(coin.out.assetInfo.nAsset > 0 && isSyscoinTx){
+        if(coin.out.assetInfo.nAsset > 0 && isSyscoinWithInputTx){
             #if __cplusplus > 201402 
             auto result = mapAssetValueIn.try_emplace(coin.out.assetInfo.nAsset,  std::move(coin.out.assetInfo.nValue));
             #else
@@ -206,7 +206,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
     }
-    if(isSyscoinTx) {
+    if(isSyscoinWithInputTx) {
         size_t nTotalAssetOutputs = 0;
         std::unsorted_map<uint32_t, CAmount> mapAssetValueOut;
         CAssetAllocation allocation(tx);
@@ -230,7 +230,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         }
         // assets should have no fees, inputs must equal output
         // new assets don't have any inputs so we allow this check to pass and later ensure it creates only 1 output with no value
-        if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE && mapAssetValueIn != mapAssetValueOut) {
+        if(mapAssetValueIn != mapAssetValueOut) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assets-io-mismatch");
         }
         if(nTotalAssetOutputs > tx.vout.size()) {
