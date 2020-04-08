@@ -239,12 +239,10 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
         if (!fIncludeWitness && it->GetTx().HasWitness())
             return false;
         // SYSCOIN
-        // If conflicting inputs, skip this tx if its newer (prefer first tx based on time)
-        if(mempool.existsConflicts(it->GetTx())) {
-            if(!mempool.isSyscoinConflictIsFirstSeen(it->GetTx())) {
-                return false;
-            }
-        }        
+        // If conflicting syscoin related dbl-spent input in this tx, skip it if its newer (prefer first tx based on time)
+        if(!mempool.isSyscoinConflictIsFirstSeen(it->GetTx())) {
+            return false;
+        }      
     }
     return true;
 }

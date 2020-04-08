@@ -19,7 +19,7 @@
 #include <util/time.h>
 #include <validationinterface.h>
 // SYSCOIN
-extern std::unordered_set<std::string> assetAllocationConflicts;
+extern std::unordered_set<COutPoint> assetAllocationConflicts;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
@@ -567,13 +567,13 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
                 // SYSCOIN
                 // we should only have to erase from assetAllocationConflicts if there has been a conflict
                 // in the case of RBF this will be called and do a no-op (erase on non-existent key) because it will only add to assetAllocationConflicts
-                // if RBF opt-out was used and yet it was still dbl-spent input (also was a syscoin asset tx)
+                // if RBF opt-out was used and yet it was still double spent input (also was a syscoin asset tx)
                 assetAllocationConflicts.erase(txin.prevout);
             }
         }
     }
 }
-// true if other tx (conflicting) was first in mempool or false if this tx was first in mempool or none found
+// true if other tx (conflicting) was first in mempool and it was involved in asset double spend
 bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
 {
     AssertLockHeld(cs);
@@ -582,9 +582,9 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
     for (const CTxIn &txin : tx.vin) {
         auto itConflict = mapNextTx.find(txin.prevout);
         // ensure that we check for assetAllocationConflicts intersection of this input
-        // the only time conflicts are allowed and would cause problems for zdag is when its dbl spent without RBF
-        // we allow one dbl-spend input to be propogated and here we ensure we are only dealing with skipping transactions based on time
-        // if it is one of those transactions that propogated dbl-spent input related to syscoin asset tx
+        // the only time conflicts are allowed and would cause problems for zdag is when its double spent without RBF
+        // we allow one double spend input to be propogated and here we ensure we are only dealing with skipping transactions based on time
+        // if it is one of those transactions that propogated double spent input related to syscoin asset tx
         if (itConflict != mapNextTx.end() && assetAllocationConflicts.find(txin.prevout) != assetAllocationConflicts.end()) {
             const CTransaction &txConflict = *itConflict->second;
             if (txConflict != tx)
@@ -593,12 +593,9 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
                 assert(conflictit != mapTx.end());
                 // if conflicting transaction was received before the transaction in question
                 // idea is to mine the oldest transaction in event of conflict
-                // upon block the conflict is removed
+                // upon block, the conflict is removed
                 if(conflictit->GetTime() <= thisit->GetTime()){
                     return false;
-                }
-                else {
-                    return true;
                 }
             }
         }
