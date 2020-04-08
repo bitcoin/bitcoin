@@ -3812,8 +3812,12 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         //
         std::vector<CInv> vInv;
         {
+            size_t reserve = std::min<size_t>(pto->setInventoryTxToSend.size(), INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize(true) / 1000000);
+            reserve = std::max<size_t>(reserve, pto->vInventoryBlockToSend.size());
+            reserve = std::min<size_t>(reserve, MAX_INV_SZ);
+            vInv.reserve(reserve);
+
             LOCK(pto->cs_inventory);
-            vInv.reserve(std::max<size_t>(pto->vInventoryBlockToSend.size(), INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize(true) / 1000000));
 
             // Add blocks
             for (const uint256& hash : pto->vInventoryBlockToSend) {

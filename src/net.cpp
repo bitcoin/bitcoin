@@ -1239,9 +1239,9 @@ void CConnman::ThreadSocketHandler()
         {
             LOCK(cs_vNodes);
             // Disconnect unused nodes
-            std::vector<CNode*> vNodesCopy = vNodes;
-            for (CNode* pnode : vNodesCopy)
+            for (auto it = vNodes.begin(); it != vNodes.end(); )
             {
+                CNode* pnode = *it;
                 if (pnode->fDisconnect)
                 {
                     if (fLogIPs) {
@@ -1253,7 +1253,7 @@ void CConnman::ThreadSocketHandler()
                     }
 
                     // remove from vNodes
-                    vNodes.erase(remove(vNodes.begin(), vNodes.end(), pnode), vNodes.end());
+                    it = vNodes.erase(it);
 
                     // release outbound grant (if any)
                     pnode->grantOutbound.Release();
@@ -1264,17 +1264,20 @@ void CConnman::ThreadSocketHandler()
                     // hold in disconnected pool until all refs are released
                     pnode->Release();
                     vNodesDisconnected.push_back(pnode);
+                } else {
+                    ++it;
                 }
             }
         }
         {
             // Delete disconnected nodes
             std::list<CNode*> vNodesDisconnectedCopy = vNodesDisconnected;
-            for (CNode* pnode : vNodesDisconnectedCopy)
+            for (auto it = vNodesDisconnected.begin(); it != vNodesDisconnected.end(); )
             {
+                CNode* pnode = *it;
                 // wait until threads are done using it
+                bool fDelete = false;
                 if (pnode->GetRefCount() <= 0) {
-                    bool fDelete = false;
                     {
                         TRY_LOCK(pnode->cs_inventory, lockInv);
                         if (lockInv) {
@@ -1285,9 +1288,12 @@ void CConnman::ThreadSocketHandler()
                         }
                     }
                     if (fDelete) {
-                        vNodesDisconnected.remove(pnode);
+                        it = vNodesDisconnected.erase(it);
                         DeleteNode(pnode);
                     }
+                }
+                if (!fDelete) {
+                    ++it;
                 }
             }
         }
@@ -3412,6 +3418,7 @@ std::vector<CNode*> CConnman::CopyNodeVector(std::function<bool(const CNode* pno
 {
     std::vector<CNode*> vecNodesCopy;
     LOCK(cs_vNodes);
+    vecNodesCopy.reserve(vNodes.size());
     for(size_t i = 0; i < vNodes.size(); ++i) {
         CNode* pnode = vNodes[i];
         if (!cond(pnode))
@@ -3429,7 +3436,6 @@ std::vector<CNode*> CConnman::CopyNodeVector()
 
 void CConnman::ReleaseNodeVector(const std::vector<CNode*>& vecNodes)
 {
-    LOCK(cs_vNodes);
     for(size_t i = 0; i < vecNodes.size(); ++i) {
         CNode* pnode = vecNodes[i];
         pnode->Release();
