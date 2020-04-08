@@ -85,6 +85,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
 bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime,const bool &bSanityCheck);
 bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys);
 static CAssetCoinInfo emptyAllocation;
-bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap &mapAssets, const bool &bSanityCheck = false);
+bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap &mapAssets, const bool &bSanityCheck = false);
 bool FormatSyscoinErrorMessage(TxValidationState &state, const std::string errorMessage, bool bErrorNotInvalid = true, bool bConsensus = true);
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H
