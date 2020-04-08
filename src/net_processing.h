@@ -85,7 +85,7 @@ void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="");
 bool IsBanned(NodeId nodeid);
 
 void EraseObjectRequest(NodeId nodeId, const CInv& inv);
-void RequestObject(NodeId nodeId, const CInv& inv, int64_t nNow, bool fForce=false);
+void RequestObject(NodeId nodeId, const CInv& inv, std::chrono::microseconds current_time, bool fForce=false);
 size_t GetRequestedObjectCount(NodeId nodeId);
 
 #endif // BITCOIN_NET_PROCESSING_H
