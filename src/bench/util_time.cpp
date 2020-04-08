@@ -4,7 +4,7 @@
 
 #include <bench/bench.h>
 
-#include <util/time.h>
+#include <utiltime.h>
 
 static void BenchTimeDeprecated(benchmark::State& state)
 {
@@ -36,7 +36,7 @@ static void BenchTimeMillisSys(benchmark::State& state)
     }
 }
 
-BENCHMARK(BenchTimeDeprecated, 100000000);
-BENCHMARK(BenchTimeMillis, 6000000);
-BENCHMARK(BenchTimeMillisSys, 6000000);
-BENCHMARK(BenchTimeMock, 300000000);
+BENCHMARK(BenchTimeDeprecated/*, 100000000*/);
+BENCHMARK(BenchTimeMillis/*, 6000000*/);
+BENCHMARK(BenchTimeMillisSys/*, 6000000*/);
+BENCHMARK(BenchTimeMock/*, 300000000*/);
