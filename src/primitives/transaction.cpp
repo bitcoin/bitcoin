@@ -54,10 +54,19 @@ CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn)
     nValue = nValueIn;
     scriptPubKey = scriptPubKeyIn;
 }
-
+CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn, CAssetCoinInfo assetInfoIn)
+{
+    nValue = nValueIn;
+    scriptPubKey = scriptPubKeyIn;
+    assetInfo = assetInfoIn;
+}
 std::string CTxOut::ToString() const
 {
-    return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
+    if(assetInfo.IsNull())
+        return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
+    else
+        return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s, nAsset=%d, nAssetValue=%d.%08d)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30), assetInfo.nAsset, assetInfo.nValue / COIN, assetInfo.nValue % COIN);
+
 }
 
 CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
@@ -112,7 +121,26 @@ CAmount CTransaction::GetValueOut() const
     assert(MoneyRange(nValueOut));
     return nValueOut;
 }
-
+bool CAssetCoinInfo::UnserializeFromData(const vector<unsigned char> &vchData) {
+    try {
+        CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
+        dsAsset >> *this;
+    } catch (std::exception &e) {
+		SetNull();
+        return false;
+    }
+	return true;
+}
+void CAssetCoinInfo::Serialize( vector<unsigned char> &vchData) {
+    CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
+    dsAsset << *this;
+	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
+}
+template <typename Stream, typename Operation>
+void CAssetCoinInfo::SerializationOp(Stream& s, Operation ser_action) {
+    READWRITE(nAsset);
+    READWRITE(nValue);
+}
 unsigned int CTransaction::GetTotalSize() const
 {
     return ::GetSerializeSize(*this, PROTOCOL_VERSION);

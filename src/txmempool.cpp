@@ -19,8 +19,7 @@
 #include <util/time.h>
 #include <validationinterface.h>
 // SYSCOIN
-#include <services/assetconsensus.h>
-extern ArrivalTimesSet setToRemoveFromMempool;
+extern std::unordered_set<std::string> assetAllocationConflicts;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
@@ -353,14 +352,7 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 {
     nTransactionsUpdated += n;
 }
-// SYSCOIN
 void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate)
-{
-    AssetBalanceMap mapAssetAllocationBalances;
-    addUnchecked(entry, setAncestors, validFeeEstimate, false, "", mapAssetAllocationBalances);
-}
-// SYSCOIN
-void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate, const bool &fSyscoinDuplicate, const std::string& fSyscoinSender, const AssetBalanceMap &mapAssetAllocationBalances)
 {
     // Add to memory pool without checking anything.
     // Used by AcceptToMemoryPool(), which DOES do
@@ -387,12 +379,6 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
         setParentTransactions.insert(tx.vin[i].prevout.hash);
-    }
-    // SYSCOIN
-    if(!fSyscoinDuplicate){
-        AddZDAGTx(MakeTransactionRef(tx), mapAssetAllocationBalances);
-    } else {
-        SetZDAGConflict(tx.GetHash(), fSyscoinSender);
     }
     // Don't bother worrying about child transactions of this one.
     // Normal case of a new transaction arriving is that there can't be any
@@ -578,6 +564,8 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
                 removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
             }
         }
+        // SYSCOIN
+        assetAllocationConflicts.erase(txin.prevout);
     }
 }
 bool CTxMemPool::removeSyscoinConflicts(const CTransaction &tx)
@@ -969,6 +957,16 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     CTransactionRef ptx = mempool.get(outpoint.hash);
     if (ptx) {
         if (outpoint.n < ptx->vout.size()) {
+            // SYSCOIN get asset info for this COIN output from tx
+            if(IsSyscoinTx(ptx->nVersion)) {
+                CAssetAllocation allocation(*ptx);
+                if(!allocation.IsNull()) {
+                    coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false, allocation.vecAssetInfo[outpoint.n]);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
             coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
             return true;
         } else {
@@ -1000,16 +998,6 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
         toremove.insert(mapTx.project<0>(it));
         it++;
-    }
-    // SYSCOIN expire zdag conflicts after 300 seconds
-    const std::chrono::seconds timeZdagConflicts = std::chrono::seconds(GetTime()) - std::chrono::seconds(300);
-    for(const auto& toRemove: setToRemoveFromMempool){
-        txiter mempoolTxToRemove = mapTx.find(toRemove);
-        if (mempoolTxToRemove != mapTx.end()) {
-            if(mempoolTxToRemove->GetTime() <= timeZdagConflicts){
-                toremove.insert(mapTx.project<0>(mempoolTxToRemove));
-            }
-        }
     }
     setEntries stage;
     for (txiter removeit : toremove) {

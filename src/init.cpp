@@ -100,12 +100,6 @@
 #include <util/executable_path/include/boost/executable_path.hpp>
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
 std::string exePath = "";
-extern AssetBalanceMap mempoolMapAssetBalances;
-extern ArrivalTimesSetImpl arrivalTimesSet; 
-extern RecursiveMutex cs_assetallocationmempoolbalance;
-extern RecursiveMutex cs_assetallocationarrival;
-extern ArrivalTimesSet setToRemoveFromMempool;
-extern RecursiveMutex cs_assetallocationmempoolremovetx;
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
 static bool fFeeEstimatesInitialized = false;
@@ -310,14 +304,12 @@ void Shutdown(NodeContext& node)
     // up with our current chain to avoid any strange pruning edge cases and make
     // next startup faster by avoiding rescan.
     // SYSCOIN
-    arrivalTimesSet.clear();
     FlushSyscoinDBs();
     passetdb.reset();
     passetallocationdb.reset();
     passetallocationmempooldb.reset();
     pethereumtxrootsdb.reset();
     pethereumtxmintdb.reset();
-    passetindexdb.reset();
     pblockindexdb.reset();
     {
         LOCK(cs_main);
@@ -476,7 +468,6 @@ void SetupServerArgs()
     gArgs.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-masternodeprivkey=<n>", "Set the masternode private key", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-assetindex=<n>", strprintf("Index Syscoin Assets for historical information (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);	
     gArgs.AddArg("-sysxasset=<n>", strprintf("SYSX Asset Guid specified when running unit tests (default: %u)", defaultChainParams->GetConsensus().nSYSXAsset), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-tpstest", strprintf("TPSTest for unittest. Leave false"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1646,31 +1637,13 @@ bool AppInitMain(NodeContext& node)
                 passetallocationdb.reset();
                 passetallocationmempooldb.reset();
                 pethereumtxrootsdb.reset();
-                passetindexdb.reset();
                 pethereumtxmintdb.reset();
                 pblockindexdb.reset();
-                passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState));
-                passetallocationdb.reset(new CAssetAllocationDB(nCoinDBCache*32, false, fReset || fReindexChainState));
-                passetallocationmempooldb.reset(new CAssetAllocationMempoolDB(0, false, fReset || fReindexChainState));
-                {
-                    LOCK(cs_assetallocationmempoolbalance);
-                    passetallocationmempooldb->ReadAssetAllocationMempoolBalances(mempoolMapAssetBalances);
-                }
-                {
-                    LOCK(cs_assetallocationarrival);
-                    passetallocationmempooldb->ReadAssetAllocationMempoolArrivalTimes(arrivalTimesSet);
-                }
-                {
-                    LOCK(cs_assetallocationmempoolremovetx);
-                    passetallocationmempooldb->ReadAssetAllocationMempoolToRemoveSet(setToRemoveFromMempool);
-                }           
+                passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState));    
                 // we don't need to ever reset the txroots db because it is an external chain not related to syscoin chain
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));
                 pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset || fReindexChainState));
                 pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReset || fReindexChainState));
-                fAssetIndex = gArgs.GetBoolArg("-assetindex", false);	
-                if(fAssetIndex)	
-                    passetindexdb.reset(new CAssetIndexDB(nCoinDBCache*16, false, fReset));
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();

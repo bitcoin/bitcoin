@@ -129,6 +129,27 @@ public:
     std::string ToString() const;
 };
 
+class CAssetCoinInfo {
+public:
+	uint32_t nAsset;
+	CAmount nValue;
+	template <typename Stream, typename Operation>
+	void SerializationOp(Stream& s, Operation ser_action);
+	CAssetCoinInfo() {
+		SetNull();
+	}
+	ADD_SERIALIZE_METHODS;
+
+    CAssetCoinInfo(const CAssetCoinInfo&) = delete;
+    CAssetCoinInfo(CAssetCoinInfo && other) = default;
+    CAssetCoinInfo& operator=( CAssetCoinInfo& a ) = delete;
+	CAssetCoinInfo& operator=( CAssetCoinInfo&& a ) = default;
+ 
+	inline void SetNull() { outpoint.SetNull(); nValue = 0;}
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+	void Serialize(std::vector<unsigned char>& vchData);
+};
+
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
  */
@@ -137,6 +158,8 @@ class CTxOut
 public:
     CAmount nValue;
     CScript scriptPubKey;
+    // SYSCOIN
+    CAssetCoinInfo assetInfo;
 
     CTxOut()
     {
@@ -144,6 +167,8 @@ public:
     }
 
     CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
+    // SYSCOIN
+    CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn, CAssetCoinInfo assetInfo);
 
     ADD_SERIALIZE_METHODS;
 
@@ -151,10 +176,14 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(nValue);
         READWRITE(scriptPubKey);
+        if(!assetInfo.IsNull()){
+            READWRITE(assetInfo);        
+        }
     }
 
     void SetNull()
     {
+        assetInfo.SetNull();
         nValue = -1;
         scriptPubKey.clear();
     }
@@ -167,7 +196,9 @@ public:
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey);
+                a.scriptPubKey == b.scriptPubKey &&
+                a.assetInfo.nAsset == b.assetInfo.nAsset &&
+                a.assetInfo.nAssetValue == b.assetInfo.nAssetValue);
     }
 
     friend bool operator!=(const CTxOut& a, const CTxOut& b)
@@ -280,8 +311,8 @@ public:
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
     static const int32_t MAX_STANDARD_VERSION=2;
-    // SYSCOIN consensus is driven by version, the highest version is SYSCOIN_TX_VERSION_ALLOCATION_LOCK(0x7409)
-    static const int32_t MAX_SYSCOIN_STANDARD_VERSION=0x7409;
+    // SYSCOIN consensus is driven by version, the highest version is SYSCOIN_TX_VERSION_ALLOCATION_SEND(0x7408)
+    static const int32_t MAX_SYSCOIN_STANDARD_VERSION=0x7408;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
@@ -290,13 +321,6 @@ public:
     // structure, including the hash.
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
-    const int32_t nVersion;
-    const uint32_t nLockTime;
-
-private:
-    /** Memory only. */
-    const uint256 hash;
-    const uint256 m_witness_hash;
 
     uint256 ComputeHash() const;
     uint256 ComputeWitnessHash() const;
@@ -304,6 +328,13 @@ private:
 public:
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
+    const int32_t nVersion;
+    const uint32_t nLockTime;
+
+private:
+    /** Memory only. */
+    const uint256 hash;
+    const uint256 m_witness_hash;
 
     /** Convert a CMutableTransaction into a CTransaction. */
     explicit CTransaction(const CMutableTransaction &tx);

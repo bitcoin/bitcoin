@@ -27,8 +27,6 @@
 #include <masternodepayments.h>
 #include <masternodesync.h>
 #include <services/assetconsensus.h>
-extern ArrivalTimesSet setToRemoveFromMempool;
-extern RecursiveMutex cs_assetallocationmempoolremovetx;
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
@@ -95,15 +93,6 @@ Optional<int64_t> BlockAssembler::m_last_block_weight{nullopt};
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, std::unordered_set<uint256, SaltedTxidHasher> &txsToRemove)
 {    
-    {
-        LOCK(cs_assetallocationmempoolremovetx);
-        // we should skip setToRemoveFromMempool instead of letting input check below deal with it because zdag state will be inconsistent in the later case
-        // that is meant as a sanity and fallback in case setToRemoveFromMempool misses
-        txsToRemove.reserve(txsToRemove.size() + setToRemoveFromMempool.size());
-        for(const auto& txid: setToRemoveFromMempool){
-            txsToRemove.insert(txid);
-        }
-    }
     int64_t nTimeStart = GetTimeMicros();
 
     resetBlock();
@@ -240,10 +229,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         }
     }
     if(bFoundError){
-        {
-            LOCK(cs_assetallocationmempoolremovetx);
-            LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed: %s. setToRemoveFromMempool size %d. Removed %d transactions and trying again...\n", state.ToString(), setToRemoveFromMempool.size(), txsToRemove.size());
-        }
+        LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed: %s. Removed %d transactions and trying again...\n", state.ToString(), txsToRemove.size());
         return CreateNewBlock(scriptPubKeyIn, txsToRemove);
     }
     txsToRemove.clear();

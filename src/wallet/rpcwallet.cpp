@@ -1077,44 +1077,26 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, const CWalle
         if (nDepth < nMinDepth)
             continue;
 
-        // SYSCOIN if asset send check receivers instead of syscoin dust output
-        std::vector<IsAssetMineSelection> IsAssetMineResults;
-        if(wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || IsAssetAllocationTx(wtx.tx->nVersion)){
-            if(pwallet->IsAssetMine(*wtx.tx.get(), filter, IsAssetMineResults)){
-                for(auto isMineResult: IsAssetMineResults){
-                    if (has_filtered_address && !(filtered_address == isMineResult.destination)) {
-                        continue;
-                    }
-                    tallyitem& item = mapTally[isMineResult.destination];
-                    item.nConf = std::min(item.nConf, nDepth);
-                    item.txids.push_back(wtx.GetHash());
-                    if (isMineResult.minefilter & ISMINE_WATCH_ONLY)
-                        item.fIsWatchonly = true;
-                }          
-            }
-        }
-        else{
-            for (const CTxOut& txout : wtx.tx->vout)
-            {
-                CTxDestination address;
-                if (!ExtractDestination(txout.scriptPubKey, address))
-                    continue;
+        for (const CTxOut& txout : wtx.tx->vout)
+        {
+            CTxDestination address;
+            if (!ExtractDestination(txout.scriptPubKey, address))
+                continue;
 
-                if (has_filtered_address && !(filtered_address == address)) {
-                    continue;
-                }
-
-                isminefilter mine = pwallet->IsMine(address);
-                if(!(mine & filter))
-                    continue;
-                tallyitem& item = mapTally[address];
-                item.nAmount += txout.nValue;
-                item.nConf = std::min(item.nConf, nDepth);
-                item.txids.push_back(wtx.GetHash());
-                if (mine & ISMINE_WATCH_ONLY)
-                    item.fIsWatchonly = true;
+            if (has_filtered_address && !(filtered_address == address)) {
+                continue;
             }
-        }
+
+            isminefilter mine = pwallet->IsMine(address);
+            if(!(mine & filter))
+                continue;
+            tallyitem& item = mapTally[address];
+            item.nAmount += txout.nValue;
+            item.nConf = std::min(item.nConf, nDepth);
+            item.txids.push_back(wtx.GetHash());
+            if (mine & ISMINE_WATCH_ONLY)
+                item.fIsWatchonly = true;
+        } 
     }
 
     // Reply

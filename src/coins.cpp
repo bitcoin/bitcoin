@@ -90,8 +90,22 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
 void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check) {
     bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();
+    // SYSCOIN get asset info for this COIN output from tx
+    CAssetAllocation allocation;
+    if(IsSyscoinTx(tx.nVersion)) {
+        allocation = CAssetAllocation(tx);
+        if(allocation.IsNull()) {
+            throw std::logic_error("Adding new coin with asset, but could not deserialize asset");
+        }
+        bAsset = true;
+    }
     for (size_t i = 0; i < tx.vout.size(); ++i) {
         bool overwrite = check ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
+        if(bAsset){
+            cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase, allocation.vecAssetInfo[i]), overwrite);
+            continue;
+        }
+        
         // Always set the possible_overwrite flag to AddCoin for coinbase txn, in order to correctly
         // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
         cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);

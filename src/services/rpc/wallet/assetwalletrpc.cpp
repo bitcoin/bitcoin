@@ -22,11 +22,6 @@ extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
-extern ArrivalTimesSetImpl arrivalTimesSet; 
-extern RecursiveMutex cs_assetallocationarrival;
-extern AssetPrevTxMap mapAssetPrevTxSender;
-extern AssetBalanceMap mempoolMapAssetBalances;
-extern RecursiveMutex cs_assetallocationmempoolbalance;
 extern RecursiveMutex cs_setethstatus;
 using namespace std;
 std::vector<CTxIn> savedtxins;
@@ -163,11 +158,6 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
    // Fetch previous transactions (inputs):
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
-    COutPoint outPointLastSender;
-    auto itSender = mapAssetPrevTxSender.find(strAddress);
-    if(itSender != mapAssetPrevTxSender.end()){
-        outPointLastSender = itSender->second;
-    }
     {
         LOCK(cs_main);
         LOCK(mempool.cs);
@@ -178,9 +168,6 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         for (const CTxIn& txin : txIn.vin) {
             view.AccessCoin(txin.prevout); // Load entries from viewChain into view; can fail.
         }
-        // ensure no other transaction spends these outpoints before adding them to the view
-        if(!outPointLastSender.IsNull() && !mempool.GetConflictTx(outPointLastSender))
-            view.AccessCoin(outPointLastSender); // try to get last sender txid   
         view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
     }
     FeeCalculation fee_calc;
@@ -359,8 +346,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     std::string strAddressFrom = params[0].get_str();
     const uint32_t &nAsset = params[1].get_uint();          	
 	CAssetAllocation theAssetAllocation;
-    const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddressFrom);
-    strAddressFrom = witnessAddress.ToString();
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
@@ -370,8 +355,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 
     theAssetAllocation.SetNull();
     // from burn to allocation
-    theAssetAllocation.assetAllocationTuple.nAsset = nAsset;
-    theAssetAllocation.assetAllocationTuple.witnessAddress = burnWitness;   
     theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), nAmount));
     vector<unsigned char> data;
     theAssetAllocation.Serialize(data); 
@@ -458,12 +441,11 @@ UniValue assetnew(const JSONRPCRequest& request) {
     }
     uint32_t nUpdateFlags = params[7].get_uint();
     vchWitness = params[9].get_str();
-    const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress);
-    strAddress = witnessAddress.ToString();
+
     // calculate net
     // build asset object
     CAsset newAsset;
-    newAsset.nAsset = 0;
+
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
     UniValue feesStructArr = find_value(params[8].get_obj(), "fee_struct");
@@ -473,7 +455,6 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.strSymbol = strSymbol;
     newAsset.vchPubData = vchFromString(publicData.write());
     newAsset.vchContract = ParseHex(strContract);
-    newAsset.witnessAddress = witnessAddress;
     newAsset.nBalance = nBalance;
     newAsset.nTotalSupply = nBalance;
     newAsset.nMaxSupply = nMaxSupply;
@@ -591,11 +572,9 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     if (!GetAsset( nAsset, theAsset))
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
-    const CWitnessAddress &copyWitness = theAsset.witnessAddress;
     const std::string& oldData = stringFromVch(theAsset.vchPubData);
     const std::vector<unsigned char> oldContract(theAsset.vchContract);
     theAsset.ClearAsset();
-    theAsset.witnessAddress = copyWitness;
     UniValue params3 = params[3];
     CAmount nBalance = 0;
     if((params3.isStr() && params3.get_str() != "0") || (params3.isNum() && params3.get_real() != 0))
@@ -634,59 +613,6 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     return syscointxfund_helper(pwallet, theAsset.witnessAddress.ToString(), SYSCOIN_TX_VERSION_ASSET_UPDATE, vchWitness, vecSend);
 }
 
-UniValue assettransfer(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    const UniValue &params = request.params;
-    RPCHelpMan{"assettransfer",
-    "\nTransfer an asset you own to another address.\n",
-    {
-        {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid."},
-        {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to transfer to."},
-        {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address that will sign for web-of-trust notarization of this transaction."}
-    },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "hex", "the unsigned funded transaction hexstring."},
-            }},
-    RPCExamples{
-        HelpExampleCli("assettransfer", "\"asset_guid\" \"address\" \"\"")
-        + HelpExampleRpc("assettransfer", "\"asset_guid\", \"address\", \"\"")
-    }
-    }.Check(request);
-
-    // gather & validate inputs
-    const uint32_t &nAsset = params[0].get_uint();
-    string strAddressTo = params[1].get_str();
-    string vchWitness;
-    vchWitness = params[2].get_str();
-
-    CScript scriptPubKeyOrig, scriptPubKeyFromOrig;
-    CAsset theAsset;
-    if (!GetAsset( nAsset, theAsset))
-        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-    
-
-    theAsset.ClearAsset();
-    theAsset.nBalance = 0;
-    CScript scriptPubKey;
-    theAsset.witnessAddressTransfer = DescribeWitnessAddress(strAddressTo);
-
-    vector<unsigned char> data;
-    theAsset.Serialize(data);
-
-
-    vector<CRecipient> vecSend;
-    
-
-    CScript scriptData;
-    scriptData << OP_RETURN << data;
-    CRecipient fee;
-    CreateFeeRecipient(scriptData, fee);
-    vecSend.push_back(fee);
-    return syscointxfund_helper(pwallet, theAsset.witnessAddress.ToString(), SYSCOIN_TX_VERSION_ASSET_TRANSFER, vchWitness, vecSend);
-}
 UniValue assetsendmany(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -856,9 +782,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     string strWitness = params[3].get_str();
 	if (!valueTo.isArray())
 		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
-    const CWitnessAddress &witnessAddress = DescribeWitnessAddress(strAddress);
-    strAddress = witnessAddress.ToString();
-	CAssetAllocationDBEntry dbAssetAllocation;
+	CAssetCoinInfo dbAssetAllocation;
     CAssetAllocation theAssetAllocation;
 	const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddress));
 	if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
@@ -869,8 +793,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
 
 	theAssetAllocation.SetNull();
-    theAssetAllocation.assetAllocationTuple.nAsset = assetAllocationTuple.nAsset;
-    theAssetAllocation.assetAllocationTuple.witnessAddress = assetAllocationTuple.witnessAddress; 
 	UniValue receivers = valueTo.get_array();
     CAmount nTotalSending = 0;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
@@ -880,7 +802,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 
 		const UniValue &receiverObj = receiver.get_obj();
         const std::string &toStr = find_value(receiverObj, "address").get_str();
-        const CWitnessAddress &recpt = DescribeWitnessAddress(toStr);
 		UniValue amountObj = find_value(receiverObj, "amount");
 		if (amountObj.isNum() || amountObj.isStr()) {
 			const CAmount &amount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
@@ -893,22 +814,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
 
 	}
-    CWitnessAddress auxFeeAddress;
     const CAmount &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, theAsset.nPrecision, auxFeeAddress);
     if(nAuxFee > 0){
         theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(auxFeeAddress.nVersion, auxFeeAddress.vchWitnessProgram), nAuxFee));
         nTotalSending += nAuxFee;
-    }
-    CAmount nBalanceZDAG = dbAssetAllocation.nBalance;
-    const string &allocationTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
-    {
-        LOCK(cs_assetallocationmempoolbalance);
-        AssetBalanceMap::iterator mapIt =  mempoolMapAssetBalances.find(allocationTupleStr);
-        if(mapIt != mempoolMapAssetBalances.end())
-            nBalanceZDAG = mapIt->second;
-    }
-    if(!fUnitTest && nTotalSending > nBalanceZDAG){
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Balance is insufficient to send this asset transaction");
     }
 
 
@@ -958,11 +867,9 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 
     const uint32_t &nAsset = params[0].get_uint();
 	std::string strAddress = params[1].get_str();
-    
-	const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress); 
-    strAddress = witnessAddress.ToString();  	
+    	
 	CAssetAllocation theAssetAllocation;
-    CAssetAllocationDBEntry dbAssetAllocation;
+    CAssetCoinInfo dbAssetAllocation;
 	const CAssetAllocationTuple assetAllocationTuple(nAsset, witnessAddress);
 	if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset allocation with this key");
@@ -980,23 +887,9 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     vector<CRecipient> vecSend;
     CScript scriptData;
     int nVersion = 0;
-    CAmount nBalanceZDAG = dbAssetAllocation.nBalance;
-    const string &allocationTupleStr = dbAssetAllocation.assetAllocationTuple.ToString();
-    {
-        LOCK(cs_assetallocationmempoolbalance);
-        AssetBalanceMap::iterator mapIt =  mempoolMapAssetBalances.find(allocationTupleStr);
-        if(mapIt != mempoolMapAssetBalances.end())
-            nBalanceZDAG = mapIt->second;
-    }
-    if(!fUnitTest && amount > nBalanceZDAG){
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Balance is insufficient to send this asset transaction");
-    }  
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''"){
         theAssetAllocation.SetNull();
-        theAssetAllocation.assetAllocationTuple.nAsset = assetAllocationTuple.nAsset;
-        theAssetAllocation.assetAllocationTuple.witnessAddress = assetAllocationTuple.witnessAddress; 
-
         theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(burnWitness.nVersion, burnWitness.vchWitnessProgram), amount));      
       
         vector<unsigned char> data;
@@ -1095,13 +988,13 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_MISC_ERROR, "Geth is not synced, please wait until it syncs up and try again");
     }
 
-    const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress); 
-    strAddress = witnessAddress.ToString();  	
+
     vector<CRecipient> vecSend;
     
     CMintSyscoin mintSyscoin;
-    mintSyscoin.assetAllocationTuple = CAssetAllocationTuple(nAsset, witnessAddress);
-    mintSyscoin.nValueAsset = nAmount;
+    std::map<uint8_t, CAmount> outAmount;
+    outAmount[0] = nAmount;
+    mintSyscoin.assetAllocation.listReceivingAssets.push_back(make_pair(nAsset, outAmount));
     mintSyscoin.nBlockNumber = nBlockNumber;
     mintSyscoin.vchTxValue = ushortToBytes(posTxValue);
     mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
