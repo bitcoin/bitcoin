@@ -121,8 +121,11 @@ NODISCARD bool MultiplicationOverflow(const T i, const T j) noexcept
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #endif // SYSCOIN_TEST_FUZZ_UTIL_H
 =======
+=======
+>>>>>>> bfef72d0f... Merge #18565: tests: Add fuzzing harnesses for classes/functions in policy/fees.h, checkqueue.h and cuckoocache.h. Add fuzzing coverage.
 template <class T>
 NODISCARD bool AdditionOverflow(const T i, const T j) noexcept
 {
