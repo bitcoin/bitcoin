@@ -550,6 +550,8 @@ bool CTxMemPool::existsConflicts(const CTransaction &tx)
     }
     return false;
 }
+// regardless of RBF or not, we want to know if there are any conflicts for ZDAG, because ZDAG is not compliant with RBF
+// this will return if there are ANY conflicts and stop ZDAG transactions from returning OK status
 void CTxMemPool::removeConflicts(const CTransaction &tx)
 {
     // Remove transactions which depend on inputs of tx, recursively
@@ -562,43 +564,46 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
             {
                 ClearPrioritisation(txConflict.GetHash());
                 removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+                // SYSCOIN
+                // we should only have to erase from assetAllocationConflicts if there has been a conflict
+                // in the case of RBF this will be called and do a no-op (erase on non-existent key) because it will only add to assetAllocationConflicts
+                // if RBF opt-out was used and yet it was still dbl-spent input (also was a syscoin asset tx)
+                assetAllocationConflicts.erase(txin.prevout);
             }
         }
-        // SYSCOIN
-        assetAllocationConflicts.erase(txin.prevout);
     }
 }
-bool CTxMemPool::removeSyscoinConflicts(const CTransaction &tx)
+// true if other tx (conflicting) was first in mempool or false if this tx was first in mempool or none found
+bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
 {
-    // Remove transactions which depend on inputs of tx, recursively
     AssertLockHeld(cs);
-    bool bRemoved = false;
     txiter thisit = mapTx.find(tx.GetHash());
     assert(thisit != mapTx.end());
     for (const CTxIn &txin : tx.vin) {
         auto itConflict = mapNextTx.find(txin.prevout);
-        if (itConflict != mapNextTx.end()) {
+        // ensure that we check for assetAllocationConflicts intersection of this input
+        // the only time conflicts are allowed and would cause problems for zdag is when its dbl spent without RBF
+        // we allow one dbl-spend input to be propogated and here we ensure we are only dealing with skipping transactions based on time
+        // if it is one of those transactions that propogated dbl-spent input related to syscoin asset tx
+        if (itConflict != mapNextTx.end() && assetAllocationConflicts.find(txin.prevout) != assetAllocationConflicts.end()) {
             const CTransaction &txConflict = *itConflict->second;
             if (txConflict != tx)
             {
                 txiter conflictit = mapTx.find(txConflict.GetHash());
                 assert(conflictit != mapTx.end());
-                // if conflicting transaction was received after the transaction in question then remove conflicting tx
-                // otherwise the transaction is question is removed
-                // idea is to keep the oldest transaction in event of conflict
-                if(conflictit->GetTime() >= thisit->GetTime()){
-                    ClearPrioritisation(txConflict.GetHash());
-                    removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+                // if conflicting transaction was received before the transaction in question
+                // idea is to mine the oldest transaction in event of conflict
+                // upon block the conflict is removed
+                if(conflictit->GetTime() <= thisit->GetTime()){
+                    return false;
                 }
                 else {
-                    ClearPrioritisation(tx.GetHash());
-                    removeRecursive(tx, MemPoolRemovalReason::CONFLICT);
+                    return true;
                 }
-                bRemoved = true;
             }
         }
     }
-    return bRemoved;
+    return true;
 }
 
 /**
