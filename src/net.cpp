@@ -1448,7 +1448,12 @@ void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_s
         vpollfds.push_back(std::move(it.second));
     }
 
-    if (poll(vpollfds.data(), vpollfds.size(), SELECT_TIMEOUT_MILLISECONDS) < 0) return;
+    wakeupSelectNeeded = true;
+    int r = poll(vpollfds.data(), vpollfds.size(), SELECT_TIMEOUT_MILLISECONDS);
+    wakeupSelectNeeded = false;
+    if (r < 0) {
+        return;
+    }
 
     if (interruptNet) return;
 
