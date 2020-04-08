@@ -61,7 +61,7 @@
 #include <services/assetallocation.h>
 #include <algorithm> // std::unique
 int64_t nTPSTestingStartTime = 0;
-std::unordered_set<std::string> assetAllocationConflicts;
+std::unordered_set<COutPoint> assetAllocationConflicts;
 std::vector<CInv> vInvToSend;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 #if defined(NDEBUG)
@@ -659,8 +659,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 }
                 
                 if (fReplacementOptOut) {
-                    // if not RBF then allow first dbl-spend to be relayed, ZDAG by default isn't RBF enabled because it shouldn't be replaceable and because of checks below
-                    // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because zdag isn't RBF.
+                    // if not RBF then allow first double spend to be relayed, ZDAG by default isn't RBF enabled because it shouldn't be replaceable and because of checks below
+                    // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because ZDAG isn't compliant with RBF.
                     if(!args.m_test_accept && IsZTx){
                         // allow the first time this outpoint was found in conflict
                         auto it = assetAllocationConflicts.emplace(txin.prevout);
