@@ -30,6 +30,7 @@ FUZZ_TARGETS = \
   test/fuzz/chain \
   test/fuzz/checkqueue \
   test/fuzz/coins_deserialize \
+  test/fuzz/cuckoocache \
   test/fuzz/decode_tx \
   test/fuzz/descriptor_parse \
   test/fuzz/diskblockindex_deserialize \
@@ -443,6 +444,12 @@ test_fuzz_coins_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_coins_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_coins_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_coins_deserialize_SOURCES = test/fuzz/deserialize.cpp
+
+test_fuzz_cuckoocache_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_cuckoocache_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_cuckoocache_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_cuckoocache_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_cuckoocache_SOURCES = test/fuzz/cuckoocache.cpp
 
 test_fuzz_decode_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_decode_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
