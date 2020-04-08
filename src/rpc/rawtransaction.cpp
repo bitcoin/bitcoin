@@ -41,9 +41,7 @@
 #include <univalue.h>
 // SYSCOIN
 #include <services/assetconsensus.h>
-#ifdef ENABLE_WALLET
-extern AssetPrevTxMap mapAssetPrevTxSender;
-#endif
+
 /** Maximum fee rate for sendrawtransaction and testmempoolaccept.
  * By default, a transaction with a fee rate higher than this will be rejected
  * by the RPCs. This can be overridden with the maxfeerate argument.
@@ -872,16 +870,6 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }
-    #ifdef ENABLE_WALLET
-    ActorSet actors;
-    GetActorsFromSyscoinTx(tx, true, true, actors);
-    if(actors.size() == 1){
-        const std::string &sender = *actors.begin();
-        // find the last output which sends funds to the sender address as change
-        mapAssetPrevTxSender[sender] = COutPoint(tx->GetHash(), tx.get()->vout.size()-1);
-    }
-    #endif
-
     return tx->GetHash().GetHex();
 }
 

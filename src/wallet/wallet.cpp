@@ -1270,48 +1270,12 @@ CAmount CWallet::GetChange(const CTxOut& txout) const
         throw std::runtime_error(std::string(__func__) + ": value out of range");
     return (IsChange(txout) ? txout.nValue : 0);
 }
-bool CWallet::IsAssetMine(const CTransaction& tx, const isminefilter& filter) const {
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || IsAssetAllocationTx(tx.nVersion)){
-        CAssetAllocation assetallocation(tx);
-        if(!assetallocation.assetAllocationTuple.IsNull()){
-            if (!assetallocation.listSendingAllocationAmounts.empty()) {
-                for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
-                    if(IsMine(amountTuple.first.GetScriptForDestination()) & filter)
-                        return true;        
-                }
-            }
-        }
-    }
-    return false;
-}
-bool CWallet::IsAssetMine(const CTransaction& tx, const isminefilter& filter, std::vector<IsAssetMineSelection> &addresses) const {
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || IsAssetAllocationTx(tx.nVersion)){
-        CAssetAllocation assetallocation(tx);
-        if(!assetallocation.assetAllocationTuple.IsNull()){
-            if (!assetallocation.listSendingAllocationAmounts.empty()) {
-                for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
-                    CTxDestination destination;
-                    const isminefilter &isMineFilteredResult = IsMine(amountTuple.first.GetScriptForDestination(destination));
-                    if (isMineFilteredResult & filter){
-                        IsAssetMineSelection isMineSelection;
-                        isMineSelection.destination = destination;
-                        isMineSelection.amount = amountTuple.second;
-                        isMineSelection.minefilter = isMineFilteredResult;
-                        addresses.emplace_back(isMineSelection);
-                    }
-                }
-            }
-        }
-    }
-    return !addresses.empty();
-}
 bool CWallet::IsMine(const CTransaction& tx) const
 {
     for (const CTxOut& txout : tx.vout)
         if (IsMine(txout))
             return true;
-    // SYSCOIN
-    return IsAssetMine(tx, ISMINE_ALL);
+    return false;
 }
 
 bool CWallet::IsFromMe(const CTransaction& tx) const
@@ -1627,11 +1591,6 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
         // If we are receiving the output, add it as a "received" entry
         if (fIsMine & filter)
             listReceived.push_back(output);
-    }
-    // SYSCOIN
-    if(pwallet->IsAssetMine(*tx, filter)){
-        COutputEntry output = {CNoDestination(), nFee, 0};
-        listReceived.push_back(output);
     }
 }
 
