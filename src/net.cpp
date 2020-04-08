@@ -1437,11 +1437,11 @@ bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &s
 }
 
 #ifdef USE_POLL
-void CConnman::SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set)
+void CConnman::SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll)
 {
     std::set<SOCKET> recv_select_set, send_select_set, error_select_set;
     if (!GenerateSelectSet(recv_select_set, send_select_set, error_select_set)) {
-        interruptNet.sleep_for(std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS));
+        if (!fOnlyPoll) interruptNet.sleep_for(std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS));
         return;
     }
 
@@ -1469,7 +1469,7 @@ void CConnman::SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &se
     }
 
     wakeupSelectNeeded = true;
-    int r = poll(vpollfds.data(), vpollfds.size(), SELECT_TIMEOUT_MILLISECONDS);
+    int r = poll(vpollfds.data(), vpollfds.size(), fOnlyPoll ? 0 : SELECT_TIMEOUT_MILLISECONDS);
     wakeupSelectNeeded = false;
     if (r < 0) {
         return;
@@ -1485,7 +1485,7 @@ void CConnman::SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &se
 }
 #endif
 
-void CConnman::SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set)
+void CConnman::SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll)
 {
     std::set<SOCKET> recv_select_set, send_select_set, error_select_set;
     if (!GenerateSelectSet(recv_select_set, send_select_set, error_select_set)) {
@@ -1498,7 +1498,7 @@ void CConnman::SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &
     //
     struct timeval timeout;
     timeout.tv_sec  = 0;
-    timeout.tv_usec = SELECT_TIMEOUT_MILLISECONDS * 1000; // frequency to poll pnode->vSend
+    timeout.tv_usec = fOnlyPoll ? 0 : SELECT_TIMEOUT_MILLISECONDS * 1000; // frequency to poll pnode->vSend
 
     fd_set fdsetRecv;
     fd_set fdsetSend;
@@ -1560,16 +1560,16 @@ void CConnman::SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &
     }
 }
 
-void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set)
+void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll)
 {
     switch (socketEventsMode) {
 #ifdef USE_POLL
         case SOCKETEVENTS_POLL:
-            SocketEventsPoll(recv_set, send_set, error_set);
+            SocketEventsPoll(recv_set, send_set, error_set, fOnlyPoll);
             break;
 #endif
         case SOCKETEVENTS_SELECT:
-            SocketEventsSelect(recv_set, send_set, error_set);
+            SocketEventsSelect(recv_set, send_set, error_set, fOnlyPoll);
             break;
         default:
             assert(false);
@@ -1578,8 +1578,26 @@ void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_s
 
 void CConnman::SocketHandler()
 {
+    bool fOnlyPoll = false;
+    {
+        // check if we have work to do and thus should avoid waiting for events
+        LOCK2(cs_vNodes, cs_mapNodesWithDataToSend);
+        if (!mapReceivableNodes.empty()) {
+            fOnlyPoll = true;
+        } else if (!mapSendableNodes.empty() && !mapNodesWithDataToSend.empty()) {
+            // we must check if at least one of the nodes with pending messages is also sendable, as otherwise a single
+            // node would be able to make the network thread busy with polling
+            for (auto& p : mapNodesWithDataToSend) {
+                if (mapSendableNodes.count(p.first)) {
+                    fOnlyPoll = true;
+                    break;
+                }
+            }
+        }
+    }
+
     std::set<SOCKET> recv_set, send_set, error_set;
-    SocketEvents(recv_set, send_set, error_set);
+    SocketEvents(recv_set, send_set, error_set, fOnlyPoll);
 
 #ifdef USE_WAKEUP_PIPE
     // drain the wakeup pipe
