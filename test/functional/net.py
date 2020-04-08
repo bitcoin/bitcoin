@@ -23,6 +23,11 @@ class NetTest(BitcoinTestFramework):
         self.num_nodes = 2
 
     def run_test(self):
+        # Wait for one ping/pong to finish so that we can be sure that there is no chatter between nodes for some time
+        # Especially the exchange of messages like getheaders and friends causes test failures here
+        self.nodes[0].ping()
+        wait_until(lambda: all(['pingtime' in n for n in self.nodes[0].getpeerinfo()]))
+
         self._test_connection_count()
         self._test_getnettotals()
         self._test_getnetworkinginfo()
@@ -60,8 +65,8 @@ class NetTest(BitcoinTestFramework):
 
         peer_info_after_ping = self.nodes[0].getpeerinfo()
         for before, after in zip(peer_info, peer_info_after_ping):
-            assert_greater_than_or_equal(after['bytesrecv_per_msg']['pong'], before['bytesrecv_per_msg']['pong'] + 32)
-            assert_greater_than_or_equal(after['bytessent_per_msg']['ping'], before['bytessent_per_msg']['ping'] + 32)
+            assert_greater_than_or_equal(after['bytesrecv_per_msg'].get('pong', 0), before['bytesrecv_per_msg'].get('pong', 0) + 32)
+            assert_greater_than_or_equal(after['bytessent_per_msg'].get('ping', 0), before['bytessent_per_msg'].get('ping', 0) + 32)
 
     def _test_getnetworkinginfo(self):
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)

@@ -50,6 +50,7 @@
 #define DEFAULT_ALLOW_OPTIMISTIC_SEND true
 #else
 #define DEFAULT_ALLOW_OPTIMISTIC_SEND false
+#define USE_WAKEUP_PIPE
 #endif
 
 class CScheduler;
@@ -474,6 +475,12 @@ private:
     void ThreadOpenConnections(std::vector<std::string> connect);
     void ThreadMessageHandler();
     void AcceptConnection(const ListenSocket& hListenSocket);
+    void DisconnectNodes();
+    void NotifyNumConnectionsChanged();
+    void InactivityCheck(CNode *pnode);
+    bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+    void SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+    void SocketHandler();
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
     void ThreadOpenMasternodeConnections();
@@ -549,6 +556,7 @@ private:
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId;
+    unsigned int nPrevNodeCount;
 
     /** Services this instance offers */
     ServiceFlags nLocalServices;
@@ -575,7 +583,7 @@ private:
 
     CThreadInterrupt interruptNet;
 
-#ifndef WIN32
+#ifdef USE_WAKEUP_PIPE
     /** a pipe which is added to select() calls to wakeup before the timeout */
     int wakeupPipe[2]{-1,-1};
 #endif
