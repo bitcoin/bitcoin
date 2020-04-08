@@ -104,7 +104,7 @@ jobs:
             - libdb-dev
             - libevent-dev
       env: >-
-        RUN_CI_ON_HOST=true
+        DANGER_RUN_CI_ON_HOST=true
         CI_USE_APT_INSTALL=no
         FILE_ENV="./ci/test/00_setup_env_s390x_host.sh"
 
@@ -194,6 +194,6 @@ jobs:
           - ccache
           - zeromq
       env: >-
-        RUN_CI_ON_HOST=true
+        DANGER_RUN_CI_ON_HOST=true
         CI_USE_APT_INSTALL=no
         FILE_ENV="./ci/test/00_setup_env_mac_host.sh"

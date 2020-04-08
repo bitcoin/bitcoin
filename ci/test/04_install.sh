@@ -35,7 +35,7 @@ fi
 
 export P_CI_DIR="$PWD"
 
-if [ -z "$RUN_CI_ON_HOST" ]; then
+if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Creating $DOCKER_NAME_TAG container to run in"
   ${CI_RETRY_EXE} docker pull "$DOCKER_NAME_TAG"
 
@@ -91,7 +91,7 @@ export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
 
 DOCKER_EXEC mkdir -p "${BASE_SCRATCH_DIR}/sanitizer-output/"
 
-if [ -z "$RUN_CI_ON_HOST" ]; then
+if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Create $BASE_ROOT_DIR"
   DOCKER_EXEC rsync -a /ro_base/ $BASE_ROOT_DIR
 fi
