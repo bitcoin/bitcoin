@@ -352,13 +352,15 @@ class BitcoinTestFramework():
 
         for group in node_groups:
             sync_blocks(group)
-            sync_mempools(group)
+            sync_mempools(group, wait=0.1, wait_func=lambda: self.bump_mocktime(3, True))
 
     def disable_mocktime(self):
         self.mocktime = 0
 
-    def bump_mocktime(self, t):
+    def bump_mocktime(self, t, update_nodes=False):
         self.mocktime += t
+        if update_nodes:
+            set_node_times(self.nodes, self.mocktime)
 
     def set_cache_mocktime(self):
         # For backwared compatibility of the python scripts

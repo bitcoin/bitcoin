@@ -902,7 +902,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 {
     {
         LOCK(cs_main);
-        g_connman->RemoveAskFor(hash);
+        EraseObjectRequest(from, CInv(MSG_ISLOCK, hash));
     }
 
     CTransactionRef tx;
@@ -1367,7 +1367,7 @@ void CInstantSendManager::AskNodesForLockedTx(const uint256& txid)
                       txid.ToString(), pnode->GetId());
 
             CInv inv(MSG_TX, txid);
-            pnode->AskFor(inv);
+            RequestObject(pnode->GetId(), inv, GetTime<std::chrono::microseconds>(), true);
         }
     }
     for (CNode* pnode : nodesToAskFor) {
