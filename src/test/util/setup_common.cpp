@@ -159,6 +159,7 @@ TestingSetup::~TestingSetup()
     g_rpc_node = nullptr;
     m_node.connman.reset();
     m_node.banman.reset();
+    m_node.args = nullptr;
     m_node.mempool = nullptr;
     m_node.scheduler.reset();
     UnloadBlockIndex();
