@@ -57,7 +57,7 @@ class InstantSendTest(DashTestFramework):
         # wait for the transaction to propagate
         connected_nodes = self.nodes.copy()
         del connected_nodes[self.isolated_idx]
-        sync_mempools(connected_nodes)
+        sync_mempools(connected_nodes, wait=0.1, wait_func=lambda: self.bump_mocktime(3, True))
         for node in connected_nodes:
             self.wait_for_instantlock(is_id, node)
         # send doublespend transaction to isolated node
@@ -119,7 +119,7 @@ class InstantSendTest(DashTestFramework):
         receiver_addr = receiver.getnewaddress()
         is_id = sender.sendtoaddress(receiver_addr, 0.9)
         # wait for the transaction to propagate
-        sync_mempools(self.nodes)
+        sync_mempools(self.nodes, wait=0.1, wait_func=lambda: self.bump_mocktime(3, True))
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
         assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", isolated.getrawtransaction, dblspnd_txid)

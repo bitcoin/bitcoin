@@ -70,7 +70,7 @@ class WalletBackupTest(BitcoinTestFramework):
 
         # Have the miner (node3) mine a block.
         # Must sync mempools before mining.
-        sync_mempools(self.nodes)
+        sync_mempools(self.nodes, wait=0.1, wait_func=lambda: self.bump_mocktime(3, True))
         self.nodes[3].generate(1)
         sync_blocks(self.nodes)
 
