@@ -3,14 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <boost/test/unit_test.hpp>
-
 #include <consensus/validation.h>
 #include <primitives/block.h>
 #include <scheduler.h>
+#include <test/util/setup_common.h>
 #include <util/check.h>
 #include <validationinterface.h>
 
-BOOST_AUTO_TEST_SUITE(validationinterface_tests)
+BOOST_FIXTURE_TEST_SUITE(validationinterface_tests, TestingSetup)
 
 class TestInterface : public CValidationInterface
 {
@@ -43,9 +43,6 @@ public:
 BOOST_AUTO_TEST_CASE(unregister_all_during_call)
 {
     bool destroyed = false;
-
-    CScheduler scheduler;
-    GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
     RegisterSharedValidationInterface(std::make_shared<TestInterface>(
         [&] {
             // First call should decrements reference count 2 -> 1
