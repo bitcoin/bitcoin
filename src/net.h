@@ -79,9 +79,6 @@ static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 static const int MAX_OUTBOUND_CONNECTIONS = 8;
 /** Maximum number of addnode outgoing nodes */
 static const int MAX_ADDNODE_CONNECTIONS = 8;
-/** Maximum number if outgoing masternodes */
-static const int MAX_OUTBOUND_MASTERNODE_CONNECTIONS = 30;
-static const int MAX_OUTBOUND_MASTERNODE_CONNECTIONS_ON_MN = 250;
 /** Eviction protection time for incoming connections  */
 static const int INBOUND_EVICTION_PROTECTION_TIME = 1;
 /** -listen default */
@@ -558,7 +555,6 @@ private:
 
     std::unique_ptr<CSemaphore> semOutbound;
     std::unique_ptr<CSemaphore> semAddnode;
-    std::unique_ptr<CSemaphore> semMasternodeOutbound;
     int nMaxConnections;
     int nMaxOutbound;
     int nMaxAddnode;
@@ -823,7 +819,6 @@ public:
     // If 'true' this node will be disconnected after MNAUTH
     bool fMasternodeProbe;
     CSemaphoreGrant grantOutbound;
-    CSemaphoreGrant grantMasternodeOutbound;
     CCriticalSection cs_filter;
     std::unique_ptr<CBloomFilter> pfilter;
     std::atomic<int> nRefCount;
