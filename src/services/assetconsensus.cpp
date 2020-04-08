@@ -280,6 +280,8 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     return true;
 }
 bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const bool &bSanityCheck) {
+    if(nHeight < nUTXOAssetsBlock)
+        return true;
     AssetMap mapAssets;
     EthereumMintTxVec vecMintKeys;
     return CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, nTime, uint256(), bSanityCheck, mapAssets, vecMintKeys);
