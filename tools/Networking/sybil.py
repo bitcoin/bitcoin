@@ -11,6 +11,8 @@ from bitcoin.net import CAddress
 
 from teeceepee.tcp import TCPSocket
 from teeceepee.tcp_listener import TCPListener
+import fcntl
+import struct 
 
 
 
