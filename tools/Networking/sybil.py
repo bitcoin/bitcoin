@@ -169,9 +169,10 @@ def initialize_fake_connection(src_ip, dst_ip):
 	dst_port = victim_port
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
 
-	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST --destination {dst_ip} -j DROP')
 	print('Setting iptables')
-	print(terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {dst_port} -j DROP'))
+	print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST --destination {dst_ip} -j DROP'))
+	print(terminal('sudo iptables -L'))
+	#print(terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {dst_port} -j DROP'))
 
 
 	mac_address = get_mac_address(network_interface)
