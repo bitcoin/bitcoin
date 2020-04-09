@@ -38,9 +38,6 @@ cache:
     - $TRAVIS_BUILD_DIR/depends/sdk-sources
     - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
     - $TRAVIS_BUILD_DIR/releases/$HOST
-    # macOS
-    - $HOME/Library/Caches/Homebrew
-    - /usr/local/Homebrew
 before_cache:
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 stages:
@@ -90,6 +87,26 @@ jobs:
       env: >-
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
         QEMU_USER_CMD=""
+
+    - stage: test
+      name: 's390x native BE [GOAL: install] [bionic] [no depends, no GUI]'
+      arch: s390x
+      dist: bionic
+      addons:
+        apt:
+          packages:
+            - bsdmainutils
+            - libboost-filesystem-dev
+            - libboost-system-dev
+            - libboost-test-dev
+            - libboost-thread-dev
+            - libdb++-dev
+            - libdb-dev
+            - libevent-dev
+      env: >-
+        DANGER_RUN_CI_ON_HOST=true
+        CI_USE_APT_INSTALL=no
+        FILE_ENV="./ci/test/00_setup_env_s390x_host.sh"
 
 # s390 build was disabled temporarily because of disk space issues on the Travis VM
 #
@@ -158,6 +175,12 @@ jobs:
       # Xcode 11.3.1, macOS 10.14, SDK 10.15
       # https://docs.travis-ci.com/user/reference/osx/#macos-version
       osx_image: xcode11.3
+      cache:
+        directories:
+          - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
+          - $TRAVIS_BUILD_DIR/releases/$HOST
+          - $HOME/Library/Caches/Homebrew
+          - /usr/local/Homebrew
       addons:
         homebrew:
           packages:
@@ -171,4 +194,6 @@ jobs:
           - ccache
           - zeromq
       env: >-
+        DANGER_RUN_CI_ON_HOST=true
+        CI_USE_APT_INSTALL=no
         FILE_ENV="./ci/test/00_setup_env_mac_host.sh"
