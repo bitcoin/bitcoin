@@ -7,6 +7,7 @@
 export LC_ALL=C.UTF-8
 
 BITCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$DEPENDS_DIR/$HOST --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
+DOCKER_EXEC "command -v ccache > /dev/null && ccache --zero-stats"
 if [ -z "$NO_DEPENDS" ]; then
   DOCKER_EXEC ccache --max-size=$CCACHE_SIZE
 fi
@@ -43,4 +44,8 @@ trap 'DOCKER_EXEC "cat ${BASE_SCRATCH_DIR}/sanitizer-output/* 2> /dev/null"' ERR
 
 BEGIN_FOLD build
 DOCKER_EXEC make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && DOCKER_EXEC make $GOAL V=1 ; false )
+END_FOLD
+
+BEGIN_FOLD ccache_stats
+DOCKER_EXEC "command -v ccache > /dev/null && ccache --version | head -n 1 && ccache --show-stats"
 END_FOLD
