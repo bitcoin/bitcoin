@@ -172,8 +172,8 @@ def initialize_fake_connection(src_ip, dst_ip):
 	arp_spoof(attacker_ip, mac_address)
 
 	listener = TCPListener(fake_ip)
-    s = TCPSocket(listener)
-    s.connect(victim_ip, victim_port)
+	s = TCPSocket(listener)
+	s.connect(victim_ip, victim_port)
 
 	"""seq = random.randrange(0,2**16)
 	ip = IP(src=src_ip, dst=dst_ip)
