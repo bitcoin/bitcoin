@@ -99,7 +99,7 @@ All available commands can be listed with `"help"`, and information about a spec
   - [omni_getfeedistributions](#omni_getfeedistributions)
 - [Configuration](#configuration)
   - [omni_setautocommit](#omni_setautocommit)
-- [Depreciated API calls](#depreciated-api-calls)
+- [Deprecated API calls](#deprecated-api-calls)
 
 ---
 
@@ -799,7 +799,7 @@ Result:
 {
   "omnicoreversion_int" : xxxxxxx,      // (number) client version as integer
   "omnicoreversion" : "x.x.x.x-xxx",    // (string) client version
-  "mastercoreversion" : "x.x.x.x-xxx",  // (string) client version (DEPRECIATED)
+  "mastercoreversion" : "x.x.x.x-xxx",  // (string) client version (DEPRECATED)
   "bitcoincoreversion" : "x.x.x",       // (string) Bitcoin Core version
   "commitinfo" : "xxxxxxx",             // (string) build commit identifier
   "block" : nnnnnn,                     // (number) index of the last processed block
@@ -2742,9 +2742,9 @@ $ omnicore-cli "omni_setautocommit" false
 
 ---
 
-## Depreciated API calls
+## Deprecated API calls
 
-To ensure backwards compatibility, depreciated RPCs are kept for at least one major version.
+To ensure backwards compatibility, deprecated RPCs are kept for at least one major version.
 
 The following calls are replaced in Omni Core 0.0.10, and queries with the old command are forwarded.
 

@@ -75,7 +75,7 @@ private:
     // MetaDEx
     unsigned int desired_property;
     uint64_t desired_value;
-    unsigned char action; // depreciated
+    unsigned char action; // deprecated
 
     // TradeOffer
     uint64_t amount_desired;
