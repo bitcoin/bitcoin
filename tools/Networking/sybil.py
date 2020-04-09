@@ -180,8 +180,8 @@ def initialize_fake_connection(src_ip, dst_ip):
 	#print(terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {dst_port} -j DROP'))
 
 
-	mac_address = get_mac_address(network_interface)
-	arp_spoof(src_ip, mac_address)
+	#mac_address = get_mac_address(network_interface)
+	#arp_spoof(src_ip, mac_address)
 
 	#ip_alias(src_ip)
 	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP')
