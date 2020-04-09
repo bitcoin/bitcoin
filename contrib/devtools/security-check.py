@@ -206,6 +206,23 @@ def check_MACHO_NX(executable) -> bool:
         return False
     return True
 
+def check_MACHO_LAZY_BINDINGS(executable) -> bool:
+    '''
+    Check for no lazy bindings.
+    We don't use or check for MH_BINDATLOAD. See #18295.
+    '''
+    p = subprocess.Popen([OTOOL_CMD, '-l', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+
+    for line in stdout.splitlines():
+        tokens = line.split()
+        if 'lazy_bind_off' in tokens or 'lazy_bind_size' in tokens:
+            if tokens[1] != '0':
+                return False
+    return True
+
 CHECKS = {
 'ELF': [
     ('PIE', check_ELF_PIE),
@@ -221,7 +238,8 @@ CHECKS = {
 'MACHO': [
     ('PIE', check_MACHO_PIE),
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
-    ('NX', check_MACHO_NX)
+    ('NX', check_MACHO_NX),
+    ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS)
 ]
 }
 
