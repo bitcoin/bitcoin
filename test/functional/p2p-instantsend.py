@@ -85,6 +85,8 @@ class InstantSendTest(DashTestFramework):
         # TODO: mine these blocks on an isolated node
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
+        # make sure the above TX is on node0
+        self.sync_mempools([n for n in self.nodes if n is not isolated])
         self.nodes[0].generate(2)
         self.sync_all()
 
