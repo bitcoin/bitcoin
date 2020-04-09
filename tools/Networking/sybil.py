@@ -208,7 +208,7 @@ def initialize_fake_connection(src_ip, dst_ip):
 	s.send(version.to_bytes())
 	# Get verack packet
 	print('\n\n*** ')
-	print(s.recv(1924)) # Next message received must be <= 1924 bytes
+	print(s.recv(1924, timeout=60)) # Next message received must be <= 1924 bytes
 	# Send verack packet
 
 	verack = msg_verack()
@@ -216,7 +216,7 @@ def initialize_fake_connection(src_ip, dst_ip):
 	s.send(verack.to_bytes())
 	# Get verack packet
 	print('\n\n*** ')
-	print(s.recv(1024)) # Next message received must be <= 1024 bytes
+	print(s.recv(1024, timeout=60)) # Next message received must be <= 1024 bytes
 
 
 	spoof_IP_and_ports.append((src_ip, src_port))
