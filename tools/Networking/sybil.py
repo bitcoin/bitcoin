@@ -34,7 +34,7 @@ spoof_IP_and_ports = []
 spoof_IP_sockets = []
 
 iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
-"""
+
 def ip_alias(ip_address):
 	print(f'Setting up IP alias {ip_address}')
 	global alias_num
@@ -45,7 +45,7 @@ def ip_alias(ip_address):
 	#terminal(f'iptables -A INPUT -p tcp -s {ip_address} -j ACCEPT')
 	#terminal(f'iptables -A OUTPUT -p tcp -d  {ip_address} -j ACCEPT')
 	alias_num += 1
-"""
+
 def terminal(cmd):
 	# print('\n> '+cmd)
 	print(os.popen(cmd).read())
@@ -173,6 +173,7 @@ def initialize_fake_connection(src_ip, dst_ip):
 	mac_address = get_mac_address(network_interface)
 	arp_spoof(src_ip, mac_address)
 
+	#ip_alias(src_ip)
 	listener = TCPListener(src_ip)
 	s = TCPSocket(listener)
 	s.connect(dst_ip, dst_port)
