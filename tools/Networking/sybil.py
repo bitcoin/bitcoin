@@ -174,8 +174,8 @@ def initialize_fake_connection(src_ip, dst_ip):
 	print('Setting iptables')
 	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -d {dst_ip} -j DROP'))
 	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP'))
-	print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP'))
-	time.sleep(5)
+	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP'))
+	#time.sleep(5)
 	print(terminal('sudo iptables -L'))
 	#print(terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {dst_port} -j DROP'))
 
