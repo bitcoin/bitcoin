@@ -7,13 +7,13 @@ import readline
 
 
 datadir = '' # Virtual machine shared folder
-if os.path.exists('/media/sf_Bitcoin'):
+if os.path.exists('/media/sf_Bitcoin/blocks'):
 	datadir = ' -datadir=/media/sf_Bitcoin' # Virtual machine shared folder
-elif os.path.exists('/media/sf_BitcoinVictim'):
+elif os.path.exists('/media/sf_BitcoinVictim/blocks'):
 	datadir = ' -datadir=/media/sf_BitcoinVictim'
-elif os.path.exists('/media/sf_BitcoinAttacker'):
+elif os.path.exists('/media/sf_BitcoinAttacker/blocks'):
 	datadir = ' -datadir=/media/sf_BitcoinAttacker'
-elif os.path.exists('/media/sim/BITCOIN'):
+elif os.path.exists('/media/sim/BITCOIN/blocks'):
 	datadir = ' -datadir=/media/sim/BITCOIN'
 
 def bitcoin(cmd):
