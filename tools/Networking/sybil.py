@@ -56,7 +56,7 @@ def bitcoin(cmd):
 	return os.popen('./../../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd).read()
 
 def random_ip():
-	return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
+	return f'10.0.2.{str(random.randint(0, 255))}'
 	#return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
 
 def version_packet(src_ip, dst_ip, src_port, dst_port):
