@@ -71,7 +71,7 @@ jobs:
     - stage: lint
       name: 'lint'
       env:
-      cache: false
+      cache: pip
       language: python
       python: '3.5' # Oldest supported version according to doc/dependencies.md
       install:
