@@ -11,5 +11,7 @@ export PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libdbus-1-dev libhar
 export DEP_OPTS="NO_UPNP=1 DEBUG=1"
 # TODO: we have few rpcs that aren't covered by any test, re-enable the line below once it's fixed
 # export TEST_RUNNER_EXTRA="--coverage --extended --exclude feature_pruning,feature_dbcrash"  # Run extended tests so that coverage does not fail, but exclude the very slow dbcrash
+export RUN_UNIT_TESTS_SEQUENTIAL="true"
+export RUN_UNIT_TESTS="false"
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-zmq --enable-reduce-exports LDFLAGS=-static-libstdc++"

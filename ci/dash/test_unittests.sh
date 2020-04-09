@@ -11,7 +11,7 @@ set -e
 
 source ./ci/dash/matrix.sh
 
-if [ "$RUN_UNIT_TESTS" != "true" ]; then
+if [ "$RUN_UNIT_TESTS" != "true" ] && [ "$RUN_UNIT_TESTS_SEQUENTIAL" != "true" ]; then
   echo "Skipping unit tests"
   exit 0
 fi
@@ -29,5 +29,9 @@ if [ "$DIRECT_WINE_EXEC_TESTS" = "true" ]; then
   # Inside Docker, binfmt isn't working so we can't trust in make invoking windows binaries correctly
   wine ./src/test/test_dash.exe
 else
-  make $MAKEJOBS check VERBOSE=1
+  if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
+    ./src/test/test_dash --catch_system_errors=no -l test_suite
+  else
+      make $MAKEJOBS check VERBOSE=1
+  fi
 fi
