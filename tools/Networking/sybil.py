@@ -35,6 +35,7 @@ spoof_IP_sockets = []
 
 iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
 
+"""
 def ip_alias(ip_address):
 	print(f'Setting up IP alias {ip_address}')
 	global alias_num
@@ -45,6 +46,7 @@ def ip_alias(ip_address):
 	#terminal(f'iptables -A INPUT -p tcp -s {ip_address} -j ACCEPT')
 	#terminal(f'iptables -A OUTPUT -p tcp -d  {ip_address} -j ACCEPT')
 	alias_num += 1
+"""
 
 def terminal(cmd):
 	# print('\n> '+cmd)
@@ -171,7 +173,8 @@ def initialize_fake_connection(src_ip, dst_ip):
 
 	print('Setting iptables')
 	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -d {dst_ip} -j DROP'))
-	print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP'))
+	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP'))
+	print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP'))
 	time.sleep(5)
 	print(terminal('sudo iptables -L'))
 	#print(terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {dst_port} -j DROP'))
@@ -187,6 +190,8 @@ def initialize_fake_connection(src_ip, dst_ip):
 	s = TCPSocket(listener)
 	s.connect(dst_ip, dst_port)
 
+	print(f'Status: {s.state}')
+	print('Connection complete?')
 	"""seq = random.randrange(0,2**16)
 	ip = IP(src=src_ip, dst=dst_ip)
 	SYN = TCP(sport=src_port, dport=dst_port, flags='A', seq=seq)
