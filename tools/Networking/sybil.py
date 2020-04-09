@@ -205,7 +205,7 @@ def initialize_fake_connection(src_ip, dst_ip):
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
 	print(version)
 
-	s.send(version.to_bytes())
+	s.send(str(version.to_bytes()))
 	# Get verack packet
 	print('\n\n*** ')
 	print(s.recv(1924, timeout=60)) # Next message received must be <= 1924 bytes
@@ -213,7 +213,7 @@ def initialize_fake_connection(src_ip, dst_ip):
 
 	verack = msg_verack()
 	print(verack)
-	s.send(verack.to_bytes())
+	s.send(str(verack.to_bytes()))
 	# Get verack packet
 	print('\n\n*** ')
 	print(s.recv(1024, timeout=60)) # Next message received must be <= 1024 bytes
