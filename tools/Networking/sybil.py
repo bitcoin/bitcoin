@@ -146,12 +146,12 @@ def addr_packet(str_addrs):
 # Make web traffic go towards the fake IP
 def arp_spoof(fake_ip, mac_address):
 	try:
-		for _ in xrange(5):
+		for _ in range(5):
 			srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(psrc=fake_ip, hwsrc=mac_address), verbose=0, timeout=0.05)
 			time.sleep(0.05)
 	except socket.error:
 		# Are you sure you're running as root?
-		print 'ERROR: You need to run this script as root.'
+		print('Error: You need to run this script as root.')
 		sys.exit()
 
 def get_mac_address(ifname):
