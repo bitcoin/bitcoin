@@ -34,7 +34,7 @@ fi
 
 export P_CI_DIR="$PWD"
 
-if [ -z "$RUN_CI_ON_HOST" ]; then
+if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Creating $DOCKER_NAME_TAG container to run in"
   ${CI_RETRY_EXE} docker pull "$DOCKER_NAME_TAG"
 
@@ -65,7 +65,7 @@ fi
 if [[ $DOCKER_NAME_TAG == centos* ]]; then
   ${CI_RETRY_EXE} DOCKER_EXEC yum -y install epel-release
   ${CI_RETRY_EXE} DOCKER_EXEC yum -y install $DOCKER_PACKAGES $PACKAGES
-elif [ "$TRAVIS_OS_NAME" != "osx" ]; then
+elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
 fi
@@ -76,6 +76,7 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
 else
   DOCKER_EXEC free -m -h
   DOCKER_EXEC echo "Number of CPUs \(nproc\):" \$\(nproc\)
+  DOCKER_EXEC echo $(lscpu | grep Endian)
   DOCKER_EXEC echo "Free disk space:"
   DOCKER_EXEC df -h
 fi
@@ -89,7 +90,7 @@ export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
 
 DOCKER_EXEC mkdir -p "${BASE_SCRATCH_DIR}/sanitizer-output/"
 
-if [ -z "$RUN_CI_ON_HOST" ]; then
+if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Create $BASE_ROOT_DIR"
   DOCKER_EXEC rsync -a /ro_base/ $BASE_ROOT_DIR
 fi

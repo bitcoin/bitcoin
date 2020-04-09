@@ -37,7 +37,7 @@ task:
   timeout_in: 60m
   env:
     MAKEJOBS: "-j9"
-    RUN_CI_ON_HOST: "1"
+    DANGER_RUN_CI_ON_HOST: "1"
     CCACHE_SIZE: "200M"
     CCACHE_DIR: "/tmp/ccache_dir"
   ccache_cache:
