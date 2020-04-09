@@ -153,12 +153,12 @@ def initialize_fake_connection(src_ip, dst_ip):
 	#mac_address = get_mac_address(network_interface)
 	#arp_spoof(src_ip, mac_address)
 
-	print('Setting iptables')
+	#print('Setting iptables')
 	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -d {dst_ip} -j DROP'))
-	print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP'))
+	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP'))
 	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP'))
 	#time.sleep(5)
-	print(terminal('sudo iptables -L'))
+	#print(terminal('sudo iptables -L'))
 	#print(terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {dst_port} -j DROP'))
 
 
@@ -194,7 +194,7 @@ def initialize_fake_connection(src_ip, dst_ip):
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
 	print(version)
 
-	s.send(str(version.to_bytes()))
+	s.send(version.to_bytes())
 	# Get verack packet
 	print('\n\n*** ')
 	print(s.recv(1924, timeout=60)) # Next message received must be <= 1924 bytes
@@ -203,7 +203,7 @@ def initialize_fake_connection(src_ip, dst_ip):
 
 	verack = msg_verack()
 	print(verack)
-	s.send(str(verack.to_bytes()))
+	s.send(verack.to_bytes())
 	# Get verack packet
 	print('\n\n*** ')
 	print(s.recv(1024, timeout=60)) # Next message received must be <= 1024 bytes
