@@ -9,6 +9,8 @@ import bitcoin
 from bitcoin.messages import *
 from bitcoin.net import CAddress
 
+import fcntl
+import struct 
 
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
 eclipse_packet_drop_rate = 0
