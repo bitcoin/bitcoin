@@ -374,8 +374,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
     }
 
             RPCHelpMan{"sendtoaddress",
-                // SYSCOIN
-                "\nSend an amount to a given address. Note: Outputs in addresses associated to Assets will not be selected. To send money from an address with Assets please use sendfrom." +
+                "\nSend an amount to a given address." +
                     HelpRequiringPassphrase(pwallet) + "\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to send to."},
