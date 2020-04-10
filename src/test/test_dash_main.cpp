@@ -7,6 +7,8 @@
 #include <net.h>
 #include <stacktraces.h>
 
+#include <memory>
+
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_monitor.hpp>
 

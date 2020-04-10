@@ -28,6 +28,7 @@
 #include <privatesend/privatesend.h>
 #include <evo/deterministicmns.h>
 
+#include <memory>
 #ifdef WIN32
 #include <string.h>
 #else

@@ -17,7 +17,7 @@ from test_framework.util import *
 
 banscore = 10
 
-class CLazyNode(NodeConnCB):
+class CLazyNode(P2PInterface):
     def __init__(self):
         super().__init__()
         self.unexpected_msg = False

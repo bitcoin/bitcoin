@@ -17,10 +17,11 @@ from collections import defaultdict
 from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.mininode import (
     CInv,
-    NodeConnCB,
+    P2PInterface,
     mininode_lock,
     msg_block,
     msg_getdata,
+    NODE_NETWORK,
     network_thread_join,
     network_thread_start,
 )
@@ -31,15 +32,15 @@ from test_framework.util import (
     wait_until,
 )
 
-# NodeConnCB is a class containing callbacks to be executed when a P2P
-# message is received from the node-under-test. Subclass NodeConnCB and
+# P2PInterface is a class containing callbacks to be executed when a P2P
+# message is received from the node-under-test. Subclass P2PInterface and
 # override the on_*() methods if you need custom behaviour.
-class BaseNode(NodeConnCB):
+class BaseNode(P2PInterface):
     def __init__(self):
-        """Initialize the NodeConnCB
+        """Initialize the P2PInterface
 
         Used to inialize custom properties for the Node that aren't
-        included by default in the base class. Be aware that the NodeConnCB
+        included by default in the base class. Be aware that the P2PInterface
         base class already stores a counter for each P2P message type and the
         last received message of each type, which should be sufficient for the
         needs of most tests.
@@ -175,7 +176,7 @@ class ExampleTest(BitcoinTestFramework):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.solve()
             block_message = msg_block(block)
-            # Send message is used to send a P2P message to the node over our NodeConn connection
+            # Send message is used to send a P2P message to the node over our P2PInterface
             self.nodes[0].p2p.send_message(block_message)
             self.tip = block.sha256
             blocks.append(self.tip)
@@ -210,12 +211,12 @@ class ExampleTest(BitcoinTestFramework):
         self.nodes[2].p2p.send_message(getdata_request)
 
         # wait_until() will loop until a predicate condition is met. Use it to test properties of the
-        # NodeConnCB objects.
+        # P2PInterface objects.
         wait_until(lambda: sorted(blocks) == sorted(list(self.nodes[2].p2p.block_receive_map.keys())), timeout=5, lock=mininode_lock)
 
         self.log.info("Check that each block was received only once")
-        # The network thread uses a global lock on data access to the NodeConn objects when sending and receiving
-        # messages. The test thread should acquire the global lock before accessing any NodeConn data to avoid locking
+        # The network thread uses a global lock on data access to the P2PConnection objects when sending and receiving
+        # messages. The test thread should acquire the global lock before accessing any P2PConnection data to avoid locking
         # and synchronization issues. Note wait_until() acquires this global lock when testing the predicate.
         with mininode_lock:
             for block in self.nodes[2].p2p.block_receive_map.values():

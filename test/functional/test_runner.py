@@ -342,9 +342,9 @@ def run_tests(*, test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_c
         # Populate cache
         try:
             subprocess.check_output([tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
-        except Exception as e:
-            print(e.output)
-            raise e
+        except subprocess.CalledProcessError as e:
+            sys.stdout.buffer.write(e.output)
+            raise
 
     #Run Tests
     job_queue = TestHandler(
