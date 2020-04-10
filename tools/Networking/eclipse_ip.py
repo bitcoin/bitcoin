@@ -59,7 +59,7 @@ def ip_alias(ip_address):
 	return interface
 
 def random_ip():
-	return f'10.0.4.4'#{str(random.randint(0, 255))}'
+	return f'10.0.2.40'#{str(random.randint(0, 255))}'
 	#return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
 
 def version_packet(src_ip, dst_ip, src_port, dst_port):
