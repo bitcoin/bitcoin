@@ -69,7 +69,7 @@ def ip_alias(ip_address):
 	return interface
 
 def random_ip():
-	return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
+	return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
 	#ip = broadcast_address
 	#old_ip = ''
 	#while(old_ip != ip):
