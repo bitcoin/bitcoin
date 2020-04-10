@@ -14,10 +14,7 @@ from test_framework.messages import (
     msg_filteradd,
     msg_filterclear,
 )
-from test_framework.mininode import (
-    P2PInterface,
-    mininode_lock,
-)
+from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 
 
@@ -69,18 +66,15 @@ class FilterTest(BitcoinTestFramework):
         filter_address = self.nodes[0].decodescript(filter_node.watch_script_pubkey)['addresses'][0]
 
         self.log.info('Check that we receive merkleblock and tx if the filter matches a tx in a block')
-        filter_node.merkleblock_received = False
         block_hash = self.nodes[0].generatetoaddress(1, filter_address)[0]
         txid = self.nodes[0].getblock(block_hash)['tx'][0]
+        filter_node.wait_for_merkleblock(int(block_hash, 16))
         filter_node.wait_for_tx(txid)
-        assert filter_node.merkleblock_received
 
         self.log.info('Check that we only receive a merkleblock if the filter does not match a tx in a block')
-        with mininode_lock:
-            filter_node.last_message.pop("merkleblock", None)
         filter_node.tx_received = False
-        self.nodes[0].generatetoaddress(1, self.nodes[0].getnewaddress())
-        filter_node.wait_for_merkleblock()
+        block_hash = self.nodes[0].generatetoaddress(1, self.nodes[0].getnewaddress())[0]
+        filter_node.wait_for_merkleblock(int(block_hash, 16))
         assert not filter_node.tx_received
 
         self.log.info('Check that we not receive a tx if the filter does not match a mempool tx')
