@@ -91,6 +91,9 @@ endif
 if BUILD_BITCOIN_TX
   bin_PROGRAMS += bitcoin-tx
 endif
+if BUILD_BITCOIN_ASMAP
+  bin_PROGRAMS += bitcoin-asmap
+endif
 if ENABLE_WALLET
 if BUILD_BITCOIN_WALLET
   bin_PROGRAMS += bitcoin-wallet
@@ -610,6 +613,19 @@ bitcoin_tx_LDADD = \
   $(LIBSECP256K1)
 
 bitcoin_tx_LDADD += $(BOOST_LIBS)
+#
+
+# bitcoin-asmap binary #
+bitcoin_asmap_SOURCES = bitcoin-asmap.cpp
+bitcoin_asmap_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+bitcoin_asmap_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+bitcoin_asmap_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+if TARGET_WINDOWS
+bitcoin_asmap_SOURCES += bitcoin-asmap-res.rc
+endif
+
+bitcoin_asmap_LDADD = $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(BOOST_LIBS)
 #
 
 # bitcoin-wallet binary #

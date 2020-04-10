@@ -19,6 +19,7 @@ BITCOIN_GUI_NAME=bitcoin-qt
 BITCOIN_CLI_NAME=bitcoin-cli
 BITCOIN_TX_NAME=bitcoin-tx
 BITCOIN_WALLET_TOOL_NAME=bitcoin-wallet
+BITCOIN_ASMAP_NAME=bitcoin-asmap
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 AC_ARG_VAR(ARFLAGS, [Flags for the archiver, defaults to <cr> if not set])
@@ -467,7 +468,7 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build bitcoin-cli bitcoin-tx bitcoin-wallet (default=yes)])],
+  [build bitcoin-cli bitcoin-tx bitcoin-wallet bitcoin-asmap (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
@@ -488,6 +489,12 @@ AC_ARG_ENABLE([util-wallet],
   [build bitcoin-wallet])],
   [build_bitcoin_wallet=$enableval],
   [build_bitcoin_wallet=$build_bitcoin_utils])
+
+AC_ARG_ENABLE([util-asmap],
+  [AS_HELP_STRING([--enable-util-asmap],
+  [build bitcoin-asmap])],
+  [build_bitcoin_asmap=$enableval],
+  [build_bitcoin_asmap=$build_bitcoin_utils])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
@@ -1081,6 +1088,7 @@ if test "x$enable_fuzz" = "xyes"; then
   build_bitcoin_cli=no
   build_bitcoin_tx=no
   build_bitcoin_wallet=no
+  build_bitcoin_asmap=no
   build_bitcoind=no
   build_bitcoin_libs=no
   bitcoin_enable_qt=no
@@ -1385,6 +1393,10 @@ AC_MSG_CHECKING([whether to build bitcoin-wallet])
 AM_CONDITIONAL([BUILD_BITCOIN_WALLET], [test x$build_bitcoin_wallet = xyes])
 AC_MSG_RESULT($build_bitcoin_wallet)
 
+AC_MSG_CHECKING([whether to build bitcoin-asmap])
+AM_CONDITIONAL([BUILD_BITCOIN_ASMAP], [test x$build_bitcoin_asmap = xyes])
+AC_MSG_RESULT($build_bitcoin_asmap)
+
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test x$build_bitcoin_libs = xyes])
 if test x$build_bitcoin_libs = xyes; then
@@ -1508,7 +1520,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests = xnononononononono; then
+if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_asmap$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests = xnononononononnoono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
@@ -1557,6 +1569,7 @@ AC_SUBST(BITCOIN_DAEMON_NAME)
 AC_SUBST(BITCOIN_GUI_NAME)
 AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
+AC_SUBST(BITCOIN_ASMAP_NAME)
 AC_SUBST(BITCOIN_WALLET_TOOL_NAME)
 
 AC_SUBST(RELDFLAGS)
