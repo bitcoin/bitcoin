@@ -15,6 +15,7 @@ import subprocess
 import time
 
 from .authproxy import JSONRPCException
+from .messages import MY_SUBVERSION
 from .util import (
     assert_equal,
     delete_cookie_file,
@@ -222,6 +223,14 @@ class TestNode():
         for p in self.p2ps:
             p.peer_disconnect()
         del self.p2ps[:]
+
+        # wait for p2p connections to disappear from getpeerinfo()
+        def check_peers():
+            for p in self.getpeerinfo():
+                if p['subver'] == MY_SUBVERSION.decode():
+                    return False
+            return True
+        wait_until(check_peers, timeout=5)
 
 class TestNodeCLIAttr:
     def __init__(self, cli, command):
