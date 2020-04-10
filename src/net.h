@@ -797,8 +797,8 @@ public:
     std::vector<CAddress> vAddrToSend;
     const std::unique_ptr<CRollingBloomFilter> m_addr_known;
     bool fGetAddr{false};
-    int64_t nNextAddrSend GUARDED_BY(cs_sendProcessing){0};
-    int64_t nNextLocalAddrSend GUARDED_BY(cs_sendProcessing){0};
+    std::chrono::microseconds m_next_addr_send GUARDED_BY(cs_sendProcessing){0};
+    std::chrono::microseconds m_next_local_addr_send GUARDED_BY(cs_sendProcessing){0};
 
     bool IsAddrRelayPeer() const { return m_addr_known != nullptr; }
 
