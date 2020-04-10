@@ -230,8 +230,7 @@ def cleanup_iptables():
 		os.remove(iptables_file_path)
 
 def cleanup_ipaliases():
-	for alias in spoof_IP_interface:
-		interface, ip = alias
+	for interface, ip in spoof_IP_interface:
 		print(f'Cleaning up IP alias {ip} on {interface}')
 		terminal(f'sudo ifconfig {interface} {ip} down')
 
@@ -268,7 +267,7 @@ if __name__ == '__main__':
 			initialize_fake_connection(src_ip = random_ip(), dst_ip = victim_ip)
 		except ConnectionRefusedError:
 			print('Connection was refused. The victim\'s node must not be running.')
-	for interface in spoof_IP_interface:
+	for interface, ip in spoof_IP_interface:
 		try:
 			start_new_thread(sniff, (), {
 				'iface':interface,
