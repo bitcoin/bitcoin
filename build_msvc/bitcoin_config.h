@@ -12,16 +12,16 @@
 #define CLIENT_VERSION_BUILD 0
 
 /* Version is release */
-#define CLIENT_VERSION_IS_RELEASE false
+#define CLIENT_VERSION_IS_RELEASE true
 
 /* Major version */
 #define CLIENT_VERSION_MAJOR 0
 
 /* Minor version */
-#define CLIENT_VERSION_MINOR 19
+#define CLIENT_VERSION_MINOR 20
 
 /* Build revision */
-#define CLIENT_VERSION_REVISION 99
+#define CLIENT_VERSION_REVISION 0
 
 /* Copyright holder(s) before %s replacement */
 #define COPYRIGHT_HOLDERS "The %s developers"
