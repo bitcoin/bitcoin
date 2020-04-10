@@ -108,8 +108,8 @@ def initialize_fake_connection(src_ip, dst_ip):
 	dst_port = victim_port
 	print(f'Spoofing with IP ({src_ip} : {src_port}) to IP ({dst_ip} : {dst_port})...')
 
-	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP')
-	terminal(f'iptables -t raw -A PREROUTING -p tcp -s {src_ip} -j DROP')
+	terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP')
+	#terminal(f'iptables -t raw -A PREROUTING -p tcp -s {src_ip} -j DROP')
 
 	spoof_interface = ip_alias(src_ip)
 	spoof_IP_interface.append((spoof_interface, src_ip))
