@@ -79,80 +79,6 @@ UniValue convertaddress(const JSONRPCRequest& request)
     return ret;	
 }
 
-unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
-{
-    UniValue paramsUTXO(UniValue::VARR);
-    UniValue utxoParams(UniValue::VARR);
-    utxoParams.push_back("addr(" + strAddressFrom + ")");
-    paramsUTXO.push_back("start");
-    paramsUTXO.push_back(utxoParams);
-    JSONRPCRequest request;
-    request.params = paramsUTXO;
-    UniValue resUTXOs = scantxoutset(request);
-    UniValue utxoArray(UniValue::VARR);
-    if (resUTXOs.isObject()) {
-        const UniValue& resUtxoUnspents = find_value(resUTXOs.get_obj(), "unspents");
-        if (!resUtxoUnspents.isArray())
-            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "No unspent outputs found in addresses provided");
-        utxoArray = resUtxoUnspents.get_array();
-    }   
-    else
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "No unspent outputs found in addresses provided");
-        
-    unsigned int count = 0;
-    {
-        LOCK(mempool.cs);
-        for (unsigned int i = 0; i < utxoArray.size(); i++)
-        {
-            const UniValue& utxoObj = utxoArray[i].get_obj();
-            const uint256& txid = uint256S(find_value(utxoObj, "txid").get_str());
-            const uint32_t& nOut = find_value(utxoObj, "vout").get_uint();
-
-            const COutPoint &outPointToCheck = COutPoint(txid, nOut);
-            if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
-                continue;
-            if (outpoint.IsNull())
-                outpoint = outPointToCheck;
-            count++;
-        }
-    }
-    return count;
-}
-UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
-{
-    if (precision < 0 || precision > 8)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-    bool sign = amount < 0;
-    int64_t n_abs = (sign ? -amount : amount);
-    int64_t quotient = n_abs;
-    int64_t divByAmount = 1;
-    int64_t remainder = 0;
-    string strPrecision = "0";
-    if (precision > 0) {
-        divByAmount = pow(10, precision);
-        quotient = n_abs / divByAmount;
-        remainder = n_abs % divByAmount;
-        strPrecision = itostr(precision);
-    }
-
-    return UniValue(UniValue::VNUM,
-        strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
-}
-CAmount AssetAmountFromValue(UniValue& value, int precision) {
-    if(precision < 0 || precision > 8)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-    if (!value.isNum() && !value.isStr())
-        throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
-    if (value.isStr() && value.get_str() == "-1") {
-        value.setInt((int64_t)(MAX_ASSET / ((int)pow(10, precision))));
-    }
-    CAmount amount;
-    if (!ParseFixedPoint(value.getValStr(), precision, &amount))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    if (amount > 0 && !AssetRange(amount))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
-    return amount;
-}
 UniValue tpstestinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 0 != params.size())
@@ -314,11 +240,7 @@ UniValue assetallocationbalances(const JSONRPCRequest& request) {
     for(size_t i =0;i<headerArray.size();i++){
         const std::string &strAddressFrom = headerArray[i].get_str();
        
-        UniValue oAssetAllocation(UniValue::VOBJ);
-        const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
-        CAssetCoinInfo txPos;
-        if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
-            continue;
+
 
         oRes.__pushKV(strAddressFrom, ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision));
     }
@@ -353,11 +275,6 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
     const int &nAsset = params[0].get_uint();
     const std::string &strAddressFrom = params[1].get_str();
     UniValue oAssetAllocation(UniValue::VOBJ);
-    const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
-    CAssetCoinInfo txPos;
-    if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos)){
-        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from assetallocation DB");
-    }
 
 
 	CAsset theAsset;

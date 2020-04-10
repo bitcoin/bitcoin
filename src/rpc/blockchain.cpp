@@ -2202,6 +2202,11 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             unspent.pushKV("desc", descriptors[txo.scriptPubKey]);
             unspent.pushKV("amount", ValueFromAmount(txo.nValue));
             unspent.pushKV("height", (int32_t)coin.nHeight);
+            // SYSCOIN
+            if(!coin.assetInfo.IsNull()) {
+                unspent.pushKV("asset_guid", coin.assetInfo.nAsset);
+                unspent.pushKV("asset_amount", ValueFromAmount(coin.assetInfo.nValue));
+            }
 
             unspents.push_back(unspent);
         }

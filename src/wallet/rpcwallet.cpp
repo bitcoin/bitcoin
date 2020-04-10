@@ -2859,9 +2859,12 @@ static UniValue listunspent(const JSONRPCRequest& request)
                     {"query_options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "JSON with query options",
                         {
                             {"minimumAmount", RPCArg::Type::AMOUNT, /* default */ "0", "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
+                            {"minimumAmountAsset", RPCArg::Type::AMOUNT, /* default */ "0", "Minimum asset value of each UTXO"},
                             {"maximumAmount", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
+                            {"maximumAmountAsset", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Maximum asset value of each UTXO"},
                             {"maximumCount", RPCArg::Type::NUM, /* default */ "unlimited", "Maximum number of UTXOs"},
                             {"minimumSumAmount", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
+                            {"minimumSumAmountAsset", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Minimum sum asset value of all UTXOs"},
                         },
                         "query_options"},
                 },
@@ -2935,6 +2938,10 @@ static UniValue listunspent(const JSONRPCRequest& request)
     CAmount nMinimumAmount = 0;
     CAmount nMaximumAmount = MAX_MONEY;
     CAmount nMinimumSumAmount = MAX_MONEY;
+    // SYSCOIN
+    CAmount nMinimumAmountAsset = 0;
+    CAmount nMaximumAmountAsset = MAX_ASSET;
+    CAmount nMinimumSumAmountAsset = MAX_ASSET;
     uint64_t nMaximumCount = 0;
 
     if (!request.params[4].isNull()) {
@@ -2951,6 +2958,15 @@ static UniValue listunspent(const JSONRPCRequest& request)
 
         if (options.exists("maximumCount"))
             nMaximumCount = options["maximumCount"].get_int64();
+        // SYSCOIN
+        if (options.exists("minimumAmountAsset"))
+            nMinimumAmountAsset = AmountFromValue(options["minimumAmountAsset"]);
+
+        if (options.exists("maximumAmountAsset"))
+            nMaximumAmountAsset = AmountFromValue(options["maximumAmountAsset"]);
+
+        if (options.exists("minimumSumAmountAsset"))
+            nMinimumSumAmountAsset = AmountFromValue(options["minimumSumAmountAsset"]);
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -2966,7 +2982,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
         cctl.m_max_depth = nMaxDepth;
         auto locked_chain = pwallet->chain().lock();
         LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(*locked_chain, vecOutputs, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
+        pwallet->AvailableCoins(*locked_chain, vecOutputs, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, nMaximumCount);
     }
 
     LOCK(pwallet->cs_wallet);

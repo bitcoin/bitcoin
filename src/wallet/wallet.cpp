@@ -1213,7 +1213,8 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
-    return IsMine(txout.scriptPubKey);
+    // SYSCOIN
+    return txout.assetInfo.IsNull() && IsMine(txout.scriptPubKey);
 }
 
 isminetype CWallet::IsMine(const CTxDestination& dest) const
@@ -2089,12 +2090,13 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     return balance;
 }
 // SYSCOIN
-void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<COutput>& vCoins, bool fOnlySafe, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t nMaximumCount, const bool bIncludeLocked) const
+void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<COutput>& vCoins, bool fOnlySafe, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const CAmount& nMinimumAmountAsset, const CAmount& nMaximumAmountAsset, const CAmount& nMinimumSumAmountAsset, const uint64_t nMaximumCount, const bool bIncludeLocked) const
 {
     AssertLockHeld(cs_wallet);
 
     vCoins.clear();
-    CAmount nTotal = 0;
+    nTotal = 0;
+    nTotalAsset = 0;
     // Either the WALLET_FLAG_AVOID_REUSE flag is not set (in which case we always allow), or we default to avoiding, and only in the case where
     // a coin control object is provided, and has the avoid address reuse flag set to false, do we allow already used addresses
     bool allow_used_addresses = !IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) || (coinControl && !coinControl->m_avoid_address_reuse);
@@ -2167,6 +2169,8 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             if (wtx.tx->vout[i].nValue < nMinimumAmount || wtx.tx->vout[i].nValue > nMaximumAmount)
                 continue;
+            if (wtx.tx->vout[i].assetInfo.nValue < nMinimumAmountAsset || wtx.tx->vout[i].assetInfo.nValue > nMaximumAmountAsset)
+                continue;
 
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(entry.first, i)))
                 continue;
@@ -2200,8 +2204,14 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
                 if (nTotal >= nMinimumSumAmount) {
                     return;
                 }
-            }
+                // SYSCOIN
+                nTotalAsset += wtx.tx->vout[i].assetInfo.nValue;
 
+                if (nTotalAsset >= nMinimumSumAmountAsset) {
+                    return;
+                }
+            }
+          
             // Checks the maximum number of UTXO's.
             if (nMaximumCount > 0 && vCoins.size() >= nMaximumCount) {
                 return;
@@ -2267,15 +2277,19 @@ const CTxOut& CWallet::FindNonChangeParentOutput(const CTransaction& tx, int out
     }
     return ptx->vout[n];
 }
-
-bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups,
-                                 std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const
+// SYSCOIN
+bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinInfo& nTargetValueAsset, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups,
+                                 std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, CAmount& nValueRetAsset, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const
 {
     setCoinsRet.clear();
     nValueRet = 0;
 
     std::vector<OutputGroup> utxo_pool;
-    if (coin_selection_params.use_bnb) {
+    // SYSCOIN
+    std::vector<OutputGroup> utxo_pool_asset;
+    // SYSCOIN bnb and asset spending not compliant with bnb since assets bnb spending would create waste for gas, and gas bnb would create waste for assets
+    // maybe research this to see if we can add extra constraint to do both asset bnb and gas bnb together
+    if (coin_selection_params.use_bnb && nTargetValueAsset.IsNull()) {
         // Get long term estimate
         FeeCalculation feeCalc;
         CCoinControl temp;
@@ -2317,20 +2331,34 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
         return SelectCoinsBnB(utxo_pool, nTargetValue, cost_of_change, setCoinsRet, nValueRet, not_input_fees);
     } else {
         // Filter by the min conf specs and add to utxo_pool
+        const bool& bAsset = !nTargetValueAsset.IsNull();
         for (const OutputGroup& group : groups) {
             if (!group.EligibleForSpending(eligibility_filter)) continue;
+            // SYSCOIN for sys spends we don't attach asset inputs
+            if(bAsset && !group.effective_value_asset.IsNull()) continue;
             utxo_pool.push_back(group);
         }
+        // SYSCOIN
+        for (const OutputGroup& group : groups) {
+            if (!group.EligibleForSpending(eligibility_filter)) continue;
+            // SYSCOIN for asset spends we only look at asset inputs for the target asset
+            if(bAsset && group.effective_value_asset.nAsset != nTargetValueAsset.nAsset) continue;
+            utxo_pool_asset.push_back(group);
+        }
         bnb_used = false;
-        return KnapsackSolver(nTargetValue, utxo_pool, setCoinsRet, nValueRet);
+        // SYSCOIN
+        bool bAssetSolver = KnapsackSolver(nTargetValueAsset, utxo_pool_asset, setCoinsRet, nValueRetAsset)
+        bool bBaseSysSolver = KnapsackSolver(nTargetValue, utxo_pool, setCoinsRet, nValueRet);
+        return bBaseSysSolver && bAssetSolver;
     }
 }
 
-bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const
+bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CAssetCoinInfo& nTargetValueAsset, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, CAmount& nValueRetAsset, const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const
 {
     std::vector<COutput> vCoins(vAvailableCoins);
     CAmount value_to_select = nTargetValue;
-
+    // SYSCOIN
+    CAmount value_to_select_asset = nTargetValueAsset;
     // Default to bnb was not used. If we use it, we set it later
     bnb_used = false;
 
@@ -2342,14 +2370,19 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             if (!out.fSpendable)
                  continue;
             nValueRet += out.tx->tx->vout[out.i].nValue;
+            // SYSCOIN
+            nValueRetAsset += out.tx->tx->vout[out.i].assetInfo.nValue;
             setCoinsRet.insert(out.GetInputCoin());
         }
-        return (nValueRet >= nTargetValue);
+        // SYSCOIN
+        return (nValueRet >= nTargetValue && nValueRetAsset >= nTargetValueAsset);
     }
 
     // calculate value from preset inputs and store them
     std::set<CInputCoin> setPresetCoins;
     CAmount nValueFromPresetInputs = 0;
+    // SYSCOIN
+    CAmount nValueFromPresetInputsAsset = 0;
 
     std::vector<COutPoint> vPresetInputs;
     coin_control.ListSelected(vPresetInputs);
@@ -2366,6 +2399,8 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             // Just to calculate the marginal byte size
             CInputCoin coin(wtx.tx, outpoint.n, wtx.GetSpendSize(outpoint.n, false));
             nValueFromPresetInputs += coin.txout.nValue;
+            // SYSCOIN
+            nValueFromPresetInputsAsset += coin.txout.assetInfo.nValue;
             if (coin.m_input_bytes <= 0) {
                 return false; // Not solvable, can't estimate size for fee
             }
@@ -2374,6 +2409,8 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 value_to_select -= coin.effective_value;
             } else {
                 value_to_select -= coin.txout.nValue;
+                // SYSCOIN
+                value_to_select_asset -= coin.txout.assetInfo.nValue;
             }
             setPresetCoins.insert(coin);
         } else {
@@ -2406,22 +2443,23 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     size_t max_ancestors = (size_t)std::max<int64_t>(1, limit_ancestor_count);
     size_t max_descendants = (size_t)std::max<int64_t>(1, limit_descendant_count);
     bool fRejectLongChains = gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
-
-    bool res = value_to_select <= 0 ||
-        SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 6, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
-        SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 1, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, 2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+    // SYSCOIN
+    bool res = (value_to_select <= 0 && value_to_select_asset <= 0) ||
+        SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(1, 6, 0), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used) ||
+        SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(1, 1, 0), groups, setCoinsRet, nValueRet, nValueRetAsset,coin_selection_params, bnb_used) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, 1, 2), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used));
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     util::insert(setCoinsRet, setPresetCoins);
 
     // add preset inputs to the total value selected
     nValueRet += nValueFromPresetInputs;
-
+    // SYSCOIN
+    nValueRetAsset += nValueFromPresetInputsAsset;
     return res;
 }
 
@@ -2736,6 +2774,8 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                          int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign)
 {
     CAmount nValue = 0;
+    CAssetCoinInfo nValueAsset;
+    uint32_t nAsset = 0;
     const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
     ReserveDestination reservedest(this, change_type);
     int nChangePosRequest = nChangePosInOut;
@@ -2748,7 +2788,17 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
             return false;
         }
         nValue += recipient.nAmount;
-
+        // SYSCOIN
+        if(!recipient.assetInfo.IsNull()) {
+            if (nValueAsset.nValue < 0 || recipient.assetInfo.nValue < 0)
+            {
+                strFailReason = _("Transaction amounts must not be negative").translated;
+                return false;
+            }
+            nValueAsset.nAsset = recipient.assetInfo.nAsset;
+            nValueAsset.nValue += recipient.assetInfo.nValue;
+            nAsset = nValueAsset.nAsset;    
+        }
         if (recipient.fSubtractFeeFromAmount)
             nSubtractFeeFromAmount++;
     }
@@ -2771,7 +2821,8 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
         LOCK(cs_wallet);
         {
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(*locked_chain, vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
+            // SYSCOIN
+            AvailableCoins(*locked_chain, vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 1, MAX_ASSET, MAX_ASSET, 0);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
 
             // Create change script that will be used if we need change
@@ -2816,6 +2867,8 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
             nFeeRet = 0;
             bool pick_new_inputs = true;
             CAmount nValueIn = 0;
+            // SYSCOIN
+            CAmount nValueInAsset = 0;
 
             // BnB selector is the only selector used when this is true.
             // That should only happen on the first pass through the loop.
@@ -2830,6 +2883,8 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 bool fFirst = true;
 
                 CAmount nValueToSelect = nValue;
+                // SYSCOIN
+                CAssetCoinInfo nValueToSelectAsset = nValueAsset;
                 if (nSubtractFeeFromAmount == 0)
                     nValueToSelect += nFeeRet;
 
@@ -2877,6 +2932,8 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 bool bnb_used = false;
                 if (pick_new_inputs) {
                     nValueIn = 0;
+                    // SYSCOIN
+                    nValueInAsset = 0;
                     setCoins.clear();
                     int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, this);
                     // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
@@ -2887,7 +2944,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                         coin_selection_params.change_spend_size = (size_t)change_spend_size;
                     }
                     coin_selection_params.effective_fee = nFeeRateNeeded;
-                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used))
+                    if (!SelectCoins(vAvailableCoins, nValueToSelect, nValueToSelectAsset, setCoins, nValueIn, nValueInAsset, acoin_control, coin_selection_params, bnb_used))
                     {
                         // If BnB was used, it was the first pass. No longer the first pass and continue loop with knapsack.
                         if (bnb_used) {
@@ -2904,16 +2961,27 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 }
 
                 const CAmount nChange = nValueIn - nValueToSelect;
+                // SYSCOIN
+                CAssetCoinInfo nChangeAsset = CAssetCoinInfo(nAsset, nValueInAsset - nValueToSelectAsset.nValue);
                 if (nChange > 0)
                 {
                     // Fill a vout to ourself
                     CTxOut newTxOut(nChange, scriptChange);
+                    // SYSCOIN
+                    if(nAsset != 0) {
+                        newTxOut.assetInfo = nChangeAsset;
+                    }
 
                     // Never create dust outputs; if we would, just
                     // add the dust to the fee.
                     // The nChange when BnB is used is always going to go to fees.
                     if (IsDust(newTxOut, discard_rate) || bnb_used)
                     {
+                        // SYSCOIN
+                        if(nAsset != 0) {
+                            strFailReason = _("Insufficient funds").translated;
+                            return false;
+                        }
                         nChangePosInOut = -1;
                         nFeeRet += nChange;
                     }
@@ -2935,6 +3003,10 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     }
                 } else {
                     nChangePosInOut = -1;
+                    if(nChangeAsset.nValue > 0) {
+                        strFailReason = _("Change index out of range").translated;
+                        return false;
+                    }
                 }
 
                 // Dummy fill vin for maximum size estimation
