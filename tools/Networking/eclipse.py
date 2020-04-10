@@ -69,13 +69,13 @@ def ip_alias(ip_address):
 	return interface
 
 def random_ip():
-	return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
-	#ip = broadcast_address
-	#old_ip = ''
-	#while(old_ip != ip):
-	#	old_ip = ip
-	#	ip = ip.replace('255', str(random.randint(0, 255)), 1)
-	#return ip
+	#return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
+	ip = broadcast_address
+	old_ip = ''
+	while(old_ip != ip):
+		old_ip = ip
+		ip = ip.replace('255', str(random.randint(0, 255)), 1)
+	return ip
 
 def version_packet(src_ip, dst_ip, src_port, dst_port):
 	msg = msg_version()
