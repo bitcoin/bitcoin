@@ -23,12 +23,14 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <stacktraces.h>
+#include <util/url.h>
 
 #include <functional>
 #include <optional>
 #include <stdio.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+UrlDecodeFn* const URL_DECODE = urlDecode;
 
 //////////////////////////////////////////////////////////////////////////////
 //
