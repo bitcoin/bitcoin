@@ -176,7 +176,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "spork", 1, "value" },
     { "voteraw", 1, "tx_index" },
     { "voteraw", 5, "time" },
-    { "sendfrom", 2, "amount" },
     { "convertaddresswallet", 2, "rescan" },
     { "assetallocationsend", 0, "asset_guid" },
     { "assetallocationsend", 3, "amount" },
