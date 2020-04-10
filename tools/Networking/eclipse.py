@@ -64,17 +64,18 @@ def ip_alias(ip_address):
 	global alias_num
 	print(f'Setting up IP alias {ip_address}')
 	interface = f'{network_interface}:{alias_num}'
-	terminal(f'sudo ifconfig {interface} {ip_address} netmask 255.255.255.0 up')
+	terminal(f'sudo ifconfig {interface} {ip_address} netmask 255.255.255.0 broadcast {broadcast_address} up')
 	alias_num += 1
 	return interface
 
 def random_ip():
-	ip = broadcast_address
-	old_ip = ''
-	while(old_ip != ip):
-		old_ip = ip
-		ip = ip.replace('255', str(random.randint(0, 255)), 1)
-	return ip
+	return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
+	#ip = broadcast_address
+	#old_ip = ''
+	#while(old_ip != ip):
+	#	old_ip = ip
+	#	ip = ip.replace('255', str(random.randint(0, 255)), 1)
+	#return ip
 
 def version_packet(src_ip, dst_ip, src_port, dst_port):
 	msg = msg_version()
