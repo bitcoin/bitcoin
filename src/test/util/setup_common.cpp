@@ -27,12 +27,14 @@
 #include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <util/url.h>
 #include <validation.h>
 #include <validationinterface.h>
 
 #include <functional>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+UrlDecodeFn* const URL_DECODE = nullptr;
 
 FastRandomContext g_insecure_rand_ctx;
 /** Random context to get unique temp data dirs. Separate from g_insecure_rand_ctx, which can be seeded from a const env var */
