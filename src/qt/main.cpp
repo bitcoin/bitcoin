@@ -5,6 +5,7 @@
 #include <qt/bitcoin.h>
 
 #include <util/translation.h>
+#include <util/url.h>
 
 #include <QCoreApplication>
 
@@ -15,5 +16,6 @@
 extern const std::function<std::string(const char*)> G_TRANSLATION_FUN = [](const char* psz) {
     return QCoreApplication::translate("bitcoin-core", psz).toStdString();
 };
+UrlDecodeFn* const URL_DECODE = urlDecode;
 
 int main(int argc, char* argv[]) { return GuiMain(argc, argv); }
