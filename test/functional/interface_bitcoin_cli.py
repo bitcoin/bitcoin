@@ -6,6 +6,12 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_process_error, get_auth_cookie
 
+# The block reward of coinbaseoutput.nValue (50) BTC/block matures after
+# COINBASE_MATURITY (100) blocks. Therefore, after mining 101 blocks we expect
+# node 0 to have a balance of (BLOCKS - COINBASE_MATURITY) * 50 BTC/block.
+BLOCKS = 101
+BALANCE = (BLOCKS - 100) * 50
+
 class TestBitcoinCli(BitcoinTestFramework):
 
     def set_test_params(self):
@@ -17,6 +23,7 @@ class TestBitcoinCli(BitcoinTestFramework):
 
     def run_test(self):
         """Main test logic"""
+        self.nodes[0].generate(BLOCKS)
 
         cli_response = self.nodes[0].cli("-version").send_cli()
         assert "{} RPC client version".format(self.config['environment']['PACKAGE_NAME']) in cli_response
@@ -35,7 +42,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         user, password = get_auth_cookie(self.nodes[0].datadir, self.chain)
 
         self.log.info("Test -stdinrpcpass option")
-        assert_equal(0, self.nodes[0].cli('-rpcuser=%s' % user, '-stdinrpcpass', input=password).getblockcount())
+        assert_equal(BLOCKS, self.nodes[0].cli('-rpcuser=%s' % user, '-stdinrpcpass', input=password).getblockcount())
         assert_raises_process_error(1, "Incorrect rpcuser or rpcpassword", self.nodes[0].cli('-rpcuser=%s' % user, '-stdinrpcpass', input="foo").echo)
 
         self.log.info("Test -stdin and -stdinrpcpass")
@@ -51,10 +58,8 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.log.info("Make sure that -getinfo with arguments fails")
         assert_raises_process_error(1, "-getinfo takes no arguments", self.nodes[0].cli('-getinfo').help)
 
-        self.log.info("Compare responses from `bitcoin-cli -getinfo` and the RPCs data is retrieved from.")
+        self.log.info("Test that -getinfo returns the expected network and blockchain info")
         cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
-        if self.is_wallet_compiled():
-            wallet_info = self.nodes[0].getwalletinfo()
         network_info = self.nodes[0].getnetworkinfo()
         blockchain_info = self.nodes[0].getblockchaininfo()
 
@@ -66,11 +71,15 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(cli_get_info['difficulty'], blockchain_info['difficulty'])
         assert_equal(cli_get_info['chain'], blockchain_info['chain'])
         if self.is_wallet_compiled():
-            assert_equal(cli_get_info['balance'], wallet_info['balance'])
+            self.log.info("Test that -getinfo returns the expected wallet info")
+            assert_equal(cli_get_info['balance'], BALANCE)
+            wallet_info = self.nodes[0].getwalletinfo()
             assert_equal(cli_get_info['keypoolsize'], wallet_info['keypoolsize'])
             assert_equal(cli_get_info['paytxfee'], wallet_info['paytxfee'])
             assert_equal(cli_get_info['relayfee'], network_info['relayfee'])
             # unlocked_until is not tested because the wallet is not encrypted
+        else:
+            self.log.info("*** Wallet not compiled; -getinfo wallet tests skipped")
 
 
 if __name__ == '__main__':
