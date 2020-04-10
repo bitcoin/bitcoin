@@ -16,7 +16,7 @@ import struct
 eclipse_packet_drop_rate = 0
 
 
-num_identities = 1
+num_identities = 10
 
 victim_ip = '10.0.2.4'
 victim_port = 8333
@@ -59,8 +59,7 @@ def ip_alias(ip_address):
 	return interface
 
 def random_ip():
-	return f'10.0.2.40'#{str(random.randint(0, 255))}'
-	#return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
+	return f'10.0.2.{str(random.randint(0, 255))}'
 
 def version_packet(src_ip, dst_ip, src_port, dst_port):
 	msg = msg_version()
