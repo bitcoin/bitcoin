@@ -51,9 +51,9 @@ network_interface = get_interface()
 def ip_alias(ip_address):
 	global alias_num
 	print(f'Setting up IP alias {ip_address}')
-	alias_num += 1
 	interface = f'{network_interface}:{alias_num}'
-	terminal(f'sudo ifconfig {interface} {ip_address} up')
+	terminal(f'sudo ifconfig {interface} {ip_address} netmask 255.255.255.0 up')
+	alias_num += 1
 	return interface
 
 def random_ip():
@@ -101,13 +101,12 @@ def initialize_fake_connection(src_ip, dst_ip):
 	#if not hasattr(s,'SO_BINDTODEVICE') :
 	#	socket.SO_BINDTODEVICE = 25
 
-	print(f'Setting socket network interface to "{spoof_interface}"...')
-	#s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
-	s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(spoof_interface + '\0').encode('utf-8'))
+	print(f'Setting socket network interface to "{network_interface}"...')
+	s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
 	
 	#s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-	print(f'Binding ({src_ip} : {src_port}) to socket...')
+	print(f'Binding socket to ({src_ip} : {src_port})...')
 	s.bind((src_ip, src_port))
 
 	#for a in dir(socket):
