@@ -119,10 +119,10 @@ def initialize_fake_connection(src_ip, dst_ip):
 	print(terminal(f'ifconfig {spoof_interface}').rstrip() + '\n')
 
 	print('Setting up iptables configurations')
-	terminal(f'sudo iptables -I OUTPUT -s {src_ip} -p tcp --tcp-flags ALL RST,ACK -j DROP')
+	#terminal(f'sudo iptables -I OUTPUT -s {src_ip} -p tcp --tcp-flags ALL RST,ACK -j DROP')
 	#terminal(f'sudo iptables -I OUTPUT -s {src_ip} -p tcp --tcp-flags ALL FIN,ACK -j DROP')
 	#terminal(f'sudo iptables -I OUTPUT -s {src_ip} -p tcp --tcp-flags ALL FIN -j DROP')
-	#terminal(f'sudo iptables -I OUTPUT -s {src_ip} -p tcp --tcp-flags ALL RST -j DROP')
+	terminal(f'sudo iptables -I OUTPUT -s {src_ip} -p tcp --tcp-flags ALL RST -j DROP')
 
 
 	#print('ARP poisoning victim...')
