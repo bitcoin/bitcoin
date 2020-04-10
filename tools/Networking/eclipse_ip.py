@@ -97,7 +97,9 @@ def initialize_fake_connection(src_ip, dst_ip):
 
 	spoof_interface = ip_alias(src_ip)
 	spoof_IP_interface.append((spoof_interface, src_ip))
-	print(f'Successfully set up IP alias on interface {spoof_interface} (see ifconfig)')
+	print(f'Successfully set up IP alias on interface {spoof_interface}')
+	print('Resulting ifconfig interface:')
+	print(terminal(f'ifconfig {spoof_interface}').rstrip() + '\n')
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	
@@ -105,19 +107,19 @@ def initialize_fake_connection(src_ip, dst_ip):
 	#	socket.SO_BINDTODEVICE = 25
 
 	print(f'Setting socket network interface to "{spoof_interface}"...')
-	#s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(spoof_interface[:16] + '\0').encode('utf-8'))
-	s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+	s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
+	#s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	
 	print(f'Binding ({src_ip} : {src_port}) to socket...')
 	s.bind((src_ip, src_port))
 
-	for a in dir(socket):
-		try:
-			print(f'{a}() = {getattr(socket,a)()}')
-		except:
-			pass
+	#for a in dir(socket):
+	#	try:
+	#		print(f'{a}() = {getattr(socket,a)()}')
+	#	except:
+	#		pass
 	
-	print(f'Connecting socket to ({dst_ip} : {dst_port})...')
+	print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
 	s.connect((dst_ip, dst_port))
 
 	# Send version packet
