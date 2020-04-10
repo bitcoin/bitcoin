@@ -203,4 +203,7 @@ private:
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
+/** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
+void RegenerateCommitments(CBlock& block);
+
 #endif // BITCOIN_MINER_H
