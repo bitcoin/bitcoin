@@ -926,3 +926,20 @@ std::vector<std::pair<CSubNet, uint32_t>> DecodeASMap(const std::vector<bool>& a
 
     return ret;
 }
+
+std::vector<bool> EncodeASMap(const std::vector<std::pair<CSubNet, uint32_t>>& mappings)
+{
+    std::vector<std::pair<std::vector<bool>, uint32_t>> bitmap;
+
+    std::vector<bool> bits(128);
+    for (const auto& item : mappings) {
+        auto cidr = item.first.GetCIDR();
+        if (cidr.second < 0) return {};
+        for (int bit = 0; bit < cidr.second; ++bit) {
+            bits[bit] = (cidr.first.GetByte((127 - bit) >> 3) >> ((127 - bit) & 7)) & 1;
+        }
+        bitmap.emplace_back(std::vector<bool>(bits.begin(), bits.begin() + cidr.second), item.second);
+    }
+
+    return EncodeASMap(std::move(bitmap), true);
+}

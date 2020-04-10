@@ -190,4 +190,6 @@ bool SanityCheckASMap(const std::vector<bool>& asmap);
 
 std::vector<std::pair<CSubNet, uint32_t>> DecodeASMap(const std::vector<bool>& asmap);
 
+std::vector<bool> EncodeASMap(const std::vector<std::pair<CSubNet, uint32_t>>& mappings);
+
 #endif // BITCOIN_NETADDRESS_H
