@@ -16,7 +16,7 @@ import struct
 eclipse_packet_drop_rate = 0
 
 
-num_identities = 10
+num_identities = 1
 
 victim_ip = '10.0.2.4'
 victim_port = 8333
