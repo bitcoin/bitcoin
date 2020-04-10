@@ -990,7 +990,7 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
-        <location filename="../walletcontroller.cpp" line="+209"/>
+        <location filename="../walletcontroller.cpp" line="+217"/>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4115,7 +4115,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
 <context>
     <name>WalletController</name>
     <message>
-        <location filename="../walletcontroller.cpp" line="-211"/>
+        <location filename="../walletcontroller.cpp" line="-219"/>
         <source>Close wallet</source>
         <translation type="unfinished"></translation>
     </message>
