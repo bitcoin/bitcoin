@@ -1078,13 +1078,11 @@ UniValue gettxout(const JSONRPCRequest& request)
 
 static UniValue verifychain(const JSONRPCRequest& request)
 {
-    int nCheckLevel = gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL);
-    int nCheckDepth = gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS);
             RPCHelpMan{"verifychain",
                 "\nVerifies blockchain database.\n",
                 {
-                    {"checklevel", RPCArg::Type::NUM, /* default */ strprintf("%d, range=0-4", nCheckLevel), "How thorough the block verification is."},
-                    {"nblocks", RPCArg::Type::NUM, /* default */ strprintf("%d, 0=all", nCheckDepth), "The number of blocks to check."},
+                    {"checklevel", RPCArg::Type::NUM, /* default */ strprintf("%d, range=0-4", DEFAULT_CHECKLEVEL), "How thorough the block verification is."},
+                    {"nblocks", RPCArg::Type::NUM, /* default */ strprintf("%d, 0=all", DEFAULT_CHECKBLOCKS), "The number of blocks to check."},
                 },
                 RPCResult{
                     RPCResult::Type::BOOL, "", "Verified or not"},
@@ -1094,15 +1092,12 @@ static UniValue verifychain(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
+    const int check_level(request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].get_int());
+    const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].get_int()};
+
     LOCK(cs_main);
 
-    if (!request.params[0].isNull())
-        nCheckLevel = request.params[0].get_int();
-    if (!request.params[1].isNull())
-        nCheckDepth = request.params[1].get_int();
-
-    return CVerifyDB().VerifyDB(
-        Params(), &::ChainstateActive().CoinsTip(), nCheckLevel, nCheckDepth);
+    return CVerifyDB().VerifyDB(Params(), &::ChainstateActive().CoinsTip(), check_level, check_depth);
 }
 
 static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name, int height) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
