@@ -842,30 +842,34 @@ static inline int NetmaskBits(uint8_t x)
     }
 }
 
-std::string CSubNet::ToString() const
+std::pair<CNetAddr, int> CSubNet::GetCIDR() const
 {
     /* Parse binary 1{n}0{N-n} to see if mask can be represented as /n */
     int cidr = 0;
-    bool valid_cidr = true;
-    int n = network.IsIPv4() ? 12 : 0;
-    for (; n < 16 && netmask[n] == 0xff; ++n)
-        cidr += 8;
+    int n = 0;
+    for (; n < 16 && netmask[n] == 0xff; ++n) cidr += 8;
     if (n < 16) {
         int bits = NetmaskBits(netmask[n]);
-        if (bits < 0)
-            valid_cidr = false;
-        else
-            cidr += bits;
+        if (bits < 0) return {network, -1};
+        cidr += bits;
         ++n;
     }
-    for (; n < 16 && valid_cidr; ++n)
-        if (netmask[n] != 0x00)
-            valid_cidr = false;
+    for (; n < 16; ++n) {
+        if (netmask[n] != 0x00) return {network, -1};
+    }
+    return {network, cidr};
+}
+
+std::string CSubNet::ToString() const
+{
+    auto cidr = GetCIDR();
+    cidr.second -= 96 * network.IsIPv4();
+    bool valid_cidr = cidr.second >= 0;
 
     /* Format output */
     std::string strNetmask;
     if (valid_cidr) {
-        strNetmask = strprintf("%u", cidr);
+        strNetmask = strprintf("%u", cidr.second);
     } else {
         if (network.IsIPv4())
             strNetmask = strprintf("%u.%u.%u.%u", netmask[12], netmask[13], netmask[14], netmask[15]);
