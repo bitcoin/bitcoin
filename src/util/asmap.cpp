@@ -183,3 +183,63 @@ bool SanityCheckASMap(const std::vector<bool>& asmap, int bits)
     }
     return false; // Reached EOF without RETURN instruction
 }
+
+std::vector<std::pair<std::vector<bool>, uint32_t>> DecodeASMap(const std::vector<bool>& asmap, int bits)
+{
+    std::vector<std::pair<std::vector<bool>, uint32_t>> ret;
+
+    const std::vector<bool>::const_iterator begin = asmap.begin(), endpos = asmap.end();
+    std::vector<bool>::const_iterator pos = begin;
+
+    std::vector<bool> branch_bits; //!< The prefix currently assumed in the input
+    std::vector<bool> branch_jumps; //!< For each bit in branch_bits, whether it's due to a JUMP (true) or a MATCH (false)
+    branch_bits.reserve(bits);
+    branch_jumps.reserve(bits);
+
+    while (pos != endpos) {
+        Instruction opcode = DecodeType(pos, endpos);
+        if (opcode == Instruction::RETURN || opcode == Instruction::DEFAULT) {
+            uint32_t asn = DecodeASN(pos, endpos);
+            if (asn == INVALID) return {};
+            ret.emplace_back(branch_bits, asn);
+            if (opcode == Instruction::RETURN) {
+                while (true) {
+                    // Drop MATCH bits
+                    while (branch_jumps.size() && !branch_jumps.back()) {
+                        branch_bits.pop_back();
+                        branch_jumps.pop_back();
+                    }
+                    if (branch_jumps.empty()) return ret; // Done
+                    // Process JUMP branch
+                    if (branch_bits.back()) {
+                        // We were on the 1 side, we're done with this JUMP
+                        branch_bits.pop_back();
+                        branch_jumps.pop_back();
+                    } else {
+                        // We were on the 0 side of a JUMP, switch to the 1 side
+                        branch_bits.back() = true;
+                        break;
+                    }
+                }
+            }
+        } else if (opcode == Instruction::JUMP) {
+            uint32_t jump = DecodeJump(pos, endpos);
+            if (jump == INVALID) return {};
+            if (branch_bits.size() == (size_t)bits) return {}; // Cannot jump when all bits are already consumed
+            branch_bits.push_back(false); // A new 0 bit is assumed in what follows
+            branch_jumps.push_back(true); // ... and it's due to a JUMP
+        } else if (opcode == Instruction::MATCH) {
+            uint32_t match = DecodeMatch(pos, endpos);
+            if (match == INVALID) return {};
+            int matchlen = CountBits(match) - 1;
+            if (branch_bits.size() + matchlen > (size_t)bits) return {}; // Comsuming more bits than exist in the input
+            for (int bitpos = 0; bitpos < matchlen; ++bitpos) {
+                branch_bits.push_back((match >> (matchlen - 1 - bitpos)) & 1);
+                branch_jumps.push_back(false); // These bits added are MATCHes, not JUMPs
+            }
+        } else {
+            return {};
+        }
+    }
+    return {}; // Unexpected EOF
+}

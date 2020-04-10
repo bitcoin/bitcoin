@@ -188,4 +188,6 @@ class CService : public CNetAddr
 
 bool SanityCheckASMap(const std::vector<bool>& asmap);
 
+std::vector<std::pair<CSubNet, uint32_t>> DecodeASMap(const std::vector<bool>& asmap);
+
 #endif // BITCOIN_NETADDRESS_H

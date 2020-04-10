@@ -903,3 +903,26 @@ bool SanityCheckASMap(const std::vector<bool>& asmap)
 {
     return SanityCheckASMap(asmap, 128); // For IP address lookups, the input is 128 bits
 }
+
+std::vector<std::pair<CSubNet, uint32_t>> DecodeASMap(const std::vector<bool>& asmap)
+{
+    std::vector<std::pair<CSubNet, uint32_t>> ret;
+
+    for (const auto& item : DecodeASMap(asmap, 128)) {
+        unsigned char ip[16] = {0};
+        for (size_t pos = 0; pos < item.first.size(); ++pos) {
+            ip[pos >> 3] |= (int(item.first[pos]) << ((127 - pos) & 7));
+        }
+        CNetAddr addr;
+        addr.SetRaw(NET_IPV6, ip);
+        if (addr.IsIPv4()) {
+            if (item.first.size() >= 96) {
+                ret.emplace_back(CSubNet(addr, item.first.size() - 96), item.second);
+            }
+        } else {
+            ret.emplace_back(CSubNet(addr, item.first.size()), item.second);
+        }
+    }
+
+    return ret;
+}
