@@ -84,9 +84,16 @@ enum BindFlags {
     BF_WHITELIST    = (1U << 2),
 };
 
+#ifndef USE_WAKEUP_PIPE
 // The set of sockets cannot be modified while waiting
 // The sleep time needs to be small to avoid new sockets stalling
 static const uint64_t SELECT_TIMEOUT_MILLISECONDS = 50;
+#else
+// select() is woken up through the wakeup pipe whenever a new node is added, so we can wait much longer.
+// We are however still somewhat limited in how long we can sleep as there is periodic work (cleanup) to be done in
+// the socket handler thread
+static const uint64_t SELECT_TIMEOUT_MILLISECONDS = 1000;
+#endif
 
 const static std::string NET_MESSAGE_COMMAND_OTHER = "*other*";
 
