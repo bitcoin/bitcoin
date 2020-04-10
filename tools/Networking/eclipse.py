@@ -294,6 +294,9 @@ def packet_received(packet):
 					#new_packet = ip/tcp/packet[TCP].payload
 					#rand_socket.send(bytes(new_packet))
 
+					payload = packet[TCP].payload
+					rand_socket.send(bytes(payload))
+
 				except Exception as e:
 					print('Relaying message FAILED')
 					print(e)
