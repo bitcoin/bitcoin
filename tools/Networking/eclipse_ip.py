@@ -39,9 +39,7 @@ def bitcoin(cmd):
 # Get the network interface
 def get_interface():
 	m = re.search(r'\n_gateway +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+)\n', terminal('arp'))
-	
 	if m != None:
-		print(m.group(1))
 		return m.group(1)
 	else:
 		print('ERROR: Network interface couldn\'t be found.')
@@ -104,9 +102,11 @@ def initialize_fake_connection(src_ip, dst_ip):
 	#	socket.SO_BINDTODEVICE = 25
 
 	print(f'Setting socket network interface to "{spoof_interface}"...')
-	s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
-	#s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+	#s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
+	s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(spoof_interface + '\0').encode('utf-8'))
 	
+	#s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
 	print(f'Binding ({src_ip} : {src_port}) to socket...')
 	s.bind((src_ip, src_port))
 
