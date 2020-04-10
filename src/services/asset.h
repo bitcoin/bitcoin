@@ -48,13 +48,12 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry, const CWallet* const pwallet, const isminefilter* filter_ismine);
 #endif
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
-bool IsOutpointMature(const COutPoint& outpoint);
 bool FlushSyscoinDBs();
 COutPoint FindAssetOwnerOutPoint(const CCoinsViewCache &inputs, const CTransaction& tx);
 bool IsAssetAllocationTx(const int &nVersion);
 bool IsZdagTx(const int &nVersion);
 bool IsSyscoinTx(const int &nVersion);
-bool IsSyscoinWithInputTx(const int &nVersion);
+bool IsSyscoinWithNoInputTx(const int &nVersion);
 bool IsAssetTx(const int &nVersion);
 bool IsSyscoinMintTx(const int &nVersion);
 CAmount getaddressbalance(const std::string& strAddress);
@@ -87,35 +86,31 @@ public:
     unsigned char nUpdateFlags;
     CAsset() {
         SetNull();
-        nAsset = 0;
     }
     explicit CAsset(const CTransaction &tx) {
         SetNull();
-        nAsset = 0;
         UnserializeFromTx(tx);
     }
     inline void ClearAsset()
     {
         vchPubData.clear();
         vchContract.clear();
-        outpoint.SetNull();
+        assetAllocation.SetNull();
 
     }
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {		
-        READWRITE(vchPubData);
-        READWRITE(outpoint);
-        READWRITE(nAsset);
-        READWRITE(strSymbol);
-        READWRITE(nBalance);
-        READWRITE(nTotalSupply);
-        READWRITE(nMaxSupply);
-        READWRITE(nBurnBalance);
-        READWRITE(nUpdateFlags);
-        READWRITE(nPrecision);
-        READWRITE(vchContract);
+    SERIALIZE_METHODS(CAsset, obj) {
+        READWRITE(obj.assetAllocation);
+        READWRITE(obj.vchPubData);
+        READWRITE(obj.strSymbol);
+        READWRITE(obj.nBalance);
+        READWRITE(obj.nTotalSupply);
+        READWRITE(obj.nMaxSupply);
+        READWRITE(obj.nBurnBalance);
+        READWRITE(obj.nUpdateFlags);
+        READWRITE(obj.nPrecision);
+        READWRITE(obj.vchContract);
     }
+
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
         a.nAsset == b.nAsset

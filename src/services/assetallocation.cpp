@@ -41,36 +41,6 @@ string assetAllocationFromTx(const int &nVersion) {
         return "<unknown assetallocation op>";
     }
 }
-bool FillAssetInfo(CAssetAllocation& assetAllocation) {
-    // fill in vecAssetInfo with lookup against tx output index which is used by coins and txmempool to iterate asset info based on output index
-    assetAllocation.vecAssetInfo.reserve(tx.vout.size());
-    std::unordered_set<int8_t> seenIndex;
-    size_t nTotalAssetOutputs = 0;
-    for(const auto &allocationMapEntry: assetAllocation.listReceivingAssets){
-        const uint32_t & nAsset = allocationMapEntry.first;
-        const std::map<uint8_t, CAmount> & mapAssets = allocationMapEntry.second;
-        nTotalAssetOutputs += mapAssets.size();
-        for (auto assetIt: mapAssets) {
-            // if output index is out of range its invalid
-            if(assetIt->first >= tx.vout.size()){
-                SetNull();
-                return false;
-            }
-            CAssetCoinInfo assetInfo(nAsset, assetIt->second);
-            assetAllocation.vecAssetInfo[assetIt->first] = std::move(assetInfo));
-            auto itInserted = seenIndex.emplace(assetIt->first);
-            // ensure indexes are unique and used only once
-            if(!itInserted.second){
-                SetNull();
-                return false;
-            }
-        }
-    }
-    if(nTotalAssetOutputs > tx.vout.size()){
-        SetNull();
-        return false;
-    }
-}
 bool CAssetAllocation::UnserializeFromData(const vector<unsigned char> &vchData) {
     try {
         CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
@@ -95,7 +65,7 @@ bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
         return false;
     }
     
-    return FillAssetInfo(*this);
+    return true;
 }
 void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
     CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
@@ -423,8 +393,4 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const CMin
         return true;                                        
     } 
     return false;                   
-}
-template <typename Stream, typename Operation>
-void CAssetAllocation::SerializationOp(Stream& s, Operation ser_action) {
-    READWRITE(listReceivingAssets);
 }

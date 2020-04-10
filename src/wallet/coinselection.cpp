@@ -16,6 +16,14 @@ struct {
     }
 } descending;
 
+// SYSCOIN Descending order comparator for asset outputs
+struct {
+    bool operator()(const OutputGroup& a, const OutputGroup& b) const
+    {
+        return a.effective_value_asset.nValue > b.effective_value_asset.nValue;
+    }
+} descending_asset;
+
 /*
  * This is the Branch and Bound Coin Selection algorithm designed by Murch. It searches for an input
  * set that can pay for the spending target and does not exceed the spending target by more than the
@@ -167,7 +175,7 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
 }
 
 static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const CAmount& nTotalLower, const CAmount& nTargetValue,
-                                  std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
+                                  std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000, bool bAsset)
 {
     std::vector<char> vfIncluded;
 
@@ -193,7 +201,7 @@ static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const 
                 //the selection random.
                 if (nPass == 0 ? insecure_rand.randbool() : !vfIncluded[i])
                 {
-                    nTotal += groups[i].m_value;
+                    nTotal += bAsset? groups[i].m_value_asset: groups[i].m_value;
                     vfIncluded[i] = true;
                     if (nTotal >= nTargetValue)
                     {
@@ -203,7 +211,7 @@ static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const 
                             nBest = nTotal;
                             vfBest = vfIncluded;
                         }
-                        nTotal -= groups[i].m_value;
+                        nTotal -= bAsset? groups[i].m_value_asset: groups[i].m_value;
                         vfIncluded[i] = false;
                     }
                 }
@@ -214,7 +222,8 @@ static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const 
 
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet)
 {
-    setCoinsRet.clear();
+    // SYSCOIN
+    //setCoinsRet.clear();
     nValueRet = 0;
 
     // List of values less than target
@@ -289,6 +298,83 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
 
     return true;
 }
+// SYSCOIN
+bool KnapsackSolver(const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet)
+{
+    if(nTargetValueAsset.IsNull())
+        return true;
+    CAmount nTargetValue = nTargetValueAsset.nValue;
+    nValueRetAsset = 0;
+
+    // List of values less than target
+    Optional<OutputGroup> lowest_larger;
+    std::vector<OutputGroup> applicable_groups;
+    CAmount nTotalLower = 0;
+
+    Shuffle(groups.begin(), groups.end(), FastRandomContext());
+
+    for (const OutputGroup& group : groups) {
+        if (group.m_value_asset == nTargetValue) {
+            util::insert(setCoinsRet, group.m_outputs);
+            nValueRet += group.m_value_asset;
+            return true;
+        } else if (group.m_value_asset < nTargetValue) {
+            applicable_groups.push_back(group);
+            nTotalLower += group.m_value_asset;
+        } else if (!lowest_larger || group.m_value_asset < lowest_larger->m_value_asset) {
+            lowest_larger = group;
+        }
+    }
+
+    if (nTotalLower == nTargetValue) {
+        for (const auto& group : applicable_groups) {
+            util::insert(setCoinsRet, group.m_outputs);
+            nValueRet += group.m_value_asset;
+        }
+        return true;
+    }
+
+    if (nTotalLower < nTargetValue) {
+        if (!lowest_larger) return false;
+        util::insert(setCoinsRet, lowest_larger->m_outputs);
+        nValueRet += lowest_larger->m_value_asset;
+        return true;
+    }
+
+    // Solve subset sum by stochastic approximation
+    std::sort(applicable_groups.begin(), applicable_groups.end(), descending_asset);
+    std::vector<char> vfBest;
+    CAmount nBest;
+
+    ApproximateBestSubset(applicable_groups, nTotalLower, nTargetValue, vfBest, nBest, 1000, true);
+
+    // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
+    //                                   or the next bigger coin is closer), return the bigger coin
+    if (lowest_larger &&
+        ((nBest != nTargetValue && nBest < nTargetValue) || lowest_larger->m_value_asset <= nBest)) {
+        util::insert(setCoinsRet, lowest_larger->m_outputs);
+        nValueRet += lowest_larger->m_value_asset;
+    } else {
+        for (unsigned int i = 0; i < applicable_groups.size(); i++) {
+            if (vfBest[i]) {
+                util::insert(setCoinsRet, applicable_groups[i].m_outputs);
+                nValueRet += applicable_groups[i].m_value_asset;
+            }
+        }
+
+        if (LogAcceptCategory(BCLog::SELECTCOINS)) {
+            LogPrint(BCLog::SELECTCOINS, "SelectCoins() best subset: "); /* Continued */
+            for (unsigned int i = 0; i < applicable_groups.size(); i++) {
+                if (vfBest[i]) {
+                    LogPrint(BCLog::SELECTCOINS, "%s ", FormatMoney(applicable_groups[i].m_value_asset)); /* Continued */
+                }
+            }
+            LogPrint(BCLog::SELECTCOINS, "total %s\n", FormatMoney(nBest));
+        }
+    }
+
+    return true;
+}
 
 /******************************************************************************
 
@@ -300,6 +386,17 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
     m_outputs.push_back(output);
     m_from_me &= from_me;
     m_value += output.effective_value;
+    // SYSCOIN
+    if(!output.effective_value_asset.IsNull()) {
+        if(effective_value_asset.IsNull()) {
+            effective_value_asset = output.effective_value_asset;
+            m_value_asset = effective_value_asset.nValue;
+        }
+        else if(effective_value_asset.nAsset == output.effective_value_asset.nAsset) {
+            m_value_asset += output.effective_value_asset.nValue;
+            effective_value_asset.nValue = m_value_asset;
+        }
+    }
     m_depth = std::min(m_depth, depth);
     // ancestors here express the number of ancestors the new coin will end up having, which is
     // the sum, rather than the max; this will overestimate in the cases where multiple inputs

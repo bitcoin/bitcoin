@@ -13,7 +13,7 @@
 #include <uint256.h>
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
-
+class CAssetAllocation;
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -133,21 +133,18 @@ class CAssetCoinInfo {
 public:
 	uint32_t nAsset;
 	CAmount nValue;
-	template <typename Stream, typename Operation>
-	void SerializationOp(Stream& s, Operation ser_action);
 	CAssetCoinInfo() {
 		SetNull();
 	}
-	ADD_SERIALIZE_METHODS;
-
-    CAssetCoinInfo(const CAssetCoinInfo&) = delete;
-    CAssetCoinInfo(CAssetCoinInfo && other) = default;
-    CAssetCoinInfo& operator=( CAssetCoinInfo& a ) = delete;
-	CAssetCoinInfo& operator=( CAssetCoinInfo&& a ) = default;
  
-	inline void SetNull() { outpoint.SetNull(); nValue = 0;}
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
-	void Serialize(std::vector<unsigned char>& vchData);
+    friend bool operator==(const CAssetCoinInfo& a, const CAssetCoinInfo& b)
+    {
+        return (a.nAsset   == b.nAsset &&
+                a.nValue == b.nValue);
+    }
+
+	inline void SetNull() { nAsset = 0; nValue = 0;}
+    inline bool IsNull() { return nAsset == 0;}
 };
 
 /** An output of a transaction.  It contains the public key that the next input
@@ -160,15 +157,12 @@ public:
     CScript scriptPubKey;
     // SYSCOIN
     CAssetCoinInfo assetInfo;
-
     CTxOut()
     {
         SetNull();
     }
 
     CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
-    // SYSCOIN
-    CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn, CAssetCoinInfo assetInfo);
 
     ADD_SERIALIZE_METHODS;
 
@@ -176,9 +170,6 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(nValue);
         READWRITE(scriptPubKey);
-        if(!assetInfo.IsNull()){
-            READWRITE(assetInfo);        
-        }
     }
 
     void SetNull()
@@ -196,9 +187,7 @@ public:
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey &&
-                a.assetInfo.nAsset == b.assetInfo.nAsset &&
-                a.assetInfo.nAssetValue == b.assetInfo.nAssetValue);
+                a.scriptPubKey == b.scriptPubKey);
     }
 
     friend bool operator!=(const CTxOut& a, const CTxOut& b)
@@ -209,6 +198,33 @@ public:
     std::string ToString() const;
 };
 
+class CTxOutCoin: public CTxOut
+{
+public:
+    CTxOutCoin()
+    {
+        SetNull();
+    }
+
+    CTxOutCoin(const CTxOut& txOut): CTxOut(txOut.nValueIn, txOut.scriptPubKeyIn), assetInfo(txOut.assetInfo) {}
+    friend bool operator==(const CTxOutCoin& a, const CTxOutCoin& b)
+    {
+        return ((*(CTxOut*)a) == (*(CTxOut*)b) &&
+                a.assetInfo == b.assetInfo);
+    }
+    friend bool operator!=(const CTxOutCoin& a, const CTxOutCoin& b)
+    {
+        return !(a == b);
+    }
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(*(CTxOut*)this);
+        READWRITE(assetInfo);
+    }
+    std::string ToString() const;
+};
 struct CMutableTransaction;
 
 /**
@@ -330,7 +346,19 @@ public:
     CTransaction();
     const int32_t nVersion;
     const uint32_t nLockTime;
-
+    // SYSCOIN
+    template <typename Stream>
+    inline void SerializeAssetInfo(Stream& s) const {
+        for (size_t i = 0; i < vout.size(); i++) {
+            s << vout[i].assetInfo;
+        }
+    }
+    template <typename Stream>
+    inline void UnserializeAssetInfo(Stream& s) const {
+        for (size_t i = 0; i < vout.size(); i++) {
+            s >> vout[i].assetInfo;
+        }
+    }
 private:
     /** Memory only. */
     const uint256 hash;
@@ -359,6 +387,8 @@ private:
 
     // Return sum of txouts.
     CAmount GetValueOut() const;
+    // SYSCOIN
+    CAmount GetAssetValueOut(const CAssetAllocation& allocation) const;
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 

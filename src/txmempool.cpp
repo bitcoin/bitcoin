@@ -957,16 +957,6 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     CTransactionRef ptx = mempool.get(outpoint.hash);
     if (ptx) {
         if (outpoint.n < ptx->vout.size()) {
-            // SYSCOIN get asset info for this COIN output from tx
-            if(IsSyscoinTx(ptx->nVersion)) {
-                CAssetAllocation allocation(*ptx);
-                if(!allocation.IsNull()) {
-                    coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false, allocation.vecAssetInfo[outpoint.n]);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
             coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
             return true;
         } else {

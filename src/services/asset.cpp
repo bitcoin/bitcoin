@@ -158,11 +158,8 @@ bool IsZdagTx(const int &nVersion){
 bool IsSyscoinTx(const int &nVersion){
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
 }
-// everything except mint asset, and activate asset
-bool IsSyscoinWithInputTx(const int &nVersion){
-    return nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE || nVersion == SYSCOIN_TX_VERSION_ASSET_SEND ||
-    nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || 
-    nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+bool IsSyscoinWithNoInputTx(const int &nVersion){
+    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
 }
 #ifdef ENABLE_WALLET
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, const CWallet* const pwallet, const isminefilter* filter_ismine){
@@ -219,28 +216,12 @@ int32_t GenerateSyscoinGuid(const COutPoint& outPoint)
     if(low32 < 0){
         low32 *= -1;
     }
-    if(low32 <= SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN*10){
-        low32 = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN*10;
+    if(low32 <= SYSCOIN_TX_VERSION_ALLOCATION_SEND*10){
+        low32 = SYSCOIN_TX_VERSION_ALLOCATION_SEND*10;
     }
     return low32;
 }
 
-bool IsOutpointMature(const COutPoint& outpoint)
-{
-	Coin coin;
-	GetUTXOCoin(outpoint, coin);
-	if (coin.IsSpent() || coin.IsCoinBase())
-		return false;
-	int numConfirmationsNeeded = 0;
-    {
-        LOCK(cs_main);
-        if (coin.nHeight > -1 && ::ChainActive().Tip())
-            return (::ChainActive().Height() - coin.nHeight) >= numConfirmationsNeeded;
-    }
-	// don't have chainActive or coin height is neg 1 or less
-	return false;
-
-}
 void CAsset::Serialize( vector<unsigned char> &vchData) {
     CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
     dsAsset << *this;

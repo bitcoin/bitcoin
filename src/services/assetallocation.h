@@ -24,9 +24,6 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &
 bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const CMintSyscoin& mintsyscoin, const int& nHeight,  const uint256& blockhash, UniValue &entry);
 
 std::string assetAllocationFromTx(const int &nVersion);
-
-typedef std::vector<std::pair<uint32_t, std::map<uint8_t, CAmount > > > OutToAssetType;
-typedef std::vector<uint8_t, CAssetCoinInfo > OutToAssetCoinInfo;
 static const int ONE_YEAR_IN_BLOCKS = 525600;
 static const int ONE_HOUR_IN_BLOCKS = 60;
 static const int ONE_MONTH_IN_BLOCKS = 43800;
@@ -36,13 +33,35 @@ enum {
 	ZDAG_WARNING_RBF,
 	ZDAG_MAJOR_CONFLICT
 };
+class CAmountCompressed {
+public:
+    CAmount nValue;
 
+    SERIALIZE_METHODS(CAmountCompressed, obj)
+    {
+        READWRITE(Using<AmountCompression>(obj.nValue));
+    }
+
+	CAmountCompressed() {
+		nAmount = 0;
+	}
+    CAmountCompressed(const CAmount& nAmountIn): nAmount(nAmountIn) {}
+
+    inline friend CAmount operator()() {
+        return nValue;
+    }
+};
 class CAssetAllocation {
 public:
-	OutToAssetType listReceivingAssets;
-	OutToAssetCoinInfo vecAssetInfo;
-	template <typename Stream, typename Operation>
-	void SerializationOp(Stream& s, Operation ser_action);
+    uint32_t nAsset;
+	std::vector<CAmountCompressed> voutAssets;
+
+    SERIALIZE_METHODS(CAssetAllocation, obj)
+    {
+        READWRITE(obj.nAsset);
+        READWRITE(obj.voutAssets);
+    }
+
 	CAssetAllocation() {
 		SetNull();
 	}
@@ -52,13 +71,11 @@ public:
 	}
 	inline void ClearAssetAllocation()
 	{
-		listReceivingAssets.clear();
-		vecAssetInfo.clear();
+		voutAssets.clear();
 	}
-	ADD_SERIALIZE_METHODS;
 
 	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
-		return (a.assetAllocationTuple == b.assetAllocationTuple
+		return (a.nAsset == b.nAsset && a.voutAssets == b.voutAssets
 			);
 	}
     CAssetAllocation(const CAssetAllocation&) = delete;
@@ -70,7 +87,7 @@ public:
 		return !(a == b);
 	}
 	inline void SetNull() { ClearAssetAllocation();}
-    inline bool IsNull() { return listReceivingAssets.empty();}
+    inline bool IsNull() { return voutAssets.empty();}
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	void Serialize(std::vector<unsigned char>& vchData);
@@ -95,19 +112,18 @@ public:
         SetNull();
         UnserializeFromTx(tx);
     }
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(assetAllocation);
-        READWRITE(vchTxValue);
-        READWRITE(vchTxParentNodes);
-        READWRITE(vchTxRoot);
-        READWRITE(vchTxPath);   
-        READWRITE(vchReceiptValue);
-        READWRITE(vchReceiptParentNodes);
-        READWRITE(vchReceiptRoot);
-        READWRITE(vchReceiptPath);
-        READWRITE(nBlockNumber);     
+    SERIALIZE_METHODS(CMintSyscoin, obj)
+    {
+        READWRITE(obj.assetAllocation);
+        READWRITE(obj.vchTxValue);
+        READWRITE(obj.vchTxParentNodes);
+        READWRITE(obj.vchTxRoot);
+        READWRITE(obj.vchTxPath);   
+        READWRITE(obj.vchReceiptValue);
+        READWRITE(obj.vchReceiptParentNodes);
+        READWRITE(obj.vchReceiptRoot);
+        READWRITE(obj.vchReceiptPath);
+        READWRITE(obj.nBlockNumber); 
     }
     inline void SetNull() { assetAllocation.SetNull(); vchTxRoot.clear(); vchTxValue.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); vchReceiptRoot.clear(); vchReceiptValue.clear(); vchReceiptParentNodes.clear(); vchReceiptPath.clear(); nBlockNumber = 0;  }
     inline bool IsNull() const { return (vchTxValue.empty() && vchReceiptValue.empty()); }
@@ -127,13 +143,12 @@ public:
         SetNull();
         UnserializeFromTx(tx);
     }
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(assetAllocation);
-        READWRITE(vchEthAddress);
-        READWRITE(nPrecision);  
+    SERIALIZE_METHODS(CBurnSyscoin, obj) {
+        READWRITE(obj.assetAllocation);
+        READWRITE(obj.vchEthAddress);
+        READWRITE(obj.nPrecision);       
     }
+
     inline void SetNull() { assetAllocation.SetNull(); vchEthAddress.clear(); nPrecision = 0;  }
     inline bool IsNull() const { return (vchEthAddress.empty() && assetAllocation.IsNull()); }
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
