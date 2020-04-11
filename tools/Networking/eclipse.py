@@ -16,7 +16,7 @@ import struct
 eclipse_packet_drop_rate = 0
 
 
-num_identities = 1
+num_identities = 3
 
 victim_ip = '10.0.2.4'
 victim_port = 8333
@@ -221,9 +221,9 @@ def packet_received(packet):
 				except Exception as e:
 					print("Closing socket because of error: " + str(e))
 					close_connection(rand_i)
-					#make_fake_connection(rand_ip, victim_ip) # Use old IP
-					make_fake_connection(random_ip(), victim_ip)
-					sys.exit()
+					make_fake_connection(rand_ip, victim_ip) # Use old IP
+					#make_fake_connection(random_ip(), victim_ip)
+					sys.exit() # Stop the current thread that sniffs for packets on this interface
 
 
 def initialize_network_info():
