@@ -191,6 +191,7 @@ def packet_received(packet):
 			pass
 	if packet[IP].dst == attacker_ip and packet[IP].src != victim_ip:
 		if len(spoof_IP_sockets) > 0:
+			rand_i = -1
 			if random.random() > eclipse_packet_drop_rate:
 				rand_i = random.randint(0, len(spoof_IP_sockets) - 1)
 				rand_ip = spoof_IP_and_ports[rand_i][0]
