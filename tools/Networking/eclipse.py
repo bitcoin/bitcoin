@@ -219,6 +219,7 @@ def packet_received(packet):
 					close_connection(rand_i)
 					#make_fake_connection(rand_ip, victim_ip) # Use old IP
 					make_fake_connection(random_ip(), victim_ip)
+					print('*'*120 + 'CLOSING')
 					sys.exit()
 
 
