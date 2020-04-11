@@ -234,10 +234,18 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     uint32_t nAsset = 0;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     std::vector<unsigned char> vchERC20ContractAddress;
-    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, dbAsset.vchContract, outputAmount, nAsset, dbAsset.nPrecision)) {
+    CWitnessAddress witnessAddress;
+    CTxDestination dest;
+    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, dbAsset.vchContract, outputAmount, nAsset, dbAsset.nPrecision, witnessAddress)) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-data", bSanityCheck);
     }
+    if(!ExtractDestination(tx.vout[0].scriptPubKey, dest)) {
+        return FormatSyscoinErrorMessage(state, "mint-extract-destination", bSanityCheck);  
+    }
     if(!fUnitTest) {
+        if(EncodeDestination(dest) != witnessAddress.ToString()) {
+            return FormatSyscoinErrorMessage(state, "mint-mismatch-destination", bSanityCheck);  
+        }
         if(nAsset != mintSyscoin.assetAllocation.nAsset) {
             return FormatSyscoinErrorMessage(state, "mint-mismatch-asset", bSanityCheck);
         }
@@ -245,10 +253,10 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(outputAmount <= 0) {
         return FormatSyscoinErrorMessage(state, "mint-value-negative", bSanityCheck);
     }
-    CAmount nTotal = 0;
-    for(const auto& voutAsset: mintSyscoin.assetAllocation.voutAssets) {
-        nTotal += voutAsset;
+    if(mintSyscoin.assetAllocation.voutAssets.size() != 1) {
+        return FormatSyscoinErrorMessage(state, "mint-invalid-asset-outputs", bSanityCheck);  
     }
+    const CAmount &nTotal = mintSyscoin.assetAllocation.voutAssets[0];
     if(outputAmount != nTotal) {
         return FormatSyscoinErrorMessage(state, "mint-mismatch-value", bSanityCheck);  
     }
@@ -268,24 +276,24 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }               
     return true;
 }
-bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime) {
+bool CheckSyscoinInputs(const CTransaction& tx, const CAssetAllocation& allocation, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime) {
     if(nHeight < nUTXOAssetsBlock)
         return true;
     AssetMap mapAssets;
     EthereumMintTxVec vecMintKeys;
-    return CheckSyscoinInputs(false, tx, txHash, state, inputs, true, nHeight, nTime, uint256(), false, mapAssets, vecMintKeys);
+    return CheckSyscoinInputs(false, tx, allocation, txHash, state, inputs, true, nHeight, nTime, uint256(), false, mapAssets, vecMintKeys);
 }
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys) {
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const CAssetAllocation& allocation, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys) {
     bool good = true;
     try{
         if(IsSyscoinMintTx(tx.nVersion)) {
             good = CheckSyscoinMint(ibd, tx, txHash, state, fJustCheck, bSanityCheck, nHeight, nTime, blockHash, mapAssets, vecMintKeys);
         }
         else if (IsAssetAllocationTx(tx.nVersion)) {
-            good = CheckAssetAllocationInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck);
+            good = CheckAssetAllocationInputs(tx, allocation, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck);
         }
         else if (IsAssetTx(tx.nVersion)) {
-            good = CheckAssetInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck);
+            good = CheckAssetInputs(tx, allocation, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck);
         } 
     } catch (...) {
         return FormatSyscoinErrorMessage(state, "checksyscoininputs-exception", bSanityCheck);
@@ -367,7 +375,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
     } 
     return true;       
 }
-bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
+bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &theAssetAllocation, const uint256& txHash, TxValidationState &state,
         const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck) {
     if (passetallocationdb == nullptr)
         return false;
@@ -376,10 +384,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
             fJustCheck ? "JUSTCHECK" : "BLOCK", bSanityCheck? 1: 0);
         
-    CAssetAllocation theAssetAllocation(tx);
-    if(theAssetAllocation.IsNull()) {
-        return FormatSyscoinErrorMessage(state, "assetallocation-null", bSanityCheck);
-    }
     const int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
@@ -698,7 +702,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
     #endif 
     return true;  
 }
-bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
+bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAllocation, const uint256& txHash, TxValidationState &state,
         const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap& mapAssets, const bool &bSanityCheck) {
     if (passetdb == nullptr)
         return false;
@@ -709,14 +713,18 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
 
     // unserialize asset from txn, check for valid
     CAsset theAsset;
-    CAssetAllocation theAssetAllocation;
     vector<unsigned char> vchData;
 
-    int nDataOut;
-    if(!GetSyscoinData(tx, vchData, nDataOut) || (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND && !theAsset.UnserializeFromData(vchData)) || (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND && !theAssetAllocation.UnserializeFromData(vchData))) {
-        return FormatSyscoinErrorMessage(state, "asset-unserialize", bSanityCheck);
+    if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND) {
+        theAsset = CAsset(tx);
+        if(theAsset.IsNull()) {
+            return FormatSyscoinErrorMessage(state, "asset-unserialize", bSanityCheck);
+        }
     }
-    
+    const int &nOut = GetSyscoinDataOutput(tx);
+    if(nOut < 0) {
+        return FormatSyscoinErrorMessage(state, "asset-missing-burn-output", bSanityCheck);
+    } 
     CAsset dbAsset;
     const uint32_t &nAsset = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND ? theAssetAllocation.nAsset : theAsset.assetAllocation.nAsset;
     #if __cplusplus > 201402 
@@ -747,7 +755,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     } 
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
-            if (!fUnitTest && tx.vout[nDataOut].nValue < 500*COIN) {
+            if (!fUnitTest && tx.vout[nOut].nValue < 500*COIN) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
             if (theAsset.assetAllocation.nAsset <= (SYSCOIN_TX_VERSION_ALLOCATION_SEND*10)) {
@@ -843,7 +851,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bSanityCheck);
             }
             storedAssetRef.nBalance -= nTotal;
-            const CAmount &nBurnAmount = theAssetAllocation.voutAssets.size() > nDataOut? theAssetAllocation.voutAssets[nDataOut]: 0;
+            const CAmount &nBurnAmount = theAssetAllocation.voutAssets.size() > nOut? theAssetAllocation.voutAssets[nOut]: 0;
             // if there were any burns we should adjust asset burn balance
             if(nBurnAmount > 0) {
                 storedAssetRef.nBurnBalance += nBurnAmount;

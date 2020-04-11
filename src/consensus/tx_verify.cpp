@@ -193,7 +193,7 @@ bool GetAssetValueOut(const CTransaction& tx, const CAssetAllocation& allocation
     return true;
 }
 // SYSCOIN remove const CTransaction
-bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, const CCoinsViewCacheAssetAllocations& assetallocation_inputs, int nSpendHeight, CAmount& txfee)
+bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, const CCoinsViewCacheAssetAllocations& assetallocation_inputs, int nSpendHeight, CAmount& txfee, const CAssetAllocation &allocation)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -201,13 +201,7 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
                          strprintf("%s: inputs missing/spent", __func__));
     }
     const bool &isSyscoinWithNoInputTx = IsSyscoinWithNoInputTx(tx.nVersion);
-    CAssetAllocation allocation;
-    if(!isSyscoinWithNoInputTx) {
-        allocation = CAssetAllocation(tx);
-        if(tx.IsNull()) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-invalid-allocation");
-        }
-    }
+    const bool &isSyscoinTx = IsSyscoinTx(tx.nVersion);
     const bool &isSyscoinAssetTx = IsAssetTx(tx.nVersion);
     CAmount nValueAssetIn = 0;
     CAmount nValueIn = 0;
@@ -249,30 +243,32 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
     }
-    if(!isSyscoinWithNoInputTx || isSyscoinAssetTx) {
-        CAmount asset_value_out; 
-        if(!GetAssetValueOut(tx, allocation, state, asset_value_out))
-            return false; // state filled by GetAssetValueOut
-        if (nValueAssetIn < asset_value_out){
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-in-belowout",
-                strprintf("value in (%s) < value out (%s)", FormatMoney(nValueAssetIn), FormatMoney(asset_value_out)));
-        }
-        if(tx.vout.size() < allocation.voutAssets.size()) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-insufficient-outputs");
-        }
+    if(isSyscoinTx) {
         // CTxOut does not serialize assetInfo to make it consistent with Bitcoin serializaion, CTxOutInfo (used by utxo db) persists assetInfo
         for (unsigned int i = 0; i < allocation.voutAssets.size(); ++i) {
             tx.vout[i].assetInfo = CAssetCoinInfo(nAsset, allocation.voutAssets[i]);
         }
-        const CAmount &asset_change = nValueAssetIn - asset_value_out;
-        if(asset_change > 0) {
-            if (!AssetRange(asset_change)) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-change-outofrange");
+        if(!isSyscoinWithNoInputTx || isSyscoinAssetTx) {
+            CAmount asset_value_out; 
+            if(!GetAssetValueOut(tx, allocation, state, asset_value_out))
+                return false; // state filled by GetAssetValueOut
+            if (nValueAssetIn < asset_value_out){
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-in-belowout",
+                    strprintf("value in (%s) < value out (%s)", FormatMoney(nValueAssetIn), FormatMoney(asset_value_out)));
             }
-            if(tx.vout.size() <= allocation.voutAssets.size()) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-change-index-outofrange");
+            if(tx.vout.size() < allocation.voutAssets.size()) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-insufficient-outputs");
             }
-            tx.vout[allocation.voutAssets.size()].assetInfo = CAssetCoinInfo(nAsset, asset_change);
+            const CAmount &asset_change = nValueAssetIn - asset_value_out;
+            if(asset_change > 0) {
+                if (!AssetRange(asset_change)) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-change-outofrange");
+                }
+                if(tx.vout.size() <= allocation.voutAssets.size()) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-change-index-outofrange");
+                }
+                tx.vout[allocation.voutAssets.size()].assetInfo = CAssetCoinInfo(nAsset, asset_change);
+            }
         }
     }
     // Tally transaction fees

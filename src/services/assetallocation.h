@@ -10,7 +10,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <txmempool.h>
-#include <services/witnessaddress.h>
 class CTransaction;
 class CAsset;
 class CMintSyscoin;

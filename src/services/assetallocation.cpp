@@ -8,12 +8,10 @@
 #include <future>
 #include <validationinterface.h>
 #include <services/assetconsensus.h>
-#ifdef ENABLE_WALLET
-#include <wallet/wallet.h>
-#endif
 #include <services/rpc/assetrpc.h>
 #include <rpc/server.h>
 #include <chainparams.h>
+#include <services/witnessaddress.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
@@ -21,8 +19,30 @@ extern UniValue DescribeAddress(const CTxDestination& dest);
 extern void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 RecursiveMutex cs_setethstatus;
 using namespace std;
-
-
+std::string CWitnessAddress::ToString() const {
+    if(nVersion == 0){
+        if (vchWitnessProgram.size() == WITNESS_V0_KEYHASH_SIZE) {
+            return EncodeDestination(WitnessV0KeyHash(vchWitnessProgram));
+        }
+        else if (vchWitnessProgram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
+            return EncodeDestination(WitnessV0ScriptHash(vchWitnessProgram));
+        }
+    }
+    return "";
+}
+bool CWitnessAddress::IsValid() const {
+    const size_t& size = vchWitnessProgram.size();
+    // this is a hard limit 2->40
+    if(size < 2 || size > 40){
+        return false;
+    }
+    // BIP 142, version 0 must be of p2wpkh or p2wpsh size
+    if(nVersion == 0){
+        return (size == WITNESS_V0_KEYHASH_SIZE || size == WITNESS_V0_SCRIPTHASH_SIZE);
+    }
+    // otherwise mark as valid for future softfork expansion
+    return true;
+}
 string assetAllocationFromTx(const int &nVersion) {
     switch (nVersion) {
 	case SYSCOIN_TX_VERSION_ASSET_SEND:

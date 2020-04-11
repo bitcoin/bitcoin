@@ -25,7 +25,7 @@ namespace Consensus {
  * Preconditions: tx.IsCoinBase() is false.
  */
  // SYSCOIN remove const tx
-bool CheckTxInputs(CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee);
+bool CheckTxInputs(CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, const CAssetAllocation &allocation);
 } // namespace Consensus
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */
