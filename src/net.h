@@ -21,8 +21,8 @@
 #include <random.h>
 #include <streams.h>
 #include <sync.h>
-#include <uint256.h>
 #include <threadinterrupt.h>
+#include <uint256.h>
 
 #include <atomic>
 #include <deque>
@@ -39,6 +39,7 @@
 class CScheduler;
 class CNode;
 class BanMan;
+struct bilingual_str;
 
 /** Default for -whitelistrelay. */
 static const bool DEFAULT_WHITELISTRELAY = true;
@@ -334,7 +335,7 @@ private:
         NetPermissionFlags m_permissions;
     };
 
-    bool BindListenPort(const CService& bindAddr, std::string& strError, NetPermissionFlags permissions);
+    bool BindListenPort(const CService& bindAddr, bilingual_str& strError, NetPermissionFlags permissions);
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
     bool InitBinds(const std::vector<CService>& binds, const std::vector<NetWhitebindPermissions>& whiteBinds);
     void ThreadOpenAddedConnections();
