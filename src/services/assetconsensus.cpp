@@ -455,9 +455,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
                 if(burnSyscoin.IsNull()) {
                     return FormatSyscoinErrorMessage(state, "assetallocation-parse-burn", bSanityCheck);
                 }
-                if(storedAssetRef.nPrecision != burnSyscoin.nPrecision) {
-                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-precision", bSanityCheck);
-                }
                 if(storedAssetRef.vchContract.empty() || storedAssetRef.vchContract != burnSyscoin.vchEthContract) {
                     return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-contract", bSanityCheck);
                 }        

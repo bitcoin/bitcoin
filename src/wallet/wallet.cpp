@@ -2177,7 +2177,8 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
             // SYSCOIN
             if (!bIncludeLocked && IsLockedCoin(entry.first, i))
                 continue;
-
+            if (coinControl && coinControl->m_asset_guid > 0 && coinControl->m_asset_guid != wtx.tx->vout[i].assetInfo.nAsset)
+                continue;
             if (IsSpent(wtxid, i))
                 continue;
 

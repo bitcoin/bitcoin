@@ -11,17 +11,10 @@
 #include <unordered_set>
 #include <txmempool.h>
 #include <services/witnessaddress.h>
-#ifdef ENABLE_WALLET
-#include <wallet/ismine.h>
-#endif
 class CTransaction;
 class CAsset;
 class CMintSyscoin;
-#ifdef ENABLE_WALLET
-class CWallet;
-#endif
 bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &entry);
-bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const CMintSyscoin& mintsyscoin, const int& nHeight,  const uint256& blockhash, UniValue &entry);
 
 std::string assetAllocationFromTx(const int &nVersion);
 static const int ONE_YEAR_IN_BLOCKS = 525600;
@@ -135,7 +128,6 @@ class CBurnSyscoin {
 public:
     CAssetAllocation assetAllocation;
     std::vector<unsigned char> vchEthAddress;
-    unsigned char nPrecision;
     CBurnSyscoin() {
         SetNull();
     }
@@ -145,20 +137,14 @@ public:
     }
     SERIALIZE_METHODS(CBurnSyscoin, obj) {
         READWRITE(obj.assetAllocation);
-        READWRITE(obj.vchEthAddress);
-        READWRITE(obj.nPrecision);       
+        READWRITE(obj.vchEthAddress);     
     }
 
-    inline void SetNull() { assetAllocation.SetNull(); vchEthAddress.clear(); nPrecision = 0;  }
+    inline void SetNull() { assetAllocation.SetNull(); vchEthAddress.clear();  }
     inline bool IsNull() const { return (vchEthAddress.empty() && assetAllocation.IsNull()); }
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);
     void Serialize(std::vector<unsigned char>& vchData);
 };
-bool BuildAssetAllocationJson(const CAssetCoinInfo& assetallocation, const CAsset& asset, UniValue& oName);
-bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation);
-#ifdef ENABLE_WALLET
-bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, const CWallet* const pwallet, const isminefilter* filter_ismine);
-#endif
 bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry);
 #endif // SYSCOIN_SERVICES_ASSETALLOCATION_H

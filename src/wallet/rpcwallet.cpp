@@ -1336,7 +1336,7 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWallet* cons
             // SYSCOIN
             const CTransaction& tx = *wtx.tx;
             UniValue output(UniValue::VOBJ);
-            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine)){
+            if(DecodeSyscoinRawtransaction(tx, output)){
                 entry.pushKV("systx", output);
                 if (mapSysTx.find(txHash) != mapSysTx.end())
                     continue;
@@ -1387,7 +1387,7 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWallet* cons
             // SYSCOIN
             const CTransaction& tx = *wtx.tx;
             UniValue output(UniValue::VOBJ);
-            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine)){
+            if(DecodeSyscoinRawtransaction(tx, output)){
                 entry.pushKV("systx", output);
                 if (mapSysTx.find(txHash) != mapSysTx.end())
                     continue;
@@ -1743,48 +1743,51 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
+    // SYSCOIN
+    const CWalletTx* wtxPtr;
+    {
+        LOCK(pwallet->cs_wallet);
 
-    auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
+        uint256 hash(ParseHashV(request.params[0], "txid"));
 
-    uint256 hash(ParseHashV(request.params[0], "txid"));
+        isminefilter filter = ISMINE_SPENDABLE;
 
-    isminefilter filter = ISMINE_SPENDABLE;
+        if (ParseIncludeWatchonly(request.params[1], *pwallet)) {
+            filter |= ISMINE_WATCH_ONLY;
+        }
 
-    if (ParseIncludeWatchonly(request.params[1], *pwallet)) {
-        filter |= ISMINE_WATCH_ONLY;
+        bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
+
+        UniValue entry(UniValue::VOBJ);
+        auto it = pwallet->mapWallet.find(hash);
+        if (it == pwallet->mapWallet.end()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+        }
+        // SYSCOIN
+        wtxPtr = &it->second;
+        const CWalletTx &wtx = *wtxPtr;
+
+        CAmount nCredit = wtx.GetCredit(filter);
+        CAmount nDebit = wtx.GetDebit(filter);
+        CAmount nNet = nCredit - nDebit;
+        CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
+
+        entry.pushKV("amount", ValueFromAmount(nNet - nFee));
+        if (wtx.IsFromMe(filter))
+            entry.pushKV("fee", ValueFromAmount(nFee));
+
+        WalletTxToJSON(pwallet->chain(), *locked_chain, wtx, entry);
+
+        UniValue details(UniValue::VARR);
+        ListTransactions(*locked_chain, pwallet, wtx, 0, false, details, filter, nullptr /* filter_label */);
+        entry.pushKV("details", details);
+
+        std::string strHex = EncodeHexTx(*wtx.tx, pwallet->chain().rpcSerializationFlags());
+        entry.pushKV("hex", strHex);
     }
-
-    bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
-
-    UniValue entry(UniValue::VOBJ);
-    auto it = pwallet->mapWallet.find(hash);
-    if (it == pwallet->mapWallet.end()) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
-    }
-    const CWalletTx& wtx = it->second;
-
-    CAmount nCredit = wtx.GetCredit(filter);
-    CAmount nDebit = wtx.GetDebit(filter);
-    CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
-
-    entry.pushKV("amount", ValueFromAmount(nNet - nFee));
-    if (wtx.IsFromMe(filter))
-        entry.pushKV("fee", ValueFromAmount(nFee));
-
-    WalletTxToJSON(pwallet->chain(), *locked_chain, wtx, entry);
-
-    UniValue details(UniValue::VARR);
-    ListTransactions(*locked_chain, pwallet, wtx, 0, false, details, filter, nullptr /* filter_label */);
-    entry.pushKV("details", details);
-
-    std::string strHex = EncodeHexTx(*wtx.tx, pwallet->chain().rpcSerializationFlags());
-    entry.pushKV("hex", strHex);
-
     if (verbose) {
         UniValue decoded(UniValue::VOBJ);
-        TxToUniv(*wtx.tx, uint256(), decoded, false);
+        TxToUniv(wtxPtr->tx, uint256(), decoded, false);
         entry.pushKV("decoded", decoded);
     }
 
@@ -2846,6 +2849,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 "with between minconf and maxconf (inclusive) confirmations.\n"
                 "Optionally filter to only include txouts paid to specified addresses.\n",
                 {
+                    {"asset_guid", RPCArg::Type::NUM, /* default */ "0", "Asset GUID to filter. 0(default) for Syscoin."},
                     {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},
                     {"maxconf", RPCArg::Type::NUM, /* default */ "9999999", "The maximum confirmations to filter"},
                     {"addresses", RPCArg::Type::ARR, /* default */ "empty array", "The syscoin addresses to filter",
@@ -2900,22 +2904,28 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    int nMinDepth = 1;
+    uint32_t nAsset = 0;
     if (!request.params[0].isNull()) {
         RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
-        nMinDepth = request.params[0].get_int();
+        nAsset = request.params[0].get_uint();
+    }
+
+    int nMinDepth = 1;
+    if (!request.params[1].isNull()) {
+        RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
+        nMinDepth = request.params[1].get_int();
     }
 
     int nMaxDepth = 9999999;
-    if (!request.params[1].isNull()) {
-        RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
-        nMaxDepth = request.params[1].get_int();
+    if (!request.params[2].isNull()) {
+        RPCTypeCheckArgument(request.params[2], UniValue::VNUM);
+        nMaxDepth = request.params[2].get_int();
     }
 
     std::set<CTxDestination> destinations;
-    if (!request.params[2].isNull()) {
-        RPCTypeCheckArgument(request.params[2], UniValue::VARR);
-        UniValue inputs = request.params[2].get_array();
+    if (!request.params[3].isNull()) {
+        RPCTypeCheckArgument(request.params[3], UniValue::VARR);
+        UniValue inputs = request.params[3].get_array();
         for (unsigned int idx = 0; idx < inputs.size(); idx++) {
             const UniValue& input = inputs[idx];
             CTxDestination dest = DecodeDestination(input.get_str());
@@ -2929,9 +2939,9 @@ static UniValue listunspent(const JSONRPCRequest& request)
     }
 
     bool include_unsafe = true;
-    if (!request.params[3].isNull()) {
-        RPCTypeCheckArgument(request.params[3], UniValue::VBOOL);
-        include_unsafe = request.params[3].get_bool();
+    if (!request.params[4].isNull()) {
+        RPCTypeCheckArgument(request.params[4], UniValue::VBOOL);
+        include_unsafe = request.params[4].get_bool();
     }
 
     CAmount nMinimumAmount = 0;
@@ -2943,8 +2953,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
     CAmount nMinimumSumAmountAsset = MAX_ASSET;
     uint64_t nMaximumCount = 0;
 
-    if (!request.params[4].isNull()) {
-        const UniValue& options = request.params[4].get_obj();
+    if (!request.params[5].isNull()) {
+        const UniValue& options = request.params[5].get_obj();
 
         if (options.exists("minimumAmount"))
             nMinimumAmount = AmountFromValue(options["minimumAmount"]);
@@ -2979,6 +2989,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
         cctl.m_avoid_address_reuse = false;
         cctl.m_min_depth = nMinDepth;
         cctl.m_max_depth = nMaxDepth;
+        cctl.m_asset_guid = nAsset;
         auto locked_chain = pwallet->chain().lock();
         LOCK(pwallet->cs_wallet);
         pwallet->AvailableCoins(*locked_chain, vecOutputs, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, nMaximumCount);

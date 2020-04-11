@@ -13,15 +13,9 @@
 #include <services/assetallocation.h>
 #include <sys/types.h>
 #include <univalue.h>
-#ifdef ENABLE_WALLET
-#include <wallet/ismine.h>
-#endif
 class CTransaction;
 class CCoinsViewCache;
 class COutPoint;
-#ifdef ENABLE_WALLET
-class CWallet;
-#endif
 
 const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 128;
 const int SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION = 129;
@@ -44,24 +38,18 @@ std::string stringFromValue(const UniValue& value);
 int GetSyscoinDataOutput(const CTransaction& tx);
 bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, int& nOut);
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
-#ifdef ENABLE_WALLET
-bool SysTxToJSON(const CTransaction &tx, UniValue &entry, const CWallet* const pwallet, const isminefilter* filter_ismine);
-#endif
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
 bool FlushSyscoinDBs();
-COutPoint FindAssetOwnerOutPoint(const CCoinsViewCache &inputs, const CTransaction& tx);
 bool IsAssetAllocationTx(const int &nVersion);
 bool IsZdagTx(const int &nVersion);
 bool IsSyscoinTx(const int &nVersion);
 bool IsSyscoinWithNoInputTx(const int &nVersion);
 bool IsAssetTx(const int &nVersion);
 bool IsSyscoinMintTx(const int &nVersion);
-CAmount getaddressbalance(const std::string& strAddress);
 int32_t GenerateSyscoinGuid(const COutPoint& outPoint);
 
 
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry);
-bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& blockhash, UniValue &entry);
 std::string assetFromTx(const int &nVersion);
 enum {
     ASSET_UPDATE_ADMIN=1, // god mode flag, governs flags field below
@@ -144,9 +132,6 @@ public:
 static CAsset emptyAsset;
 bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, UniValue& oName);
-#ifdef ENABLE_WALLET
-bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, const CWallet* const pwallet, const isminefilter* filter_ismine);
-#endif
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
 extern std::unique_ptr<CAssetDB> passetdb;
 #endif // SYSCOIN_SERVICES_ASSET_H

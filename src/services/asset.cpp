@@ -7,9 +7,6 @@
 #include <services/assetconsensus.h>
 #include <validationinterface.h>
 #include <boost/thread.hpp>
-#ifdef ENABLE_WALLET
-#include <wallet/wallet.h>
-#endif
 #include <services/rpc/assetrpc.h>
 #include <rpc/server.h>
 #include <chainparams.h>
@@ -161,20 +158,7 @@ bool IsSyscoinTx(const int &nVersion){
 bool IsSyscoinWithNoInputTx(const int &nVersion){
     return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
 }
-#ifdef ENABLE_WALLET
-bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, const CWallet* const pwallet, const isminefilter* filter_ismine){
-    vector<vector<unsigned char> > vvch;
-    bool found = false;
-    if(IsSyscoinMintTx(rawTx.nVersion)){
-        found = AssetMintTxToJson(rawTx, rawTx.GetHash(), output);
-    }
-    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion)){
-        found = SysTxToJSON(rawTx, output, pwallet, filter_ismine);
-    }
-    
-    return found;
-}
-#endif
+
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
     vector<vector<unsigned char> > vvch;
     bool found = false;
@@ -187,18 +171,7 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
     
     return found;
 }
-// TODO cleanup, this is to support disable-wallet build make sure to wrap around ENABLE_WALLET
-#ifdef ENABLE_WALLET
-bool SysTxToJSON(const CTransaction& tx, UniValue& output, const CWallet* const pwallet, const isminefilter* filter_ismine)
-{
-    bool found = false;
-    if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
-        found = AssetTxToJSON(tx, output);
-    else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
-        found = AssetAllocationTxToJSON(tx, output, pwallet, filter_ismine);
-    return found;
-}
-#endif
+
 bool SysTxToJSON(const CTransaction& tx, UniValue& output)
 {
     bool found = false;
@@ -247,6 +220,7 @@ bool BuildAssetJson(const CAsset& asset,UniValue& oAsset)
 	oAsset.__pushKV("address", asset.witnessAddress.ToString());
     oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
 	oAsset.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
+	oAsset.__pushKV("burn_balance", ValueFromAssetAmount(asset.nBurnBalance, asset.nPrecision));
 	oAsset.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
 	oAsset.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
 	oAsset.__pushKV("update_flags", asset.nUpdateFlags);
@@ -285,12 +259,6 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 	if (!asset.vchContract.empty())
 		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
 
-	if (!asset.witnessAddress.IsNull())
-		entry.__pushKV("sender", asset.witnessAddress.ToString());
-
-	if (!asset.witnessAddressTransfer.IsNull())
-		entry.__pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
-
 	if (asset.nUpdateFlags > 0)
 		entry.__pushKV("update_flags", asset.nUpdateFlags);
 
@@ -305,43 +273,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
     entry.__pushKV("blockhash", blockhash.GetHex());  
     return true;
 }
-bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& blockhash, UniValue &entry)
-{
-    CAsset asset(tx);
-    if(asset.IsNull())
-        return false;
-    entry.__pushKV("txtype", assetFromTx(tx.nVersion));
-    entry.__pushKV("asset_guid", asset.nAsset);
-    entry.__pushKV("symbol", asset.strSymbol);
-    entry.__pushKV("txid", tx.GetHash().GetHex());
-    entry.__pushKV("height", nHeight);
 
-    if(!asset.vchPubData.empty())
-        entry.__pushKV("public_value", stringFromVch(asset.vchPubData));
-        
-    if(!asset.vchContract.empty())
-        entry.__pushKV("contract", "0x"+HexStr(asset.vchContract));
-        
-    if(!asset.witnessAddress.IsNull())
-        entry.__pushKV("sender", asset.witnessAddress.ToString());
-
-    if(!asset.witnessAddressTransfer.IsNull())
-        entry.__pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
-
-    if(asset.nUpdateFlags > 0)
-        entry.__pushKV("update_flags", asset.nUpdateFlags);
-              
-    if (asset.nBalance > 0)
-        entry.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
-
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
-        entry.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
-        entry.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
-        entry.__pushKV("precision", asset.nPrecision);  
-    }  
-    entry.__pushKV("blockhash", blockhash.GetHex()); 
-    return true;
-}
 bool CAssetDB::Flush(const AssetMap &mapAssets){
     if(mapAssets.empty())
         return true;
