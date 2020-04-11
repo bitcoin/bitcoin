@@ -68,13 +68,13 @@ class FilterTest(BitcoinTestFramework):
         self.log.info('Check that we receive merkleblock and tx if the filter matches a tx in a block')
         block_hash = self.nodes[0].generatetoaddress(1, filter_address)[0]
         txid = self.nodes[0].getblock(block_hash)['tx'][0]
-        filter_node.wait_for_merkleblock(int(block_hash, 16))
+        filter_node.wait_for_merkleblock(block_hash)
         filter_node.wait_for_tx(txid)
 
         self.log.info('Check that we only receive a merkleblock if the filter does not match a tx in a block')
         filter_node.tx_received = False
         block_hash = self.nodes[0].generatetoaddress(1, self.nodes[0].getnewaddress())[0]
-        filter_node.wait_for_merkleblock(int(block_hash, 16))
+        filter_node.wait_for_merkleblock(block_hash)
         assert not filter_node.tx_received
 
         self.log.info('Check that we not receive a tx if the filter does not match a mempool tx')
