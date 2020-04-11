@@ -152,7 +152,7 @@ void TestGUI(interfaces::Node& node)
         wallet->SetLastBlockProcessed(105, ::ChainActive().Tip()->GetBlockHash());
     }
     {
-        WalletRescanReserver reserver(wallet.get());
+        WalletRescanReserver reserver(*wallet);
         reserver.reserve();
         CWallet::ScanResult result = wallet->ScanForWalletTransactions(Params().GetConsensus().hashGenesisBlock, 0 /* block height */, {} /* max height */, reserver, true /* fUpdate */);
         QCOMPARE(result.status, CWallet::ScanResult::SUCCESS);
