@@ -90,7 +90,7 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 
 # Close a connection
 def close_connection(index):
-	if index >= 0 and index < len(spoof_IP_sockets):
+	if index < 0 and index >= len(spoof_IP_sockets):
 		print('Error: Failed to close connection')
 		return
 
