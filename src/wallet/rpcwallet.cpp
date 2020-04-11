@@ -152,6 +152,8 @@ static void WalletTxToJSON(interfaces::Chain& chain, interfaces::Chain::Lock& lo
     }
     uint256 hash = wtx.GetHash();
     entry.pushKV("txid", hash.GetHex());
+    if (wtx.isConflicted())
+        entry.pushKV("conflicted", true);
     UniValue conflicts(UniValue::VARR);
     for (const uint256& conflict : wtx.GetConflicts())
         conflicts.push_back(conflict.GetHex());
@@ -1366,6 +1368,7 @@ static const std::vector<RPCResult> TransactionDescriptionString()
            {RPCResult::Type::NUM, "blockindex", "The index of the transaction in the block that includes it."},
            {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
+           {RPCResult::Type::BOOL, "conflicted", "Only present if transaction is conflicted"},
            {RPCResult::Type::ARR, "walletconflicts", "Conflicting transaction ids.",
            {
                {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
