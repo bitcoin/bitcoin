@@ -91,7 +91,7 @@ bool IsConfSupported(KeyInfo& key, std::string& error) {
     return true;
 }
 
-bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys)
+bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys, std::map<std::string, std::vector<common::SettingsValue>>* settings_target)
 {
     LOCK(cs_args);
     std::vector<std::pair<std::string, std::string>> options;
@@ -107,6 +107,9 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
             if (!value) {
                 return false;
             }
+            if (settings_target) {
+                (*settings_target)[key.name].push_back(*value);
+            } else
             m_settings.ro_config[key.section][key.name].push_back(*value);
         } else {
             if (ignore_invalid_keys) {

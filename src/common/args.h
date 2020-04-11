@@ -144,7 +144,7 @@ protected:
     mutable fs::path m_cached_datadir_path GUARDED_BY(cs_args);
     mutable fs::path m_cached_network_datadir_path GUARDED_BY(cs_args);
 
-    [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
+    [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false, std::map<std::string, std::vector<common::SettingsValue>>* settings_target = nullptr);
 
     /**
      * Returns true if settings values from the default section should be used,
