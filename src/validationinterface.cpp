@@ -199,13 +199,14 @@ void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx) {
                           ptx->GetWitnessHash().ToString());
 }
 
-void CMainSignals::TransactionRemovedFromMempool(const CTransactionRef &ptx) {
-    auto event = [ptx, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionRemovedFromMempool(ptx); });
+void CMainSignals::TransactionRemovedFromMempool(const CTransactionRef &ptx, bool fIsConflicted) {
+    auto event = [ptx, fIsConflicted, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionRemovedFromMempool(ptx, fIsConflicted); });
     };
-    ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s wtxid=%s", __func__,
+    ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s wtxid=%s conflicted %s", __func__,
                           ptx->GetHash().ToString(),
-                          ptx->GetWitnessHash().ToString());
+                          ptx->GetWitnessHash().ToString(),
+                          fIsConflicted);
 }
 
 void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex) {

@@ -127,9 +127,12 @@ protected:
      * - BlockConnected(A)
      * - BlockConnected(B)
      *
+     * If removal is due to a conflict, provided boolean will be true to inform
+     * any client interested in changing tracking state of notified transaction.
+     *
      * Called on a background thread.
      */
-    virtual void TransactionRemovedFromMempool(const CTransactionRef &ptx) {}
+    virtual void TransactionRemovedFromMempool(const CTransactionRef &ptx, bool fIsConflicted) {}
     /**
      * Notifies listeners of a block being connected.
      * Provides a vector of transactions evicted from the mempool as a result.
@@ -197,7 +200,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef &);
-    void TransactionRemovedFromMempool(const CTransactionRef &);
+    void TransactionRemovedFromMempool(const CTransactionRef &, bool fIsConflicted);
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex* pindex);
     void ChainStateFlushed(const CBlockLocator &);

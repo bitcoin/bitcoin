@@ -145,7 +145,7 @@ public:
     {
         m_notifications->transactionAddedToMempool(tx);
     }
-    void TransactionRemovedFromMempool(const CTransactionRef& tx) override
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, bool is_conflicted) override
     {
         m_notifications->transactionRemovedFromMempool(tx);
     }
