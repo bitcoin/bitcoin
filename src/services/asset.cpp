@@ -217,7 +217,6 @@ bool BuildAssetJson(const CAsset& asset,UniValue& oAsset)
     oAsset.__pushKV("symbol", asset.strSymbol);
     oAsset.__pushKV("txid", asset.txHash.GetHex());
 	oAsset.__pushKV("public_value", stringFromVch(asset.vchPubData));
-	oAsset.__pushKV("address", asset.witnessAddress.ToString());
     oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
 	oAsset.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
 	oAsset.__pushKV("burn_balance", ValueFromAssetAmount(asset.nBurnBalance, asset.nPrecision));
@@ -237,21 +236,13 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
     uint256 blockhash;
-    if(pblockindexdb->ReadBlockHash(txHash, blockhash)){ 
-        LOCK(cs_main);
-        blockindex = LookupBlockIndex(blockhash);
-    }
-    if(blockindex)
-    {
-        nHeight = blockindex->nHeight;
-    }
+    pblockindexdb->ReadBlockHash(txHash, blockhash);
         	
 
 	entry.__pushKV("txtype", assetFromTx(tx.nVersion));
 	entry.__pushKV("asset_guid", asset.nAsset);
     entry.__pushKV("symbol", asset.strSymbol);
     entry.__pushKV("txid", txHash.GetHex());
-    entry.__pushKV("height", nHeight);
     
 	if (!asset.vchPubData.empty())
 		entry.__pushKV("public_value", stringFromVch(asset.vchPubData));
