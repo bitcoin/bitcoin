@@ -93,16 +93,15 @@ def close_connection(index):
 	if index < 0 and index >= len(spoof_IP_sockets):
 		print('Error: Failed to close connection')
 		return
-
 	ip, port = spoof_IP_and_ports[index]
 	interface = spoof_IP_interface[index][0]
-
-	spoof_IP_sockets[index].close()
-	terminal(f'sudo ifconfig {interface} {ip} down')
 
 	del spoof_IP_and_ports[index]
 	del spoof_IP_sockets[index]
 	del spoof_IP_interface[index]
+
+	spoof_IP_sockets[index].close()
+	terminal(f'sudo ifconfig {interface} {ip} down')
 
 	print(f'Connection to ({ip} : {port}) successfully closed')
 
