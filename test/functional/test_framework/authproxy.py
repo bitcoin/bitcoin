@@ -101,6 +101,7 @@ class AuthServiceProxy():
         if os.name == 'nt':
             # Windows somehow does not like to re-use connections
             # TODO: Find out why the connection would disconnect occasionally and make it reusable on Windows
+            # Avoid "ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine"
             self._set_conn()
         try:
             self.__conn.request(method, path, postdata, headers)
