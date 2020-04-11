@@ -120,10 +120,11 @@ public:
 };
 
 /** Show warning message **/
+// TODO: InitWarning() should take a bilingual_str parameter.
 void InitWarning(const std::string& str);
 
 /** Show error message **/
-bool InitError(const std::string& str);
+bool InitError(const bilingual_str& str);
 
 extern CClientUIInterface uiInterface;
 
