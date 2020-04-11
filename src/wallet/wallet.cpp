@@ -1108,11 +1108,15 @@ void CWallet::transactionAddedToMempool(const CTransactionRef& ptx) {
     }
 }
 
-void CWallet::transactionRemovedFromMempool(const CTransactionRef &ptx) {
+void CWallet::transactionRemovedFromMempool(const CTransactionRef &ptx, bool is_conflicted) {
     LOCK(cs_wallet);
     auto it = mapWallet.find(ptx->GetHash());
     if (it != mapWallet.end()) {
         it->second.fInMempool = false;
+    }
+    if (is_conflicted) {
+        CWalletTx::Confirmation confirm(CWalletTx::Status::CONFLICTED, /* block_height */ 0, /* block_hash */ {}, /* nIndex */ 0);
+        SyncTransaction(ptx, confirm);
     }
 }
 
@@ -1127,7 +1131,7 @@ void CWallet::blockConnected(const CBlock& block, int height)
     for (size_t index = 0; index < block.vtx.size(); index++) {
         CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, height, block_hash, index);
         SyncTransaction(block.vtx[index], confirm);
-        transactionRemovedFromMempool(block.vtx[index]);
+        transactionRemovedFromMempool(block.vtx[index], false);
     }
 }
 

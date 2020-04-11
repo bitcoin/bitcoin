@@ -147,7 +147,7 @@ public:
     }
     void TransactionRemovedFromMempool(const CTransactionRef& tx, bool is_conflicted) override
     {
-        m_notifications->transactionRemovedFromMempool(tx);
+        m_notifications->transactionRemovedFromMempool(tx, is_conflicted);
     }
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
