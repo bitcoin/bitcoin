@@ -90,7 +90,7 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 
 # Close a connection
 def close_connection(index):
-	if index not in spoof_IP_sockets:
+	if index > 0 and index < len(spoof_IP_sockets):
 		print('Error: Failed to close connection')
 		return
 	spoof_IP_sockets[index].close()
@@ -216,11 +216,9 @@ def packet_received(packet):
 
 				except Exception as e:
 					print("Closing socket because of error: " + str(e))
-					print(rand_i)
 					close_connection(rand_i)
 					#make_fake_connection(rand_ip, victim_ip) # Use old IP
 					#make_fake_connection(random_ip(), victim_ip)
-					print('*'*120 + 'CLOSING')
 					sys.exit()
 
 
