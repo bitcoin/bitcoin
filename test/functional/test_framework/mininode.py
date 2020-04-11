@@ -393,7 +393,7 @@ class P2PInterface(P2PConnection):
             last_headers = self.last_message.get('headers')
             if not last_headers:
                 return False
-            return last_headers.headers[0].rehash() == blockhash
+            return last_headers.headers[0].rehash() == int(blockhash, 16)
 
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
@@ -403,7 +403,7 @@ class P2PInterface(P2PConnection):
             last_filtered_block = self.last_message.get('merkleblock')
             if not last_filtered_block:
                 return False
-            return last_filtered_block.merkleblock.header.rehash() == blockhash
+            return last_filtered_block.merkleblock.header.rehash() == int(blockhash, 16)
 
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
