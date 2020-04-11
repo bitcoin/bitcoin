@@ -593,8 +593,12 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return false; // state filled in by CheckTransaction
     // SYSCOIN
     if(IsSyscoinTx(tx.nVersion)){
+        CAssetAllocation allocation(tx);
+        if(allocation.IsNull()) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-invalid-allocation");
+        }
         TxValidationState tx_state;
-        if (!CheckSyscoinInputs(tx, hash, tx_state, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast())) {
+        if (!CheckSyscoinInputs(tx, allocation, hash, tx_state, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast())) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx", tx_state.ToString()); 
         } 
     }     
@@ -723,7 +727,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
 
     CAmount nFees = 0;
-    if (!Consensus::CheckTxInputs(tx, state, m_view, GetSpendHeight(m_view), nFees)) {
+    // SYSCOIN
+    if (!Consensus::CheckTxInputs(const_cast<CTransaction&>(tx), state, m_view, GetSpendHeight(m_view), nFees, allocation)) {
         return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
     }
 
@@ -2189,9 +2194,28 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
         if (!tx.IsCoinBase())
         {
-            CAmount txfee = 0;
             TxValidationState tx_state;
-            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
+            // SYSCOIN
+            CAssetAllocation allocation;
+            if(IsSyscoinTx(tx.nVersion)){
+                allocation = CAssetAllocation(tx);
+                if(allocation.IsNull()) {
+                    LogPrintf("ERROR: %s: Consensus::CheckSyscoinInputs allocation deserialization failed\n", __func__);
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "block-allocation-parse-failed");
+                }
+                TxValidationState tx_state;
+                // just temp var not used in !fJustCheck mode
+                if (!CheckSyscoinInputs(ibd, tx, allocation, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, vecMintKeys)){
+                    // Any transaction validation failure in ConnectBlock is a block consensus failure
+                    state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
+                                tx_state.GetRejectReason(), tx_state.GetDebugMessage());
+                    return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
+                }
+            }
+
+            CAmount txfee = 0;
+            // SYSCOIN
+            if (!Consensus::CheckTxInputs(const_cast<CTransaction&>(tx), tx_state, view, pindex->nHeight, txfee, allocation)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                             tx_state.GetRejectReason(), tx_state.GetDebugMessage());
@@ -2243,17 +2267,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                     tx.GetHash().ToString(), state.ToString());
             }
             control.Add(vChecks);
-            // SYSCOIN
-            if(IsSyscoinTx(tx.nVersion)){
-                TxValidationState tx_state;
-                // just temp var not used in !fJustCheck mode
-                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, vecMintKeys)){
-                    // Any transaction validation failure in ConnectBlock is a block consensus failure
-                    state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
-                                tx_state.GetRejectReason(), tx_state.GetDebugMessage());
-                    return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
-                }
-            }
         }
         if(!fJustCheck){
             blockIndex.emplace_back(std::move(txHash), std::move(blockHash));

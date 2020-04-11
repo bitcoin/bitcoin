@@ -656,9 +656,16 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
 {
     TxValidationState dummy_state; // Not used. CheckTxInputs() should always pass
     CAmount txfee = 0;
-    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee);
+    // SYSCOIN
+    CAssetAllocation allocation;
+    CTransaction txTmp = tx;
+    if(IsSyscoinTx(tx)) {
+        allocation = CAssetAllocation(tx);
+        assert(!allocation.IsNull());
+    }
+    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(txTmp, dummy_state, mempoolDuplicate, spendheight, txfee);
     assert(fCheckResult);
-    UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
+    UpdateCoins(txTmp, mempoolDuplicate, std::numeric_limits<int>::max());
 }
 
 void CTxMemPool::check(const CCoinsViewCache *pcoins) const

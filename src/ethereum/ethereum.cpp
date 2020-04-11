@@ -102,13 +102,15 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
  * @param outputAmount The amount burned
  * @param nAsset The asset burned
  * @param nLocalPrecision The local precision to know how to convert ethereum's uint256 to a CAmount (int64) with truncation of insignifficant bits
+ * @param witnessAddress The destination witness address for the minting
  * @return true if everything is valid
  */
-bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, const std::vector<unsigned char>& vchAssetContract, CAmount& outputAmount, uint32_t& nAsset, const uint8_t& nLocalPrecision) {
+bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, const std::vector<unsigned char>& vchAssetContract, CAmount& outputAmount, uint32_t& nAsset, const uint8_t& nLocalPrecision, CWitnessAddress& witnessAddress) {
     if(vchAssetContract.empty()){
       return false;
     }
-    if(vchInputData.size() != 132) {
+    // total 7 or 8 fields are expected @ 32 bytes each field, 8 fields if witness > 32 bytes
+    if(vchInputData.size() < 228 || vchInputData.size() > 260) {
       return false;  
     }
     // method hash is 4 bytes
@@ -153,5 +155,20 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     }
     // once we have truncated it is safe to get low 64 bits of the uint256 which should encapsulate the entire value
     outputAmount = outputAmountArith.GetLow64();
-    return true;
+
+    // skip data field market (32 bytes) + 31 bytes offset to the varint _byte
+    dataPos += 63;
+    const unsigned char &dataLength = vchInputData[dataPos++] - 1; // // - 1 to account for the version byte
+    // witness programs can extend to 40 bytes, min length is 2 for min witness program
+    if(dataLength > 40 || dataLength < 2){
+      return false;
+    }
+
+    // witness address information starting at position dataPos till the end
+    // get version proceeded by witness program bytes
+    const unsigned char& nVersion = vchInputData[dataPos++];
+    std::vector<unsigned char>::const_iterator firstWitness = vchInputData.begin()+dataPos;
+    std::vector<unsigned char>::const_iterator lastWitness = firstWitness + dataLength; 
+    witnessAddress = CWitnessAddress(nVersion, std::vector<unsigned char>(firstWitness,lastWitness));
+    return witnessAddress.IsValid();
 }
