@@ -148,19 +148,11 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
     uint256 blockhash;
-    if(pblockindexdb->ReadBlockHash(txHash, blockhash)){ 
-        LOCK(cs_main);
-        blockindex = LookupBlockIndex(blockhash);
-    }
-    if(blockindex)
-    {
-        nHeight = blockindex->nHeight;
-    }
+    pblockindexdb->ReadBlockHash(txHash, blockhash);
     entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
     entry.__pushKV("asset_guid", assetallocation.nAsset);
     entry.__pushKV("symbol", dbAsset.strSymbol);
     entry.__pushKV("txid", txHash.GetHex());
-    entry.__pushKV("height", nHeight);
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;
     for(int i =0; i < mintsyscoin.assetAllocation.voutAssets.size();i++) {
@@ -189,14 +181,7 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &
         int nHeight = 0;
         CBlockIndex* blockindex = nullptr;
         uint256 blockhash;
-        if(pblockindexdb->ReadBlockHash(txHash, blockhash)){ 
-            LOCK(cs_main);
-            blockindex = LookupBlockIndex(blockhash);
-        }
-        if(blockindex)
-        {
-            nHeight = blockindex->nHeight;
-        }
+        pblockindexdb->ReadBlockHash(txHash, blockhash);
         entry.__pushKV("txtype", "assetallocationmint");
         CAsset dbAsset;
         GetAsset(mintsyscoin.assetAllocation.nAsset, dbAsset);
@@ -215,7 +200,6 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &
         entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
         entry.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
         entry.__pushKV("txid", txHash.GetHex());
-        entry.__pushKV("height", nHeight);
         entry.__pushKV("blockhash", blockhash.GetHex());
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.__pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   

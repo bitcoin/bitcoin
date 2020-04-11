@@ -747,7 +747,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     } 
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
-            if(!fUnitTest && tx.vout[nDataOut].nValue < 500*COIN) {
+            if (!fUnitTest && tx.vout[nDataOut].nValue < 500*COIN) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
             if (theAsset.assetAllocation.nAsset <= (SYSCOIN_TX_VERSION_ALLOCATION_SEND*10)) {
@@ -768,15 +768,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (theAsset.nBalance > theAsset.nMaxSupply || (theAsset.nBalance <= 0)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bSanityCheck);
             }
-            if (!theAsset.witnessAddress.IsValid()) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-address", bSanityCheck);
-            }
-            if(theAsset.nUpdateFlags > ASSET_UPDATE_ALL) {
+            if (theAsset.nUpdateFlags > ASSET_UPDATE_ALL) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
             } 
-            if(!theAsset.witnessAddressTransfer.IsNull()) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-transfer-address", bSanityCheck);
-            }
             if (nAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-guid", bSanityCheck);
             }         
@@ -789,22 +783,19 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (theAsset.nBalance < 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-balance", bSanityCheck);
             }
-            if (theAsset.nBurnBalance != 0) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-burn-balance", bSanityCheck);
-            }   
             if (!theAssetAllocation.IsNull()) {
                 return FormatSyscoinErrorMessage(state, "asset-allocations-not-empty", bSanityCheck);
             }
             if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }  
-            if(theAsset.nUpdateFlags > ASSET_UPDATE_ALL) {
+            if (theAsset.nUpdateFlags > ASSET_UPDATE_ALL) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
             }
             if (theAsset.nPrecision != storedAssetRef.nPrecision) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             }
-            if(theAsset.strSymbol != storedAssetRef.strSymbol) {
+            if (theAsset.strSymbol != storedAssetRef.strSymbol) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }         
             if (theAsset.nBalance > 0 && !(storedAssetRef.nUpdateFlags & ASSET_UPDATE_SUPPLY)) {
