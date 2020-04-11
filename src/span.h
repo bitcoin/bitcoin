@@ -24,6 +24,23 @@ public:
     constexpr Span(C* data, std::ptrdiff_t size) noexcept : m_data(data), m_size(size) {}
     constexpr Span(C* data, C* end) noexcept : m_data(data), m_size(end - data) {}
 
+    /** Implicit conversion of spans between compatible types.
+     *
+     *  Specifically, if a pointer to an array of type O can be implicitly converted to a pointer to an array of type
+     *  C, then permit implicit conversion of Span<O> to Span<C>. This matches the behavior of the corresponding
+     *  C++20 std::span constructor.
+     *
+     *  For example this means that a Span<T> can be converted into a Span<const T>.
+     */
+    template <typename O, typename std::enable_if<std::is_convertible<O (*)[], C (*)[]>::value, int>::type = 0>
+    constexpr Span(const Span<O>& other) noexcept : m_data(other.m_data), m_size(other.m_size) {}
+
+    /** Default copy constructor. */
+    constexpr Span(const Span&) noexcept = default;
+
+    /** Default assignment operator. */
+    Span& operator=(const Span& other) noexcept = default;
+
     constexpr C* data() const noexcept { return m_data; }
     constexpr C* begin() const noexcept { return m_data; }
     constexpr C* end() const noexcept { return m_data + m_size; }
@@ -41,6 +58,8 @@ public:
     friend constexpr bool operator<=(const Span& a, const Span& b) noexcept { return !(b < a); }
     friend constexpr bool operator>(const Span& a, const Span& b) noexcept { return (b < a); }
     friend constexpr bool operator>=(const Span& a, const Span& b) noexcept { return !(a < b); }
+
+    template <typename O> friend class Span;
 };
 
 /** Create a span to a container exposing data() and size().
