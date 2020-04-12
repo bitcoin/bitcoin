@@ -4092,7 +4092,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
             if (pto->nNextInvSend < current_time) {
                 fSendTrickle = true;
                 if (pto->fInbound) {
-                    pto->nNextInvSend = std::chrono::microseconds{connman->PoissonNextSendInbound(nNow, INVENTORY_BROADCAST_INTERVAL)};
+                    pto->nNextInvSend = std::chrono::microseconds{connman->PoissonNextSendInbound(current_time.count(), INVENTORY_BROADCAST_INTERVAL)};
                 } else {
                     // Use half the delay for regular outbound peers, as there is less privacy concern for them.
                     // and quarter the delay for Masternode outbound peers, as there is even less privacy concern in this case.
