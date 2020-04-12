@@ -30,8 +30,10 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <noui.h>
+#include <init.h>
 #include <ui_interface.h>
 #include <uint256.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 
@@ -431,6 +433,32 @@ int GuiMain(int argc, char* argv[])
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
 
+#if defined(WIN32)
+#else
+    node->setupServerArgs();
+    SetupUIArgs();
+    std::string error;
+    if (!gArgs.ParseParameters(argc, argv, error))
+        return InitError(strprintf("Error parsing command line arguments: %s\n", error));
+
+    if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
+        std::string strUsage = PACKAGE_NAME " version " + FormatFullVersion() + "\n";
+
+        if (gArgs.IsArgSet("-version"))
+        {
+            strUsage += FormatParagraph(LicenseInfo()) + "\n";
+        }
+        else
+        {
+            strUsage += "\nUsage:  bitcoin-qt [options]                     Start " PACKAGE_NAME "\n";
+            strUsage += "\n" + gArgs.GetHelpMessage();
+        }
+
+        tfm::format(std::cout, "%s", strUsage);
+        return EXIT_SUCCESS;
+    }
+#endif
+
     BitcoinApplication app(*node);
 
     // Register meta types used for QMetaObject::invokeMethod and Qt::QueuedConnection
@@ -446,6 +474,7 @@ int GuiMain(int argc, char* argv[])
     qRegisterMetaType<std::function<void()>>("std::function<void()>");
     qRegisterMetaType<QMessageBox::Icon>("QMessageBox::Icon");
 
+#if defined(WIN32)
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
     node->setupServerArgs();
@@ -459,6 +488,7 @@ int GuiMain(int argc, char* argv[])
             QString::fromStdString("Error parsing command line arguments: %1.").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
     }
+#endif
 
     // Now that the QApplication is setup and we have parsed our parameters, we can set the platform style
     app.setupPlatformStyle();
