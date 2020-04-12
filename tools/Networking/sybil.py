@@ -55,6 +55,10 @@ def random_ip():
 		if ip not in [x[0] for x in identity_address]: break
 	return ip
 
+# Checking the internet by sending a single ping to Google
+def internet_is_active():
+	return os.system('ping -c 1 google.com') == 0
+
 # If all else fails, we can use this to recover the network
 def reset_network():
 	print('Resetting network...')
@@ -239,6 +243,9 @@ def on_close():
 	cleanup_ipaliases()
 	cleanup_iptables()
 	print('Cleanup complete. Goodbye.')
+	print('Verifying that internet works...')
+	if not internet_is_active():
+		reset_network()
 
 
 # This is the first code to run
