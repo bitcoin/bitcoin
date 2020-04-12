@@ -50,6 +50,7 @@ def random_ip():
 			old_ip = ip
 			ip = ip.replace('255', str(random.randint(0, 255)), 1)
 		# Don't accept already assigned IPs
+		if ip == default_gateway: continue
 		if ip == victim_ip: continue
 		if ip not in [x[0] for x in identity_address]: break
 	return ip
@@ -166,13 +167,13 @@ def attack(socket, src_ip, src_port, dst_ip, dst_port, interface):
 # Called when
 def initialize_network_info():
 	print('Retrieving network info...')
-	global network_interface, broadcast_address
+	global default_gateway, network_interface, broadcast_address
 
 	# Get the network interface of the default gateway
-	m = re.search(r'default.+ +dev +([^ ]+)', terminal('ip route'))
+	m = re.search(r'default +via +([^ ]+) +dev +([^ ]+)', terminal('ip route'))
 	if m != None:
-		network_interface = m.group(1).strip()
-		print(network_interface)
+		default_gateway = m.group(1).strip()
+		network_interface = m.group(2).strip()
 	else:
 		print('Error: Network interface couldn\'t be found.')
 		sys.exit()
