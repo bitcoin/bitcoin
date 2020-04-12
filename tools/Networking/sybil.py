@@ -107,9 +107,14 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	if verbose: print('Creating network socket...')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	
-	#if verbose: print(f'Setting socket network interface to "{network_interface}"...')
-	#s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
-	
+	if verbose: print(f'Setting socket network interface to "{network_interface}"...')
+	success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
+	while success != 0
+		success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
+		time.sleep(1)
+		print(network_interface)
+
+
 	if verbose: print(f'Binding socket to ({src_ip} : {src_port})...')
 	s.bind((src_ip, src_port))
 
