@@ -160,7 +160,6 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 
 def attack(socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while True:
-		print(socket)
 		try:
 			socket.send(version_packet(src_ip, dst_ip, src_port, dst_port).to_bytes())
 		except:
