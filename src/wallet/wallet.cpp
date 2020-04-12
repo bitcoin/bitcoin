@@ -3282,12 +3282,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
             return false;
         }
         // Delete destdata tuples associated with address
-        std::string strAddress = EncodeDestination(address);
-        for (const std::pair<const std::string, std::string> &item : m_address_book[address].destdata)
-        {
-            batch.EraseDestData(strAddress, item.first);
-        }
-        m_address_book.erase(address);
+        batch.EraseDestData(address);
         is_mine = IsMine(address) != ISMINE_NO;
     }
 
@@ -3762,64 +3757,30 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx) const
 
 bool CWallet::SetAddressUsed(WalletBatch& batch, const CTxDestination& dest, bool used)
 {
-    const std::string key{"used"};
-    if (std::get_if<CNoDestination>(&dest))
-        return false;
-
-    if (!used) {
-        auto* data = util::FindKey(m_address_book, dest);
-        return data && data->destdata.erase(key) && batch.EraseDestData(EncodeDestination(dest), key);
-    }
-
-    const std::string value{"1"};
-    m_address_book[dest].destdata.insert(std::make_pair(key, value));
-    return batch.WriteDestData(EncodeDestination(dest), key, value);
-}
-
-void CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, const std::string &value)
-{
-    m_address_book[dest].destdata.insert(std::make_pair(key, value));
+    m_address_book[dest].SetUsed(used);
+    return batch.WriteUsed(dest, used);
 }
 
 bool CWallet::IsAddressUsed(const CTxDestination& dest) const
 {
-    const std::string key{"used"};
-    std::map<CTxDestination, CAddressBookData>::const_iterator i = m_address_book.find(dest);
-    if(i != m_address_book.end())
-    {
-        CAddressBookData::StringMap::const_iterator j = i->second.destdata.find(key);
-        if(j != i->second.destdata.end())
-        {
-            return true;
-        }
-    }
-    return false;
+    auto it = m_address_book.find(dest);
+    return it != m_address_book.end() && it->second.IsUsed();
 }
 
 std::vector<std::string> CWallet::GetAddressReceiveRequests() const
 {
-    const std::string prefix{"rr"};
-    std::vector<std::string> values;
-    for (const auto& address : m_address_book) {
-        for (const auto& data : address.second.destdata) {
-            if (!data.first.compare(0, prefix.size(), prefix)) {
-                values.emplace_back(data.second);
-            }
+    std::vector<std::string> requests;
+    for (const auto& dest : m_address_book) {
+        for (const auto& request : dest.second.GetReceiveRequests()) {
+            requests.emplace_back(request.second);
         }
     }
-    return values;
+    return requests;
 }
 
 bool CWallet::SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, const std::string& id, const std::string& value)
 {
-    const std::string key{"rr" + id}; // "rr" prefix = "receive request" in destdata
-    CAddressBookData& data = m_address_book.at(dest);
-    if (value.empty()) {
-        return data.destdata.erase(key) && batch.EraseDestData(EncodeDestination(dest), key);
-    } else {
-        data.destdata[key] = value;
-        return batch.WriteDestData(EncodeDestination(dest), key, value);
-    }
+    return m_address_book[dest].SetReceiveRequest(id, value) && batch.WriteReceiveRequest(dest, id, value);
 }
 
 std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error_string)

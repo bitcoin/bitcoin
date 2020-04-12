@@ -190,20 +190,28 @@ class CAddressBookData
 {
 private:
     bool m_change{true};
+    bool m_used{false};
     std::string m_label;
+    std::map<std::string, std::string> m_receive_requests;
 public:
     std::string purpose;
 
     CAddressBookData() : purpose("unknown") {}
 
-    typedef std::map<std::string, std::string> StringMap;
-    StringMap destdata;
-
     bool IsChange() const { return m_change; }
+    bool IsUsed() const { return m_used; }
+    void SetUsed(bool used) { m_used = used;}
     const std::string& GetLabel() const { return m_label; }
     void SetLabel(const std::string& label) {
         m_change = false;
         m_label = label;
+    }
+    const std::map<std::string, std::string>& GetReceiveRequests() const { return m_receive_requests; }
+    bool SetReceiveRequest(const std::string& id, const std::string& value)
+    {
+        if (value.empty()) return m_receive_requests.erase(id);
+        m_receive_requests[id] = value;
+        return true;
     }
 };
 

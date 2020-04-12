@@ -546,7 +546,12 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> strAddress;
             ssKey >> strKey;
             ssValue >> strValue;
-            pwallet->LoadDestData(DecodeDestination(strAddress), strKey, strValue);
+            CAddressBookData& data = pwallet->m_address_book[DecodeDestination(strAddress)];
+            if (strKey.compare("used") == 0) {
+                data.SetUsed(true);
+            } else if (strKey.compare(0, 2, "rr") == 0) {
+                data.SetReceiveRequest(strKey.substr(2), std::move(strValue));
+            }
         } else if (strType == DBKeys::HDCHAIN) {
             CHDChain chain;
             ssValue >> chain;
@@ -968,16 +973,24 @@ void MaybeCompactWalletDB()
     fOneThread = false;
 }
 
-bool WalletBatch::WriteDestData(const std::string &address, const std::string &key, const std::string &value)
+bool WalletBatch::WriteUsed(const CTxDestination& dest, bool used)
 {
-    return WriteIC(std::make_pair(DBKeys::DESTDATA, std::make_pair(address, key)), value);
+    auto key = std::make_pair(DBKeys::DESTDATA, std::make_pair(EncodeDestination(dest), std::string("used")));
+    return used ? WriteIC(key, std::string("p")) : EraseIC(key); // p for "present", opposite of absent (null)
 }
 
-bool WalletBatch::EraseDestData(const std::string &address, const std::string &key)
+bool WalletBatch::WriteReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& receive_request)
 {
-    return EraseIC(std::make_pair(DBKeys::DESTDATA, std::make_pair(address, key)));
+    auto key = std::make_pair(DBKeys::DESTDATA, std::make_pair(EncodeDestination(dest), "rr" + id));
+    return receive_request.empty() ? EraseIC(key) : WriteIC(key, receive_request);
 }
 
+bool WalletBatch::EraseDestData(const CTxDestination& dest)
+{
+    CDataStream prefix(SER_DISK, CLIENT_VERSION);
+    prefix << DBKeys::DESTDATA << EncodeDestination(dest);
+    return m_batch->ErasePrefix(prefix);
+}
 
 bool WalletBatch::WriteHDChain(const CHDChain& chain)
 {

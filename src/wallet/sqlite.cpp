@@ -91,6 +91,11 @@ void SQLiteBatch::SetupSQLStatements()
             throw std::runtime_error(strprintf("SQLiteDatabase: Failed to setup SQL statements: %s\n", sqlite3_errstr(res)));
         }
     }
+    if (!m_delete_prefix_stmt) {
+        if ((res = sqlite3_prepare_v2(m_database.m_db, "DELETE FROM main WHERE instr(?, key) = 1", -1, &m_delete_prefix_stmt, nullptr)) != SQLITE_OK) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to setup SQL statements: %s\n", sqlite3_errstr(res)));
+        }
+    }
     if (!m_cursor_stmt) {
         if ((res = sqlite3_prepare_v2(m_database.m_db, "SELECT key, value FROM main", -1, &m_cursor_stmt, nullptr)) != SQLITE_OK) {
             throw std::runtime_error(strprintf("SQLiteDatabase: Failed to setup SQL statements : %s\n", sqlite3_errstr(res)));
@@ -370,6 +375,10 @@ void SQLiteBatch::Close()
     if (ret != SQLITE_OK) {
         LogPrintf("SQLiteBatch: Batch closed but could not finalize delete statement: %s\n", sqlite3_errstr(ret));
     }
+    ret = sqlite3_finalize(m_delete_prefix_stmt);
+    if (ret != SQLITE_OK) {
+        LogPrintf("SQLiteBatch: Batch closed but could not finalize delete prefix statement: %s\n", sqlite3_errstr(ret));
+    }
     ret = sqlite3_finalize(m_cursor_stmt);
     if (ret != SQLITE_OK) {
         LogPrintf("SQLiteBatch: Batch closed but could not finalize cursor statement: %s\n", sqlite3_errstr(ret));
@@ -378,6 +387,7 @@ void SQLiteBatch::Close()
     m_insert_stmt = nullptr;
     m_overwrite_stmt = nullptr;
     m_delete_stmt = nullptr;
+    m_delete_prefix_stmt = nullptr;
     m_cursor_stmt = nullptr;
 }
 
@@ -453,28 +463,38 @@ bool SQLiteBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwrit
     return res == SQLITE_DONE;
 }
 
-bool SQLiteBatch::EraseKey(CDataStream&& key)
+bool SQLiteBatch::ExecStatement(sqlite3_stmt* stmt, Span<const uint8_t> blob)
 {
     if (!m_database.m_db) return false;
-    assert(m_delete_stmt);
+    assert(stmt);
 
     // Bind: leftmost parameter in statement is index 1
-    int res = sqlite3_bind_blob(m_delete_stmt, 1, key.data(), key.size(), SQLITE_STATIC);
+    int res = sqlite3_bind_blob(stmt, 1, blob.data(), blob.size(), SQLITE_STATIC);
     if (res != SQLITE_OK) {
         LogPrintf("%s: Unable to bind statement: %s\n", __func__, sqlite3_errstr(res));
-        sqlite3_clear_bindings(m_delete_stmt);
-        sqlite3_reset(m_delete_stmt);
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
         return false;
     }
 
     // Execute
-    res = sqlite3_step(m_delete_stmt);
-    sqlite3_clear_bindings(m_delete_stmt);
-    sqlite3_reset(m_delete_stmt);
+    res = sqlite3_step(stmt);
+    sqlite3_clear_bindings(stmt);
+    sqlite3_reset(stmt);
     if (res != SQLITE_DONE) {
         LogPrintf("%s: Unable to execute statement: %s\n", __func__, sqlite3_errstr(res));
     }
     return res == SQLITE_DONE;
+}
+
+bool SQLiteBatch::EraseKey(CDataStream&& key)
+{
+    return ExecStatement(m_delete_stmt, key);
+}
+
+bool SQLiteBatch::ErasePrefix(Span<uint8_t> prefix)
+{
+    return ExecStatement(m_delete_prefix_stmt, prefix);
 }
 
 bool SQLiteBatch::HasKey(CDataStream&& key)
