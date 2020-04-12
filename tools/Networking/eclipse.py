@@ -12,6 +12,7 @@ import random
 import re
 import socket
 import struct 
+import sys
 import time
 
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
@@ -78,7 +79,7 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 def close_connection(socket, ip, port, interface):
 	socket.close()
 	terminal(f'sudo ifconfig {interface} {ip} down')
-	
+
 	identity_socket.remove(socket)
 	identity_interface.remove(interface)
 	identity_address.remove((ip, port))

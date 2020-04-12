@@ -12,6 +12,7 @@ import random
 import re
 import socket
 import struct 
+import sys
 import time
 
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
