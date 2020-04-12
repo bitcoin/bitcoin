@@ -15,7 +15,11 @@ import time
 from test_framework.messages import msg_getaddr, msg_ping, msg_verack
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import wait_until
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than_or_equal,
+    wait_until,
+)
 
 banscore = 10
 
@@ -86,6 +90,14 @@ class CNodeNoVerackIdle(CLazyNode):
         self.send_message(msg_getaddr())
 
 
+class P2PVersionStore(P2PInterface):
+    version_received = None
+
+    def on_version(self, msg):
+        super().on_version(msg)
+        self.version_received = msg
+
+
 class P2PLeakTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -122,6 +134,18 @@ class P2PLeakTest(BitcoinTestFramework):
         assert no_version_bannode.unexpected_msg == False
         assert no_version_idlenode.unexpected_msg == False
         assert no_verack_idlenode.unexpected_msg == False
+
+        self.log.info('Check that the version message does not leak the local address of the node')
+        time_begin = int(time.time())
+        p2p_version_store = self.nodes[0].add_p2p_connection(P2PVersionStore())
+        time_end = time.time()
+        ver = p2p_version_store.version_received
+        assert_greater_than_or_equal(ver.nTime, time_begin)
+        assert_greater_than_or_equal(time_end, ver.nTime)
+        assert_equal(ver.addrFrom.port, 0)
+        assert_equal(ver.addrFrom.ip, '0.0.0.0')
+        assert_equal(ver.nStartingHeight, 201)
+        assert_equal(ver.nRelay, 1)
 
 
 if __name__ == '__main__':
