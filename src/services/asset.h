@@ -33,7 +33,7 @@ std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);
 std::vector<unsigned char> vchFromString(const std::string &str);
 std::string stringFromValue(const UniValue& value);
-int GetSyscoinDataOutput(const CTransaction& tx);
+unsigned int GetSyscoinDataOutput(const CTransaction& tx);
 bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, int& nOut);
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
@@ -99,7 +99,7 @@ public:
 
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
-        a.nAsset == b.nAsset
+        a.assetAllocation.nAsset == b.assetAllocation.nAsset
         );
     }
 
@@ -113,14 +113,14 @@ public:
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     void Serialize(std::vector<unsigned char>& vchData);
 };
-typedef std::unordered_map<uint32_t, CAsset > AssetMap;
+typedef std::unordered_map<int32_t, CAsset > AssetMap;
 class CAssetDB : public CDBWrapper {
 public:
     CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {}
-    bool EraseAsset(const uint32_t& nAsset) {
+    bool EraseAsset(const int32_t& nAsset) {
         return Erase(nAsset);
     }   
-    bool ReadAsset(const uint32_t& nAsset, CAsset& asset) {
+    bool ReadAsset(const int32_t& nAsset, CAsset& asset) {
         return Read(nAsset, asset);
     }  	
 	bool ScanAssets(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
@@ -128,7 +128,7 @@ public:
 };
 
 static CAsset emptyAsset;
-bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
+bool GetAsset(const int32_t &nAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, UniValue& oName);
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
 extern std::unique_ptr<CAssetDB> passetdb;

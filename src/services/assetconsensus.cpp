@@ -15,6 +15,8 @@
 #include <services/rpc/assetrpc.h>
 #include <validationinterface.h>
 #include <utility> // std::unique
+#include <services/witnessaddress.h>
+#include <key_io.h>
 std::unique_ptr<CBlockIndexDB> pblockindexdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
@@ -231,7 +233,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     CAsset& storedAssetRef = mapAsset->second;
     CAmount outputAmount;
-    uint32_t nAsset = 0;
+    int32_t nAsset = 0;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     std::vector<unsigned char> vchERC20ContractAddress;
     CWitnessAddress witnessAddress;
@@ -256,7 +258,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(mintSyscoin.assetAllocation.voutAssets.size() != 1) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-asset-outputs", bSanityCheck);  
     }
-    const CAmount &nTotal = mintSyscoin.assetAllocation.voutAssets[0];
+    const CAmount &nTotal = mintSyscoin.assetAllocation.voutAssets[0].nValue;
     if(outputAmount != nTotal) {
         return FormatSyscoinErrorMessage(state, "mint-mismatch-value", bSanityCheck);  
     }
@@ -277,11 +279,11 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     return true;
 }
 bool CheckSyscoinInputs(const CTransaction& tx, const CAssetAllocation& allocation, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime) {
-    if(nHeight < nUTXOAssetsBlock)
+    if(nHeight < Params().GetConsensus().nUTXOAssetsBlock)
         return true;
     AssetMap mapAssets;
     EthereumMintTxVec vecMintKeys;
-    return CheckSyscoinInputs(false, tx, allocation, txHash, state, inputs, true, nHeight, nTime, uint256(), false, mapAssets, vecMintKeys);
+    return CheckSyscoinInputs(false, tx, allocation, txHash, state, true, nHeight, nTime, uint256(), false, mapAssets, vecMintKeys);
 }
 bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const CAssetAllocation& allocation, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys) {
     bool good = true;
@@ -337,15 +339,14 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, Ethereum
         mapAsset->second = std::move(dbAsset);                        
     }
     CAsset& storedAssetRef = mapAsset->second;
-    CAmount outputAmount;
     CAmount nTotal = 0;
     for(const auto& voutAsset: mintSyscoin.assetAllocation.voutAssets) {
-        nTotal += voutAsset;
+        nTotal += voutAsset.nValue;
     }
     storedAssetRef.nBurnBalance += nTotal;
     return true;
 }
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys)
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys)
 {
     if(tx.IsCoinBase())
         return true;
@@ -356,7 +357,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
     }
     else{
         if (IsAssetAllocationTx(tx.nVersion)) {
-            if(!DisconnectAssetAllocationSend(tx, txHash, mapAssets))
+            if(!DisconnectAssetAllocation(tx, txHash, mapAssets))
                 return false;
         }
         else if (IsAssetTx(tx.nVersion)) {
@@ -376,21 +377,20 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
     return true;       
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &theAssetAllocation, const uint256& txHash, TxValidationState &state,
-        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck) {
-    if (passetallocationdb == nullptr)
-        return false;
+        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap &mapAssets, const bool &bSanityCheck) {
     if (!bSanityCheck)
         LogPrint(BCLog::SYS,"*** ASSET ALLOCATION %d %d %s %s bSanityCheck=%d\n", nHeight,
             ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
             fJustCheck ? "JUSTCHECK" : "BLOCK", bSanityCheck? 1: 0);
         
-    const int &nOut = GetSyscoinDataOutput(tx);
+    const unsigned int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
     }
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ALLOCATION_SEND:
-            const CAmount &nBurnAmount = theAssetAllocation.voutAssets.size() > nOut? theAssetAllocation.voutAssets[nOut]: 0;
+        {
+            const CAmount &nBurnAmount = theAssetAllocation.voutAssets.size() > nOut? theAssetAllocation.voutAssets[nOut].nValue: 0;
             // if there were any burns we should adjust asset burn balance
             if(nBurnAmount > 0) {
                 #if __cplusplus > 201402 
@@ -408,21 +408,22 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
                     } 
                     mapAsset->second = std::move(dbAsset);                        
                 }
-                CAsset& storedAssetRef = mapAsset->second;
-                storedAssetRef.nBurnBalance += nBurnAmount;
-                if (storedAssetRef.nBurnBalance > storedAssetRef.nTotalSupply)) {
+                mapAsset->second.nBurnBalance += nBurnAmount;
+                if (mapAsset->second.nBurnBalance > mapAsset->second.nTotalSupply) {
                     return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-balance", bSanityCheck);
                 }
             }
-            break; 
+        }
+        break; 
         case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
+        {
             const CAmount &nBurnAmount = tx.vout[nOut].nValue;
             if(nBurnAmount <= 0) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-positive-burn-amount", bSanityCheck);
             }
             CAmount nAmountAsset = 0;
             for(const auto& voutAsset: theAssetAllocation.voutAssets){
-                nAmountAsset += voutAsset;
+                nAmountAsset += voutAsset.nValue;
             }
             // the burn amount in opreturn (sys) should match the asset output total (sysx)
             if(nBurnAmount != nAmountAsset) {
@@ -446,28 +447,15 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
                 } 
                 mapAsset->second = std::move(dbAsset);                        
             }
-            CAsset& storedAssetRef = mapAsset->second;  
-            if (nBurnAmount <= 0 || nBurnAmount > storedAssetRef.nBurnBalance) {
+            if (nBurnAmount <= 0 || nBurnAmount > mapAsset->second.nBurnBalance) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
             }
-            storedAssetRef.nBurnBalance -= nBurnAmount;
-            break;
+            mapAsset->second.nBurnBalance -= nBurnAmount;
+        }
+        break;
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
-            if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
-                CBurnSyscoin burnSyscoin(tx);
-                if(burnSyscoin.IsNull()) {
-                    return FormatSyscoinErrorMessage(state, "assetallocation-parse-burn", bSanityCheck);
-                }
-                if(storedAssetRef.vchContract.empty() || storedAssetRef.vchContract != burnSyscoin.vchEthContract) {
-                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-contract", bSanityCheck);
-                }        
-            }
-
-            const CAmount &nBurnAmount = theAssetAllocation.voutAssets.size() > nOut? theAssetAllocation.voutAssets[nOut]: 0;
-            if(nBurnAmount <= 0 || nBurnAmount > storedAssetRef.nTotalSupply) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-positive-burn-amount", bSanityCheck);
-            }
+        {
             #if __cplusplus > 201402 
             auto result = mapAssets.try_emplace(theAssetAllocation.nAsset,  std::move(emptyAsset));
             #else
@@ -482,10 +470,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
                     return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-asset", bSanityCheck);             
                 } 
                 mapAsset->second = std::move(dbAsset);                        
+            }   
+
+            const CAmount &nBurnAmount = theAssetAllocation.voutAssets.size() > nOut? theAssetAllocation.voutAssets[nOut].nValue: 0;
+            if(nBurnAmount <= 0 || nBurnAmount > mapAsset->second.nTotalSupply) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-positive-burn-amount", bSanityCheck);
             }
-            CAsset& storedAssetRef = mapAsset->second;
-            storedAssetRef.nBurnBalance += nBurnAmount;
-            if (storedAssetRef.nBurnBalance > storedAssetRef.nTotalSupply)) {
+            mapAsset->second.nBurnBalance += nBurnAmount;
+            if (mapAsset->second.nBurnBalance > mapAsset->second.nTotalSupply) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-balance", bSanityCheck);
             }
             if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
@@ -497,10 +489,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
                     return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bSanityCheck);
                 }  
             }            
-            if(storedAssetRef.vchContract.empty()) {
+            if(mapAsset->second.vchContract.empty()) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-missing-contract", bSanityCheck);
-            } 
-            break;            
+            }
+        } 
+        break;
         default:
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-op", bSanityCheck);
     }
@@ -519,7 +512,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
 // revert asset burn balance based on any burns done in asset allocation tx
 bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     CAssetAllocation theAssetAllocation(tx);
-    const int &nOut = GetSyscoinDataOutput(tx);
+    const unsigned int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not find data output\n");
         return false;
@@ -530,6 +523,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, Asse
     }
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
+        {
             const CAmount &nBurnAmount = tx.vout[nOut].nValue;
             #if __cplusplus > 201402 
             auto result = mapAssets.try_emplace(theAssetAllocation.nAsset,  std::move(emptyAsset));
@@ -546,13 +540,14 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, Asse
                     return false;                
                 } 
                 mapAsset->second = std::move(dbAsset);                        
-            }
-            CAsset& storedAssetRef = mapAsset->second;  
-            storedAssetRef.nBurnBalance += nBurnAmount; 
-            break;  
+            } 
+            mapAsset->second.nBurnBalance += nBurnAmount;
+        }
+        break;  
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
-        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN: 
-            const CAmount &nBurnAmount = theAssetAllocation.voutAssets[nOut];
+        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
+        {
+            const CAmount &nBurnAmount = theAssetAllocation.voutAssets[nOut].nValue;
             #if __cplusplus > 201402 
             auto result = mapAssets.try_emplace(theAssetAllocation.nAsset,  std::move(emptyAsset));
             #else
@@ -569,15 +564,16 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, Asse
                 } 
                 mapAsset->second = std::move(dbAsset);                        
             }
-            CAsset& storedAssetRef = mapAsset->second;
-            if (nBurnAmount > storedAssetRef.nBurnBalance) {
+            if (nBurnAmount > mapAsset->second.nBurnBalance) {
                 LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Insufficient burn balance\n");
                 return false;
             }
-            storedAssetRef.nBurnBalance -= nBurnAmount;  
-            break;
-        case SYSCOIN_TX_VERSION_SYSCOIN_ALLOCATION_SEND: 
-            const CAmount &nBurnAmount = theAssetAllocation.voutAssets.size() > nOut? theAssetAllocation.voutAssets[nOut]: 0;
+            mapAsset->second.nBurnBalance -= nBurnAmount;
+        }
+        break;
+        case SYSCOIN_TX_VERSION_ALLOCATION_SEND:
+        {
+            const CAmount &nBurnAmount = theAssetAllocation.voutAssets.size() > nOut? theAssetAllocation.voutAssets[nOut].nValue: 0;
             // if there were any burns we should adjust asset burn balance
             if(nBurnAmount > 0) {
                 #if __cplusplus > 201402 
@@ -595,15 +591,14 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, Asse
                     } 
                     mapAsset->second = std::move(dbAsset);                        
                 }
-                CAsset& storedAssetRef = mapAsset->second;
-                if (storedAssetRef.nBurnBalance < nBurnAmount)) {
-                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-balance", bSanityCheck);
+                if (mapAsset->second.nBurnBalance < nBurnAmount) {
+                    LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Insufficient burn balance\n");
+                    return false;
                 }
-                storedAssetRef.nBurnBalance -= nBurnAmount;
+                mapAsset->second.nBurnBalance -= nBurnAmount;
             }
-            break;
-        default:
-            break;
+        }
+        break;
     }
     return true;  
 }
@@ -613,12 +608,12 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not decode asset allocation in asset send\n");
         return false;
     } 
-    const int &nOut = GetSyscoinDataOutput(tx);
+    const unsigned int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not find data output\n");
         return false;
     }
-    const uint32_t &nAsset = theAssetAllocation.nAsset;
+    const int32_t &nAsset = theAssetAllocation.nAsset;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
     #else
@@ -638,10 +633,10 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
     CAsset& storedAssetRef = mapAsset->second;
     CAmount nTotal = 0;
     for(const auto& voutAsset: theAssetAllocation.voutAssets){
-        nTotal += voutAsset;
+        nTotal += voutAsset.nValue;
     }
     storedAssetRef.nBalance += nTotal;
-    const CAmount &nBurnAmount = theAssetAllocation.voutAssets.size() > nOut? theAssetAllocation.voutAssets[nOut]: 0;
+    const CAmount &nBurnAmount = theAssetAllocation.voutAssets.size() > nOut? theAssetAllocation.voutAssets[nOut].nValue: 0;
     // if there were any burns we should adjust asset burn balance
     if(nBurnAmount > 0) {
         if (storedAssetRef.nBurnBalance < nBurnAmount) {
@@ -659,7 +654,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
         LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not decode asset\n");
         return false;
     }
-    const uint32_t &nAsset = theAsset.assetAllocation.nAsset;
+    const int32_t &nAsset = theAsset.assetAllocation.nAsset;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
     #else
@@ -694,7 +689,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
         LogPrint(BCLog::SYS,"DisconnectAssetActivate: Could not decode asset allocation in asset activate\n");
         return false;
     } 
-    const uint32_t &nAsset = theAssetAllocation.nAsset;
+    const int32_t &nAsset = theAssetAllocation.nAsset;
     #if __cplusplus > 201402 
     mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
     #else
@@ -721,12 +716,12 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
             return FormatSyscoinErrorMessage(state, "asset-unserialize", bSanityCheck);
         }
     }
-    const int &nOut = GetSyscoinDataOutput(tx);
+    const unsigned int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "asset-missing-burn-output", bSanityCheck);
     } 
     CAsset dbAsset;
-    const uint32_t &nAsset = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND ? theAssetAllocation.nAsset : theAsset.assetAllocation.nAsset;
+    const int32_t &nAsset = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND ? theAssetAllocation.nAsset : theAsset.assetAllocation.nAsset;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
     #else
@@ -755,6 +750,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
     } 
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
+        {
             if (!fUnitTest && tx.vout[nOut].nValue < 500*COIN) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
@@ -784,10 +780,12 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
             }         
             // starting supply is the supplied balance upon init
             storedAssetRef.nTotalSupply = theAsset.nBalance;
-            storedAssetRef.nBurnBalance = 0;  
-            break;
+            storedAssetRef.nBurnBalance = 0; 
+        }
+        break;
 
         case SYSCOIN_TX_VERSION_ASSET_UPDATE:
+        {
             if (theAsset.nBalance < 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-balance", bSanityCheck);
             }
@@ -839,29 +837,34 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
                 }
                 storedAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
-            }             
-            break;
+            }    
+        }         
+        break;
             
         case SYSCOIN_TX_VERSION_ASSET_SEND:
+        {
             CAmount nTotal = 0;
             for(const auto& voutAsset: theAssetAllocation.voutAssets){
-                nTotal += assetInfo.second;
+                nTotal += voutAsset.nValue;
             }
             if (storedAssetRef.nBalance < nTotal) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bSanityCheck);
             }
             storedAssetRef.nBalance -= nTotal;
-            const CAmount &nBurnAmount = theAssetAllocation.voutAssets.size() > nOut? theAssetAllocation.voutAssets[nOut]: 0;
+            const CAmount &nBurnAmount = theAssetAllocation.voutAssets.size() > nOut? theAssetAllocation.voutAssets[nOut].nValue: 0;
             // if there were any burns we should adjust asset burn balance
             if(nBurnAmount > 0) {
                 storedAssetRef.nBurnBalance += nBurnAmount;
-                if (storedAssetRef.nBurnBalance > storedAssetRef.nTotalSupply)) {
+                if (storedAssetRef.nBurnBalance > storedAssetRef.nTotalSupply) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-burn-balance", bSanityCheck);
                 }
-            }            
-            break;
+            }   
+        }         
+        break;  
         default:
+        {
             return FormatSyscoinErrorMessage(state, "asset-invalid-op", bSanityCheck);
+        }
     }
     
     if (!bSanityCheck) {

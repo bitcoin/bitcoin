@@ -401,7 +401,7 @@ public:
         int serializedIndex = isAbandoned() || isConflicted() ? -1 : m_confirm.nIndex;
         s << tx << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << fFromMe << dummy_bool;
         // SYSCOIN
-        tx.SerializeAssetInfo(s);
+        tx->SerializeAssetInfo(s);
     }
 
     template<typename Stream>
@@ -415,7 +415,7 @@ public:
         int serializedIndex;
         s >> tx >> m_confirm.hashBlock >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> mapValue >> vOrderForm >> fTimeReceivedIsTxTime >> nTimeReceived >> fFromMe >> dummy_bool;
         // SYSCOIN
-        tx.UnserializeAssetInfo(s);
+        tx->UnserializeAssetInfo(s);
         /* At serialization/deserialization, an nIndex == -1 means that hashBlock refers to
          * the earliest block in the chain we know this or any in-wallet ancestor conflicts
          * with. If nIndex == -1 and hashBlock is ABANDON_HASH, it means transaction is abandoned.
@@ -738,6 +738,9 @@ public:
      * if they are not ours
      */
     // SYSCOIN
+    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet,
+                    const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CAssetCoinInfo& nTargetValueAsset, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, CAmount& nValueRetAsset,
                     const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
@@ -817,6 +820,9 @@ public:
      * completion the coin set and corresponding actual target value is
      * assembled
      */
+    bool SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups,
+        std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const;
+    // SYSCOIN
     bool SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinInfo& nTargetValueAsset, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups,
         std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, CAmount& nValueRetAsset, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const;
 

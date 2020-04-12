@@ -101,14 +101,14 @@ struct AssetCoinInfoCompression
 {
     template<typename Stream, typename I> void Ser(Stream& s, I val)
     {
-        s << val.nAsset;
+        s << VARINT_MODE(val.nAsset, VarIntMode::NONNEGATIVE_SIGNED);
         if(val.nAsset > 0) {
             s << VARINT(CompressAmount(val.nValue));
         }
     }
     template<typename Stream, typename I> void Unser(Stream& s, I& val)
     {
-        val.nAsset >> s;
+        s >> VARINT_MODE(val.nAsset, VarIntMode::NONNEGATIVE_SIGNED);
         if(val.nAsset > 0) {
             uint64_t v;
             s >> VARINT(v);
@@ -125,6 +125,6 @@ struct TxOutCompression
 // SYSCOIN
 struct TxOutCoinCompression
 {
-    FORMATTER_METHODS(CTxOutCoin, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey)), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
+    FORMATTER_METHODS(CTxOutCoin, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
 };
 #endif // SYSCOIN_COMPRESSOR_H

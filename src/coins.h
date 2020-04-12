@@ -42,7 +42,7 @@ public:
 
     //! construct a Coin from a CTxOutCoin and height/coinbase information.
     // SYSCOIN
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(CTxOutCoin(outIn))), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
+    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(CTxOutCoin(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
     Coin(CTxOutCoin&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
     Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(CTxOutCoin(outIn)), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
 

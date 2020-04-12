@@ -1049,6 +1049,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 
 		//theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), amount));
 	}
+	CTxDestination auxFeeAddress;
 	const CAmount &nAuxFee = getAuxFee(find_value(r.get_obj(), "public_value").get_str(), inputamount, nprecision, auxFeeAddress);
 	if(nAuxFee > 0){
 		//theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(auxFeeAddress.nVersion, auxFeeAddress.vchWitnessProgram), nAuxFee));

@@ -19,7 +19,8 @@
 #include <util/time.h>
 #include <validationinterface.h>
 // SYSCOIN
-extern std::unordered_set<COutPoint> assetAllocationConflicts;
+#include <services/asset.h>
+extern std::set<COutPoint> assetAllocationConflicts;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
@@ -430,8 +431,6 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     totalTxSize -= it->GetTxSize();
     cachedInnerUsage -= it->DynamicMemoryUsage();
     cachedInnerUsage -= memusage::DynamicUsage(mapLinks[it].parents) + memusage::DynamicUsage(mapLinks[it].children);
-    // SYSCOIN
-    RemoveZDAGTx(ptx);
     mapLinks.erase(it);
     mapTx.erase(it);
     nTransactionsUpdated++;
@@ -659,11 +658,11 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
     // SYSCOIN
     CAssetAllocation allocation;
     CTransaction txTmp = tx;
-    if(IsSyscoinTx(tx)) {
+    if(IsSyscoinTx(tx.nVersion)) {
         allocation = CAssetAllocation(tx);
         assert(!allocation.IsNull());
     }
-    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(txTmp, dummy_state, mempoolDuplicate, spendheight, txfee);
+    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(txTmp, dummy_state, mempoolDuplicate, spendheight, txfee, allocation);
     assert(fCheckResult);
     UpdateCoins(txTmp, mempoolDuplicate, std::numeric_limits<int>::max());
 }

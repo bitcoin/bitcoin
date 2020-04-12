@@ -8,6 +8,7 @@
 #include <dbwrapper.h>
 #include <primitives/transaction.h>
 #include <compressor.h>
+#include <amount.h>
 class CTransaction;
 class CAsset;
 class CMintSyscoin;
@@ -33,17 +34,20 @@ public:
     }
 
 	CAmountCompressed() {
-		nAmount = 0;
+		nValue = 0;
 	}
-    CAmountCompressed(const CAmount& nAmountIn): nAmount(nAmountIn) {}
-
-    inline friend CAmount operator()() {
-        return nValue;
-    }
+    CAmountCompressed(const CAmount& nAmountIn): nValue(nAmountIn) {}
+	inline friend bool operator==(const CAmountCompressed &a, const CAmountCompressed &b) {
+		return (a.nValue == b.nValue
+			);
+	}
+    inline friend bool operator!=(const CAmountCompressed &a, const CAmountCompressed &b) {
+		return !(a == b);
+	}
 };
 class CAssetAllocation {
 public:
-    uint32_t nAsset;
+    int32_t nAsset;
 	std::vector<CAmountCompressed> voutAssets;
 
     SERIALIZE_METHODS(CAssetAllocation, obj)
@@ -77,7 +81,7 @@ public:
 		return !(a == b);
 	}
 	inline void SetNull() { ClearAssetAllocation();}
-    inline bool IsNull() { return voutAssets.empty();}
+    inline bool IsNull() const { return voutAssets.empty();}
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	void Serialize(std::vector<unsigned char>& vchData);

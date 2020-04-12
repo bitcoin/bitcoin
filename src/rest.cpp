@@ -600,9 +600,9 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
             utxo.pushKV("scriptPubKey", o);
             // SYSCOIN
-            if(!coin.assetInfo.IsNull()) {
-                utxo.pushKV("asset_guid", coin.assetInfo.nAsset);
-                utxo.pushKV("asset_value", ValueFromAmount(coin.assetInfo.nValue));
+            if(!coin.out.assetInfo.IsNull()) {
+                utxo.pushKV("asset_guid", coin.out.assetInfo.nAsset);
+                utxo.pushKV("asset_value", ValueFromAmount(coin.out.assetInfo.nValue));
             }
             utxos.push_back(utxo);
         }

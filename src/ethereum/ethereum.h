@@ -11,5 +11,5 @@
 #include <amount.h>
 class CWitnessAddress;
 bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP& parentNodes, const dev::RLP& root); 
-bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, const std::vector<unsigned char>& vchAssetContract, CAmount& outputAmount, uint32_t& nAsset, const uint8_t& nLocalPrecision, CWitnessAddress& witnessAddress);
+bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, const std::vector<unsigned char>& vchAssetContract, CAmount& outputAmount, int32_t& nAsset, const uint8_t& nLocalPrecision, CWitnessAddress& witnessAddress);
 #endif // SYSCOIN_ETHEREUM_ETHEREUM_H

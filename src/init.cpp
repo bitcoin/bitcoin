@@ -306,8 +306,6 @@ void Shutdown(NodeContext& node)
     // SYSCOIN
     FlushSyscoinDBs();
     passetdb.reset();
-    passetallocationdb.reset();
-    passetallocationmempooldb.reset();
     pethereumtxrootsdb.reset();
     pethereumtxmintdb.reset();
     pblockindexdb.reset();
@@ -468,6 +466,8 @@ void SetupServerArgs()
     gArgs.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-masternodeprivkey=<n>", "Set the masternode private key", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-assetindex=<n>", strprintf("Wallet is Asset aware, won't spend assets when sending only Syscoin (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);		
+    
     gArgs.AddArg("-sysxasset=<n>", strprintf("SYSX Asset Guid specified when running unit tests (default: %u)", defaultChainParams->GetConsensus().nSYSXAsset), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-tpstest", strprintf("TPSTest for unittest. Leave false"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -792,8 +792,6 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     BlockValidationState state;
-    // SYSCOIN
-	const int stopatblocknumber = gArgs.GetArg("-stopatblock", 0);
     if (!ActivateBestChain(state, chainparams)) {
         LogPrintf("Failed to connect best block (%s)\n", state.ToString());
         StartShutdown();
@@ -1632,10 +1630,8 @@ bool AppInitMain(NodeContext& node)
                 UnloadBlockIndex();
                                 
                 // SYSCOIN
-                
+                fAssetIndex = gArgs.GetBoolArg("-assetindex", false);	
                 passetdb.reset();
-                passetallocationdb.reset();
-                passetallocationmempooldb.reset();
                 pethereumtxrootsdb.reset();
                 pethereumtxmintdb.reset();
                 pblockindexdb.reset();

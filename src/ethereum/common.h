@@ -46,11 +46,9 @@
 #include <functional>
 #include <string>
 #include <chrono>
-#pragma warning(push)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#include <boost/multiprecision/cpp_int.hpp>
-#pragma warning(pop)
+#include <boost/multiprecision/cpp_int.hpp>	
 #pragma GCC diagnostic pop
 #include <ethereum/vector_ref.h>
 // CryptoPP defines _byte in the global namespace, so must we.

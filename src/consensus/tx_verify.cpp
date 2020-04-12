@@ -13,6 +13,8 @@
 #include <chain.h>
 #include <coins.h>
 #include <util/moneystr.h>
+// SYSCOIN
+#include <services/asset.h>
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
     if (tx.nLockTime == 0)
@@ -155,18 +157,17 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 // SYSCOIN
-bool GetAssetValueOut(const CTransaction& tx, const CAssetAllocation& allocation, TxValidationState& state, CAmount &nValueOut) const
+bool GetAssetValueOut(const CTransaction& tx, const CAssetAllocation& allocation, TxValidationState& state, CAmount &nValueOut)
 {
-    const bool &isSyscoinAssetSendTx = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND);
-    const bool &isSyscoinAssetNewOrUpdateTx = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND);
-    int nAssetSend = 0;
+    const bool &isSyscoinAssetSendTx = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND;
+    const bool &isSyscoinAssetNewOrUpdateTx = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND;
     nValueOut = 0;
     // asset (activate/update) are allowed only 1 asset output
     if(isSyscoinAssetNewOrUpdateTx) {
         if(allocation.voutAssets.size() != 1) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-too-many-values");
         }
-        if(allocation.voutAssets[0] != 0) {
+        if(allocation.voutAssets[0].nValue != 0) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-value-non-zero");
         }
         return true;
@@ -182,10 +183,10 @@ bool GetAssetValueOut(const CTransaction& tx, const CAssetAllocation& allocation
         }
         // otherwise validate the value as positive
         else {
-            if (!AssetRange(voutAsset))
+            if (!AssetRange(voutAsset.nValue))
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-value-outofrange");
         }    
-        nValueOut += voutAsset;
+        nValueOut += voutAsset.nValue;
     }
 
     if(!AssetRange(nValueOut))
@@ -193,7 +194,7 @@ bool GetAssetValueOut(const CTransaction& tx, const CAssetAllocation& allocation
     return true;
 }
 // SYSCOIN remove const CTransaction
-bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, const CCoinsViewCacheAssetAllocations& assetallocation_inputs, int nSpendHeight, CAmount& txfee, const CAssetAllocation &allocation)
+bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const CCoinsViewCache &inputs, int nSpendHeight, CAmount& txfee, const CAssetAllocation &allocation)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -244,9 +245,10 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
     }
     if(isSyscoinTx) {
+        std::vector<CTxOut>& vout = *const_cast<std::vector<CTxOut>*>(&tx.vout);
         // CTxOut does not serialize assetInfo to make it consistent with Bitcoin serializaion, CTxOutInfo (used by utxo db) persists assetInfo
         for (unsigned int i = 0; i < allocation.voutAssets.size(); ++i) {
-            tx.vout[i].assetInfo = CAssetCoinInfo(nAsset, allocation.voutAssets[i]);
+            vout[i].assetInfo = CAssetCoinInfo(allocation.nAsset, allocation.voutAssets[i].nValue);
         }
         if(!isSyscoinWithNoInputTx || isSyscoinAssetTx) {
             CAmount asset_value_out; 
@@ -267,7 +269,8 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
                 if(tx.vout.size() <= allocation.voutAssets.size()) {
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-change-index-outofrange");
                 }
-                tx.vout[allocation.voutAssets.size()].assetInfo = CAssetCoinInfo(nAsset, asset_change);
+                std::vector<CTxOut>& vout = *const_cast<std::vector<CTxOut>*>(&tx.vout);
+                vout[allocation.voutAssets.size()].assetInfo = CAssetCoinInfo(allocation.nAsset, asset_change);
             }
         }
     }

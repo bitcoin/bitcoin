@@ -13,7 +13,9 @@
 #include <uint256.h>
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
+// SYSCOIN
 class CAssetAllocation;
+class CAssetCoinInfo;
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -131,20 +133,28 @@ public:
 
 class CAssetCoinInfo {
 public:
-	uint32_t nAsset;
+	int32_t nAsset;
 	CAmount nValue;
 	CAssetCoinInfo() {
 		SetNull();
 	}
+    CAssetCoinInfo(const int32_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) { }
  
     friend bool operator==(const CAssetCoinInfo& a, const CAssetCoinInfo& b)
     {
         return (a.nAsset   == b.nAsset &&
                 a.nValue == b.nValue);
     }
+    ADD_SERIALIZE_METHODS;
 
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(nAsset);
+        if(nAsset > 0)
+            READWRITE(nValue);
+    }
 	inline void SetNull() { nAsset = 0; nValue = 0;}
-    inline bool IsNull() { return nAsset == 0;}
+    inline bool IsNull() const { return nAsset == 0;}
 };
 
 /** An output of a transaction.  It contains the public key that the next input
@@ -194,10 +204,9 @@ public:
     {
         return !(a == b);
     }
-
     std::string ToString() const;
 };
-
+// SYSCOIN
 class CTxOutCoin: public CTxOut
 {
 public:
@@ -206,10 +215,11 @@ public:
         SetNull();
     }
 
-    CTxOutCoin(const CTxOut& txOut): CTxOut(txOut.nValueIn, txOut.scriptPubKeyIn), assetInfo(txOut.assetInfo) {}
+    CTxOutCoin(const CTxOut& txOut): CTxOut(txOut.nValue, txOut.scriptPubKey) { assetInfo = txOut.assetInfo;}
     friend bool operator==(const CTxOutCoin& a, const CTxOutCoin& b)
     {
-        return ((*(CTxOut*)a) == (*(CTxOut*)b) &&
+        return (a.nValue       == b.nValue &&
+                a.scriptPubKey == b.scriptPubKey &&
                 a.assetInfo == b.assetInfo);
     }
     friend bool operator!=(const CTxOutCoin& a, const CTxOutCoin& b)
@@ -338,6 +348,11 @@ public:
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
 
+private:
+    /** Memory only. */
+    const uint256 hash;
+    const uint256 m_witness_hash;
+
     uint256 ComputeHash() const;
     uint256 ComputeWitnessHash() const;
 
@@ -346,23 +361,6 @@ public:
     CTransaction();
     const int32_t nVersion;
     const uint32_t nLockTime;
-    // SYSCOIN
-    template <typename Stream>
-    inline void SerializeAssetInfo(Stream& s) const {
-        for (size_t i = 0; i < vout.size(); i++) {
-            s << vout[i].assetInfo;
-        }
-    }
-    template <typename Stream>
-    inline void UnserializeAssetInfo(Stream& s) const {
-        for (size_t i = 0; i < vout.size(); i++) {
-            s >> vout[i].assetInfo;
-        }
-    }
-private:
-    /** Memory only. */
-    const uint256 hash;
-    const uint256 m_witness_hash;
 
     /** Convert a CMutableTransaction into a CTransaction. */
     explicit CTransaction(const CMutableTransaction &tx);
@@ -372,7 +370,21 @@ private:
     inline void Serialize(Stream& s) const {
         SerializeTransaction(*this, s);
     }
-
+    // SYSCOIN
+    template <typename Stream>
+    inline void SerializeAssetInfo(Stream& s) const {
+        std::vector<CTxOut>& voutRef = *const_cast<std::vector<CTxOut>*>(&vout);
+        for (size_t i = 0; i < voutRef.size(); i++) {
+            s << voutRef[i].assetInfo;
+        }
+    }
+    template <typename Stream>
+    inline void UnserializeAssetInfo(Stream& s) const {
+        std::vector<CTxOut>& voutRef = *const_cast<std::vector<CTxOut>*>(&vout);
+        for (size_t i = 0; i < voutRef.size(); i++) {
+            s >> voutRef[i].assetInfo;
+        }
+    }
     /** This deserializing constructor is provided instead of an Unserialize method.
      *  Unserialize is not possible, since it would require overwriting const fields. */
     template <typename Stream>

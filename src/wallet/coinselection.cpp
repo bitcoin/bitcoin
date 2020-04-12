@@ -175,7 +175,7 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
 }
 
 static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const CAmount& nTotalLower, const CAmount& nTargetValue,
-                                  std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000, bool bAsset)
+                                  std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000, bool bAsset = false)
 {
     std::vector<char> vfIncluded;
 
@@ -304,7 +304,7 @@ bool KnapsackSolver(const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputG
     if(nTargetValueAsset.IsNull())
         return true;
     CAmount nTargetValue = nTargetValueAsset.nValue;
-    nValueRetAsset = 0;
+    nValueRet = 0;
 
     // List of values less than target
     Optional<OutputGroup> lowest_larger;

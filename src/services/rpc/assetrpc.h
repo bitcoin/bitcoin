@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_SERVICES_RPC_ASSETRPC_H
 #define SYSCOIN_SERVICES_RPC_ASSETRPC_H
 #include <string>
-class CAmount;
-class CTxDestination;
+#include <amount.h>
+#include <script/standard.h>
 CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const uint8_t &nPrecision, CTxDestination & address);
 #endif // SYSCOIN_SERVICES_RPC_ASSETRPC_H
