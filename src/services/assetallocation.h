@@ -7,9 +7,7 @@
 
 #include <dbwrapper.h>
 #include <primitives/transaction.h>
-#include <unordered_map>
-#include <unordered_set>
-#include <txmempool.h>
+#include <compressor.h>
 class CTransaction;
 class CAsset;
 class CMintSyscoin;
