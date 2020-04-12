@@ -165,10 +165,10 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	except:
 		print('Error: unable to  start thread to sniff interface {interface}')
 
-def sniff(socket, dst_ip, dst_port, src_ip, src_port, interface):
+def sniff(socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while True:
 		packet = socket.recv(65565)
-		packet_received(packet, socket, from_ip, interface)
+		packet_received(packet, socket, dst_ip, dst_port, src_ip, src_port, interface)
 
 # Called when a packet is sniffed from the network
 def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interface):
