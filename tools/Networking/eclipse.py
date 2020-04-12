@@ -162,10 +162,15 @@ def packet_received(packet):
 
 	msg_raw = bytes(packet)
 	is_bitcoin = msg_raw[0:4] == b'\xf9\xbe\xb4\xd9'
-	msg_type = msg_raw[4:4+12].split(b"\x00", 1)[0].decode()
-	payload_length = struct.unpack(b'<i', msg_raw[4+12:4+12+4])[0]
-	payload_valid = msg_raw[4+12+4:4+12+4+4] == hashlib.sha256(hashlib.sha256(msg_raw[4+12+4+4:4+12+4+4+payload_length]).digest()).digest()[:4]
-	payload_length_valid = len(msg_raw) - payload_length == 4+12+4+4
+	msg_type = ''
+	payload_length = 0
+	payload_valid = False
+	payload_length_valid = False
+	if is_bitcoin:
+		msg_type = msg_raw[4:4+12].split(b"\x00", 1)[0].decode()
+		payload_length = struct.unpack(b'<i', msg_raw[4+12:4+12+4])[0]
+		payload_valid = msg_raw[4+12+4:4+12+4+4] == hashlib.sha256(hashlib.sha256(msg_raw[4+12+4+4:4+12+4+4+payload_length]).digest()).digest()[:4]
+		payload_length_valid = len(msg_raw) - payload_length == 4+12+4+4
 	#msg_payload = b''
 	#if(payload_valid and payload_length_valid):
 	#	msg_payload = msg_raw[4+12+4+4:4+12+4+4+payload_length]
