@@ -60,6 +60,7 @@ def ip_alias(ip_address):
 	global alias_num
 	print(f'Setting up IP alias {ip_address} on {network_interface}')
 	interface = f'{network_interface}:{alias_num}'
+	terminal(f'sudo ifconfig {interface} {ip_address} down')
 	terminal(f'sudo ifconfig {interface} {ip_address} netmask 255.255.255.0 broadcast {broadcast_address} up')
 	alias_num += 1
 	return interface
