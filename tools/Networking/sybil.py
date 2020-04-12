@@ -24,7 +24,7 @@ victim_ip = '10.0.2.4'
 victim_port = 8333
 
 # How many identities should run simultaneously
-num_identities = 10
+num_identities = 3
 
 # While attacking the victim, wait this many seconds before sending each version message
 seconds_between_version_packets = 0.1
