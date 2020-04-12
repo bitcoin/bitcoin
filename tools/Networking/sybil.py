@@ -77,12 +77,11 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 
 # Close a connection
 def close_connection(socket, ip, port, interface):
+	socket.close()
 	terminal(f'sudo ifconfig {interface} {ip} down')
 
 	if socket in identity_socket: identity_socket.remove(socket)
-	else: print('!!!!!!!!!! SOCKET NOT FOUND')
-	socket.close()
-
+	else: del socket
 	if interface in identity_interface: identity_interface.remove(interface)
 	if (ip, port) in identity_address: identity_address.remove((ip, port))
 	print(f'Successfully closed connection to ({ip} : {port})')
