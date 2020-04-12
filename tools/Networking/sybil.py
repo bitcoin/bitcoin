@@ -160,7 +160,7 @@ def attack(socket, src_ip, src_port, dst_ip, dst_port, interface):
 			break
 	close_connection(socket, src_ip, src_port, interface)
 	print(f'Peer was banned ({src_ip} : {src_port})')
-	#make_fake_connection(random_ip(), dst_ip, False)
+	make_fake_connection(random_ip(), dst_ip, False)
 
 # Called when
 def initialize_network_info():
