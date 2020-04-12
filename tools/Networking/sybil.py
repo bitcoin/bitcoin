@@ -58,7 +58,7 @@ def random_ip():
 # Create an alias for a specified identity
 def ip_alias(ip_address):
 	global alias_num
-	print(f'Setting up IP alias {ip_address}')
+	print(f'Setting up IP alias {ip_address} on {network_interface}')
 	interface = f'{network_interface}:{alias_num}'
 	terminal(f'sudo ifconfig {interface} {ip_address} netmask 255.255.255.0 broadcast {broadcast_address} up')
 	alias_num += 1
@@ -121,7 +121,12 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	s.bind((src_ip, src_port))
 
 	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
-	s.connect((dst_ip, dst_port))
+	try:
+		s.connect((dst_ip, dst_port))
+	except:
+		close_connection(s, src_ip, src_port, interface)
+		make_fake_connection(random_ip(), dst_ip, False)
+		return
 
 	# Send version packet
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
