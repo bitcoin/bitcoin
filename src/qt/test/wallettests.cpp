@@ -264,7 +264,7 @@ void TestGUI(interfaces::Node& node)
     QCOMPARE(currentRowCount, initialRowCount+1);
 
     // Check addition to wallet
-    std::vector<std::string> requests = walletModel.wallet().getDestValues("rr");
+    std::vector<std::string> requests = walletModel.wallet().getAddressReceiveRequests();
     QCOMPARE(requests.size(), size_t{1});
     RecentRequestEntry entry;
     CDataStream{MakeUCharSpan(requests[0]), SER_DISK, CLIENT_VERSION} >> entry;
@@ -286,7 +286,7 @@ void TestGUI(interfaces::Node& node)
     QCOMPARE(requestTableModel->rowCount({}), currentRowCount-1);
 
     // Check removal from wallet
-    QCOMPARE(walletModel.wallet().getDestValues("rr").size(), size_t{0});
+    QCOMPARE(walletModel.wallet().getAddressReceiveRequests().size(), size_t{0});
 }
 
 } // namespace
