@@ -161,6 +161,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 def packet_received(packet):
 
 	msg_raw = bytes(packet[TCP].payload)
+	print(msg_raw)
 	is_bitcoin = False
 	try:
 		is_bitcoin = (msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')
