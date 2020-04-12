@@ -194,8 +194,6 @@ def packet_received(msg_raw):
 	print(f'{msg_type} size = {len(msg_raw)}')
 	print(f'payload_valid={payload_valid}')
 	print(f'payload_length_valid={payload_length_valid}')
-	print(f'************* DIR {dir(packet)}')
-	sys.exit()
 	if not payload_valid: return
 	if not payload_length_valid: return
 
