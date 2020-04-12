@@ -112,6 +112,15 @@ class AuthServiceProxy():
             self.__conn.close()
             self.__conn.request(method, path, postdata, headers)
             return self._get_response()
+        except OSError as e:
+            retry = (
+                '[WinError 10053] An established connection was aborted by the software in your host machine' in str(e))
+            if retry:
+                self.__conn.close()
+                self.__conn.request(method, path, postdata, headers)
+                return self._get_response()
+            else:
+                raise
 
     def get_request(self, *args, **argsn):
         AuthServiceProxy.__id_count += 1
