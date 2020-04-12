@@ -393,18 +393,17 @@ class P2PInterface(P2PConnection):
             last_headers = self.last_message.get('headers')
             if not last_headers:
                 return False
-            return last_headers.headers[0].rehash() == blockhash
+            return last_headers.headers[0].rehash() == int(blockhash, 16)
 
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
-    def wait_for_merkleblock(self, timeout=60):
+    def wait_for_merkleblock(self, blockhash, timeout=60):
         def test_function():
             assert self.is_connected
             last_filtered_block = self.last_message.get('merkleblock')
             if not last_filtered_block:
                 return False
-            # TODO change this method to take a hash value and only return true if the correct block has been received
-            return True
+            return last_filtered_block.merkleblock.header.rehash() == int(blockhash, 16)
 
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
