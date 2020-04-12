@@ -399,7 +399,6 @@ class P2PInterface(P2PConnection):
     def on_mempool(self, message): pass
     def on_notfound(self, message): pass
     def on_pong(self, message): pass
-    def on_reject(self, message): pass
     def on_sendaddrv2(self, message): pass
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
