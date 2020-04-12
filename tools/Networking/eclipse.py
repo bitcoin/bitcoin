@@ -168,15 +168,10 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 def sniff(socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while True:
 		packet = socket.recv(65565)
-		print(f'Packet: {packet}')
-		#packet_received(packet)
+		packet_received(packet)
 
 # Called when a packet is sniffed from the network
-def packet_received(packet):
-	#packet.show()
-
-	msg_raw = bytes(packet[TCP].payload)
-	#print('"' + str(packet) + '"')
+def packet_received(msg_raw):
 	if len(msg_raw) >= 4:
 		is_bitcoin = (msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')
 	else:
