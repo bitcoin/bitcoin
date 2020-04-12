@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <rpc/server.h>
 #include <wallet/wallet.h>
+#include <wallet/coinselection.h>
 #include <chainparams.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
@@ -122,7 +123,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     theAssetAllocation.voutAssets.push_back(nAmount);
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddressFrom));
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false, CAssetCoinInfo(nAsset, nAmount) };
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
     vecSend.push_back(recp);
 
     vector<unsigned char> data;
@@ -140,6 +141,8 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     std::string strError;
     int nChangePosRet = -1;
     CCoinControl coin_control;
+    coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
+    coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
     tx->tx.nVersion = SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
@@ -264,7 +267,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     }
     // new/send/update all have asset utxo's with 0 asset amount
     CAmount nAssetAmount = 0;
-    CRecipient recp = { GetScriptForDestination(dest), nGas, false, CAssetCoinInfo(0, nAssetAmount) };
+    CRecipient recp = { GetScriptForDestination(dest), nGas, false };
     vecSend.push_back(recp);
     CScript scriptData;
     scriptData << OP_RETURN << data;
@@ -296,7 +299,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     scriptData.clear();
     scriptData << OP_RETURN << data;
     // create recipient aware that it is for an asset
-    recp = { GetScriptForDestination(dest), nGas, false, CAssetCoinInfo(newAsset.assetAllocation.nAsset, nAssetAmount) };
+    recp = { GetScriptForDestination(dest), nGas, false };
     vecSend.push_back(recp);
     CreateFeeRecipient(scriptData, opreturnRecipient);
     if(!fUnitTest){
@@ -324,17 +327,15 @@ UniValue assetnew(const JSONRPCRequest& request) {
     res.__pushKV("asset_guid", newAsset.assetAllocation.nAsset);
     return res;
 }
-UniValue CreateAssetUpdateTx(CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient, const int nVersion, const CRecpient* recpIn = null_ptr) {
+UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient, const int nVersion, const CRecpient* recpIn = null_ptr) {
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
-    CCoinControl cctl;
-    cctl.m_avoid_address_reuse = false;
-    cctl.m_min_depth = nMinDepth;
-    cctl.m_max_depth = nMaxDepth;
-    cctl.m_asset_guid = nAsset;
+    CCoinControl coin_control;
+    coin_control.m_avoid_address_reuse = false;
     CAmount nMinimumAmountAsset = 0;
     CAmount nMaximumAmountAsset = 0;
     CAmount nMinimumSumAmountAsset = 0;
+    coin_control.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
     std::vector<COutput> vecOutputs;
     pwallet->AvailableCoins(*locked_chain, vecOutputs, true, &cctl, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset);
     int nNumOutputsFound = 0;
@@ -351,11 +352,12 @@ UniValue CreateAssetUpdateTx(CWallet* const pwallet, std::vector<CRecipient>& ve
     if(nNumOutputsFound <= 0) {
         throw JSONRPCError(RPC_WALLET_ERROR, "No inputs found for this asset");
     }
-    CAmount nGas = foundOutput.tx->tx->vout[foundOutput.i].nValue;  
+    
     if (!pwallet->CanGetAddresses()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
-
+    const CInputCoin &inputCoin = foundOutput.GetInputCoin();
+    const CAmount &nGas = inputCoin.effective_value;  
     // Parse the label first so we don't generate a key if there's an error
     std::string label = "";
     CTxDestination dest;
@@ -363,9 +365,8 @@ UniValue CreateAssetUpdateTx(CWallet* const pwallet, std::vector<CRecipient>& ve
     if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, error)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
     }
-    CAmount nAssetAmount = 0;
     // subtract fee from this output (it should pay the gas which was funded by asset new)
-    CRecipient recp = recpIn? *recpIn: { GetScriptForDestination(dest), nGas, true, CAssetCoinInfo(nAsset, nAssetAmount) };
+    CRecipient recp = recpIn? *recpIn: { GetScriptForDestination(dest), nGas, true };
     // order matters, after the calling function adds whatever outputs for assets, we need to add the
     // change back to a new output proceeding the asset outputs, other outputs can come after
     vecSend.push_back(recp);
@@ -374,7 +375,8 @@ UniValue CreateAssetUpdateTx(CWallet* const pwallet, std::vector<CRecipient>& ve
     CAmount nFeeRequired = 0;
     std::string strError;
     int nChangePosRet = -1;
-    CCoinControl coin_control;
+    coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
+    coin_control.Select(inputCoin.outpoint);
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
     tx->tx.nVersion = nVersion;
@@ -382,7 +384,7 @@ UniValue CreateAssetUpdateTx(CWallet* const pwallet, std::vector<CRecipient>& ve
     if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
         if(nFeeRequired > nGas && ((tx->GetValueOut() + nFeeRequired) <= curBalance)) {
             // if gas runs out, try fund from new inputs
-            recp = { GetScriptForDestination(dest), nGas, false, CAssetCoinInfo(nAsset, nAssetAmount) };
+            recp = { GetScriptForDestination(dest), nGas, false };
             vecSend.clear();
             vecSend.push_back(recp);
             vecSend.push_back(opreturnRecipient);
@@ -496,7 +498,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(pwallet, vecSend, opreturnRecipient, SYSCOIN_TX_VERSION_ASSET_UPDATE);
+    return CreateAssetUpdateTx(nAsset, pwallet, vecSend, opreturnRecipient, SYSCOIN_TX_VERSION_ASSET_UPDATE);
 }
 UniValue assettransfer(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -539,10 +541,9 @@ UniValue assettransfer(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
     }
     // new/send/update all have asset utxo's with 0 asset amount
-    CAmount nAssetAmount = 0;
     const CScript& scriptPubKey = GetScriptForDestination(dest);
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false, CAssetCoinInfo(nAsset, nAssetAmount) };
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
 
     theAsset.vchPubData.clear();
     theAsset.vchContract.clear();
@@ -559,7 +560,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(pwallet, vecSend, opreturnRecipient, SYSCOIN_TX_VERSION_ASSET_UPDATE, &recp);
+    return CreateAssetUpdateTx(nAsset, pwallet, vecSend, opreturnRecipient, SYSCOIN_TX_VERSION_ASSET_UPDATE, &recp);
 }
 UniValue assetsendmany(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -614,7 +615,6 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"asset_guid'\, \"address'\", \"amount\"}");
 
         const UniValue &receiverObj = receiver.get_obj();
-        const uint32_t &nAsset = find_value(receiverObj, "asset_guid").get_uint();
         const std::string &toStr = find_value(receiverObj, "address").get_str(); 
         const CScript& scriptPubKey = GetScriptForDestination(EncodeDestination(toStr));             
         UniValue amountObj = find_value(receiverObj, "amount");
@@ -627,7 +627,8 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         else
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in asset output array");
         theAssetAllocation.voutAssets.push_back(nAmount);
-        CRecipient recp = { scriptPubKey, nAmount, false };
+        CTxOut change_prototype_txout(0, scriptPubKey);
+        CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
         vecSend.push_back(recp);
     }
 
@@ -639,7 +640,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     scriptData << OP_RETURN << data;
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
-    return CreateAssetUpdateTx(pwallet, vecSend, opreturnRecipient, SYSCOIN_TX_VERSION_ASSET_SEND);
+    return CreateAssetUpdateTx(nAsset, pwallet, vecSend, opreturnRecipient, SYSCOIN_TX_VERSION_ASSET_SEND);
 }
 
 UniValue assetsend(const JSONRPCRequest& request) {
@@ -746,7 +747,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			if (amount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
 			theAssetAllocation.voutAssets.push_back(nAmount);
-            CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false, CAssetCoinInfo(nAsset, nAmount) };
+            CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
             vecSend.push_back(recp);
         }
 		else
@@ -758,11 +759,14 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         theAssetAllocation.voutAssets.push_back(nAuxFee);
         const CScript& scriptPubKey = GetScriptForDestination(auxFeeAddress);
         CTxOut change_prototype_txout(0, scriptPubKey);
-        CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false, CAssetCoinInfo(nAsset, nAuxFee) };
+        CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
         vecSend.push_back(recp);
     }
 
-
+    CAmount nTotal = 0;
+    for(const auto& amount: theAssetAllocation.voutAssets) {
+        nTotal += amount;
+    }
 	vector<unsigned char> data;
 	theAssetAllocation.Serialize(data);   
 
@@ -780,6 +784,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     std::string strError;
     int nChangePosRet = -1;
     CCoinControl coin_control;
+    coin_control.assetInfo = CAssetCoinInfo(nAsset, nTotal);
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
     tx->tx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
@@ -848,13 +853,14 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
-    fee.assetInfo = CAssetCoinInfo(nAsset, amount);
 	vecSend.push_back(fee); 
 	// Create and send the transaction
     CAmount nFeeRequired = 0;
     std::string strError;
     int nChangePosRet = -1;
     CCoinControl coin_control;
+    coin_control.assetInfo = CAssetCoinInfo(nAsset, amount);
+    coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
     tx->tx.nVersion = nVersion;
@@ -988,7 +994,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     }
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false, CAssetCoinInfo(nAsset, nAmount) };
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
     vecSend.push_back(recp);
     vector<unsigned char> data;
     mintSyscoin.Serialize(data);
@@ -1003,6 +1009,8 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     std::string strError;
     int nChangePosRet = -1;
     CCoinControl coin_control;
+    coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
+    coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
     tx->tx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_MINT;

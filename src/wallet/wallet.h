@@ -197,7 +197,6 @@ struct CRecipient
     CScript scriptPubKey;
     CAmount nAmount;
     bool fSubtractFeeFromAmount;
-    Optional<CAssetCoinInfo> assetInfo;
 };
 
 typedef std::map<std::string, std::string> mapValue_t;
