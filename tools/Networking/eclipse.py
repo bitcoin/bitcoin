@@ -119,28 +119,29 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	s.connect((dst_ip, dst_port))
 
 	# Send version packet
-	if verbose: print('\nSending VERSION packet')
+	#if verbose: print('\nSending VERSION packet')
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
 	print(version)
 	s.send(version.to_bytes())
 
 	# Get verack packet
-	if verbose: print('\nReceiving VERACK packet')
+	#if verbose: print('\nReceiving VERACK packet')
 	verack = s.recv(1924)
-	if verbose: print(verack) # Next message received must be <= 1924 bytes
+	#if verbose: print(verack) # Next message received must be <= 1924 bytes
 	
 	# Send verack packet
-	if verbose: print('\nSending VERACK packet')
+	#if verbose: print('\nSending VERACK packet')
 	verack = msg_verack(bitcoin_protocolversion)
-	if verbose: print(verack)
+	#if verbose: print(verack)
 	s.send(verack.to_bytes())
 
 	# Get verack packet
-	if verbose: print('\nReceiving VERACK packet')
-	if verbose: print(s.recv(1024)) # Next message received must be <= 1024 bytes
+	#if verbose: print('\nReceiving VERACK packet')
+	verack = s.recv(1024)
+	#if verbose: print(verack) # Next message received must be <= 1024 bytes
 
 	if verbose: print('\n\n')
-	if verbose: print('* CONNECTION SUCCESSFULLY ESTABLISHED *')
+	if verbose: print('Connection successful')
 
 	identity_address.append((src_ip, src_port))
 	identity_socket.append(s)
