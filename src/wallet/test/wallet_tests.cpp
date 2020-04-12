@@ -922,6 +922,7 @@ private:
     bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override { return m_pass; }
     bool EraseKey(DataStream&& key) override { return m_pass; }
     bool HasKey(DataStream&& key) override { return m_pass; }
+    bool ErasePrefix(Span<const std::byte> prefix) override { return m_pass; }
 
 public:
     explicit FailBatch(bool pass) : m_pass(pass) {}
