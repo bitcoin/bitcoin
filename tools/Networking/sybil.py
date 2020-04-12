@@ -109,7 +109,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	
 	if verbose: print(f'Setting socket network interface to "{network_interface}"...')
 	success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
-	while success != 0
+	while success != 0:
 		success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
 		time.sleep(1)
 		print(network_interface)
