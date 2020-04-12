@@ -1213,8 +1213,7 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
-    // SYSCOIN
-    return txout.assetInfo.IsNull() && IsMine(txout.scriptPubKey);
+    return IsMine(txout.scriptPubKey);
 }
 
 isminetype CWallet::IsMine(const CTxDestination& dest) const
@@ -2177,7 +2176,7 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
             // SYSCOIN
             if (!bIncludeLocked && IsLockedCoin(entry.first, i))
                 continue;
-            if (coinControl && coinControl->m_asset_guid > 0 && coinControl->m_asset_guid != wtx.tx->vout[i].assetInfo.nAsset)
+            if (coinControl && !coinControl->fAllowOtherInputs && coinControl->assetInfo.nAsset > 0 && coinControl->assetInfo.nAsset != wtx.tx->vout[i].assetInfo.nAsset)
                 continue;
             if (IsSpent(wtxid, i))
                 continue;
@@ -2335,8 +2334,10 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
         const bool& bAsset = !nTargetValueAsset.IsNull();
         for (const OutputGroup& group : groups) {
             if (!group.EligibleForSpending(eligibility_filter)) continue;
-            // SYSCOIN for sys spends we don't attach asset inputs
-            if(bAsset && !group.effective_value_asset.IsNull()) continue;
+            // SYSCOIN for sys spends we don't attach asset inputs (if -assetindex is set as a startup param, it is false by default)
+            // by default, assets will be spent automatically as syscoin when dust coins are selected so users should select assetindex if they
+            // want their wallet aware of assets, exchanges and services only dealing with syscoin should keep it default
+            if(fAssetIndex && bAsset && !group.effective_value_asset.IsNull()) continue;
             utxo_pool.push_back(group);
         }
         // SYSCOIN
@@ -2775,8 +2776,6 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                          int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign)
 {
     CAmount nValue = 0;
-    CAssetCoinInfo nValueAsset;
-    uint32_t nAsset = 0;
     const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
     ReserveDestination reservedest(this, change_type);
     int nChangePosRequest = nChangePosInOut;
@@ -2789,17 +2788,6 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
             return false;
         }
         nValue += recipient.nAmount;
-        // SYSCOIN
-        if(!recipient.assetInfo.IsNull()) {
-            if (nValueAsset.nValue < 0 || recipient.assetInfo.nValue < 0)
-            {
-                strFailReason = _("Transaction amounts must not be negative").translated;
-                return false;
-            }
-            nValueAsset.nAsset = recipient.assetInfo.nAsset;
-            nValueAsset.nValue += recipient.assetInfo.nValue;
-            nAsset = nValueAsset.nAsset;    
-        }
         if (recipient.fSubtractFeeFromAmount)
             nSubtractFeeFromAmount++;
     }
@@ -2885,7 +2873,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
 
                 CAmount nValueToSelect = nValue;
                 // SYSCOIN
-                CAssetCoinInfo nValueToSelectAsset = nValueAsset;
+                CAssetCoinInfo nValueToSelectAsset = coin_control.assetInfo;
                 if (nSubtractFeeFromAmount == 0)
                     nValueToSelect += nFeeRet;
 
@@ -2945,7 +2933,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                         coin_selection_params.change_spend_size = (size_t)change_spend_size;
                     }
                     coin_selection_params.effective_fee = nFeeRateNeeded;
-                    if (!SelectCoins(vAvailableCoins, nValueToSelect, nValueToSelectAsset, setCoins, nValueIn, nValueInAsset, acoin_control, coin_selection_params, bnb_used))
+                    if (!SelectCoins(vAvailableCoins, nValueToSelect, nValueToSelectAsset, setCoins, nValueIn, nValueInAsset, coin_control, coin_selection_params, bnb_used))
                     {
                         // If BnB was used, it was the first pass. No longer the first pass and continue loop with knapsack.
                         if (bnb_used) {
@@ -2963,7 +2951,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
 
                 const CAmount nChange = nValueIn - nValueToSelect;
                 // SYSCOIN
-                CAssetCoinInfo nChangeAsset = CAssetCoinInfo(nAsset, nValueInAsset - nValueToSelectAsset.nValue);
+                CAssetCoinInfo nChangeAsset = CAssetCoinInfo(coin_control.assetInfo.nAsset, nValueInAsset - nValueToSelectAsset.nValue);
                 if (nChange > 0)
                 {
                     // Fill a vout to ourself
