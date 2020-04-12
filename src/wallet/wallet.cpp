@@ -3798,8 +3798,9 @@ bool CWallet::GetDestData(const CTxDestination &dest, const std::string &key, st
     return false;
 }
 
-std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
+std::vector<std::string> CWallet::GetAddressReceiveRequests() const
 {
+    const std::string prefix{"rr"};
     std::vector<std::string> values;
     for (const auto& address : m_address_book) {
         for (const auto& data : address.second.destdata) {
@@ -3809,6 +3810,18 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
         }
     }
     return values;
+}
+
+bool CWallet::SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, const std::string& id, const std::string& value)
+{
+    const std::string key{"rr" + id}; // "rr" prefix = "receive request" in destdata
+    CAddressBookData& data = m_address_book.at(dest);
+    if (value.empty()) {
+        return data.destdata.erase(key) && batch.EraseDestData(EncodeDestination(dest), key);
+    } else {
+        data.destdata[key] = value;
+        return batch.WriteDestData(EncodeDestination(dest), key, value);
+    }
 }
 
 std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error_string)
