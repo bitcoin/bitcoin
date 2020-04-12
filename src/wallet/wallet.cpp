@@ -813,12 +813,11 @@ void CWallet::SetSpentKeyState(WalletBatch& batch, const uint256& hash, unsigned
     CTxDestination dst;
     if (ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst)) {
         if (IsMine(dst)) {
-            if (used && !GetDestData(dst, "used", nullptr)) {
-                if (AddDestData(batch, dst, "used", "p")) { // p for "present", opposite of absent (null)
+            if (used != IsAddressUsed(dst)) {
+                if (used) {
                     tx_destinations.insert(dst);
                 }
-            } else if (!used && GetDestData(dst, "used", nullptr)) {
-                EraseDestData(batch, dst, "used");
+                SetAddressUsed(batch, dst, used);
             }
         }
     }
@@ -834,7 +833,7 @@ bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
         if (!ExtractDestination(srctx->tx->vout[n].scriptPubKey, dest)) {
             return false;
         }
-        if (GetDestData(dest, "used", nullptr)) {
+        if (IsAddressUsed(dest)) {
             return true;
         }
         if (IsLegacy()) {
@@ -842,15 +841,15 @@ bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
             assert(spk_man != nullptr);
             for (const auto& keyid : GetAffectedKeys(srctx->tx->vout[n].scriptPubKey, *spk_man)) {
                 WitnessV0KeyHash wpkh_dest(keyid);
-                if (GetDestData(wpkh_dest, "used", nullptr)) {
+                if (IsAddressUsed(wpkh_dest)) {
                     return true;
                 }
                 ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
-                if (GetDestData(sh_wpkh_dest, "used", nullptr)) {
+                if (IsAddressUsed(sh_wpkh_dest)) {
                     return true;
                 }
                 PKHash pkh_dest(keyid);
-                if (GetDestData(pkh_dest, "used", nullptr)) {
+                if (IsAddressUsed(pkh_dest)) {
                     return true;
                 }
             }
@@ -3761,20 +3760,20 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx) const
     return nTimeSmart;
 }
 
-bool CWallet::AddDestData(WalletBatch& batch, const CTxDestination &dest, const std::string &key, const std::string &value)
+bool CWallet::SetAddressUsed(WalletBatch& batch, const CTxDestination& dest, bool used)
 {
+    const std::string key{"used"};
     if (std::get_if<CNoDestination>(&dest))
         return false;
 
+    if (!used) {
+        if (auto* data = util::FindKey(m_address_book, dest)) data->destdata.erase(key);
+        return batch.EraseDestData(EncodeDestination(dest), key);
+    }
+
+    const std::string value{"1"};
     m_address_book[dest].destdata.insert(std::make_pair(key, value));
     return batch.WriteDestData(EncodeDestination(dest), key, value);
-}
-
-bool CWallet::EraseDestData(WalletBatch& batch, const CTxDestination &dest, const std::string &key)
-{
-    if (!m_address_book[dest].destdata.erase(key))
-        return false;
-    return batch.EraseDestData(EncodeDestination(dest), key);
 }
 
 void CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, const std::string &value)
@@ -3782,16 +3781,15 @@ void CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, c
     m_address_book[dest].destdata.insert(std::make_pair(key, value));
 }
 
-bool CWallet::GetDestData(const CTxDestination &dest, const std::string &key, std::string *value) const
+bool CWallet::IsAddressUsed(const CTxDestination& dest) const
 {
+    const std::string key{"used"};
     std::map<CTxDestination, CAddressBookData>::const_iterator i = m_address_book.find(dest);
     if(i != m_address_book.end())
     {
         CAddressBookData::StringMap::const_iterator j = i->second.destdata.find(key);
         if(j != i->second.destdata.end())
         {
-            if(value)
-                *value = j->second;
             return true;
         }
     }
