@@ -185,13 +185,14 @@ def packet_received(packet):
 		return
 
 	# Extract the message type
-	msgtype = packet.load[4:16].decode()
+	msgtype = str(packet.load[4:16].decode())
 
 	# Relay Bitcoin packets that aren't from the victim
 	if packet[IP].src == victim_ip:
 		print(f'*** Message received ** addr={packet[IP].dst} ** cmd={msgtype}')
 		print(msgtype == 'ping')
 		if msgtype == 'ping':
+			payload = packet[TCP].payload
 			msg = from_bytes(bytes(payload))
 			print(msg)
 			print(type(msg))
