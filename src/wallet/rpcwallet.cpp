@@ -1743,48 +1743,44 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-    // SYSCOIN
-    const CWalletTx* wtxPtr;
-    {
-        LOCK(pwallet->cs_wallet);
+    
+    LOCK(pwallet->cs_wallet);
 
-        uint256 hash(ParseHashV(request.params[0], "txid"));
+    uint256 hash(ParseHashV(request.params[0], "txid"));
 
-        isminefilter filter = ISMINE_SPENDABLE;
+    isminefilter filter = ISMINE_SPENDABLE;
 
-        if (ParseIncludeWatchonly(request.params[1], *pwallet)) {
-            filter |= ISMINE_WATCH_ONLY;
-        }
-
-        bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
-
-        UniValue entry(UniValue::VOBJ);
-        auto it = pwallet->mapWallet.find(hash);
-        if (it == pwallet->mapWallet.end()) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
-        }
-        // SYSCOIN
-        wtxPtr = &it->second;
-        const CWalletTx &wtx = *wtxPtr;
-
-        CAmount nCredit = wtx.GetCredit(filter);
-        CAmount nDebit = wtx.GetDebit(filter);
-        CAmount nNet = nCredit - nDebit;
-        CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
-
-        entry.pushKV("amount", ValueFromAmount(nNet - nFee));
-        if (wtx.IsFromMe(filter))
-            entry.pushKV("fee", ValueFromAmount(nFee));
-
-        WalletTxToJSON(pwallet->chain(), *locked_chain, wtx, entry);
-
-        UniValue details(UniValue::VARR);
-        ListTransactions(*locked_chain, pwallet, wtx, 0, false, details, filter, nullptr /* filter_label */);
-        entry.pushKV("details", details);
-
-        std::string strHex = EncodeHexTx(*wtx.tx, pwallet->chain().rpcSerializationFlags());
-        entry.pushKV("hex", strHex);
+    if (ParseIncludeWatchonly(request.params[1], *pwallet)) {
+        filter |= ISMINE_WATCH_ONLY;
     }
+
+    bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
+
+    UniValue entry(UniValue::VOBJ);
+    auto it = pwallet->mapWallet.find(hash);
+    if (it == pwallet->mapWallet.end()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    }
+    const CWalletTx &wtx = it->second;
+
+    CAmount nCredit = wtx.GetCredit(filter);
+    CAmount nDebit = wtx.GetDebit(filter);
+    CAmount nNet = nCredit - nDebit;
+    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
+
+    entry.pushKV("amount", ValueFromAmount(nNet - nFee));
+    if (wtx.IsFromMe(filter))
+        entry.pushKV("fee", ValueFromAmount(nFee));
+
+    WalletTxToJSON(pwallet->chain(), *locked_chain, wtx, entry);
+
+    UniValue details(UniValue::VARR);
+    ListTransactions(*locked_chain, pwallet, wtx, 0, false, details, filter, nullptr /* filter_label */);
+    entry.pushKV("details", details);
+
+    std::string strHex = EncodeHexTx(*wtx.tx, pwallet->chain().rpcSerializationFlags());
+    entry.pushKV("hex", strHex);
+
     if (verbose) {
         UniValue decoded(UniValue::VOBJ);
         TxToUniv(wtxPtr->tx, uint256(), decoded, false);

@@ -674,7 +674,7 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         txRoot.vchReceiptRoot = ParseHex(txReceiptRoot);
         const int64_t &nTimestamp = tupleArray[5].get_int64();
         txRoot.nTimestamp = nTimestamp;
-        txRootMap.emplace(std::piecewise_construct,  std::forward_as_tuple(vchTxRoot),  std::forward_as_tuple(txRoot));
+        txRootMap.emplace(std::piecewise_construct,  std::forward_as_tuple(nHeight),  std::forward_as_tuple(txRoot));
     } 
     bool res = pethereumtxrootsdb->FlushWrite(txRootMap);
     UniValue ret(UniValue::VOBJ);

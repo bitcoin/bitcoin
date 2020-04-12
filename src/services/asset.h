@@ -7,11 +7,9 @@
 
 
 #include <dbwrapper.h>
-#include <script/standard.h>
 #include <serialize.h>
 #include <primitives/transaction.h>
 #include <services/assetallocation.h>
-#include <sys/types.h>
 #include <univalue.h>
 class CTransaction;
 class CCoinsViewCache;

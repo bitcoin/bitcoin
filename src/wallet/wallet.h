@@ -37,7 +37,8 @@
 #include <vector>
 
 #include <boost/signals2/signal.hpp>
-
+// SYSCOIN
+class CAssetCoinInfo;
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
 //! Explicitly unload and delete the wallet.
