@@ -43,7 +43,7 @@ def bitcoin(cmd):
 # Generate a random identity using the broadcast address template
 def random_ip():
 	# By forcing the IP to be above a certain threshhold, it prevents a lot of errors
-	minimum_ip_range = 10 #int(attacker_ip.split('.')[-1])
+	minimum_ip_range = min(int(attacker_ip.split('.')[-1]), int(victim_ip.split('.')[-1])) + 1
 	while(True):
 		ip = broadcast_address
 		old_ip = ''
