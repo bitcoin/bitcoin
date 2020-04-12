@@ -105,16 +105,9 @@ class AuthServiceProxy():
         try:
             self.__conn.request(method, path, postdata, headers)
             return self._get_response()
-        except http.client.BadStatusLine as e:
-            if e.line == "''":  # if connection was closed, try again
-                self.__conn.close()
-                self.__conn.request(method, path, postdata, headers)
-                return self._get_response()
-            else:
-                raise
         except (BrokenPipeError, ConnectionResetError):
-            # Python 3.5+ raises BrokenPipeError instead of BadStatusLine when the connection was reset
-            # ConnectionResetError happens on FreeBSD with Python 3.4
+            # Python 3.5+ raises BrokenPipeError when the connection was reset
+            # ConnectionResetError happens on FreeBSD
             self.__conn.close()
             self.__conn.request(method, path, postdata, headers)
             return self._get_response()
