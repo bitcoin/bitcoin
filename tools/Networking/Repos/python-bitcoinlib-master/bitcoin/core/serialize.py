@@ -36,7 +36,7 @@ MAX_SIZE = 0x02000000
 
 def Hash(msg):
     """SHA256^2)(msg) -> bytes"""
-    return hashlib.sha256(hashlib.sha256(msg).digest()).digest()
+    return hashlib.sha256(hashlib.sha256(bytes(msg)).digest()).digest()
 
 def Hash160(msg):
     """RIPEME160(SHA256(msg)) -> bytes"""

