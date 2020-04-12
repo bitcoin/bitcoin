@@ -452,6 +452,30 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     return response;
 }
 
+/**
+ * GetWalletBalances calls listwallets; if more than one wallet is loaded, it then
+ * fetches mine.trusted balances for each loaded wallet and pushes them to `result`.
+ *
+ * @param result  Reference to UniValue object the wallet names and balances are pushed to.
+ */
+static void GetWalletBalances(UniValue& result)
+{
+    std::unique_ptr<BaseRequestHandler> rh{MakeUnique<DefaultRequestHandler>()};
+    const UniValue listwallets = ConnectAndCallRPC(rh.get(), "listwallets", /* args=*/{});
+    if (!find_value(listwallets, "error").isNull()) return;
+    const UniValue& wallets = find_value(listwallets, "result");
+    if (wallets.size() <= 1) return;
+
+    UniValue balances(UniValue::VOBJ);
+    for (const UniValue& wallet : wallets.getValues()) {
+        const std::string wallet_name = wallet.get_str();
+        const UniValue getbalances = ConnectAndCallRPC(rh.get(), "getbalances", /* args=*/{}, wallet_name);
+        const UniValue& balance = find_value(getbalances, "result")["mine"]["trusted"];
+        balances.pushKV(wallet_name, balance);
+    }
+    result.pushKV("balances", balances);
+}
+
 static int CommandLineRPC(int argc, char *argv[])
 {
     std::string strPrint;
