@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test message sending before handshake completion.
 
-A node should never send anything other than VERSION/VERACK/REJECT until it's
+A node should never send anything other than VERSION/VERACK until it's
 received a VERACK.
 
 This test connects to a node and sends it a few messages, trying to entice it
@@ -35,7 +35,6 @@ class CLazyNode(P2PInterface):
 
     def on_version(self, message): self.bad_message(message)
     def on_verack(self, message): self.bad_message(message)
-    def on_reject(self, message): self.bad_message(message)
     def on_inv(self, message): self.bad_message(message)
     def on_addr(self, message): self.bad_message(message)
     def on_getdata(self, message): self.bad_message(message)
@@ -65,8 +64,6 @@ class CNodeNoVersionBan(CLazyNode):
         for i in range(banscore):
             self.send_message(msg_verack())
 
-    def on_reject(self, message): pass
-
 # Node that never sends a version. This one just sits idle and hopes to receive
 # any message (it shouldn't!)
 class CNodeNoVersionIdle(CLazyNode):
@@ -79,7 +76,6 @@ class CNodeNoVerackIdle(CLazyNode):
         self.version_received = False
         super().__init__()
 
-    def on_reject(self, message): pass
     def on_verack(self, message): pass
     # When version is received, don't reply with a verack. Instead, see if the
     # node will give us a message that it shouldn't. This is not an exhaustive
