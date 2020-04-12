@@ -164,7 +164,8 @@ def packet_received(packet):
 	msg_raw = bytes(packet)
 	is_bitcoin = False
 	try:
-		is_bitcoin = msg_raw[0:4] == b'\xf9\xbe\xb4\xd9'
+		print(f'IS BITCOIN: {(msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')}')
+		is_bitcoin = (msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')
 	except:
 		pass
 	msg_type = ''
@@ -173,10 +174,11 @@ def packet_received(packet):
 	payload_length_valid = False
 	if is_bitcoin:
 		try:
-			msg_type = msg_raw[4:4+12].split(b"\x00", 1)[0].decode()
-			payload_length = struct.unpack(b'<i', msg_raw[4+12:4+12+4])[0]
-			payload_valid = msg_raw[4+12+4:4+12+4+4] == hashlib.sha256(hashlib.sha256(msg_raw[4+12+4+4:4+12+4+4+payload_length]).digest()).digest()[:4]
-			payload_length_valid = len(msg_raw) - payload_length == 4+12+4+4
+			msg_type = msg_raw[4 : 4+12].split(b"\x00", 1)[0].decode()
+			payload_length = struct.unpack(b'<i', msg_raw[4+12 : 4+12+4])[0]
+			payload_checksum = hashlib.sha256(hashlib.sha256(msg_raw[4+12+4+4 : 4+12+4+4+payload_length]).digest()).digest()[:4]
+			payload_valid = (msg_raw[4+12+4 : 4+12+4+4] == payload_checksum)
+			payload_length_valid = (len(msg_raw) - payload_length == 4+12+4+4)
 			# The payload is msg_raw[4+12+4+4:4+12+4+4+payload_length] but we'll let MsgSerializable.from_bytes decode it
 		except:
 			pass
