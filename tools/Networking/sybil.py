@@ -109,7 +109,8 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	
 	if verbose: print(f'Setting socket network interface to "{network_interface}"...')
 	success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
-	while success != 0:
+	while success == -1:
+		print(f'Setting socket network interface to "{network_interface}"...')
 		success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
 		time.sleep(1)
 		print(network_interface)
@@ -168,7 +169,7 @@ def initialize_network_info():
 	global network_interface, broadcast_address
 
 	# Get the network interface of the default gateway
-	m = re.search(r'default.+ dev ([^ ]+)', terminal('ip route'))
+	m = re.search(r'default.+ +dev +([^ ]+)', terminal('ip route'))
 	if m != None:
 		network_interface = m.group(1).strip()
 		print(network_interface)
