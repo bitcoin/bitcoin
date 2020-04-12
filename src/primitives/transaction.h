@@ -226,13 +226,6 @@ public:
     {
         return !(a == b);
     }
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(*(CTxOut*)this);
-        READWRITE(assetInfo);
-    }
     std::string ToString() const;
 };
 struct CMutableTransaction;
@@ -347,6 +340,8 @@ public:
     // structure, including the hash.
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
+    const int32_t nVersion;
+    const uint32_t nLockTime;
 
 private:
     /** Memory only. */
@@ -359,8 +354,6 @@ private:
 public:
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
-    const int32_t nVersion;
-    const uint32_t nLockTime;
 
     /** Convert a CMutableTransaction into a CTransaction. */
     explicit CTransaction(const CMutableTransaction &tx);
