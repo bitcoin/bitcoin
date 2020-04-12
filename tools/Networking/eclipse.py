@@ -163,8 +163,8 @@ def packet_received(packet):
 	msg_raw = bytes(packet)
 	is_bitcoin = False
 	try:
-		print(f'IS BITCOIN: {(msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')}')
 		is_bitcoin = (msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')
+		print(f'IS BITCOIN: {is_bitcoin}')
 	except:
 		pass
 	msg_type = ''
