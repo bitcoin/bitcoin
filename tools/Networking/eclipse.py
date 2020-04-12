@@ -15,7 +15,6 @@ import struct
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
 eclipse_packet_drop_rate = 0
 
-
 num_identities = 1
 
 victim_ip = '10.0.2.4'
@@ -194,7 +193,7 @@ def packet_received(packet):
 		print(msgtype is 'ping')
 		if msgtype == 'ping':
 			payload = packet[TCP].payload
-			msg = from_bytes(bytes(payload))
+			msg = MsgSerializable.from_bytes(bytes(payload))
 			print(msg)
 			print(type(msg))
 			# send pong
