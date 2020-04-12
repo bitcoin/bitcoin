@@ -42,9 +42,9 @@ script: |
   CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
   FAKETIME_HOST_PROGS="gcc g++"
   FAKETIME_PROGS="date ar ranlib nm"
-  HOST_CFLAGS="-O2 -g"
-  HOST_CXXFLAGS="-O2 -g"
-  HOST_LDFLAGS_BASE="-static-libstdc++ -Wl,-O2"
+  HOST_CFLAGS="-O2 -g -ffunction-sections -fdata-sections"
+  HOST_CXXFLAGS="-O2 -g -ffunction-sections -fdata-sections"
+  HOST_LDFLAGS_BASE="-static-libstdc++ -Wl,-O2 -Wl,--gc-sections"
 
   export QT_RCC_TEST=1
   export QT_RCC_SOURCE_DATE_OVERRIDE=1
