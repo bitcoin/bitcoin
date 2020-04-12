@@ -14,7 +14,8 @@ class CBlockIndex;
 class CCoinsViewCache;
 class CTransaction;
 class TxValidationState;
-
+// SYSCOIN
+class CAssetAllocation;
 /** Transaction validation functions */
 
 namespace Consensus {

@@ -22,6 +22,7 @@ extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags 
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
+extern RecursiveMutex cs_setethstatus;
 using namespace std;
 UniValue convertaddress(const JSONRPCRequest& request)	
 {	
@@ -93,12 +94,12 @@ UniValue tpstestinfo(const JSONRPCRequest& request) {
 	oTPSTestResults.__pushKV("enabled", fTPSTestEnabled);
     oTPSTestResults.__pushKV("testinitiatetime", (int64_t)nTPSTestingStartTime);
    
-	for (auto &receivedTime : mempool) {
+	/*for (auto &receivedTime : mempool) {
 		UniValue oTPSTestStatusObj(UniValue::VOBJ);
 		oTPSTestStatusObj.__pushKV("txid", receivedTime.first.GetHex());
 		oTPSTestStatusObj.__pushKV("time", receivedTime.second);
 		oTPSTestReceiversMempool.push_back(oTPSTestStatusObj);
-	}
+	}*/
 	oTPSTestResults.__pushKV("receivers", oTPSTestReceiversMempool);
 	return oTPSTestResults;
 }
@@ -344,7 +345,6 @@ UniValue listassets(const JSONRPCRequest& request) {
             {"from", RPCArg::Type::NUM, "0", "The number of results to skip."},
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "A json object with options to filter results.",
                 {
-                    {"txid", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Transaction ID to filter results for"},
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Asset GUID to filter"},
                     {"addresses", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "A json array with owners",  
                         {
@@ -362,11 +362,11 @@ UniValue listassets(const JSONRPCRequest& request) {
                     {
                         {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
                         {RPCResult::Type::STR, "symbol", "The asset symbol"},
-                        {RPCResult::Type::STR_HEX, "txid", "The transaction id that created this asset"},
                         {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
                         {RPCResult::Type::STR, "address", "The address that controls this asset"},
                         {RPCResult::Type::STR_HEX, "contract", "The ethereum contract address"},
                         {RPCResult::Type::NUM, "balance", "The current balance"},
+                        {RPCResult::Type::NUM, "burn_balance", "The current burn balance"},
                         {RPCResult::Type::NUM, "total_supply", "The total supply of this asset"},
                         {RPCResult::Type::NUM, "max_supply", "The maximum supply of this asset"},
                         {RPCResult::Type::NUM, "update_flag", "The flag in decimal"},
@@ -820,7 +820,7 @@ CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const 
     const UniValue &addressObj = find_value(auxFeesObj, "address");
     if(!addressObj.isStr())
         return -1;
-    address = EncodeDestination(addressObj.get_str());
+    address = DecodeDestination(addressObj.get_str());
     const UniValue &feeStructObj = find_value(auxFeesObj, "fee_struct");
     if(!feeStructObj.isArray())
         return -1;

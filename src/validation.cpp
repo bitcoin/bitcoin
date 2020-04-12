@@ -60,8 +60,9 @@
 #include <services/assetconsensus.h>
 #include <services/assetallocation.h>
 #include <algorithm> // std::unique
+extern RecursiveMutex cs_setethstatus;
 int64_t nTPSTestingStartTime = 0;
-std::unordered_set<COutPoint> assetAllocationConflicts;
+std::set<COutPoint> assetAllocationConflicts;
 std::vector<CInv> vInvToSend;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 #if defined(NDEBUG)
@@ -444,7 +445,8 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
         if (txFrom) {
             assert(txFrom->GetHash() == txin.prevout.hash);
             assert(txFrom->vout.size() > txin.prevout.n);
-            assert(txFrom->vout[txin.prevout.n] == coin.out);
+            // SYSCOIN
+            assert(txFrom->vout[txin.prevout.n] == ((CTxOut)coin.out));
         } else {
             const Coin& coinFromDisk = ::ChainstateActive().CoinsTip().AccessCoin(txin.prevout);
             assert(!coinFromDisk.IsSpent());
@@ -592,8 +594,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (!CheckTransaction(tx, state))
         return false; // state filled in by CheckTransaction
     // SYSCOIN
+    CAssetAllocation allocation;
     if(IsSyscoinTx(tx.nVersion)){
-        CAssetAllocation allocation(tx);
+        allocation = CAssetAllocation(tx);
         if(allocation.IsNull()) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-invalid-allocation");
         }
@@ -669,9 +672,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                         // allow the first time this outpoint was found in conflict
                         auto it = assetAllocationConflicts.emplace(txin.prevout);
                         // if was inserted (not found)
-                        if(it.second)
+                        if(it.second) {
                             setConflictsAsset.insert(ptxConflicting->GetHash());
                             break;
+                        }
                         else
                             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                     }
@@ -728,7 +732,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     CAmount nFees = 0;
     // SYSCOIN
-    if (!Consensus::CheckTxInputs(const_cast<CTransaction&>(tx), state, m_view, GetSpendHeight(m_view), nFees, allocation)) {
+    if (!Consensus::CheckTxInputs(*const_cast<CTransaction*>(&tx), state, m_view, GetSpendHeight(m_view), nFees, allocation)) {
         return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
     }
 
@@ -1885,7 +1889,8 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 COutPoint out(hash, o);
                 Coin coin;
                 bool is_spent = view.SpendCoin(out, &coin);
-                if (!is_spent || tx.vout[o] != coin.out || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
+                // SYSCOIN
+                if (!is_spent || tx.vout[o] != ((CTxOut)coin.out) || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
                     fClean = false; // transaction output mismatch
                 }
             }
@@ -1908,7 +1913,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
         // SYSCOIN
-        if(passetdb != nullptr && !DisconnectSyscoinTransaction(tx, hash, pindex, view, mapAssets, vecMintKeys))
+        if(passetdb != nullptr && !DisconnectSyscoinTransaction(tx, hash, view, mapAssets, vecMintKeys))
             fClean = false;
     } 
     // SYSCOIN 
@@ -2191,7 +2196,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         const CTransaction &tx = *(block.vtx[i]);
 
         nInputs += tx.vin.size();
-
+        // SYSCOIN
+        const uint256& txHash = tx.GetHash(); 
         if (!tx.IsCoinBase())
         {
             TxValidationState tx_state;
@@ -2205,7 +2211,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 }
                 TxValidationState tx_state;
                 // just temp var not used in !fJustCheck mode
-                if (!CheckSyscoinInputs(ibd, tx, allocation, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, vecMintKeys)){
+                if (!CheckSyscoinInputs(ibd, tx, allocation, txHash, tx_state, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, vecMintKeys)){
                     // Any transaction validation failure in ConnectBlock is a block consensus failure
                     state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                                 tx_state.GetRejectReason(), tx_state.GetDebugMessage());
@@ -2215,7 +2221,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
             CAmount txfee = 0;
             // SYSCOIN
-            if (!Consensus::CheckTxInputs(const_cast<CTransaction&>(tx), tx_state, view, pindex->nHeight, txfee, allocation)) {
+            if (!Consensus::CheckTxInputs(*const_cast<CTransaction*>(&tx), tx_state, view, pindex->nHeight, txfee, allocation)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                             tx_state.GetRejectReason(), tx_state.GetDebugMessage());
@@ -2253,7 +2259,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         }
 
         txdata.emplace_back(tx);
-        const uint256& txHash = tx.GetHash(); 
         if (!tx.IsCoinBase())
         {
             std::vector<CScriptCheck> vChecks;

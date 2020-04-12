@@ -18,11 +18,9 @@
 #include <wallet/wallet.h>
 #include <wallet/coinselection.h>
 #include <chainparams.h>
-extern std::string EncodeDestination(const CTxDestination& dest);
-extern CTxDestination DecodeDestination(const std::string& str);
-extern UniValue ValueFromAmount(const CAmount& amount);
-extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
-extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
+#include <util/moneystr.h>
+#include <core_io.h>
+#include <key_io.h>
 extern RecursiveMutex cs_setethstatus;
 extern CFeeRate dustRelayFee;
 using namespace std;
@@ -106,8 +104,8 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             }},
         RPCExamples{
-            HelpExampleCli("syscoinburntoassetallocation", \"asset_guid\" \"amount\"")
-            + HelpExampleRpc("syscoinburntoassetallocation", \"asset_guid\", \"amount\"")
+            HelpExampleCli("syscoinburntoassetallocation", "\"asset_guid\" \"amount\"")
+            + HelpExampleRpc("syscoinburntoassetallocation", "\"asset_guid\", \"amount\"")
         }
     }.Check(request);
     const uint32_t &nAsset = params[0].get_uint();          	
@@ -115,15 +113,30 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-        
+
+    if (!pwallet->CanGetAddresses()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
+    }
+
+    // Parse the label first so we don't generate a key if there's an error
+    std::string label = "";
+    CTxDestination dest;
+    std::string error;
+    if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, error)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
+    }
+
+    const CScript& scriptPubKey = GetScriptForDestination(dest);
+    CTxOut change_prototype_txout(0, scriptPubKey);
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
+
+
     vector<CRecipient> vecSend;
     UniValue amountObj = params[1];
 	CAmount nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
     theAssetAllocation.nAsset = nAsset;
     theAssetAllocation.voutAssets.push_back(nAmount);
-    const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddressFrom));
-    CTxOut change_prototype_txout(0, scriptPubKey);
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
+
     vecSend.push_back(recp);
 
     vector<unsigned char> data;
@@ -145,14 +158,15 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
-    tx->tx.nVersion = SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
+    int32_t& nVersion = *const_cast<int32_t*>(&tx->nVersion);
+    nVersion = SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
     if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
     UniValue res;
-    res.__pushKV("txid", tx.GetHash().GetHex());
+    res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
 }
 UniValue assetnew(const JSONRPCRequest& request) {
@@ -266,7 +280,6 @@ UniValue assetnew(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
     }
     // new/send/update all have asset utxo's with 0 asset amount
-    CAmount nAssetAmount = 0;
     CRecipient recp = { GetScriptForDestination(dest), nGas, false };
     vecSend.push_back(recp);
     CScript scriptData;
@@ -285,7 +298,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
     CCoinControl coin_control;
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
-    tx->tx.nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
+    int32_t& nVersion = *const_cast<int32_t*>(&tx->nVersion);
+    nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
     if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
@@ -308,12 +322,13 @@ UniValue assetnew(const JSONRPCRequest& request) {
     }
     vecSend.push_back(opreturnRecipient);
     CTransactionRef tx1;
-    tx1->tx.nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
+    int32_t& nVersion1 = *const_cast<int32_t*>(&tx1->nVersion);
+    nVersion1 = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
     nFeeRequired = 0;
     nChangePosRet = -1;
     // two rounds one to get input to determine the right asset guid and second to do the real tx
     if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx1, nFeeRequired, nChangePosRet, strError, coin_control)) {
-        if (!fSubtractFeeFromAmount && tx->GetValueOut() + nFeeRequired > curBalance)
+        if (tx1->GetValueOut() + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
@@ -323,11 +338,11 @@ UniValue assetnew(const JSONRPCRequest& request) {
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx1, std::move(mapValue), {} /* orderForm */);
     UniValue res;
-    res.__pushKV("txid", tx1.GetHash().GetHex());
+    res.__pushKV("txid", tx1->GetHash().GetHex());
     res.__pushKV("asset_guid", newAsset.assetAllocation.nAsset);
     return res;
 }
-UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient, const int nVersion, const CRecpient* recpIn = null_ptr) {
+UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient, const int32_t nVersionIn, const CRecipient* recpIn = nullptr) {
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
     CCoinControl coin_control;
@@ -337,14 +352,14 @@ UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std
     CAmount nMinimumSumAmountAsset = 0;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
     std::vector<COutput> vecOutputs;
-    pwallet->AvailableCoins(*locked_chain, vecOutputs, true, &cctl, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset);
+    pwallet->AvailableCoins(*locked_chain, vecOutputs, true, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset);
     int nNumOutputsFound = 0;
-    COutput foundOutput;
-    for(const auto &output: vecOutputs) {
-        if(!output.fSpendable || !output.fSolvable)
+    int nFoundOutput = -1;
+    for(unsigned int i = 0; i < vecOutputs.size(); i++) {
+        if(!vecOutputs[i].fSpendable || !vecOutputs[i].fSolvable)
             continue;
         nNumOutputsFound++;
-        foundOutput = output;
+        nFoundOutput = i;
     }
     if(nNumOutputsFound > 1) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Too many inputs found for this asset, should only have exactly one input");
@@ -356,7 +371,7 @@ UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std
     if (!pwallet->CanGetAddresses()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
-    const CInputCoin &inputCoin = foundOutput.GetInputCoin();
+    const CInputCoin &inputCoin = vecOutputs[nFoundOutput].GetInputCoin();
     const CAmount &nGas = inputCoin.effective_value;  
     // Parse the label first so we don't generate a key if there's an error
     std::string label = "";
@@ -366,7 +381,11 @@ UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
     }
     // subtract fee from this output (it should pay the gas which was funded by asset new)
-    CRecipient recp = recpIn? *recpIn: { GetScriptForDestination(dest), nGas, true };
+    CRecipient recp;
+    if(recpIn)
+        recp = *recpIn;
+    else
+        recp = { GetScriptForDestination(dest), nGas, true };
     // order matters, after the calling function adds whatever outputs for assets, we need to add the
     // change back to a new output proceeding the asset outputs, other outputs can come after
     vecSend.push_back(recp);
@@ -379,7 +398,8 @@ UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std
     coin_control.Select(inputCoin.outpoint);
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
-    tx->tx.nVersion = nVersion;
+    int32_t& nVersion = *const_cast<int32_t*>(&tx->nVersion);
+    nVersion = nVersionIn;
     UniValue res;
     if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
         if(nFeeRequired > nGas && ((tx->GetValueOut() + nFeeRequired) <= curBalance)) {
@@ -389,13 +409,14 @@ UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std
             vecSend.push_back(recp);
             vecSend.push_back(opreturnRecipient);
             CTransactionRef tx1;
-            tx1->tx.nVersion = nVersion;
+            int32_t& nVersion = *const_cast<int32_t*>(&tx1->nVersion);
+            nVersion = nVersion;
             if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx1, nFeeRequired, nChangePosRet, strError, coin_control)) {
                 if (tx1->GetValueOut() + nFeeRequired > curBalance)
                     strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
                 throw JSONRPCError(RPC_WALLET_ERROR, strError);
             } else {
-                res.__pushKV("txid", tx1.GetHash().GetHex());
+                res.__pushKV("txid", tx1->GetHash().GetHex());
                 return res;
             }
         }
@@ -403,7 +424,7 @@ UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     } else {
-        res.__pushKV("txid", tx1.GetHash().GetHex());
+        res.__pushKV("txid", tx->GetHash().GetHex());
         return res;
     }
      return res;
@@ -550,9 +571,6 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     theAsset.assetAllocation.nAsset = nAsset;
     theAsset.assetAllocation.voutAssets.push_back(0);
 
-    theAsset.nBalance = nBalance;
-    theAsset.nUpdateFlags = nUpdateFlags;
-
     vector<unsigned char> data;
     theAsset.Serialize(data);
     CScript scriptData;
@@ -612,11 +630,11 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     for (unsigned int idx = 0; idx < receivers.size(); idx++) {
         const UniValue& receiver = receivers[idx];
         if (!receiver.isObject())
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"asset_guid'\, \"address'\", \"amount\"}");
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"asset_guid\", \"address\", \"amount\"}");
 
         const UniValue &receiverObj = receiver.get_obj();
         const std::string &toStr = find_value(receiverObj, "address").get_str(); 
-        const CScript& scriptPubKey = GetScriptForDestination(EncodeDestination(toStr));             
+        const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));             
         UniValue amountObj = find_value(receiverObj, "amount");
         CAmount nAmount;
         if (amountObj.isNum() || amountObj.isStr()) {
@@ -729,22 +747,24 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-
+    
+    CAssetAllocation theAssetAllocation;
+    vector<CRecipient> vecSend;
 	UniValue receivers = valueTo.get_array();
     CAmount nTotalSending = 0;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
 		const UniValue& receiver = receivers[idx];
 		if (!receiver.isObject())
-			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address'\" or \"amount\"}");
+			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address\" or \"amount\"}");
 
 		const UniValue &receiverObj = receiver.get_obj();
         const std::string &toStr = find_value(receiverObj, "address").get_str();
-        const CScript& scriptPubKey = GetScriptForDestination(EncodeDestination(toStr));   
+        const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));   
         CTxOut change_prototype_txout(0, scriptPubKey);
 		UniValue amountObj = find_value(receiverObj, "amount");
 		if (amountObj.isNum() || amountObj.isStr()) {
 			const CAmount &nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
-			if (amount <= 0)
+			if (nAmount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
 			theAssetAllocation.voutAssets.push_back(nAmount);
             CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
@@ -754,6 +774,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
 
 	}
+    CTxDestination auxFeeAddress;
     const CAmount &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, theAsset.nPrecision, auxFeeAddress);
     if(nAuxFee > 0){
         theAssetAllocation.voutAssets.push_back(nAuxFee);
@@ -765,15 +786,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 
     CAmount nTotal = 0;
     for(const auto& amount: theAssetAllocation.voutAssets) {
-        nTotal += amount;
+        nTotal += amount.nValue;
     }
 	vector<unsigned char> data;
 	theAssetAllocation.Serialize(data);   
 
 
-	// send the asset pay txn
-	vector<CRecipient> vecSend;
-	
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -787,14 +805,15 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nTotal);
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
-    tx->tx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+    int32_t& nVersion = *const_cast<int32_t*>(&tx->nVersion);
+    nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
     if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
     UniValue res;
-    res.__pushKV("txid", tx.GetHash().GetHex());
+    res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
 }
 
@@ -836,19 +855,20 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
     vector<CRecipient> vecSend;
     CScript scriptData;
-    int nVersion = 0;
+    int32_t nVersionIn = 0;
 
     CBurnSyscoin burnSyscoin;
-    burnSyscoin.assetAllocations.nAsset = nAsset;
-    burnSyscoin.assetAllocations.voutAssets.push_back(amount);
+    burnSyscoin.assetAllocation.nAsset = nAsset;    
+    burnSyscoin.assetAllocation.voutAssets.push_back(amount);
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''") {
-        nVersion = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
+        nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
     }
     else {
         burnSyscoin.vchEthAddress = ParseHex(ethAddress);
-        nVersion = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
+        nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
     }
+    vector<unsigned char> data;
     burnSyscoin.Serialize(data);  
     scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -863,14 +883,15 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
-    tx->tx.nVersion = nVersion;
+    int32_t& nVersion = *const_cast<int32_t*>(&tx->nVersion);
+    nVersion = nVersionIn;
     if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
     UniValue res;
-    res.__pushKV("txid", tx.GetHash().GetHex());
+    res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
 }
 std::vector<unsigned char> ushortToBytes(unsigned short paramShort)
@@ -890,6 +911,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         "\nMint assetallocation to come back from the bridge\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Mint to this address."},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to mint.  Note that fees (in SYS) will be taken from the owner address"},
             {"blocknumber", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
             {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction hex."},
@@ -906,24 +928,25 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             }},
         RPCExamples{
-            HelpExampleCli("assetallocationmint", "\"asset_guid\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\"")
-            + HelpExampleRpc("assetallocationmint", "\"asset_guid\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\"")
+            HelpExampleCli("assetallocationmint", "\"asset_guid\" \"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\"")
+            + HelpExampleRpc("assetallocationmint", "\"asset_guid\", \"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\"")
         }
     }.Check(request);
     const uint32_t &nAsset = params[0].get_uint();
+    std::string strAddress = params[1].get_str();
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
-    UniValue amountValue = request.params[1];
+    UniValue amountValue = request.params[2];
     const CAmount &nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationmint");  
 
-    const uint32_t &nBlockNumber = params[2].get_uint(); 
+    const uint32_t &nBlockNumber = params[3].get_uint(); 
     
-    string vchTxValue = params[3].get_str();
-    string vchTxRoot = params[4].get_str();
-    string vchTxParentNodes = params[5].get_str();
+    string vchTxValue = params[4].get_str();
+    string vchTxRoot = params[5].get_str();
+    string vchTxParentNodes = params[6].get_str();
 
     // find byte offset of tx data in the parent nodes
     size_t pos = vchTxParentNodes.find(vchTxValue);
@@ -931,17 +954,16 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Could not find tx value in tx parent nodes");  
     }
     uint16_t posTxValue = (uint16_t)pos/2;
-    string vchTxPath = params[6].get_str();
+    string vchTxPath = params[7].get_str();
  
-    string vchReceiptValue = params[7].get_str();
-    string vchReceiptRoot = params[8].get_str();
+    string vchReceiptValue = params[8].get_str();
+    string vchReceiptRoot = params[9].get_str();
     string vchReceiptParentNodes = params[9].get_str();
     pos = vchReceiptParentNodes.find(vchReceiptValue);
     if(pos == std::string::npos || vchReceiptParentNodes.size() > (USHRT_MAX*2)){
         throw JSONRPCError(RPC_TYPE_ERROR, "Could not find receipt value in receipt parent nodes");  
     }
     uint16_t posReceiptValue = (uint16_t)pos/2;
-    string strWitness = params[10].get_str();
     if(!fGethSynced){
         throw JSONRPCError(RPC_MISC_ERROR, "Geth is not synced, please wait until it syncs up and try again");
     }
@@ -1013,14 +1035,15 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
-    tx->tx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_MINT;
+    int32_t& nVersion = *const_cast<int32_t*>(&tx->nVersion);
+    nVersion = SYSCOIN_TX_VERSION_ALLOCATION_MINT;
     if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
     UniValue res;
-    res.__pushKV("txid", tx.GetHash().GetHex());
+    res.__pushKV("txid", tx->GetHash().GetHex());
     return res;  
 }
 
@@ -1168,7 +1191,7 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "syscoinburntoassetallocation",     &syscoinburntoassetallocation,  {"asset_guid","amount"} }, 
     { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","amount","ethereum_destination_address"} }, 
-    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof"} },     
+    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof"} },     
     { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","total_supply","max_supply","update_flags","aux_fees"}},
     { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","aux_fees"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},

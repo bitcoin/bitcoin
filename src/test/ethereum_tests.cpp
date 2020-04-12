@@ -12,6 +12,7 @@
 #include <policy/policy.h>
 #include <services/asset.h>
 #include <univalue.h>
+#include <services/witnessaddress.h>
 
 extern UniValue read_json(const std::string& jsondata);
 
@@ -21,14 +22,14 @@ BOOST_AUTO_TEST_CASE(ethereum_parseabidata)
 {
     tfm::format(std::cout,"Running ethereum_parseabidata...\n");
     CAmount outputAmount;
-    uint32_t nAsset = 0;
+    int32_t nAsset = 0;
     const std::vector<unsigned char> &expectedMethodHash = ParseHex("5f959b69");
     const std::vector<unsigned char> &expectedVchContract = ParseHex("fe234d3994f95bf7cebd9837c4444f5af63f0a97");
     const std::vector<unsigned char> &rlpBytes = ParseHex("5f959b690000000000000000000000000000000000000000000000015af1d78b58c40000000000000000000000000000000000000000000000000000000000003acaeec0000000000000000000000000fe234d3994f95bf7cebd9837c4444f5af63f0a97000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000001500e37ddd289ccd1fb130a91210644810b2415aec400000000000000000000000");
     CWitnessAddress expectedAddress(0, ParseHex("e37ddd289ccd1fb130a91210644810b2415aec40"));
     CWitnessAddress address;
     uint8_t nPrecision = 8;
-    BOOST_CHECK(parseEthMethodInputData(expectedMethodHash, rlpBytes, expectedVchContract, outputAmount, nAsset, nPrecision));
+    BOOST_CHECK(parseEthMethodInputData(expectedMethodHash, rlpBytes, expectedVchContract, outputAmount, nAsset, nPrecision, address));
     BOOST_CHECK_EQUAL(outputAmount, 25*COIN);
     BOOST_CHECK_EQUAL(nAsset, 986377920);
     BOOST_CHECK(address == expectedAddress);

@@ -56,6 +56,7 @@ extern bool fLoaded;
 extern bool bb;
 extern pid_t gethPID;
 extern pid_t relayerPID;
+extern bool fAssetIndex;
 extern std::vector<JSONRPCRequest> vecTPSRawTransactions;
 typedef struct {
     // Values from /proc/meminfo, in KiB or converted to MiB.

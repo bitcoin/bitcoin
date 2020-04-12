@@ -12,6 +12,8 @@
 #include <rpc/server.h>
 #include <chainparams.h>
 #include <services/witnessaddress.h>
+#include <key_io.h>
+#include <core_io.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
@@ -164,9 +166,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
         return false;
     CAsset dbAsset;
     GetAsset(assetallocation.nAsset, dbAsset);
-    int nHeight = 0;
     const uint256& txHash = tx.GetHash();
-    CBlockIndex* blockindex = nullptr;
     uint256 blockhash;
     pblockindexdb->ReadBlockHash(txHash, blockhash);
     entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
@@ -175,11 +175,11 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     entry.__pushKV("txid", txHash.GetHex());
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;
-    for(int i =0; i < mintsyscoin.assetAllocation.voutAssets.size();i++) {
-        nTotal += voutAsset;
+    for(unsigned int i =0; i < assetallocation.voutAssets.size();i++) {
+        nTotal += assetallocation.voutAssets[i].nValue;
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
         oAssetAllocationReceiversObj.__pushKV("n", i);
-        oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(mintsyscoin.assetAllocation.voutAssets[i], dbAsset.nPrecision));
+        oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(assetallocation.voutAssets[i].nValue, dbAsset.nPrecision));
         oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
     }
 
@@ -196,24 +196,22 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
 
 
 bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &entry){
-    CMintSyscoin mintsyscoin(tx);
-    if (!mintsyscoin.IsNull()) {
-        int nHeight = 0;
-        CBlockIndex* blockindex = nullptr;
+    CMintSyscoin mintSyscoin(tx);
+    if (!mintSyscoin.IsNull()) {
         uint256 blockhash;
         pblockindexdb->ReadBlockHash(txHash, blockhash);
         entry.__pushKV("txtype", "assetallocationmint");
         CAsset dbAsset;
-        GetAsset(mintsyscoin.assetAllocation.nAsset, dbAsset);
-        entry.__pushKV("asset_guid", mintsyscoin.assetAllocation.nAsset);
+        GetAsset(mintSyscoin.assetAllocation.nAsset, dbAsset);
+        entry.__pushKV("asset_guid", mintSyscoin.assetAllocation.nAsset);
         entry.__pushKV("symbol", dbAsset.strSymbol);
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
         CAmount nTotal = 0;
-        for(int i =0; i < mintsyscoin.assetAllocation.voutAssets.size();i++) {
+        for(unsigned int i =0; i < mintSyscoin.assetAllocation.voutAssets.size();i++) {
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            nTotal += voutAsset;
+            nTotal += mintSyscoin.assetAllocation.voutAssets[i].nValue;
             oAssetAllocationReceiversObj.__pushKV("n", i);
-            oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(mintsyscoin.assetAllocation.voutAssets[i], dbAsset.nPrecision));
+            oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(mintSyscoin.assetAllocation.voutAssets[i].nValue, dbAsset.nPrecision));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
         }
     
@@ -222,19 +220,16 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &
         entry.__pushKV("txid", txHash.GetHex());
         entry.__pushKV("blockhash", blockhash.GetHex());
         UniValue oSPVProofObj(UniValue::VOBJ);
-        oSPVProofObj.__pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
-        oSPVProofObj.__pushKV("txparentnodes", HexStr(mintsyscoin.vchTxParentNodes)); 
-        oSPVProofObj.__pushKV("txroot", HexStr(mintsyscoin.vchTxRoot));
-        oSPVProofObj.__pushKV("txpath", HexStr(mintsyscoin.vchTxPath)); 
-        oSPVProofObj.__pushKV("receiptvalue", HexStr(mintsyscoin.vchReceiptValue));   
-        oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
-        oSPVProofObj.__pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
-        oSPVProofObj.__pushKV("ethblocknumber", mintsyscoin.nBlockNumber); 
+        oSPVProofObj.__pushKV("txvalue", HexStr(mintSyscoin.vchTxValue));   
+        oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
+        oSPVProofObj.__pushKV("txroot", HexStr(mintSyscoin.vchTxRoot));
+        oSPVProofObj.__pushKV("txpath", HexStr(mintSyscoin.vchTxPath)); 
+        oSPVProofObj.__pushKV("receiptvalue", HexStr(mintSyscoin.vchReceiptValue));   
+        oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes)); 
+        oSPVProofObj.__pushKV("receiptroot", HexStr(mintSyscoin.vchReceiptRoot)); 
+        oSPVProofObj.__pushKV("ethblocknumber", mintSyscoin.nBlockNumber); 
         entry.__pushKV("spv_proof", oSPVProofObj); 
         return true;
     } 
     return false;
-}
-
-    return false;                   
 }

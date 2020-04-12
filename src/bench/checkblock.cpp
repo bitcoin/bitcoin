@@ -27,8 +27,8 @@ static void DeserializeBlockTest(benchmark::State& state)
         assert(rewound);
     }
 }
-
-static void DeserializeAndCheckBlockTest(benchmark::State& state)
+// SYSCOIN TODO block413567 for syscoin
+/*static void DeserializeAndCheckBlockTest(benchmark::State& state)
 {
     CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
@@ -46,7 +46,7 @@ static void DeserializeAndCheckBlockTest(benchmark::State& state)
         bool checked = CheckBlock(block, validationState, chainParams->GetConsensus());
         assert(checked);
     }
-}
+}*/
 
 BENCHMARK(DeserializeBlockTest, 130);
 // SYSCOIN

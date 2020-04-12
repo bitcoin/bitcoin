@@ -10,6 +10,7 @@
 #include <services/rpc/assetrpc.h>
 #include <rpc/server.h>
 #include <chainparams.h>
+#include <core_io.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
@@ -19,7 +20,7 @@ extern CAmount AmountFromValue(const UniValue& value);
 std::unique_ptr<CAssetDB> passetdb;
 using namespace std;
 
-int GetSyscoinDataOutput(const CTransaction& tx) {
+unsigned int GetSyscoinDataOutput(const CTransaction& tx) {
 	for (unsigned int i = 0; i<tx.vout.size(); i++) {
 		if (tx.vout[i].scriptPubKey.IsUnspendable())
 			return i;
@@ -202,7 +203,7 @@ void CAsset::Serialize( vector<unsigned char> &vchData) {
 
 }
 
-bool GetAsset(const uint32_t &nAsset,
+bool GetAsset(const int32_t &nAsset,
         CAsset& txPos) {
     if (passetdb == nullptr || !passetdb->ReadAsset(nAsset, txPos))
         return false;
@@ -213,9 +214,8 @@ bool GetAsset(const uint32_t &nAsset,
 
 bool BuildAssetJson(const CAsset& asset,UniValue& oAsset)
 {
-    oAsset.__pushKV("asset_guid", asset.nAsset);
+    oAsset.__pushKV("asset_guid", asset.assetAllocation.nAsset);
     oAsset.__pushKV("symbol", asset.strSymbol);
-    oAsset.__pushKV("txid", asset.txHash.GetHex());
 	oAsset.__pushKV("public_value", stringFromVch(asset.vchPubData));
     oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
 	oAsset.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
@@ -232,15 +232,13 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 	if(asset.IsNull())
 		return false;
 
-    int nHeight = 0;
     const uint256& txHash = tx.GetHash();
-    CBlockIndex* blockindex = nullptr;
     uint256 blockhash;
     pblockindexdb->ReadBlockHash(txHash, blockhash);
         	
 
 	entry.__pushKV("txtype", assetFromTx(tx.nVersion));
-	entry.__pushKV("asset_guid", asset.nAsset);
+	entry.__pushKV("asset_guid", asset.assetAllocation.nAsset);
     entry.__pushKV("symbol", asset.strSymbol);
     entry.__pushKV("txid", txHash.GetHex());
     
@@ -271,8 +269,8 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
 	int write = 0;
 	int erase = 0;
     CDBBatch batch(*this);
-    std::map<std::string, std::vector<uint32_t> > mapGuids;
-    std::vector<uint32_t> emptyVec;
+    std::map<std::string, std::vector<int32_t> > mapGuids;
+    std::vector<int32_t> emptyVec;
     for (const auto &key : mapAssets) {
 		if (key.second.IsNull()) {
 			erase++;
@@ -288,7 +286,7 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
 }
 bool CAssetDB::ScanAssets(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes) {
 	string strTxid = "";
-    uint32_t nAsset = 0;
+    int32_t nAsset = 0;
 	if (!oOptions.isNull()) {
 		const UniValue &txid = find_value(oOptions, "txid");
 		if (txid.isStr()) {
@@ -302,7 +300,7 @@ bool CAssetDB::ScanAssets(const uint32_t count, const uint32_t from, const UniVa
 	std::unique_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CAsset txPos;
-	uint32_t key = 0;
+	int32_t key = 0;
 	uint32_t index = 0;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
@@ -314,11 +312,6 @@ bool CAssetDB::ScanAssets(const uint32_t count, const uint32_t from, const UniVa
                     pcursor->Next();
                     continue;
                 }
-				if (!strTxid.empty() && strTxid != txPos.txHash.GetHex())
-				{
-					pcursor->Next();
-					continue;
-				}
 				UniValue oAsset(UniValue::VOBJ);
 				if (!BuildAssetJson(txPos, oAsset))
 				{

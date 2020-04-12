@@ -1744,6 +1744,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
     
+    auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
 
     uint256 hash(ParseHashV(request.params[0], "txid"));
@@ -1783,7 +1784,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
 
     if (verbose) {
         UniValue decoded(UniValue::VOBJ);
-        TxToUniv(wtxPtr->tx, uint256(), decoded, false);
+        TxToUniv(*wtx.tx, uint256(), decoded, false);
         entry.pushKV("decoded", decoded);
     }
 
@@ -2900,7 +2901,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    uint32_t nAsset = 0;
+    int32_t nAsset = 0;
     if (!request.params[0].isNull()) {
         RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
         nAsset = request.params[0].get_uint();

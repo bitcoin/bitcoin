@@ -44,7 +44,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
 }
 // This will figure out a valid hash and Nonce if you're
 // creating a different genesis block:
-static void GenerateGenesisBlock(CBlockHeader &genesisBlock, uint256 &phash)
+/*static void GenerateGenesisBlock(CBlockHeader &genesisBlock, uint256 &phash)
 {
     arith_uint256 bnTarget;
     bnTarget.SetCompact(genesisBlock.nBits);
@@ -62,7 +62,7 @@ static void GenerateGenesisBlock(CBlockHeader &genesisBlock, uint256 &phash)
     tfm::format(std::cout,"genesis.nNonce = %u \n", genesisBlock.nNonce);
     tfm::format(std::cout,"Generate hash = %s\n", phash.ToString().c_str());
     tfm::format(std::cout,"genesis.hashMerkleRoot = %s\n", genesisBlock.hashMerkleRoot.ToString().c_str());
-}   
+}   */
 /**
  * Build the genesis block. Note that the output of its generation
  * transaction cannot be spent since it did not originally exist in the
