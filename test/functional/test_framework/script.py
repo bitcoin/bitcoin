@@ -428,7 +428,7 @@ class CScript(bytes):
     __slots__ = ()
 
     @classmethod
-    def __coerce_instance(cls, other):
+    def __coerce_instance(cls, other, nested):
         # Coerce other into bytes
         if isinstance(other, CScriptOp):
             other = bytes([other])
@@ -444,6 +444,8 @@ class CScript(bytes):
                 other = bytes([OP_1NEGATE])
             else:
                 other = CScriptOp.encode_op_pushdata(bn2vch(other))
+        elif isinstance(other, CScript) and not nested:
+            pass
         elif isinstance(other, (bytes, bytearray)):
             other = CScriptOp.encode_op_pushdata(other)
         return other
@@ -451,7 +453,7 @@ class CScript(bytes):
     def __add__(self, other):
         # Do the coercion outside of the try block so that errors in it are
         # noticed.
-        other = self.__coerce_instance(other)
+        other = self.__coerce_instance(other, False)
 
         try:
             # bytes.__add__ always returns bytes instances unfortunately
@@ -469,7 +471,7 @@ class CScript(bytes):
         else:
             def coerce_iterable(iterable):
                 for instance in iterable:
-                    yield cls.__coerce_instance(instance)
+                    yield cls.__coerce_instance(instance, True)
             # Annoyingly on both python2 and python3 bytes.join() always
             # returns a bytes instance even when subclassed.
             return super(CScript, cls).__new__(cls, b''.join(coerce_iterable(value)))
