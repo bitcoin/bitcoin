@@ -121,7 +121,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	# Send version packet
 	#if verbose: print('\nSending VERSION packet')
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
-	print(version)
+	#if verbose: print(version)
 	s.send(version.to_bytes())
 
 	# Get verack packet
@@ -140,7 +140,6 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	verack = s.recv(1024)
 	#if verbose: print(verack) # Next message received must be <= 1024 bytes
 
-	if verbose: print('\n\n')
 	if verbose: print('Connection successful')
 
 	identity_address.append((src_ip, src_port))
