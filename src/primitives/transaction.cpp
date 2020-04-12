@@ -11,6 +11,7 @@
 #include <assert.h>
 // SYSCOIN
 const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 128;
+const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY = 0x7400;
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
@@ -108,7 +109,7 @@ CAmount CTransaction::GetValueOut() const
     bool bFirstOutput = true;
     for (const auto& tx_out : vout) {
         // SYSCOIN
-        if(bFirstOutput && nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
+        if(bFirstOutput && (nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)){
             bFirstOutput = false;
             continue;
         }
