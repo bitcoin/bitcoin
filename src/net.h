@@ -556,6 +556,7 @@ private:
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
+    mutable CCriticalSection cs_vNodesDisconnected;
     std::atomic<NodeId> nLastNodeId;
     unsigned int nPrevNodeCount;
 
