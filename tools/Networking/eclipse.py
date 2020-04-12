@@ -279,7 +279,8 @@ def cleanup_iptables():
 
 # Remove all ip aliases that were created by the script
 def cleanup_ipaliases():
-	for i in range(len(identity_interface)):
+	for i in range(0, len(identity_address)):
+		print(i)
 		ip = identity_address[i][0]
 		interface = identity_interface[i]
 		print(f'Cleaning up IP alias {ip} on {interface}')
