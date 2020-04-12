@@ -199,7 +199,8 @@ def packet_received(packet):
 		if msgtype == 'ping':
 			payload = packet[TCP].payload
 			#msg = MsgSerializable.from_bytes(bytes(payload))
-			msg = MsgSerializable.from_bytes(payload)
+			print(bytes(payload))
+			msg = MsgSerializable.from_bytes(bytes(payload))
 			print(msg)
 			print(type(msg))
 			# send pong
