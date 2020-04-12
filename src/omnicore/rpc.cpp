@@ -2272,7 +2272,7 @@ static UniValue omni_getinfo(const JSONRPCRequest& request)
                    "{\n"
                    "  \"omnicoreversion_int\" : xxxxxxx,       (number) client version as integer\n"
                    "  \"omnicoreversion\" : \"x.x.x.x-xxx\",     (string) client version\n"
-                   "  \"mastercoreversion\" : \"x.x.x.x-xxx\",   (string) client version (DEPRECIATED)\n"
+                   "  \"mastercoreversion\" : \"x.x.x.x-xxx\",   (string) client version (DEPRECATED)\n"
                    "  \"bitcoincoreversion\" : \"x.x.x\",        (string) Bitcoin Core version\n"
                    "  \"block\" : nnnnnn,                      (number) index of the last processed block\n"
                    "  \"blocktime\" : nnnnnnnnnn,              (number) timestamp of the last processed block\n"
@@ -2707,7 +2707,7 @@ static const CRPCCommand commands[] =
 #endif
     { "hidden",                      "mscrpc",                         &mscrpc,                          {"extra", "extra2", "extra3"}  },
 
-    /* depreciated: */
+    /* deprecated: */
     { "hidden",                      "getinfo_MP",                     &omni_getinfo,                    {}  },
     { "hidden",                      "getbalance_MP",                  &omni_getbalance,                 {"address", "propertyid"} },
     { "hidden",                      "getallbalancesforaddress_MP",    &omni_getallbalancesforaddress,   {"address"} },
