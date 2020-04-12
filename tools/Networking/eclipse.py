@@ -162,7 +162,7 @@ def packet_received(packet):
 	#packet.show()
 
 	msg_raw = bytes(packet[TCP].payload)
-	print(hexdump(packet))
+	print('"' + str(packet) + '"')
 	if len(msg_raw) >= 4:
 		is_bitcoin = (msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')
 	else:
