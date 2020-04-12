@@ -50,8 +50,8 @@ def random_ip():
 			old_ip = ip
 			ip = ip.replace('255', str(random.randint(0, 255)), 1)
 		# Don't accept already assigned IPs
-		if ip not in [x[0] for x in identity_address]:
-			break
+		if ip == victim_ip: continue
+		if ip not in [x[0] for x in identity_address]: break
 	return ip
 
 # Create an alias for a specified identity
