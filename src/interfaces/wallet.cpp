@@ -177,22 +177,20 @@ public:
         }
         return result;
     }
-    bool addDestData(const CTxDestination& dest, const std::string& key, const std::string& value) override
-    {
+    std::vector<std::string> getReceiveRequests() override {
+        LOCK(m_wallet->cs_wallet);
+        std::vector<std::string> requests;
+        for (const auto& dest : m_wallet->m_address_book) {
+            for (const auto& request : dest.second.GetReceiveRequests()) {
+                requests.emplace_back(request.second);
+            }
+        }
+        return requests;
+    }
+    bool saveReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& value) override {
         LOCK(m_wallet->cs_wallet);
         WalletBatch batch{m_wallet->GetDatabase()};
-        return m_wallet->AddDestData(batch, dest, key, value);
-    }
-    bool eraseDestData(const CTxDestination& dest, const std::string& key) override
-    {
-        LOCK(m_wallet->cs_wallet);
-        WalletBatch batch{m_wallet->GetDatabase()};
-        return m_wallet->EraseDestData(batch, dest, key);
-    }
-    std::vector<std::string> getDestValues(const std::string& prefix) override
-    {
-        LOCK(m_wallet->cs_wallet);
-        return m_wallet->GetDestValues(prefix);
+        return m_wallet->m_address_book[dest].SetReceiveRequest(id, value) && batch.WriteReceiveRequest(dest, id, value);
     }
     void lockCoin(const COutPoint& output) override
     {

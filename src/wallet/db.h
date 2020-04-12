@@ -330,7 +330,7 @@ public:
         if (!pdb)
             return nullptr;
         Dbc* pcursor = nullptr;
-        int ret = pdb->cursor(nullptr, &pcursor, 0);
+        int ret = pdb->cursor(activeTxn, &pcursor, 0);
         if (ret != 0)
             return nullptr;
         return pcursor;
@@ -355,6 +355,22 @@ public:
         ssValue.clear();
         ssValue.write((char*)datValue.get_data(), datValue.get_size());
         return 0;
+    }
+
+    bool ErasePrefix(const char* data, size_t size)
+    {
+        TxnBegin();
+        Dbc* pcursor = GetCursor();
+        Dbt prefix((void*)data, size), prefix_value;
+        int ret = pcursor->get(&prefix, &prefix_value, DB_SET_RANGE);
+        for (int flag = DB_CURRENT; ret == 0; flag = DB_NEXT) {
+            SafeDbt key, value;
+            if ((ret = pcursor->get(key, value, flag)) != 0 || key.get_size() < size || memcmp(key.get_data(), data, size) != 0) break;
+            pcursor->del(0);
+        }
+        pcursor->close();
+        TxnCommit();
+        return ret == 0 || ret == DB_NOTFOUND;
     }
 
     bool TxnBegin()
