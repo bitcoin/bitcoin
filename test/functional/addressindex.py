@@ -215,7 +215,6 @@ class AddressIndexTest(BitcoinTestFramework):
         self.nodes[3].invalidateblock(best_hash)
         # Allow some time for the reorg to start
         self.bump_mocktime(2)
-        set_node_times(self.nodes, self.mocktime)
         self.sync_all()
 
         balance4 = self.nodes[1].getaddressbalance(address2)
@@ -259,7 +258,6 @@ class AddressIndexTest(BitcoinTestFramework):
         signed_tx = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
         memtxid1 = self.nodes[2].sendrawtransaction(signed_tx["hex"], True)
         self.bump_mocktime(2)
-        set_node_times(self.nodes, self.mocktime)
 
         tx2 = CTransaction()
         tx2.vin = [CTxIn(COutPoint(int(unspent[1]["txid"], 16), unspent[1]["vout"]))]
@@ -274,7 +272,6 @@ class AddressIndexTest(BitcoinTestFramework):
         signed_tx2 = self.nodes[2].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
         memtxid2 = self.nodes[2].sendrawtransaction(signed_tx2["hex"], True)
         self.bump_mocktime(2)
-        set_node_times(self.nodes, self.mocktime)
 
         mempool = self.nodes[2].getaddressmempool({"addresses": [address3]})
         assert_equal(len(mempool), 3)
@@ -302,7 +299,6 @@ class AddressIndexTest(BitcoinTestFramework):
         signed_tx3 = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
         memtxid3 = self.nodes[2].sendrawtransaction(signed_tx3["hex"], True)
         self.bump_mocktime(2)
-        set_node_times(self.nodes, self.mocktime)
 
         mempool3 = self.nodes[2].getaddressmempool({"addresses": [address3]})
         assert_equal(len(mempool3), 2)

@@ -45,7 +45,6 @@ class BlockchainTest(BitcoinTestFramework):
         self.set_genesis_mocktime()
         for i in range(200):
             self.bump_mocktime(156)
-            self.nodes[0].setmocktime(self.mocktime)
             self.nodes[0].generate(1)
         # Actual tests
         self._test_getblockchaininfo()
