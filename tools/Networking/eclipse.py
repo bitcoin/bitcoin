@@ -147,7 +147,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	identity_socket.append(s)
 
 	# Listen to the connections for future packets
-	if verbose: print('Attaching packet listener for future messages...')
+	if verbose: print('Attaching packet listener to {identity_interface}')
 	try:
 		start_new_thread(sniff, (), {
 			'iface': spoof_interface,
@@ -280,7 +280,6 @@ def cleanup_iptables():
 # Remove all ip aliases that were created by the script
 def cleanup_ipaliases():
 	for i in range(0, len(identity_address)):
-		print(i)
 		ip = identity_address[i][0]
 		interface = identity_interface[i]
 		print(f'Cleaning up IP alias {ip} on {interface}')
