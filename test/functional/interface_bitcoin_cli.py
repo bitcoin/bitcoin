@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoin-cli"""
+from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_process_error, get_auth_cookie
 
@@ -72,6 +73,29 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_equal(cli_get_info['paytxfee'], wallet_info['paytxfee'])
             assert_equal(cli_get_info['relayfee'], network_info['relayfee'])
             assert_equal(self.nodes[0].cli.getwalletinfo(), wallet_info)
+
+            self.log.info("Test -getinfo with multiple wallets loaded returns multiwallet balances")
+            wallets = ['', 'Encrypted', 'secret']
+            amounts = [Decimal('59.999928'), Decimal(9), Decimal(31)]
+            self.nodes[0].createwallet(wallet_name=wallets[1])
+            self.nodes[0].createwallet(wallet_name=wallets[2])
+            w1 = self.nodes[0].get_wallet_rpc(wallets[0])
+            w2 = self.nodes[0].get_wallet_rpc(wallets[1])
+            w3 = self.nodes[0].get_wallet_rpc(wallets[2])
+            w1.walletpassphrase(password, 60)
+            w1.sendtoaddress(w2.getnewaddress(), amounts[1])
+            w1.sendtoaddress(w3.getnewaddress(), amounts[2])
+            # Mine a block to confirm; adds a block reward (50 BTC) to the default wallet.
+            self.nodes[0].generate(1)
+            # Verify that -getinfo returns the expected loaded wallets and balances.
+            cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
+            assert_equal(set(self.nodes[0].listwallets()), set(wallets))
+            assert_equal(cli_get_info['balances'], {k: v for k, v in zip(wallets, amounts)})
+            # Unload the default wallet and re-verify.
+            self.nodes[0].unloadwallet(wallets[0])
+            assert wallets[0] not in self.nodes[0].listwallets()
+            cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
+            assert_equal(cli_get_info['balances'], {k: v for k, v in zip(wallets[1:], amounts[1:])})
         else:
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
 
@@ -85,7 +109,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.nodes[0].wait_for_cookie_credentials()  # ensure cookie file is available to avoid race condition
         blocks = self.nodes[0].cli('-rpcwait').send_cli('getblockcount')
         self.nodes[0].wait_for_rpc_connection()
-        assert_equal(blocks, BLOCKS)
+        assert_equal(blocks, BLOCKS + 1 if self.is_wallet_compiled() else BLOCKS)
 
 
 if __name__ == '__main__':
