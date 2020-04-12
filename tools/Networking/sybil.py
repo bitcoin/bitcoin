@@ -42,18 +42,20 @@ def bitcoin(cmd):
 
 # Generate a random identity using the broadcast address template
 def random_ip():
-	#return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
+	# By forcing the IP to be above a certain threshhold, it prevents a lot of errors
+	minimum_ip_range = 10 #int(attacker_ip.split('.')[-1])
 	while(True):
 		ip = broadcast_address
 		old_ip = ''
 		while(old_ip != ip):
 			old_ip = ip
-			ip = ip.replace('255', str(random.randint(0, 255)), 1)
+			ip = ip.replace('255', str(random.randint(minimum_ip_range, 255)), 1)
 		# Don't accept already assigned IPs
 		if ip == default_gateway: continue
 		if ip == victim_ip: continue
 		if ip not in [x[0] for x in identity_address]: break
 	return ip
+	#return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
 
 # Checking the internet by sending a single ping to Google
 def internet_is_active():
