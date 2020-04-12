@@ -1,29 +1,23 @@
 from _thread import start_new_thread
-#from scapy.all import *
-import socket
-import atexit
-import json
-import os
-import re
-import time
-import random
-import bitcoin
 from bitcoin.messages import *
 from bitcoin.net import CAddress
 from io import BytesIO as _BytesIO
-import hashlib
-
+import atexit
+import bitcoin
 import fcntl
+import hashlib
+import json
+import os
+import random
+import re
+import socket
 import struct 
-
-#pkt = Ether(b"\x08\x00'\x19\xef\xcd\x08\x00'\xa9;f\x08\x00E\x00\x00L&\xc0@\x00@\x06\xfb\x82\n\x00\x02\x04\n\x00\x02f \x8d\x17\x0f\xe5\xf4\xd8\xed\x9aj\x02\xbc\x80\x18\x01\xfd-\x9c\x00\x00\x01\x01\x08\n\xa0\xb9\xf5\xba\x8d\x16\xb3\x8a\xf9\xbe\xb4\xd9ping\x00\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\xdf\x1fOV")
-#print(pkt)
-#sys.exit()
+import time
 
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
 eclipse_packet_drop_rate = 0
 
-num_identities = 10
+num_identities = 1
 
 victim_ip = '10.0.2.4'
 victim_port = 8333
