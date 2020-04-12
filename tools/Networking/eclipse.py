@@ -182,6 +182,9 @@ def packet_received(packet):
 			pass
 
 	if not is_bitcoin: return
+	print(msg_type)
+	print(f'payload_valid={payload_valid}')
+	print(f'payload_length_valid={payload_length_valid}')
 	if not payload_valid: return
 	if not payload_length_valid: return
 
