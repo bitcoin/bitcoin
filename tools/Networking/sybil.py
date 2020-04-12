@@ -79,7 +79,10 @@ def close_connection(socket, ip, port, interface):
 	socket.close()
 	terminal(f'sudo ifconfig {interface} {ip} down')
 
-	identity_socket.remove(socket)
+	if socket in identity_socket:
+		identity_socket.remove(socket)
+	else:
+		del socket
 	identity_interface.remove(interface)
 	identity_address.remove((ip, port))
 	print(f'Successfully closed connection to ({ip} : {port})')
