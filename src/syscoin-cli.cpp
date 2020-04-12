@@ -251,7 +251,7 @@ public:
     UniValue ProcessReply(const UniValue &batch_in) override
     {
         UniValue result(UniValue::VOBJ);
-        std::vector<UniValue> batch = JSONRPCProcessBatchReply(batch_in, batch_in.size());
+        const std::vector<UniValue> batch = JSONRPCProcessBatchReply(batch_in);
         // Errors in getnetworkinfo() and getblockchaininfo() are fatal, pass them on;
         // getwalletinfo() and getbalances() are allowed to fail if there is no wallet.
         if (!batch[ID_NETWORKINFO]["error"].isNull()) {
