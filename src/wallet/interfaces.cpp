@@ -228,9 +228,22 @@ public:
         return m_wallet->GetAddressReceiveRequests();
     }
     bool setAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& value) override {
+        // Note: The setAddressReceiveRequest interface used by the GUI to store
+        // receive requests is a little awkward and could be improved in the
+        // future:
+        //
+        // - The same method is used to save requests and erase them, but
+        //   having separate methods could be clearer and prevent bugs.
+        //
+        // - Request ids are passed as strings even though they are generated as
+        //   integers.
+        //
+        // - Multiple requests can be stored for the same address, but it might
+        //   be better to only allow one request or only keep the current one.
         LOCK(m_wallet->cs_wallet);
         WalletBatch batch{m_wallet->GetDatabase()};
-        return m_wallet->SetAddressReceiveRequest(batch, dest, id, value);
+        return value.empty() ? m_wallet->EraseAddressReceiveRequest(batch, dest, id)
+                             : m_wallet->SetAddressReceiveRequest(batch, dest, id, value);
     }
     bool displayAddress(const CTxDestination& dest) override
     {
