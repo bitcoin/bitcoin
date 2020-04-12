@@ -168,9 +168,10 @@ def initialize_network_info():
 	global network_interface, broadcast_address
 
 	# Get the network interface of the default gateway
-	m = re.search(r'\n_gateway +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+)\n', terminal('arp'))
+	m = re.search(r'default.+ dev ([^ ]+)', terminal('ip route'))
 	if m != None:
 		network_interface = m.group(1).strip()
+		print(network_interface)
 	else:
 		print('Error: Network interface couldn\'t be found.')
 		sys.exit()
