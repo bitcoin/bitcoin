@@ -302,8 +302,7 @@ def packet_received(msg_raw, socket, mirror_socket, from_ip, from_port, to_ip, t
 	except Exception as e:
 		close_connection(socket, mirror_socket, from_ip, from_port, interface)
 		print("Closing socket because of error: " + str(e))
-		make_fake_connection(rand_ip, victim_ip, False, attempt_number - 1) # Use old IP
-		#make_fake_connection(random_ip(), victim_ip, False, attempt_number - 1)
+		make_fake_connection(random_ip(), victim_ip, False, attempt_number - 1)
 		return True # End the thread
 	return False
 
