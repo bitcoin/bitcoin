@@ -55,7 +55,7 @@ struct AddressTableEntryLessThan
 static AddressTableEntry::Type translateTransactionType(const QString &strPurpose, bool isMine)
 {
     AddressTableEntry::Type addressType = AddressTableEntry::Hidden;
-    // "refund" addresses aren't shown, and change addresses aren't in mapAddressBook at all.
+    // "refund" addresses aren't shown, and change addresses aren't returned by getAddresses at all.
     if (strPurpose == "send")
         addressType = AddressTableEntry::Sending;
     else if (strPurpose == "receive")

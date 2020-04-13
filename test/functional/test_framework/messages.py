@@ -1379,10 +1379,23 @@ class msg_headers:
 
 
 class msg_merkleblock:
+    __slots__ = ("merkleblock",)
     command = b"merkleblock"
 
+    def __init__(self, merkleblock=None):
+        if merkleblock is None:
+            self.merkleblock = CMerkleBlock()
+        else:
+            self.merkleblock = merkleblock
+
     def deserialize(self, f):
-        pass  # Placeholder for now
+        self.merkleblock.deserialize(f)
+
+    def serialize(self):
+        return self.merkleblock.serialize()
+
+    def __repr__(self):
+        return "msg_merkleblock(merkleblock=%s)" % (repr(self.merkleblock))
 
 
 class msg_filterload:
@@ -1412,6 +1425,25 @@ class msg_filterload:
     def __repr__(self):
         return "msg_filterload(data={}, nHashFuncs={}, nTweak={}, nFlags={})".format(
             self.data, self.nHashFuncs, self.nTweak, self.nFlags)
+
+
+class msg_filteradd:
+    __slots__ = ("data")
+    command = b"filteradd"
+
+    def __init__(self, data):
+        self.data = data
+
+    def deserialize(self, f):
+        self.data = deser_string(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_string(self.data)
+        return r
+
+    def __repr__(self):
+        return "msg_filteradd(data={})".format(self.data)
 
 
 class msg_filterclear:

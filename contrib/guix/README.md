@@ -220,8 +220,6 @@ repository and will likely put one up soon.
 [guix/env-setup]: https://www.gnu.org/software/guix/manual/en/html_node/Build-Environment-Setup.html
 [guix/substitutes]: https://www.gnu.org/software/guix/manual/en/html_node/Substitutes.html
 [guix/substitute-server-auth]: https://www.gnu.org/software/guix/manual/en/html_node/Substitute-Server-Authorization.html
-[guix/inferiors]: https://www.gnu.org/software/guix/manual/en/html_node/Inferiors.html
-[guix/channels]: https://www.gnu.org/software/guix/manual/en/html_node/Channels.html
 [guix/time-machine]: https://guix.gnu.org/manual/en/html_node/Invoking-guix-time_002dmachine.html
 
 [debian/guix-package]: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=850644

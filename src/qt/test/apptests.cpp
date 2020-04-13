@@ -83,6 +83,7 @@ void AppTests::appTests()
     // Reset global state to avoid interfering with later tests.
     AbortShutdown();
     UnloadBlockIndex();
+    WITH_LOCK(::cs_main, g_chainman.Reset());
 }
 
 //! Entry point for SyscoinGUI tests.
