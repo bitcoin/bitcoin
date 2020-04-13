@@ -745,7 +745,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
         }
     }
     CAsset &storedAssetRef = mapAsset->second; 
-    if (theAsset.vchPubData.size() > MAX_VALUE_LENGTH) {
+    if (storedAssetRef.vchPubData.size() > MAX_VALUE_LENGTH) {
         return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
     } 
     switch (tx.nVersion) {
@@ -754,32 +754,32 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
             if (!fUnitTest && tx.vout[nOut].nValue < 500*COIN) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
-            if (theAsset.assetAllocation.nAsset <= (SYSCOIN_TX_VERSION_ALLOCATION_SEND*10)) {
+            if (storedAssetRef.assetAllocation.nAsset <= (SYSCOIN_TX_VERSION_ALLOCATION_SEND*10)) {
                 return FormatSyscoinErrorMessage(state, "asset-guid-invalid", bSanityCheck);
             }
-            if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH) {
+            if (!storedAssetRef.vchContract.empty() && storedAssetRef.vchContract.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }  
-            if (theAsset.nPrecision > 8) {
+            if (storedAssetRef.nPrecision > 8) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             }
-            if (theAsset.strSymbol.size() > 8 || theAsset.strSymbol.size() < 1) {
+            if (storedAssetRef.strSymbol.size() > 8 || storedAssetRef.strSymbol.size() < 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
-            if (!AssetRange(theAsset.nMaxSupply)) {
+            if (!AssetRange(storedAssetRef.nMaxSupply)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
             }
-            if (theAsset.nBalance > theAsset.nMaxSupply || (theAsset.nBalance <= 0)) {
+            if (storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bSanityCheck);
             }
-            if (theAsset.nUpdateFlags > ASSET_UPDATE_ALL) {
+            if (storedAssetRef.nUpdateFlags > ASSET_UPDATE_ALL) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
             } 
             if (nAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-guid", bSanityCheck);
             }         
             // starting supply is the supplied balance upon init
-            storedAssetRef.nTotalSupply = theAsset.nBalance;
+            storedAssetRef.nTotalSupply = storedAssetRef.nBalance;
             storedAssetRef.nBurnBalance = 0; 
         }
         break;

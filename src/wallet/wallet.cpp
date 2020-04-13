@@ -2169,7 +2169,7 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             if (wtx.tx->vout[i].nValue < nMinimumAmount || wtx.tx->vout[i].nValue > nMaximumAmount)
                 continue;
-            if (wtx.tx->vout[i].assetInfo.nValue < nMinimumAmountAsset || wtx.tx->vout[i].assetInfo.nValue > nMaximumAmountAsset)
+            if (wtx.tx->vout[i].assetInfo.nAsset > 0 && (wtx.tx->vout[i].assetInfo.nValue < nMinimumAmountAsset || wtx.tx->vout[i].assetInfo.nValue > nMaximumAmountAsset))
                 continue;
 
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(entry.first, i)))
@@ -2201,18 +2201,17 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
                 nTotal += wtx.tx->vout[i].nValue;
-
                 if (nTotal >= nMinimumSumAmount) {
                     return;
                 }
+            }
+            if (nMinimumSumAmountAsset != MAX_ASSET && wtx.tx->vout[i].assetInfo.nAsset > 0) {
                 // SYSCOIN
                 nTotalAsset += wtx.tx->vout[i].assetInfo.nValue;
-
                 if (nTotalAsset >= nMinimumSumAmountAsset) {
                     return;
                 }
-            }
-          
+            }         
             // Checks the maximum number of UTXO's.
             if (nMaximumCount > 0 && vCoins.size() >= nMaximumCount) {
                 return;
@@ -2229,7 +2228,7 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins(interfaces::Ch
     std::vector<COutput> availableCoins;
 
     AvailableCoins(locked_chain, availableCoins);
-
+    LogPrintf("ListCoins size %d\n", availableCoins.size());
     for (const COutput& coin : availableCoins) {
         CTxDestination address;
         if ((coin.fSpendable || (IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.fSolvable)) &&
@@ -2258,7 +2257,7 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins(interfaces::Ch
             }
         }
     }
-
+    LogPrintf("ListCoins result %d\n", result.size());
     return result;
 }
 
