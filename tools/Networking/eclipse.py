@@ -343,7 +343,7 @@ def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_
 	#msg = MsgSerializable.from_bytes(msg_raw)
 
 	# Relay Bitcoin packets that aren't from the victim
-	print(f'*** Mirror message received ** {from_ip} --> {to_ip} ** {msg_type}')
+	print(f'*** Mirrored response sent  ** {from_ip} --> {to_ip} ** {msg_type}')
 	if orig_socket == None: return False # If the original's socket isn't running, don't bother trying to relay
 	try:
 		#if msg_type == 'ping':
