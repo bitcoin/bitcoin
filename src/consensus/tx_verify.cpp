@@ -160,7 +160,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
 bool GetAssetValueOut(const CTransaction& tx, const CAssetAllocation& allocation, TxValidationState& state, CAmount &nValueOut)
 {
     const bool &isSyscoinAssetSendTx = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND;
-    const bool &isSyscoinAssetNewOrUpdateTx = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND;
+    const bool &isSyscoinAssetNewOrUpdateTx = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE;
     nValueOut = 0;
     // asset (activate/update) are allowed only 1 asset output
     if(isSyscoinAssetNewOrUpdateTx) {
