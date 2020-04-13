@@ -205,6 +205,7 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& pru
         /* Use selectParams here to guarantee Params() can be used by node interface */
         try {
             node.selectParams(gArgs.GetChainName());
+
         } catch (const std::exception&) {
             return false;
         }

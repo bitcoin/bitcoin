@@ -53,8 +53,8 @@ inline uint256 makeTopLevelRoot(int height, const KeystoneArray& keystones, cons
 
 inline bool isKeystone(const CBlockIndex& block)
 {
-    auto& p = Params().GetPopConfig();
-    return (block.nHeight % p.alt->getKeystoneInterval()) == 0;
+    auto& c = getService<Config>();
+    return (block.nHeight % c.popconfig.alt->getKeystoneInterval()) == 0;
 }
 
 inline const CBlockIndex* getPreviousKeystone(const CBlockIndex& block)

@@ -12,6 +12,7 @@
 #include <util/system.h>
 #include <util/translation.h>
 #include <wallet/wallettool.h>
+#include <bootstraps.h>
 
 #include <functional>
 
@@ -61,6 +62,7 @@ static bool WalletAppInit(int argc, char* argv[])
     }
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
     SelectParams(gArgs.GetChainName());
+    selectPopConfig(gArgs);
 
     return true;
 }

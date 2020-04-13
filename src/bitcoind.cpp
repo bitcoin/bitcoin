@@ -23,6 +23,7 @@
 
 #include <vbk/init.hpp>
 
+#include "bootstraps.h"
 #include <functional>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
@@ -90,6 +91,7 @@ static bool AppInit(int argc, char* argv[])
         // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
             SelectParams(gArgs.GetChainName());
+            selectPopConfig(gArgs);
         } catch (const std::exception& e) {
             return InitError(strprintf("%s\n", e.what()));
         }

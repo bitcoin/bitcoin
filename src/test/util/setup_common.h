@@ -71,7 +71,7 @@ static constexpr CAmount CENT{1000000};
 struct BasicVbkSetup {
     BasicVbkSetup();
 
-    virtual ~BasicVbkSetup();
+    virtual ~BasicVbkSetup() = default;
 };
 
 /** Basic testing setup.

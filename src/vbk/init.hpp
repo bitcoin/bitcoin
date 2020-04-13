@@ -31,7 +31,8 @@ Face& InitService(Arg1 arg)
 
 inline PopService& InitPopService()
 {
-    return detail::InitService<PopService, PopServiceImpl>(Params().GetPopConfig());
+    auto& config = getService<VeriBlock::Config>();
+    return detail::InitService<PopService, PopServiceImpl>(config.popconfig);
 }
 
 inline Config& InitConfig()
