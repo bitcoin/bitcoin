@@ -14,11 +14,6 @@
  */
 const std::string CLIENT_NAME("Satoshi");
 
-/**
- * Client version number
- */
-#define CLIENT_VERSION_SUFFIX ""
-
 
 /**
  * The following part of the code determines the CLIENT_BUILD variable.
@@ -33,7 +28,6 @@ const std::string CLIENT_NAME("Satoshi");
  *   * if BUILD_DESC is defined, use that literally (output of git-describe)
  *   * if not, but GIT_COMMIT is defined, use v[maj].[min].[rev].[build]-g[commit]
  *   * otherwise, use v[maj].[min].[rev].[build]-unk
- * finally CLIENT_VERSION_SUFFIX is added
  */
 
 //! First, include build.h if requested
@@ -66,7 +60,7 @@ const std::string CLIENT_NAME("Satoshi");
 #endif
 #endif
 
-const std::string CLIENT_BUILD(BUILD_DESC CLIENT_VERSION_SUFFIX);
+const std::string CLIENT_BUILD(BUILD_DESC);
 
 static std::string FormatVersion(int nVersion)
 {
