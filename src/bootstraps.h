@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 
-#include <veriblock/config.hpp>
+#include "chainparams.h"
+#include <primitives/block.h>
 #include <util/system.h> // for gArgs
+#include <veriblock/config.hpp>
 
 extern int testnetVBKstartHeight;
 extern std::vector<std::string> testnetVBKblocks;
@@ -13,7 +15,32 @@ extern std::vector<std::string> testnetVBKblocks;
 extern int testnetBTCstartHeight;
 extern std::vector<std::string> testnetBTCblocks;
 
+struct AltChainParamsVBTC : public altintegration::AltChainParams {
+    ~AltChainParamsVBTC() override = default;
+
+    AltChainParamsVBTC(const CBlock& genesis)
+    {
+        auto hash = genesis.GetHash();
+        bootstrap.hash = std::vector<uint8_t>{hash.begin(), hash.end()};
+        bootstrap.height = 0; // pop is enabled starting at genesis
+        bootstrap.timestamp = genesis.GetBlockTime();
+    }
+
+    altintegration::AltBlock getBootstrapBlock() const noexcept override
+    {
+        return bootstrap;
+    }
+
+    uint32_t getIdentifier() const noexcept override
+    {
+        return 0x3ae6ca;
+    }
+
+    altintegration::AltBlock bootstrap;
+};
+
 void printConfig(const altintegration::Config& config);
-std::shared_ptr<altintegration::Config> makeConfig(const ArgsManager& mgr);
+void selectPopConfig(const ArgsManager& mgr);
+
 
 #endif

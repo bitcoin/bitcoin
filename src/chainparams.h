@@ -86,8 +86,6 @@ public:
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
 
-    const altintegration::Config& GetPopConfig() const { return *popconfig; }
-
 protected:
     CChainParams() {}
 
@@ -108,7 +106,6 @@ protected:
     bool m_is_test_chain;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
-    std::shared_ptr<altintegration::Config> popconfig;
 };
 
 /**
