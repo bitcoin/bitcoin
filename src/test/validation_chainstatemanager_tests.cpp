@@ -3,13 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <chainparams.h>
-#include <random.h>
 #include <index/txindex.h>
-#include <uint256.h>
 #include <consensus/validation.h>
+#include <random.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <vector>
 
@@ -102,7 +103,9 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     exp_tip = c1.m_chain.Tip();
     BOOST_CHECK_EQUAL(validated_tip, exp_tip);
 
-    // Avoid triggering the address sanitizer.
+    // Let scheduler events finish running to avoid accessing memory that is going to be unloaded
+    SyncWithValidationInterfaceQueue();
+
     WITH_LOCK(::cs_main, manager.Unload());
 }
 
