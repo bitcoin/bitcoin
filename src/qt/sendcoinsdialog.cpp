@@ -67,10 +67,12 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
         ui->addButton->setIcon(QIcon());
         ui->clearButton->setIcon(QIcon());
         ui->sendButton->setIcon(QIcon());
+        ui->makeUnsignedButton->setIcon(QIcon());
     } else {
         ui->addButton->setIcon(_platformStyle->SingleColorIcon(":/icons/add"));
         ui->clearButton->setIcon(_platformStyle->SingleColorIcon(":/icons/remove"));
         ui->sendButton->setIcon(_platformStyle->SingleColorIcon(":/icons/send"));
+        ui->makeUnsignedButton->setIcon(_platformStyle->SingleColorIcon(":/icons/send"));
     }
 
     GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
@@ -188,8 +190,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         ui->optInRBF->setCheckState(Qt::Checked);
 
         if (model->wallet().privateKeysDisabled()) {
-            ui->sendButton->setText(tr("Cr&eate Unsigned"));
-            ui->sendButton->setToolTip(tr("Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.").arg(PACKAGE_NAME));
+            ui->sendButton->setDisabled(true);
         }
 
         // set the smartfee-sliders default value (wallets default conf.target or last stored value)
@@ -219,7 +220,7 @@ SendCoinsDialog::~SendCoinsDialog()
     delete ui;
 }
 
-bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informative_text, QString& detailed_text)
+bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informative_text, QString& detailed_text, bool make_psbt)
 {
     QList<SendCoinsRecipient> recipients;
     bool valid = true;
@@ -266,7 +267,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
 
     updateCoinControlState(ctrl);
 
-    prepareStatus = model->prepareTransaction(*m_current_transaction, ctrl);
+    prepareStatus = model->prepareTransaction(*m_current_transaction, ctrl, !make_psbt /* sign */);
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
@@ -306,14 +307,14 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
         formatted.append(recipientElement);
     }
 
-    if (model->wallet().privateKeysDisabled()) {
+    if (make_psbt) {
         question_string.append(tr("Do you want to draft this transaction?"));
     } else {
         question_string.append(tr("Are you sure you want to send?"));
     }
 
     question_string.append("<br /><span style='font-size:10pt;'>");
-    if (model->wallet().privateKeysDisabled()) {
+    if (make_psbt) {
         question_string.append(tr("Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.").arg(PACKAGE_NAME));
     } else {
         question_string.append(tr("Please, review your transaction."));
@@ -376,11 +377,11 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
 
     QString question_string, informative_text, detailed_text;
-    if (!PrepareSendText(question_string, informative_text, detailed_text)) return;
+    if (!PrepareSendText(question_string, informative_text, detailed_text, false /* make_psbt */)) return;
     assert(m_current_transaction);
 
-    const QString confirmation = model->wallet().privateKeysDisabled() ? tr("Confirm transaction proposal") : tr("Confirm send coins");
-    const QString confirmButtonText = model->wallet().privateKeysDisabled() ? tr("Create Unsigned") : tr("Send");
+    const QString confirmation = tr("Confirm send coins");
+    const QString confirmButtonText = tr("Send");
     SendConfirmationDialog confirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, confirmButtonText, this);
     confirmationDialog.exec();
     QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
@@ -391,72 +392,92 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    bool send_failure = false;
-    if (model->wallet().privateKeysDisabled()) {
-        CMutableTransaction mtx = CMutableTransaction{*(m_current_transaction->getWtx())};
-        PartiallySignedTransaction psbtx(mtx);
-        bool complete = false;
-        const TransactionError err = model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, psbtx, complete);
-        assert(!complete);
-        assert(err == TransactionError::OK);
-        // Serialize the PSBT
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << psbtx;
-        GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
-        QMessageBox msgBox;
-        msgBox.setText("Unsigned Transaction");
-        msgBox.setInformativeText("The PSBT has been copied to the clipboard. You can also save it.");
-        msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard);
-        msgBox.setDefaultButton(QMessageBox::Discard);
-        switch (msgBox.exec()) {
-        case QMessageBox::Save: {
-            QString selectedFilter;
-            QString fileNameSuggestion = "";
-            bool first = true;
-            for (const SendCoinsRecipient &rcp : m_current_transaction->getRecipients()) {
-                if (!first) {
-                    fileNameSuggestion.append(" - ");
-                }
-                QString labelOrAddress = rcp.label.isEmpty() ? rcp.address : rcp.label;
-                QString amount = BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
-                fileNameSuggestion.append(labelOrAddress + "-" + amount);
-                first = false;
-            }
-            fileNameSuggestion.append(".psbt");
-            QString filename = GUIUtil::getSaveFileName(this,
-                tr("Save Transaction Data"), fileNameSuggestion,
-                tr("Partially Signed Transaction (Binary) (*.psbt)"), &selectedFilter);
-            if (filename.isEmpty()) {
-                return;
-            }
-            std::ofstream out(filename.toLocal8Bit().data());
-            out << ssTx.str();
-            out.close();
-            Q_EMIT message(tr("PSBT saved"), "PSBT saved to disk", CClientUIInterface::MSG_INFORMATION);
-            break;
-        }
-        case QMessageBox::Discard:
-            break;
-        default:
-            assert(false);
-        }
-    } else {
-        // now send the prepared transaction
-        WalletModel::SendCoinsReturn sendStatus = model->sendCoins(*m_current_transaction);
-        // process sendStatus and on error generate message shown to user
-        processSendCoinsReturn(sendStatus);
+    // now send the prepared transaction
+    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(*m_current_transaction);
+    // process sendStatus and on error generate message shown to user
+    processSendCoinsReturn(sendStatus);
 
-        if (sendStatus.status == WalletModel::OK) {
-            Q_EMIT coinsSent(m_current_transaction->getWtx()->GetHash());
-        } else {
-            send_failure = true;
-        }
-    }
-    if (!send_failure) {
+    if (sendStatus.status == WalletModel::OK) {
+        Q_EMIT coinsSent(m_current_transaction->getWtx()->GetHash());
         accept();
         CoinControlDialog::coinControl()->UnSelectAll();
         coinControlUpdateLabels();
     }
+    fNewRecipientAllowed = true;
+    m_current_transaction.reset();
+}
+
+void SendCoinsDialog::on_makeUnsignedButton_clicked()
+{
+    if(!model || !model->getOptionsModel())
+        return;
+
+    QString question_string, informative_text, detailed_text;
+    if (!PrepareSendText(question_string, informative_text, detailed_text, true /* make psbt */)) return;
+    assert(m_current_transaction);
+
+    const QString confirmation = tr("Confirm transaction proposal");
+    const QString confirmButtonText = tr("Create Unsigned");
+    SendConfirmationDialog confirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, confirmButtonText, this);
+    confirmationDialog.exec();
+    QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
+
+    if(retval != QMessageBox::Yes)
+    {
+        fNewRecipientAllowed = true;
+        return;
+    }
+
+    CMutableTransaction mtx = CMutableTransaction{*(m_current_transaction->getWtx())};
+    PartiallySignedTransaction psbtx(mtx);
+    bool complete = false;
+    const TransactionError err = model->wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, psbtx, complete);
+    assert(!complete);
+    assert(err == TransactionError::OK);
+    // Serialize the PSBT
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    ssTx << psbtx;
+    GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
+    QMessageBox msgBox;
+    msgBox.setText("Unsigned Transaction");
+    msgBox.setInformativeText("The PSBT has been copied to the clipboard. You can also save it.");
+    msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard);
+    msgBox.setDefaultButton(QMessageBox::Discard);
+    switch (msgBox.exec()) {
+    case QMessageBox::Save: {
+        QString selectedFilter;
+        QString fileNameSuggestion = "";
+        bool first = true;
+        for (const SendCoinsRecipient &rcp : m_current_transaction->getRecipients()) {
+            if (!first) {
+                fileNameSuggestion.append(" - ");
+            }
+            QString labelOrAddress = rcp.label.isEmpty() ? rcp.address : rcp.label;
+            QString amount = BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+            fileNameSuggestion.append(labelOrAddress + "-" + amount);
+            first = false;
+        }
+        fileNameSuggestion.append(".psbt");
+        QString filename = GUIUtil::getSaveFileName(this,
+            tr("Save Transaction Data"), fileNameSuggestion,
+            tr("Partially Signed Transaction (Binary) (*.psbt)"), &selectedFilter);
+        if (filename.isEmpty()) {
+            return;
+        }
+        std::ofstream out(filename.toLocal8Bit().data());
+        out << ssTx.str();
+        out.close();
+        Q_EMIT message(tr("PSBT saved"), "PSBT saved to disk", CClientUIInterface::MSG_INFORMATION);
+        break;
+    }
+    case QMessageBox::Discard:
+        break;
+    default:
+        assert(false);
+    }
+    accept();
+    CoinControlDialog::coinControl()->UnSelectAll();
+    coinControlUpdateLabels();
     fNewRecipientAllowed = true;
     m_current_transaction.reset();
 }
@@ -544,7 +565,8 @@ QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
         }
     }
     QWidget::setTabOrder(prev, ui->sendButton);
-    QWidget::setTabOrder(ui->sendButton, ui->clearButton);
+    QWidget::setTabOrder(ui->sendButton, ui->makeUnsignedButton);
+    QWidget::setTabOrder(ui->makeUnsignedButton, ui->clearButton);
     QWidget::setTabOrder(ui->clearButton, ui->addButton);
     return ui->addButton;
 }
