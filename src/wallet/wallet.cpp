@@ -2358,7 +2358,13 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
         bnb_used = false;
         // SYSCOIN
         bool bAssetSolver = KnapsackSolver(nTargetValueAsset, utxo_pool_asset, setCoinsRet, nValueRetAsset);
-        bool bBaseSysSolver = KnapsackSolver(nTargetValue, utxo_pool, setCoinsRet, nValueRet);
+        // from returned coins, see if we need to also add more gas or do we have enough already
+        for(const auto& inputCoin: setCoinsRet) {
+            nValueRet += inputCoin.effective_value;
+        }
+        // remove attached gas from asset inputs from how much we thought we needed before
+        const CAmount &nTarget = nTargetValue - nValueRet;
+        bool bBaseSysSolver = nTarget <= 0 || KnapsackSolver(nTarget, utxo_pool, setCoinsRet, nValueRet);
         return bBaseSysSolver && bAssetSolver;
     }
 }
