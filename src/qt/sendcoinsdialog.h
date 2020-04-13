@@ -71,13 +71,14 @@ private:
     void processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg = QString());
     void minimizeFeeSection(bool fMinimize);
     // Format confirmation message
-    bool PrepareSendText(QString& question_string, QString& informative_text, QString& detailed_text);
+    bool PrepareSendText(QString& question_string, QString& informative_text, QString& detailed_text, bool make_psbt);
     void updateFeeMinimizedLabel();
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl& ctrl);
 
 private Q_SLOTS:
     void on_sendButton_clicked();
+    void on_makeUnsignedButton_clicked();
     void on_buttonChooseFee_clicked();
     void on_buttonMinimizeFee_clicked();
     void removeEntry(SendCoinsEntry* entry);
