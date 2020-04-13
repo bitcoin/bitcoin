@@ -165,7 +165,9 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
-    UniValue res;
+    mapValue_t mapValue;
+    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
 }
@@ -402,7 +404,7 @@ UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std
     CMutableTransaction mtx;
     mtx.nVersion = nVersionIn;
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    UniValue res;
+    UniValue res(UniValue::VOBJ);
     if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
         if(nFeeRequired > nGas && ((tx->GetValueOut() + nFeeRequired) <= curBalance)) {
             // if gas runs out, try fund from new inputs
@@ -418,6 +420,8 @@ UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std
                     strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
                 throw JSONRPCError(RPC_WALLET_ERROR, strError);
             } else {
+                mapValue_t mapValue;
+                pwallet->CommitTransaction(tx1, std::move(mapValue), {} /* orderForm */);
                 res.__pushKV("txid", tx1->GetHash().GetHex());
                 return res;
             }
@@ -426,6 +430,8 @@ UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     } else {
+        mapValue_t mapValue;
+        pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
         res.__pushKV("txid", tx->GetHash().GetHex());
         return res;
     }
@@ -814,7 +820,9 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
-    UniValue res;
+    mapValue_t mapValue;
+    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
 }
@@ -892,7 +900,9 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
-    UniValue res;
+    mapValue_t mapValue;
+    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
 }
@@ -1044,7 +1054,9 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
-    UniValue res;
+    mapValue_t mapValue;
+    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;  
 }
