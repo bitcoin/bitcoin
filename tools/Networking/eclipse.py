@@ -447,7 +447,7 @@ if __name__ == '__main__':
 		except ConnectionRefusedError:
 			print('Connection was refused. The victim\'s node must not be running.')
 
-	print(f'Successful connections: {len(identity_address)}\n')
+	print(f'\nSUCCESSFUL CONNECTIONS: {len(identity_address)}\n')
 
 	# Prevent the script from terminating when the sniff function is still active
 	while 1:
