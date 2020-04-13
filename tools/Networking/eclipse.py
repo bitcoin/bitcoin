@@ -24,7 +24,7 @@ victim_ip = '10.0.2.4'
 victim_port = 8333
 
 # How many identities should run simultaneously
-num_identities = 1
+num_identities = 8
 
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
 eclipse_packet_drop_rate = 0
