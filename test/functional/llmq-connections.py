@@ -68,9 +68,9 @@ class LLMQConnections(DashTestFramework):
             mn.node.setnetworkactive(False)
         for mn in self.mninfo:
             wait_until(lambda: len(mn.node.getpeerinfo()) == 0)
-        self.bump_mocktime(60)
         for mn in self.mninfo:
             mn.node.setnetworkactive(True)
+        self.bump_mocktime(60)
 
         self.log.info("verify that all masternodes re-connected")
         for q in self.nodes[0].quorum('list')['llmq_test']:
