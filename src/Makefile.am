@@ -610,7 +610,6 @@ libsyscoin_util_a_SOURCES = \
   util/strencodings.cpp \
   util/string.cpp \
   util/time.cpp \
-  util/url.cpp \
   util/executable_path/src/executable_path.cpp \
   util/executable_path/src/detail/executable_path_internals_bsd.cpp \
   util/executable_path/src/detail/executable_path_internals_common.cpp \
@@ -621,6 +620,10 @@ libsyscoin_util_a_SOURCES = \
   util/executable_path/src/detail/executable_path_internals_solaris.cpp \
   util/executable_path/src/detail/executable_path_internals_windows.cpp \
   $(SYSCOIN_CORE_H)
+
+if USE_LIBEVENT
+libsyscoin_util_a_SOURCES += util/url.cpp
+endif
 
 if GLIBC_BACK_COMPAT
 libsyscoin_util_a_SOURCES += compat/glibc_compat.cpp
@@ -829,6 +832,7 @@ include Makefile.leveldb.include
 endif
 
 include Makefile.test_util.include
+include Makefile.test_fuzz.include
 
 if ENABLE_TESTS
 include Makefile.test.include

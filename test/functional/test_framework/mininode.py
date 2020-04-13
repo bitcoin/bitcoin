@@ -30,6 +30,7 @@ from test_framework.messages import (
     msg_blocktxn,
     msg_cmpctblock,
     msg_feefilter,
+    msg_filteradd,
     msg_filterclear,
     msg_filterload,
     msg_getaddr,
@@ -65,6 +66,7 @@ MESSAGEMAP = {
     b"blocktxn": msg_blocktxn,
     b"cmpctblock": msg_cmpctblock,
     b"feefilter": msg_feefilter,
+    b"filteradd": msg_filteradd,
     b"filterclear": msg_filterclear,
     b"filterload": msg_filterload,
     b"getaddr": msg_getaddr,
@@ -324,6 +326,7 @@ class P2PInterface(P2PConnection):
     def on_blocktxn(self, message): pass
     def on_cmpctblock(self, message): pass
     def on_feefilter(self, message): pass
+    def on_filteradd(self, message): pass
     def on_filterclear(self, message): pass
     def on_filterload(self, message): pass
     def on_getaddr(self, message): pass
@@ -336,7 +339,6 @@ class P2PInterface(P2PConnection):
     def on_merkleblock(self, message): pass
     def on_notfound(self, message): pass
     def on_pong(self, message): pass
-    def on_reject(self, message): pass
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
     def on_tx(self, message): pass
@@ -390,18 +392,17 @@ class P2PInterface(P2PConnection):
             last_headers = self.last_message.get('headers')
             if not last_headers:
                 return False
-            return last_headers.headers[0].rehash() == blockhash
+            return last_headers.headers[0].rehash() == int(blockhash, 16)
 
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
-    def wait_for_merkleblock(self, timeout=60):
+    def wait_for_merkleblock(self, blockhash, timeout=60):
         def test_function():
             assert self.is_connected
             last_filtered_block = self.last_message.get('merkleblock')
             if not last_filtered_block:
                 return False
-            # TODO change this method to take a hash value and only return true if the correct block has been received
-            return True
+            return last_filtered_block.merkleblock.header.rehash() == int(blockhash, 16)
 
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 

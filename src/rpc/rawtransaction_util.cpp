@@ -216,7 +216,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                 keystore->AddCScript(script);
                 // Automatically also add the P2WSH wrapped version of the script (to deal with P2SH-P2WSH).
                 // This is done for redeemScript only for compatibility, it is encouraged to use the explicit witnessScript field instead.
-                CScript witness_output_script{GetScriptForWitness(script)};
+                CScript witness_output_script{GetScriptForDestination(WitnessV0ScriptHash(script))};
                 keystore->AddCScript(witness_output_script);
 
                 if (!ws.isNull() && !rs.isNull()) {

@@ -23,6 +23,7 @@
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/util.h>
 #include <time.h>
 #include <uint256.h>
 #include <util/moneystr.h>
@@ -35,6 +36,7 @@
 #include <cassert>
 #include <chrono>
 #include <limits>
+#include <set>
 #include <vector>
 
 void initialize()
@@ -90,8 +92,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
     (void)GetSizeOfCompactSize(u64);
     (void)GetSpecialScriptSize(u32);
-    // (void)GetVirtualTransactionSize(i64, i64); // function defined only for a subset of int64_t inputs
-    // (void)GetVirtualTransactionSize(i64, i64, u32); // function defined only for a subset of int64_t/uint32_t inputs
+    if (!MultiplicationOverflow(i64, static_cast<int64_t>(::nBytesPerSigOp)) && !AdditionOverflow(i64 * ::nBytesPerSigOp, static_cast<int64_t>(4))) {
+        (void)GetVirtualTransactionSize(i64, i64);
+    }
+    if (!MultiplicationOverflow(i64, static_cast<int64_t>(u32)) && !AdditionOverflow(i64, static_cast<int64_t>(4)) && !AdditionOverflow(i64 * u32, static_cast<int64_t>(4))) {
+        (void)GetVirtualTransactionSize(i64, i64, u32);
+    }
     (void)HexDigit(ch);
     (void)MoneyRange(i64);
     (void)ToString(i64);
@@ -110,6 +116,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)memusage::DynamicUsage(u8);
     const unsigned char uch = static_cast<unsigned char>(u8);
     (void)memusage::DynamicUsage(uch);
+    {
+        const std::set<int64_t> i64s{i64, static_cast<int64_t>(u64)};
+        const size_t dynamic_usage = memusage::DynamicUsage(i64s);
+        const size_t incremental_dynamic_usage = memusage::IncrementalDynamicUsage(i64s);
+        assert(dynamic_usage == incremental_dynamic_usage * i64s.size());
+    }
     (void)MillisToTimeval(i64);
     const double d = ser_uint64_to_double(u64);
     assert(ser_double_to_uint64(d) == u64);
@@ -127,8 +139,20 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             assert(parsed_money == i64);
         }
     }
+    if (i32 >= 0 && i32 <= 16) {
+        assert(i32 == CScript::DecodeOP_N(CScript::EncodeOP_N(i32)));
+    }
+
     const std::chrono::seconds seconds{i64};
     assert(count_seconds(seconds) == i64);
+
+    const CScriptNum script_num{i64};
+    (void)script_num.getint();
+    // Avoid negation failure:
+    // script/script.h:332:35: runtime error: negation of -9223372036854775808 cannot be represented in type 'int64_t' (aka 'long'); cast to an unsigned type to negate this value to itself
+    if (script_num != CScriptNum{std::numeric_limits<int64_t>::min()}) {
+        (void)script_num.getvch();
+    }
 
     const arith_uint256 au256 = UintToArith256(u256);
     assert(ArithToUint256(au256) == u256);

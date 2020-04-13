@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <httpserver.h>
+#include <interfaces/chain.h>
 #include <key_io.h>
 #include <node/context.h>
 #include <outputtype.h>
@@ -493,7 +494,13 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     LOCK(cs_main);
 
     RPCTypeCheck(request.params, {UniValue::VNUM});
-    SetMockTime(request.params[0].get_int64());
+    int64_t time = request.params[0].get_int64();
+    SetMockTime(time);
+    if (g_rpc_node) {
+        for (const auto& chain_client : g_rpc_node->chain_clients) {
+            chain_client->setMockTime(time);
+        }
+    }
 
     return NullUniValue;
 }
@@ -719,6 +726,8 @@ static UniValue echo(const JSONRPCRequest& request)
     return request.params;
 }
 
+void RegisterMiscRPCCommands(CRPCTable &t)
+{
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -740,8 +749,6 @@ static const CRPCCommand commands[] =
 };
 // clang-format on
 
-void RegisterMiscRPCCommands(CRPCTable &t)
-{
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }

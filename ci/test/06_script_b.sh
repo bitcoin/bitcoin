@@ -21,10 +21,17 @@ if [ -n "$USE_VALGRIND" ]; then
   END_FOLD
 fi
 
+bash -c "${CI_WAIT}" &  # Print dots in case the tests take a long time to run
+
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
   BEGIN_FOLD unit-tests
-  bash -c "${CI_WAIT}" &  # Print dots in case the unit tests take a long time to run
   DOCKER_EXEC LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib make $MAKEJOBS check VERBOSE=1
+  END_FOLD
+fi
+
+if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
+  BEGIN_FOLD unit-tests-seq
+  DOCKER_EXEC LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib "${BASE_ROOT_DIR}/build/bitcoin-*/src/test/test_bitcoin" --catch_system_errors=no -l test_suite
   END_FOLD
 fi
 

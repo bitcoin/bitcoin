@@ -134,12 +134,6 @@ AC_ARG_ENABLE(gui-tests,
     [use_gui_tests=$enableval],
     [use_gui_tests=$use_tests])
 
-AC_ARG_WITH([rapidcheck],
-  [AS_HELP_STRING([--with-rapidcheck],
-  [enable RapidCheck property-based tests (default is yes if librapidcheck is found)])],
-  [use_rapidcheck=$withval],
-  [use_rapidcheck=auto])
-
 AC_ARG_ENABLE(bench,
     AS_HELP_STRING([--disable-bench],[do not compile benchmarks (default is to compile)]),
     [use_bench=$enableval],
@@ -1273,7 +1267,7 @@ if test x$use_pkgconfig = xyes; then
         SYSCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
       if test x$build_syscoin_cli$build_syscoind$syscoin_enable_qt$use_tests$use_bench != xnonononono; then
-        PKG_CHECK_MODULES([EVENT], [libevent],, [AC_MSG_ERROR(libevent not found.)])
+        PKG_CHECK_MODULES([EVENT], [libevent], [use_libevent=yes], [AC_MSG_ERROR(libevent not found.)])
         if test x$TARGET_OS != xwindows; then
           PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads],, [AC_MSG_ERROR(libevent_pthreads not found.)])
         fi
@@ -1293,7 +1287,7 @@ if test x$use_pkgconfig = xyes; then
 else
 
   if test x$build_syscoin_cli$build_syscoind$syscoin_enable_qt$use_tests$use_bench != xnonononono; then
-    AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
+    AC_CHECK_HEADER([event2/event.h], [use_libevent=yes], AC_MSG_ERROR(libevent headers missing),)
     AC_CHECK_LIB([event],[main],EVENT_LIBS=-levent,AC_MSG_ERROR(libevent missing))
     if test x$TARGET_OS != xwindows; then
       AC_CHECK_LIB([event_pthreads],[main],EVENT_PTHREADS_LIBS=-levent_pthreads,AC_MSG_ERROR(libevent_pthreads missing))
@@ -1328,22 +1322,6 @@ else
     SYSCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
   fi
 fi
-
-dnl RapidCheck property-based testing
-
-enable_property_tests=no
-if test "x$use_rapidcheck" = xauto; then
-    AC_CHECK_HEADERS([rapidcheck.h], [enable_property_tests=yes])
-elif test "x$use_rapidcheck" != xno; then
-    enable_property_tests=yes
-fi
-
-RAPIDCHECK_LIBS=
-if test "x$enable_property_tests" = xyes; then
-   RAPIDCHECK_LIBS=-lrapidcheck
-fi
-AC_SUBST(RAPIDCHECK_LIBS)
-AM_CONDITIONAL([ENABLE_PROPERTY_TESTS], [test x$enable_property_tests = xyes])
 
 dnl univalue check
 
@@ -1548,6 +1526,7 @@ AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
 AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
+AM_CONDITIONAL([USE_LIBEVENT],[test x$use_libevent = xyes])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
 AM_CONDITIONAL([HARDEN],[test x$use_hardening = xyes])
 AM_CONDITIONAL([ENABLE_SSE42],[test x$enable_sse42 = xyes])
@@ -1682,7 +1661,6 @@ fi
 echo "  with zmq      = $use_zmq"
 echo "  with test     = $use_tests"
 if test x$use_tests != xno; then
-    echo "    with prop   = $enable_property_tests"
     echo "    with fuzz   = $enable_fuzz"
 fi
 echo "  with bench    = $use_bench"
