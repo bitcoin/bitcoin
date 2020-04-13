@@ -3464,6 +3464,10 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
+    if (!pwallet->chain().rpcEnableDeprecated("bumpfee") && pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "Using bumpfee with wallets that have private keys disabled is deprecated. Use psbtbumpfee instead or restart bitcoind with -deprecatedrpc=bumpfee. This functionality will be removed in 0.22");
+    }
+
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
     uint256 hash(ParseHashV(request.params[0], "txid"));
     CAmount old_fee;
