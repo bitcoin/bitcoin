@@ -2811,7 +2811,8 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
     }
 
     CMutableTransaction txNew;
-
+    // SYSCOIN
+    txNew.nVersion = tx->nVersion;
     txNew.nLockTime = GetLocktimeForNewTransaction(chain(), locked_chain);
 
     FeeCalculation feeCalc;
