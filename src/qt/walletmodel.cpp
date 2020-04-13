@@ -478,7 +478,7 @@ bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t 
         return m_wallet->addDestData(dest, key, sRequest);
 }
 
-bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
+bool WalletModel::bumpFee(uint256 hash, uint256& new_hash, bool create_psbt)
 {
     CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = true;
@@ -491,8 +491,6 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
             (errors.size() ? QString::fromStdString(errors[0]) : "") +")");
          return false;
     }
-
-    const bool create_psbt = m_wallet->privateKeysDisabled();
 
     // allow a user based fee verification
     QString questionString = create_psbt ? tr("Do you want to draft a transaction with fee increase?") : tr("Do you want to increase the fee?");

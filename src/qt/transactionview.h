@@ -77,6 +77,7 @@ private:
     QDateTimeEdit *dateTo;
     QAction *abandonAction;
     QAction *bumpFeeAction;
+    QAction *bumpFeePSBTAction;
 
     QWidget *createDateRangeWidget();
 
@@ -100,7 +101,8 @@ private Q_SLOTS:
     void openThirdPartyTxUrl(QString url);
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
     void abandonTx();
-    void bumpFee();
+    void bumpFee(bool make_psbt = false);
+    void bumpFeePSBT();
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
