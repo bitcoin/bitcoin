@@ -63,11 +63,7 @@ public:
 		SetNull();
 		UnserializeFromTx(tx);
 	}
-	inline void ClearAssetAllocation()
-	{
-		voutAssets.clear();
-	}
-
+	
 	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return (a.nAsset == b.nAsset && a.voutAssets == b.voutAssets
 			);
@@ -80,7 +76,7 @@ public:
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { ClearAssetAllocation();}
+	inline void SetNull() { nAsset = 0; voutAssets.clear();}
     inline bool IsNull() const { return voutAssets.empty();}
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);

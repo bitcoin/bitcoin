@@ -350,7 +350,6 @@ UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
     CCoinControl coin_control;
-    coin_control.m_avoid_address_reuse = false;
     CAmount nMinimumAmountAsset = 0;
     CAmount nMaximumAmountAsset = 0;
     CAmount nMinimumSumAmountAsset = 0;
