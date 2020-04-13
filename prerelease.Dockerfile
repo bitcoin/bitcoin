@@ -44,18 +44,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 
 WORKDIR /tmp
 
-ENV ALTINTEGRATION_VERSION=eb8d5128a8df6ee7eb96cec042f1c78ed71dc722
-RUN ( \
-    cd /tmp; \
-    wget https://github.com/VeriBlock/alt-integration-cpp/archive/${ALTINTEGRATION_VERSION}.tar.gz; \
-    tar -xf ${ALTINTEGRATION_VERSION}.tar.gz; \
-    cd alt-integration-cpp-${ALTINTEGRATION_VERSION}; \
-    mkdir build; \
-    cd build; \
-    cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF; \
-    make -j2 install; \
-    )
-
 RUN ldconfig
 
 ENV LC_ALL=C.UTF-8
