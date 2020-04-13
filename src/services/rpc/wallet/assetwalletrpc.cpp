@@ -152,7 +152,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     // Create and send the transaction
     CAmount nFeeRequired = 0;
     std::string strError;
-    int nChangePosRet = -1;
+    int nChangePosRet = theAssetAllocation.voutAssets.size();
     CCoinControl coin_control;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
     coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
@@ -304,7 +304,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     // Create and send the transaction
     CAmount nFeeRequired = 0;
     std::string strError;
-    int nChangePosRet = -1;
+    int nChangePosRet = newAsset.assetAllocation.voutAssets.size(); // pos 1 right befor opreturn
     CCoinControl coin_control;
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CMutableTransaction mtx;
@@ -397,7 +397,7 @@ UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std
     // Create and send the transaction
     CAmount nFeeRequired = 0;
     std::string strError;
-    int nChangePosRet = -1;
+    int nChangePosRet = 1;
     coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     coin_control.Select(inputCoin.outpoint);
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
@@ -808,7 +808,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     // Create and send the transaction
     CAmount nFeeRequired = 0;
     std::string strError;
-    int nChangePosRet = -1;
+    int nChangePosRet = theAssetAllocation.voutAssets.size();
     CCoinControl coin_control;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nTotal);
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
@@ -887,7 +887,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	// Create and send the transaction
     CAmount nFeeRequired = 0;
     std::string strError;
-    int nChangePosRet = -1;
+    int nChangePosRet = burnSyscoin.assetAllocation.voutAssets.size();
     CCoinControl coin_control;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, amount);
     coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
@@ -1041,7 +1041,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
   	// Create and send the transaction
     CAmount nFeeRequired = 0;
     std::string strError;
-    int nChangePosRet = -1;
+    int nChangePosRet = mintSyscoin.assetAllocation.voutAssets.size();
     CCoinControl coin_control;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
     coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
