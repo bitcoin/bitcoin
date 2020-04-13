@@ -198,7 +198,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 	if mirror_socket != None:
 		if verbose: print('Attaching mirror packet listener to {interface}')
 		try:
-			start_new_thread(sniff, (), {
+			start_new_thread(mirror_sniff, (), {
 				'socket': mirror_socket,
 				'orig_socket': s,
 				'src_ip': src_ip,
