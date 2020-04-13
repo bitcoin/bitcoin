@@ -780,7 +780,9 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
             }         
             // starting supply is the supplied balance upon init
             storedAssetRef.nTotalSupply = storedAssetRef.nBalance;
-            storedAssetRef.nBurnBalance = 0; 
+            storedAssetRef.nBurnBalance = 0;
+            // clear vouts as we don't need to store them once we have processed.
+            storedAssetRef.assetAllocation.voutAssets.clear();
         }
         break;
 
@@ -788,9 +790,6 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
         {
             if (theAsset.nBalance < 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-balance", bSanityCheck);
-            }
-            if (!theAssetAllocation.IsNull()) {
-                return FormatSyscoinErrorMessage(state, "asset-allocations-not-empty", bSanityCheck);
             }
             if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
