@@ -3,7 +3,6 @@
 
 #include "chainparams.h"
 #include "pop_service.hpp"
-#include "pop_service/pop_service_exception.hpp"
 
 #include <memory>
 #include <mutex>
