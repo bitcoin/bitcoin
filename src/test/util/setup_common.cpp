@@ -71,7 +71,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     fs::create_directories(m_path_root);
     gArgs.ForceSetArg("-datadir", m_path_root.string());
     ClearDatadirCache();
-    SelectParams(chainName, "regtest", "regtest");
+    SelectParams(chainName);
     SeedInsecureRand();
     gArgs.ForceSetArg("-printtoconsole", "0");
     InitLogging();
@@ -160,7 +160,7 @@ TestChain100Setup::TestChain100Setup(): RegTestingSetup()
     // TODO: fix the code to support SegWit blocks.
     gArgs.ForceSetArg("-segwitheight", "432");
     // Need to recreate chainparams
-    SelectParams(CBaseChainParams::REGTEST, "regtest", "regtest");
+    SelectParams(CBaseChainParams::REGTEST);
 
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);

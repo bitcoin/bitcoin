@@ -1,24 +1,79 @@
 #include "bootstraps.h"
+#include <boost/algorithm/string.hpp>
+#include <util/strencodings.h>
 #include <veriblock/config.hpp>
 
-std::shared_ptr<altintegration::Config> makeConfig(std::string btcnet, std::string vbknet)
+static std::vector<std::string> parseBlocks(const std::string& s)
+{
+    std::vector<std::string> strs;
+    boost::split(strs, s, boost::is_any_of("\t"));
+    return strs;
+}
+
+void printConfig(const altintegration::Config& config)
+{
+    std::string btclast = config.btc.blocks.empty() ? "<empty>" : config.btc.blocks.rbegin()->getHash().toHex();
+    std::string btcfirst = config.btc.blocks.empty() ? "<empty>" : config.btc.blocks.begin()->getHash().toHex();
+    std::string vbklast = config.vbk.blocks.empty() ? "<empty>" : config.vbk.blocks.rbegin()->getHash().toHex();
+    std::string vbkfirst = config.vbk.blocks.empty() ? "<empty>" : config.vbk.blocks.begin()->getHash().toHex();
+
+    assert(config.alt);
+
+    LogPrintf(R"(Applied POP config:
+ BTC:
+  startHeight : %d
+  total blocks: %d
+  first       : %s
+  last        : %s
+
+ VBK:
+  startHeight : %d
+  total blocks: %d
+  first       : %s
+  last        : %s
+
+ ALT:
+  block height: %d
+  block hash  : %s
+  chain id    : %d
+)",
+        config.btc.startHeight, config.btc.blocks.size(), btcfirst, btclast,
+
+        config.vbk.startHeight, config.vbk.blocks.size(), vbkfirst, vbklast,
+
+        config.alt->getBootstrapBlock().height,
+        HexStr(config.alt->getBootstrapBlock().hash),
+        config.alt->getIdentifier());
+}
+
+std::shared_ptr<altintegration::Config> makeConfig(const ArgsManager& args)
 {
     auto config = std::make_shared<altintegration::Config>();
+    std::string btcnet = args.GetArg("-popbtcnetwork", "test");
+    std::string vbknet = args.GetArg("-popvbknetwork", "test");
+    bool popautoconfig = args.GetBoolArg("-popautoconfig", true);
+
 
     if (btcnet == "test") {
-        config->setBTC(testnetBTCstartHeight, testnetBTCblocks, std::make_shared<altintegration::BtcChainParamsTest>());
+        auto param = std::make_shared<altintegration::BtcChainParamsTest>();
+        if (popautoconfig) {
+            config->setBTC(testnetBTCstartHeight, testnetBTCblocks, param);
+        } else {
+            int btcstart = args.GetArg("-popbtcstartheight", 0);
+            std::string btcblocks = args.GetArg("-popbtcblocks", "");
+            config->setBTC(btcstart, parseBlocks(btcblocks), param);
+        }
     } else if (btcnet == "regtest") {
-        config->setBTC(0, {}, std::make_shared<altintegration::BtcChainParamsRegTest>());
+        auto param = std::make_shared<altintegration::VbkChainParamsRegTest>();
+        if (popautoconfig) {
+            config->setVBK(0, {}, param);
+        } else {
+            int vbkstart = args.GetArg("-popvbkstartheight", 0);
+            std::string vbkblocks = args.GetArg("-popvbkblocks", "");
+            config->setVBK(vbkstart, parseBlocks(vbkblocks), param);
+        }
     } else {
         throw std::invalid_argument("btcnet currently only supports test/regtest");
-    }
-
-    if (vbknet == "test") {
-        config->setVBK(testnetVBKstartHeight, testnetVBKblocks, std::make_shared<altintegration::VbkChainParamsTest>());
-    } else if (vbknet == "regtest") {
-        config->setVBK(0, {}, std::make_shared<altintegration::VbkChainParamsRegTest>());
-    } else {
-        throw std::invalid_argument("vbknet currently only supports test/regtest");
     }
 
     return config;

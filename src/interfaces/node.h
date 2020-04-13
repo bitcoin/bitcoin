@@ -60,7 +60,7 @@ public:
     virtual bool readConfigFiles(std::string& error) = 0;
 
     //! Choose network parameters.
-    virtual void selectParams(const std::string& network, const std::string& btcnet, const std::string& vbknet) = 0;
+    virtual void selectParams(const std::string& network) = 0;
 
     //! Get the (assumed) blockchain size.
     virtual uint64_t getAssumedBlockchainSize() = 0;

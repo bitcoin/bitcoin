@@ -16,8 +16,7 @@ struct GenesisBlockFixture {
 
     static void init(const std::string& name)
     {
-        SelectParams(name, "regtest", "regtest");
-        VeriBlock::InitPopService();
+        SelectParams(name);
     }
 
     static void check(const std::string& name)
