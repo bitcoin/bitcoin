@@ -307,7 +307,7 @@ def packet_received(msg_raw, socket, mirror_socket, from_ip, from_port, to_ip, t
 def mirror_sniff(socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while True:
 		packet = socket.recv(65565)
-		if mirror_packet_received(packet, socket, dst_ip, dst_port, src_ip, src_port, interface):
+		if mirror_packet_received(packet, socket, orig_socket, dst_ip, dst_port, src_ip, src_port, interface):
 			break
 
 # Called when a packet is sniffed from the network
