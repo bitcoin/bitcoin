@@ -409,7 +409,6 @@ int GuiMain(int argc, char* argv[])
     util::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
-    VeriBlock::InitUtilService();
     VeriBlock::InitConfig();
     SetupEnvironment();
     util::ThreadSetInternalName("main");
@@ -515,7 +514,9 @@ int GuiMain(int argc, char* argv[])
 
     // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
-        node->selectParams(gArgs.GetChainName());
+        std::string btcnet = gArgs.GetArg("-popbtcnetwork", "test");
+        std::string vbknet = gArgs.GetArg("-popvbknetwork", "test");
+        node->selectParams(gArgs.GetChainName(), btcnet, vbknet);
     } catch(std::exception &e) {
         node->initError(strprintf("%s\n", e.what()));
         QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("Error: %1").arg(e.what()));
@@ -525,11 +526,6 @@ int GuiMain(int argc, char* argv[])
     // Parse URIs on command line -- this can affect Params()
     PaymentServer::ipcParseCommandLine(*node, argc, argv);
 #endif
-
-    VeriBlock::InitPopService(
-        gArgs.GetArg("-althost", "127.0.0.1"),
-        gArgs.GetArg("-altport", "19012"),
-        gArgs.GetBoolArg("-altautoconfig", false));
 
     QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(Params().NetworkIDString()));
     assert(!networkStyle.isNull());

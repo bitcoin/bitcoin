@@ -35,7 +35,6 @@
 #include <warnings.h>
 
 #include <vbk/service_locator.hpp>
-#include <vbk/util_service.hpp>
 #include <vbk/merkle.hpp>
 
 #include <memory>
@@ -714,7 +713,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
 
     //VeriBlock Data
     UniValue keystoneArray(UniValue::VARR);
-    VeriBlock::KeystoneArray keystones = VeriBlock::getService<VeriBlock::UtilService>().getKeystoneHashesForTheNextBlock(pindexPrev);
+    VeriBlock::KeystoneArray keystones = VeriBlock::getKeystoneHashesForTheNextBlock(pindexPrev);
     for (const auto& keystone : keystones) {
         keystoneArray.push_back(keystone.GetHex());
     }
@@ -725,7 +724,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("pop_witness_commitment", HexStr(popCoinbaseCommitment.scriptPubKey.begin(), popCoinbaseCommitment.scriptPubKey.end()));
 
     UniValue popRewardsArray(UniValue::VARR);
-    VeriBlock::PoPRewards popRewards = VeriBlock::getService<VeriBlock::UtilService>().getPopRewards(*pindexPrev, Params().GetConsensus());
+    VeriBlock::PoPRewards popRewards = VeriBlock::getService<VeriBlock::PopService>().getPopRewards(*pindexPrev, Params().GetConsensus());
     for (const auto& itr : popRewards) {
         UniValue popRewardValue(UniValue::VOBJ);
         popRewardValue.pushKV("payout_info", HexStr(itr.first.begin(), itr.first.end()));

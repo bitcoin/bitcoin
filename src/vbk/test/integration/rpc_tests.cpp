@@ -32,7 +32,6 @@ BOOST_AUTO_TEST_CASE(getpopdata_test)
     node.chain = interfaces::MakeChain(node);
     node.connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
     auto& chain = node.chain;
-    VeriBlock::InitRpcService(node.connman.get());
     std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
     AddWallet(wallet);
 
@@ -104,7 +103,6 @@ BOOST_AUTO_TEST_CASE(updatecontext_test)
     node.chain = interfaces::MakeChain(node);
     node.connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
     auto& chain = node.chain;
-    VeriBlock::InitRpcService(node.connman.get());
     std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
     AddWallet(wallet);
 

@@ -21,10 +21,10 @@ static CBlock createBlockWithPopTx(TestChain100Setup& test)
     return test.CreateAndProcessBlock({popTx}, scriptPubKey);
 }
 
-inline void setPublicationData(VeriBlock::PublicationData& pub, const CDataStream& stream, const int64_t& index)
+inline void setPublicationData(altintegration::PublicationData& pub, const CDataStream& stream, const int64_t& index)
 {
-    pub.set_identifier(index);
-    pub.set_header((void*)stream.data(), stream.size());
+    pub.identifier = index;
+    pub.header =  std::vector<uint8_t>(stream.begin(), stream.end());
 }
 
 struct PopServiceFixture : public TestChain100Setup {
@@ -37,36 +37,13 @@ struct PopServiceFixture : public TestChain100Setup {
         VeriBlock::InitConfig();
         VeriBlockTest::setUpPopServiceMock(pop_service_mock);
 
-        ON_CALL(pop_service_impl_mock, parsePopTx)
-            .WillByDefault(
-                [](const CTransactionRef&, ScriptError* serror, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType* type) -> bool {
-                    if (type != nullptr) {
-                        *type = VeriBlock::PopTxType::PUBLICATIONS;
-                    }
-                    if (serror != nullptr) {
-                        *serror = ScriptError::SCRIPT_ERR_OK;
-                    }
-                    return true;
-                });
         ON_CALL(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)
             .WillByDefault(Return(true));
-        ON_CALL(pop_service_impl_mock, addTemporaryPayloads)
-            .WillByDefault(
-              [&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
-                return VeriBlock::addTemporaryPayloadsImpl(pop_service_impl_mock, tx, pindexPrev, params, state);
-            });
-        ON_CALL(pop_service_impl_mock, clearTemporaryPayloads)
-            .WillByDefault(
-                [&]() {
-                    VeriBlock::clearTemporaryPayloadsImpl(pop_service_impl_mock);
-                });
-
-        VeriBlock::initTemporaryPayloadsMock(pop_service_impl_mock);
     }
 
     void setNoAddRemovePayloadsExpectations()
     {
-        EXPECT_CALL(pop_service_impl_mock, addPayloads).Times(0);
+        EXPECT_CALL(pop_service_impl_mock, commitPayloads).Times(0);
         EXPECT_CALL(pop_service_impl_mock, removePayloads).Times(0);
     }
 };
@@ -84,12 +61,6 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test, PopServiceFixture)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << endorsedBlock.GetBlockHeader();
     auto& config = VeriBlock::getService<VeriBlock::Config>();
-
-    ON_CALL(pop_service_impl_mock, getPublicationsData)
-        .WillByDefault(
-            [stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-                setPublicationData(publicationData, stream, config.index.unwrap());
-            });
 
     BlockValidationState state;
     {
@@ -109,17 +80,11 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_index, PopServiceFixture)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << endorsedBlock.GetBlockHeader();
 
-    // make another index
-    ON_CALL(pop_service_impl_mock, getPublicationsData)
-        .WillByDefault(
-            [stream](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-                setPublicationData(publicationData, stream, -1);
-            });
     ON_CALL(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)
         .WillByDefault(
             [](VeriBlock::AltchainId altChainIdentifier, const CBlockHeader& popEndorsementHeader,
               const Consensus::Params& params, TxValidationState& state) -> bool {
-                VeriBlock::PopServiceImpl pop_service_impl(false, false);
+                VeriBlock::PopServiceImpl pop_service_impl;
                 return pop_service_impl.determineATVPlausibilityWithBTCRules(altChainIdentifier, popEndorsementHeader, params, state);
             });
     setNoAddRemovePayloadsExpectations();
@@ -147,11 +112,6 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_known_orphan_
     stream << endorsedBlock.GetBlockHeader();
     auto& config = VeriBlock::getService<VeriBlock::Config>();
 
-    ON_CALL(pop_service_impl_mock, getPublicationsData)
-        .WillByDefault(
-            [stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-                setPublicationData(publicationData, stream, config.index.unwrap());
-            });
     setNoAddRemovePayloadsExpectations();
 
     {
@@ -188,11 +148,6 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_endorsed_block_not_from_chain, P
     stream << endorsedBlock.GetBlockHeader();
     auto& config = VeriBlock::getService<VeriBlock::Config>();
 
-    ON_CALL(pop_service_impl_mock, getPublicationsData)
-        .WillByDefault(
-            [stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-                setPublicationData(publicationData, stream, config.index.unwrap());
-            });
     setNoAddRemovePayloadsExpectations();
 
     {
@@ -216,11 +171,6 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_settlement_interval, PopSe
     stream << endorsedBlock.GetBlockHeader();
     auto& config = VeriBlock::getService<VeriBlock::Config>();
 
-    ON_CALL(pop_service_impl_mock, getPublicationsData)
-        .WillByDefault(
-            [stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-                setPublicationData(publicationData, stream, config.index.unwrap());
-            });
     setNoAddRemovePayloadsExpectations();
 
     config.POP_REWARD_SETTLEMENT_INTERVAL = 0;
@@ -248,17 +198,12 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_addPayloads, PopServiceFix
     stream << endorsedBlock.GetBlockHeader();
     auto& config = VeriBlock::getService<VeriBlock::Config>();
 
-    ON_CALL(pop_service_impl_mock, getPublicationsData)
+    ON_CALL(pop_service_impl_mock, commitPayloads)
         .WillByDefault(
-            [stream, config](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-                setPublicationData(publicationData, stream, config.index.unwrap());
-            });
-    ON_CALL(pop_service_impl_mock, addPayloads)
-        .WillByDefault(
-            [](std::string hash, const int& nHeight, const VeriBlock::Publications& publications) -> void {
+            [](const CBlockIndex& prev, const CBlock& connecting, TxValidationState& state) -> bool {
                 throw VeriBlock::PopServiceException("fail");
             });
-    EXPECT_CALL(pop_service_impl_mock, addPayloads).Times(1);
+    EXPECT_CALL(pop_service_impl_mock, commitPayloads).Times(1);
     EXPECT_CALL(pop_service_impl_mock, removePayloads).Times(0);
 
     BlockValidationState state;

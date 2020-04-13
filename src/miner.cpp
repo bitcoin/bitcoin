@@ -24,7 +24,7 @@
 
 #include <vbk/service_locator.hpp>
 #include <vbk/merkle.hpp>
-#include <vbk/util_service.hpp>
+#include <vbk/pop_service.hpp>
 #include <vbk/util.hpp>
 
 #include <algorithm>
@@ -157,7 +157,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
 
-    VeriBlock::getService<VeriBlock::UtilService>().addPopPayoutsIntoCoinbaseTx(coinbaseTx, *pindexPrev, chainparams.GetConsensus());
+    VeriBlock::getService<VeriBlock::PopService>().addPopPayoutsIntoCoinbaseTx(coinbaseTx, *pindexPrev, chainparams.GetConsensus());
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
@@ -426,8 +426,10 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             // contextual PoP validation
             assert(ancestors.size() == 1);
             TxValidationState txstate;
-            if (nPopTx < config.max_pop_tx_amount &&
-                !VeriBlock::getService<VeriBlock::PopService>().addTemporaryPayloads(iter->GetSharedTx(), *::ChainActive().Tip(), chainparams.GetConsensus(), txstate)) {
+
+            // TODO add payloads validation if it necessary
+            if (nPopTx < config.max_pop_tx_amount /*&&
+                !VeriBlock::getService<VeriBlock::PopService>().addTemporaryPayloads(iter->GetSharedTx(), *::ChainActive().Tip(), chainparams.GetConsensus(), txstate)*/) {
 
                 failedTx.insert(iter);
                 failedPopTx.insert(iter);

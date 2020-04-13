@@ -1,11 +1,9 @@
 #ifndef BITCOIN_SRC_VBK_INIT_HPP
 #define BITCOIN_SRC_VBK_INIT_HPP
 
+#include "pop_service_impl.hpp"
 #include "vbk/config.hpp"
-#include "vbk/pop_service/pop_service_impl.hpp"
-#include "vbk/rpc_service/rpc_service_impl.hpp"
 #include "vbk/service_locator.hpp"
-#include "vbk/util_service/util_service_impl.hpp"
 #include <util/system.h>
 
 #include <utility>
@@ -33,18 +31,7 @@ Face& InitService(Arg1 arg)
 
 inline PopService& InitPopService()
 {
-    return detail::InitService<PopService, PopServiceImpl>();
-}
-
-inline UtilService& InitUtilService()
-{
-    return detail::InitService<UtilService, UtilServiceImpl>();
-}
-
-inline RpcService& InitRpcService(CConnman* connman)
-{
-    assert(connman != nullptr && "connman is nullptr");
-    return detail::InitService<RpcService, RpcServiceImpl>(connman);
+    return detail::InitService<PopService, PopServiceImpl>(Params().GetPopConfig());
 }
 
 inline Config& InitConfig()
@@ -54,23 +41,6 @@ inline Config& InitConfig()
     return *cfg;
 }
 
-inline PopService& InitPopService(std::string host, std::string port, bool altautoconfig)
-{
-    auto& config = getService<Config>();
-    config.service_ip = std::move(host);
-    config.service_port = std::move(port);
-
-    return detail::InitService<PopService, PopServiceImpl>(altautoconfig);
-}
-
-
-inline void ResetVeriBlock()
-{
-    setService<Config>(nullptr);
-    setService<UtilService>(nullptr);
-    setService<PopService>(nullptr);
-    setService<RpcService>(nullptr);
-}
 
 } // namespace VeriBlock
 

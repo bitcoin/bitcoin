@@ -1,6 +1,8 @@
 #ifndef BITCOIN_SRC_VBK_UTIL_HPP
 #define BITCOIN_SRC_VBK_UTIL_HPP
 
+#include <streams.h>
+#include <version.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 
@@ -127,6 +129,14 @@ public:
         return defaultComparator(a, b);
     }
 };
+
+inline CBlockHeader headerFromBytes(const std::vector<uint8_t>& v)
+{
+    CDataStream stream(v, SER_NETWORK, PROTOCOL_VERSION);
+    CBlockHeader header;
+    stream >> header;
+    return header;
+}
 
 } // namespace VeriBlock
 #endif

@@ -1148,6 +1148,15 @@ TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_FORMAT_FUNCS)
 
 #endif
 
+} // namespace tinyformat
+
+#endif // TINYFORMAT_H_INCLUDED
+
+
+#pragma once
+
+namespace tinyformat {
+
 // Added for Bitcoin Core
 template<typename... Args>
 std::string format(const std::string &fmt, const Args&... args)
@@ -1157,10 +1166,9 @@ std::string format(const std::string &fmt, const Args&... args)
     return oss.str();
 }
 
-} // namespace tinyformat
-
 // Added for Bitcoin Core:
 /** Format arguments and return the string or write to given std::ostream (see tinyformat::format doc for details) */
 #define strprintf tfm::format
 
-#endif // TINYFORMAT_H_INCLUDED
+}
+

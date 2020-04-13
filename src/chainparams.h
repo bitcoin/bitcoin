@@ -10,6 +10,7 @@
 #include <consensus/params.h>
 #include <primitives/block.h>
 #include <protocol.h>
+#include <veriblock/config.hpp>
 
 #include <memory>
 #include <vector>
@@ -84,6 +85,9 @@ public:
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
+
+    const altintegration::Config& GetPopConfig() const { return *popconfig; }
+
 protected:
     CChainParams() {}
 
@@ -104,6 +108,7 @@ protected:
     bool m_is_test_chain;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
+    std::shared_ptr<altintegration::Config> popconfig;
 };
 
 /**
@@ -111,18 +116,18 @@ protected:
  * @returns a CChainParams* of the chosen chain.
  * @throws a std::runtime_error if the chain is not supported.
  */
-std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain);
+std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain, const std::string& btcnet, const std::string& vbknet);
 
 /**
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.
  */
-const CChainParams &Params();
+const CChainParams& Params();
 
 /**
  * Sets the params returned by Params() to those for the given chain name.
  * @throws std::runtime_error when the chain is not supported.
  */
-void SelectParams(const std::string& chain);
+void SelectParams(const std::string& chain, const std::string& btcnet, const std::string& vbknet);
 
 #endif // BITCOIN_CHAINPARAMS_H

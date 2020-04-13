@@ -13,6 +13,7 @@
 #include <primitives/block.h>
 
 #include <vbk/util.hpp>
+#include <veriblock/validation_state.hpp>
 
 /** A "reason" why a transaction was invalid, suitable for determining whether the
   * provider of the transaction should be banned/ignored/disconnected/etc.
@@ -111,6 +112,21 @@ public:
     bool IsError() const { return m_mode == MODE_ERROR; }
     std::string GetRejectReason() const { return m_reject_reason; }
     std::string GetDebugMessage() const { return m_debug_message; }
+
+    operator altintegration::ValidationState() {
+        altintegration::ValidationState v;
+        if(IsInvalid()) {
+            v.Invalid(m_reject_reason, m_debug_message);
+            return v;
+        }
+
+        if(IsError()) {
+            v.Error(m_reject_reason);
+            return v;
+        }
+
+        return v;
+    }
 };
 
 inline ValidationState::~ValidationState() {};

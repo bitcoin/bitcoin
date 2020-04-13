@@ -1,4 +1,5 @@
 *.tar.gz
+.vscode
 
 src/vbk/grpc_integration/*.pb.cc
 src/vbk/grpc_integration/*.pb.h

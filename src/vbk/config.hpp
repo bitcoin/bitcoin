@@ -5,26 +5,18 @@
 #include <string>
 #include <vector>
 
-#include "vbk/typed_wrapper.hpp"
 #include <array>
 #include <cstdint>
 #include <uint256.h>
 
-#ifndef VBK_NUM_KEYSTONES
-/// number of keystones stored in ContextInfoContainer
-// after change of this number, you need to re-generate genesis blocks (main, test, regtest)
-#define VBK_NUM_KEYSTONES 2u
-#endif
-
 namespace VeriBlock {
 
-using KeystoneArray = std::array<uint256, VBK_NUM_KEYSTONES>;
+using KeystoneArray = std::array<uint256, 2>;
 
-using AltchainId = TypedWrapper<int64_t, struct AltchainIdTag>;
 
 struct Config {
     // unique index to this chain; network id across chains
-    AltchainId index = AltchainId(0x3ae6ca);
+    uint32_t index = 0x3ae6ca;
 
     uint32_t btc_header_size = 80;
     uint32_t vbk_header_size = 64;
