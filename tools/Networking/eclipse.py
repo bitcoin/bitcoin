@@ -213,8 +213,6 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 
 # Creates a fake connection to the victim
 def mirror_make_fake_connection(socket, interface, src_ip, verbose=True):
-	if attempt_number == 0: return None
-
 	src_port = random.randint(1024, 65535)
 	dst_ip = attacker_ip
 	dst_port = 8333
