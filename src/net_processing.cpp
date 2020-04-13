@@ -3442,7 +3442,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
     bool found = false;
     const std::vector<std::string> &allMessages = getAllNetMessageTypes();
     for(const auto &msg: allMessages) {
-        if(msg == strCommand) {
+        if(msg == msg_type) {
             found = true;
             break;
         }
@@ -3451,11 +3451,11 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
     if (found)
     {
         //probably one the extensions
-        mnodeman.ProcessMessage(pfrom, strCommand, vRecv, *connman);
-        mnpayments.ProcessMessage(pfrom, strCommand, vRecv,*connman);
-        sporkManager.ProcessSpork(pfrom, strCommand, vRecv, *connman);
-        masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
-        governance.ProcessMessage(pfrom, strCommand, vRecv,*connman);
+        mnodeman.ProcessMessage(pfrom, msg_type, vRecv, *connman);
+        mnpayments.ProcessMessage(pfrom, msg_type, vRecv,*connman);
+        sporkManager.ProcessSpork(pfrom, msg_type, vRecv, *connman);
+        masternodeSync.ProcessMessage(pfrom, msg_type, vRecv);
+        governance.ProcessMessage(pfrom, msg_type, vRecv,*connman);
         return true;
     }
         
