@@ -698,7 +698,18 @@ if TARGET_WINDOWS
 syscoin_tx_SOURCES += syscoin-tx-res.rc
 endif
 
-syscoin_tx_LDADD = $(syscoind_LDADD)
+syscoin_tx_LDADD = \
+  $(LIBSYSCOIN_SERVER) \
+  $(LIBUNIVALUE) \
+  $(LIBSYSCOIN_COMMON) \
+  $(LIBSYSCOIN_UTIL) \
+  $(LIBSYSCOIN_CRYPTO) \
+  $(LIBSECP256K1) \
+  $(LIBLEVELDB) \
+  $(LIBLEVELDB_SSE42) \
+  $(LIBETHEREUM)
+
+syscoin_tx_LDADD += $(BOOST_LIBS)
 #
 
 # syscoin-wallet binary #
