@@ -5,8 +5,6 @@
 src/syscoin
 src/syscoind
 src/syscoin-cli
-src/syscoin-gui
-src/syscoin-node
 src/syscoin-tx
 src/syscoin-wallet
 src/test/fuzz

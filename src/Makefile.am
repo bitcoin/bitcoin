@@ -87,10 +87,6 @@ if BUILD_SYSCOIND
   bin_PROGRAMS += syscoind
 endif
 
-if BUILD_SYSCOIN_NODE
-  bin_PROGRAMS += syscoin-node
-endif
-
 if BUILD_SYSCOIN_CLI
   bin_PROGRAMS += syscoin-cli
 endif
@@ -646,22 +642,22 @@ libsyscoin_cli_a_SOURCES = \
 nodist_libsyscoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
-# syscoind & syscoin-node binaries #
-syscoin_common_sources = syscoind.cpp
-syscoin_common_cppflags = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
-syscoin_common_cxxflags = $(AM_CXXFLAGS) $(PIE_FLAGS)
-syscoin_common_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# syscoind binary #
+syscoind_SOURCES = syscoind.cpp
+syscoind_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+syscoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-syscoin_common_sources += syscoind-res.rc
+syscoind_SOURCES += syscoind-res.rc
 endif
 
-syscoin_common_ldadd = \
+syscoind_LDADD = \
   $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_COMMON) \
-  $(LIBSYSCOIN_UTIL) \
   $(LIBUNIVALUE) \
+  $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_ZMQ) \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
@@ -671,19 +667,7 @@ syscoin_common_ldadd = \
   $(LIBSECP256K1) \
   $(LIBETHEREUM)
 
-syscoin_common_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
-
-syscoind_SOURCES = $(syscoin_common_sources)
-syscoind_CPPFLAGS = $(syscoin_common_cppflags)
-syscoind_CXXFLAGS = $(syscoin_common_cxxflags)
-syscoind_LDFLAGS = $(syscoin_common_ldflags)
-syscoind_LDADD = $(syscoin_common_ldadd)
-
-syscoin_node_SOURCES = $(syscoin_common_sources)
-syscoin_node_CPPFLAGS = $(syscoin_common_cppflags)
-syscoin_node_CXXFLAGS = $(syscoin_common_cxxflags)
-syscoin_node_LDFLAGS = $(syscoin_common_ldflags)
-syscoin_node_LDADD = $(syscoin_common_ldadd)
+syscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 # syscoin-cli binary #
 syscoin_cli_SOURCES = syscoin-cli.cpp
@@ -719,14 +703,31 @@ syscoin_tx_LDADD = $(syscoind_LDADD)
 
 # syscoin-wallet binary #
 syscoin_wallet_SOURCES = syscoin-wallet.cpp
-syscoin_wallet_CPPFLAGS = $(syscoin_common_cppflags)
-syscoin_wallet_CXXFLAGS = $(syscoin_common_cxxflags)
-syscoin_wallet_LDFLAGS = $(syscoin_common_ldflags)
-syscoin_wallet_LDADD = $(LIBSYSCOIN_WALLET_TOOL) $(syscoin_common_ldadd)
+syscoin_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+syscoin_wallet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
 syscoin_wallet_SOURCES += syscoin-wallet-res.rc
 endif
+
+syscoin_wallet_LDADD = \
+  $(LIBSYSCOIN_WALLET_TOOL) \
+  $(LIBSYSCOIN_WALLET) \
+  $(LIBSYSCOIN_SERVER) \
+  $(LIBSYSCOIN_COMMON) \
+  $(LIBSYSCOIN_CONSENSUS) \
+  $(LIBSYSCOIN_UTIL) \
+  $(LIBSYSCOIN_CRYPTO) \
+  $(LIBSYSCOIN_ZMQ) \
+  $(LIBLEVELDB) \
+  $(LIBLEVELDB_SSE42) \
+  $(LIBMEMENV) \
+  $(LIBSECP256K1) \
+  $(LIBUNIVALUE) \
+  $(LIBETHEREUM)
+
+syscoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
 #
 
 # syscoinconsensus library #
