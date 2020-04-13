@@ -11,7 +11,11 @@
 #include <QStringList>
 #include <QDateTime>
 
-class WalletModel;
+namespace interfaces {
+class Wallet;
+} // namespace interfaces
+
+class OptionsModel;
 
 class RecentRequestEntry
 {
@@ -52,7 +56,7 @@ class RecentRequestsTableModel: public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit RecentRequestsTableModel(WalletModel *parent);
+    explicit RecentRequestsTableModel(interfaces::Wallet& wallet, OptionsModel* options_model, QObject* parent);
     ~RecentRequestsTableModel();
 
     enum ColumnIndex {
@@ -85,7 +89,8 @@ public Q_SLOTS:
     void updateDisplayUnit();
 
 private:
-    WalletModel *walletModel;
+    interfaces::Wallet& m_wallet;
+    OptionsModel* const m_options_model;
     QStringList columns;
     QList<RecentRequestEntry> list;
     int64_t nReceiveRequestsMaxId{0};

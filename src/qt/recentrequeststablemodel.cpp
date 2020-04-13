@@ -7,7 +7,6 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
-#include <qt/walletmodel.h>
 
 #include <clientversion.h>
 #include <key_io.h>
@@ -17,18 +16,18 @@
 
 #include <utility>
 
-RecentRequestsTableModel::RecentRequestsTableModel(WalletModel *parent) :
-    QAbstractTableModel(parent), walletModel(parent)
+RecentRequestsTableModel::RecentRequestsTableModel(interfaces::Wallet& wallet, OptionsModel* options_model, QObject* parent) :
+    QAbstractTableModel(parent), m_wallet(wallet), m_options_model(options_model)
 {
     // Load entries from wallet
-    for (const std::string& request : parent->wallet().getReceiveRequests()) {
+    for (const std::string& request : m_wallet.getReceiveRequests()) {
         addNewRequest(request);
     }
 
     /* These columns must match the indices in the ColumnIndex enumeration */
     columns << tr("Date") << tr("Label") << tr("Message") << getAmountTitle();
 
-    connect(walletModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &RecentRequestsTableModel::updateDisplayUnit);
+    connect(m_options_model, &OptionsModel::displayUnitChanged, this, &RecentRequestsTableModel::updateDisplayUnit);
 }
 
 RecentRequestsTableModel::~RecentRequestsTableModel()
@@ -84,9 +83,9 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
             if (rec->recipient.amount == 0 && role == Qt::DisplayRole)
                 return tr("(no amount requested)");
             else if (role == Qt::EditRole)
-                return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, BitcoinUnits::separatorNever);
+                return BitcoinUnits::format(m_options_model->getDisplayUnit(), rec->recipient.amount, false, BitcoinUnits::separatorNever);
             else
-                return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
+                return BitcoinUnits::format(m_options_model->getDisplayUnit(), rec->recipient.amount);
         }
     }
     else if (role == Qt::TextAlignmentRole)
@@ -124,7 +123,7 @@ void RecentRequestsTableModel::updateAmountColumnTitle()
 /** Gets title for amount column including current display unit if optionsModel reference available. */
 QString RecentRequestsTableModel::getAmountTitle()
 {
-    return (this->walletModel->getOptionsModel() != nullptr) ? tr("Requested") + " ("+BitcoinUnits::shortName(this->walletModel->getOptionsModel()->getDisplayUnit()) + ")" : "";
+    return (m_options_model != nullptr) ? tr("Requested") + " ("+BitcoinUnits::shortName(m_options_model->getDisplayUnit()) + ")" : "";
 }
 
 QModelIndex RecentRequestsTableModel::index(int row, int column, const QModelIndex &parent) const
@@ -143,7 +142,7 @@ bool RecentRequestsTableModel::removeRows(int row, int count, const QModelIndex 
         for (int i = 0; i < count; ++i)
         {
             const RecentRequestEntry* rec = &list[row+i];
-            if (!walletModel->wallet().saveReceiveRequest(DecodeDestination(rec->recipient.address.toStdString()), ToString(rec->id), ""))
+            if (!m_wallet.saveReceiveRequest(DecodeDestination(rec->recipient.address.toStdString()), ToString(rec->id), ""))
                 return false;
         }
 
@@ -172,7 +171,7 @@ void RecentRequestsTableModel::addNewRequest(const SendCoinsRecipient &recipient
     CDataStream ss(SER_DISK, CLIENT_VERSION);
     ss << newEntry;
 
-    if (!walletModel->wallet().saveReceiveRequest(DecodeDestination(recipient.address.toStdString()), ToString(newEntry.id), ss.str()))
+    if (!m_wallet.saveReceiveRequest(DecodeDestination(recipient.address.toStdString()), ToString(newEntry.id), ss.str()))
         return;
 
     addNewRequest(newEntry);
