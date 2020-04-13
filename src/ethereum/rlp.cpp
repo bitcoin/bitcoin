@@ -100,7 +100,7 @@ RLPs RLP::toList(int _flags) const
 		else
 			return ret;
 	}
-	for (auto const& i: *this)
+	for (const auto i: *this)
 		ret.push_back(i);
 	return ret;
 }

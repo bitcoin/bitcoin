@@ -10,7 +10,8 @@
 #include <util/strencodings.h>
 #include <assert.h>
 // SYSCOIN
-const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 0x7400;
+const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 128;
+const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY = 0x7400;
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
@@ -54,12 +55,18 @@ CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn)
     nValue = nValueIn;
     scriptPubKey = scriptPubKeyIn;
 }
-
 std::string CTxOut::ToString() const
 {
-    return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
+    return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
 }
-
+// SYSCOIN
+std::string CTxOutCoin::ToString() const
+{
+    if(assetInfo.IsNull())
+        return strprintf("CTxOutCoin(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
+    else
+        return strprintf("CTxOutCoin(nValue=%d.%08d, scriptPubKey=%s, nAsset=%d, nAssetValue=%d.%08d)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30), assetInfo.nAsset, assetInfo.nValue / COIN, assetInfo.nValue % COIN);
+}
 CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
 CMutableTransaction::CMutableTransaction(const CTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime) {}
 
@@ -85,12 +92,13 @@ uint256 CTransaction::ComputeWitnessHash() const
 CTransaction::CTransaction() : vin(), vout(), nVersion(CTransaction::CURRENT_VERSION), nLockTime(0), hash{}, m_witness_hash{} {}
 CTransaction::CTransaction(const CMutableTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime), hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
 CTransaction::CTransaction(CMutableTransaction&& tx) : vin(std::move(tx.vin)), vout(std::move(tx.vout)), nVersion(tx.nVersion), nLockTime(tx.nLockTime), hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
+
 // SYSCOIN
 CTransaction& CTransaction::operator=(const CTransaction &tx) {
-    *const_cast<int*>(&nVersion) = tx.nVersion;
+    *const_cast<int32_t*>(&nVersion) = tx.nVersion;
     *const_cast<std::vector<CTxIn>*>(&vin) = tx.vin;
     *const_cast<std::vector<CTxOut>*>(&vout) = tx.vout;
-    *const_cast<unsigned int*>(&nLockTime) = tx.nLockTime;
+    *const_cast<uint32_t*>(&nLockTime) = tx.nLockTime;
     *const_cast<uint256*>(&hash) = tx.hash;
     *const_cast<uint256*>(&m_witness_hash) = tx.m_witness_hash;
     return *this;
@@ -101,7 +109,7 @@ CAmount CTransaction::GetValueOut() const
     bool bFirstOutput = true;
     for (const auto& tx_out : vout) {
         // SYSCOIN
-        if(bFirstOutput && nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
+        if(bFirstOutput && (nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)){
             bFirstOutput = false;
             continue;
         }

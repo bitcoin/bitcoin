@@ -13,7 +13,9 @@
 #include <uint256.h>
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
-
+// SYSCOIN
+class CAssetAllocation;
+class CAssetCoinInfo;
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -129,6 +131,32 @@ public:
     std::string ToString() const;
 };
 
+class CAssetCoinInfo {
+public:
+	int32_t nAsset;
+	CAmount nValue;
+	CAssetCoinInfo() {
+		SetNull();
+	}
+    CAssetCoinInfo(const int32_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) { }
+ 
+    friend bool operator==(const CAssetCoinInfo& a, const CAssetCoinInfo& b)
+    {
+        return (a.nAsset   == b.nAsset &&
+                a.nValue == b.nValue);
+    }
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(nAsset);
+        if(nAsset > 0)
+            READWRITE(nValue);
+    }
+	inline void SetNull() { nAsset = 0; nValue = 0;}
+    inline bool IsNull() const { return nAsset == 0;}
+};
+
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
  */
@@ -137,7 +165,8 @@ class CTxOut
 public:
     CAmount nValue;
     CScript scriptPubKey;
-
+    // SYSCOIN
+    CAssetCoinInfo assetInfo;
     CTxOut()
     {
         SetNull();
@@ -155,6 +184,7 @@ public:
 
     void SetNull()
     {
+        assetInfo.SetNull();
         nValue = -1;
         scriptPubKey.clear();
     }
@@ -174,10 +204,30 @@ public:
     {
         return !(a == b);
     }
-
     std::string ToString() const;
 };
+// SYSCOIN
+class CTxOutCoin: public CTxOut
+{
+public:
+    CTxOutCoin()
+    {
+        SetNull();
+    }
 
+    CTxOutCoin(const CTxOut& txOut): CTxOut(txOut.nValue, txOut.scriptPubKey) { assetInfo = txOut.assetInfo;}
+    friend bool operator==(const CTxOutCoin& a, const CTxOutCoin& b)
+    {
+        return (a.nValue       == b.nValue &&
+                a.scriptPubKey == b.scriptPubKey &&
+                a.assetInfo == b.assetInfo);
+    }
+    friend bool operator!=(const CTxOutCoin& a, const CTxOutCoin& b)
+    {
+        return !(a == b);
+    }
+    std::string ToString() const;
+};
 struct CMutableTransaction;
 
 /**
@@ -280,8 +330,8 @@ public:
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
     static const int32_t MAX_STANDARD_VERSION=2;
-    // SYSCOIN consensus is driven by version, the highest version is SYSCOIN_TX_VERSION_ALLOCATION_LOCK(0x7409)
-    static const int32_t MAX_SYSCOIN_STANDARD_VERSION=0x7409;
+    // SYSCOIN consensus is driven by version, the highest version is SYSCOIN_TX_VERSION_ALLOCATION_SEND(135)
+    static const int32_t MAX_SYSCOIN_STANDARD_VERSION=135;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
@@ -313,7 +363,21 @@ public:
     inline void Serialize(Stream& s) const {
         SerializeTransaction(*this, s);
     }
-
+    // SYSCOIN
+    template <typename Stream>
+    inline void SerializeAssetInfo(Stream& s) const {
+        std::vector<CTxOut>& voutRef = *const_cast<std::vector<CTxOut>*>(&vout);
+        for (size_t i = 0; i < voutRef.size(); i++) {
+            s << voutRef[i].assetInfo;
+        }
+    }
+    template <typename Stream>
+    inline void UnserializeAssetInfo(Stream& s) const {
+        std::vector<CTxOut>& voutRef = *const_cast<std::vector<CTxOut>*>(&vout);
+        for (size_t i = 0; i < voutRef.size(); i++) {
+            s >> voutRef[i].assetInfo;
+        }
+    }
     /** This deserializing constructor is provided instead of an Unserialize method.
      *  Unserialize is not possible, since it would require overwriting const fields. */
     template <typename Stream>
@@ -328,6 +392,8 @@ public:
 
     // Return sum of txouts.
     CAmount GetValueOut() const;
+    // SYSCOIN
+    CAmount GetAssetValueOut(const CAssetAllocation& allocation) const;
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 

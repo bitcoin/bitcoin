@@ -26,6 +26,8 @@ public:
         outpoint = COutPoint(tx->GetHash(), i);
         txout = tx->vout[i];
         effective_value = txout.nValue;
+        // SYSCOIN
+        effective_value_asset = txout.assetInfo;
     }
 
     CInputCoin(const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(tx, i)
@@ -36,6 +38,8 @@ public:
     COutPoint outpoint;
     CTxOut txout;
     CAmount effective_value;
+    // SYSCOIN
+    CAssetCoinInfo effective_value_asset;
 
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
     int m_input_bytes{-1};
@@ -69,22 +73,29 @@ struct OutputGroup
     std::vector<CInputCoin> m_outputs;
     bool m_from_me{true};
     CAmount m_value{0};
+    // SYSCOIN
+    CAmount m_value_asset{0};
     int m_depth{999};
     size_t m_ancestors{0};
     size_t m_descendants{0};
     CAmount effective_value{0};
+    // SYSCOIN
+    CAssetCoinInfo effective_value_asset;
     CAmount fee{0};
     CAmount long_term_fee{0};
 
     OutputGroup() {}
-    OutputGroup(std::vector<CInputCoin>&& outputs, bool from_me, CAmount value, int depth, size_t ancestors, size_t descendants)
+    // SYSCOIN
+    OutputGroup(std::vector<CInputCoin>&& outputs, bool from_me, CAmount value, CAmount value_asset, int depth, size_t ancestors, size_t descendants)
     : m_outputs(std::move(outputs))
     , m_from_me(from_me)
     , m_value(value)
+    , m_value_asset(value_asset)
     , m_depth(depth)
     , m_ancestors(ancestors)
     , m_descendants(descendants)
     {}
+    // SYSCOIN
     OutputGroup(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants) : OutputGroup() {
         Insert(output, depth, from_me, ancestors, descendants);
     }
@@ -97,5 +108,7 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
 
 // Original coin selection algorithm as a fallback
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
+// SYSCOIN
+bool KnapsackSolver(const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
 
 #endif // SYSCOIN_WALLET_COINSELECTION_H

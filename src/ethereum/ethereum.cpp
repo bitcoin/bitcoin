@@ -105,7 +105,7 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
  * @param witnessAddress The destination witness address for the minting
  * @return true if everything is valid
  */
-bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, const std::vector<unsigned char>& vchAssetContract, CAmount& outputAmount, uint32_t& nAsset, const uint8_t& nLocalPrecision, CWitnessAddress& witnessAddress) {
+bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, const std::vector<unsigned char>& vchAssetContract, CAmount& outputAmount, int32_t& nAsset, const uint8_t& nLocalPrecision, CWitnessAddress& witnessAddress) {
     if(vchAssetContract.empty()){
       return false;
     }
@@ -128,12 +128,12 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     arith_uint256 outputAmountArith = UintToArith256(uint256(vchAmount));
     
     
-    // convert the vch into a uint32_t (nAsset)
+    // convert the vch into a int32_t (nAsset)
     // should be in position 68 walking backwards
-    nAsset = static_cast<uint32_t>(vchInputData[67]);
-    nAsset |= static_cast<uint32_t>(vchInputData[66]) << 8;
-    nAsset |= static_cast<uint32_t>(vchInputData[65]) << 16;
-    nAsset |= static_cast<uint32_t>(vchInputData[64]) << 24;
+    nAsset = static_cast<int32_t>(vchInputData[67]);
+    nAsset |= static_cast<int32_t>(vchInputData[66]) << 8;
+    nAsset |= static_cast<int32_t>(vchInputData[65]) << 16;
+    nAsset |= static_cast<int32_t>(vchInputData[64]) << 24;
     // start from 100 offset (96 for 3rd field + 4 bytes for function signature) and subtract 20 
     std::vector<unsigned char>::const_iterator firstContractAddress = vchInputData.begin() + 80;
     std::vector<unsigned char>::const_iterator lastContractAddress = firstContractAddress + 20;

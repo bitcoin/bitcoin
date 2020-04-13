@@ -45,7 +45,7 @@ struct BIP9Deployment {
 struct Params {
     uint256 hashGenesisBlock;
     // SYSCOIN
-    uint32_t nSYSXAsset;
+    int32_t nSYSXAsset;
     std::vector<unsigned char> vchSYSXBurnMethodSignature;
     std::vector<unsigned char> vchSYSXERC20Manager;
     std::vector<unsigned char> vchTokenFreezeMethod;
@@ -54,8 +54,7 @@ struct Params {
     unsigned int nSeniorityHeight2;
     double nSeniorityLevel2;
     int nBridgeStartBlock;
-    int nDeterministicAssetStartBlock;
-    int nERC20StartBlock;
+    int nUTXOAssetsBlock;
         
     int nSuperblockStartBlock;
     int nSuperblockCycle; // in blocks

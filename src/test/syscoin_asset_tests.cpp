@@ -51,54 +51,6 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
     string hexStr = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);
 }
-BOOST_AUTO_TEST_CASE(generate_map_test)
-{
-	tfm::format(std::cout,"Running generate_map_test...\n");
-	AssetMap mapAssets;
-    AssetAllocationMap mapAssetAllocations;
-    for(int i =0;i<10000;i++){
-        std::string recv = itostr(i);
-        #if __cplusplus > 201402 
-        auto result = mapAssets.try_emplace(i,  std::move(emptyAsset));
-        auto result1 = mapAssetAllocations.try_emplace(recv,  std::move(emptyAllocation));
-        #else
-        auto result =  mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(i),  std::forward_as_tuple(std::move(emptyAsset)));
-        auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(recv),  std::forward_as_tuple(std::move(emptyAllocation)));
-        #endif 
-    }
-    for(int i =0;i<10000;i++){
-        std::string recv = itostr(i);
-        #if __cplusplus > 201402 
-        auto result = mapAssets.try_emplace(i,  std::move(emptyAsset));
-        auto result1 = mapAssetAllocations.try_emplace(recv,  std::move(emptyAllocation));
-        #else
-        auto result =  mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(i),  std::forward_as_tuple(std::move(emptyAsset)));
-        auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(recv),  std::forward_as_tuple(std::move(emptyAllocation)));
-        #endif 
-        if((i%2) == 0){
-            CAsset tmpAsset;
-            tmpAsset.nBalance = 1;
-            result.first->second = std::move(tmpAsset);
-            CAssetAllocationDBEntry tmpDbEntry;
-            tmpDbEntry.nBalance = 1;
-            result1.first->second = std::move(tmpDbEntry);
-        } else {
-            result.first->second.SetNull();
-            result1.first->second.nBalance = 0;
-        }
-    }
-  
-   for(int i =0;i<10000;i++){
-        if((i%2) != 0){
-            auto &asset = mapAssets[i];
-		    BOOST_CHECK (asset.IsNull());
-            auto &assetallocation = mapAssetAllocations[itostr(i)];
-		    BOOST_CHECK (assetallocation.nBalance <= 0);
-        }
-    }
-  
-
-}
 BOOST_AUTO_TEST_CASE(generate_asset_spt_sysx)
 {
     UniValue r;
@@ -224,7 +176,7 @@ BOOST_AUTO_TEST_CASE(generate_auxfees)
     feestructArr.push_back(boundsArr5);
     auxfeesObj.pushKV("fee_struct", feestructArr);
     pubDataObj.pushKV("aux_fees", auxfeesObj);
-    CWitnessAddress address;
+    CTxDestination address;
     const std::string& pubDataStr = pubDataObj.write();
  
     BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 5000000*COIN,8, address), 19456000000);
@@ -274,7 +226,7 @@ BOOST_AUTO_TEST_CASE(generate_auxfees1)
     feestructArr.push_back(boundsArr3);
     auxfeesObj.pushKV("fee_struct", feestructArr);
     pubDataObj.pushKV("aux_fees", auxfeesObj);
-    CWitnessAddress address;
+    CTxDestination address;
     const std::string& pubDataStr = pubDataObj.write();
  
     BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 10*COIN,8, address), 10000000);
@@ -559,21 +511,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     }
     GenerateBlocks(5);
     tfm::format(std::cout,"sending assets with assetsend...\n");
-    // PHASE 5:  SEND ASSETS TO NEW ALLOCATIONS
-    for(int i =0;i<numAssets;i++){
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassetindexassets" , "\"" +  vecFundedAddresses[i] + "\""));	
-        UniValue indexArray = r.get_array();	
-        BOOST_CHECK_EQUAL(indexArray.size(), 1);	
-        uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_uint();
-        uint32_t nAssetStored;
-        ParseUInt32(vecAssets[i], &nAssetStored);
-        BOOST_CHECK_EQUAL(nAsset, nAssetStored);
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetsendmany" ,  vecAssets[i] + ",[{\"address\":\"" + vecFundedAddresses[i] + "\",\"amount\":250}],\"''\""));
-
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet", "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
-        string hex_str = find_value(r.get_obj(), "hex").get_str();
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hex_str + "\""));       
-    }
 
     GenerateBlocks(5);
 
@@ -710,25 +647,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     const int64_t &endblock = GetTimeMicros();
     tfm::format(std::cout,"elapsed time in block creation: %lld\n", endblock-startblock);
     tfm::format(std::cout,"elapsed time in seconds: %lld\n", end-start);
-    tfm::format(std::cout,"checking indexes...\n");	
-    unfoundedAccountIndex = 0;	
-    for(int i =0;i<numAssets;i++){	
-        uint32_t nAssetStored;	
-        ParseUInt32(vecAssets[i], &nAssetStored);	
-        for (int j = 0; j < numberOfAssetSendsPerBlock; j++) {	
-            BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassetindexallocations" , "\"" + unfundedAccounts[unfoundedAccountIndex++] + "\""));	
-            UniValue indexArray = r.get_array();	
-            BOOST_CHECK_EQUAL(indexArray.size(), numAssets);       	
-            if(unfoundedAccountIndex >= unfundedAccounts.size())	
-                unfoundedAccountIndex = 0;	
-        }	
-
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassetindexassets" , "\"" + vecFundedAddresses[i] + "\""));	
-        UniValue indexArray = r.get_array();	
-        BOOST_CHECK_EQUAL(indexArray.size(), 1);	
-        uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_uint();	
-        BOOST_CHECK_EQUAL(nAsset, nAssetStored);	
-    }
 
 }
 BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
