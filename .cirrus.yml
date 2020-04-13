@@ -1,7 +1,7 @@
 task:
-  name: "FreeBsd 12.0 amd64  [GOAL: install]  [no depends, only system libs]"
+  name: "FreeBsd 12.1 amd64  [GOAL: install]  [no depends, only system libs]"
   freebsd_instance:
-    image: freebsd-12-0-release-amd64
+    image_family: freebsd-12-1  # https://cirrus-ci.org/guide/FreeBSD/
     cpu: 8
     memory: 8G
   timeout_in: 60m
