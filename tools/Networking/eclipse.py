@@ -256,6 +256,18 @@ def mirror_make_fake_connection(socket, interface, src_ip, verbose=True):
 def sniff(socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while True:
 		packet = socket.recv(65565)
+		"""try: # TODO: Make packet_received multithreaded, may require creating a thread class
+		start_new_thread(sniff, (), {
+			'socket': s,
+			'mirror_socket': mirror_socket,
+			'src_ip': src_ip,
+			'src_port': src_port,
+			'dst_ip': dst_ip,
+			'dst_port': dst_port,
+			'interface': interface
+		})"""
+	except:
+		print(f'Error: unable to start thread to sniff interface {interface}')
 		if packet_received(packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface):
 			break
 
