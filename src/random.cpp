@@ -356,7 +356,7 @@ uint64_t GetRand(uint64_t nMax)
     if (nMax == 0)
         return 0;
 
-    // This will later conflict with bitcoin#14955. Simply take the bitcoin version as resolution
+    // This will later conflict with bitcoin#14955. Simply take the bitcoin version as resolution and pass g_mock_deterministic_tests into FastRandomContext
     if (g_mock_deterministic_tests) {
         return FastRandomContext(true).randrange(nMax);
     }
