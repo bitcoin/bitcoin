@@ -1333,12 +1333,6 @@ else
   fi
 fi
 
-if test "x$protoc_bin_path" != x; then
-  AC_PATH_PROG(PROTOC,protoc,,$protoc_bin_path)
-else
-  AC_PATH_PROG(PROTOC,protoc)
-fi
-AS_IF([test x"$PROTOC" == x], [AC_MSG_ERROR([Please install protoc before configuring.])])
 
 save_CXXFLAGS="${CXXFLAGS}"
 CXXFLAGS="${CXXFLAGS} ${CRYPTO_CFLAGS} ${SSL_CFLAGS}"
