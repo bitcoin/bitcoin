@@ -3245,8 +3245,11 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
 
 static UniValue bumpfee(const JSONRPCRequest& request)
 {
-            RPCHelpMan{"bumpfee",
+    bool want_psbt = request.strMethod == "psbtbumpfee";
+
+            RPCHelpMan{request.strMethod,
                 "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
+                + std::string(want_psbt ? "Returns a PSBT instead of creating and signing a new transaction.\n" : "") +
                 "An opt-in RBF transaction with the given txid must be in the wallet.\n"
                 "The command will pay the additional fee by reducing change outputs or adding inputs when necessary. It may add a new change output if one does not already exist.\n"
                 "All inputs in the original transaction will be included in the replacement transaction.\n"
@@ -3277,26 +3280,34 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                         "options"},
                 },
                 RPCResult{
-                    RPCResult::Type::OBJ, "", "", {
-                        {RPCResult::Type::STR, "psbt", "The base64-encoded unsigned PSBT of the new transaction. Only returned when wallet private keys are disabled."},
-                        {RPCResult::Type::STR_HEX, "txid", "The id of the new transaction. Only returned when wallet private keys are enabled."},
+                    RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
+                    {
+                        {RPCResult::Type::STR, "psbt", "The base64-encoded unsigned PSBT of the new transaction." + std::string(want_psbt ? "" : " Only returned when wallet private keys are disabled. (DEPRECATED)")},
+                    },
+                    want_psbt ? std::vector<RPCResult>{} : std::vector<RPCResult>{{RPCResult::Type::STR_HEX, "txid", "The id of the new transaction. Only returned when wallet private keys are enabled."}}
+                    ),
+                    {
                         {RPCResult::Type::STR_AMOUNT, "origfee", "The fee of the replaced transaction."},
                         {RPCResult::Type::STR_AMOUNT, "fee", "The fee of the new transaction."},
                         {RPCResult::Type::ARR, "errors", "Errors encountered during processing (may be empty).",
                         {
                             {RPCResult::Type::STR, "", ""},
                         }},
-                    }
+                    })
                 },
                 RPCExamples{
-            "\nBump the fee, get the new transaction\'s txid\n" +
-                    HelpExampleCli("bumpfee", "<txid>")
+            "\nBump the fee, get the new transaction\'s" + std::string(want_psbt ? "psbt" : "txid") + "\n" +
+                    HelpExampleCli(request.strMethod, "<txid>")
                 },
             }.Check(request);
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
+
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !want_psbt) {
+        want_psbt = true;
+    }
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
     uint256 hash(ParseHashV(request.params[0], "txid"));
@@ -3382,7 +3393,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
 
     // If wallet private keys are enabled, return the new transaction id,
     // otherwise return the base64-encoded unsigned PSBT of the new transaction.
-    if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+    if (!want_psbt) {
         if (!feebumper::SignTransaction(*pwallet, mtx)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
         }
@@ -3413,6 +3424,11 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     result.pushKV("errors", result_errors);
 
     return result;
+}
+
+static UniValue psbtbumpfee(const JSONRPCRequest& request)
+{
+    return bumpfee(request);
 }
 
 UniValue rescanblockchain(const JSONRPCRequest& request)
@@ -4160,6 +4176,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "addmultisigaddress",               &addmultisigaddress,            {"nrequired","keys","label","address_type"} },
     { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
     { "wallet",             "bumpfee",                          &bumpfee,                       {"txid", "options"} },
+    { "wallet",             "psbtbumpfee",                      &psbtbumpfee,                   {"txid", "options"} },
     { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name", "disable_private_keys", "blank", "passphrase", "avoid_reuse", "descriptors"} },
     { "wallet",             "dumpprivkey",                      &dumpprivkey,                   {"address"}  },
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
