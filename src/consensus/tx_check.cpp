@@ -8,13 +8,13 @@
 #include <primitives/transaction.h>
 #include <vbk/service_locator.hpp>
 #include <vbk/util.hpp>
-#include <vbk/util_service.hpp>
+#include <vbk/pop_service.hpp>
 
 bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
 {
     // if it is pop tx, use separate validation function
     if(VeriBlock::isPopTx(tx)) {
-        auto& util = VeriBlock::getService<VeriBlock::UtilService>();
+        auto& util = VeriBlock::getService<VeriBlock::PopService>();
         return util.validatePopTx(tx, state);
     }
 

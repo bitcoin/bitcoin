@@ -290,47 +290,7 @@ BOOST_FIXTURE_TEST_CASE(check_CreateNewBlock_with_blockPopValidation_fail, Testi
             [&](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) {
                 return VeriBlock::blockPopValidationImpl(pop_impl_mock, block, pindexPrev, params, state);
             });
-    ON_CALL(pop_service_mock, addTemporaryPayloads)
-        .WillByDefault(
-            [&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
-                return VeriBlock::addTemporaryPayloadsImpl(pop_impl_mock, tx, pindexPrev, params, state);
-            });
 
-    ON_CALL(pop_impl_mock, parsePopTx)
-        .WillByDefault(
-            [](const CTransactionRef&, ScriptError* serror, VeriBlock::Publications*, VeriBlock::Context*, VeriBlock::PopTxType* type) -> bool {
-              if (type != nullptr) {
-                *type = VeriBlock::PopTxType::CONTEXT;
-              }
-              if (serror != nullptr) {
-                *serror = ScriptError::SCRIPT_ERR_OK;
-              }
-              return true;
-            });
-    ON_CALL(pop_impl_mock, addTemporaryPayloads)
-        .WillByDefault(
-            [&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
-                return VeriBlock::addTemporaryPayloadsImpl(pop_impl_mock, tx, pindexPrev, params, state);
-            });
-    ON_CALL(pop_impl_mock, clearTemporaryPayloads)
-        .WillByDefault(
-            [&]() {
-                VeriBlock::clearTemporaryPayloadsImpl(pop_impl_mock);
-            });
-
-    VeriBlock::initTemporaryPayloadsMock(pop_impl_mock);
-
-    // Simulate that we have 8 invalid popTxs
-    EXPECT_CALL(pop_impl_mock, updateContext)
-        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
-        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
-        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
-        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
-        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
-        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
-        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
-        .WillOnce(testing::Throw(VeriBlock::PopServiceException("fail")))
-        .WillRepeatedly(Return());
     const size_t popTxCount = 10;
 
     TestMemPoolEntryHelper entry;

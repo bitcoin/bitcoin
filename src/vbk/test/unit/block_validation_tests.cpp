@@ -36,7 +36,6 @@ struct BlockValidationFixture : public TestChain100Setup {
     BlockValidationFixture()
     {
         auto& config = VeriBlock::InitConfig();
-        VeriBlock::InitUtilService();
 
         CBlockIndex* endorsedBlockIndex = ChainActive().Tip()->pprev;
         CBlock endorsedBlock;
@@ -45,17 +44,6 @@ struct BlockValidationFixture : public TestChain100Setup {
         stream = std::make_shared<CDataStream>(SER_NETWORK, PROTOCOL_VERSION);
         *stream << endorsedBlock.GetBlockHeader();
 
-        ON_CALL(pop_impl_mock, getPublicationsData).WillByDefault(
-          [&](const VeriBlock::Publications& pub, VeriBlock::PublicationData& publicationData) {
-            publicationData.set_identifier(config.index.unwrap());
-            publicationData.set_header(stream->data(), stream->size());
-          });
-        ON_CALL(pop_impl_mock, parsePopTx).WillByDefault(
-          [](const CTransactionRef& tx, ScriptError* serror, VeriBlock::Publications* pub, VeriBlock::Context* ctx,
-            VeriBlock::PopTxType* type) -> bool {
-            std::vector<std::vector<uint8_t>> stack;
-            return VeriBlock::EvalScriptImpl(tx->vin[0].scriptSig, stack, serror, pub, ctx, type, false);
-          });
         ON_CALL(pop_impl_mock, determineATVPlausibilityWithBTCRules).WillByDefault(Return(true));
 
         ON_CALL(pop_service_mock, checkVTBinternally).WillByDefault(Return(true));
@@ -64,17 +52,6 @@ struct BlockValidationFixture : public TestChain100Setup {
           [&](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) -> bool {
             return VeriBlock::blockPopValidationImpl(pop_impl_mock, block, pindexPrev, params, state);
           });
-
-        ON_CALL(pop_impl_mock, addTemporaryPayloads).WillByDefault(
-          [&](const CTransactionRef& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state) {
-            return VeriBlock::addTemporaryPayloadsImpl(pop_impl_mock, tx, pindexPrev, params, state);
-          });
-        ON_CALL(pop_impl_mock, clearTemporaryPayloads).WillByDefault(
-          [&]() {
-            VeriBlock::clearTemporaryPayloadsImpl(pop_impl_mock);
-          });
-
-        VeriBlock::initTemporaryPayloadsMock(pop_impl_mock);
     };
 
     std::shared_ptr<CDataStream> stream;
@@ -124,7 +101,6 @@ BOOST_FIXTURE_TEST_CASE(BlockWithBothPopTxes, BlockValidationFixture)
 
     EXPECT_CALL(pop_service_mock, checkATVinternally).Times(1);
     EXPECT_CALL(pop_service_mock, checkVTBinternally).Times(1);
-    EXPECT_CALL(pop_impl_mock, updateContext).Times(1);
 
     auto block = CreateAndProcessBlock({ctxtx, pubtx}, cbKey);
 

@@ -25,7 +25,6 @@ BOOST_FIXTURE_TEST_CASE(DisconnectBlock_restore_iputs_ignore_pop_tx_test, TestCh
     CMutableTransaction popTx = VeriBlockTest::makePopTx({1}, {{2}});
 
     BOOST_CHECK(VeriBlock::isPopTx(CTransaction(popTx)));
-    EXPECT_CALL(pop_service_mock, savePopTxToDatabase).Times(testing::AtLeast(1));
 
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     CBlock block = CreateAndProcessBlock({popTx}, scriptPubKey);

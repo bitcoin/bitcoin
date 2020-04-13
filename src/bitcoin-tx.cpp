@@ -28,6 +28,7 @@
 #include <stdio.h>
 
 #include <boost/algorithm/string.hpp>
+#include <vbk/init.hpp>
 
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
@@ -89,7 +90,9 @@ static int AppInitRawTx(int argc, char* argv[])
 
     // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
-        SelectParams(gArgs.GetChainName());
+        std::string btcnet = gArgs.GetArg("-popbtcnetwork", "test");
+        std::string vbknet = gArgs.GetArg("-popvbknetwork", "test");
+        SelectParams(gArgs.GetChainName(), btcnet, vbknet);
     } catch (const std::exception& e) {
         tfm::format(std::cerr, "Error: %s\n", e.what());
         return EXIT_FAILURE;

@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - master
+    - develop
+  pull_request:
+    branches:
+    - master
+    - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: veriblock/btcdev:cpp
+    env:
+      CC: gcc
+      CXX: g++
+      ALTINTEGRATION_VERSION: eb8d5128a8df6ee7eb96cec042f1c78ed71dc722
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - name: install alt-integration-cpp
+      run: |
+        (
+        cd /opt;
+        wget https://github.com/VeriBlock/alt-integration-cpp/archive/${ALTINTEGRATION_VERSION}.tar.gz;
+        tar -xf ${ALTINTEGRATION_VERSION}.tar.gz;
+        cd alt-integration-cpp-${ALTINTEGRATION_VERSION};
+        mkdir build;
+        cd build;
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF;
+        make -j2 install
+        )
+    - name: autogen
+      run: ./autogen.sh
+    - name: configure
+      run: ./configure
+        --without-gui
+        --enable-werror
+        --enable-lcov
+        --enable-lcov-branch-coverage
+        --disable-bench
+        --disable-tests
+
+    - name: make
+      run: make -j2
+    - name: make check
+      timeout-minutes: 10
+      run: make check
+    - name: Collect coverage
+      run: |
+        lcov -c -d src -o cov.info
+        gcovr --xml cov.xml -j2 -v -s -b -r src
+    - name: Run sonarqube
+      run: sonar-scanner -Dsonar.login=${{ secrets.SONAR_TOKEN }}

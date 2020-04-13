@@ -43,7 +43,6 @@ static void WaitForShutdown(NodeContext& node)
 static bool AppInit(int argc, char* argv[])
 {
     VeriBlock::InitConfig();
-    VeriBlock::InitUtilService();
     NodeContext node;
     node.chain = interfaces::MakeChain(node);
 
@@ -90,7 +89,9 @@ static bool AppInit(int argc, char* argv[])
         }
         // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
-            SelectParams(gArgs.GetChainName());
+            std::string btcnet = gArgs.GetArg("-popbtcnetwork", "test");
+            std::string vbknet = gArgs.GetArg("-popvbknetwork", "test");
+            SelectParams(gArgs.GetChainName(), btcnet, vbknet);
         } catch (const std::exception& e) {
             return InitError(strprintf("%s\n", e.what()));
         }
@@ -107,11 +108,6 @@ static bool AppInit(int argc, char* argv[])
         // Set this early so that parameter interactions go to console
         InitLogging();
         InitParameterInteraction();
-
-        VeriBlock::InitPopService(
-            gArgs.GetArg("-althost", "127.0.0.1"),
-            gArgs.GetArg("-altport", "19012"),
-            gArgs.GetBoolArg("-altautoconfig", false));
 
         if (!AppInitBasicSetup())
         {

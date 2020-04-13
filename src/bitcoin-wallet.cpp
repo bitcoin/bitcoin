@@ -60,7 +60,9 @@ static bool WalletAppInit(int argc, char* argv[])
         return false;
     }
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-    SelectParams(gArgs.GetChainName());
+    std::string btcnet = gArgs.GetArg("-popbtcnetwork", "test");
+    std::string vbknet = gArgs.GetArg("-popvbknetwork", "test");
+    SelectParams(gArgs.GetChainName(), btcnet, vbknet);
 
     return true;
 }

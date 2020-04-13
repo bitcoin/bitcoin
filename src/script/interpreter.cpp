@@ -14,7 +14,7 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <uint256.h>
-#include <vbk/util_service.hpp>
+#include <vbk/pop_service.hpp>
 
 typedef std::vector<unsigned char> valtype;
 
@@ -302,8 +302,9 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
 
     if (flags & SCRIPT_VERIFY_POP) {
-        auto& util = VeriBlock::getService<VeriBlock::UtilService>();
-        return util.EvalScript(script, stack, serror, nullptr, nullptr, nullptr, true);
+        auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+        altintegration::ValidationState state;
+        return pop.evalScript(script, stack, serror, nullptr, state, true);
     }
 
     if (script.size() > MAX_SCRIPT_SIZE) {

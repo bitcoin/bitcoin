@@ -31,7 +31,7 @@
 
 void initialize()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(CBaseChainParams::REGTEST, "regtest", "regtest");
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

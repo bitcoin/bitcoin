@@ -71,7 +71,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     fs::create_directories(m_path_root);
     gArgs.ForceSetArg("-datadir", m_path_root.string());
     ClearDatadirCache();
-    SelectParams(chainName);
+    SelectParams(chainName, "regtest", "regtest");
     SeedInsecureRand();
     gArgs.ForceSetArg("-printtoconsole", "0");
     InitLogging();
@@ -137,7 +137,6 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     m_node.mempool->setSanityCheck(1.0);
     m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
-    VeriBlock::InitRpcService(m_node.connman.get());
 }
 
 TestingSetup::~TestingSetup()
@@ -161,7 +160,7 @@ TestChain100Setup::TestChain100Setup(): RegTestingSetup()
     // TODO: fix the code to support SegWit blocks.
     gArgs.ForceSetArg("-segwitheight", "432");
     // Need to recreate chainparams
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(CBaseChainParams::REGTEST, "regtest", "regtest");
 
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
@@ -241,11 +240,4 @@ CBlock getBlock13b8a()
 BasicVbkSetup::BasicVbkSetup()
 {
     VeriBlock::InitConfig();
-    VeriBlock::InitUtilService();
-    VeriBlockTest::setUpPopServiceMock(pop_service_mock);
-}
-
-BasicVbkSetup::~BasicVbkSetup()
-{
-    VeriBlock::ResetVeriBlock();
 }

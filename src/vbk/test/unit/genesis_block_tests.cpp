@@ -12,12 +12,12 @@ struct GenesisBlockFixture {
     GenesisBlockFixture()
     {
         VeriBlock::InitConfig();
-        VeriBlock::InitUtilService();
     }
 
     static void init(const std::string& name)
     {
-        SelectParams(name);
+        SelectParams(name, "regtest", "regtest");
+        VeriBlock::InitPopService();
     }
 
     static void check(const std::string& name)

@@ -1,15 +1,19 @@
 #ifndef BITCOIN_SRC_VBK_MERKLE_HPP
 #define BITCOIN_SRC_VBK_MERKLE_HPP
 
+#include "chainparams.h"
 #include "vbk/config.hpp"
+#include "vbk/pop_service.hpp"
 #include "vbk/service_locator.hpp"
-#include "vbk/util_service.hpp"
 
 #include <chain.h>            // for CBlockIndex
 #include <consensus/merkle.h> // for BlockMerkleRoot
 #include <consensus/validation.h>
 #include <primitives/block.h> // for CBlock
 #include <primitives/transaction.h>
+
+#include <veriblock/keystone_util.hpp>
+
 
 namespace VeriBlock {
 
@@ -21,6 +25,7 @@ inline int GetPopMerkleRootCommitmentIndex(const CBlock& block)
             auto& s = block.vtx[0]->vout[o].scriptPubKey;
             if (s.size() >= 37 && s[0] == OP_RETURN && s[1] == 0x23 && s[2] == 0x3a && s[3] == 0xe6 && s[4] == 0xca) {
                 commitpos = o;
+                break;
             }
         }
     }
@@ -39,17 +44,62 @@ inline uint256 BlockPopTxMerkleRoot(const CBlock& block)
     return ComputeMerkleRoot(std::move(leaves), nullptr);
 }
 
+inline uint256 makeTopLevelRoot(int height, const KeystoneArray& keystones, const uint256& txRoot)
+{
+    ContextInfoContainer context(height, keystones, txRoot);
+    auto contextHash = context.getUnauthenticatedHash();
+    return Hash(txRoot.begin(), txRoot.end(), contextHash.begin(), contextHash.end());
+}
+
+inline bool isKeystone(const CBlockIndex& block)
+{
+    auto& p = Params().GetPopConfig();
+    return (block.nHeight % p.alt->getKeystoneInterval()) == 0;
+}
+
+inline const CBlockIndex* getPreviousKeystone(const CBlockIndex& block)
+{
+    const CBlockIndex* pblockWalk = &block;
+    do {
+        pblockWalk = pblockWalk->pprev;
+    } while (pblockWalk != nullptr && !isKeystone(*pblockWalk));
+
+    return pblockWalk;
+}
+
+
+inline KeystoneArray getKeystoneHashesForTheNextBlock(const CBlockIndex* pindexPrev)
+{
+    const CBlockIndex* pwalk = pindexPrev;
+
+    KeystoneArray keystones;
+    auto it = keystones.begin();
+    auto end = keystones.end();
+    while (it != end) {
+        if (pwalk == nullptr) {
+            break;
+        }
+
+        if (isKeystone(*pwalk)) {
+            *it = pwalk->GetBlockHash();
+            ++it;
+        }
+
+        pwalk = getPreviousKeystone(*pwalk);
+    }
+    return keystones;
+}
+
 inline uint256 TopLevelMerkleRoot(const CBlockIndex* prevIndex, const CBlock& block, bool* mutated = nullptr)
 {
-    auto& util = VeriBlock::getService<VeriBlock::UtilService>();
     if (prevIndex == nullptr) {
         // special case: this is genesis block
         KeystoneArray keystones;
-        return util.makeTopLevelRoot(0, keystones, BlockMerkleRoot(block, mutated));
+        return makeTopLevelRoot(0, keystones, BlockMerkleRoot(block, mutated));
     }
 
-    auto keystones = util.getKeystoneHashesForTheNextBlock(prevIndex);
-    return util.makeTopLevelRoot(prevIndex->nHeight + 1, keystones, BlockMerkleRoot(block, mutated));
+    auto keystones = getKeystoneHashesForTheNextBlock(prevIndex);
+    return makeTopLevelRoot(prevIndex->nHeight + 1, keystones, BlockMerkleRoot(block, mutated));
 }
 
 inline bool VerifyTopLevelMerkleRoot(const CBlock& block, BlockValidationState& state, const CBlockIndex* pprevIndex)

@@ -106,36 +106,13 @@ VBK_H = \
   vbk/init.hpp \
   vbk/service_locator.hpp \
   vbk/pop_service.hpp \
-  vbk/rpc_service.hpp \
-  vbk/util_service.hpp \
-  vbk/validation_service.hpp \
+  vbk/pop_service_impl.hpp \
   vbk/config.hpp \
   vbk/typed_wrapper.hpp \
-  vbk/pop_service/pop_service_exception.hpp \
   vbk/merkle.hpp \
   vbk/genesis.hpp \
-  vbk/entity/pop.hpp \
-  vbk/interpreter.hpp \
+  vbk/altchainparam.hpp \
   vbk/util.hpp
-
-VBK_GRPC_OUT_ABS = $(srcdir)/vbk/pop_service
-
-VBK_GRPC_H = \
-  vbk/pop_service/integration.grpc.pb.h \
-  vbk/pop_service/integration.pb.h
-
-VBK_GRPC_CC = \
-  vbk/pop_service/integration.grpc.pb.cc \
-  vbk/pop_service/integration.pb.cc
-
-dist_data_DATA = $(VBK_PROTO)
-
-$(VBK_GRPC_H) $(VBK_GRPC_CC): $(VBK_PROTO) $(PROTOC) $(GRPC_CPP_PLUGIN)
-	$(AM_V_GEN) $(PROTOC) -I $(srcdir)/$(dir $(VBK_PROTO)) --cpp_out=$(VBK_GRPC_OUT_ABS) --grpc_out=$(VBK_GRPC_OUT_ABS) --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN) $(notdir $(VBK_PROTO))
-
-.PRECIOUS: $(VBK_GRPC_H) $(VBK_GRPC_CC)
-
-$(VBK_H): $(VBK_GRPC_H) $(VBK_GRPC_CC)
 ### VeriBlock section end
 
 
@@ -153,6 +130,7 @@ BITCOIN_CORE_H = \
   blockencodings.h \
   blockfilter.h \
   chain.h \
+  bootstraps.h \
   chainparams.h \
   chainparamsbase.h \
   chainparamsseeds.h \
@@ -313,10 +291,8 @@ libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
-  vbk/rpc_service/rpc_service_impl.cpp \
-  vbk/rpc_service/rpc_service_impl.hpp \
-  vbk/pop_service/pop_service_impl.cpp \
-  vbk/pop_service/pop_service_impl.hpp \
+  vbk/pop_service_impl.cpp \
+  vbk/pop_service_impl.hpp \
   addrdb.cpp \
   addrman.cpp \
   banman.cpp \
@@ -367,8 +343,6 @@ libbitcoin_server_a_SOURCES = \
   validationinterface.cpp \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
-
-nodist_libbitcoin_server_a_SOURCES = $(VBK_GRPC_H) $(VBK_GRPC_CC)
 
 if ENABLE_WALLET
 libbitcoin_server_a_SOURCES += wallet/init.cpp
@@ -512,6 +486,7 @@ libbitcoin_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
   bloom.cpp \
+  bootstraps.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
@@ -545,8 +520,6 @@ libbitcoin_common_a_SOURCES = \
 libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_util_a_SOURCES = \
-  vbk/util_service/util_service_impl.cpp \
-  vbk/util_service/util_service_impl.hpp \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -599,7 +572,6 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 
 # bitcoind binary #
 bitcoind_SOURCES = bitcoind.cpp
-$(bitcoind_SOURCES): $(VBK_GRPC_H) $(VBK_GRPC_CC)
 bitcoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 bitcoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bitcoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -611,6 +583,7 @@ endif
 # Libraries below may be listed more than once to resolve circular dependencies (see
 # https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
 bitcoind_LDADD = \
+  $(ALTINTEGRATION_LIBS) \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
@@ -622,14 +595,12 @@ bitcoind_LDADD = \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
-  $(LIBSECP256K1) \
-  $(GRPC_LIBS)
+  $(LIBSECP256K1)
 
-bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(ALTINTEGRATION_LIBS)
 
 # bitcoin-cli binary #
 bitcoin_cli_SOURCES = bitcoin-cli.cpp
-$(bitcoin_cli_SOURCES): $(VBK_GRPC_H) $(VBK_GRPC_CC)
 bitcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
 bitcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bitcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -643,14 +614,13 @@ bitcoin_cli_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
-  $(GRPC_LIBS)
+  $(ALTINTEGRATION_LIBS)
 
 bitcoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
 #
 
 # bitcoin-tx binary #
 bitcoin_tx_SOURCES = bitcoin-tx.cpp
-$(bitcoin_tx_SOURCES): $(VBK_GRPC_H) $(VBK_GRPC_CC)
 bitcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 bitcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bitcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -665,15 +635,13 @@ bitcoin_tx_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
-  $(LIBSECP256K1) \
-  $(GRPC_LIBS)
+  $(LIBSECP256K1)
 
-bitcoin_tx_LDADD += $(BOOST_LIBS)
+bitcoin_tx_LDADD += $(BOOST_LIBS) $(ALTINTEGRATION_LIBS)
 #
 
 # bitcoin-wallet binary #
 bitcoin_wallet_SOURCES = bitcoin-wallet.cpp
-$(bitcoin_wallet_SOURCES): $(VBK_GRPC_H) $(VBK_GRPC_CC)
 bitcoin_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 bitcoin_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bitcoin_wallet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -695,7 +663,7 @@ bitcoin_wallet_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE) \
-  $(GRPC_LIBS)
+  $(ALTINTEGRATION_LIBS)
 
 bitcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
 #
@@ -738,7 +706,6 @@ CLEANFILES += wallet/*.gcda wallet/*.gcno
 CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
-CLEANFILES += $(VBK_GRPC_H) $(VBK_GRPC_CC)
 
 EXTRA_DIST = $(CTAES_DIST)
 
