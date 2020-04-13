@@ -53,9 +53,9 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
 class CMainParams : public CChainParams
 {
 public:
-    CMainParams(std::string btcnet, std::string vbknet)
+    CMainParams(const ArgsManager& args)
     {
-        popconfig = makeConfig(std::move(btcnet), std::move(vbknet));
+        popconfig = makeConfig(args);
 
         strNetworkID = CBaseChainParams::MAIN;
         consensus.nSubsidyHalvingInterval = 210000;
@@ -147,9 +147,9 @@ public:
 class CTestNetParams : public CChainParams
 {
 public:
-    CTestNetParams(std::string btcnet, std::string vbknet)
+    CTestNetParams(const ArgsManager& args)
     {
-        popconfig = makeConfig(btcnet, vbknet);
+        popconfig = makeConfig(args);
 
         strNetworkID = CBaseChainParams::TESTNET;
         consensus.nSubsidyHalvingInterval = 210000;
@@ -239,9 +239,9 @@ public:
 class CRegTestParams : public CChainParams
 {
 public:
-    explicit CRegTestParams(const ArgsManager& args, std::string btcnet, std::string vbknet)
+    explicit CRegTestParams(const ArgsManager& args)
     {
-        popconfig = makeConfig(btcnet, vbknet);
+        popconfig = makeConfig(args);
 
         strNetworkID = CBaseChainParams::REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
@@ -377,20 +377,21 @@ const CChainParams& Params()
     return *globalChainParams;
 }
 
-std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain, const std::string& btcnet, const std::string& vbknet)
+std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-        return std::unique_ptr<CChainParams>(new CMainParams(btcnet, vbknet));
+        return std::unique_ptr<CChainParams>(new CMainParams(gArgs));
     else if (chain == CBaseChainParams::TESTNET)
-        return std::unique_ptr<CChainParams>(new CTestNetParams(btcnet, vbknet));
+        return std::unique_ptr<CChainParams>(new CTestNetParams(gArgs));
     else if (chain == CBaseChainParams::REGTEST)
-        return std::unique_ptr<CChainParams>(new CRegTestParams(gArgs, btcnet, vbknet));
+        return std::unique_ptr<CChainParams>(new CRegTestParams(gArgs));
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
-void SelectParams(const std::string& network, const std::string& btcnet, const std::string& vbknet)
+void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
-    globalChainParams = CreateChainParams(network, btcnet, vbknet);
+    globalChainParams = CreateChainParams(network);
     assert(globalChainParams != nullptr);
+    printConfig(globalChainParams->GetPopConfig());
 }

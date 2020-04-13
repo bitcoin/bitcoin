@@ -514,9 +514,7 @@ int GuiMain(int argc, char* argv[])
 
     // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
-        std::string btcnet = gArgs.GetArg("-popbtcnetwork", "test");
-        std::string vbknet = gArgs.GetArg("-popvbknetwork", "test");
-        node->selectParams(gArgs.GetChainName(), btcnet, vbknet);
+        node->selectParams(gArgs.GetChainName());
     } catch(std::exception &e) {
         node->initError(strprintf("%s\n", e.what()));
         QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("Error: %1").arg(e.what()));

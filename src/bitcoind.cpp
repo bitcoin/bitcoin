@@ -89,9 +89,7 @@ static bool AppInit(int argc, char* argv[])
         }
         // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
-            std::string btcnet = gArgs.GetArg("-popbtcnetwork", "test");
-            std::string vbknet = gArgs.GetArg("-popvbknetwork", "test");
-            SelectParams(gArgs.GetChainName(), btcnet, vbknet);
+            SelectParams(gArgs.GetChainName());
         } catch (const std::exception& e) {
             return InitError(strprintf("%s\n", e.what()));
         }

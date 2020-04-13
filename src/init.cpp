@@ -348,9 +348,9 @@ void SetupServerArgs()
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
     const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
     const auto regtestBaseParams = CreateBaseChainParams(CBaseChainParams::REGTEST);
-    const auto defaultChainParams = CreateChainParams(CBaseChainParams::MAIN, "test", "test");
-    const auto testnetChainParams = CreateChainParams(CBaseChainParams::TESTNET, "test", "test");
-    const auto regtestChainParams = CreateChainParams(CBaseChainParams::REGTEST, "regtest", "regtest");
+    const auto defaultChainParams = CreateChainParams(CBaseChainParams::MAIN);
+    const auto testnetChainParams = CreateChainParams(CBaseChainParams::TESTNET);
+    const auto regtestChainParams = CreateChainParams(CBaseChainParams::REGTEST);
 
     // Hidden Options
     std::vector<std::string> hidden_args = {
@@ -358,8 +358,13 @@ void SetupServerArgs()
         // GUI args. These will be overwritten by SetupUIArgs for the GUI
         "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-splash", "-uiplatform"};
 
-    gArgs.AddArg("-popbtcnetwork", "BTC network for pop mining: main/(test)/regtest", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-popvbknetwork", "VBK network for pop mining: main/(test)/alpha/regtest", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-popautoconfig", "If false, enables pop{btc,vbk}{startheight,blocks} (default: true)", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-popbtcstartheight", "If autoconfig is disabled, sets the first BTC bootstrap block height", ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-popbtcblocks", "If autoconfig is disabled, sets the blocks (must be comma separated list of 2014 BTC blocks)", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-popvbkstartheight", "If autoconfig is disabled, sets the first VBK bootstrap block height", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-popvbkblocks", "If autoconfig is disabled, sets the blocks (must be comma separated list of 100 VBK blocks)", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-popbtcnetwork", "BTC network for pop mining: main/(test)/regtest", ArgsManager::ALLOW_STRING, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-popvbknetwork", "VBK network for pop mining: main/(test)/alpha/regtest", ArgsManager::ALLOW_STRING, OptionsCategory::OPTIONS);
     gArgs.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #if HAVE_SYSTEM
     gArgs.AddArg("-alertnotify=<cmd>", "Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);

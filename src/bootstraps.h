@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <veriblock/config.hpp>
+#include <util/system.h> // for gArgs
 
 extern int testnetVBKstartHeight;
 extern std::vector<std::string> testnetVBKblocks;
@@ -12,6 +13,7 @@ extern std::vector<std::string> testnetVBKblocks;
 extern int testnetBTCstartHeight;
 extern std::vector<std::string> testnetBTCblocks;
 
-std::shared_ptr<altintegration::Config> makeConfig(std::string btcnet, std::string vbknet);
+void printConfig(const altintegration::Config& config);
+std::shared_ptr<altintegration::Config> makeConfig(const ArgsManager& mgr);
 
 #endif
