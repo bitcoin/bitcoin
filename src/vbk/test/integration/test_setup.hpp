@@ -4,12 +4,9 @@
 
 #include <vbk/init.hpp>
 #include <vbk/service_locator.hpp>
-#include <vbk/test/integration/grpc_integration_service.hpp>
 #include <vbk/test/integration/utils.hpp>
 #include <vbk/test/util/mock.hpp>
 #include <vbk/test/util/tx.hpp>
-#include <vbk/util_service.hpp>
-#include <vbk/util_service/util_service_impl.hpp>
 
 #include <gmock/gmock.h>
 
