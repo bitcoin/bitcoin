@@ -31,6 +31,7 @@ if [ "$CHECK_DOC" = 1 ]; then
     test/lint/extended-lint-all.sh
 fi
 
+command -v ccache > /dev/null && ccache --zero-stats
 ccache --max-size=$CCACHE_SIZE
 
 if [ -n "$CONFIG_SHELL" ]; then
@@ -52,6 +53,8 @@ cd dashcore-$BUILD_TARGET
 ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
 
 make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
+
+command -v ccache > /dev/null && ccache --version | head -n 1 && ccache --show-stats
 
 if [ -n "$USE_VALGRIND" ]; then
     echo "valgrind in USE!"

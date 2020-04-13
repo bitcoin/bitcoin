@@ -192,7 +192,7 @@ after_success:
     - stage: lint
       name: 'lint'
       env:
-      cache: false
+      cache: pip
       language: python
       python: '3.8' # Oldest supported version according to doc/dependencies.md
       install:

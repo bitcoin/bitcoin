@@ -29,7 +29,7 @@ MAKEJOBS="-j$(nproc)"
 export MAKEJOBS
 # A folder for the ci system to put temporary files (ccache, datadirs for tests, ...)
 # This folder only exists on the ci host.
-export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch/}
+export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch}
 # What host to compile for. See also ./depends/README.md
 # Tests that need cross-compilation export the appropriate HOST.
 # Tests that run natively guess the host
@@ -60,7 +60,6 @@ export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
 # Folder where the build is done (bin and lib).
 export BASE_OUTDIR=${BASE_OUTDIR:-$BASE_SCRATCH_DIR/out/$HOST}
 export SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
-export WINEDEBUG=${WINEDEBUG:-fixme-all}
 export DOCKER_PACKAGES=${DOCKER_PACKAGES:-build-essential libtool autotools-dev automake pkg-config bsdmainutils curl ca-certificates ccache python3 rsync git procps}
 export GOAL=${GOAL:-install}
 export DIR_QA_ASSETS=${DIR_QA_ASSETS:-${BASE_SCRATCH_DIR}/qa-assets}
