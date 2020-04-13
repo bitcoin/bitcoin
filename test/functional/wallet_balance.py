@@ -86,10 +86,11 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getbalance(), 50)
 
         self.log.info("Test getbalance with different arguments")
+        assert_raises_rpc_error(-8, "minconf must be zero", self.nodes[1].getbalance, minconf=1)
         assert_equal(self.nodes[0].getbalance("*"), 50)
-        assert_equal(self.nodes[0].getbalance("*", 1), 50)
-        assert_equal(self.nodes[0].getbalance("*", 1, True), 100)
-        assert_equal(self.nodes[0].getbalance(minconf=1), 50)
+        assert_equal(self.nodes[0].getbalance("*", 0), 50)
+        assert_equal(self.nodes[0].getbalance("*", 0, True), 100)
+        assert_equal(self.nodes[0].getbalance(minconf=0), 50)
         assert_equal(self.nodes[0].getbalance(minconf=0, include_watchonly=True), 100)
         assert_equal(self.nodes[1].getbalance(minconf=0, include_watchonly=True), 50)
 
@@ -154,10 +155,6 @@ class WalletTest(BitcoinTestFramework):
             # Same with minconf=0
             assert_equal(self.nodes[0].getbalance(minconf=0), Decimal('9.99'))
             assert_equal(self.nodes[1].getbalance(minconf=0), Decimal('0'))
-            # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
-            # TODO: fix getbalance tracking of coin spentness depth
-            assert_equal(self.nodes[0].getbalance(minconf=1), Decimal('0'))
-            assert_equal(self.nodes[1].getbalance(minconf=1), Decimal('0'))
             # getunconfirmedbalance
             assert_equal(self.nodes[0].getunconfirmedbalance(), Decimal('60'))  # output of node 1's spend
             assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], Decimal('60'))
@@ -189,14 +186,6 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[1].sendrawtransaction(txs[0]['hex'])
         self.nodes[1].generatetoaddress(2, ADDRESS_WATCHONLY)
         self.sync_all()
-
-        # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
-        # TODO: fix getbalance tracking of coin spentness depth
-        # getbalance with minconf=3 should still show the old balance
-        assert_equal(self.nodes[1].getbalance(minconf=3), Decimal('0'))
-
-        # getbalance with minconf=2 will show the new balance.
-        assert_equal(self.nodes[1].getbalance(minconf=2), Decimal('0'))
 
         # check mempool transactions count for wallet unconfirmed balance after
         # dynamically loading the wallet.
