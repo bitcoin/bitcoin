@@ -37,7 +37,7 @@
 
 TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent), model(nullptr), transactionProxyModel(nullptr),
-    transactionView(nullptr), abandonAction(nullptr), bumpFeeAction(nullptr), columnResizingFixer(nullptr)
+    transactionView(nullptr), abandonAction(nullptr), bumpFeeAction(nullptr), bumpFeePSBTAction(nullptr), columnResizingFixer(nullptr)
 {
     // Build filter row
     setContentsMargins(0,0,0,0);
@@ -152,6 +152,8 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     abandonAction = new QAction(tr("Abandon transaction"), this);
     bumpFeeAction = new QAction(tr("Increase transaction fee"), this);
     bumpFeeAction->setObjectName("bumpFeeAction");
+    bumpFeePSBTAction = new QAction(tr("Increase transaction fee (make PSBT)"), this);
+    bumpFeePSBTAction->setObjectName("bumpFeePSBTAction");
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
@@ -172,6 +174,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     contextMenu->addAction(showDetailsAction);
     contextMenu->addSeparator();
     contextMenu->addAction(bumpFeeAction);
+    contextMenu->addAction(bumpFeePSBTAction);
     contextMenu->addAction(abandonAction);
     contextMenu->addAction(editLabelAction);
 
@@ -187,6 +190,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(view, &QTableView::customContextMenuRequested, this, &TransactionView::contextualMenu);
 
     connect(bumpFeeAction, &QAction::triggered, this, &TransactionView::bumpFee);
+    connect(bumpFeePSBTAction, &QAction::triggered, this, &TransactionView::bumpFeePSBT);
     connect(abandonAction, &QAction::triggered, this, &TransactionView::abandonTx);
     connect(copyAddressAction, &QAction::triggered, this, &TransactionView::copyAddress);
     connect(copyLabelAction, &QAction::triggered, this, &TransactionView::copyLabel);
@@ -394,7 +398,8 @@ void TransactionView::contextualMenu(const QPoint &point)
     uint256 hash;
     hash.SetHex(selection.at(0).data(TransactionTableModel::TxHashRole).toString().toStdString());
     abandonAction->setEnabled(model->wallet().transactionCanBeAbandoned(hash));
-    bumpFeeAction->setEnabled(model->wallet().transactionCanBeBumped(hash));
+    bumpFeeAction->setEnabled(model->wallet().transactionCanBeBumped(hash) && !model->wallet().privateKeysDisabled());
+    bumpFeePSBTAction->setEnabled(model->wallet().transactionCanBeBumped(hash));
 
     if(index.isValid())
     {
@@ -420,7 +425,7 @@ void TransactionView::abandonTx()
     model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
 }
 
-void TransactionView::bumpFee()
+void TransactionView::bumpFee(bool make_psbt)
 {
     if(!transactionView || !transactionView->selectionModel())
         return;
@@ -433,7 +438,7 @@ void TransactionView::bumpFee()
 
     // Bump tx fee over the walletModel
     uint256 newHash;
-    if (model->bumpFee(hash, newHash)) {
+    if (model->bumpFee(hash, newHash, make_psbt)) {
         // Update the table
         transactionView->selectionModel()->clearSelection();
         model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, true);
@@ -441,6 +446,12 @@ void TransactionView::bumpFee()
         qApp->processEvents();
         Q_EMIT bumpedFee(newHash);
     }
+}
+
+
+void TransactionView::bumpFeePSBT()
+{
+    bumpFee(true);
 }
 
 void TransactionView::copyAddress()
