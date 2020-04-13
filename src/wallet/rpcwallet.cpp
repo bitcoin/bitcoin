@@ -1073,44 +1073,26 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, const CWalle
         if (nDepth < nMinDepth)
             continue;
 
-        // SYSCOIN if asset send check receivers instead of syscoin dust output
-        std::vector<IsAssetMineSelection> IsAssetMineResults;
-        if(wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || IsAssetAllocationTx(wtx.tx->nVersion)){
-            if(pwallet->IsAssetMine(*wtx.tx.get(), filter, IsAssetMineResults)){
-                for(auto isMineResult: IsAssetMineResults){
-                    if (has_filtered_address && !(filtered_address == isMineResult.destination)) {
-                        continue;
-                    }
-                    tallyitem& item = mapTally[isMineResult.destination];
-                    item.nConf = std::min(item.nConf, nDepth);
-                    item.txids.push_back(wtx.GetHash());
-                    if (isMineResult.minefilter & ISMINE_WATCH_ONLY)
-                        item.fIsWatchonly = true;
-                }          
-            }
-        }
-        else{
-            for (const CTxOut& txout : wtx.tx->vout)
-            {
-                CTxDestination address;
-                if (!ExtractDestination(txout.scriptPubKey, address))
-                    continue;
+        for (const CTxOut& txout : wtx.tx->vout)
+        {
+            CTxDestination address;
+            if (!ExtractDestination(txout.scriptPubKey, address))
+                continue;
 
-                if (has_filtered_address && !(filtered_address == address)) {
-                    continue;
-                }
-
-                isminefilter mine = pwallet->IsMine(address);
-                if(!(mine & filter))
-                    continue;
-                tallyitem& item = mapTally[address];
-                item.nAmount += txout.nValue;
-                item.nConf = std::min(item.nConf, nDepth);
-                item.txids.push_back(wtx.GetHash());
-                if (mine & ISMINE_WATCH_ONLY)
-                    item.fIsWatchonly = true;
+            if (has_filtered_address && !(filtered_address == address)) {
+                continue;
             }
-        }
+
+            isminefilter mine = pwallet->IsMine(address);
+            if(!(mine & filter))
+                continue;
+            tallyitem& item = mapTally[address];
+            item.nAmount += txout.nValue;
+            item.nConf = std::min(item.nConf, nDepth);
+            item.txids.push_back(wtx.GetHash());
+            if (mine & ISMINE_WATCH_ONLY)
+                item.fIsWatchonly = true;
+        } 
     }
 
     // Reply
@@ -1353,7 +1335,7 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWallet* cons
             // SYSCOIN
             const CTransaction& tx = *wtx.tx;
             UniValue output(UniValue::VOBJ);
-            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine)){
+            if(DecodeSyscoinRawtransaction(tx, output)){
                 entry.pushKV("systx", output);
                 if (mapSysTx.find(txHash) != mapSysTx.end())
                     continue;
@@ -1405,7 +1387,7 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWallet* cons
             // SYSCOIN
             const CTransaction& tx = *wtx.tx;
             UniValue output(UniValue::VOBJ);
-            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine)){
+            if(DecodeSyscoinRawtransaction(tx, output)){
                 entry.pushKV("systx", output);
                 if (mapSysTx.find(txHash) != mapSysTx.end())
                     continue;
@@ -1761,7 +1743,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-
+    
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
 
@@ -1780,7 +1762,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     if (it == pwallet->mapWallet.end()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     }
-    const CWalletTx& wtx = it->second;
+    const CWalletTx &wtx = it->second;
 
     CAmount nCredit = wtx.GetCredit(filter);
     CAmount nDebit = wtx.GetDebit(filter);
@@ -2872,6 +2854,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 "with between minconf and maxconf (inclusive) confirmations.\n"
                 "Optionally filter to only include txouts paid to specified addresses.\n",
                 {
+                    {"asset_guid", RPCArg::Type::NUM, /* default */ "0", "Asset GUID to filter. 0(default) for Syscoin."},
                     {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},
                     {"maxconf", RPCArg::Type::NUM, /* default */ "9999999", "The maximum confirmations to filter"},
                     {"addresses", RPCArg::Type::ARR, /* default */ "empty array", "The syscoin addresses to filter",
@@ -2884,9 +2867,12 @@ static UniValue listunspent(const JSONRPCRequest& request)
                     {"query_options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "JSON with query options",
                         {
                             {"minimumAmount", RPCArg::Type::AMOUNT, /* default */ "0", "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
+                            {"minimumAmountAsset", RPCArg::Type::AMOUNT, /* default */ "0", "Minimum asset value of each UTXO"},
                             {"maximumAmount", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
+                            {"maximumAmountAsset", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Maximum asset value of each UTXO"},
                             {"maximumCount", RPCArg::Type::NUM, /* default */ "unlimited", "Maximum number of UTXOs"},
                             {"minimumSumAmount", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
+                            {"minimumSumAmountAsset", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Minimum sum asset value of all UTXOs"},
                         },
                         "query_options"},
                 },
@@ -2901,6 +2887,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
                             {RPCResult::Type::STR, "label", "The associated label, or \"\" for the default label"},
                             {RPCResult::Type::STR, "scriptPubKey", "the script key"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
+                            {RPCResult::Type::STR_AMOUNT, "asset_amount", "the transaction output asset amount if asset output"},
+                            {RPCResult::Type::NUM, "asset_guid", "The asset unique identifier if asset output"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                             {RPCResult::Type::STR_HEX, "redeemScript", "The redeemScript if scriptPubKey is P2SH"},
                             {RPCResult::Type::STR, "witnessScript", "witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH"},
@@ -2923,22 +2911,28 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    int nMinDepth = 1;
+    int32_t nAsset = 0;
     if (!request.params[0].isNull()) {
         RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
-        nMinDepth = request.params[0].get_int();
+        nAsset = request.params[0].get_uint();
+    }
+
+    int nMinDepth = 1;
+    if (!request.params[1].isNull()) {
+        RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
+        nMinDepth = request.params[1].get_int();
     }
 
     int nMaxDepth = 9999999;
-    if (!request.params[1].isNull()) {
-        RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
-        nMaxDepth = request.params[1].get_int();
+    if (!request.params[2].isNull()) {
+        RPCTypeCheckArgument(request.params[2], UniValue::VNUM);
+        nMaxDepth = request.params[2].get_int();
     }
 
     std::set<CTxDestination> destinations;
-    if (!request.params[2].isNull()) {
-        RPCTypeCheckArgument(request.params[2], UniValue::VARR);
-        UniValue inputs = request.params[2].get_array();
+    if (!request.params[3].isNull()) {
+        RPCTypeCheckArgument(request.params[3], UniValue::VARR);
+        UniValue inputs = request.params[3].get_array();
         for (unsigned int idx = 0; idx < inputs.size(); idx++) {
             const UniValue& input = inputs[idx];
             CTxDestination dest = DecodeDestination(input.get_str());
@@ -2952,18 +2946,22 @@ static UniValue listunspent(const JSONRPCRequest& request)
     }
 
     bool include_unsafe = true;
-    if (!request.params[3].isNull()) {
-        RPCTypeCheckArgument(request.params[3], UniValue::VBOOL);
-        include_unsafe = request.params[3].get_bool();
+    if (!request.params[4].isNull()) {
+        RPCTypeCheckArgument(request.params[4], UniValue::VBOOL);
+        include_unsafe = request.params[4].get_bool();
     }
 
     CAmount nMinimumAmount = 0;
     CAmount nMaximumAmount = MAX_MONEY;
     CAmount nMinimumSumAmount = MAX_MONEY;
+    // SYSCOIN
+    CAmount nMinimumAmountAsset = 0;
+    CAmount nMaximumAmountAsset = MAX_ASSET;
+    CAmount nMinimumSumAmountAsset = MAX_ASSET;
     uint64_t nMaximumCount = 0;
 
-    if (!request.params[4].isNull()) {
-        const UniValue& options = request.params[4].get_obj();
+    if (!request.params[5].isNull()) {
+        const UniValue& options = request.params[5].get_obj();
 
         if (options.exists("minimumAmount"))
             nMinimumAmount = AmountFromValue(options["minimumAmount"]);
@@ -2976,6 +2974,15 @@ static UniValue listunspent(const JSONRPCRequest& request)
 
         if (options.exists("maximumCount"))
             nMaximumCount = options["maximumCount"].get_int64();
+        // SYSCOIN
+        if (options.exists("minimumAmountAsset"))
+            nMinimumAmountAsset = AmountFromValue(options["minimumAmountAsset"]);
+
+        if (options.exists("maximumAmountAsset"))
+            nMaximumAmountAsset = AmountFromValue(options["maximumAmountAsset"]);
+
+        if (options.exists("minimumSumAmountAsset"))
+            nMinimumSumAmountAsset = AmountFromValue(options["minimumSumAmountAsset"]);
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -2989,9 +2996,10 @@ static UniValue listunspent(const JSONRPCRequest& request)
         cctl.m_avoid_address_reuse = false;
         cctl.m_min_depth = nMinDepth;
         cctl.m_max_depth = nMaxDepth;
+        cctl.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
         auto locked_chain = pwallet->chain().lock();
         LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(*locked_chain, vecOutputs, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
+        pwallet->AvailableCoins(*locked_chain, vecOutputs, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, nMaximumCount);
     }
 
     LOCK(pwallet->cs_wallet);
@@ -3055,6 +3063,10 @@ static UniValue listunspent(const JSONRPCRequest& request)
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
         entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
+        if(!out.tx->tx->vout[out.i].assetInfo.IsNull()) {
+            entry.pushKV("asset_amount", ValueFromAmount(out.tx->tx->vout[out.i].assetInfo.nValue));
+            entry.pushKV("asset_guid", out.tx->tx->vout[out.i].assetInfo.nAsset);
+        }
         entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);

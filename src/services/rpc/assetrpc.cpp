@@ -20,16 +20,9 @@ extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
-extern std::unordered_set<std::string> assetAllocationConflicts;
-extern RecursiveMutex cs_assetallocationconflicts;
-extern RecursiveMutex cs_assetallocationarrival;
-extern RecursiveMutex cs_setethstatus;
-extern ArrivalTimesSetImpl arrivalTimesSet;
-extern RecursiveMutex cs_assetallocationmempoolremovetx;
-extern ArrivalTimesSet setToRemoveFromMempool;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
-extern std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
+extern RecursiveMutex cs_setethstatus;
 using namespace std;
 UniValue convertaddress(const JSONRPCRequest& request)	
 {	
@@ -87,116 +80,6 @@ UniValue convertaddress(const JSONRPCRequest& request)
     return ret;	
 }
 
-CWitnessAddress DescribeWitnessAddress(const std::string& strAddress){
-    string witnessProgramHex = "";
-    unsigned char witnessVersion = 0;
-    if(strAddress != "burn"){
-        UniValue requestParam(UniValue::VARR);
-        requestParam.push_back(strAddress);	
-        JSONRPCRequest jsonRequest;	
-        jsonRequest.params = requestParam;	
-        const UniValue &convertedAddressValue = convertaddress(jsonRequest);	
-        const std::string & v4address = find_value(convertedAddressValue.get_obj(), "v4address").get_str();	
-        const CTxDestination &dest = DecodeDestination(v4address);
-        UniValue detail = DescribeAddress(dest);
-        if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Address must be a segwit based address");
-        witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-        witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_uint();  
-    }
-    return CWitnessAddress(witnessVersion, strAddress == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex));
-}
-unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
-{
-    UniValue paramsUTXO(UniValue::VARR);
-    UniValue utxoParams(UniValue::VARR);
-    utxoParams.push_back("addr(" + strAddressFrom + ")");
-    paramsUTXO.push_back("start");
-    paramsUTXO.push_back(utxoParams);
-    JSONRPCRequest request;
-    request.params = paramsUTXO;
-    UniValue resUTXOs = scantxoutset(request);
-    UniValue utxoArray(UniValue::VARR);
-    if (resUTXOs.isObject()) {
-        const UniValue& resUtxoUnspents = find_value(resUTXOs.get_obj(), "unspents");
-        if (!resUtxoUnspents.isArray())
-            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "No unspent outputs found in addresses provided");
-        utxoArray = resUtxoUnspents.get_array();
-    }   
-    else
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "No unspent outputs found in addresses provided");
-        
-    unsigned int count = 0;
-    {
-        LOCK(mempool.cs);
-        for (unsigned int i = 0; i < utxoArray.size(); i++)
-        {
-            const UniValue& utxoObj = utxoArray[i].get_obj();
-            const uint256& txid = uint256S(find_value(utxoObj, "txid").get_str());
-            const uint32_t& nOut = find_value(utxoObj, "vout").get_uint();
-
-            const COutPoint &outPointToCheck = COutPoint(txid, nOut);
-            if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
-                continue;
-            if (outpoint.IsNull())
-                outpoint = outPointToCheck;
-            count++;
-        }
-    }
-    return count;
-}
-UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
-{
-    if (precision < 0 || precision > 8)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-    bool sign = amount < 0;
-    int64_t n_abs = (sign ? -amount : amount);
-    int64_t quotient = n_abs;
-    int64_t divByAmount = 1;
-    int64_t remainder = 0;
-    string strPrecision = "0";
-    if (precision > 0) {
-        divByAmount = pow(10, precision);
-        quotient = n_abs / divByAmount;
-        remainder = n_abs % divByAmount;
-        strPrecision = itostr(precision);
-    }
-
-    return UniValue(UniValue::VNUM,
-        strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
-}
-CAmount AssetAmountFromValue(UniValue& value, int precision)
-{
-    if(precision < 0 || precision > 8)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-    if (!value.isNum() && !value.isStr())
-        throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
-    if (value.isStr() && value.get_str() == "-1") {
-        value.setInt((int64_t)(MAX_ASSET / ((int)pow(10, precision))));
-    }
-    CAmount amount;
-    if (!ParseFixedPoint(value.getValStr(), precision, &amount))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    if (amount > 0 && !AssetRange(amount))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
-    return amount;
-}
-bool AssetRange(const CAmount& amount, int precision)
-{
-
-    if (precision < 0 || precision > 8)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-    bool sign = amount < 0;
-    int64_t n_abs = (sign ? -amount : amount);
-    int64_t quotient = n_abs;
-    if (precision > 0) {
-        int64_t divByAmount = pow(10, precision);
-        quotient = n_abs / divByAmount;
-    }
-    if (!AssetRange(quotient))
-        return false;
-    return true;
-}
 UniValue tpstestinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 0 != params.size())
@@ -211,12 +94,12 @@ UniValue tpstestinfo(const JSONRPCRequest& request) {
 	oTPSTestResults.__pushKV("enabled", fTPSTestEnabled);
     oTPSTestResults.__pushKV("testinitiatetime", (int64_t)nTPSTestingStartTime);
    
-	for (auto &receivedTime : vecTPSTestReceivedTimesMempool) {
+	/*for (auto &receivedTime : mempool) {
 		UniValue oTPSTestStatusObj(UniValue::VOBJ);
 		oTPSTestStatusObj.__pushKV("txid", receivedTime.first.GetHex());
 		oTPSTestStatusObj.__pushKV("time", receivedTime.second);
 		oTPSTestReceiversMempool.push_back(oTPSTestStatusObj);
-	}
+	}*/
 	oTPSTestResults.__pushKV("receivers", oTPSTestReceiversMempool);
 	return oTPSTestResults;
 }
@@ -233,7 +116,6 @@ UniValue tpstestsetenabled(const JSONRPCRequest& request) {
 		throw JSONRPCError(RPC_MISC_ERROR, "This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again.");
 	fTPSTestEnabled = params[0].get_bool();
 	if (!fTPSTestEnabled) {
-		vecTPSTestReceivedTimesMempool.clear();
 		nTPSTestingStartTime = 0;
 	}
 	UniValue result(UniValue::VOBJ);
@@ -292,196 +174,10 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 	return result;
 }
 
-UniValue assetallocationbalance(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"assetallocationbalance",
-        "\nShow stored balance of a single asset allocation.\n",
-        {
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
-            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the allocation owner"}
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::NUM, "amount", "The balance of a single asset allocation"},
-            }},
-        RPCExamples{
-            HelpExampleCli("assetallocationbalance","\"asset_guid\" \"address\"")
-            + HelpExampleRpc("assetallocationbalance", "\"asset_guid\", \"address\"")
-        }
-    }.Check(request);
 
-    const int &nAsset = params[0].get_uint();
-    string strAddressFrom = params[1].get_str();
-    UniValue oAssetAllocation(UniValue::VOBJ);
-    const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
-    CAssetAllocationDBEntry txPos;
-    if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
-        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from assetallocation DB");
-
-    CAsset theAsset;
-    if (!GetAsset(nAsset, theAsset))
-        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-
-    UniValue oRes(UniValue::VOBJ);
-    oRes.__pushKV("amount", ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision));
-    return oRes;
-}
-
-UniValue assetallocationbalances(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"assetallocationbalances",
-        "\nShow stored balance of multiple asset allocations.\n",
-        {
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
-            {"addresses", RPCArg::Type::ARR, RPCArg::Optional::NO, "The addresses owning the allocations",
-                {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "syscoin address"},
-                },
-            }
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::NUM, "address1", "The balance of a single asset allocation."},
-                {RPCResult::Type::NUM, "address2", "The balance of a single asset allocation."},
-            }},
-        RPCExamples{
-            HelpExampleCli("assetallocationbalances","\"asset_guid\" \"[\\\"address1\\\",\\\"address2\\\"]\"")
-            + HelpExampleRpc("assetallocationbalances", "\"asset_guid\", \"[\\\"address1\\\",\\\"address2\\\"]\"")
-        }
-    }.Check(request);
-
-    const int &nAsset = params[0].get_uint();
-    const UniValue &headerArray = params[1].get_array();
-
-    CAsset theAsset;
-    if (!GetAsset(nAsset, theAsset))
-        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-
-    UniValue oRes(UniValue::VOBJ);
-    for(size_t i =0;i<headerArray.size();i++){
-        const std::string &strAddressFrom = headerArray[i].get_str();
-       
-        UniValue oAssetAllocation(UniValue::VOBJ);
-        const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
-        CAssetAllocationDBEntry txPos;
-        if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
-            continue;
-
-        oRes.__pushKV(strAddressFrom, ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision));
-    }
-    return oRes;
-}
-
-UniValue assetallocationinfo(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-    RPCHelpMan{"assetallocationinfo",
-        "\nShow stored values of a single asset allocation.\n",
-        {
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
-            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the owner"}
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "asset_allocation", "The unique key for this allocation"},
-                {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
-                {RPCResult::Type::STR, "symbol", "The asset symbol"},
-                {RPCResult::Type::STR, "address", "The address of the owner of this allocation"},
-                {RPCResult::Type::NUM, "balance", "The current balance"},
-                {RPCResult::Type::NUM, "balance_zdag", "The zdag balance"},
-                {RPCResult::Type::STR, "locked_outpoint", "The locked UTXO if applicable for this allocation"},
-            }},
-        RPCExamples{
-            HelpExampleCli("assetallocationinfo", "\"assetguid\" \"address\"")
-            + HelpExampleRpc("assetallocationinfo", "\"assetguid\", \"address\"")
-        }
-    }.Check(request);
-
-    const int &nAsset = params[0].get_uint();
-    const std::string &strAddressFrom = params[1].get_str();
-    UniValue oAssetAllocation(UniValue::VOBJ);
-    const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
-    CAssetAllocationDBEntry txPos;
-    if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos)){
-        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from assetallocation DB");
-    }
-
-
-	CAsset theAsset;
-	if (!GetAsset(nAsset, theAsset)){
-		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-    }
-
-
-	if(!BuildAssetAllocationJson(txPos, theAsset, oAssetAllocation))
-		oAssetAllocation.clear();
-    return oAssetAllocation;
-}
-UniValue listassetindexallocations(const JSONRPCRequest& request) {	
-    const UniValue &params = request.params;	
-    RPCHelpMan{"listassetindexallocations",	
-        "\nReturn a list of asset allocations an address is associated with.\n",	
-        {	
-            {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to find assets associated with."}	
-        },
-        RPCResult{
-            RPCResult::Type::ARR, "", "",
-            {
-                {RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::STR, "asset_allocation", "The unique key for this allocation"},
-                    {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
-                    {RPCResult::Type::STR, "symbol", "The asset symbol"},
-                    {RPCResult::Type::STR, "address", "The address of the owner of this allocation"},
-                    {RPCResult::Type::NUM, "balance", "The current balance"},
-                    {RPCResult::Type::NUM, "balance_zdag", "The zdag balance"},
-                    {RPCResult::Type::STR, "locked_outpoint", "The locked UTXO if applicable for this allocation"},
-                }},
-            }
-        },
-        RPCExamples{	
-            HelpExampleCli("listassetindexallocations", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")	
-            + HelpExampleRpc("listassetindexallocations", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")	
-        }	
-    }.Check(request);	
-    if(!fAssetIndex){	
-        throw JSONRPCError(RPC_MISC_ERROR, "You must reindex syscoin with -assetindex enabled");	
-    }       	
-
-
-    string strAddressFrom = params[0].get_str();	
-
-    const CWitnessAddress &witnessAddress = DescribeWitnessAddress(strAddressFrom);	
-
-    UniValue oAssetAllocation(UniValue::VOBJ);	
-    UniValue oRes(UniValue::VARR);	
-    std::vector<uint32_t> assetGuids;	
-    passetallocationdb->ReadAssetsByAddress(witnessAddress, assetGuids);	
-
-
-    for(const uint32_t& guid: assetGuids){	
-        UniValue oAssetAllocation(UniValue::VOBJ);	
-        const CAssetAllocationTuple assetAllocationTuple(guid, witnessAddress);	
-        CAssetAllocationDBEntry txPos;	
-        if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))	
-            continue;	
-        CAsset theAsset;	
-        if (!GetAsset(guid, theAsset))	
-           continue;	
-
-        if(BuildAssetAllocationJson(txPos, theAsset, oAssetAllocation)){	
-            oRes.push_back(oAssetAllocation);	
-        }	
-    }	
-    return oRes;	
-}
-// recursive procedure to loop through all arrival times and related arrival times to find all senders
-int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sender){
+int CheckActorsInTransactionGraph(const uint256& lookForTxHash){
     LOCK(cs_main);
     LOCK(mempool.cs);
-    ActorSet actorSetSender;
     {
         CTxMemPool::setEntries setAncestors;
         const CTransactionRef &txRef = mempool.get(lookForTxHash);
@@ -489,74 +185,35 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash, std::string& sen
             return ZDAG_NOT_FOUND;
         if(txRef->nVersion != SYSCOIN_TX_VERSION_ALLOCATION_SEND)
             return ZDAG_NOT_FOUND;
-        // the zdag tx or any others from this sender should be under MTU of IP packet
-        if(GetSerializeSize(txRef, PROTOCOL_VERSION) > 1100){
+        // the zdag tx should be under MTU of IP packet
+        if(GetSerializeSize(txRef, PROTOCOL_VERSION) > 1100)
             return ZDAG_WARNING_RBF;
-        }
         // check if any inputs are dbl spent, reject if so
         if(mempool.existsConflicts(*txRef))
             return ZDAG_MAJOR_CONFLICT;        
 
-        // get sender
-        sender = GetSenderOfZdagTx(*txRef);
-        if(sender.empty())
-            return ZDAG_MAJOR_CONFLICT;
-
         // check this transaction isn't RBF enabled
         RBFTransactionState rbfState = IsRBFOptIn(*txRef, mempool, setAncestors);
-        if (rbfState == RBFTransactionState::UNKNOWN) {
+        if (rbfState == RBFTransactionState::UNKNOWN)
             return ZDAG_NOT_FOUND;
-        } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {
+        else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125)
             return ZDAG_WARNING_RBF;
-        }
         for (CTxMemPool::txiter it : setAncestors) {
             const CTransactionRef& ancestorTxRef = it->GetSharedTx();
+            // should be under MTU of IP packet
+            if(GetSerializeSize(ancestorTxRef, PROTOCOL_VERSION) > 1100)
+                return ZDAG_WARNING_RBF;
             // check if any ancestor inputs are dbl spent, reject if so
             if(mempool.existsConflicts(*ancestorTxRef))
                 return ZDAG_MAJOR_CONFLICT;
-
         }  
-    } 
-    {
-        LOCK(cs_assetallocationarrival);
-        auto arrivalTimesIt = arrivalTimesSet.find(sender);
-        if(arrivalTimesIt == arrivalTimesSet.end())
-            return ZDAG_MAJOR_CONFLICT;
-        const ArrivalTimesSet& arrivalTimes = arrivalTimesIt->second;
-        // its in mempool and its an asset tx, it should exist in arrival times or it wasn't put in due to a conflict
-        if(arrivalTimes.find(lookForTxHash) == arrivalTimes.end())
-            return ZDAG_MAJOR_CONFLICT;
-        // ensure non of the neighbouring sender tx's are not RBF either
-        for(const auto& arrivalTime: arrivalTimes){
-            // already checked this one
-            if(arrivalTime == lookForTxHash)
-                continue;
-            const CTransactionRef &txRefArrival = mempool.get(arrivalTime);
-            if (!txRefArrival)
-                return ZDAG_NOT_FOUND;
-            RBFTransactionState rbfState = IsRBFOptIn(*txRefArrival, mempool);
-            if (rbfState == RBFTransactionState::UNKNOWN) {
-                return ZDAG_NOT_FOUND;
-            } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {
-                return ZDAG_WARNING_RBF;
-            }         
-        }
     }
     return ZDAG_STATUS_OK;
 }
-int VerifyTransactionGraph(const uint256& lookForTxHash) {
-    std::string sender;    
-    int status = CheckActorsInTransactionGraph(lookForTxHash, sender);
+int VerifyTransactionGraph(const uint256& lookForTxHash) {  
+    int status = CheckActorsInTransactionGraph(lookForTxHash);
     if(status != ZDAG_STATUS_OK){
         return status;
-    }
-    {
-        LOCK(cs_assetallocationconflicts);
-        auto it = assetAllocationConflicts.find(sender);
-        if (it != assetAllocationConflicts.end()){
-            LogPrint(BCLog::SYS, "VerifyTransactionGraph: Actor Conflict %s\n", sender);
-            return ZDAG_MAJOR_CONFLICT;
-        }
     }
 	return ZDAG_STATUS_OK;
 }
@@ -591,119 +248,7 @@ UniValue assetallocationverifyzdag(const JSONRPCRequest& request) {
 	return oAssetAllocationStatus;
 }
 
-UniValue listassetallocations(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-    RPCHelpMan{"listassetallocations",
-        "\nScan through all asset allocations.\n",
-        {
-            {"count", RPCArg::Type::NUM, "10", "The number of results to return."},
-            {"from", RPCArg::Type::NUM, "0", "The number of results to skip."},
-            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "A json object with options to filter results.",
-                {
-                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Asset GUID to filter"},
-                    {"addresses", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "A json array with owners",  
-                        {
-                            {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to filter"},
-                        },
-                        "[addressobjects,...]"
-                    }
-                }
-                }
-            },
-            RPCResult{
-                RPCResult::Type::ARR, "", "",
-                {
-                    {RPCResult::Type::OBJ, "", "",
-                    {
-                        {RPCResult::Type::STR, "asset_allocation", "The unique key for this allocation"},
-                        {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
-                        {RPCResult::Type::STR, "symbol", "The asset symbol"},
-                        {RPCResult::Type::STR, "address", "The address of the owner of this allocation"},
-                        {RPCResult::Type::NUM, "balance", "The current balance"},
-                        {RPCResult::Type::NUM, "balance_zdag", "The zdag balance"},
-                        {RPCResult::Type::STR, "locked_outpoint", "The locked UTXO if applicable for this allocation"},
-                    }},
-                }
-            },
-            RPCExamples{
-                HelpExampleCli("listassetallocations", "0")
-            + HelpExampleCli("listassetallocations", "10 10")
-            + HelpExampleCli("listassetallocations", "0 0 '{\"asset_guid\":92922}'")
-            + HelpExampleCli("listassetallocations", "0 0 '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
-            + HelpExampleRpc("listassetallocations", "0")
-            + HelpExampleRpc("listassetallocations", "10, 10")
-            + HelpExampleRpc("listassetallocations", "0, 0, '{\"asset_guid\":92922}'")
-            + HelpExampleRpc("listassetallocations", "0, 0, '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
-            }
-    }.Check(request);
-	UniValue options;
-	uint32_t count = 10;
-	uint32_t from = 0;
-	if (params.size() > 0) {
-		count = params[0].get_uint();
-		if (count == 0) {
-			count = 10;
-		}
-	}
-	if (params.size() > 1) {
-		from = params[1].get_uint();
-	}
-	if (params.size() > 2) {
-		options = params[2];
-	}
-	UniValue oRes(UniValue::VARR);
-	if (!passetallocationdb->ScanAssetAllocations(count, from, options, oRes))
-		throw JSONRPCError(RPC_MISC_ERROR, "Scan failed");
-	return oRes;
-}
-UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"listassetallocationmempoolbalances",
-        "\nScan through all asset allocation mempool balances. Useful for ZDAG analysis on senders of allocations.\n",
-        {
-            {"count", RPCArg::Type::NUM, "10", "The number of results to return."},
-            {"from", RPCArg::Type::NUM, "0", "The number of results to skip."},
-            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "A json object with options to filter results.",
-                {
-                    {"addresses_array", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "A json array with owners",  
-                        {
-                            {"sender_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to filter"},
-                        },
-                        "[address,...]"
-                    }
-                }
-                }
-        },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("listassetallocationmempoolbalances", "0")
-            + HelpExampleCli("listassetallocationmempoolbalances", "10 10")
-            + HelpExampleCli("listassetallocationmempoolbalances", "0 0 '{\"senders\":[{\"address\":\"sysrt1q9hrtqlcpvd089hswwa3gtsy29f8pugc3wah3fl\"},{\"address\":\"sysrt1qea3v4dj5kjxjgtysdxd3mszjz56530ugw467dq\"}]}'")
-            + HelpExampleRpc("listassetallocationmempoolbalances", "0")
-            + HelpExampleRpc("listassetallocationmempoolbalances", "10, 10")
-            + HelpExampleRpc("listassetallocationmempoolbalances", "0, 0, '{\"senders\":[{\"address\":\"sysrt1q9hrtqlcpvd089hswwa3gtsy29f8pugc3wah3fl\"},{\"address\":\"sysrt1qea3v4dj5kjxjgtysdxd3mszjz56530ugw467dq\"}]}'")
-        }
-    }.Check(request);
-    UniValue options;
-    uint32_t count = 10;
-    uint32_t from = 0;
-    if (params.size() > 0) {
-        count = params[0].get_uint();
-        if (count == 0) {
-            count = 10;
-        }
-    }
-    if (params.size() > 1) {
-        from = params[1].get_uint();
-    }
-    if (params.size() > 2) {
-        options = params[2];
-    }
-    UniValue oRes(UniValue::VARR);
-    if (!passetallocationmempooldb->ScanAssetAllocationMempoolBalances(count, from, options, oRes))
-        throw JSONRPCError(RPC_MISC_ERROR, "Scan failed");
-    return oRes;
-}
+
 
 UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
@@ -751,40 +296,7 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Not a Syscoin transaction");
     return output;
 }
-CAmount getaddressbalance(const string& strAddress)
-{
-    UniValue paramsUTXO(UniValue::VARR);
-    UniValue utxoParams(UniValue::VARR);
-    utxoParams.push_back("addr(" + strAddress + ")");
-    paramsUTXO.push_back("start");
-    paramsUTXO.push_back(utxoParams);
-    JSONRPCRequest request;
-    request.params = paramsUTXO;
-    UniValue resUTXOs = scantxoutset(request);
-    return AmountFromValue(find_value(resUTXOs.get_obj(), "total_amount"));
-}
-UniValue addressbalance(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    RPCHelpMan{"addressbalance",
-    "\nShow the Syscoin balance of an address\n",
-    {
-        {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to holding the balance"}
-    },
-    RPCResult{
-        RPCResult::Type::OBJ, "", "",
-        {
-            {RPCResult::Type::NUM, "amount", "Syscoin balance of the addressn"},
-        }},  
-    RPCExamples{
-        HelpExampleCli("addressbalance", "\"sysrt1qea3v4dj5kjxjgtysdxd3mszjz56530ugw467dq\"")
-        + HelpExampleRpc("addressbalance", "\"sysrt1qea3v4dj5kjxjgtysdxd3mszjz56530ugw467dq\"")
-        }
-    }.Check(request);
-    string address = params[0].get_str();
-    UniValue res(UniValue::VOBJ);
-    res.__pushKV("amount", ValueFromAmount(getaddressbalance(address)));
-    return res;
-}
+
 UniValue assetinfo(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     RPCHelpMan{"assetinfo",
@@ -833,7 +345,6 @@ UniValue listassets(const JSONRPCRequest& request) {
             {"from", RPCArg::Type::NUM, "0", "The number of results to skip."},
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "A json object with options to filter results.",
                 {
-                    {"txid", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Transaction ID to filter results for"},
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Asset GUID to filter"},
                     {"addresses", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "A json array with owners",  
                         {
@@ -851,11 +362,11 @@ UniValue listassets(const JSONRPCRequest& request) {
                     {
                         {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
                         {RPCResult::Type::STR, "symbol", "The asset symbol"},
-                        {RPCResult::Type::STR_HEX, "txid", "The transaction id that created this asset"},
                         {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
                         {RPCResult::Type::STR, "address", "The address that controls this asset"},
                         {RPCResult::Type::STR_HEX, "contract", "The ethereum contract address"},
                         {RPCResult::Type::NUM, "balance", "The current balance"},
+                        {RPCResult::Type::NUM, "burn_balance", "The current burn balance"},
                         {RPCResult::Type::NUM, "total_supply", "The total supply of this asset"},
                         {RPCResult::Type::NUM, "max_supply", "The maximum supply of this asset"},
                         {RPCResult::Type::NUM, "update_flag", "The flag in decimal"},
@@ -988,113 +499,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     res.__pushKV("index", nIndex);    
     return res;
 }
-UniValue listassetindex(const JSONRPCRequest& request) {	
-    const UniValue &params = request.params;	
-    RPCHelpMan{"listassetindex",	
-    "\nScan through asset index and return paged results of historical asset transactions. Requires assetindex config parameter enabled and optional assetindexpagesize which is 25 by default.\n",	
-    {	
-        {"page", RPCArg::Type::NUM, "0", "Return specific page number of transactions. Lower page number means more recent transactions."},	
-        {"options", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json object with options to filter results", 	
-            {	
-                {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset GUID to filter."},	
-                {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to filter.  Leave empty to scan globally through asset"}	
-            }	
-        }	
-    }, 	
 
-    RPCResult{
-        RPCResult::Type::ARR, "", "",
-        {
-            {RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
-                {RPCResult::Type::STR, "symbol", "The asset symbol"},
-                {RPCResult::Type::STR_HEX, "txid", "The transaction id that created this asset"},
-                {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
-                {RPCResult::Type::STR, "address", "The address that controls this asset"},
-                {RPCResult::Type::STR_HEX, "contract", "The ethereum contract address"},
-                {RPCResult::Type::NUM, "balance", "The current balance"},
-                {RPCResult::Type::NUM, "total_supply", "The total supply of this asset"},
-                {RPCResult::Type::NUM, "max_supply", "The maximum supply of this asset"},
-                {RPCResult::Type::NUM, "update_flag", "The flag in decimal"},
-                {RPCResult::Type::NUM, "precision", "The precision of this asset"},
-            }},
-        }
-    },
-   	
-    RPCExamples{	
-        HelpExampleCli("listassetindex", "0 '{\"asset_guid\":92922}'")	
-        + HelpExampleCli("listassetindex", "2 '{\"asset_guid\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")	
-        + HelpExampleRpc("listassetindex", "0, '{\"asset_guid\":92922}'")	
-        + HelpExampleRpc("listassetindex", "2, '{\"asset_guid\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")	
-    }	
-}.Check(request);	
-    if(!fAssetIndex){	
-        throw JSONRPCError(RPC_MISC_ERROR, "You must start syscoin with -assetindex enabled");	
-    }	
-    UniValue options;	
-    uint32_t page = params[0].get_uint();	
-
-    options = params[1];	
-
-    UniValue oRes(UniValue::VARR);	
-    if (!passetindexdb->ScanAssetIndex(page, options, oRes))	
-        throw JSONRPCError(RPC_MISC_ERROR, "Scan failed");	
-    return oRes;	
-}	
-UniValue listassetindexassets(const JSONRPCRequest& request) {	
-    const UniValue &params = request.params;	
-    RPCHelpMan{"listassetindexassets",	
-        "\nReturn a list of assets an address is associated with.\n",	
-        {	
-            {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to find assets associated with."}	
-        },
-        RPCResult{
-            RPCResult::Type::ARR, "", "",
-            {
-                {RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
-                    {RPCResult::Type::STR, "symbol", "The asset symbol"},
-                    {RPCResult::Type::STR_HEX, "txid", "The transaction id that created this asset"},
-                    {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
-                    {RPCResult::Type::STR, "address", "The address that controls this asset"},
-                    {RPCResult::Type::STR_HEX, "contract", "The ethereum contract address"},
-                    {RPCResult::Type::NUM, "balance", "The current balance"},
-                    {RPCResult::Type::NUM, "total_supply", "The total supply of this asset"},
-                    {RPCResult::Type::NUM, "max_supply", "The maximum supply of this asset"},
-                    {RPCResult::Type::NUM, "update_flag", "The flag in decimal"},
-                    {RPCResult::Type::NUM, "precision", "The precision of this asset"},
-                }},
-            }
-        },	
-        RPCExamples{	
-            HelpExampleCli("listassetindexassets", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")	
-            + HelpExampleRpc("listassetindexassets", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")	
-        }	
-    }.Check(request);	
-    if(!fAssetIndex){	
-        throw JSONRPCError(RPC_MISC_ERROR, "You must reindex syscoin with -assetindex enabled");	
-    }  	
-
-    UniValue oRes(UniValue::VARR);	
-    std::vector<uint32_t> assetGuids;	
-    const CWitnessAddress &witnessAddress = DescribeWitnessAddress(params[0].get_str());	
-    passetdb->ReadAssetsByAddress(witnessAddress, assetGuids);	
-
-    for(const uint32_t& guid: assetGuids){	
-        UniValue oAsset(UniValue::VOBJ);	
-        CAsset theAsset;	
-        if (!GetAsset(guid, theAsset))	
-           continue;	
-
-        // equality: catch case where asset is transferred	
-        if(theAsset.witnessAddress == witnessAddress && BuildAssetJson(theAsset, oAsset)){	
-            oRes.push_back(oAsset);	
-        }	
-    }	
-    return oRes;	
-}
 UniValue syscoinstopgeth(const JSONRPCRequest& request) {
     RPCHelpMan{"syscoinstopgeth",
     "\nStops Geth and the relayer from running.\n",
@@ -1405,7 +810,7 @@ UniValue syscoincheckmint(const JSONRPCRequest& request)
     output.pushKV("in_active_chain", in_active_chain);
     return output;
 } 
-CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const uint8_t &nPrecision, CWitnessAddress & address) {
+CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const uint8_t &nPrecision, CTxDestination & address) {
     UniValue publicObj;
     if(!publicObj.read(public_data))
         return -1;
@@ -1415,7 +820,7 @@ CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const 
     const UniValue &addressObj = find_value(auxFeesObj, "address");
     if(!addressObj.isStr())
         return -1;
-    address = DescribeWitnessAddress(addressObj.get_str());
+    address = DecodeDestination(addressObj.get_str());
     const UniValue &feeStructObj = find_value(auxFeesObj, "fee_struct");
     if(!feeStructObj.isArray())
         return -1;
@@ -1466,18 +871,9 @@ static const CRPCCommand commands[] =
     { "syscoin",            "syscoingetspvproof",               &syscoingetspvproof,            {"txid"} },
     { "syscoin",            "convertaddress",                   &convertaddress,                {"address"} },
     { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {}},
-    { "syscoin",            "addressbalance",                   &addressbalance,                {}},
     { "syscoin",            "assetinfo",                        &assetinfo,                     {"asset_guid"}},
     { "syscoin",            "listassets",                       &listassets,                    {"count","from","options"} },
-    { "syscoin",            "assetallocationinfo",              &assetallocationinfo,           {"asset_guid"}},
-    { "syscoin",            "assetallocationbalance",           &assetallocationbalance,        {"asset_guid"}},
-    { "syscoin",            "assetallocationbalances",          &assetallocationbalances,       {"asset_guid","addresses"} },
     { "syscoin",            "assetallocationverifyzdag",        &assetallocationverifyzdag,     {"txid"} },
-    { "syscoin",            "listassetallocations",             &listassetallocations,          {"count","from","options"} },
-    { "syscoin",            "listassetallocationmempoolbalances",             &listassetallocationmempoolbalances,          {"count","from","options"} },
-    { "syscoin",            "listassetindex",                   &listassetindex,                {"page","options"} },	
-    { "syscoin",            "listassetindexassets",             &listassetindexassets,          {"address"} },	
-    { "syscoin",            "listassetindexallocations",        &listassetindexallocations,     {"address"} },
     { "syscoin",            "tpstestinfo",                      &tpstestinfo,                   {} },
     { "syscoin",            "tpstestadd",                       &tpstestadd,                    {"starttime","rawtxs"} },
     { "syscoin",            "tpstestsetenabled",                &tpstestsetenabled,             {"enabled"} },

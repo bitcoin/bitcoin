@@ -19,8 +19,8 @@
 #include <util/time.h>
 #include <validationinterface.h>
 // SYSCOIN
-#include <services/assetconsensus.h>
-extern ArrivalTimesSet setToRemoveFromMempool;
+#include <services/asset.h>
+extern std::set<COutPoint> assetAllocationConflicts;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
@@ -353,14 +353,7 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 {
     nTransactionsUpdated += n;
 }
-// SYSCOIN
 void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate)
-{
-    AssetBalanceMap mapAssetAllocationBalances;
-    addUnchecked(entry, setAncestors, validFeeEstimate, false, "", mapAssetAllocationBalances);
-}
-// SYSCOIN
-void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate, const bool &fSyscoinDuplicate, const std::string& fSyscoinSender, const AssetBalanceMap &mapAssetAllocationBalances)
 {
     // Add to memory pool without checking anything.
     // Used by AcceptToMemoryPool(), which DOES do
@@ -387,12 +380,6 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
         setParentTransactions.insert(tx.vin[i].prevout.hash);
-    }
-    // SYSCOIN
-    if(!fSyscoinDuplicate){
-        AddZDAGTx(MakeTransactionRef(tx), mapAssetAllocationBalances);
-    } else {
-        SetZDAGConflict(tx.GetHash(), fSyscoinSender);
     }
     // Don't bother worrying about child transactions of this one.
     // Normal case of a new transaction arriving is that there can't be any
@@ -444,8 +431,6 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     totalTxSize -= it->GetTxSize();
     cachedInnerUsage -= it->DynamicMemoryUsage();
     cachedInnerUsage -= memusage::DynamicUsage(mapLinks[it].parents) + memusage::DynamicUsage(mapLinks[it].children);
-    // SYSCOIN
-    RemoveZDAGTx(ptx);
     mapLinks.erase(it);
     mapTx.erase(it);
     nTransactionsUpdated++;
@@ -556,14 +541,15 @@ bool CTxMemPool::existsConflicts(const CTransaction &tx)
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
             const CTransaction &txConflict = *it->second;
-            if (txConflict != tx)
-            {
+            if (txConflict != tx) {
                 return true;
             }
         }
     }
     return false;
 }
+// regardless of RBF or not, we want to know if there are any conflicts for ZDAG, because ZDAG is not compliant with RBF
+// this will return if there are ANY conflicts and stop ZDAG transactions from returning OK status
 void CTxMemPool::removeConflicts(const CTransaction &tx)
 {
     // Remove transactions which depend on inputs of tx, recursively
@@ -576,41 +562,42 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
             {
                 ClearPrioritisation(txConflict.GetHash());
                 removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+                // SYSCOIN
+                // we should only have to erase from assetAllocationConflicts if there has been a conflict
+                // in the case of RBF this will be called and do a no-op (erase on non-existent key) because it will only add to assetAllocationConflicts
+                // if RBF opt-out was used and yet it was still double spent input (also was a syscoin asset tx)
+                assetAllocationConflicts.erase(txin.prevout);
             }
         }
     }
 }
-bool CTxMemPool::removeSyscoinConflicts(const CTransaction &tx)
+// true if other tx (conflicting) was first in mempool and it was involved in asset double spend
+bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
 {
-    // Remove transactions which depend on inputs of tx, recursively
     AssertLockHeld(cs);
-    bool bRemoved = false;
     txiter thisit = mapTx.find(tx.GetHash());
     assert(thisit != mapTx.end());
     for (const CTxIn &txin : tx.vin) {
         auto itConflict = mapNextTx.find(txin.prevout);
-        if (itConflict != mapNextTx.end()) {
+        // ensure that we check for assetAllocationConflicts intersection of this input
+        // the only time conflicts are allowed and would cause problems for zdag is when its double spent without RBF
+        // we allow one double spend input to be propogated and here we ensure we are only dealing with skipping transactions based on time
+        // if it is one of those transactions that propogated double spent input related to syscoin asset tx
+        if (itConflict != mapNextTx.end() && assetAllocationConflicts.find(txin.prevout) != assetAllocationConflicts.end()) {
             const CTransaction &txConflict = *itConflict->second;
-            if (txConflict != tx)
-            {
+            if (txConflict != tx) {
                 txiter conflictit = mapTx.find(txConflict.GetHash());
                 assert(conflictit != mapTx.end());
-                // if conflicting transaction was received after the transaction in question then remove conflicting tx
-                // otherwise the transaction is question is removed
-                // idea is to keep the oldest transaction in event of conflict
-                if(conflictit->GetTime() >= thisit->GetTime()){
-                    ClearPrioritisation(txConflict.GetHash());
-                    removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+                // if conflicting transaction was received before the transaction in question
+                // idea is to mine the oldest transaction in event of conflict
+                // upon block, the conflict is removed
+                if(conflictit->GetTime() <= thisit->GetTime()){
+                    return false;
                 }
-                else {
-                    ClearPrioritisation(tx.GetHash());
-                    removeRecursive(tx, MemPoolRemovalReason::CONFLICT);
-                }
-                bRemoved = true;
             }
         }
     }
-    return bRemoved;
+    return true;
 }
 
 /**
@@ -668,9 +655,16 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
 {
     TxValidationState dummy_state; // Not used. CheckTxInputs() should always pass
     CAmount txfee = 0;
-    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee);
+    // SYSCOIN
+    CAssetAllocation allocation;
+    CTransaction txTmp = tx;
+    if(IsSyscoinTx(tx.nVersion)) {
+        allocation = CAssetAllocation(tx);
+        assert(!allocation.IsNull());
+    }
+    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(txTmp, dummy_state, mempoolDuplicate, spendheight, txfee, allocation);
     assert(fCheckResult);
-    UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
+    UpdateCoins(txTmp, mempoolDuplicate, std::numeric_limits<int>::max());
 }
 
 void CTxMemPool::check(const CCoinsViewCache *pcoins) const
@@ -1000,16 +994,6 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
         toremove.insert(mapTx.project<0>(it));
         it++;
-    }
-    // SYSCOIN expire zdag conflicts after 300 seconds
-    const std::chrono::seconds timeZdagConflicts = std::chrono::seconds(GetTime()) - std::chrono::seconds(300);
-    for(const auto& toRemove: setToRemoveFromMempool){
-        txiter mempoolTxToRemove = mapTx.find(toRemove);
-        if (mempoolTxToRemove != mapTx.end()) {
-            if(mempoolTxToRemove->GetTime() <= timeZdagConflicts){
-                toremove.insert(mapTx.project<0>(mempoolTxToRemove));
-            }
-        }
     }
     setEntries stage;
     for (txiter removeit : toremove) {

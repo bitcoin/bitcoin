@@ -14,7 +14,7 @@
 #include <coins.h>
 #include <util/moneystr.h>
 // SYSCOIN
-const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 0x7400;
+#include <services/asset.h>
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
     if (tx.nLockTime == 0)
@@ -156,17 +156,55 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     }
     return nSigOps;
 }
+// SYSCOIN
+bool GetAssetValueOut(const CTransaction& tx, const CAssetAllocation& allocation, TxValidationState& state, CAmount &nValueOut)
+{
+    const bool &isSyscoinAssetSendTx = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND;
+    const bool &isSyscoinAssetNewOrUpdateTx = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE;
+    nValueOut = 0;
+    // asset (activate/update) are allowed only 1 asset output
+    if(isSyscoinAssetNewOrUpdateTx) {
+        if(allocation.voutAssets.size() != 1) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-too-many-values");
+        }
+        if(allocation.voutAssets[0].nValue != 0) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-value-non-zero");
+        }
+        return true;
+    }
+    int nAssetSend = 0;
+    for (const auto& voutAsset : allocation.voutAssets) {
+        // asset send can create exactly one no value output
+        if(isSyscoinAssetSendTx && voutAsset == 0) {
+            nAssetSend++;
+            if(nAssetSend > 1) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-too-many-zero-values");
+            }
+        }
+        // otherwise validate the value as positive
+        else {
+            if (!AssetRange(voutAsset.nValue))
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-value-outofrange");
+        }    
+        nValueOut += voutAsset.nValue;
+    }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, CTransaction *txMissingInput)
+    if(!AssetRange(nValueOut))
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-total-outofrange");
+    return true;
+}
+// SYSCOIN remove const CTransaction
+bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const CCoinsViewCache &inputs, int nSpendHeight, CAmount& txfee, const CAssetAllocation &allocation)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
-        if(txMissingInput != nullptr)
-            *txMissingInput = tx;
         return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent",
                          strprintf("%s: inputs missing/spent", __func__));
     }
-
+    const bool &isSyscoinWithNoInputTx = IsSyscoinWithNoInputTx(tx.nVersion);
+    const bool &isSyscoinTx = IsSyscoinTx(tx.nVersion);
+    const bool &isSyscoinAssetTx = IsAssetTx(tx.nVersion);
+    CAmount nValueAssetIn = 0;
     CAmount nValueIn = 0;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
@@ -178,30 +216,69 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
-
+        if(coin.out.assetInfo.nAsset > 0) {
+            if(coin.out.assetInfo.nAsset != allocation.nAsset) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-input-asset-mismatch");
+            }
+            nValueAssetIn += coin.out.assetInfo.nValue;
+            // asset (activate/update/send) should have input of asset guid but no value
+            if(isSyscoinAssetTx) {
+                if(coin.out.assetInfo.nValue != 0 || nValueAssetIn != 0)
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputassetvalues-not-zero");
+            }
+            // otherwise validate the value as positive
+            else if(!isSyscoinWithNoInputTx) {
+                if (!AssetRange(coin.out.assetInfo.nValue) || !AssetRange(nValueAssetIn))
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputassetvalues-outofrange");
+            }
+        }
         // Check for negative or overflow input values
         nValueIn += coin.out.nValue;
         if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputvalues-outofrange");
         }
-    }
-    // SYSCOIN
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
-        if(tx.vout.size() < 3 || tx.vout.size() > 4)
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-mint-outputs-wrong");
+        
     }
     const CAmount &value_out = tx.GetValueOut();
     if (nValueIn < value_out){
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
     }
-
+    if(isSyscoinTx) {
+        std::vector<CTxOut>& vout = *const_cast<std::vector<CTxOut>*>(&tx.vout);
+        // CTxOut does not serialize assetInfo to make it consistent with Bitcoin serializaion, CTxOutInfo (used by utxo db) persists assetInfo
+        for (unsigned int i = 0; i < allocation.voutAssets.size(); ++i) {
+            vout[i].assetInfo = CAssetCoinInfo(allocation.nAsset, allocation.voutAssets[i].nValue);
+        }
+        if(!isSyscoinWithNoInputTx || isSyscoinAssetTx) {
+            CAmount asset_value_out; 
+            if(!GetAssetValueOut(tx, allocation, state, asset_value_out))
+                return false; // state filled by GetAssetValueOut
+            if (nValueAssetIn < asset_value_out){
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-in-belowout",
+                    strprintf("value in (%s) < value out (%s)", FormatMoney(nValueAssetIn), FormatMoney(asset_value_out)));
+            }
+            if(tx.vout.size() < allocation.voutAssets.size()) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-insufficient-outputs");
+            }
+            const CAmount &asset_change = nValueAssetIn - asset_value_out;
+            if(asset_change > 0) {
+                if (!AssetRange(asset_change)) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-change-outofrange");
+                }
+                if(tx.vout.size() <= allocation.voutAssets.size()) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-change-index-outofrange");
+                }
+                std::vector<CTxOut>& vout = *const_cast<std::vector<CTxOut>*>(&tx.vout);
+                vout[allocation.voutAssets.size()].assetInfo = CAssetCoinInfo(allocation.nAsset, asset_change);
+            }
+        }
+    }
     // Tally transaction fees
     const CAmount txfee_aux = nValueIn - value_out;
     if (!MoneyRange(txfee_aux)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-fee-outofrange");
     }
-
     txfee = txfee_aux;
     return true;
 }

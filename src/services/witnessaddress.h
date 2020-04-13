@@ -1,4 +1,4 @@
-#ifndef SYSCOIN_SERVICES_WITNESSADDRESS_H
+﻿#ifndef SYSCOIN_SERVICES_WITNESSADDRESS_H
 #define SYSCOIN_SERVICES_WITNESSADDRESS_H
 #include <serialize.h>
 #include <script/standard.h>
@@ -41,11 +41,8 @@ public:
         nVersion = 0;
         vchWitnessProgram.clear();
     }
-    bool IsValid() const;
     std::string ToString() const;
-    CScript GetScriptForDestination() const;
-    bool GetDestination(CTxDestination & destination) const;
-    CScript GetScriptForDestination(CTxDestination& destination) const;
+    bool IsValid() const;
     inline bool IsNull() const {
         return (nVersion == 0 && vchWitnessProgram.empty());
     }

@@ -7,75 +7,14 @@
 
 #include <dbwrapper.h>
 #include <primitives/transaction.h>
-#include <unordered_map>
-#include <unordered_set>
-#include <txmempool.h>
-#include <services/witnessaddress.h>
-#ifdef ENABLE_WALLET
-#include <wallet/ismine.h>
-#endif
+#include <compressor.h>
+#include <amount.h>
 class CTransaction;
 class CAsset;
 class CMintSyscoin;
-#ifdef ENABLE_WALLET
-class CWallet;
-#endif
 bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &entry);
-bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const CMintSyscoin& mintsyscoin, const int& nHeight,  const uint256& blockhash, UniValue &entry);
 
 std::string assetAllocationFromTx(const int &nVersion);
-
-class CAssetAllocationTuple {
-public:
-	uint32_t nAsset;
-	CWitnessAddress witnessAddress;
-	ADD_SERIALIZE_METHODS;
-
-	template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action) {
-		READWRITE(nAsset);
-		READWRITE(witnessAddress);
-	}
-	CAssetAllocationTuple(const uint32_t &asset, const CWitnessAddress &witnessAddress_) {
-		nAsset = asset;
-		witnessAddress = witnessAddress_;
-	}
-	explicit CAssetAllocationTuple(const uint32_t &asset) {
-		nAsset = asset;
-		witnessAddress.SetNull();
-	}
-	CAssetAllocationTuple() {
-		SetNull();
-	}
-    CAssetAllocationTuple(CAssetAllocationTuple & other) = delete;
-    CAssetAllocationTuple(CAssetAllocationTuple && other) = default;
-    CAssetAllocationTuple& operator=(CAssetAllocationTuple& other) = delete;
-    CAssetAllocationTuple& operator=(CAssetAllocationTuple&& other) = default;
-    
-	inline bool operator==(const CAssetAllocationTuple& other) const {
-		return this->nAsset == other.nAsset && this->witnessAddress == other.witnessAddress;
-	}
-	inline bool operator!=(const CAssetAllocationTuple& other) const {
-		return (this->nAsset != other.nAsset || this->witnessAddress != other.witnessAddress);
-	}
-	inline bool operator< (const CAssetAllocationTuple& right) const
-	{
-		return ToString() < right.ToString();
-	}
-	inline void SetNull() {
-		nAsset = 0;
-		witnessAddress.SetNull();
-	}
-	std::string ToString() const;
-	inline bool IsNull() const {
-		return (nAsset == 0 && witnessAddress.IsNull());
-	}
-};
-typedef std::unordered_set<uint256, SaltedTxidHasher> ArrivalTimesSet;
-typedef std::unordered_map<std::string, ArrivalTimesSet> ArrivalTimesSetImpl;
-typedef std::vector<std::pair<CWitnessAddress, CAmount > > RangeAmountTuples;
-typedef std::unordered_set<std::string> ActorSet;
-static ArrivalTimesSet emptyArrivalTimes;
 static const int ONE_YEAR_IN_BLOCKS = 525600;
 static const int ONE_HOUR_IN_BLOCKS = 60;
 static const int ONE_MONTH_IN_BLOCKS = 43800;
@@ -85,13 +24,38 @@ enum {
 	ZDAG_WARNING_RBF,
 	ZDAG_MAJOR_CONFLICT
 };
+class CAmountCompressed {
+public:
+    CAmount nValue;
 
+    SERIALIZE_METHODS(CAmountCompressed, obj)
+    {
+        READWRITE(Using<AmountCompression>(obj.nValue));
+    }
+
+	CAmountCompressed() {
+		nValue = 0;
+	}
+    CAmountCompressed(const CAmount& nAmountIn): nValue(nAmountIn) {}
+	inline friend bool operator==(const CAmountCompressed &a, const CAmountCompressed &b) {
+		return (a.nValue == b.nValue
+			);
+	}
+    inline friend bool operator!=(const CAmountCompressed &a, const CAmountCompressed &b) {
+		return !(a == b);
+	}
+};
 class CAssetAllocation {
 public:
-	CAssetAllocationTuple assetAllocationTuple;
-	RangeAmountTuples listSendingAllocationAmounts;
-	template <typename Stream, typename Operation>
-	void SerializationOp(Stream& s, Operation ser_action);
+    int32_t nAsset;
+	std::vector<CAmountCompressed> voutAssets;
+
+    SERIALIZE_METHODS(CAssetAllocation, obj)
+    {
+        READWRITE(obj.nAsset);
+        READWRITE(obj.voutAssets);
+    }
+
 	CAssetAllocation() {
 		SetNull();
 	}
@@ -99,14 +63,9 @@ public:
 		SetNull();
 		UnserializeFromTx(tx);
 	}
-	inline void ClearAssetAllocation()
-	{
-		listSendingAllocationAmounts.clear();
-	}
-	ADD_SERIALIZE_METHODS;
-
+	
 	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
-		return (a.assetAllocationTuple == b.assetAllocationTuple
+		return (a.nAsset == b.nAsset && a.voutAssets == b.voutAssets
 			);
 	}
     CAssetAllocation(const CAssetAllocation&) = delete;
@@ -117,98 +76,72 @@ public:
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { ClearAssetAllocation();}
+	inline void SetNull() { nAsset = 0; voutAssets.clear();}
+    inline bool IsNull() const { return voutAssets.empty();}
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	void Serialize(std::vector<unsigned char>& vchData);
 };
-class CAssetAllocationDBEntry {
+class CMintSyscoin {
 public:
-	CAssetAllocationTuple assetAllocationTuple;
-	CAmount nBalance;
-	template <typename Stream, typename Operation>
-	void SerializationOp(Stream& s, Operation ser_action);
-	CAssetAllocationDBEntry() {
-		SetNull();
-	}
-	ADD_SERIALIZE_METHODS;
+    CAssetAllocation assetAllocation;
+    std::vector<unsigned char> vchTxValue;
+    std::vector<unsigned char> vchTxParentNodes;
+    std::vector<unsigned char> vchTxRoot;
+    std::vector<unsigned char> vchTxPath;
+    std::vector<unsigned char> vchReceiptValue;
+    std::vector<unsigned char> vchReceiptParentNodes;
+    std::vector<unsigned char> vchReceiptRoot;
+    std::vector<unsigned char> vchReceiptPath;   
+    uint32_t nBlockNumber;
 
-	inline friend bool operator==(const CAssetAllocationDBEntry &a, const CAssetAllocationDBEntry &b) {
-		return (a.assetAllocationTuple == b.assetAllocationTuple
-			);
-	}
-    CAssetAllocationDBEntry(const CAssetAllocationDBEntry&) = delete;
-    CAssetAllocationDBEntry(CAssetAllocationDBEntry && other) = default;
-    CAssetAllocationDBEntry& operator=( CAssetAllocationDBEntry& a ) = delete;
-	CAssetAllocationDBEntry& operator=( CAssetAllocationDBEntry&& a ) = default;
- 
-	inline friend bool operator!=(const CAssetAllocationDBEntry &a, const CAssetAllocationDBEntry &b) {
-		return !(a == b);
-	}
-	inline void SetNull() { nBalance = 0;}
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
-	void Serialize(std::vector<unsigned char>& vchData);
+    CMintSyscoin() {
+        SetNull();
+    }
+    explicit CMintSyscoin(const CTransaction &tx) {
+        SetNull();
+        UnserializeFromTx(tx);
+    }
+    SERIALIZE_METHODS(CMintSyscoin, obj)
+    {
+        READWRITE(obj.assetAllocation);
+        READWRITE(obj.vchTxValue);
+        READWRITE(obj.vchTxParentNodes);
+        READWRITE(obj.vchTxRoot);
+        READWRITE(obj.vchTxPath);   
+        READWRITE(obj.vchReceiptValue);
+        READWRITE(obj.vchReceiptParentNodes);
+        READWRITE(obj.vchReceiptRoot);
+        READWRITE(obj.vchReceiptPath);
+        READWRITE(obj.nBlockNumber); 
+    }
+    inline void SetNull() { assetAllocation.SetNull(); vchTxRoot.clear(); vchTxValue.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); vchReceiptRoot.clear(); vchReceiptValue.clear(); vchReceiptParentNodes.clear(); vchReceiptPath.clear(); nBlockNumber = 0;  }
+    inline bool IsNull() const { return (vchTxValue.empty() && vchReceiptValue.empty()); }
+    bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+    bool UnserializeFromTx(const CTransaction &tx);
+    void Serialize(std::vector<unsigned char>& vchData);
 };
-typedef std::unordered_map<std::string, CAssetAllocationDBEntry > AssetAllocationMap;
-typedef std::unordered_map<std::string, COutPoint > AssetPrevTxMap;
-class CAssetAllocationDB : public CDBWrapper {
+class CBurnSyscoin {
 public:
-	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe) {}
-    
-    bool ReadAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, CAssetAllocationDBEntry& assetallocation) {
-        return Read(assetAllocationTuple, assetallocation);
+    CAssetAllocation assetAllocation;
+    std::vector<unsigned char> vchEthAddress;
+    CBurnSyscoin() {
+        SetNull();
     }
-	bool ReadAssetsByAddress(const CWitnessAddress &address, std::vector<uint32_t> &assetGuids){	
-        return Read(address, assetGuids);	
-    }	
-    bool ExistsAssetsByAddress(const CWitnessAddress &address){	
-        return Exists(address);	
-    }	
-	bool WriteAssetAllocationIndex(const CTransaction &tx, const uint256& txHash, const CAsset& dbAsset, const int &nHeight, const uint256& blockhash);	
-    bool WriteMintIndex(const CTransaction& tx, const uint256& txHash, const CMintSyscoin& mintSyscoin, const int &nHeight, const uint256& blockhash);
-    bool Flush(const AssetAllocationMap &mapAssetAllocations);
-	bool ScanAssetAllocations(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
-};
-
-class CAssetAllocationMempoolDB : public CDBWrapper {
-public:
-    CAssetAllocationMempoolDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocationmempoolbalances", nCacheSize, fMemory, fWipe) {
+    explicit CBurnSyscoin(const CTransaction &tx) {
+        SetNull();
+        UnserializeFromTx(tx);
+    }
+    SERIALIZE_METHODS(CBurnSyscoin, obj) {
+        READWRITE(obj.assetAllocation);
+        READWRITE(obj.vchEthAddress);     
     }
 
-    bool WriteAssetAllocationMempoolBalances(const AssetBalanceMap &valueMap) {
-        return Write(std::string("assetallocationtxbalance"), valueMap, true);
-    }
-    bool ReadAssetAllocationMempoolBalances(AssetBalanceMap &valueMap) {
-        return Read(std::string("assetallocationtxbalance"), valueMap);
-    }
-    bool WriteAssetAllocationMempoolArrivalTimes(const ArrivalTimesSetImpl &valueMap) {
-        return Write(std::string("assetallocationtxarrival"), valueMap, true);
-    }
-    bool ReadAssetAllocationMempoolArrivalTimes(ArrivalTimesSetImpl &valueMap) {
-        return Read(std::string("assetallocationtxarrival"), valueMap);
-    }
-	bool WriteAssetAllocationMempoolToRemoveSet(const ArrivalTimesSet  &valueMap) {
-        return Write(std::string("assetallocationtxmempool"), valueMap, true);
-    }
-    bool ReadAssetAllocationMempoolToRemoveSet(ArrivalTimesSet  &valueMap) {
-        return Read(std::string("assetallocationtxmempool"), valueMap);
-    } 	  
-    bool ScanAssetAllocationMempoolBalances(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
+    inline void SetNull() { assetAllocation.SetNull(); vchEthAddress.clear();  }
+    inline bool IsNull() const { return (vchEthAddress.empty() && assetAllocation.IsNull()); }
+    bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+    bool UnserializeFromTx(const CTransaction &tx);
+    void Serialize(std::vector<unsigned char>& vchData);
 };
-static COutPoint emptyOutPoint;
-bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocationDBEntry& txPos);
-bool BuildAssetAllocationJson(const CAssetAllocationDBEntry& assetallocation, const CAsset& asset, UniValue& oName);
-bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation);
-#ifdef ENABLE_WALLET
-bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, const CWallet* const pwallet, const isminefilter* filter_ismine);
-#endif
-void GetActorsFromSyscoinTx(const CTransactionRef& txRef, bool bJustSender, bool bGetAddress, ActorSet& actorSet);
-void GetActorsFromAssetTx(const CAsset& theAsset, const CAssetAllocation& theAssetAllocation, int nVersion, bool bJustSender, bool bGetAddress, ActorSet& actorSet);
-void GetActorsFromAssetAllocationTx(const CAssetAllocation &theAssetAllocation, int nVersion, bool bJustSender, bool bGetAddress, ActorSet& actorSet);
-void GetActorsFromMintTx(const CMintSyscoin& theMintSyscoin, bool bJustSender, bool bGetAddress, ActorSet& actorSet);
 bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry);
-bool WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName);
-bool WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName);	
-bool WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid);
-std::string GetSenderOfZdagTx(const CTransaction &tx);
 #endif // SYSCOIN_SERVICES_ASSETALLOCATION_H
