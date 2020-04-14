@@ -2178,8 +2178,13 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
             // SYSCOIN
             if (!bIncludeLocked && IsLockedCoin(entry.first, i))
                 continue;
-            if (coinControl && !coinControl->fAllowOtherInputs && coinControl->assetInfo && coinControl->assetInfo->nAsset > 0 && coinControl->assetInfo->nAsset != wtx.tx->vout[i].assetInfo.nAsset)
-                continue;
+            // if coin control requested an asset to be funded
+            if (coinControl && coinControl->assetInfo && coinControl->assetInfo->nAsset > 0) {
+                // only allowed if asset matches the output or fAllowOtherInputs and output is non-asset
+                const bool& bMatchAssetOrSysOutput = (coinControl->assetInfo->nAsset == wtx.tx->vout[i].assetInfo.nAsset) || (coinControl->fAllowOtherInputs && wtx.tx->vout[i].assetInfo.IsNull());
+                if(!bMatchAssetOrSysOutput)
+                    continue;
+            }
             if (IsSpent(wtxid, i))
                 continue;
 
@@ -2342,28 +2347,27 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
         const bool& bAsset = !nTargetValueAsset.IsNull();
         for (const OutputGroup& group : groups) {
             if (!group.EligibleForSpending(eligibility_filter)) continue;
-            // SYSCOIN for sys spends we don't attach asset inputs (if -assetindex is set as a startup param, it is false by default)
-            // by default, assets will be spent automatically as syscoin when dust coins are selected so users should select assetindex if they
-            // want their wallet aware of assets, exchanges and services only dealing with syscoin should keep it default
-            if(fAssetIndex && bAsset && !group.effective_value_asset.IsNull()) continue;
-            utxo_pool.push_back(group);
+            // SYSCOIN fund two seperate groups of utxo's for asset/gas
+            // for asset only if assetindex is set (otherwise bAssetSolver shoud always be false and fail)
+            // you shouldn't be spending asset without assetindex set because sys spends can use those utxo's inadvertently
+            // exchanges/services that are not asset aware will be able to spend assets sent to them as regular sys utxos (un-colouring the asset portion of the utxo as a result)
+            if(fAssetIndex && !group.effective_value_asset.IsNull()) utxo_pool_asset.push_back(group);
+            else utxo_pool.push_back(group);
         }
         // SYSCOIN
-        for (const OutputGroup& group : groups) {
-            if (!group.EligibleForSpending(eligibility_filter)) continue;
-            // SYSCOIN for asset spends we only look at asset inputs for the target asset
-            if(bAsset && group.effective_value_asset.nAsset != nTargetValueAsset.nAsset) continue;
-            utxo_pool_asset.push_back(group);
+        bool bAssetSolver = true;
+        CAmount nTarget = nTargetValue;
+        if(bAsset) {
+            bnb_used = false;
+            // SYSCOIN
+            bAssetSolver = KnapsackSolver(nTargetValueAsset, utxo_pool_asset, setCoinsRet, nValueRetAsset);
+            // from returned coins, see if we need to also add more gas or do we have enough already
+            for(const auto& inputCoin: setCoinsRet) {
+                nValueRet += inputCoin.effective_value;
+            }
+            // remove attached gas from asset inputs from how much we thought we needed before
+            nTarget -= nValueRet;
         }
-        bnb_used = false;
-        // SYSCOIN
-        bool bAssetSolver = KnapsackSolver(nTargetValueAsset, utxo_pool_asset, setCoinsRet, nValueRetAsset);
-        // from returned coins, see if we need to also add more gas or do we have enough already
-        for(const auto& inputCoin: setCoinsRet) {
-            nValueRet += inputCoin.effective_value;
-        }
-        // remove attached gas from asset inputs from how much we thought we needed before
-        const CAmount &nTarget = nTargetValue - nValueRet;
         bool bBaseSysSolver = nTarget <= 0 || KnapsackSolver(nTarget, utxo_pool, setCoinsRet, nValueRet);
         return bBaseSysSolver && bAssetSolver;
     }
@@ -4346,7 +4350,6 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
     for (const auto& output : outputs) {
         if (output.fSpendable) {
             CInputCoin input_coin = output.GetInputCoin();
-
             size_t ancestors, descendants;
             chain().getTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
             if (!single_coin && ExtractDestination(output.tx->tx->vout[output.i].scriptPubKey, dst)) {
