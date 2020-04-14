@@ -226,27 +226,28 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
 
 static UniValue addnode(const JSONRPCRequest& request)
 {
+    const RPCHelpMan help{"addnode",
+                   "\nAttempts to add or remove a node from the addnode list.\n"
+                   "Or try a connection to a node once.\n"
+                   "Nodes added using addnode (or -connect) are protected from DoS disconnection and are not required to be\n"
+                   "full nodes/support SegWit as other outbound peers are (though such peers will not be synced from).\n",
+                   {
+                       {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The node (see getpeerinfo for nodes)"},
+                       {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
+                   },
+                   RPCResult{RPCResult::Type::NONE, "", ""},
+                   RPCExamples{
+                       HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\"")
+               + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\"")
+                   },
+    };
+    help.Check(request);
+
     std::string strCommand;
     if (!request.params[1].isNull())
         strCommand = request.params[1].get_str();
-    if (request.fHelp || request.params.size() != 2 ||
-        (strCommand != "onetry" && strCommand != "add" && strCommand != "remove"))
-        throw std::runtime_error(
-            RPCHelpMan{"addnode",
-                "\nAttempts to add or remove a node from the addnode list.\n"
-                "Or try a connection to a node once.\n"
-                "Nodes added using addnode (or -connect) are protected from DoS disconnection and are not required to be\n"
-                "full nodes/support SegWit as other outbound peers are (though such peers will not be synced from).\n",
-                {
-                    {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The node (see getpeerinfo for nodes)"},
-                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
-                },
-                RPCResult{RPCResult::Type::NONE, "", ""},
-                RPCExamples{
-                    HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\"")
-            + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\"")
-                },
-            }.ToString());
+    if (strCommand != "onetry" && strCommand != "add" && strCommand != "remove")
+        throw std::runtime_error(help.ToString());
 
     if(!g_rpc_node->connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -561,10 +562,12 @@ static UniValue setban(const JSONRPCRequest& request)
                             + HelpExampleRpc("setban", "\"192.168.0.6\", \"add\", 86400")
                 },
     };
+    help.Check(request);
+
     std::string strCommand;
     if (!request.params[1].isNull())
         strCommand = request.params[1].get_str();
-    if (request.fHelp || !help.IsValidNumArgs(request.params.size()) || (strCommand != "add" && strCommand != "remove")) {
+    if (strCommand != "add" && strCommand != "remove") {
         throw std::runtime_error(help.ToString());
     }
     if (!g_rpc_node->banman) {

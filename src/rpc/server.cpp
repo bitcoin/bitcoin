@@ -129,19 +129,16 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 
 UniValue help(const JSONRPCRequest& jsonRequest)
 {
-    if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
-        throw std::runtime_error(
-            RPCHelpMan{"help",
-                "\nList all commands, or get help for a specified command.\n",
-                {
-                    {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"},
-                },
-                RPCResult{
-                    RPCResult::Type::STR, "", "The help text"
-                },
-                RPCExamples{""},
-            }.ToString()
-        );
+    RPCHelpMan{"help",
+        "\nList all commands, or get help for a specified command.\n",
+        {
+            {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"},
+        },
+        RPCResult{
+            RPCResult::Type::STR, "", "The help text"
+        },
+        RPCExamples{""},
+    }.Check(jsonRequest);
 
     std::string strCommand;
     if (jsonRequest.params.size() > 0)
@@ -158,14 +155,18 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     // Also accept the hidden 'wait' integer argument (milliseconds)
     // For instance, 'stop 1000' makes the call wait 1 second before returning
     // to the client (intended for testing)
-    if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
-        throw std::runtime_error(
-            RPCHelpMan{"stop",
-                "\nRequest a graceful shutdown of " PACKAGE_NAME ".",
-                {},
-                RPCResult{RPCResult::Type::STR, "", "A string with the content '" + RESULT + "'"},
-                RPCExamples{""},
-            }.ToString());
+    RPCHelpMan{"stop",
+        "\nRequest a graceful shutdown of " PACKAGE_NAME ".",
+        {
+          {"wait", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "Amount of ms before "
+                                                                           "returning to the client "
+                                                                           "(intended for testing)"},
+          {"detach", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "deprecated"}
+        },
+        RPCResult{RPCResult::Type::STR, "", "A string with the content '" + RESULT + "'"},
+        RPCExamples{""},
+    }.Check(jsonRequest);
+
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
