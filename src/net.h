@@ -638,14 +638,8 @@ public:
  */
 class TransportDeserializer {
 public:
-    // returns true if the current deserialization is complete
-    virtual bool Complete() const = 0;
     // set the serialization context version
     virtual void SetVersion(int version) = 0;
-    // read and deserialize data
-    virtual int Read(const char *data, unsigned int bytes) = 0;
-    // decomposes a message from the context
-    virtual CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) = 0;
     /**
      * Try to decode all CNetMessage%s from the first \p num_bytes bytes of the
      * \p receive_buffer buffer.
@@ -702,7 +696,7 @@ public:
         Reset();
     }
 
-    bool Complete() const override
+    bool Complete() const
     {
         if (!in_data)
             return false;
@@ -713,12 +707,11 @@ public:
         hdrbuf.SetVersion(nVersionIn);
         vRecv.SetVersion(nVersionIn);
     }
-    int Read(const char *pch, unsigned int nBytes) override {
+    int Read(const char *pch, unsigned int nBytes) {
         int ret = in_data ? readData(pch, nBytes) : readHeader(pch, nBytes);
         if (ret < 0) Reset();
         return ret;
     }
-    CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) override;
     std::tuple<bool, std::vector<CNetMessage>> ReadMessages(const char *receive_buffer, unsigned int num_bytes, const CMessageHeader::MessageStartChars& message_start, int64_t time) override {
         std::vector<CNetMessage> out_msgs;
         while (num_bytes > 0) {
@@ -737,6 +730,7 @@ public:
         }
         return std::make_tuple(true, out_msgs);
     }
+    CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time);
 };
 
 /** The TransportSerializer prepares messages for the network transport
