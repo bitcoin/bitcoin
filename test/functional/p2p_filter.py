@@ -60,8 +60,13 @@ class FilterTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.log.info('Add filtered P2P connection to the node')
         filter_node = self.nodes[0].add_p2p_connection(FilterNode())
+
+        self.log.info('Check that too large filter is rejected')
+        with self.nodes[0].assert_debug_log(['Misbehaving']):
+            filter_node.send_and_ping(msg_filterload(data=b'\xaa', nHashFuncs=51, nTweak=0, nFlags=1))
+
+        self.log.info('Add filtered P2P connection to the node')
         filter_node.send_and_ping(filter_node.watch_filter_init)
         filter_address = self.nodes[0].decodescript(filter_node.watch_script_pubkey)['addresses'][0]
 
