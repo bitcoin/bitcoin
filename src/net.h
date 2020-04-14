@@ -646,6 +646,26 @@ public:
     virtual int Read(const char *data, unsigned int bytes) = 0;
     // decomposes a message from the context
     virtual CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) = 0;
+    /**
+     * Try to decode all CNetMessage%s from the first \p nBytes bytes of the \p
+     * pch buffer.
+     *
+     * @param[in] message_start The expected message start string.
+     * @param[in] time The approximate time at which these messages were
+     *                 received in microseconds since UNIX epoch.
+     *
+     * @returns A tuple where the first element indicates whether or not an
+     *          unhandleable error has occured (e.g. failure to deserialize the
+     *          header or ludicrous message sizes), and the second element
+     *          contains all succesfully decoded CNetMessage%s.
+     *
+     * @note Even if an unhandleable error has occured, CNetMessage%s might have
+     *       already been decoded. These CNetMessage%s should not be ignored and
+     *       probably should be processed.
+     *
+     * @see CNode::ReceiveMsgBytes(const char *, unsigned int, bool&)
+     */
+    virtual std::tuple<bool, std::vector<CNetMessage>> ReadMessages(const char *pch, unsigned int nBytes, const CMessageHeader::MessageStartChars& message_start, int64_t time) = 0;
     virtual ~TransportDeserializer() {}
 };
 
@@ -699,6 +719,24 @@ public:
         return ret;
     }
     CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) override;
+    std::tuple<bool, std::vector<CNetMessage>> ReadMessages(const char *pch, unsigned int nBytes, const CMessageHeader::MessageStartChars& message_start, int64_t time) override {
+        std::vector<CNetMessage> out_msgs;
+        while (nBytes > 0) {
+            // absorb network data
+            int handled = Read(pch, nBytes);
+            if (handled < 0) {
+                return std::make_tuple(false, out_msgs);
+            }
+
+            pch += handled;
+            nBytes -= handled;
+
+            if (Complete()) {
+                out_msgs.push_back(GetMessage(message_start, time));
+            }
+        }
+        return std::make_tuple(true, out_msgs);
+    }
 };
 
 /** The TransportSerializer prepares messages for the network transport

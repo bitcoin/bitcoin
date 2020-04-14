@@ -579,39 +579,30 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
  */
 bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete)
 {
-    complete = false;
     int64_t nTimeMicros = GetTimeMicros();
     LOCK(cs_vRecv);
     nLastRecv = nTimeMicros / 1000000;
     nRecvBytes += nBytes;
-    while (nBytes > 0) {
-        // absorb network data
-        int handled = m_deserializer->Read(pch, nBytes);
-        if (handled < 0) return false;
 
-        pch += handled;
-        nBytes -= handled;
+    std::tuple<bool, std::vector<CNetMessage>> tup = m_deserializer->ReadMessages(pch, nBytes, Params().MessageStart(), nTimeMicros);
 
-        if (m_deserializer->Complete()) {
-            // decompose a transport agnostic CNetMessage from the deserializer
-            CNetMessage msg = m_deserializer->GetMessage(Params().MessageStart(), nTimeMicros);
+    std::vector<CNetMessage> msgs = std::get<1>(tup);
 
-            //store received bytes per message command
-            //to prevent a memory DOS, only allow valid commands
-            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.m_command);
-            if (i == mapRecvBytesPerMsgCmd.end())
-                i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
-            assert(i != mapRecvBytesPerMsgCmd.end());
-            i->second += msg.m_raw_message_size;
+    complete = !msgs.empty();
+    for (CNetMessage &msg : msgs) {
+        //store received bytes per message command
+        //to prevent a memory DOS, only allow valid commands
+        mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.m_command);
+        if (i == mapRecvBytesPerMsgCmd.end())
+            i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
+        assert(i != mapRecvBytesPerMsgCmd.end());
+        i->second += msg.m_raw_message_size;
 
-            // push the message to the process queue,
-            vRecvMsg.push_back(std::move(msg));
-
-            complete = true;
-        }
+        // push the message to the process queue,
+        vRecvMsg.push_back(std::move(msg));
     }
 
-    return true;
+    return std::get<0>(tup);
 }
 
 void CNode::SetSendVersion(int nVersionIn)
