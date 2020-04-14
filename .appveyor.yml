@@ -86,7 +86,10 @@ test_script:
 - ps:  python test\util\bitcoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
 # Fee estimation test failing on appveyor with: WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted.
-- cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
+# functional tests disabled for now. See
+# https://github.com/bitcoin/bitcoin/pull/18626#issuecomment-613396202
+# https://github.com/bitcoin/bitcoin/issues/18623
+# - cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
 artifacts:
 #- path: bitcoin-%APPVEYOR_BUILD_VERSION%.zip
 deploy: off
