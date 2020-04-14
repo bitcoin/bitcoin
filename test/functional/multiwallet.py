@@ -114,7 +114,7 @@ class MultiWalletTest(BitcoinTestFramework):
         wallets[0].generate(1)
         for wallet_name, wallet in zip(wallet_names, wallets):
             info = wallet.getwalletinfo()
-            assert_equal(info['immature_balance'], 50 if wallet is wallets[0] else 0)
+            assert_equal(info['immature_balance'], 500 if wallet is wallets[0] else 0)
             assert_equal(info['walletname'], wallet_name)
 
         # accessing invalid wallet fails
