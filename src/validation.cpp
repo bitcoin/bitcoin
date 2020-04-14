@@ -2081,13 +2081,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     assert(pindex);
     assert(*pindex->phashBlock == block.GetHash());
     int64_t nTimeStart = GetTimeMicros();
-	// SYSCOIN
-	const int stopatblocknumber = gArgs.GetArg("-stopatblock", 0);
-	if (stopatblocknumber > 0) {
-		if (stopatblocknumber < pindex->nHeight) {
-			return false;
-		}
-	}
     // Check it again in case a previous version let a bad block in
     // NOTE: We don't currently (re-)invoke ContextualCheckBlock() or
     // ContextualCheckBlockHeader() here. This means that if we add a new
@@ -2708,11 +2701,6 @@ public:
  */
 bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions &disconnectpool)
 {
-    // SYSCOIN
-	const int stopatblocknumber = gArgs.GetArg("-stopatblock", 0);
-	if (stopatblocknumber > 0 && pindexNew->nHeight >= stopatblocknumber) {
-		return false;
-	}
     assert(pindexNew->pprev == ::ChainActive().Tip());
     // Read block from disk.
     int64_t nTime1 = GetTimeMicros();
