@@ -20,15 +20,15 @@
 /**
  * Overview of wallet database classes:
  *
- * - CDBEnv is an environment in which the database exists (has no analog in dbwrapper.h)
- * - CWalletDBWrapper represents a wallet database (similar to CDBWrapper in dbwrapper.h)
- * - CDB is a low-level database transaction (similar to CDBBatch in dbwrapper.h)
- * - CWalletDB is a modifier object for the wallet, and encapsulates a database
+ * - BerkeleyEnvironment is an environment in which the database exists (has no analog in dbwrapper.h)
+ * - WalletDatabase represents a wallet database (similar to CDBWrapper in dbwrapper.h)
+ * - BerkeleyBatch is a low-level database transaction (similar to CDBBatch in dbwrapper.h)
+ * - WalletBatch is a modifier object for the wallet, and encapsulates a database
  *   transaction as well as methods to act on the database (no analog in
  *   dbwrapper.h)
  *
- * The latter two are named confusingly, in contrast to what the names CDB
- * and CWalletDB suggest they are transient transaction objects and don't
+ * The latter two are named confusingly, in contrast to what the names BerkeleyBatch
+ * and WalletBatch suggest they are transient transaction objects and don't
  * represent the database itself.
  */
 
@@ -44,6 +44,9 @@ class CWallet;
 class CWalletTx;
 class uint160;
 class uint256;
+
+/** Backend-agnostic database type. */
+using WalletDatabase = BerkeleyDatabase;
 
 /** Error statuses for the wallet database */
 enum DBErrors
@@ -93,7 +96,7 @@ public:
  * database. It will be committed when the object goes out of scope.
  * Optionally (on by default) it will flush to disk as well.
  */
-class CWalletDB
+class WalletBatch
 {
 private:
     template <typename K, typename T>
@@ -102,7 +105,7 @@ private:
         if (!batch.Write(key, value, fOverwrite)) {
             return false;
         }
-        m_dbw.IncrementUpdateCounter();
+        m_database.IncrementUpdateCounter();
         return true;
     }
 
@@ -112,18 +115,18 @@ private:
         if (!batch.Erase(key)) {
             return false;
         }
-        m_dbw.IncrementUpdateCounter();
+        m_database.IncrementUpdateCounter();
         return true;
     }
 
 public:
-    explicit CWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) :
-        batch(dbw, pszMode, _fFlushOnClose),
-        m_dbw(dbw)
+    explicit WalletBatch(WalletDatabase& database, const char* pszMode = "r+", bool _fFlushOnClose = true) :
+        batch(database, pszMode, _fFlushOnClose),
+        m_database(database)
     {
     }
-    CWalletDB(const CWalletDB&) = delete;
-    CWalletDB& operator=(const CWalletDB&) = delete;
+    WalletBatch(const WalletBatch&) = delete;
+    WalletBatch& operator=(const WalletBatch&) = delete;
 
     bool WriteName(const std::string& strAddress, const std::string& strName);
     bool EraseName(const std::string& strAddress);
@@ -201,8 +204,8 @@ public:
     //! Write wallet version
     bool WriteVersion(int nVersion);
 private:
-    CDB batch;
-    CWalletDBWrapper& m_dbw;
+    BerkeleyBatch batch;
+    WalletDatabase& m_database;
 };
 
 //! Compacts BDB state so that wallet.dat is self-contained (if there are changes)
