@@ -5255,7 +5255,7 @@ bool CWallet::InitAutoBackup()
     nWalletBackups = gArgs.GetArg("-createwalletbackups", 10);
     nWalletBackups = std::max(0, std::min(10, nWalletBackups));
 
-    std::string strWalletFile = gArgs.GetArg("-wallet", DEFAULT_WALLET_DAT);
+    std::string strWalletFile = gArgs.GetArg("-wallet", "");
 
     if(!AutoBackupWallet(nullptr, strWalletFile, strWarning, strError)) {
         if (!strWarning.empty())
