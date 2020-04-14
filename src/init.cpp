@@ -476,7 +476,6 @@ void SetupServerArgs()
     gArgs.AddArg("-gethrpcport=<port>", strprintf("Listen for GETH RPC connections on <port> for the relayer (default: %u)", 8645), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-gethtestnet", strprintf("Connect to Ethereum Rinkeby testnet network (default: %d)", false), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-gethsyncmode", strprintf("Geth sync mode, light, fast or full (default: light)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    gArgs.AddArg("-stopatblock", strprintf("For Airdrops it is useful to stop your blockchain from processing at a certain block. Set this block as required by your airdrop schedule. 0 means it is disabled (default: 0)"), 0, OptionsCategory::OPTIONS);
     gArgs.AddArg("-litemode=<n>", strprintf("Disable all Syscoin specific functionality (Masternodes, Governance) (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS); 
     gArgs.AddArg("-masternode=<n>", strprintf("Enable the client to act as a masternode (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
