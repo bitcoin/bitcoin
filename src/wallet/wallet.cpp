@@ -2170,6 +2170,7 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             if (wtx.tx->vout[i].nValue < nMinimumAmount || wtx.tx->vout[i].nValue > nMaximumAmount)
                 continue;
+            // SYSCOIN
             if (wtx.tx->vout[i].assetInfo.nAsset > 0 && (wtx.tx->vout[i].assetInfo.nValue < nMinimumAmountAsset || wtx.tx->vout[i].assetInfo.nValue > nMaximumAmountAsset))
                 continue;
 
@@ -2211,8 +2212,8 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
                     return;
                 }
             }
+            // SYSCOIN
             if (nMinimumSumAmountAsset != MAX_ASSET && wtx.tx->vout[i].assetInfo.nAsset > 0) {
-                // SYSCOIN
                 nTotalAsset += wtx.tx->vout[i].assetInfo.nValue;
                 if (nTotalAsset >= nMinimumSumAmountAsset) {
                     return;
@@ -2234,7 +2235,6 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins(interfaces::Ch
     std::vector<COutput> availableCoins;
 
     AvailableCoins(locked_chain, availableCoins);
-    LogPrintf("ListCoins size %d\n", availableCoins.size());
     for (const COutput& coin : availableCoins) {
         CTxDestination address;
         if ((coin.fSpendable || (IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.fSolvable)) &&
