@@ -419,7 +419,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     return out;
 }
 
-UniValue CRPCTable::execute(const JSONRPCRequest &request) const
+UniValue CRPCTable::execute(const std::string& method, const JSONRPCRequest &request) const
 {
     // Return immediately if in warmup
     {
@@ -429,7 +429,7 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     }
 
     // Find method
-    auto it = mapCommands.find(request.strMethod);
+    auto it = mapCommands.find(method);
     if (it != mapCommands.end()) {
         UniValue result;
         for (const auto& command : it->second) {
@@ -439,6 +439,11 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
         }
     }
     throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
+}
+
+UniValue CRPCTable::execute(const JSONRPCRequest &request) const
+{
+  return this->execute(request.strMethod, request);
 }
 
 static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler)

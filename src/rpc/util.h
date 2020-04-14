@@ -199,6 +199,10 @@ struct RPCArg {
      */
     std::string ToStringObj(bool oneline) const;
     /**
+     * Return the type as a string.
+     */
+    std::string ToTypeString() const;
+    /**
      * Return the description string, including the argument type and whether
      * the argument is required.
      */
@@ -322,6 +326,8 @@ public:
     RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples);
 
     std::string ToString() const;
+    std::string ToStringArgsCli() const;
+    std::string ToString(const std::string& format) const;
     /** If the supplied number of args is neither too small nor too high */
     bool IsValidNumArgs(size_t num_args) const;
     /**
@@ -330,7 +336,13 @@ public:
      */
     inline void Check(const JSONRPCRequest& request) const {
         if (request.fHelp || !IsValidNumArgs(request.params.size())) {
-            throw std::runtime_error(ToString());
+            std::string help_format = "default";
+            if (request.strMethod == "format") {
+                RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR});
+                help_format = request.params[1].get_str();
+            }
+
+            throw std::runtime_error(ToString(help_format));
         }
     }
 

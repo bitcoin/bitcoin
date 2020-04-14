@@ -505,6 +505,29 @@ std::string RPCHelpMan::ToString() const
 
     return ret;
 }
+std::string RPCHelpMan::ToStringArgsCli() const
+{
+    std::string res;
+    for (const auto& arg : m_args) {
+        const bool is_file = ToLower(arg.m_description).find("file") != std::string::npos;
+        res += arg.m_name + ":" + (is_file ? "file" : arg.ToTypeString()) + ",";
+    }
+
+    if (res.size() > 0)
+        res.pop_back();
+
+    return res;
+}
+std::string RPCHelpMan::ToString(const std::string& format) const
+{
+    if (format == "default")
+        return this->ToString();
+
+    if (format == "args_cli")
+        return this->ToStringArgsCli();
+
+    throw std::runtime_error("unrecognized help format");
+}
 
 bool RPCArg::IsOptional() const
 {
@@ -515,6 +538,32 @@ bool RPCArg::IsOptional() const
     }
 }
 
+std::string RPCArg::ToTypeString() const
+{
+    switch (m_type) {
+    case Type::STR_HEX:
+    case Type::STR:
+        return "string";
+    case Type::NUM:
+        return "numeric";
+    case Type::AMOUNT:
+        return "numeric or string";
+    case Type::RANGE:
+        return "numeric or array";
+    case Type::BOOL:
+        return "boolean";
+    case Type::OBJ:
+    case Type::OBJ_USER_KEYS:
+        return "json object";
+    case Type::ARR:
+        return "json array";
+    // no default case, so the compiler can warn about missing cases
+    }
+
+    // gcc and msvc might complain we don't return anything even if we handle all cases
+    throw std::runtime_error("unknown argument type");
+}
+
 std::string RPCArg::ToDescriptionString() const
 {
     std::string ret;
@@ -522,40 +571,7 @@ std::string RPCArg::ToDescriptionString() const
     if (m_type_str.size() != 0) {
         ret += m_type_str.at(1);
     } else {
-        switch (m_type) {
-        case Type::STR_HEX:
-        case Type::STR: {
-            ret += "string";
-            break;
-        }
-        case Type::NUM: {
-            ret += "numeric";
-            break;
-        }
-        case Type::AMOUNT: {
-            ret += "numeric or string";
-            break;
-        }
-        case Type::RANGE: {
-            ret += "numeric or array";
-            break;
-        }
-        case Type::BOOL: {
-            ret += "boolean";
-            break;
-        }
-        case Type::OBJ:
-        case Type::OBJ_USER_KEYS: {
-            ret += "json object";
-            break;
-        }
-        case Type::ARR: {
-            ret += "json array";
-            break;
-        }
-
-            // no default case, so the compiler can warn about missing cases
-        }
+        ret += this->ToTypeString();
     }
     if (m_fallback.which() == 1) {
         ret += ", optional, default=" + boost::get<std::string>(m_fallback);
