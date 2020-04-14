@@ -271,7 +271,7 @@ void PruneOneBlockFile(const int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune);
 
 /** Prune block files up to a given height */
-void PruneBlockFilesManual(int nManualPruneHeight);
+void PruneBlockFilesManual(int nManualPruneHeight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 /** (try to) add transaction to memory pool
  * plTxnReplaced will be appended to with all transactions replaced from mempool **/
@@ -672,14 +672,14 @@ public:
         const CChainParams& chainparams,
         BlockValidationState &state,
         FlushStateMode mode,
-        int nManualPruneHeight = 0);
+        int nManualPruneHeight = 0) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Unconditionally flush all changes to disk.
-    void ForceFlushStateToDisk();
+    void ForceFlushStateToDisk() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Prune blockfiles from the disk if necessary and then flush chainstate changes
     //! if we pruned.
-    void PruneAndFlush();
+    void PruneAndFlush() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
      * Make the best chain active, in multiple steps. The result is either failure

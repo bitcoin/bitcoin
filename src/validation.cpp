@@ -2234,7 +2234,7 @@ bool CChainState::FlushStateToDisk(
     FlushStateMode mode,
     int nManualPruneHeight)
 {
-    LOCK(cs_main);
+    AssertLockHeld(::cs_main);
     assert(this->CanFlushToDisk());
     static int64_t nLastWrite = 0;
     static int64_t nLastFlush = 0;
@@ -2895,6 +2895,7 @@ bool CChainState::ActivateBestChain(BlockValidationState &state, const CChainPar
     CheckBlockIndex(chainparams.GetConsensus());
 
     // Write changes periodically to disk, after relay.
+    LOCK(::cs_main);
     if (!FlushStateToDisk(chainparams, state, FlushStateMode::PERIODIC)) {
         return false;
     }
@@ -4503,6 +4504,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
         LimitValidationInterfaceQueue();
 
         // Occasionally flush state to disk.
+        LOCK(::cs_main);
         if (!FlushStateToDisk(params, state, FlushStateMode::PERIODIC)) {
             LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
             return false;
