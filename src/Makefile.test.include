@@ -215,6 +215,7 @@ SYSCOIN_TESTS =\
   test/fs_tests.cpp \
   test/getarg_tests.cpp \
   test/hash_tests.cpp \
+  test/interfaces_tests.cpp \
   test/key_tests.cpp \
   test/limitedmap_tests.cpp \
   test/logging_tests.cpp \
