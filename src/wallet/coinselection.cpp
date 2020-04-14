@@ -392,7 +392,9 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
             effective_value_asset = output.effective_value_asset;
             m_value_asset = effective_value_asset.nValue;
         }
-        else if(effective_value_asset.nAsset == output.effective_value_asset.nAsset) {
+        else {
+            // at this point we shouldn't get an asset mismatch because groups should have targetted asset or none (0)
+            assert(effective_value_asset.nAsset == output.effective_value_asset.nAsset);
             m_value_asset += output.effective_value_asset.nValue;
             effective_value_asset.nValue = m_value_asset;
         }
