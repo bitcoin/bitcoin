@@ -565,6 +565,18 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
 }
 #undef X
 
+/**
+ * Try to decode all CNetMessage%s from the first \p nBytes bytes of the \p pch
+ * buffer and send them off for further processing.
+ *
+ * @param[out] complete Whether or not at least one CNetMessage was successfully
+ *                      decoded.
+ *
+ * @returns Whether or not an unhandleable error has occured (e.g. failure to
+ *          deserialize the header or ludicrous message sizes).
+ *
+ * @see ReadMessages(const char *, unsigned int, const CMessageHeader::MessageStartChars&, int64_t)
+ */
 bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete)
 {
     complete = false;
