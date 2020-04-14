@@ -377,7 +377,7 @@ class BIP68Test(BitcoinTestFramework):
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], "locked_in")
         self.nodes[0].generate(1)
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], "active")
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
     # Use self.nodes[1] to test that version 2 transactions are standard.
     def test_version2_relay(self):

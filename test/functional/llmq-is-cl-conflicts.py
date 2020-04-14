@@ -56,7 +56,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
             self.nodes[0].generate(10)
-        sync_blocks(self.nodes, timeout=60*5)
+        self.sync_blocks(self.nodes, timeout=60*5)
 
         self.test_node = self.nodes[0].add_p2p_connection(TestNode())
         network_thread_start()
@@ -103,7 +103,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         rawtx4_txid = self.nodes[0].sendrawtransaction(rawtx4)
 
         # wait for transactions to propagate
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         for node in self.nodes:
             self.wait_for_instantlock(rawtx1_txid, node)
             self.wait_for_instantlock(rawtx4_txid, node)
@@ -120,7 +120,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         for node in self.nodes:
             self.wait_for_best_chainlock(node, "%064x" % block.sha256)
 
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
         # At this point all nodes should be in sync and have the same "best chainlock"
 
@@ -146,7 +146,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         rawtx5 = self.nodes[0].signrawtransaction(rawtx5)['hex']
         rawtx5_txid = self.nodes[0].sendrawtransaction(rawtx5)
         # wait for the transaction to propagate
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         for node in self.nodes:
             self.wait_for_instantlock(rawtx5_txid, node)
 

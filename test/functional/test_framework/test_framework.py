@@ -337,7 +337,8 @@ class BitcoinTestFramework():
         """
         disconnect_nodes(self.nodes[1], 2)
         disconnect_nodes(self.nodes[2], 1)
-        self.sync_all([self.nodes[:2], self.nodes[2:]])
+        self.sync_all(self.nodes[:2])
+        self.sync_all(self.nodes[2:])
 
     def join_network(self):
         """
@@ -346,21 +347,29 @@ class BitcoinTestFramework():
         connect_nodes_bi(self.nodes, 1, 2)
         self.sync_all()
 
-    def sync_all(self, node_groups=None):
-        if not node_groups:
-            node_groups = [self.nodes]
+    def sync_blocks(self, nodes=None, **kwargs):
+        sync_blocks(nodes or self.nodes, **kwargs)
 
-        for group in node_groups:
-            sync_blocks(group)
-            sync_mempools(group, wait=0.1, wait_func=lambda: self.bump_mocktime(3, True))
+    def sync_mempools(self, nodes=None, **kwargs):
+        if self.mocktime != 0:
+            if 'wait' not in kwargs:
+                kwargs['wait'] = 0.1
+            if 'wait_func' not in kwargs:
+                kwargs['wait_func'] = lambda: self.bump_mocktime(3, True, nodes=nodes)
+
+        sync_mempools(nodes or self.nodes, **kwargs)
+
+    def sync_all(self, nodes=None, **kwargs):
+        self.sync_blocks(nodes, **kwargs)
+        self.sync_mempools(nodes, **kwargs)
 
     def disable_mocktime(self):
         self.mocktime = 0
 
-    def bump_mocktime(self, t, update_nodes=False):
+    def bump_mocktime(self, t, update_nodes=False, nodes=None):
         self.mocktime += t
         if update_nodes:
-            set_node_times(self.nodes, self.mocktime)
+            set_node_times(nodes or self.nodes, self.mocktime)
 
     def set_cache_mocktime(self):
         # For backwared compatibility of the python scripts
@@ -454,7 +463,7 @@ class BitcoinTestFramework():
                         self.nodes[peer].generate(1)
                         block_time += 156
                     # Must sync before next peer starts generating blocks
-                    sync_blocks(self.nodes)
+                    self.sync_blocks()
 
             # Shut them down, and clean up cache directories:
             self.stop_nodes()

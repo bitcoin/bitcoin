@@ -255,7 +255,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
             self.nodes[0].generate(4)
             self.sync_all()
         self.nodes[0].generate(1)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
         # Assert that merkleRootQuorums is present and 0 (we have no quorums yet)
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
@@ -291,7 +291,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
             if not found_unconfirmed:
                 break
             self.nodes[0].generate(1)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
 if __name__ == '__main__':
     LLMQCoinbaseCommitmentsTest().main()

@@ -148,7 +148,7 @@ class ImportRescanTest(BitcoinTestFramework):
         timestamp = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"]
         set_node_times(self.nodes, timestamp + TIMESTAMP_WINDOW + 1)
         self.nodes[0].generate(1)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
         # For each variation of wallet key import, invoke the import RPC and
         # check the results from getbalance and listtransactions.
@@ -174,7 +174,7 @@ class ImportRescanTest(BitcoinTestFramework):
         # Generate a block containing the new transactions.
         self.nodes[0].generate(1)
         assert_equal(self.nodes[0].getrawmempool(), [])
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
         # Check the latest results from getbalance and listtransactions.
         for variant in IMPORT_VARIANTS:

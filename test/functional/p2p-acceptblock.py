@@ -316,7 +316,7 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         # 9. Connect node1 to node0 and ensure it is able to sync
         connect_nodes(self.nodes[0], 1)
-        sync_blocks([self.nodes[0], self.nodes[1]])
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
         self.log.info("Successfully synced nodes 1 and 0")
 
 if __name__ == '__main__':

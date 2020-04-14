@@ -74,7 +74,7 @@ class DIP3Test(BitcoinTestFramework):
 
         # We have hundreds of blocks to sync here, give it more time
         self.log.info("syncing blocks for all nodes")
-        sync_blocks(self.nodes, timeout=120)
+        self.sync_blocks(self.nodes, timeout=120)
 
         # DIP3 is fully enforced here
 
