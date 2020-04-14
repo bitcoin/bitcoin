@@ -85,12 +85,10 @@ class LLMQSigningTest(DashTestFramework):
 
         # fast forward 6.5 days, recovered sig should still be valid
         self.bump_mocktime(int(60 * 60 * 24 * 6.5))
-        set_node_times(self.nodes, self.mocktime)
         # Cleanup starts every 5 seconds
         wait_for_sigs(True, False, True, 15)
         # fast forward 1 day, recovered sig should not be valid anymore
         self.bump_mocktime(int(60 * 60 * 24 * 1))
-        set_node_times(self.nodes, self.mocktime)
         # Cleanup starts every 5 seconds
         wait_for_sigs(False, False, False, 15)
 
@@ -116,7 +114,6 @@ class LLMQSigningTest(DashTestFramework):
             connect_nodes(mn.node, 0)
             # Let 1 second pass so that the next node is used for recovery, which should succeed
             self.bump_mocktime(1)
-            set_node_times(self.nodes, self.mocktime)
             wait_for_sigs(True, False, True, 5)
 
 if __name__ == '__main__':

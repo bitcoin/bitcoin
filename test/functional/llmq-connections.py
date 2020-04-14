@@ -52,7 +52,6 @@ class LLMQConnections(DashTestFramework):
 
         self.log.info("checking that probes age")
         self.bump_mocktime(60)
-        set_node_times(self.nodes, self.mocktime)
         for mn in self.get_quorum_masternodes(q):
             wait_until(lambda: self.get_mn_probe_count(mn.node, q, False) == 0)
 
@@ -69,10 +68,9 @@ class LLMQConnections(DashTestFramework):
             mn.node.setnetworkactive(False)
         for mn in self.mninfo:
             wait_until(lambda: len(mn.node.getpeerinfo()) == 0)
-        self.bump_mocktime(60)
-        set_node_times(self.nodes, self.mocktime)
         for mn in self.mninfo:
             mn.node.setnetworkactive(True)
+        self.bump_mocktime(60)
 
         self.log.info("verify that all masternodes re-connected")
         for q in self.nodes[0].quorum('list')['llmq_test']:

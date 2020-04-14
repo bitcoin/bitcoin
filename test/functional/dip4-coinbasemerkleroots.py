@@ -6,7 +6,7 @@ from collections import namedtuple
 
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import p2p_port, assert_equal, sync_blocks, set_node_times
+from test_framework.util import p2p_port, assert_equal, sync_blocks
 
 '''
 dip4-coinbasemerkleroots.py
@@ -269,7 +269,6 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
             assert_equal(merkleRootQuorums, 0)
 
         self.bump_mocktime(1)
-        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 

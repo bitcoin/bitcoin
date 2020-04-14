@@ -5,7 +5,7 @@
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import connect_nodes, set_node_times, wait_until
+from test_framework.util import connect_nodes, wait_until
 
 '''
 multikeysporks.py
@@ -103,7 +103,6 @@ class MultiKeySporkTest(BitcoinTestFramework):
             assert(self.get_test_spork_value(node) == 4070908800)
 
         self.bump_mocktime(1)
-        set_node_times(self.nodes, self.mocktime)
         # first and second signers set spork value
         self.set_test_spork_value(self.nodes[0], 1)
         self.set_test_spork_value(self.nodes[1], 1)
@@ -119,7 +118,6 @@ class MultiKeySporkTest(BitcoinTestFramework):
             wait_until(lambda: self.get_test_spork_value(node) == 1, sleep=0.1, timeout=10)
 
         self.bump_mocktime(1)
-        set_node_times(self.nodes, self.mocktime)
         # now set the spork again with other signers to test
         # old and new spork messages interaction
         self.set_test_spork_value(self.nodes[2], 2)

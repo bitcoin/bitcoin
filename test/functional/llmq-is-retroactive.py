@@ -48,7 +48,6 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # are the only "neighbours" in intra-quorum connections for one of them.
         self.wait_for_instantlock(txid, self.nodes[0])
         self.bump_mocktime(1)
-        set_node_times(self.nodes, self.mocktime)
         block = self.nodes[0].generate(1)[0]
         self.wait_for_chainlocked_block_all_nodes(block)
 
@@ -62,7 +61,6 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         reconnect_isolated_node(self.nodes[3], 0)
         # Make sure nodes actually try re-connecting quorum connections
         self.bump_mocktime(30)
-        set_node_times(self.nodes, self.mocktime)
         self.wait_for_mnauth(self.nodes[3], 2)
         # node 3 fully reconnected but the TX wasn't relayed to it, so there should be no IS lock
         self.wait_for_instantlock(txid, self.nodes[0], False, 5)
@@ -80,7 +78,6 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         txid = self.nodes[3].sendrawtransaction(rawtx)
         # Make node 3 consider the TX as safe
         self.bump_mocktime(10 * 60 + 1)
-        set_node_times(self.nodes, self.mocktime)
         block = self.nodes[3].generatetoaddress(1, self.nodes[0].getnewaddress())[0]
         reconnect_isolated_node(self.nodes[3], 0)
         self.wait_for_chainlocked_block_all_nodes(block)
@@ -96,13 +93,11 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         reconnect_isolated_node(self.nodes[3], 0)
         # Make sure nodes actually try re-connecting quorum connections
         self.bump_mocktime(30)
-        set_node_times(self.nodes, self.mocktime)
         self.wait_for_mnauth(self.nodes[3], 2)
         # node 3 fully reconnected but the TX wasn't relayed to it, so there should be no IS lock
         self.wait_for_instantlock(txid, self.nodes[0], False, 5)
         # Make node0 consider the TX as safe
         self.bump_mocktime(10 * 60 + 1)
-        set_node_times(self.nodes, self.mocktime)
         block = self.nodes[0].generate(1)[0]
         self.wait_for_chainlocked_block_all_nodes(block)
 
@@ -136,12 +131,10 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         time.sleep(5)
         # Make the signing session for the IS lock timeout on nodes 1-3
         self.bump_mocktime(61)
-        set_node_times(self.nodes, self.mocktime)
         time.sleep(2) # make sure Cleanup() is called
         reconnect_isolated_node(self.nodes[3], 0)
         # Make sure nodes actually try re-connecting quorum connections
         self.bump_mocktime(30)
-        set_node_times(self.nodes, self.mocktime)
         self.wait_for_mnauth(self.nodes[3], 2)
         # node 3 fully reconnected but the signing session is already timed out on all nodes, so no IS lock
         self.wait_for_instantlock(txid, self.nodes[0], False, 5)
@@ -150,7 +143,6 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
             self.wait_for_instantlock(txid, self.nodes[0], False, 5)
         # Make node 0 consider the TX as safe
         self.bump_mocktime(10 * 60 + 1)
-        self.nodes[0].setmocktime(self.mocktime)
         block = self.nodes[0].generate(1)[0]
         self.wait_for_chainlocked_block_all_nodes(block)
 
@@ -164,12 +156,10 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         time.sleep(2) # make sure signing is done on node 2 (it's async)
         # Make the signing session for the IS lock timeout on node 3
         self.bump_mocktime(61)
-        set_node_times(self.nodes, self.mocktime)
         time.sleep(2) # make sure Cleanup() is called
         reconnect_isolated_node(self.nodes[3], 0)
         # Make sure nodes actually try re-connecting quorum connections
         self.bump_mocktime(30)
-        set_node_times(self.nodes, self.mocktime)
         self.wait_for_mnauth(self.nodes[3], 2)
         self.nodes[0].sendrawtransaction(rawtx)
         # Make sure nodes 1 and 2 received the TX
@@ -184,7 +174,6 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
             self.wait_for_instantlock(txid, self.nodes[0], False, 5)
         # Make node 0 consider the TX as safe
         self.bump_mocktime(10 * 60 + 1)
-        self.nodes[0].setmocktime(self.mocktime)
         block = self.nodes[0].generate(1)[0]
         self.wait_for_chainlocked_block_all_nodes(block)
 

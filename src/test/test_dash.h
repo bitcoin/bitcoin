@@ -22,6 +22,11 @@
 extern uint256 insecure_rand_seed;
 extern FastRandomContext insecure_rand_ctx;
 
+/**
+ * Flag to make GetRand in random.h return the same number
+ */
+extern bool g_mock_deterministic_tests;
+
 static inline void SeedInsecureRand(bool fDeterministic = false)
 {
     if (fDeterministic) {
