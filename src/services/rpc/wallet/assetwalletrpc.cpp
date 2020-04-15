@@ -22,7 +22,6 @@
 #include <core_io.h>
 #include <key_io.h>
 extern RecursiveMutex cs_setethstatus;
-extern CFeeRate dustRelayFee;
 using namespace std;
 void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient)
 {
@@ -86,6 +85,21 @@ public:
     template<typename X>
     void operator()(const X &none) {}
 };
+void ModifyAssetOutputsBasedOnChange(const CMutableTransaction& mtx, CAssetAllocation& assetAllocation, const int &nChangePosInOut) {
+    for(auto &it: assetAllocation.voutAssets) {
+        for(auto& voutAsset: it.second) {
+            // everything after the change insertion location should be incremented to account for the new tx.vout
+            if(voutAsset.n >= (uint32_t)nChangePosInOut) {
+                voutAsset.n++;
+            }
+        }
+        // mtx would have assetInfo in change position when change was created in CreateTransaction()
+        // only add to vout array if it was asset based change, to the correct asset vout array
+        if(mtx.vout[nChangePosInOut].assetInfo.nAsset == it.first) {
+            it.second.push_back(CAssetOut(nChangePosInOut, mtx.vout[nChangePosInOut].assetInfo.nValue));
+        }
+    }
+}
 UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -128,7 +142,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 
     const CScript& scriptPubKey = GetScriptForDestination(dest);
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
 
 
     vector<CRecipient> vecSend;
@@ -285,11 +299,16 @@ UniValue assetnew(const JSONRPCRequest& request) {
     if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, error)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
     }
+    CMutableTransaction mtx;
+    std::set<int> setSubtractFeeFromOutputs;
     // new/send/update all have asset utxo's with 0 asset amount
     const CScript& scriptPubKey = GetScriptForDestination(dest);
-    CTxOut change_prototype_txout(0, scriptPubKey);
-    CRecipient recp = { scriptPubKey, nGas <= 0? GetDustThreshold(change_prototype_txout, ::dustRelayFee): nGas, nGas > 0 };
-    vecSend.push_back(recp);
+    CTxOut change_prototype_txout(nGas, scriptPubKey);
+    bool isDust = nGas < COIN;
+    CRecipient recp = { scriptPubKey, isDust? GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()): nGas,  !isDust};
+    mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+    if(nGas > 0)
+        setSubtractFeeFromOutputs.insert(0);
     CScript scriptData;
     scriptData << OP_RETURN << data;
     CRecipient opreturnRecipient;
@@ -298,32 +317,28 @@ UniValue assetnew(const JSONRPCRequest& request) {
         // 500 SYS fee for new asset
         opreturnRecipient.nAmount = 500*COIN;
     }
-    vecSend.push_back(opreturnRecipient);
-    // Create and send the transaction
+    mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
     CAmount nFeeRequired = 0;
-    std::string strError;
+    std::string strFailReason;
     int nChangePosRet = -1;
     CCoinControl coin_control;
-    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
-    CMutableTransaction mtx;
-    mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
-        if (tx->GetValueOut() + nFeeRequired > curBalance)
-            strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    bool lockUnspents = false;
+    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
- 
+    mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
     data.clear();
     // generate deterministic guid based on input txid
-    const int32_t &nAsset = GenerateSyscoinGuid(tx->vin[0].prevout);
+    const int32_t &nAsset = GenerateSyscoinGuid(mtx.vin[0].prevout);
     newAsset.assetAllocation.voutAssets.clear();
     newAsset.assetAllocation.voutAssets[nAsset].push_back(CAssetOut(0, 0));
+    if(nChangePosRet != -1) {
+        ModifyAssetOutputsBasedOnChange(mtx, newAsset.assetAllocation, nChangePosRet);
+    }
     newAsset.Serialize(data);
     scriptData.clear();
     scriptData << OP_RETURN << data;
     // modify the opreturn scriptPubKey with new data with asset guid filled in. Then sign again.
-    mtx = CMutableTransaction(*tx);
     bool bFoundData = false;
     for(auto& vout: mtx.vout) {
         if(vout.scriptPubKey.IsUnspendable()) {
@@ -338,7 +353,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     if(!pwallet->SignTransaction(mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
     }
-    tx = CTransactionRef(MakeTransactionRef(std::move(mtx)));
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -346,16 +361,15 @@ UniValue assetnew(const JSONRPCRequest& request) {
     res.__pushKV("asset_guid", nAsset);
     return res;
 }
-UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient, const int32_t nVersionIn, const CRecipient* recpIn = nullptr) {
-    auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
+int CreateAssetUpdateTx(interfaces::Chain::Lock& locked_chain, CMutableTransaction &mtx, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) {
+    AssertLockHeld(pwallet->cs_wallet);
     CCoinControl coin_control;
     CAmount nMinimumAmountAsset = 0;
     CAmount nMaximumAmountAsset = 0;
     CAmount nMinimumSumAmountAsset = 0;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
     std::vector<COutput> vecOutputs;
-    pwallet->AvailableCoins(*locked_chain, vecOutputs, true, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset);
+    pwallet->AvailableCoins(locked_chain, vecOutputs, true, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset);
     int nNumOutputsFound = 0;
     int nFoundOutput = -1;
     for(unsigned int i = 0; i < vecOutputs.size(); i++) {
@@ -385,60 +399,42 @@ UniValue CreateAssetUpdateTx(const uint32_t &nAsset, CWallet* const pwallet, std
     }
     // subtract fee from this output (it should pay the gas which was funded by asset new)
     CRecipient recp;
-    if(recpIn)
+    if(recpIn) {
         recp = *recpIn;
-    else
-        recp = { GetScriptForDestination(dest), nGas, true };
+    }
+    else {
+        recp = { GetScriptForDestination(dest), nGas, true };  
+    }
     // order matters, after the calling function adds whatever outputs for assets, we need to add the
     // change back to a new output proceeding the asset outputs, other outputs can come after
     vecSend.push_back(recp);
     vecSend.push_back(opreturnRecipient);
-    // Create and send the transaction
+    std::set<int> setSubtractFeeFromOutputs;
+    for(unsigned i =0;i<vecSend.size();i++) {
+        CTxOut txOut(vecSend[i].nAmount, vecSend[i].scriptPubKey);
+        if(txOut.nValue < COIN) {
+            txOut.nValue = GetDustThreshold(txOut, pwallet->chain().relayDustFee());
+        }
+        else if(vecSend[i].fSubtractFeeFromAmount)
+            setSubtractFeeFromOutputs.insert(i);
+        mtx.vout.push_back(txOut);
+    }
     CAmount nFeeRequired = 0;
-    std::string strError;
+    std::string strFailReason;
     int nChangePosRet = -1;
     coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
-    coin_control.Select(inputCoin.outpoint);
-    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
-    CMutableTransaction mtx;
-    mtx.nVersion = nVersionIn;
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    UniValue res(UniValue::VOBJ);
-    if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
-        if(nFeeRequired > nGas && ((tx->GetValueOut() + nFeeRequired) <= curBalance)) {
-            // if gas runs out, try fund from new inputs
-            recp = { GetScriptForDestination(dest), nGas, false };
-            vecSend.clear();
-            vecSend.push_back(recp);
-            vecSend.push_back(opreturnRecipient);
-            CMutableTransaction mtx1;
-            mtx1.nVersion = nVersionIn;
-            CTransactionRef tx1(MakeTransactionRef(std::move(mtx1)));
-            if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx1, nFeeRequired, nChangePosRet, strError, coin_control)) {
-                if (tx1->GetValueOut() + nFeeRequired > curBalance)
-                    strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-                throw JSONRPCError(RPC_WALLET_ERROR, strError);
-            } else {
-                mapValue_t mapValue;
-                pwallet->CommitTransaction(tx1, std::move(mapValue), {} /* orderForm */);
-                res.__pushKV("txid", tx1->GetHash().GetHex());
-                return res;
-            }
-        }
-        else if (tx->GetValueOut() + nFeeRequired > curBalance)
-            strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
-    } else {
-        mapValue_t mapValue;
-        pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
-        res.__pushKV("txid", tx->GetHash().GetHex());
-        return res;
+    mtx.vin.push_back(CTxIn(inputCoin.outpoint));
+    bool lockUnspents = false;
+    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
-     return res;
+    return nChangePosRet; 
 }
 UniValue assetupdate(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
     const UniValue &params = request.params;
     RPCHelpMan{"assetupdate",
         "\nPerform an update on an asset you control.\n",
@@ -514,7 +510,6 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         theAsset.vchContract.clear();
 
     theAsset.assetAllocation.voutAssets[nAsset].push_back(CAssetOut(0, 0));
-
     theAsset.nBalance = nBalance;
     theAsset.nUpdateFlags = nUpdateFlags;
 
@@ -525,11 +520,44 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(nAsset, pwallet, vecSend, opreturnRecipient, SYSCOIN_TX_VERSION_ASSET_UPDATE);
+    CMutableTransaction mtx;
+    int nChangePosRet = CreateAssetUpdateTx(*locked_chain, mtx, nAsset, pwallet, vecSend, opreturnRecipient);
+    if(nChangePosRet != -1) {
+        ModifyAssetOutputsBasedOnChange(mtx, theAsset.assetAllocation, nChangePosRet);
+    }
+    
+    mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_UPDATE;
+    data.clear();
+    // regen opreturn with possible new change outputs
+    theAsset.Serialize(data);
+    scriptData.clear();
+    scriptData << OP_RETURN << data;
+    bool bFoundData = false;
+    for(auto& vout: mtx.vout) {
+        if(vout.scriptPubKey.IsUnspendable()) {
+            vout.scriptPubKey = scriptData;
+            bFoundData = true;
+            break;
+        }
+    }
+    if(!bFoundData) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not find OP_RETURN data output in asset transaction");
+    }
+    if(!pwallet->SignTransaction(mtx)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
+    }
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    mapValue_t mapValue;
+    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    UniValue res(UniValue::VOBJ);
+    res.__pushKV("txid", tx->GetHash().GetHex());
+    return res;
 }
 UniValue assettransfer(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
     const UniValue &params = request.params;
     RPCHelpMan{"assettransfer",
         "\nPerform a transfer of ownership on an asset you control.\n",
@@ -550,30 +578,16 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     const uint32_t &nAsset = params[0].get_uint();
     string strAddress = params[1].get_str();
    
-    
     CAsset theAsset;
 
-    if (!GetAsset( nAsset, theAsset))
+    if (!GetAsset( nAsset, theAsset)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-        
-    if (!pwallet->CanGetAddresses()) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
-
-    // Parse the label first so we don't generate a key if there's an error
-    std::string label = "";
-    CTxDestination dest;
-    std::string error;
-    if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, error)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
-    }
-    // new/send/update all have asset utxo's with 0 asset amount
-    const CScript& scriptPubKey = GetScriptForDestination(dest);
+    const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
-
-    theAsset.vchPubData.clear();
-    theAsset.vchContract.clear();
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
+    theAsset.ClearAsset();
+    theAsset.nBalance = 0;
     theAsset.assetAllocation.voutAssets[nAsset].push_back(CAssetOut(0, 0));
 
     vector<unsigned char> data;
@@ -583,11 +597,44 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(nAsset, pwallet, vecSend, opreturnRecipient, SYSCOIN_TX_VERSION_ASSET_UPDATE, &recp);
+    CMutableTransaction mtx;
+    int nChangePosRet = CreateAssetUpdateTx(*locked_chain, mtx, nAsset, pwallet, vecSend, opreturnRecipient, &recp);
+    if(nChangePosRet != -1) {
+        ModifyAssetOutputsBasedOnChange(mtx, theAsset.assetAllocation, nChangePosRet);
+    }
+    
+    mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_UPDATE;
+    data.clear();
+    // regen opreturn with possible new change outputs
+    theAsset.Serialize(data);
+    scriptData.clear();
+    scriptData << OP_RETURN << data;
+    bool bFoundData = false;
+    for(auto& vout: mtx.vout) {
+        if(vout.scriptPubKey.IsUnspendable()) {
+            vout.scriptPubKey = scriptData;
+            bFoundData = true;
+            break;
+        }
+    }
+    if(!bFoundData) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not find OP_RETURN data output in asset transaction");
+    }
+    if(!pwallet->SignTransaction(mtx)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
+    }
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    mapValue_t mapValue;
+    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    UniValue res(UniValue::VOBJ);
+    res.__pushKV("txid", tx->GetHash().GetHex());
+    return res;
 }
 UniValue assetsendmany(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
     const UniValue &params = request.params;
     RPCHelpMan{"assetsendmany",
     "\nSend an asset you own to another address/addresses as an asset allocation. Maximum recipients is 250.\n",
@@ -650,7 +697,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in asset output array");
         theAsset.assetAllocation.voutAssets[nAsset].push_back(CAssetOut(theAsset.assetAllocation.voutAssets[nAsset].size(), nAmount));
         CTxOut change_prototype_txout(0, scriptPubKey);
-        CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
+        CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
         vecSend.push_back(recp);
     }
 
@@ -662,7 +709,38 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     scriptData << OP_RETURN << data;
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
-    return CreateAssetUpdateTx(nAsset, pwallet, vecSend, opreturnRecipient, SYSCOIN_TX_VERSION_ASSET_SEND);
+    CMutableTransaction mtx;
+    int nChangePosRet = CreateAssetUpdateTx(*locked_chain, mtx, nAsset, pwallet, vecSend, opreturnRecipient);
+    if(nChangePosRet != -1) {
+        ModifyAssetOutputsBasedOnChange(mtx, theAssetAllocation, nChangePosRet);
+    }
+    
+    mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_SEND;
+    data.clear();
+    // regen opreturn with possible new change outputs
+    theAssetAllocation.Serialize(data);
+    scriptData.clear();
+    scriptData << OP_RETURN << data;
+    bool bFoundData = false;
+    for(auto& vout: mtx.vout) {
+        if(vout.scriptPubKey.IsUnspendable()) {
+            vout.scriptPubKey = scriptData;
+            bFoundData = true;
+            break;
+        }
+    }
+    if(!bFoundData) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not find OP_RETURN data output in asset transaction");
+    }
+    if(!pwallet->SignTransaction(mtx)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
+    }
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    mapValue_t mapValue;
+    pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
+    UniValue res(UniValue::VOBJ);
+    res.__pushKV("txid", tx->GetHash().GetHex());
+    return res;
 }
 
 UniValue assetsend(const JSONRPCRequest& request) {
@@ -705,20 +783,6 @@ UniValue assetsend(const JSONRPCRequest& request) {
     requestMany.params = paramsFund;
     requestMany.URI = request.URI;
     return assetsendmany(requestMany);          
-}
-void ModifyAssetOutputsBasedOnChange(const CMutableTransaction& mtx, CAssetAllocation& assetAllocation, const int &nChangePosInOut) {
-    for(auto &it: assetAllocation.voutAssets) {
-        for(auto& voutAsset: it.second) {
-            // everything after the change insertion location should be incremented to account for the new tx.vout
-            if(voutAsset.n >= (uint32_t)nChangePosInOut) {
-                voutAsset.n++;
-            }
-        }
-        // mtx would have assetInfo in change position when change was created in CreateTransaction(), 
-        if(mtx.vout[nChangePosInOut].assetInfo.nAsset == it.first) {
-            it.second.push_back(CAssetOut(nChangePosInOut, mtx.vout[nChangePosInOut].assetInfo.nValue));
-        }
-    }
 }
 UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -785,7 +849,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			if (nAmount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
 			theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(theAssetAllocation.voutAssets[nAsset].size(), nAmount));
-            CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
+            CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
             auto it = mapAssetTotals.emplace(nAsset, nAmount);
             if(!it.second) {
@@ -802,7 +866,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(theAssetAllocation.voutAssets[nAsset].size(), nAuxFee));
             const CScript& scriptPubKey = GetScriptForDestination(auxFeeAddress);
             CTxOut change_prototype_txout(0, scriptPubKey);
-            CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
+            CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
             auto it = mapAssetTotals.emplace(nAsset, nAuxFee);
             if(!it.second) {
@@ -1092,7 +1156,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     }
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, ::dustRelayFee), false };
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
     vecSend.push_back(recp);
     vector<unsigned char> data;
     mintSyscoin.Serialize(data);
