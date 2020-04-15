@@ -549,9 +549,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     cwd=self.options.tmpdir,
                 ))
             self.start_node(CACHE_NODE_ID)
+            cache_node = self.nodes[CACHE_NODE_ID]
 
             # Wait for RPC connections to be ready
-            self.nodes[CACHE_NODE_ID].wait_for_rpc_connection()
+            cache_node.wait_for_rpc_connection()
+
+            # Set a time in the past, so that blocks don't end up in the future
+            cache_node.setmocktime(cache_node.getblockheader(cache_node.getbestblockhash())['time'])
 
             # Create a 199-block-long chain; each of the 4 first nodes
             # gets 25 mature blocks and 25 immature.
@@ -560,12 +564,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # This is needed so that we are out of IBD when the test starts,
             # see the tip age check in IsInitialBlockDownload().
             for i in range(8):
-                self.nodes[CACHE_NODE_ID].generatetoaddress(
+                cache_node.generatetoaddress(
                     nblocks=25 if i != 7 else 24,
                     address=TestNode.PRIV_KEYS[i % 4].address,
                 )
 
-            assert_equal(self.nodes[CACHE_NODE_ID].getblockchaininfo()["blocks"], 199)
+            assert_equal(cache_node.getblockchaininfo()["blocks"], 199)
 
             # Shut it down, and clean up cache directories:
             self.stop_nodes()
