@@ -114,20 +114,22 @@ FUZZ_SUITE_LD_COMMON = \
 ### VeriBlock section start
 # path is relative to src
 VBK_TESTS = \
-  vbk/test/unit/rpc_service_tests.cpp \
-  vbk/test/unit/genesis_block_tests.cpp \
-  vbk/test/unit/pop_service_tests.cpp \
-  vbk/test/unit/util_service_tests.cpp \
-  vbk/test/unit/pop_tx_tests.cpp \
-  vbk/test/unit/forkresolution_tests.cpp \
-  vbk/test/unit/updated_mempool_tests.cpp \
-  vbk/test/unit/pop_reward_tests.cpp \
-  vbk/test/unit/vbk_merkle_tests.cpp \
-  vbk/test/unit/vbk_net_processing_tests.cpp \
-  vbk/test/unit/pop_interpreter_tests.cpp \
-  vbk/test/unit/block_validation_tests.cpp \
   vbk/test/unit/gmock_tests.cpp
-  
+
+#  vbk/test/unit/rpc_service_tests.cpp \
+#  vbk/test/unit/genesis_block_tests.cpp \
+#  vbk/test/unit/pop_service_tests.cpp \
+#  vbk/test/unit/util_service_tests.cpp \
+#  vbk/test/unit/updated_mempool_tests.cpp \
+#  vbk/test/unit/vbk_merkle_tests.cpp \
+#  vbk/test/unit/vbk_net_processing_tests.cpp \
+#  vbk/test/unit/pop_interpreter_tests.cpp \
+#  vbk/test/unit/block_validation_tests.cpp \
+#  vbk/test/unit/forkresolution_tests.cpp
+#  vbk/test/unit/pop_tx_tests.cpp
+#  vbk/test/unit/pop_reward_tests.cpp
+
+
 ### VeriBlock section end
 
 # test_bitcoin binary #
@@ -146,7 +148,6 @@ BITCOIN_TESTS =\
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
   test/blockfilter_tests.cpp \
-  test/blockfilter_index_tests.cpp \
   test/bloom_tests.cpp \
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
@@ -199,13 +200,14 @@ BITCOIN_TESTS =\
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
-  test/txindex_tests.cpp \
   test/txvalidation_tests.cpp \
-  test/txvalidationcache_tests.cpp \
   test/uint256_tests.cpp \
   test/util_tests.cpp \
   test/validation_block_tests.cpp \
   test/versionbits_tests.cpp
+#  test/txvalidationcache_tests.cpp
+#  test/txindex_tests.cpp
+#   test/blockfilter_index_tests.cpp
 
 if ENABLE_PROPERTY_TESTS
 BITCOIN_TESTS += \
@@ -219,12 +221,12 @@ endif
 if ENABLE_WALLET
 BITCOIN_TESTS += \
   wallet/test/db_tests.cpp \
-  wallet/test/psbt_wallet_tests.cpp \
-  wallet/test/wallet_tests.cpp \
-  wallet/test/wallet_crypto_tests.cpp \
-  wallet/test/coinselector_tests.cpp \
-  wallet/test/init_tests.cpp \
-  wallet/test/ismine_tests.cpp
+  wallet/test/psbt_wallet_tests.cpp
+#  wallet/test/wallet_tests.cpp \
+#  wallet/test/wallet_crypto_tests.cpp \
+#  wallet/test/coinselector_tests.cpp \
+#  wallet/test/init_tests.cpp \
+#  wallet/test/ismine_tests.cpp
 
 BITCOIN_TEST_SUITE += \
   wallet/test/wallet_test_fixture.cpp \

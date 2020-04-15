@@ -1629,8 +1629,6 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     const std::string lockname = ".lock";
 #ifndef WIN32
 
-    testing::Mock::AllowLeak(&pop_service_mock);
-
     // Revert SIGCHLD to default, otherwise boost.test will catch and fail on
     // it: there is BOOST_TEST_IGNORE_SIGCHLD but that only works when defined
     // at build-time of the boost library

@@ -1,4 +1,4 @@
-packages:=boost libevent
+packages:=boost libevent altintegration
 
 qt_packages = zlib
 

@@ -363,9 +363,10 @@ void PopServiceImpl::removeAllBlockPayloads(const CBlockIndex& connecting)
     std::lock_guard<std::mutex> lock(mutex);
     altintegration::ValidationState instate;
     auto block = cast(connecting.nHeight, connecting.GetBlockHeader());
-    bool ret = altTree->setState(block.hash, instate);
+    bool ret = altTree->setState(block.previousBlock, instate);
     assert(ret);
     assert(instate.IsValid());
+    (void) ret;
 }
 
 

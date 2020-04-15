@@ -10,7 +10,6 @@
 #include <vbk/test/util/tx.hpp>
 
 struct NetServiceFixture : public TestingSetup {
-    VeriBlockTest::ServicesFixture service_fixture;
 };
 
 static CService ip(uint32_t i)
