@@ -423,7 +423,7 @@ and its `cs_KeyStore` lock for example).
 Threads
 -------
 
-- [Main thread (`syscoind`)](https://doxygen.bitcoincore.org/syscoind_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97)
+- [Main thread (`syscoind`)](https://doxygen.bitcoincore.org/bitcoind_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97)
   : Started from `main()` in `syscoind.cpp`. Responsible for starting up and
   shutting down the application.
 
