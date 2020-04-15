@@ -12,7 +12,7 @@ from test_framework.messages import (
     ser_string,
 )
 from test_framework.mininode import (
-    P2PDataStore,
+    P2PDataStore, P2PInterface
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -57,6 +57,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.test_checksum()
         self.test_size()
         self.test_command()
+        self.test_large_inv()
 
         node = self.nodes[0]
         self.node = node
@@ -216,6 +217,19 @@ class InvalidMessagesTest(BitcoinTestFramework):
             self.nodes[0].p2p.send_raw_message(msg)
             conn.sync_with_ping(timeout=1)
             self.nodes[0].disconnect_p2ps()
+
+    def test_large_inv(self):
+        conn = self.nodes[0].add_p2p_connection(P2PInterface())
+        with self.nodes[0].assert_debug_log(['Misbehaving', 'peer=5 (0 -> 20): message inv size() = 50001']):
+            msg = msg_inv([CInv(MSG_TX, 1)] * 50001)
+            conn.send_and_ping(msg)
+        with self.nodes[0].assert_debug_log(['Misbehaving', 'peer=5 (20 -> 40): message getdata size() = 50001']):
+            msg = msg_getdata([CInv(MSG_TX, 1)] * 50001)
+            conn.send_and_ping(msg)
+        with self.nodes[0].assert_debug_log(['Misbehaving', 'peer=5 (40 -> 60): headers message size = 2001']):
+            msg = msg_headers([CBlockHeader()] * 2001)
+            conn.send_and_ping(msg)
+        self.nodes[0].disconnect_p2ps()
 
     def _tweak_msg_data_size(self, message, wrong_size):
         """
