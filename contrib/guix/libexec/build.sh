@@ -174,7 +174,7 @@ esac
 # CFLAGS
 HOST_CFLAGS="-O2 -g"
 case "$HOST" in
-    *linux*)  HOST_CFLAGS+=" -ffile-prefix-map=${PWD}=." ;;
+    *linux*)  HOST_CFLAGS+=" -ffile-prefix-map=${PWD}=. -ffunction-sections -fdata-sections" ;;
     *mingw*)  HOST_CFLAGS+=" -fno-ident" ;;
 esac
 
@@ -183,7 +183,7 @@ HOST_CXXFLAGS="$HOST_CFLAGS"
 
 # LDFLAGS
 case "$HOST" in
-    *linux*)  HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$glibc_dynamic_linker -static-libstdc++ -Wl,-O2" ;;
+    *linux*)  HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$glibc_dynamic_linker -static-libstdc++ -Wl,-O2 -Wl,--gc-sections" ;;
     *mingw*)  HOST_LDFLAGS="-Wl,--no-insert-timestamp" ;;
 esac
 
