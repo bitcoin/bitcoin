@@ -73,6 +73,8 @@ int main(int argc, char** argv)
             gArgs.GetArg("-plot-height", DEFAULT_PLOT_HEIGHT)));
     }
 
+    gArgs.ClearArgs(); // gArgs no longer needed. Clear it here to avoid interactions with the testing setup in the benches
+
     benchmark::BenchRunner::RunAll(*printer, evaluations, scaling_factor, regex_filter, is_list_only);
 
     return EXIT_SUCCESS;

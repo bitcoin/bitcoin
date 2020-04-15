@@ -16,11 +16,16 @@
 #include <validation.h>
 #include <validationinterface.h>
 
-const RegTestingSetup* g_setup;
+const TestingSetup* g_setup;
 
 void initialize()
 {
-    static RegTestingSetup setup{};
+    static TestingSetup setup{
+        CBaseChainParams::REGTEST,
+        {
+            "-nodebuglogfile",
+        },
+    };
     g_setup = &setup;
 
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
