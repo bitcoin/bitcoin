@@ -13,7 +13,6 @@
 #include "vbk/service_locator.hpp"
 #include "vbk/test/util/mock.hpp"
 #include "vbk/test/util/tx.hpp"
-#include "vbk/util_service/util_service_impl.hpp"
 
 BOOST_AUTO_TEST_SUITE(vbk_merkle_tests)
 
@@ -51,7 +50,6 @@ BOOST_FIXTURE_TEST_CASE(TestChain100Setup_has_valid_merkle_roots, MerkleFixture)
 
 BOOST_FIXTURE_TEST_CASE(addPopTransactionRootIntoCoinbaseCommitment_test, MerkleFixture)
 {
-    VeriBlockTest::ServicesFixture service_fixture;
     CMutableTransaction popTx = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, 2)});
 
     {

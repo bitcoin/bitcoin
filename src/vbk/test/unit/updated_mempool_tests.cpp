@@ -11,7 +11,6 @@
 #include <wallet/wallet.h>
 
 #include <vbk/init.hpp>
-#include <vbk/pop_service/pop_service_impl.hpp>
 #include <vbk/test/util/tx.hpp>
 #include <vbk/test/util/mock.hpp>
 
@@ -155,159 +154,155 @@ BOOST_AUTO_TEST_CASE(MempoolPoPPriorityIndexing)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(AcceptToMemoryPool_pop_tx_test, TestingSetup)
-{
-    VeriBlockTest::ServicesFixture service_fixture;
+//BOOST_FIXTURE_TEST_CASE(AcceptToMemoryPool_pop_tx_test, TestingSetup)
+//{
+//    CMutableTransaction popTx1 = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, 2)});
+//    CMutableTransaction popTx2 = VeriBlockTest::makePopTx({2}, {std::vector<uint8_t>(100, 3)});
+//
+//    {
+//        LOCK(cs_main);
+//
+//        TxValidationState state;
+//        BOOST_CHECK(mempool.size() == 0);
+//        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx1), nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
+//
+//        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx2), nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
+//        BOOST_CHECK(mempool.size() == 2);
+//    }
+//}
 
-    CMutableTransaction popTx1 = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, 2)});
-    CMutableTransaction popTx2 = VeriBlockTest::makePopTx({2}, {std::vector<uint8_t>(100, 3)});
-
-    {
-        LOCK(cs_main);
-
-        TxValidationState state;
-        BOOST_CHECK(mempool.size() == 0);
-        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx1), nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
-
-        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx2), nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
-        BOOST_CHECK(mempool.size() == 2);
-    }
-}
-
-BOOST_FIXTURE_TEST_CASE(get_pop_tx_from_mempool_1, TestingSetup)
-{
-    VeriBlockTest::ServicesFixture service_fixture;
-
-    BlockAssemblerTest blockAssembler(Params());
-
-    CMutableTransaction popTx1 = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, 2)});
-    CMutableTransaction popTx2 = VeriBlockTest::makePopTx({2}, {std::vector<uint8_t>(100, 3)});
-
-    TestMemPoolEntryHelper entry;
-    {
-        LOCK2(cs_main, mempool.cs);
-        mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx1));
-        mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx2));
-    }
-
-    int nPackagesSelected = 0;
-    int nDescendantsUpdated = 0;
-
-    blockAssembler.prepareBlockTest();
-    blockAssembler.addPackageTxs<VeriBlock::poptx_priority<ancestor_score>>(nPackagesSelected, nDescendantsUpdated);
-
-
-    // in this test case we dont have coinbase transaction in the block
-    BOOST_CHECK(blockAssembler.getBlock().vtx.size() == 2);
-}
-
-BOOST_FIXTURE_TEST_CASE(get_pop_tx_from_mempool_2, TestingSetup)
-{
-    VeriBlockTest::ServicesFixture service_fixture;
-
-    BlockAssemblerTest blockAssembler(Params());
-
-    TestMemPoolEntryHelper entry;
-
-    size_t commonTxAmount = 20000;
-    for (size_t i = 0; i < commonTxAmount; ++i) {
-        LOCK2(cs_main, mempool.cs);
-        CMutableTransaction tx = CMutableTransaction();
-        tx.vout.resize(1);
-        tx.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
-        tx.vout[0].nValue = i;
-        mempool.addUnchecked(entry.Fee(0LL).FromTx(tx));
-    }
-
-    int nPackagesSelected = 0;
-    int nDescendantsUpdated = 0;
-
-    blockAssembler.prepareBlockTest();
-
-    blockAssembler.addPackageTxs<ancestor_score>(nPackagesSelected, nDescendantsUpdated);
-
-
-    // check that we have the max amount of txs in block
-    BOOST_CHECK(blockAssembler.getBlock().vtx.size() < commonTxAmount);
-    BOOST_CHECK(mempool.size() == commonTxAmount);
-
-    // add one popTx into mempool
-    CMutableTransaction popTx = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, 1)});
-    BOOST_CHECK(VeriBlock::isPopTx(CTransaction(popTx)));
-    {
-        LOCK2(cs_main, mempool.cs);
-        mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx));
-    }
-
-
-    nPackagesSelected = 0;
-    nDescendantsUpdated = 0;
-
-    blockAssembler.prepareBlockTest();
-
-    // get txs with poptx comparator
-    blockAssembler.addPackageTxs<VeriBlock::poptx_priority<ancestor_score>>(nPackagesSelected, nDescendantsUpdated);
-
-
-    // check that we have one pop tx in block
-    std::vector<CTransactionRef> vtx = blockAssembler.getBlock().vtx;
-    BOOST_CHECK(std::find_if(vtx.begin(), vtx.end(), [](const CTransactionRef& tx) { return VeriBlock::isPopTx(*tx); }) != vtx.end());
-}
-
-BOOST_FIXTURE_TEST_CASE(check_the_pop_tx_limits_in_block, TestingSetup)
-{
-    auto& config = VeriBlock::getService<VeriBlock::Config>();
-    VeriBlockTest::ServicesFixture service_fixture;
-
-    BlockAssemblerTest blockAssembler(Params());
-
-    TestMemPoolEntryHelper entry;
-
-    for (size_t i = 0; i < config.max_pop_tx_amount + 10; ++i) {
-        LOCK2(cs_main, mempool.cs);
-        CMutableTransaction popTx = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, i)});
-        mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx));
-    }
-
-    int nPackagesSelected = 0;
-    int nDescendantsUpdated = 0;
-
-    blockAssembler.prepareBlockTest();
-
-    blockAssembler.addPackageTxs<VeriBlock::poptx_priority<ancestor_score>>(nPackagesSelected, nDescendantsUpdated);
-
-
-    BOOST_CHECK(blockAssembler.getBlock().vtx.size() == config.max_pop_tx_amount);
-}
-
-BOOST_FIXTURE_TEST_CASE(check_CreateNewBlock_with_blockPopValidation_fail, TestingSetup)
-{
-    testing::NiceMock<VeriBlockTest::PopServiceImplMock> pop_impl_mock;
-
-    ON_CALL(pop_service_mock, determineATVPlausibilityWithBTCRules).WillByDefault(Return(true));
-    ON_CALL(pop_service_mock, blockPopValidation)
-        .WillByDefault(
-            [&](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) {
-                return VeriBlock::blockPopValidationImpl(pop_impl_mock, block, pindexPrev, params, state);
-            });
-
-    const size_t popTxCount = 10;
-
-    TestMemPoolEntryHelper entry;
-    for (size_t i = 0; i < popTxCount; ++i) {
-        LOCK2(cs_main, mempool.cs);
-        CMutableTransaction popTx = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, i)});
-        mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx));
-    }
-
-    BlockAssembler blkAssembler(Params());
-    CScript scriptPubKey = CScript() << OP_CHECKSIG;
-
-    // intentionally generate the correct block mutiple times to make sure it's repeatable
-    for (size_t i = 0; i < popTxCount * 2; i++) {
-        std::unique_ptr<CBlockTemplate> pblockTemplate = blkAssembler.CreateNewBlock(scriptPubKey);
-        BOOST_TEST(pblockTemplate->block.vtx.size() == 3);
-    }
-}
+//BOOST_FIXTURE_TEST_CASE(get_pop_tx_from_mempool_1, TestingSetup)
+//{
+//    BlockAssemblerTest blockAssembler(Params());
+//
+//    CMutableTransaction popTx1 = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, 2)});
+//    CMutableTransaction popTx2 = VeriBlockTest::makePopTx({2}, {std::vector<uint8_t>(100, 3)});
+//
+//    TestMemPoolEntryHelper entry;
+//    {
+//        LOCK2(cs_main, mempool.cs);
+//        mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx1));
+//        mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx2));
+//    }
+//
+//    int nPackagesSelected = 0;
+//    int nDescendantsUpdated = 0;
+//
+//    blockAssembler.prepareBlockTest();
+//    blockAssembler.addPackageTxs<VeriBlock::poptx_priority<ancestor_score>>(nPackagesSelected, nDescendantsUpdated);
+//
+//
+//    // in this test case we dont have coinbase transaction in the block
+//    BOOST_CHECK(blockAssembler.getBlock().vtx.size() == 2);
+//}
+//
+//BOOST_FIXTURE_TEST_CASE(get_pop_tx_from_mempool_2, TestingSetup)
+//{
+//    VeriBlockTest::ServicesFixture service_fixture;
+//
+//    BlockAssemblerTest blockAssembler(Params());
+//
+//    TestMemPoolEntryHelper entry;
+//
+//    size_t commonTxAmount = 20000;
+//    for (size_t i = 0; i < commonTxAmount; ++i) {
+//        LOCK2(cs_main, mempool.cs);
+//        CMutableTransaction tx = CMutableTransaction();
+//        tx.vout.resize(1);
+//        tx.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+//        tx.vout[0].nValue = i;
+//        mempool.addUnchecked(entry.Fee(0LL).FromTx(tx));
+//    }
+//
+//    int nPackagesSelected = 0;
+//    int nDescendantsUpdated = 0;
+//
+//    blockAssembler.prepareBlockTest();
+//
+//    blockAssembler.addPackageTxs<ancestor_score>(nPackagesSelected, nDescendantsUpdated);
+//
+//
+//    // check that we have the max amount of txs in block
+//    BOOST_CHECK(blockAssembler.getBlock().vtx.size() < commonTxAmount);
+//    BOOST_CHECK(mempool.size() == commonTxAmount);
+//
+//    // add one popTx into mempool
+//    CMutableTransaction popTx = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, 1)});
+//    BOOST_CHECK(VeriBlock::isPopTx(CTransaction(popTx)));
+//    {
+//        LOCK2(cs_main, mempool.cs);
+//        mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx));
+//    }
+//
+//
+//    nPackagesSelected = 0;
+//    nDescendantsUpdated = 0;
+//
+//    blockAssembler.prepareBlockTest();
+//
+//    // get txs with poptx comparator
+//    blockAssembler.addPackageTxs<VeriBlock::poptx_priority<ancestor_score>>(nPackagesSelected, nDescendantsUpdated);
+//
+//
+//    // check that we have one pop tx in block
+//    std::vector<CTransactionRef> vtx = blockAssembler.getBlock().vtx;
+//    BOOST_CHECK(std::find_if(vtx.begin(), vtx.end(), [](const CTransactionRef& tx) { return VeriBlock::isPopTx(*tx); }) != vtx.end());
+//}
+//
+//BOOST_FIXTURE_TEST_CASE(check_the_pop_tx_limits_in_block, TestingSetup)
+//{
+//    auto& config = VeriBlock::getService<VeriBlock::Config>();
+//    VeriBlockTest::ServicesFixture service_fixture;
+//
+//    BlockAssemblerTest blockAssembler(Params());
+//
+//    TestMemPoolEntryHelper entry;
+//
+//    for (size_t i = 0; i < config.max_pop_tx_amount + 10; ++i) {
+//        LOCK2(cs_main, mempool.cs);
+//        CMutableTransaction popTx = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, i)});
+//        mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx));
+//    }
+//
+//    int nPackagesSelected = 0;
+//    int nDescendantsUpdated = 0;
+//
+//    blockAssembler.prepareBlockTest();
+//
+//    blockAssembler.addPackageTxs<VeriBlock::poptx_priority<ancestor_score>>(nPackagesSelected, nDescendantsUpdated);
+//
+//
+//    BOOST_CHECK(blockAssembler.getBlock().vtx.size() == config.max_pop_tx_amount);
+//}
+//
+//BOOST_FIXTURE_TEST_CASE(check_CreateNewBlock_with_blockPopValidation_fail, TestingSetup)
+//{
+//    testing::NiceMock<VeriBlockTest::PopServiceImplMock> pop_impl_mock;
+//
+//    ON_CALL(pop_service_mock, determineATVPlausibilityWithBTCRules).WillByDefault(Return(true));
+//    ON_CALL(pop_service_mock, blockPopValidation)
+//        .WillByDefault(
+//            [&](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) {
+//                return VeriBlock::blockPopValidationImpl(pop_impl_mock, block, pindexPrev, params, state);
+//            });
+//
+//    const size_t popTxCount = 10;
+//
+//    TestMemPoolEntryHelper entry;
+//    for (size_t i = 0; i < popTxCount; ++i) {
+//        LOCK2(cs_main, mempool.cs);
+//        CMutableTransaction popTx = VeriBlockTest::makePopTx({1}, {std::vector<uint8_t>(100, i)});
+//        mempool.addUnchecked(entry.Fee(0LL).FromTx(popTx));
+//    }
+//
+//    BlockAssembler blkAssembler(Params());
+//    CScript scriptPubKey = CScript() << OP_CHECKSIG;
+//
+//    // intentionally generate the correct block mutiple times to make sure it's repeatable
+//    for (size_t i = 0; i < popTxCount * 2; i++) {
+//        std::unique_ptr<CBlockTemplate> pblockTemplate = blkAssembler.CreateNewBlock(scriptPubKey);
+//        BOOST_TEST(pblockTemplate->block.vtx.size() == 3);
+//    }
+//}
 
 BOOST_AUTO_TEST_SUITE_END()

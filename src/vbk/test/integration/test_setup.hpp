@@ -13,9 +13,6 @@
 namespace VeriBlockTest {
 
 struct IntegrationTestFixture : public TestChain100Setup {
-    VeriBlock::UtilServiceImpl util_service_impl;
-    UtilServiceMock util_service_mock;
-
     IntegrationTestFixture();
 };
 

@@ -28,7 +28,6 @@ BOOST_FIXTURE_TEST_CASE(DisconnectBlock_restore_iputs_ignore_pop_tx_test, TestCh
 
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     CBlock block = CreateAndProcessBlock({popTx}, scriptPubKey);
-    testing::Mock::VerifyAndClearExpectations(&pop_service_mock);
 
     BOOST_CHECK(ChainActive().Tip()->GetBlockHash() == block.GetHash()); // check that our block is the Tip of the current blockChain
     {

@@ -68,19 +68,13 @@ static inline bool InsecureRandBool() { return g_insecure_rand_ctx.randbool(); }
 
 static constexpr CAmount CENT{1000000};
 
-struct BasicVbkSetup {
-    BasicVbkSetup();
-
-    virtual ~BasicVbkSetup() = default;
-};
-
 /** Basic testing setup.
  * This just configures logging, data dir and chain parameters.
  */
-struct BasicTestingSetup: public BasicVbkSetup {
+struct BasicTestingSetup {
     ECCVerifyHandle globalVerifyHandle;
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
-    ~BasicTestingSetup() override;
+    ~BasicTestingSetup();
 private:
     const fs::path m_path_root;
 };
@@ -93,7 +87,7 @@ struct TestingSetup : public BasicTestingSetup {
     boost::thread_group threadGroup;
     CScheduler scheduler;
     explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
-    ~TestingSetup() override;
+    ~TestingSetup();
 };
 
 /** Identical to TestingSetup, but chain set to regtest */
@@ -121,7 +115,7 @@ struct TestChain100Setup : public RegTestingSetup {
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
                                  const CScript& scriptPubKey, bool* isBlockValid);
 
-    ~TestChain100Setup() override;
+    ~TestChain100Setup();
 
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
