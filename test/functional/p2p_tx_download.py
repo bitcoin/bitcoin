@@ -152,6 +152,10 @@ class TxDownloadTest(BitcoinTestFramework):
         wait_until(lambda: p.tx_getdata_count == MAX_GETDATA_IN_FLIGHT + 2)
         self.nodes[0].setmocktime(0)
 
+    def test_spurious_notfound(self):
+        self.log.info('Check that spurious notfound is ignored')
+        self.nodes[0].p2ps[0].send_message(msg_notfound(vec=[CInv(1, 1)]))
+
     def run_test(self):
         # Setup the p2p connections
         self.peers = []
@@ -160,6 +164,8 @@ class TxDownloadTest(BitcoinTestFramework):
                 self.peers.append(node.add_p2p_connection(TestP2PConn()))
 
         self.log.info("Nodes are setup with {} incoming connections each".format(NUM_INBOUND))
+
+        self.test_spurious_notfound()
 
         # Test the in-flight max first, because we want no transactions in
         # flight ahead of this test.
