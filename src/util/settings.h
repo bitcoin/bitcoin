@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-class UniValue;
+#include <univalue.h> // For util::SettingsValue = UniValue
 
 namespace util {
 

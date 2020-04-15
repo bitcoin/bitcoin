@@ -17,7 +17,7 @@ static const char* DEFAULT_PLOT_PLOTLYURL = "https://cdn.plot.ly/plotly-latest.m
 static const int64_t DEFAULT_PLOT_WIDTH = 1024;
 static const int64_t DEFAULT_PLOT_HEIGHT = 768;
 
-static void SetupBenchArgs()
+static void SetupBenchArgs(ArgsManager& argsman)
 {
     SetupHelpOptions(gArgs);
 
@@ -33,7 +33,8 @@ static void SetupBenchArgs()
 
 int main(int argc, char** argv)
 {
-    SetupBenchArgs();
+    ArgsManager argsman;
+    SetupBenchArgs(argsman);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
