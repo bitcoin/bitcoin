@@ -647,8 +647,8 @@ public:
     // decomposes a message from the context
     virtual CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) = 0;
     /**
-     * Try to decode all CNetMessage%s from the first \p nBytes bytes of the \p
-     * pch buffer.
+     * Try to decode all CNetMessage%s from the first \p num_bytes bytes of the
+     * \p receive_buffer buffer.
      *
      * @param[in] message_start The expected message start string.
      * @param[in] time The approximate time at which these messages were
@@ -665,7 +665,7 @@ public:
      *
      * @see CNode::ReceiveMsgBytes(const char *, unsigned int, bool&)
      */
-    virtual std::tuple<bool, std::vector<CNetMessage>> ReadMessages(const char *pch, unsigned int nBytes, const CMessageHeader::MessageStartChars& message_start, int64_t time) = 0;
+    virtual std::tuple<bool, std::vector<CNetMessage>> ReadMessages(const char *receive_buffer, unsigned int num_bytes, const CMessageHeader::MessageStartChars& message_start, int64_t time) = 0;
     virtual ~TransportDeserializer() {}
 };
 
@@ -719,17 +719,17 @@ public:
         return ret;
     }
     CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) override;
-    std::tuple<bool, std::vector<CNetMessage>> ReadMessages(const char *pch, unsigned int nBytes, const CMessageHeader::MessageStartChars& message_start, int64_t time) override {
+    std::tuple<bool, std::vector<CNetMessage>> ReadMessages(const char *receive_buffer, unsigned int num_bytes, const CMessageHeader::MessageStartChars& message_start, int64_t time) override {
         std::vector<CNetMessage> out_msgs;
-        while (nBytes > 0) {
+        while (num_bytes > 0) {
             // absorb network data
-            int handled = Read(pch, nBytes);
+            int handled = Read(receive_buffer, num_bytes);
             if (handled < 0) {
                 return std::make_tuple(false, out_msgs);
             }
 
-            pch += handled;
-            nBytes -= handled;
+            receive_buffer += handled;
+            num_bytes -= handled;
 
             if (Complete()) {
                 out_msgs.push_back(GetMessage(message_start, time));
