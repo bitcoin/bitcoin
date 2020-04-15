@@ -12,7 +12,6 @@ environment:
   QT_LOCAL_PATH: 'C:\Qt5.9.8_x64_static_vs2019'
   VCPKG_INSTALL_PATH: 'C:\tools\vcpkg\installed'
 install:
-- cmd: pip install --quiet git+https://github.com/frerich/clcache.git@v4.2.0
 # Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
 # - cmd: pip install zmq
 # Powershell block below is to install the c++ dependencies via vcpkg. The pseudo code is:
@@ -32,7 +31,6 @@ install:
       .\vcpkg integrate install
       cd "$env:APPVEYOR_BUILD_FOLDER"
 before_build:
-- ps:  clcache -M 536870912
 # Powershell block below is to download and extract the Qt static libraries. The pseudo code is:
 #    a. Download the zip file with the prebuilt Qt static libraries.
 #    b. Check that the downloaded file matches the expected hash.
@@ -50,13 +48,9 @@ before_build:
         Exit-AppveyorBuild;
       }
 - cmd: python build_msvc\msvc-autogen.py
-- ps:  Start-Process clcache-server
-- ps:  fsutil behavior set disablelastaccess 0 # Enable Access time feature on Windows (for clcache)
 build_script:
-- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitcoin.sln /m /v:q /nologo
+- cmd: msbuild /p:TrackFileAccess=false build_msvc\bitcoin.sln /m /v:q /nologo
 after_build:
-- ps:  fsutil behavior set disablelastaccess 1 # Disable Access time feature on Windows (better performance)
-- ps:  clcache -z
 #- 7z a bitcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
 test_script:
 - cmd: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
