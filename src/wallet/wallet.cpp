@@ -2651,9 +2651,13 @@ SigningResult CWallet::SignMessage(const std::string& message, const PKHash& pkh
     }
     return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
 }
-
-bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
+// SYSCOIN
+bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl &coinControl)
 {
+    std::vector<COutPoint> vOutpoints;
+    coinControl.ListSelected(vOutpoints);
+    if(coinControl.assetInfo)
+        LogPrintf("FundTransaction assetInfo %d %lld count inputs %d\n", coinControl.assetInfo->nAsset, coinControl.assetInfo->nValue, vOutpoints.size());
     std::vector<CRecipient> vecSend;
 
     // Turn the txout set into a CRecipient vector.
@@ -2818,9 +2822,6 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
     }
 
     CMutableTransaction txNew;
-    // SYSCOIN
-    if(tx)
-        txNew.nVersion = tx->nVersion;
 
     FeeCalculation feeCalc;
     CAmount nFeeNeeded;
@@ -2983,7 +2984,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     // Fill a vout to ourself
                     CTxOut newTxOut(nChange, scriptChange);
                     // SYSCOIN
-                    if(nChangeAsset.nAsset > 0) {
+                    if(nChangeAsset.nAsset > 0 && nChangeAsset.nValue > 0) {
                         newTxOut.assetInfo = nChangeAsset;
                     }
 
@@ -2993,7 +2994,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     if (IsDust(newTxOut, discard_rate) || bnb_used)
                     {
                         // SYSCOIN
-                        if(nChangeAsset.nAsset != 0) {
+                        if(nChangeAsset.nAsset > 0 && nChangeAsset.nValue > 0) {
                             strFailReason = _("Insufficient funds").translated;
                             return false;
                         }
@@ -3014,10 +3015,11 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                         }
                         std::vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosInOut;
                         txNew.vout.insert(position, newTxOut);
+                        LogPrintf("wallet nChangePosInOut %d\n", nChangePosInOut);
                     }
                 } else {
                     nChangePosInOut = -1;
-                    if(nChangeAsset.nValue > 0) {
+                    if(nChangeAsset.nAsset > 0 && nChangeAsset.nValue > 0) {
                         strFailReason = _("Change index out of range").translated;
                         return false;
                     }
