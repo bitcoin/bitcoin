@@ -1894,6 +1894,11 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 Coin coin;
                 bool is_spent = view.SpendCoin(out, &coin);
                 // SYSCOIN
+                if(coin.out.assetInfo.nAsset > 0) {
+                    CAssetCoinInfo& txCoinInfo = *const_cast<CAssetCoinInfo*>(&tx.vout[o].assetInfo);
+                    txCoinInfo.nAsset = coin.out.assetInfo.nAsset;
+                    txCoinInfo.nValue = coin.out.assetInfo.nValue;
+                }
                 if (!is_spent || tx.vout[o] != ((CTxOut)coin.out) || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
                     fClean = false; // transaction output mismatch
                 }

@@ -2681,6 +2681,8 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 
     if (nChangePosInOut != -1) {
         tx.vout.insert(tx.vout.begin() + nChangePosInOut, tx_new->vout[nChangePosInOut]);
+        // SYSCOIN
+        tx.vout[nChangePosInOut].assetInfo = tx_new->vout[nChangePosInOut].assetInfo;
     }
 
     // Copy output sizes from new transaction; they may have had the fee
@@ -2790,7 +2792,6 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
     // else use m_default_address_type for change
     return m_default_address_type;
 }
-
 bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet,
                          int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign)
 {
@@ -3011,7 +3012,6 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                             strFailReason = _("Change index out of range").translated;
                             return false;
                         }
-
                         std::vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosInOut;
                         txNew.vout.insert(position, newTxOut);
                     }

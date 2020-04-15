@@ -15,7 +15,7 @@
 
 /** Formatter for undo information for a CTxIn
  *
- *  Contains the prevout's CTxOut being spent, and its metadata as well
+ *  Contains the prevout's CTxOutCoin being spent, and its metadata as well
  *  (coinbase or not, height). The serialization contains a dummy value of
  *  zero. This is compatible with older versions which expect to see
  *  the transaction version there.

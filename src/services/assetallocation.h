@@ -13,7 +13,6 @@ class CTransaction;
 class CAsset;
 class CMintSyscoin;
 bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &entry);
-
 std::string assetAllocationFromTx(const int &nVersion);
 static const int ONE_YEAR_IN_BLOCKS = 525600;
 static const int ONE_HOUR_IN_BLOCKS = 60;
@@ -24,35 +23,34 @@ enum {
 	ZDAG_WARNING_RBF,
 	ZDAG_MAJOR_CONFLICT
 };
-class CAmountCompressed {
+class CAssetOut {
 public:
+    uint32_t n;
     CAmount nValue;
 
-    SERIALIZE_METHODS(CAmountCompressed, obj)
+    SERIALIZE_METHODS(CAssetOut, obj)
     {
+        READWRITE(VARINT(obj.n));
         READWRITE(Using<AmountCompression>(obj.nValue));
     }
-
-	CAmountCompressed() {
+    CAssetOut(const CAmount& nAmountIn, const uint32_t &nIn): n(nIn), nValue(nAmountIn) {}
+	CAssetOut() {
 		nValue = 0;
+        n = 0;
 	}
-    CAmountCompressed(const CAmount& nAmountIn): nValue(nAmountIn) {}
-	inline friend bool operator==(const CAmountCompressed &a, const CAmountCompressed &b) {
-		return (a.nValue == b.nValue
-			);
+    inline friend bool operator==(const CAssetOut &a, const CAssetOut &b) {
+		return (a.n == b.n && a.nValue == b.nValue);
 	}
-    inline friend bool operator!=(const CAmountCompressed &a, const CAmountCompressed &b) {
+    inline friend bool operator!=(const CAssetOut &a, const CAssetOut &b) {
 		return !(a == b);
 	}
 };
+typedef std::map<int32_t, std::vector<CAssetOut> > assetOutputType;
 class CAssetAllocation {
 public:
-    int32_t nAsset;
-	std::vector<CAmountCompressed> voutAssets;
-
+    assetOutputType voutAssets;
     SERIALIZE_METHODS(CAssetAllocation, obj)
     {
-        READWRITE(obj.nAsset);
         READWRITE(obj.voutAssets);
     }
 
@@ -65,7 +63,7 @@ public:
 	}
 	
 	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
-		return (a.nAsset == b.nAsset && a.voutAssets == b.voutAssets
+		return (a.voutAssets == b.voutAssets
 			);
 	}
     CAssetAllocation(const CAssetAllocation&) = delete;
@@ -76,7 +74,7 @@ public:
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { nAsset = 0; voutAssets.clear();}
+	inline void SetNull() { voutAssets.clear();}
     inline bool IsNull() const { return voutAssets.empty();}
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);

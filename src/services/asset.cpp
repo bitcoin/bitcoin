@@ -157,7 +157,7 @@ bool IsSyscoinTx(const int &nVersion){
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
 }
 bool IsSyscoinWithNoInputTx(const int &nVersion){
-    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
+    return nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
 }
 
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
@@ -212,9 +212,9 @@ bool GetAsset(const int32_t &nAsset,
 
 
 
-bool BuildAssetJson(const CAsset& asset,UniValue& oAsset)
+bool BuildAssetJson(const CAsset& asset, const int32_t& nAsset, UniValue& oAsset)
 {
-    oAsset.__pushKV("asset_guid", asset.assetAllocation.nAsset);
+    oAsset.__pushKV("asset_guid", nAsset);
     oAsset.__pushKV("symbol", asset.strSymbol);
 	oAsset.__pushKV("public_value", stringFromVch(asset.vchPubData));
     oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
@@ -238,7 +238,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
         	
 
 	entry.__pushKV("txtype", assetFromTx(tx.nVersion));
-	entry.__pushKV("asset_guid", asset.assetAllocation.nAsset);
+	entry.__pushKV("asset_guid", asset.assetAllocation.voutAssets.begin()->first);
     entry.__pushKV("symbol", asset.strSymbol);
     entry.__pushKV("txid", txHash.GetHex());
     
@@ -313,7 +313,7 @@ bool CAssetDB::ScanAssets(const uint32_t count, const uint32_t from, const UniVa
                     continue;
                 }
 				UniValue oAsset(UniValue::VOBJ);
-				if (!BuildAssetJson(txPos, oAsset))
+				if (!BuildAssetJson(txPos, key, oAsset))
 				{
 					pcursor->Next();
 					continue;
