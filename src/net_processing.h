@@ -65,6 +65,11 @@ struct CNodeStateStats {
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 bool IsBanned(NodeId nodeid);
 
+// Upstream moved this into net_processing.cpp (13417), however since we use Misbehaving in a number of dash specific
+// files such as mnauth.cpp and governance.cpp it makes sense to keep it in the header
+/** Increase a node's misbehavior score. */
+void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="");
+
 void EraseObjectRequest(NodeId nodeId, const CInv& inv);
 void RequestObject(NodeId nodeId, const CInv& inv, std::chrono::microseconds current_time, bool fForce=false);
 size_t GetRequestedObjectCount(NodeId nodeId);
