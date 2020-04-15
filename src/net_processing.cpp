@@ -3638,14 +3638,14 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
 
         if (pto->IsAddrRelayPeer() && !::ChainstateActive().IsInitialBlockDownload() && pto->m_next_local_addr_send < current_time) {
             AdvertiseLocal(pto);
-            pto->m_next_local_addr_send = PoissonNextSend(current_time, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
+            pto->m_next_local_addr_send = GetPoissonRand(current_time, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
         }
 
         //
         // Message: addr
         //
         if (pto->IsAddrRelayPeer() && pto->m_next_addr_send < current_time) {
-            pto->m_next_addr_send = PoissonNextSend(current_time, AVG_ADDRESS_BROADCAST_INTERVAL);
+            pto->m_next_addr_send = GetPoissonRand(current_time, AVG_ADDRESS_BROADCAST_INTERVAL);
             std::vector<CAddress> vAddr;
             vAddr.reserve(pto->vAddrToSend.size());
             assert(pto->m_addr_known);
@@ -3863,7 +3863,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         pto->m_tx_relay->nNextInvSend = std::chrono::microseconds{connman->PoissonNextSendInbound(nNow, INVENTORY_BROADCAST_INTERVAL)};
                     } else {
                         // Use half the delay for outbound peers, as there is less privacy concern for them.
-                        pto->m_tx_relay->nNextInvSend = PoissonNextSend(current_time, std::chrono::seconds{INVENTORY_BROADCAST_INTERVAL >> 1});
+                        pto->m_tx_relay->nNextInvSend = GetPoissonRand(current_time, std::chrono::seconds{INVENTORY_BROADCAST_INTERVAL >> 1});
                     }
                 }
 
@@ -4145,7 +4145,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     connman->PushMessage(pto, msgMaker.Make(NetMsgType::FEEFILTER, filterToSend));
                     pto->m_tx_relay->lastSentFeeFilter = filterToSend;
                 }
-                pto->m_tx_relay->nextSendTimeFeeFilter = PoissonNextSend(timeNow, AVG_FEEFILTER_BROADCAST_INTERVAL);
+                pto->m_tx_relay->nextSendTimeFeeFilter = GetPoissonRand(timeNow, AVG_FEEFILTER_BROADCAST_INTERVAL);
             }
             // If the fee filter has changed substantially and it's still more than MAX_FEEFILTER_CHANGE_DELAY
             // until scheduled broadcast, then move the broadcast to within MAX_FEEFILTER_CHANGE_DELAY.

@@ -723,7 +723,7 @@ void RandomInit()
     ReportHardwareRand();
 }
 
-int64_t PoissonNextSend(int64_t now, int average_interval_seconds)
+int64_t GetPoissonRand(int64_t now, int average_interval_seconds)
 {
     return now + (int64_t)(std::log1p(GetRand(1ULL << 48) * -0.0000000000000035527136788 /* -1/2^48 */) * average_interval_seconds * -1000000.0 + 0.5);
 }
