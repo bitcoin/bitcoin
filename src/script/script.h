@@ -424,7 +424,7 @@ public:
         return ret;
     }
 
-    CScript(int64_t b)        { operator<<(b); }
+    explicit CScript(int64_t b) { operator<<(b); }
 
     explicit CScript(opcodetype b)     { operator<<(b); }
     explicit CScript(const CScriptNum& b) { operator<<(b); }
