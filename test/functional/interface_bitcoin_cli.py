@@ -25,11 +25,8 @@ class TestBitcoinCli(BitcoinTestFramework):
         """Main test logic"""
         self.nodes[0].generate(BLOCKS)
 
-        cli_response = self.nodes[0].cli("-version").send_cli()
-        assert "{} RPC client version".format(self.config['environment']['PACKAGE_NAME']) in cli_response
-
-        self.log.info("Compare responses from getwalletinfo RPC and `bitcoin-cli getwalletinfo`")
         if self.is_wallet_compiled():
+            self.log.info("Compare responses from getwalletinfo RPC and `bitcoin-cli getwalletinfo`")
             cli_response = self.nodes[0].cli.getwalletinfo()
             rpc_response = self.nodes[0].getwalletinfo()
             assert_equal(cli_response, rpc_response)
@@ -55,10 +52,10 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.log.info("Test connecting with non-existing RPC cookie file")
         assert_raises_process_error(1, "Could not locate RPC credentials", self.nodes[0].cli('-rpccookiefile=does-not-exist', '-rpcpassword=').echo)
 
-        self.log.info("Make sure that -getinfo with arguments fails")
+        self.log.info("Test -getinfo with arguments fails")
         assert_raises_process_error(1, "-getinfo takes no arguments", self.nodes[0].cli('-getinfo').help)
 
-        self.log.info("Test that -getinfo returns the expected network and blockchain info")
+        self.log.info("Test -getinfo returns expected network and blockchain info")
         cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
         network_info = self.nodes[0].getnetworkinfo()
         blockchain_info = self.nodes[0].getblockchaininfo()
@@ -72,7 +69,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(cli_get_info['chain'], blockchain_info['chain'])
 
         if self.is_wallet_compiled():
-            self.log.info("Test that -getinfo returns the expected wallet info")
+            self.log.info("Test -getinfo returns expected wallet info")
             assert_equal(cli_get_info['balance'], BALANCE)
             wallet_info = self.nodes[0].getwalletinfo()
             assert_equal(cli_get_info['keypoolsize'], wallet_info['keypoolsize'])
@@ -83,6 +80,10 @@ class TestBitcoinCli(BitcoinTestFramework):
             self.log.info("*** Wallet not compiled; -getinfo wallet tests skipped")
 
         self.stop_node(0)
+
+        self.log.info("Test -version with node stopped")
+        cli_response = self.nodes[0].cli("-version").send_cli()
+        assert "{} RPC client version".format(self.config['environment']['PACKAGE_NAME']) in cli_response
 
         self.log.info("Test -rpcwait option waits for RPC connection instead of failing")
         # Start node without RPC connection.
