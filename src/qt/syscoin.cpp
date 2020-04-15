@@ -382,7 +382,7 @@ void SyscoinApplication::shutdownResult()
 
 void SyscoinApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(nullptr, "Runaway exception", SyscoinGUI::tr("A fatal error occurred. Syscoin can no longer continue safely and will quit.") + QString("\n\n") + message);
+    QMessageBox::critical(nullptr, "Runaway exception", SyscoinGUI::tr("A fatal error occurred. %1 can no longer continue safely and will quit.").arg(PACKAGE_NAME) + QString("\n\n") + message);
     ::exit(EXIT_FAILURE);
 }
 
