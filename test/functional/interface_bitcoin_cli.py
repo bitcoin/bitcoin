@@ -70,6 +70,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(cli_get_info['proxy'], network_info['networks'][0]['proxy'])
         assert_equal(cli_get_info['difficulty'], blockchain_info['difficulty'])
         assert_equal(cli_get_info['chain'], blockchain_info['chain'])
+
         if self.is_wallet_compiled():
             self.log.info("Test that -getinfo returns the expected wallet info")
             assert_equal(cli_get_info['balance'], BALANCE)
@@ -80,6 +81,17 @@ class TestBitcoinCli(BitcoinTestFramework):
             # unlocked_until is not tested because the wallet is not encrypted
         else:
             self.log.info("*** Wallet not compiled; -getinfo wallet tests skipped")
+
+        self.stop_node(0)
+
+        self.log.info("Test -rpcwait option waits for RPC connection instead of failing")
+        # Start node without RPC connection.
+        self.nodes[0].start()
+        # Verify failure without -rpcwait.
+        assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('getblockcount').echo)
+        # Verify success using -rpcwait.
+        assert_equal(BLOCKS, self.nodes[0].cli('-rpcwait', 'getblockcount').send_cli())
+        self.nodes[0].wait_for_rpc_connection()
 
 
 if __name__ == '__main__':
