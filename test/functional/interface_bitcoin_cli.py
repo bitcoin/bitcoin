@@ -25,12 +25,6 @@ class TestBitcoinCli(BitcoinTestFramework):
         """Main test logic"""
         self.nodes[0].generate(BLOCKS)
 
-        if self.is_wallet_compiled():
-            self.log.info("Compare responses from getwalletinfo RPC and `bitcoin-cli getwalletinfo`")
-            cli_response = self.nodes[0].cli.getwalletinfo()
-            rpc_response = self.nodes[0].getwalletinfo()
-            assert_equal(cli_response, rpc_response)
-
         self.log.info("Compare responses from getblockchaininfo RPC and `bitcoin-cli getblockchaininfo`")
         cli_response = self.nodes[0].cli.getblockchaininfo()
         rpc_response = self.nodes[0].getblockchaininfo()
@@ -59,7 +53,6 @@ class TestBitcoinCli(BitcoinTestFramework):
         cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
         network_info = self.nodes[0].getnetworkinfo()
         blockchain_info = self.nodes[0].getblockchaininfo()
-
         assert_equal(cli_get_info['version'], network_info['version'])
         assert_equal(cli_get_info['blocks'], blockchain_info['blocks'])
         assert_equal(cli_get_info['timeoffset'], network_info['timeoffset'])
@@ -69,15 +62,16 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(cli_get_info['chain'], blockchain_info['chain'])
 
         if self.is_wallet_compiled():
-            self.log.info("Test -getinfo returns expected wallet info")
+            self.log.info("Test -getinfo and bitcoin-cli getwalletinfo return expected wallet info")
             assert_equal(cli_get_info['balance'], BALANCE)
             wallet_info = self.nodes[0].getwalletinfo()
             assert_equal(cli_get_info['keypoolsize'], wallet_info['keypoolsize'])
             assert_equal(cli_get_info['paytxfee'], wallet_info['paytxfee'])
             assert_equal(cli_get_info['relayfee'], network_info['relayfee'])
             # unlocked_until is not tested because the wallet is not encrypted
+            assert_equal(self.nodes[0].cli.getwalletinfo(), wallet_info)
         else:
-            self.log.info("*** Wallet not compiled; -getinfo wallet tests skipped")
+            self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
 
         self.stop_node(0)
 
