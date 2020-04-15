@@ -164,27 +164,34 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     CAssetAllocation assetallocation(tx);
     if(assetallocation.IsNull())
         return false;
-    CAsset dbAsset;
-    GetAsset(assetallocation.nAsset, dbAsset);
     const uint256& txHash = tx.GetHash();
     uint256 blockhash;
     pblockindexdb->ReadBlockHash(txHash, blockhash);
     entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
-    entry.__pushKV("asset_guid", assetallocation.nAsset);
-    entry.__pushKV("symbol", dbAsset.strSymbol);
     entry.__pushKV("txid", txHash.GetHex());
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;
-    for(unsigned int i =0; i < assetallocation.voutAssets.size();i++) {
-        nTotal += assetallocation.voutAssets[i].nValue;
+    CAsset dbAsset;
+    for(const auto &it: assetallocation.voutAssets) {
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-        oAssetAllocationReceiversObj.__pushKV("n", i);
-        oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(assetallocation.voutAssets[i].nValue, dbAsset.nPrecision));
+        const int32_t &nAsset = it.first;
+        GetAsset(nAsset, dbAsset);
+        oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+        oAssetAllocationReceiversObj.__pushKV("symbol", dbAsset.strSymbol);
+        UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
+        for(const auto& voutAsset: it.second){
+            nTotal += voutAsset.nValue;
+            UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
+            oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
+            oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAssetAmount(voutAsset.nValue, dbAsset.nPrecision));
+            oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
+        }
+        oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
+        oAssetAllocationReceiversObj.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
         oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
     }
 
     entry.__pushKV("allocations", oAssetAllocationReceiversArray);
-    entry.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.__pushKV("blockhash", blockhash.GetHex()); 
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
          CBurnSyscoin burnSyscoin(tx);
@@ -201,22 +208,29 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &
         uint256 blockhash;
         pblockindexdb->ReadBlockHash(txHash, blockhash);
         entry.__pushKV("txtype", "assetallocationmint");
-        CAsset dbAsset;
-        GetAsset(mintSyscoin.assetAllocation.nAsset, dbAsset);
-        entry.__pushKV("asset_guid", mintSyscoin.assetAllocation.nAsset);
-        entry.__pushKV("symbol", dbAsset.strSymbol);
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
         CAmount nTotal = 0;
-        for(unsigned int i =0; i < mintSyscoin.assetAllocation.voutAssets.size();i++) {
+        for(const auto &it: mintSyscoin.assetAllocation.voutAssets) {
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            nTotal += mintSyscoin.assetAllocation.voutAssets[i].nValue;
-            oAssetAllocationReceiversObj.__pushKV("n", i);
-            oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(mintSyscoin.assetAllocation.voutAssets[i].nValue, dbAsset.nPrecision));
+            const int32_t &nAsset = it.first;
+            CAsset dbAsset;
+            GetAsset(nAsset, dbAsset);
+            oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+            oAssetAllocationReceiversObj.__pushKV("symbol", dbAsset.strSymbol);
+            UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
+            for(const auto& voutAsset: it.second){
+                nTotal += voutAsset.nValue;
+                UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
+                oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
+                oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAssetAmount(voutAsset.nValue, dbAsset.nPrecision));
+                oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
+            }
+            oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
+            oAssetAllocationReceiversObj.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
         }
     
         entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
-        entry.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
         entry.__pushKV("txid", txHash.GetHex());
         entry.__pushKV("blockhash", blockhash.GetHex());
         UniValue oSPVProofObj(UniValue::VOBJ);

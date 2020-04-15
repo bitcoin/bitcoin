@@ -37,5 +37,5 @@ inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <=
 */
 static const CAmount MAX_ASSET = 1000000000000000000LL - 1LL;
 inline bool AssetRange(const CAmount& nValue) { return (nValue > 0 && nValue <= MAX_ASSET); }
-
+inline bool AssetMoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_ASSET); }
 #endif //  SYSCOIN_AMOUNT_H

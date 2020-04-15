@@ -99,7 +99,7 @@ public:
 
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
-        a.assetAllocation.nAsset == b.assetAllocation.nAsset
+        a.assetAllocation == b.assetAllocation
         );
     }
 
@@ -129,7 +129,7 @@ public:
 
 static CAsset emptyAsset;
 bool GetAsset(const int32_t &nAsset,CAsset& txPos);
-bool BuildAssetJson(const CAsset& asset, UniValue& oName);
+bool BuildAssetJson(const CAsset& asset, const int32_t& nAsset, UniValue& oName);
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
 extern std::unique_ptr<CAssetDB> passetdb;
 #endif // SYSCOIN_SERVICES_ASSET_H
