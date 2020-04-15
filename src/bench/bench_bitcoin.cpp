@@ -74,8 +74,6 @@ int main(int argc, char** argv)
             argsman.GetArg("-plot-height", DEFAULT_PLOT_HEIGHT)));
     }
 
-    argsman.ClearArgs(); // argsman no longer needed. Clear it here to avoid interactions with the testing setup in the benches
-
     benchmark::BenchRunner::RunAll(*printer, evaluations, scaling_factor, regex_filter, is_list_only);
 
     return EXIT_SUCCESS;
