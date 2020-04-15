@@ -161,7 +161,8 @@ public:
         const FoundBlock& ancestor_out={}) = 0;
 
     //! Find most recent common ancestor between two blocks and optionally
-    //! return block information.
+    //! return block information. block1_out and block2_out are not filled
+    //! if the ancestor is not found.
     virtual bool findCommonAncestor(const uint256& block_hash1,
         const uint256& block_hash2,
         const FoundBlock& ancestor_out={},
