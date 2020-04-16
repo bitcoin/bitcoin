@@ -5,11 +5,11 @@
 #include <key.h>
 
 #include <key_io.h>
+#include <test/util/setup_common.h>
 #include <uint256.h>
-#include <util/system.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <test/util/setup_common.h>
+#include <util/system.h>
 
 #include <string>
 #include <vector>

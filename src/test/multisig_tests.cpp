@@ -4,14 +4,14 @@
 
 #include <key.h>
 #include <policy/policy.h>
+#include <script/interpreter.h>
 #include <script/script.h>
 #include <script/script_error.h>
-#include <script/interpreter.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+#include <test/util/setup_common.h>
 #include <tinyformat.h>
 #include <uint256.h>
-#include <test/util/setup_common.h>
 
 
 #include <boost/test/unit_test.hpp>

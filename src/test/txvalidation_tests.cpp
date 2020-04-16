@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <validation.h>
 #include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <test/util/setup_common.h>
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 

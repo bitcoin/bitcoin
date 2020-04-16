@@ -3,12 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <util/system.h>
+#include <boost/thread/thread.hpp>
 #include <checkqueue.h>
 #include <prevector.h>
-#include <vector>
-#include <boost/thread/thread.hpp>
 #include <random.h>
+#include <util/system.h>
+#include <vector>
 
 
 static const int MIN_CORES = 2;
