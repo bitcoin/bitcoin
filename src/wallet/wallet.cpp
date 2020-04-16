@@ -2973,28 +2973,33 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 } else {
                     bnb_used = false;
                 }
-
-                const CAmount nChange = nValueIn - nValueToSelect;
                 // SYSCOIN
+                CAmount nChange = nValueIn - nValueToSelect;
                 CAssetCoinInfo nChangeAsset;
                 if(coin_control.assetInfo)
                     nChangeAsset = CAssetCoinInfo(coin_control.assetInfo->nAsset, nValueInAsset - nValueToSelectAsset.nValue);
-                if (nChange > 0)
+                const bool& isAssetChange = (nChangeAsset.nAsset > 0 && nChangeAsset.nValue > 0);
+                if (nChange > 0 || isAssetChange)
                 {
+                    // SYSCOIN
+                    if(isAssetChange) {
+                        // if asset has change but no change for SYS, assign some dust output so the asset change can get into an output
+                        if(nChange <= 0) {
+                            nChange = GetDustThreshold(change_prototype_txout, discard_rate);
+                        }
+                    }
                     // Fill a vout to ourself
                     CTxOut newTxOut(nChange, scriptChange);
-                    // SYSCOIN
-                    if(nChangeAsset.nAsset > 0 && nChangeAsset.nValue > 0) {
+                    if(isAssetChange) {
                         newTxOut.assetInfo = nChangeAsset;
                     }
-
                     // Never create dust outputs; if we would, just
                     // add the dust to the fee.
                     // The nChange when BnB is used is always going to go to fees.
                     if (IsDust(newTxOut, discard_rate) || bnb_used)
                     {
                         // SYSCOIN
-                        if(nChangeAsset.nAsset > 0 && nChangeAsset.nValue > 0) {
+                        if(isAssetChange) {
                             strFailReason = _("Insufficient funds").translated;
                             return false;
                         }
@@ -3015,14 +3020,10 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                         }
                         std::vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosInOut;
                         txNew.vout.insert(position, newTxOut);
-                        LogPrintf("wallet nChangePosInOut %d\n", nChangePosInOut);
+    
                     }
                 } else {
                     nChangePosInOut = -1;
-                    if(nChangeAsset.nAsset > 0 && nChangeAsset.nValue > 0) {
-                        strFailReason = _("Change index out of range").translated;
-                        return false;
-                    }
                 }
 
                 // Dummy fill vin for maximum size estimation

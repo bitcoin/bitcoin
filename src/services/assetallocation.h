@@ -33,7 +33,7 @@ public:
         READWRITE(VARINT(obj.n));
         READWRITE(Using<AmountCompression>(obj.nValue));
     }
-    CAssetOut(const CAmount& nAmountIn, const uint32_t &nIn): n(nIn), nValue(nAmountIn) {}
+    CAssetOut(const uint32_t &nIn, const CAmount& nAmountIn): n(nIn), nValue(nAmountIn) {}
 	CAssetOut() {
 		nValue = 0;
         n = 0;

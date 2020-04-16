@@ -182,7 +182,7 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
         if(coin.out.assetInfo.nAsset > 0) {
-            auto inRes = mapAssetIn.emplace(coin.out.assetInfo.nAsset, 0);
+            auto inRes = mapAssetIn.emplace(coin.out.assetInfo.nAsset, coin.out.assetInfo.nValue);
             if(!inRes.second) {
                 inRes.first->second += coin.out.assetInfo.nValue;
             }
