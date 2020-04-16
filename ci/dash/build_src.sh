@@ -31,8 +31,7 @@ if [ "$CHECK_DOC" = 1 ]; then
     test/lint/extended-lint-all.sh
 fi
 
-command -v ccache > /dev/null && ccache --zero-stats
-ccache --max-size=$CCACHE_SIZE
+ccache --zero-stats --max-size=$CCACHE_SIZE
 
 if [ -n "$CONFIG_SHELL" ]; then
   export CONFIG_SHELL="$CONFIG_SHELL"
@@ -54,7 +53,7 @@ cd dashcore-$BUILD_TARGET
 
 make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
 
-command -v ccache > /dev/null && ccache --version | head -n 1 && ccache --show-stats
+ccache --version | head -n 1 && ccache --show-stats
 
 if [ -n "$USE_VALGRIND" ]; then
     echo "valgrind in USE!"
