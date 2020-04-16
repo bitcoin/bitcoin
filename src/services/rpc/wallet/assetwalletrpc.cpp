@@ -6,10 +6,12 @@
 #include <validation.h>
 #include <boost/algorithm/string.hpp>
 #include <rpc/util.h>
+#include <rpc/blockchain.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/fees.h>
 #include <policy/policy.h>
 #include <services/assetconsensus.h>
+#include <consensus/validation.h>
 #include <services/rpc/assetrpc.h>
 #include <script/signingprovider.h>
 #include <wallet/coincontrol.h>
@@ -85,6 +87,29 @@ public:
     template<typename X>
     void operator()(const X &none) {}
 };
+void TestTransaction(const CTransactionRef& tx) {
+    const CFeeRate max_raw_tx_fee_rate{COIN / 10}; // same as DEFAULT_MAX_RAW_TX_FEE_RATE
+    AssertLockHeld(cs_main);
+    CTxMemPool& mempool = EnsureMemPool();
+    int64_t virtual_size = GetVirtualTransactionSize(*tx);
+    CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
+
+    TxValidationState state;
+    bool test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx),
+            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
+
+    if (!test_accept_res) {
+        if (state.IsInvalid()) {
+            if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "missing-inputs");
+            } else {
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("%s", state.GetRejectReason()));
+            }
+        } else {
+            throw JSONRPCError(RPC_WALLET_ERROR, state.GetRejectReason());
+        }
+    }
+}
 void ModifyAssetOutputsBasedOnChange(const CMutableTransaction& mtx, CAssetAllocation& assetAllocation, const int &nChangePosInOut) {
     for(auto &it: assetAllocation.voutAssets) {
         for(auto& voutAsset: it.second) {
@@ -101,6 +126,7 @@ void ModifyAssetOutputsBasedOnChange(const CMutableTransaction& mtx, CAssetAlloc
     }
 }
 UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
+    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -178,6 +204,8 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
+
+    TestTransaction(tx);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -185,7 +213,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     return res;
 }
 UniValue assetnew(const JSONRPCRequest& request) {
-    LogPrintf("assetnew0\n");
+    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -354,6 +382,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    TestTransaction(tx);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -431,6 +460,7 @@ int CreateAssetUpdateTx(interfaces::Chain::Lock& locked_chain, CMutableTransacti
     return nChangePosRet; 
 }
 UniValue assetupdate(const JSONRPCRequest& request) {
+    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -547,6 +577,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    TestTransaction(tx);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -554,6 +585,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     return res;
 }
 UniValue assettransfer(const JSONRPCRequest& request) {
+    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -624,6 +656,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    TestTransaction(tx);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -631,6 +664,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     return res;
 }
 UniValue assetsendmany(const JSONRPCRequest& request) {
+    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -736,6 +770,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    TestTransaction(tx);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -785,6 +820,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
     return assetsendmany(requestMany);          
 }
 UniValue assetallocationsendmany(const JSONRPCRequest& request) {
+    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -923,6 +959,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    TestTransaction(tx);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -931,6 +968,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 }
 
 UniValue assetallocationburn(const JSONRPCRequest& request) {
+    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -960,11 +998,11 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
-    UniValue amountObj = params[2];
+    UniValue amountObj = params[1];
 	CAmount nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-	string ethAddress = params[3].get_str();
+	string ethAddress = params[2].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
     vector<CRecipient> vecSend;
     CScript scriptData;
@@ -985,35 +1023,27 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
-	vecSend.push_back(fee); 
-	// Create and send the transaction
+    CMutableTransaction mtx;
+    mtx.vout.push_back(CTxOut(fee.nAmount, fee.scriptPubKey));
     CAmount nFeeRequired = 0;
-    std::string strError;
+    std::string strFailReason;
     int nChangePosRet = -1;
     CCoinControl coin_control;
+    bool lockUnspents = false;
+    std::set<int> setSubtractFeeFromOutputs;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
-    coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
-    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
-    CMutableTransaction mtx;
-    mtx.nVersion = nVersionIn;
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control, false)) {
-        if (tx->GetValueOut() + nFeeRequired > curBalance)
-            strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
-    
-    mtx = CMutableTransaction(*tx);
     if(nChangePosRet != -1) {
         ModifyAssetOutputsBasedOnChange(mtx, burnSyscoin.assetAllocation, nChangePosRet);
     }
+    mtx.nVersion = nVersionIn;
     data.clear();
     // regen opreturn with possible new change outputs
     burnSyscoin.Serialize(data);
     scriptData.clear();
     scriptData << OP_RETURN << data;
-    // modify the opreturn scriptPubKey with new data with asset guid filled in. Then sign again.
-    
     bool bFoundData = false;
     for(auto& vout: mtx.vout) {
         if(vout.scriptPubKey.IsUnspendable()) {
@@ -1028,7 +1058,8 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     if(!pwallet->SignTransaction(mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
     }
-    tx = CTransactionRef(MakeTransactionRef(std::move(mtx)));
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    TestTransaction(tx);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -1043,6 +1074,7 @@ std::vector<unsigned char> ushortToBytes(unsigned short paramShort)
      return arrayOfByte;
 }
 UniValue assetallocationmint(const JSONRPCRequest& request) {
+    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -1157,7 +1189,6 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
     CTxOut change_prototype_txout(0, scriptPubKey);
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
-    vecSend.push_back(recp);
     vector<unsigned char> data;
     mintSyscoin.Serialize(data);
     
@@ -1165,23 +1196,45 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     scriptData << OP_RETURN << data;
     CRecipient fee;
     CreateFeeRecipient(scriptData, fee);
-    vecSend.push_back(fee);
-  	// Create and send the transaction
+    
+    CMutableTransaction mtx;
+    mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+    mtx.vout.push_back(CTxOut(fee.nAmount, fee.scriptPubKey));
     CAmount nFeeRequired = 0;
-    std::string strError;
+    std::string strFailReason;
     int nChangePosRet = -1;
     CCoinControl coin_control;
+    bool lockUnspents = false;
+    std::set<int> setSubtractFeeFromOutputs;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
-    coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
-    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
-    CMutableTransaction mtx;
-    mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_MINT;
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
-        if (tx->GetValueOut() + nFeeRequired > curBalance)
-            strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
+    if(nChangePosRet != -1) {
+        ModifyAssetOutputsBasedOnChange(mtx, mintSyscoin.assetAllocation, nChangePosRet);
+    }
+    mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_MINT;
+    data.clear();
+    // regen opreturn with possible new change outputs
+    mintSyscoin.Serialize(data);
+    scriptData.clear();
+    scriptData << OP_RETURN << data;
+    bool bFoundData = false;
+    for(auto& vout: mtx.vout) {
+        if(vout.scriptPubKey.IsUnspendable()) {
+            vout.scriptPubKey = scriptData;
+            bFoundData = true;
+            break;
+        }
+    }
+    if(!bFoundData) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not find OP_RETURN data output in asset transaction");
+    }
+    if(!pwallet->SignTransaction(mtx)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
+    }
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    TestTransaction(tx);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
