@@ -221,6 +221,10 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
         // CTxOut does not serialize assetInfo to make it consistent with Bitcoin serializaion, CTxOutInfo (used by utxo db) persists assetInfo
         // it will add txoutinfo based on vout.assetInfo
         std::vector<CTxOut>& vout = *const_cast<std::vector<CTxOut>*>(&tx.vout);
+        // clear asset info so we don't get previous assetInfo colouring
+        for(unsigned int i =0;i< vout.size(); i++) {
+            vout[i].assetInfo.SetNull();
+        }
         for(const auto &it: allocation.voutAssets) {
             const int32_t &nAsset = it.first;
             if(it.second.empty()) {
