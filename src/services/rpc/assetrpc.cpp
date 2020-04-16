@@ -79,7 +79,7 @@ UniValue convertaddress(const JSONRPCRequest& request)
     ret.pushKV("v4address", currentV4Address); 	
     return ret;	
 }
-
+int64_t nTPSTestingStartTime = 0;
 UniValue tpstestinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 0 != params.size())

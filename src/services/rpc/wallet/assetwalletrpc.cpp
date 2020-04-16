@@ -103,10 +103,10 @@ void TestTransaction(const CTransactionRef& tx) {
             if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "missing-inputs");
             } else {
-                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("%s", state.GetRejectReason()));
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("%s", state.ToString()));
             }
         } else {
-            throw JSONRPCError(RPC_WALLET_ERROR, state.GetRejectReason());
+            throw JSONRPCError(RPC_WALLET_ERROR, state.ToString());
         }
     }
 }

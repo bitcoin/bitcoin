@@ -21,7 +21,6 @@ std::unique_ptr<CBlockIndexDB> pblockindexdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 extern RecursiveMutex cs_setethstatus;
-extern bool AbortNode(const std::string& strMessage, const std::string& userMessage = "", unsigned int prefix = 0);
 using namespace std;
 bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string errorMessage, bool bErrorNotInvalid, bool bConsensus){
         if(bErrorNotInvalid) {
