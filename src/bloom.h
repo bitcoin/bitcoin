@@ -84,9 +84,6 @@ public:
     bool contains(const COutPoint& outpoint) const;
     bool contains(const uint256& hash) const;
 
-    void clear();
-    void reset(const unsigned int nNewTweak);
-
     //! True if the size is <= MAX_BLOOM_FILTER_SIZE and the number of hash functions is <= MAX_HASH_FUNCS
     //! (catch a filter which was just deserialized which was too big)
     bool IsWithinSizeConstraints() const;
