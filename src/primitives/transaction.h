@@ -137,6 +137,7 @@ public:
 	CAmount nValue;
 	CAssetCoinInfo() {
 		SetNull();
+        nValue = 0;
 	}
     CAssetCoinInfo(const int32_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) { }
  
@@ -153,7 +154,7 @@ public:
         if(nAsset > 0)
             READWRITE(nValue);
     }
-	inline void SetNull() { nAsset = 0; nValue = 0;}
+	inline void SetNull() { nAsset = 0; }
     inline bool IsNull() const { return nAsset == 0;}
 };
 
