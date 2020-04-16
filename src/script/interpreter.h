@@ -130,8 +130,6 @@ struct PrecomputedTransactionData
 
     template <class T>
     explicit PrecomputedTransactionData(const T& tx);
-    // SYSCOIN
-    PrecomputedTransactionData() {}
 };
 
 enum class SigVersion
