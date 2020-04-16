@@ -4,13 +4,13 @@
 
 #include <arith_uint256.h>
 #include <streams.h>
+#include <test/util/setup_common.h>
 #include <uint256.h>
 #include <version.h>
-#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 #include <string>
 
 BOOST_FIXTURE_TEST_SUITE(uint256_tests, BasicTestingSetup)

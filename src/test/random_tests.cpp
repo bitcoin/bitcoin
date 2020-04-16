@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <random>
 #include <algorithm>
+#include <random>
 
 BOOST_FIXTURE_TEST_SUITE(random_tests, BasicTestingSetup)
 

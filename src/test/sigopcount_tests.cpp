@@ -4,12 +4,12 @@
 
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
-#include <pubkey.h>
 #include <key.h>
+#include <pubkey.h>
 #include <script/script.h>
 #include <script/standard.h>
-#include <uint256.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
 
 #include <vector>
 

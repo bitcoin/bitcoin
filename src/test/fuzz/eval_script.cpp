@@ -4,8 +4,8 @@
 
 #include <pubkey.h>
 #include <script/interpreter.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
 #include <util/memory.h>
 
 #include <limits>

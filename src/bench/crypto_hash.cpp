@@ -4,14 +4,14 @@
 
 
 #include <bench/bench.h>
-#include <hash.h>
-#include <random.h>
-#include <uint256.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
 #include <crypto/sha512.h>
 #include <crypto/siphash.h>
+#include <hash.h>
+#include <random.h>
+#include <uint256.h>
 
 /* Number of bytes to hash per iteration */
 static const uint64_t BUFFER_SIZE = 1000*1000;

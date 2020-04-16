@@ -4,15 +4,15 @@
 
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
-#include <test/data/sighash.json.h>
 #include <hash.h>
 #include <script/interpreter.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
+#include <test/data/sighash.json.h>
 #include <test/util/setup_common.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 #include <version.h>
 
 #include <iostream>

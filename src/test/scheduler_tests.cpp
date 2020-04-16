@@ -6,8 +6,8 @@
 #include <scheduler.h>
 #include <util/time.h>
 
-#include <boost/thread.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/thread.hpp>
 
 BOOST_AUTO_TEST_SUITE(scheduler_tests)
 

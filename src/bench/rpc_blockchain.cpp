@@ -5,9 +5,9 @@
 #include <bench/bench.h>
 #include <bench/data.h>
 
-#include <validation.h>
-#include <streams.h>
 #include <rpc/blockchain.h>
+#include <streams.h>
+#include <validation.h>
 
 #include <univalue.h>
 
