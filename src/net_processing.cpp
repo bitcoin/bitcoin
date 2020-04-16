@@ -2128,9 +2128,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (pfrom->fInbound) {
                 pfrom->fMasternode = fOtherMasternode;
                 if (fOtherMasternode) {
-                    LogPrint(BCLog::NET, "peer=%d is an inbound masternode connection, not relaying anything to it\n", pfrom->GetId());
+                    LogPrint(BCLog::NET_NETCONN, "peer=%d is an inbound masternode connection, not relaying anything to it\n", pfrom->GetId());
                     if (!fMasternodeMode) {
-                        LogPrint(BCLog::NET, "but we're not a masternode, disconnecting\n");
+                        LogPrint(BCLog::NET_NETCONN, "but we're not a masternode, disconnecting\n");
                         pfrom->fDisconnect = true;
                         return true;
                     }
