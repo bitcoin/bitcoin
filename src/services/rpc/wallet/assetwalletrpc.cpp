@@ -168,7 +168,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 
     const CScript& scriptPubKey = GetScriptForDestination(dest);
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
 
 
     vector<CRecipient> vecSend;
@@ -333,7 +333,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     const CScript& scriptPubKey = GetScriptForDestination(dest);
     CTxOut change_prototype_txout(nGas, scriptPubKey);
     bool isDust = nGas < COIN;
-    CRecipient recp = { scriptPubKey, isDust? GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()): nGas,  !isDust};
+    CRecipient recp = { scriptPubKey, isDust? GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)): nGas,  !isDust};
     mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
     if(nGas > 0)
         setSubtractFeeFromOutputs.insert(0);
@@ -442,7 +442,7 @@ int CreateAssetUpdateTx(interfaces::Chain::Lock& locked_chain, CMutableTransacti
     for(unsigned i =0;i<vecSend.size();i++) {
         CTxOut txOut(vecSend[i].nAmount, vecSend[i].scriptPubKey);
         if(txOut.nValue < COIN) {
-            txOut.nValue = GetDustThreshold(txOut, pwallet->chain().relayDustFee());
+            txOut.nValue = GetDustThreshold(txOut, GetDiscardRate(*pwallet));
         }
         else if(vecSend[i].fSubtractFeeFromAmount)
             setSubtractFeeFromOutputs.insert(i);
@@ -617,7 +617,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     }
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
     theAsset.ClearAsset();
     theAsset.nBalance = 0;
     theAsset.assetAllocation.voutAssets[nAsset].push_back(CAssetOut(0, 0));
@@ -729,12 +729,17 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         }
         else
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in asset output array");
-        theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(theAssetAllocation.voutAssets[nAsset].size(), nAmount));
+        auto& voutAsset = theAssetAllocation.voutAssets[nAsset];
+        const size_t len = voutAsset.size();
+        voutAsset.push_back(CAssetOut(len, nAmount));
         CTxOut change_prototype_txout(0, scriptPubKey);
-        CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
+        CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
         vecSend.push_back(recp);
     }
-
+    auto& voutAsset = theAssetAllocation.voutAssets[nAsset];
+    const size_t len = voutAsset.size();
+    // add change for asset
+    voutAsset.push_back(CAssetOut(len, 0));
     CScript scriptPubKey;
     vector<unsigned char> data;
     theAssetAllocation.Serialize(data);
@@ -884,8 +889,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			const CAmount &nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
 			if (nAmount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-			theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(theAssetAllocation.voutAssets[nAsset].size(), nAmount));
-            CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
+            auto& voutAsset = theAssetAllocation.voutAssets[nAsset];
+            const size_t len = voutAsset.size();
+            voutAsset.push_back(CAssetOut(len, nAmount));
+            CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
             auto it = mapAssetTotals.emplace(nAsset, nAmount);
             if(!it.second) {
@@ -899,10 +906,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         CTxDestination auxFeeAddress;
         const CAmount &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, theAsset.nPrecision, auxFeeAddress);
         if(nAuxFee > 0){
-            theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(theAssetAllocation.voutAssets[nAsset].size(), nAuxFee));
+            auto& voutAsset = theAssetAllocation.voutAssets[nAsset];
+            const size_t len = voutAsset.size();
+            voutAsset.push_back(CAssetOut(len, nAuxFee));
             const CScript& scriptPubKey = GetScriptForDestination(auxFeeAddress);
             CTxOut change_prototype_txout(0, scriptPubKey);
-            CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
+            CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
             auto it = mapAssetTotals.emplace(nAsset, nAuxFee);
             if(!it.second) {
@@ -925,6 +934,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     std::string strFailReason;
     int nChangePosRet = -1;
     CCoinControl coin_control;
+    coin_control.m_signal_bip125_rbf = true;
     bool lockUnspents = false;
     std::set<int> setSubtractFeeFromOutputs;
     for(const auto &it: mapAssetTotals) {
@@ -1188,7 +1198,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     }
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
     vector<unsigned char> data;
     mintSyscoin.Serialize(data);
     

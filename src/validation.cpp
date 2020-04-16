@@ -771,7 +771,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // No transactions are allowed below minRelayTxFee except from disconnected
     // blocks
-    if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state, IsZTx)) return false;
+    // SYSCOIN only double fee-rate requirement for allocation spends if not RBF
+    if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state, IsZTx && !SignalsOptInRBF(tx))) return false;
 
     if (nAbsurdFee && nFees > nAbsurdFee)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD,
