@@ -102,19 +102,6 @@ bool CBloomFilter::contains(const uint256& hash) const
     return contains(data);
 }
 
-void CBloomFilter::clear()
-{
-    vData.assign(vData.size(),0);
-    isFull = false;
-    isEmpty = true;
-}
-
-void CBloomFilter::reset(const unsigned int nNewTweak)
-{
-    clear();
-    nTweak = nNewTweak;
-}
-
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
