@@ -214,9 +214,9 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
         // CTxOut does not serialize assetInfo to make it consistent with Bitcoin serializaion, CTxOutInfo (used by utxo db) persists assetInfo
         // it will add txoutinfo based on vout.assetInfo
         std::vector<CTxOut>& vout = *const_cast<std::vector<CTxOut>*>(&tx.vout);
-        for(unsigned int i =0;i< vout.size(); i++) {
-            if(!vout[i].assetInfo.IsNull())
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-info-not-null");
+        // clear out assetinfo so it can be re-assigned to the right vout
+        for(auto& v: vout) {
+            v.assetInfo.SetNull();
         }
         for(const auto &it: allocation.voutAssets) {
             const int32_t &nAsset = it.first;
@@ -231,9 +231,11 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
                 const CAmount& nAmount = voutAsset.nValue;
                 nTotal += nAmount;
                 if(nAmount == 0) {
+                    // 0 amount output not possible for anything except asset tx (new/update/send)
                     if(!isAssetTx) {
                         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-zero-change-non-asset");
                     }
+                    // only 1 is allowed for change
                     if(bFoundChange) {
                         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-change-out-found");
                     } 
@@ -254,6 +256,7 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
                 }
                 vout[nOut].assetInfo = CAssetCoinInfo(nAsset, nAmount);
             }
+            // change is required (even though it is sending 0, receiving 0) for asset tx
             if(isAssetTx && !bFoundChange) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-no-change-found");
             }
