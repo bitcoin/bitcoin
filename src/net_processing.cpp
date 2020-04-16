@@ -71,8 +71,7 @@ static constexpr int STALE_RELAY_AGE_LIMIT = 30 * 24 * 60 * 60;
 /// limiting block relay. Set to one week, denominated in seconds.
 static constexpr int HISTORICAL_BLOCK_AGE = 7 * 24 * 60 * 60;
 /** Maximum number of in-flight transactions from a peer */
-// SYSCOIN
-static constexpr int32_t MAX_PEER_TX_IN_FLIGHT = 1000;
+static constexpr int32_t MAX_PEER_TX_IN_FLIGHT = 100;
 /** Maximum number of announced transactions from a peer */
 static constexpr int32_t MAX_PEER_TX_ANNOUNCEMENTS = 2 * MAX_INV_SZ;
 /** How many microseconds to delay requesting transactions from inbound peers */

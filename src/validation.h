@@ -31,8 +31,6 @@
 #include <stdint.h>
 #include <utility>
 #include <vector>
-// SYSCOIN
-#include <script/interpreter.h>
 
 class CChainState;
 class BlockValidationState;
@@ -52,8 +50,8 @@ struct DisconnectedBlockTransactions;
 struct PrecomputedTransactionData;
 struct LockPoints;
 
-/** SYSCOIN Default for -minrelaytxfee, minimum relay fee for transactions */
-static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 10000;
+/** Default for -minrelaytxfee, minimum relay fee for transactions */
+static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
 static const unsigned int DEFAULT_ANCESTOR_LIMIT = 25;
 /** Default for -limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
@@ -198,8 +196,7 @@ static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 static const unsigned int NODE_NETWORK_LIMITED_MIN_BLOCKS = 288;
 
 static const signed int DEFAULT_CHECKBLOCKS = 6;
-// SYSCOIN
-static const unsigned int DEFAULT_CHECKLEVEL = 4;
+static const unsigned int DEFAULT_CHECKLEVEL = 3;
 
 // Require that user allocate at least 550 MiB for block & undo files (blk???.dat and rev???.dat)
 // At 1MB per block, 288 blocks = 288MB.
@@ -292,8 +289,6 @@ void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune);
 /** Prune block files up to a given height */
 void PruneBlockFilesManual(int nManualPruneHeight);
 
-
-// SYSCOIN
 /** (try to) add transaction to memory pool
  * plTxnReplaced will be appended to with all transactions replaced from mempool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
@@ -982,8 +977,7 @@ extern VersionBitsCache versionbitscache;
  * Determine what nVersion a new block should use.
  */
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
-// SYSCOIN
-extern int64_t nTPSTestingStartTime;
+
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.

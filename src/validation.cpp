@@ -62,7 +62,6 @@
 #include <services/assetallocation.h>
 #include <algorithm> // std::unique
 extern RecursiveMutex cs_setethstatus;
-int64_t nTPSTestingStartTime = 0;
 std::set<COutPoint> assetAllocationConflicts;
 std::vector<CInv> vInvToSend;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
@@ -466,8 +465,8 @@ namespace {
 class MemPoolAccept
 {
 public:
-    // SYSCOIN rearrange m_view and m_pool
-    MemPoolAccept(CTxMemPool& mempool) : m_view(&m_dummy), m_pool(mempool), m_viewmempool(&::ChainstateActive().CoinsTip(), m_pool),
+
+    MemPoolAccept(CTxMemPool& mempool) : m_pool(mempool), m_view(&m_dummy), m_viewmempool(&::ChainstateActive().CoinsTip(), m_pool),
         m_limit_ancestors(gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT)),
         m_limit_ancestor_size(gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT)*1000),
         m_limit_descendants(gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT)),
@@ -495,8 +494,6 @@ public:
     
     // Single transaction acceptance
     bool AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    // SYSCOIN
-    CCoinsViewCache m_view;
 private:
     // All the intermediate state that gets passed between the various levels
     // of checking a given transaction.
@@ -555,6 +552,7 @@ private:
 
 private:
     CTxMemPool& m_pool;
+    CCoinsViewCache m_view;
     CCoinsViewMemPool m_viewmempool;
     CCoinsView m_dummy;
 
@@ -1809,8 +1807,7 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
 }
 
 /** Abort with a message */
-// SYSCOIN
-bool AbortNode(const std::string& strMessage, const std::string& userMessage = "", unsigned int prefix = 0)
+static bool AbortNode(const std::string& strMessage, const std::string& userMessage = "", unsigned int prefix = 0)
 {
     SetMiscWarning(strMessage);
     LogPrintf("*** %s\n", strMessage);
@@ -4457,9 +4454,6 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     LOCK(cs_main);
     if (::ChainActive().Tip() == nullptr || ::ChainActive().Tip()->pprev == nullptr)
         return true;
-    // SYSCOIN
-    if(fUnitTest)
-        nCheckLevel = 4;
     // Verify blocks in the best chain
     if (nCheckDepth <= 0 || nCheckDepth > ::ChainActive().Height())
         nCheckDepth = ::ChainActive().Height();
