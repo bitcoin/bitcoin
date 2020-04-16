@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <vector>
 #include <prevector.h>
+#include <vector>
 
 #include <reverse_iterator.h>
 #include <serialize.h>

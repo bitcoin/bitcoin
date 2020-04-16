@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/util/transaction_utils.h>
 #include <coins.h>
 #include <script/signingprovider.h>
+#include <test/util/transaction_utils.h>
 
 CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey, int nValue)
 {

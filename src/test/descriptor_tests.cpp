@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <vector>
-#include <string>
-#include <script/sign.h>
-#include <script/standard.h>
-#include <test/util/setup_common.h>
 #include <boost/test/unit_test.hpp>
 #include <script/descriptor.h>
+#include <script/sign.h>
+#include <script/standard.h>
+#include <string>
+#include <test/util/setup_common.h>
 #include <util/strencodings.h>
+#include <vector>
 
 namespace {
 

@@ -6,12 +6,12 @@
 #ifndef BITCOIN_TEST_SCRIPTNUM10_H
 #define BITCOIN_TEST_SCRIPTNUM10_H
 
+#include <assert.h>
 #include <limits>
 #include <stdexcept>
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include <assert.h>
 
 class scriptnum10_error : public std::runtime_error
 {

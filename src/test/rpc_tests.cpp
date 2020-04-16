@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <rpc/server.h>
 #include <rpc/client.h>
+#include <rpc/server.h>
 #include <rpc/util.h>
 
 #include <core_io.h>

@@ -8,8 +8,8 @@
 #include <key.h>
 #include <key_io.h>
 #include <streams.h>
-#include <util/strencodings.h>
 #include <test/util/setup_common.h>
+#include <util/strencodings.h>
 
 #include <string>
 #include <vector>

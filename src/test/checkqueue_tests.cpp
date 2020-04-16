@@ -6,15 +6,15 @@
 #include <util/system.h>
 #include <util/time.h>
 
-#include <test/util/setup_common.h>
-#include <checkqueue.h>
+#include <atomic>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
-#include <atomic>
+#include <checkqueue.h>
+#include <condition_variable>
+#include <mutex>
+#include <test/util/setup_common.h>
 #include <thread>
 #include <vector>
-#include <mutex>
-#include <condition_variable>
 
 #include <unordered_set>
 #include <utility>

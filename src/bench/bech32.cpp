@@ -7,8 +7,8 @@
 #include <bech32.h>
 #include <util/strencodings.h>
 
-#include <vector>
 #include <string>
+#include <vector>
 
 
 static void Bech32Encode(benchmark::State& state)

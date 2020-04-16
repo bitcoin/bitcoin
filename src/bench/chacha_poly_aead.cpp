@@ -8,8 +8,8 @@
 #include <crypto/poly1305.h> // for the POLY1305_TAGLEN constant
 #include <hash.h>
 
-#include <limits>
 #include <assert.h>
+#include <limits>
 
 /* Number of bytes to process per iteration */
 static constexpr uint64_t BUFFER_SIZE_TINY = 64;

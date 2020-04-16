@@ -5,10 +5,10 @@
 
 #include <netaddress.h>
 #include <noui.h>
-#include <util/string.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <timedata.h>
+#include <util/string.h>
 #include <warnings.h>
 
 #include <string>

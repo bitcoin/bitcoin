@@ -7,8 +7,8 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <core_memusage.h>
-#include <pubkey.h>
 #include <primitives/block.h>
+#include <pubkey.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 #include <validation.h>

@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
-#include <pubkey.h>
 #include <primitives/block.h>
+#include <pubkey.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
 #include <uint256.h>
