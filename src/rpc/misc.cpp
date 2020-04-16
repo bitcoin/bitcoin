@@ -322,7 +322,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
             }
 
             CHDChain hdChainCurrent;
-            if (pwallet->mapHdPubKeys.count(*keyID) && pwallet->GetHDChain(hdChainCurrent)) {
+            if (keyID && pwallet->mapHdPubKeys.count(*keyID) && pwallet->GetHDChain(hdChainCurrent)) {
                 ret.push_back(Pair("hdkeypath", pwallet->mapHdPubKeys[*keyID].GetKeyPath()));
                 ret.push_back(Pair("hdchainid", hdChainCurrent.GetID().GetHex()));
             }
