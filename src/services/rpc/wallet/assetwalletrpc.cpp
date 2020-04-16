@@ -729,7 +729,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         }
         else
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in asset output array");
-        theAsset.assetAllocation.voutAssets[nAsset].push_back(CAssetOut(theAsset.assetAllocation.voutAssets[nAsset].size(), nAmount));
+        theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(theAssetAllocation.voutAssets[nAsset].size(), nAmount));
         CTxOut change_prototype_txout(0, scriptPubKey);
         CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, pwallet->chain().relayDustFee()), false };
         vecSend.push_back(recp);
