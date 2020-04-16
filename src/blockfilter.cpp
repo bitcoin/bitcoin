@@ -227,7 +227,7 @@ BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const
     : m_filter_type(filter_type), m_block_hash(block.GetHash())
 {
     switch (m_filter_type) {
-    case BlockFilterType::BASIC:
+    case BlockFilterType::BASIC_FILTER:
         m_filter = GCSFilter(m_block_hash.GetUint64(0), m_block_hash.GetUint64(1),
                              BASIC_FILTER_P, BASIC_FILTER_M,
                              BasicFilterElements(block, block_undo));

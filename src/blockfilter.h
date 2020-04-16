@@ -78,7 +78,7 @@ constexpr uint32_t BASIC_FILTER_M = 784931;
 
 enum BlockFilterType : uint8_t
 {
-    BASIC = 0,
+    BASIC_FILTER = 0,
 };
 
 /**
@@ -131,7 +131,7 @@ public:
         m_filter_type = static_cast<BlockFilterType>(filter_type);
 
         switch (m_filter_type) {
-        case BlockFilterType::BASIC:
+        case BlockFilterType::BASIC_FILTER:
             m_filter = GCSFilter(m_block_hash.GetUint64(0), m_block_hash.GetUint64(1),
                                  BASIC_FILTER_P, BASIC_FILTER_M, std::move(encoded_filter));
             break;
