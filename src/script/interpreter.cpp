@@ -1291,18 +1291,29 @@ uint256 GetOutputsHash(const T& txTo)
 } // namespace
 
 template <class T>
-PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo)
+void PrecomputedTransactionData::Init(const T& txTo)
 {
+    assert(!m_ready);
+
     // Cache is calculated only for transactions with witness
     if (txTo.HasWitness()) {
         hashPrevouts = GetPrevoutHash(txTo);
         hashSequence = GetSequenceHash(txTo);
         hashOutputs = GetOutputsHash(txTo);
-        ready = true;
     }
+
+    m_ready = true;
+}
+
+template <class T>
+PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo)
+{
+    Init(txTo);
 }
 
 // explicit instantiation
+template void PrecomputedTransactionData::Init(const CTransaction& txTo);
+template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo);
 template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo);
 template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
 
@@ -1315,7 +1326,7 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
         uint256 hashPrevouts;
         uint256 hashSequence;
         uint256 hashOutputs;
-        const bool cacheready = cache && cache->ready;
+        const bool cacheready = cache && cache->m_ready;
 
         if (!(nHashType & SIGHASH_ANYONECANPAY)) {
             hashPrevouts = cacheready ? cache->hashPrevouts : GetPrevoutHash(txTo);
