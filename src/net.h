@@ -98,6 +98,12 @@ static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
 
+#if defined USE_POLL
+#define DEFAULT_SOCKETEVENTS "poll"
+#else
+#define DEFAULT_SOCKETEVENTS "select"
+#endif
+
 typedef int64_t NodeId;
 
 struct AddedNodeInfo
@@ -136,6 +142,11 @@ public:
         CONNECTIONS_ALL = (CONNECTIONS_IN | CONNECTIONS_OUT),
     };
 
+    enum SocketEventsMode {
+        SOCKETEVENTS_SELECT = 0,
+        SOCKETEVENTS_POLL = 1,
+    };
+
     struct Options
     {
         ServiceFlags nLocalServices = NODE_NONE;
@@ -156,6 +167,7 @@ public:
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
+        SocketEventsMode socketEventsMode = SOCKETEVENTS_SELECT;
     };
 
     void Init(const Options& connOptions) {
@@ -179,6 +191,7 @@ public:
             LOCK(cs_vAddedNodes);
             vAddedNodes = connOptions.m_added_nodes;
         }
+        socketEventsMode = connOptions.socketEventsMode;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1);
@@ -188,6 +201,7 @@ public:
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
     void SetNetworkActive(bool active);
+    SocketEventsMode GetSocketEventsMode() const { return socketEventsMode; }
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool fConnectToMasternode = false, bool fMasternodeProbe = false);
     void OpenMasternodeConnection(const CAddress& addrConnect, bool probe = false);
     bool CheckIncomingNonce(uint64_t nonce);
@@ -470,6 +484,10 @@ private:
     void NotifyNumConnectionsChanged();
     void InactivityCheck(CNode *pnode);
     bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+#ifdef USE_POLL
+    void SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+#endif
+    void SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
     void SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
     void SocketHandler();
     void ThreadSocketHandler();
@@ -580,6 +598,8 @@ private:
     int wakeupPipe[2]{-1,-1};
 #endif
     std::atomic<bool> wakeupSelectNeeded{false};
+
+    SocketEventsMode socketEventsMode;
 
     std::thread threadDNSAddressSeed;
     std::thread threadSocketHandler;
