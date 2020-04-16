@@ -892,25 +892,14 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
         {
             CAmount nTotal = 0;
             CAmount nBurnAmount = 0;
-            bool bFoundAssetChange = false;
             for(const auto& voutAsset: vecVout){
                 nTotal += voutAsset.nValue;
-                if(voutAsset.nValue == 0) {
-                    if(bFoundAssetChange) {
-                        return FormatSyscoinErrorMessage(state, "asset-multiple-asset-change", bSanityCheck);
-                    }
-                    bFoundAssetChange = true;
-                }
                 if(voutAsset.n == nOut) {
                     nBurnAmount = voutAsset.nValue;
                     if(tx.vout[nOut].assetInfo.nValue != nBurnAmount) {
                         return FormatSyscoinErrorMessage(state, "asset-mismatch-burn-amount", bSanityCheck);
                     }
                 }
-            }
-            // ensure only one zero value change is found
-            if(!bFoundAssetChange) {
-                return FormatSyscoinErrorMessage(state, "asset-no-asset-change", bSanityCheck);
             }
             if (storedAssetRef.nBalance < nTotal) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bSanityCheck);

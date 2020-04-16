@@ -156,18 +156,6 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     }
     return nSigOps;
 }
-// SYSCOIN
-bool AssetOutputRange(const CAmount& nAmount, const int32_t& nVersion, const bool &isAssetTx)
-{
-    if(isAssetTx) {
-        // can be >= 0, validate that only one output exists == 0 in checkassetinputs()
-        if(nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
-            return AssetMoneyRange(nAmount);
-        else
-            return nAmount == 0;
-    }
-    return AssetRange(nAmount);
-}
 // SYSCOIN remove const CTransaction
 bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const CCoinsViewCache &inputs, int nSpendHeight, CAmount& txfee, const CAssetAllocation &allocation)
 {
@@ -194,12 +182,17 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
         if(coin.out.assetInfo.nAsset > 0) {
-            if(!AssetOutputRange(coin.out.assetInfo.nValue, tx.nVersion, isAssetTx)) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-outofrange");
-            }
             auto inRes = mapAssetIn.emplace(coin.out.assetInfo.nAsset, 0);
             if(!inRes.second) {
                 inRes.first->second += coin.out.assetInfo.nValue;
+            }
+            if(coin.out.assetInfo.nValue == 0) {
+                if(!isAssetTx) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalue-zero-change-non-asset");
+                }
+            }
+            else if(!AssetRange(coin.out.assetInfo.nValue) || !AssetRange(inRes.first->second)) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-outofrange");
             }
         }
         // Check for negative or overflow input values
@@ -231,9 +224,24 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-empty-out");
             }
             CAmount nTotal = 0;
-            for(const auto& voutAsset: it.second){
+            // never allow more than 1 change output (zero value output) per asset
+            // this bool should be sufficient because later on uniqueness per asset is enforced with bad-txns-asset-not-unique check
+            bool bFoundChange = false;
+            for(const auto& voutAsset: it.second) {
                 const CAmount& nAmount = voutAsset.nValue;
-                if(!AssetOutputRange(nAmount, tx.nVersion, isAssetTx)) {
+                nTotal += nAmount;
+                if(nAmount == 0) {
+                    if(!isAssetTx) {
+                        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-zero-change-non-asset");
+                    }
+                    if(bFoundChange) {
+                        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-change-out-found");
+                    } 
+                    else {
+                        bFoundChange = true;
+                    }
+                }
+                else if(!AssetRange(nAmount) || !AssetRange(nTotal)) {
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-outofrange");
                 }
                 const uint32_t& nOut = voutAsset.n;
@@ -245,9 +253,11 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-invalid-vout-index");
                 }
                 vout[nOut].assetInfo = CAssetCoinInfo(nAsset, nAmount);
-                nTotal += nAmount;
             }
-            if(!AssetOutputRange(nTotal, tx.nVersion, isAssetTx)) {
+            if(isAssetTx && !bFoundChange) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-no-change-found");
+            }
+            if(nTotal > 0 && !AssetRange(nTotal)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-total-outofrange");
             }
             auto itRes = mapAssetOut.emplace(it.first, nTotal);
