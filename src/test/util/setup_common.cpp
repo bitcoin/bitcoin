@@ -161,7 +161,7 @@ TestingSetup::~TestingSetup()
     m_node.banman.reset();
     m_node.mempool = nullptr;
     m_node.scheduler.reset();
-    UnloadBlockIndex();
+    WITH_LOCK(::cs_main, UnloadBlockIndex());
     g_chainman.Reset();
     pblocktree.reset();
 }

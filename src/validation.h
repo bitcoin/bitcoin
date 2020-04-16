@@ -240,7 +240,7 @@ bool LoadGenesisBlock(const CChainParams& chainparams);
  * initializing state if we're running with -reindex. */
 bool LoadBlockIndex(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 /** Unload database information */
-void UnloadBlockIndex();
+void UnloadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 /** Run an instance of the script checking thread */
 void ThreadScriptCheck(int worker_num);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */

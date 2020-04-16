@@ -4544,7 +4544,7 @@ void CChainState::UnloadBlockIndex() {
 // block index state
 void UnloadBlockIndex()
 {
-    LOCK(cs_main);
+    AssertLockHeld(::cs_main);
     g_chainman.Unload();
     pindexBestInvalid = nullptr;
     pindexBestHeader = nullptr;
