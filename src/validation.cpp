@@ -4330,7 +4330,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
 
 bool CChainState::ReplayBlocks(const CChainParams& params)
 {
-    LOCK(cs_main);
+    AssertLockHeld(::cs_main);
 
     CCoinsView& db = this->CoinsDB();
     CCoinsViewCache cache(&db);
