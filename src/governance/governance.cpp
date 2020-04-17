@@ -909,7 +909,6 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
     CNetMsgMaker msgMaker(pfrom->GetSendVersion());
 
     CBloomFilter filter;
-    filter.clear();
 
     size_t nVoteCount = 0;
     if (fUseFilter) {
