@@ -8,11 +8,7 @@
 #include <vbk/pop_service_impl.hpp>
 #include <vbk/service_locator.hpp>
 
-#include <gmock/gmock.h>
-
 namespace VeriBlockTest {
-
-using ::testing::Return;
 
 //class PopServiceMock : public ::testing::NiceMock<VeriBlock::PopService>
 //{

@@ -6,7 +6,7 @@ version: '3'
 
 services:
   dev:
-    image: veriblock/btcdev:cpp
+    image: veriblock/btcdev
     tty: true
     stdin_open: true
     working_dir: /app

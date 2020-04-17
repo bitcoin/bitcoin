@@ -113,8 +113,11 @@ FUZZ_SUITE_LD_COMMON = \
 
 ### VeriBlock section start
 # path is relative to src
-VBK_TESTS = \
-  vbk/test/unit/gmock_tests.cpp
+VBK_TESTS =
+
+if USE_GMOCK
+  VBK_TESTS += vbk/test/unit/gmock_tests.cpp
+endif
 
 #  vbk/test/unit/rpc_service_tests.cpp \
 #  vbk/test/unit/genesis_block_tests.cpp \
