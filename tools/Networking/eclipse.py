@@ -314,8 +314,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, from_i
 def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
 		packet = socket.recv(65565)
-		if mirror_packet_received(thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
-			break
+		createTask('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface)
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
