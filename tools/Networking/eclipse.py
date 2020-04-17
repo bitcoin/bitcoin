@@ -17,10 +17,10 @@ import time
 
 
 # Specify the attacker's genuine IP
-attacker_ip = '10.0.2.15'
+attacker_ip = '10.0.2.4'
 
 # Specify the victim's IP, and port (8333 for Bitcoin)
-victim_ip = '10.0.2.4'
+victim_ip = '10.0.2.5'
 victim_port = 8333
 
 # How many identities should run simultaneously
