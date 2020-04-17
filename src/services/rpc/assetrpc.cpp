@@ -11,6 +11,7 @@
 #include <validationinterface.h>
 #include <thread>
 #include <policy/rbf.h>
+#include <policy/policy.h>
 #include <chrono>
 #include <consensus/validation.h>
 using namespace std;
@@ -183,11 +184,11 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash){
         const CTransactionRef &txRef = mempool.get(lookForTxHash);
         if (!txRef)
             return ZDAG_NOT_FOUND;
-        if(txRef->nVersion != SYSCOIN_TX_VERSION_ALLOCATION_SEND)
-            return ZDAG_NOT_FOUND;
+        if(!IsZdagTx(txRef->nVersion))
+            return ZDAG_WARNING_NOT_ZDAG_TX;
         // the zdag tx should be under MTU of IP packet
-        if(GetSerializeSize(txRef, PROTOCOL_VERSION) > 1100)
-            return ZDAG_WARNING_RBF;
+        if(txRef->GetTotalSize() > MAX_STANDARD_ZDAG_TX_SIZE)
+            return ZDAG_WARNING_SIZE_OVER_POLICY;
         // check if any inputs are dbl spent, reject if so
         if(mempool.existsConflicts(*txRef))
             return ZDAG_MAJOR_CONFLICT;        
@@ -201,11 +202,13 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash){
         for (CTxMemPool::txiter it : setAncestors) {
             const CTransactionRef& ancestorTxRef = it->GetSharedTx();
             // should be under MTU of IP packet
-            if(GetSerializeSize(ancestorTxRef, PROTOCOL_VERSION) > 1100)
-                return ZDAG_WARNING_RBF;
+            if(ancestorTxRef->GetTotalSize() > MAX_STANDARD_ZDAG_TX_SIZE)
+                return ZDAG_WARNING_SIZE_OVER_POLICY;
             // check if any ancestor inputs are dbl spent, reject if so
             if(mempool.existsConflicts(*ancestorTxRef))
                 return ZDAG_MAJOR_CONFLICT;
+            if(!IsZdagTx(ancestorTxRef->nVersion))
+                return ZDAG_WARNING_NOT_ZDAG_TX;
         }  
     }
     return ZDAG_STATUS_OK;
