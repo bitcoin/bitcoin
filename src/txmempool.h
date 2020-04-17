@@ -29,7 +29,6 @@
 #include <boost/multi_index/sequenced_index.hpp>
 
 class CBlockIndex;
-typedef std::unordered_map<std::string, CAmount> AssetBalanceMap;
 extern RecursiveMutex cs_main;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */

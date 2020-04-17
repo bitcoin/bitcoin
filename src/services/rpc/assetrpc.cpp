@@ -772,10 +772,9 @@ UniValue syscoincheckmint(const JSONRPCRequest& request)
     bool in_active_chain = false;
     CBlockIndex* blockindex = nullptr;
     const uint32_t nBridgeTransferID = request.params[0].get_uint();
-    std::vector<unsigned char> ethTxid;
     uint256 sysTxid;
-    if(!pethereumtxmintdb || !pethereumtxmintdb->ReadEthTx(nBridgeTransferID, ethTxid) || !pethereumtxmintdb->ReadSysTx(ethTxid, sysTxid)){
-       throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read syscoin transaction from ethereum transaction");
+    if(!pethereumtxmintdb || !pethereumtxmintdb->Read(nBridgeTransferID, sysTxid)){
+       throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read Syscoin transaction using Bridge Transfer ID");
     }
     {
         LOCK(cs_main);

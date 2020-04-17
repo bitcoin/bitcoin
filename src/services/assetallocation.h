@@ -92,6 +92,7 @@ public:
     std::vector<unsigned char> vchReceiptRoot;
     std::vector<unsigned char> vchReceiptPath;   
     uint32_t nBlockNumber;
+    uint32_t nBridgeTransferID;
 
     CMintSyscoin() {
         SetNull();
@@ -103,6 +104,7 @@ public:
     SERIALIZE_METHODS(CMintSyscoin, obj)
     {
         READWRITE(obj.assetAllocation);
+        READWRITE(obj.nBridgeTransferID); 
         READWRITE(obj.vchTxValue);
         READWRITE(obj.vchTxParentNodes);
         READWRITE(obj.vchTxRoot);
@@ -113,7 +115,7 @@ public:
         READWRITE(obj.vchReceiptPath);
         READWRITE(obj.nBlockNumber); 
     }
-    inline void SetNull() { assetAllocation.SetNull(); vchTxRoot.clear(); vchTxValue.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); vchReceiptRoot.clear(); vchReceiptValue.clear(); vchReceiptParentNodes.clear(); vchReceiptPath.clear(); nBlockNumber = 0;  }
+    inline void SetNull() { assetAllocation.SetNull(); vchTxRoot.clear(); vchTxValue.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); vchReceiptRoot.clear(); vchReceiptValue.clear(); vchReceiptParentNodes.clear(); vchReceiptPath.clear(); nBridgeTransferID = 0; nBlockNumber = 0;  }
     inline bool IsNull() const { return (vchTxValue.empty() && vchReceiptValue.empty()); }
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);

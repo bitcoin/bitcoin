@@ -62,6 +62,7 @@
 #include <services/assetallocation.h>
 #include <algorithm> // std::unique
 extern RecursiveMutex cs_setethstatus;
+EthereumMintTxMap mapMintKeysMempool;
 std::set<COutPoint> assetAllocationConflicts;
 std::vector<CInv> vInvToSend;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
@@ -601,7 +602,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-invalid-allocation");
         }
         TxValidationState tx_state;
-        if (!CheckSyscoinInputs(tx, allocation, hash, tx_state, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast())) {
+        if (!CheckSyscoinInputs(tx, allocation, hash, tx_state, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), mapMintKeysMempool)) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx", tx_state.ToString()); 
         } 
     }     
@@ -1872,7 +1873,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
 {
     AssetMap mapAssets;
-    EthereumMintTxVec vecMintKeys;
+    EthereumMintTxMap mapMintKeys;
     std::vector<uint256> vecTXIDs;
     std::vector<uint256> vecBlocks;
     bool fClean = true;
@@ -1931,19 +1932,18 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
         // SYSCOIN
-        if(passetdb != nullptr && !DisconnectSyscoinTransaction(tx, hash, view, mapAssets, vecMintKeys))
+        if(passetdb != nullptr && !DisconnectSyscoinTransaction(tx, hash, view, mapAssets, mapMintKeys))
             fClean = false;
     } 
+    // move best block pointer to prevout block
+    view.SetBestBlock(pindex->pprev->GetBlockHash());
     // SYSCOIN 
-    if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssets) || !pblockindexdb->FlushErase(vecTXIDs) || !pethereumtxmintdb->FlushErase(vecMintKeys)){
+    if(pblockindexdb != nullptr){
+        if(!passetdb->Flush(mapAssets) || !pblockindexdb->FlushErase(vecTXIDs) || !pethereumtxmintdb->FlushErase(mapMintKeys)){
             error("DisconnectBlock(): Error flushing to asset dbs on disconnect");
             return DISCONNECT_FAILED;
         }
     }
-    // move best block pointer to prevout block
-    view.SetBestBlock(pindex->pprev->GetBlockHash());
-
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
 
@@ -2204,7 +2204,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // SYSCOIN
     const bool ibd = ::ChainstateActive().IsInitialBlockDownload();
     AssetMap mapAssets;
-    EthereumMintTxVec vecMintKeys;
+    EthereumMintTxMap mapMintKeys;
     std::vector<std::pair<uint256, uint256> > blockIndex; 
     const uint256& blockHash = block.GetHash();
     for (unsigned int i = 0; i < block.vtx.size(); i++)
@@ -2227,7 +2227,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 }
                 TxValidationState tx_state;
                 // just temp var not used in !fJustCheck mode
-                if (!CheckSyscoinInputs(ibd, tx, allocation, txHash, tx_state, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, vecMintKeys)){
+                if (!CheckSyscoinInputs(ibd, tx, allocation, txHash, tx_state, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, mapMintKeys)){
                     // Any transaction validation failure in ConnectBlock is a block consensus failure
                     state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                                 tx_state.GetRejectReason(), tx_state.GetDebugMessage());
@@ -2336,11 +2336,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     if (fJustCheck)
         return true;
  
-    if(pblockindexdb){
-        if(!pblockindexdb->FlushWrite(blockIndex) || !passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushWrite(vecMintKeys)){
-            return error("Error flushing to asset dbs");
-        }
-    }
     if (!WriteUndoDataForBlock(blockundo, state, pindex, chainparams))
         return false;
 
@@ -2353,6 +2348,11 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
 
+    if(pblockindexdb){
+        if(!pblockindexdb->FlushWrite(blockIndex) || !passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushWrite(mapMintKeys)){
+            return error("Error flushing to asset dbs");
+        }
+    }
     int64_t nTime5 = GetTimeMicros(); nTimeIndex += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5 - nTime4), nTimeIndex * MICRO, nTimeIndex * MILLI / nBlocksTotal);
 
