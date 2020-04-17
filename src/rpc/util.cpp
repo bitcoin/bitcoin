@@ -381,6 +381,9 @@ struct Sections {
         std::string ret;
         const size_t pad = m_max_pad + 4;
         for (const auto& s : m_sections) {
+            // The left part of a section is assumed to be a single line, usually it is the name of the JSON struct or a
+            // brace like {, }, [, or ]
+            CHECK_NONFATAL(s.m_left.find('\n') == std::string::npos);
             if (s.m_right.empty()) {
                 ret += s.m_left;
                 ret += "\n";
