@@ -2,22 +2,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <checkqueue.h>
+#include <test/util/setup_common.h>
 #include <util/memory.h>
 #include <util/system.h>
 #include <util/time.h>
 
-#include <atomic>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
-#include <checkqueue.h>
+
+#include <atomic>
 #include <condition_variable>
 #include <mutex>
-#include <test/util/setup_common.h>
 #include <thread>
-#include <vector>
-
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, TestingSetup)
 
