@@ -234,6 +234,7 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &
         entry.__pushKV("txid", txHash.GetHex());
         entry.__pushKV("blockhash", blockhash.GetHex());
         UniValue oSPVProofObj(UniValue::VOBJ);
+        oSPVProofObj.__pushKV("bridgetransferid", mintSyscoin.nBridgeTransferID);   
         oSPVProofObj.__pushKV("txvalue", HexStr(mintSyscoin.vchTxValue));   
         oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
         oSPVProofObj.__pushKV("txroot", HexStr(mintSyscoin.vchTxRoot));

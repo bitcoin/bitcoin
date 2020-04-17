@@ -845,7 +845,8 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                     },
                     },
                     "[assetallocationsend object]..."
-                }
+            },
+            {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125. ZDAG is only possible if RBF is disabled."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -853,18 +854,20 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             }},
         RPCExamples{
-            HelpExampleCli("assetallocationsendmany", "\'[{\"asset_guid\":1045909988,\"address\":\"sysaddress1\",\"amount\":100},{\"asset_guid\":1045909988,\"address\":\"sysaddress2\",\"amount\":200}]\'")
-            + HelpExampleCli("assetallocationsendmany", "\"[{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\"")
-            + HelpExampleRpc("assetallocationsendmany", "\'[{\"asset_guid\":1045909988,\"address\":\"sysaddress1\",\"amount\":100},{\"asset_guid\":1045909988,\"address\":\"sysaddress2\",\"amount\":200}]\'")
-            + HelpExampleRpc("assetallocationsendmany", "\"[{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\"")
+            HelpExampleCli("assetallocationsendmany", "\'[{\"asset_guid\":1045909988,\"address\":\"sysaddress1\",\"amount\":100},{\"asset_guid\":1045909988,\"address\":\"sysaddress2\",\"amount\":200}]\' \"false\"")
+            + HelpExampleCli("assetallocationsendmany", "\"[{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"true\"")
+            + HelpExampleRpc("assetallocationsendmany", "\'[{\"asset_guid\":1045909988,\"address\":\"sysaddress1\",\"amount\":100},{\"asset_guid\":1045909988,\"address\":\"sysaddress2\",\"amount\":200}]\',\"false\"")
+            + HelpExampleRpc("assetallocationsendmany", "\"[{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\",\"true\"")
         }
     }.Check(request);
-
+    CCoinControl coin_control;
 	// gather & validate inputs
 	UniValue valueTo = params[0];
 	if (!valueTo.isArray())
 		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
-
+    if (!request.params[1].isNull()) {
+        coin_control.m_signal_bip125_rbf = request.params[1].get_bool();
+    }
     CAssetAllocation theAssetAllocation;
     CMutableTransaction mtx;
 	UniValue receivers = valueTo.get_array();
@@ -933,10 +936,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     CAmount nFeeRequired = 0;
     std::string strFailReason;
     int nChangePosRet = -1;
-    CCoinControl coin_control;
-    coin_control.m_signal_bip125_rbf = true;
     bool lockUnspents = false;
     std::set<int> setSubtractFeeFromOutputs;
+    // if zdag double the fee rate
+    if(!coin_control.m_signal_bip125_rbf) {
+        coin_control.m_feerate = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE*2);
+    }
     for(const auto &it: mapAssetTotals) {
         nChangePosRet = -1;
         nFeeRequired = 0;
@@ -1260,6 +1265,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid"},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation to"},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The quantity of asset to send"},
+            {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125. ZDAG is only possible if RBF is disabled."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1267,8 +1273,8 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             }},
         RPCExamples{
-            HelpExampleCli("assetallocationsend", "\"asset_guid\" \"address\" \"amount\"")
-            + HelpExampleRpc("assetallocationsend", "\"asset_guid\", \"address\", \"amount\"")
+            HelpExampleCli("assetallocationsend", "\"asset_guid\" \"address\" \"amount\" \"false\"")
+            + HelpExampleRpc("assetallocationsend", "\"asset_guid\", \"address\", \"amount\" \"false\"")
         }
     }.Check(request);
     const uint32_t &nAsset = params[0].get_uint();
@@ -1278,12 +1284,17 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     UniValue amountValue = request.params[2];
     CAmount nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
     if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationsend");          
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationsend");  
+    bool m_signal_bip125_rbf = false;
+    if (!request.params[3].isNull()) {
+        m_signal_bip125_rbf = request.params[3].get_bool();
+    }        
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     outputObj.__pushKV("asset_guid", nAsset);
     outputObj.__pushKV("address", params[1].get_str());
     outputObj.__pushKV("amount", ValueFromAssetAmount(nAmount, theAsset.nPrecision));
+    outputObj.__pushKV("replaceable", m_signal_bip125_rbf);
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(output);
@@ -1402,8 +1413,8 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
     { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","amounts"}},
-    { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address_receiver","amount"}},
-    { "syscoinwallet",            "assetallocationsendmany",          &assetallocationsendmany,       {"amounts"}},
+    { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address_receiver","amount","replaceable"}},
+    { "syscoinwallet",            "assetallocationsendmany",          &assetallocationsendmany,       {"amounts","replaceable"}},
 };
 // clang-format on
 
