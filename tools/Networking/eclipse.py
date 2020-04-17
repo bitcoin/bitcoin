@@ -290,6 +290,11 @@ def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, int
 		packet = socket.recv(65565)
 		create_task('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface)
 
+def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
+	while not thread.stopped():
+		packet = socket.recv(65565)
+		create_task('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface)
+
 # Called when a packet is sniffed from the network
 # Return true to end the thread
 def packet_received(thread, parent_thread, packet, socket, mirror_socket, from_ip, from_port, to_ip, to_port, interface):
@@ -339,14 +344,10 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, from_i
 		make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = False, attempt_number = 3)
 	return
 
-def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
-	while not thread.stopped():
-		packet = socket.recv(65565)
-		create_task('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface)
-
 # Called when a packet is sniffed from the network
 # Return true to end the thread
 def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, from_ip, from_port, to_ip, to_port, interface):
+	print('MIRROR')
 	if len(packet) >= 4:
 		is_bitcoin = (packet[0:4] == b'\xf9\xbe\xb4\xd9')
 	else:
