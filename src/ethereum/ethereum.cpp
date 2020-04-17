@@ -98,19 +98,14 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
  *
  * @param vchInputExpectedMethodHash The expected method hash
  * @param vchInputData The input to parse
- * @param vchAssetContract The ERC20 contract address of the token involved in moving over
  * @param outputAmount The amount burned
  * @param nAsset The asset burned
- * @param nLocalPrecision The local precision to know how to convert ethereum's uint256 to a CAmount (int64) with truncation of insignifficant bits
  * @param witnessAddress The destination witness address for the minting
  * @return true if everything is valid
  */
-bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, const std::vector<unsigned char>& vchAssetContract, CAmount& outputAmount, int32_t& nAsset, const uint8_t& nLocalPrecision, CWitnessAddress& witnessAddress) {
-    if(vchAssetContract.empty()){
-      return false;
-    }
-    // total 7 or 8 fields are expected @ 32 bytes each field, 8 fields if witness > 32 bytes
-    if(vchInputData.size() < 228 || vchInputData.size() > 260) {
+bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, CAmount& nAmount, int32_t& nAsset, CWitnessAddress& witnessAddress) {
+    // total 5 or 6 fields are expected @ 32 bytes each field, 6 fields if witness > 32 bytes + 4 byte method hash
+    if(vchInputData.size() < 164 || vchInputData.size() > 196) {
       return false;  
     }
     // method hash is 4 bytes
@@ -126,7 +121,7 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     // reverse endian
     std::reverse(vchAmount.begin(), vchAmount.end());
     arith_uint256 outputAmountArith = UintToArith256(uint256(vchAmount));
-    
+    nAmount = outputAmountArith.GetLow64();
     
     // convert the vch into a int32_t (nAsset)
     // should be in position 68 walking backwards
@@ -134,30 +129,9 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     nAsset |= static_cast<int32_t>(vchInputData[66]) << 8;
     nAsset |= static_cast<int32_t>(vchInputData[65]) << 16;
     nAsset |= static_cast<int32_t>(vchInputData[64]) << 24;
-    // start from 100 offset (96 for 3rd field + 4 bytes for function signature) and subtract 20 
-    std::vector<unsigned char>::const_iterator firstContractAddress = vchInputData.begin() + 80;
-    std::vector<unsigned char>::const_iterator lastContractAddress = firstContractAddress + 20;
-    const std::vector<unsigned char> vchERC20ContractAddress(firstContractAddress,lastContractAddress);
-    if(vchERC20ContractAddress != vchAssetContract)
-    {
-      return false;
-    }
-    // get precision
-    int dataPos = 131;
-    const int8_t &nPrecision = static_cast<uint8_t>(vchInputData[dataPos++]);
-    // local precision can range between 0 and 8 decimal places, so it should fit within a CAmount
-    // we pad zero's if erc20's precision is less than ours so we can accurately get the whole value of the amount transferred
-    if(nLocalPrecision > nPrecision){
-      outputAmountArith *= pow(10, nLocalPrecision-nPrecision);
-    // ensure we truncate decimals to fit within int64 if erc20's precision is more than our asset precision
-    } else if(nLocalPrecision < nPrecision){
-      outputAmountArith /= pow(10, nPrecision-nLocalPrecision);
-    }
-    // once we have truncated it is safe to get low 64 bits of the uint256 which should encapsulate the entire value
-    outputAmount = outputAmountArith.GetLow64();
-
-    // skip data field market (32 bytes) + 31 bytes offset to the varint _byte
-    dataPos += 63;
+    
+    size_t dataPos = 130;
+    // skip data field marker (32 bytes) + 31 bytes offset to the varint _byte
     const unsigned char &dataLength = vchInputData[dataPos++] - 1; // // - 1 to account for the version byte
     // witness programs can extend to 40 bytes, min length is 2 for min witness program
     if(dataLength > 40 || dataLength < 2){
