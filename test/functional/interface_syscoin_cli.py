@@ -42,12 +42,12 @@ class TestSyscoinCli(SyscoinTestFramework):
         user, password = get_auth_cookie(self.nodes[0].datadir, self.chain)
 
         self.log.info("Test -stdinrpcpass option")
-        assert_equal(BLOCKS, self.nodes[0].cli('-rpcuser=%s' % user, '-stdinrpcpass', input=password).getblockcount())
-        assert_raises_process_error(1, "Incorrect rpcuser or rpcpassword", self.nodes[0].cli('-rpcuser=%s' % user, '-stdinrpcpass', input="foo").echo)
+        assert_equal(BLOCKS, self.nodes[0].cli('-rpcuser={}'.format(user), '-stdinrpcpass', input=password).getblockcount())
+        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword', self.nodes[0].cli('-rpcuser={}'.format(user), '-stdinrpcpass', input='foo').echo)
 
         self.log.info("Test -stdin and -stdinrpcpass")
-        assert_equal(["foo", "bar"], self.nodes[0].cli('-rpcuser=%s' % user, '-stdin', '-stdinrpcpass', input=password + "\nfoo\nbar").echo())
-        assert_raises_process_error(1, "Incorrect rpcuser or rpcpassword", self.nodes[0].cli('-rpcuser=%s' % user, '-stdin', '-stdinrpcpass', input="foo").echo)
+        assert_equal(['foo', 'bar'], self.nodes[0].cli('-rpcuser={}'.format(user), '-stdin', '-stdinrpcpass', input=password + '\nfoo\nbar').echo())
+        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword', self.nodes[0].cli('-rpcuser={}'.format(user), '-stdin', '-stdinrpcpass', input='foo').echo)
 
         self.log.info("Test connecting to a non-existing server")
         assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcport=1').echo)
@@ -58,8 +58,10 @@ class TestSyscoinCli(SyscoinTestFramework):
         self.log.info("Make sure that -getinfo with arguments fails")
         assert_raises_process_error(1, "-getinfo takes no arguments", self.nodes[0].cli('-getinfo').help)
 
-        self.log.info("Test that -getinfo returns the expected network and blockchain info")
-        cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
+        self.log.info("Test -getinfo returns expected network and blockchain info")
+        if self.is_wallet_compiled():
+            self.nodes[0].encryptwallet(password)
+        cli_get_info = self.nodes[0].cli().send_cli('-getinfo')
         network_info = self.nodes[0].getnetworkinfo()
         blockchain_info = self.nodes[0].getblockchaininfo()
 
@@ -79,7 +81,19 @@ class TestSyscoinCli(SyscoinTestFramework):
             assert_equal(cli_get_info['relayfee'], network_info['relayfee'])
             # unlocked_until is not tested because the wallet is not encrypted
         else:
-            self.log.info("*** Wallet not compiled; -getinfo wallet tests skipped")
+            self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
+
+        self.log.info("Test -version with node stopped")
+        self.stop_node(0)
+        cli_response = self.nodes[0].cli().send_cli('-version')
+        assert "{} RPC client version".format(self.config['environment']['PACKAGE_NAME']) in cli_response
+
+        self.log.info("Test -rpcwait option successfully waits for RPC connection")
+        self.nodes[0].start()  # start node without RPC connection
+        self.nodes[0].wait_for_cookie_credentials()  # ensure cookie file is available to avoid race condition
+        blocks = self.nodes[0].cli('-rpcwait').send_cli('getblockcount')
+        self.nodes[0].wait_for_rpc_connection()
+        assert_equal(blocks, BLOCKS)
 
 
 if __name__ == '__main__':
