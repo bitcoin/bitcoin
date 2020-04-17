@@ -260,7 +260,7 @@ def mirror_make_fake_connection(socket, interface, src_ip, verbose=True):
 def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
 		packet = socket.recv(65565)
-		createTask('Process packet ' + src_ip, packet_received, packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface)
+		createTask('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface)
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
