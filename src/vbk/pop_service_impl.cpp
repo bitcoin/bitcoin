@@ -366,7 +366,7 @@ void PopServiceImpl::removeAllBlockPayloads(const CBlockIndex& connecting)
     bool ret = altTree->setState(block.previousBlock, instate);
     assert(ret);
     assert(instate.IsValid());
-    (void) ret;
+    (void)ret;
 }
 
 
@@ -434,7 +434,7 @@ bool PopServiceImpl::parseTxPopPayloads(const CBlock& block, const CTransaction&
             "[ " + txhash.ToString() + "]: endorsed block " + endorsedHeader.GetHash().ToString() + " is missing");
     }
 
-    payloads.containingTx = txhash.asVector();
+    payloads.containingTx = altintegration::uint256(txhash.asVector());
     payloads.containingBlock = cast(pindexThis.nHeight, block.GetBlockHeader());
     payloads.endorsed = cast(endorsedIndex->nHeight, endorsedHeader);
 
