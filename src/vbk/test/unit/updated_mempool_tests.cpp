@@ -1,4 +1,5 @@
 #include <boost/test/unit_test.hpp>
+#include <gmock/gmock.h>
 
 #include <chainparams.h>
 #include <consensus/validation.h>
@@ -11,8 +12,8 @@
 #include <wallet/wallet.h>
 
 #include <vbk/init.hpp>
-#include <vbk/test/util/tx.hpp>
 #include <vbk/test/util/mock.hpp>
+#include <vbk/test/util/tx.hpp>
 
 #include <algorithm>
 #include <vector>
