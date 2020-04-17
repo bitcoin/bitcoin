@@ -362,18 +362,18 @@ void WalletInit::Close()
 void WalletInit::AutoLockMasternodeCollaterals()
 {
     // we can't do this before DIP3 is fully initialized
-    for (CWalletRef pwallet : vpwallets) {
+    for (CWallet* pwallet : GetWallets()) {
         pwallet->AutoLockMasternodeCollaterals();
     }
 }
 
 void WalletInit::InitPrivateSendSettings()
 {
-    if (vpwallets.empty()) {
+    if (!HasWallets()) {
         privateSendClient.fEnablePrivateSend = privateSendClient.fPrivateSendRunning = false;
     } else {
         privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", !fLiteMode);
-        privateSendClient.fPrivateSendRunning = vpwallets[0]->IsLocked() ? false : gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART);
+        privateSendClient.fPrivateSendRunning = GetWallets()[0]->IsLocked() ? false : gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART);
     }
     privateSendClient.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
     privateSendClient.nPrivateSendSessions = std::min(std::max((int)gArgs.GetArg("-privatesendsessions", DEFAULT_PRIVATESEND_SESSIONS), MIN_PRIVATESEND_SESSIONS), MAX_PRIVATESEND_SESSIONS);
