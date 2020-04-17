@@ -139,7 +139,10 @@ namespace BCLog {
         MNSYNC      = ((uint64_t)1 << 40),
         PRIVATESEND = ((uint64_t)1 << 41),
         SPORK       = ((uint64_t)1 << 42),
+        NETCONN     = ((uint64_t)1 << 43),
         //End Dash
+
+        NET_NETCONN = NET | NETCONN, // use this to have something logged in NET and NETCONN as well
 
         ALL         = ~(uint64_t)0,
     };

@@ -41,7 +41,7 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
     mnauth.proRegTxHash = activeMasternodeInfo.proTxHash;
     mnauth.sig = activeMasternodeInfo.blsKeyOperator->Sign(signHash);
 
-    LogPrint(BCLog::NET, "CMNAuth::%s -- Sending MNAUTH, peer=%d\n", __func__, pnode->GetId());
+    LogPrint(BCLog::NET_NETCONN, "CMNAuth::%s -- Sending MNAUTH, peer=%d\n", __func__, pnode->GetId());
 
     connman.PushMessage(pnode, CNetMsgMaker(pnode->GetSendVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
@@ -117,7 +117,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         if (!pnode->fInbound) {
             mmetaman.GetMetaInfo(mnauth.proRegTxHash)->SetLastOutboundSuccess(GetAdjustedTime());
             if (pnode->fMasternodeProbe) {
-                LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- masternode probe successful for %s, disconnecting. peer=%d\n",
+                LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- masternode probe successful for %s, disconnecting. peer=%d\n",
                          mnauth.proRegTxHash.ToString(), pnode->GetId());
                 pnode->fDisconnect = true;
                 return;
@@ -133,27 +133,27 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             if (pnode2->verifiedProRegTxHash == mnauth.proRegTxHash) {
                 if (fMasternodeMode) {
                     auto deterministicOutbound = llmq::CLLMQUtils::DeterministicOutboundConnection(activeMasternodeInfo.proTxHash, mnauth.proRegTxHash);
-                    LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, deterministicOutbound=%s. peer=%d\n",
+                    LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, deterministicOutbound=%s. peer=%d\n",
                              mnauth.proRegTxHash.ToString(), pnode2->GetId(), deterministicOutbound.ToString(), pnode->GetId());
                     if (deterministicOutbound == activeMasternodeInfo.proTxHash) {
                         if (pnode2->fInbound) {
-                            LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping old inbound, peer=%d\n", pnode2->GetId());
+                            LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- dropping old inbound, peer=%d\n", pnode2->GetId());
                             pnode2->fDisconnect = true;
                         } else if (pnode->fInbound) {
-                            LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping new inbound, peer=%d\n", pnode->GetId());
+                            LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- dropping new inbound, peer=%d\n", pnode->GetId());
                             pnode->fDisconnect = true;
                         }
                     } else {
                         if (!pnode2->fInbound) {
-                            LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping old outbound, peer=%d\n", pnode2->GetId());
+                            LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- dropping old outbound, peer=%d\n", pnode2->GetId());
                             pnode2->fDisconnect = true;
                         } else if (!pnode->fInbound) {
-                            LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping new outbound, peer=%d\n", pnode->GetId());
+                            LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- dropping new outbound, peer=%d\n", pnode->GetId());
                             pnode->fDisconnect = true;
                         }
                     }
                 } else {
-                    LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, dropping new connection. peer=%d\n",
+                    LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, dropping new connection. peer=%d\n",
                             mnauth.proRegTxHash.ToString(), pnode2->GetId(), pnode->GetId());
                     pnode->fDisconnect = true;
                 }
@@ -170,7 +170,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             pnode->verifiedPubKeyHash = dmn->pdmnState->pubKeyOperator.GetHash();
         }
 
-        LogPrint(BCLog::NET, "CMNAuth::%s -- Valid MNAUTH for %s, peer=%d\n", __func__, mnauth.proRegTxHash.ToString(), pnode->GetId());
+        LogPrint(BCLog::NET_NETCONN, "CMNAuth::%s -- Valid MNAUTH for %s, peer=%d\n", __func__, mnauth.proRegTxHash.ToString(), pnode->GetId());
     }
 }
 
@@ -203,7 +203,7 @@ void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList&
         }
 
         if (doRemove) {
-            LogPrint(BCLog::NET, "CMNAuth::NotifyMasternodeListChanged -- Disconnecting MN %s due to key changed/removed, peer=%d\n",
+            LogPrint(BCLog::NET_NETCONN, "CMNAuth::NotifyMasternodeListChanged -- Disconnecting MN %s due to key changed/removed, peer=%d\n",
                      pnode->verifiedProRegTxHash.ToString(), pnode->GetId());
             pnode->fDisconnect = true;
         }
