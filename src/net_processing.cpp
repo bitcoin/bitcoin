@@ -3503,9 +3503,7 @@ static bool SendRejectsAndCheckIfBanned(CNode* pnode, CConnman* connman)
     CNodeState &state = *State(pnode->GetId());
 
     for (const CBlockReject& reject : state.rejects) {
-        // Pass allowOptimisticSend=true here to allow sending the reject message immediately instead of waiting for the
-        // network thread to do it. This gives us a chance of actually sending out the reject before we close the connection.
-        connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::REJECT, (std::string)NetMsgType::BLOCK, reject.chRejectCode, reject.strRejectReason, reject.hashBlock), true);
+        connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::REJECT, (std::string)NetMsgType::BLOCK, reject.chRejectCode, reject.strRejectReason, reject.hashBlock));
     }
     state.rejects.clear();
 

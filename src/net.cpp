@@ -1257,6 +1257,20 @@ void CConnman::DisconnectNodes()
             CNode* pnode = *it;
             if (pnode->fDisconnect)
             {
+                if (pnode->nDisconnectLingerTime == 0) {
+                    // let's not immediately close the socket but instead wait for at least 100ms so that there is a
+                    // chance to flush all/some pending data. Otherwise the other side might not receive REJECT messages
+                    // that were pushed right before setting fDisconnect=true
+                    // Flushing must happen in two places to ensure data can be received by the other side:
+                    //   1. vSendMsg must be empty and all messages sent via send(). This is ensured by SocketHandler()
+                    //      being called before DisconnectNodes and also by the linger time
+                    //   2. Internal socket send buffers must be flushed. This is ensured solely by the linger time
+                    pnode->nDisconnectLingerTime = GetTimeMillis() + 100;
+                    continue;
+                } else if (GetTimeMillis() < pnode->nDisconnectLingerTime) {
+                    continue;
+                }
+
                 if (fLogIPs) {
                     LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d fMasternode=%d\n",
                           pnode->GetId(), pnode->addr.ToString(), pnode->GetRefCount(), pnode->fInbound, pnode->fMasternode);
@@ -1411,8 +1425,7 @@ bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &s
 
 #ifdef USE_WAKEUP_PIPE
     // We add a pipe to the read set so that the select() call can be woken up from the outside
-    // This is done when data is available for sending and at the same time optimistic sending was disabled
-    // when pushing the data.
+    // This is done when data is added to send buffers (vSendMsg) or when new peers are added
     // This is currently only implemented for POSIX compliant systems. This means that Windows will fall back to
     // timing out after 50ms and then trying to send. This is ok as we assume that heavy-load daemons are usually
     // run on Linux and friends.
@@ -1600,7 +1613,7 @@ void CConnman::SocketHandler()
             sendSet = send_set.count(pnode->hSocket) > 0;
             errorSet = error_set.count(pnode->hSocket) > 0;
         }
-        if (recvSet || errorSet)
+        if (!pnode->fDisconnect && (recvSet || errorSet))
         {
             // typical socket buffer is 8K-64K
             char pchBuf[0x10000];
@@ -1677,6 +1690,9 @@ void CConnman::ThreadSocketHandler()
 
     while (!interruptNet)
     {
+        // Handle sockets before we do the next round of disconnects. This allows us to flush send buffers one last time
+        // before actually closing sockets. Receiving is however skipped in case a peer is pending to be disconnected
+        SocketHandler();
         if (GetTimeMillis() - nLastCleanupNodes > 1000) {
             ForEachNode(AllNodes, [&](CNode* pnode) {
                 InactivityCheck(pnode);
@@ -1685,7 +1701,6 @@ void CConnman::ThreadSocketHandler()
             nLastCleanupNodes = GetTimeMillis();
         }
         NotifyNumConnectionsChanged();
-        SocketHandler();
     }
 }
 
@@ -3423,7 +3438,7 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
 }
 
-void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg, bool allowOptimisticSend)
+void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     size_t nMessageSize = msg.data.size();
     size_t nTotalSize = nMessageSize + CMessageHeader::HEADER_SIZE;
@@ -3441,7 +3456,6 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg, bool allowOpti
     {
         LOCK(pnode->cs_vSend);
         bool hasPendingData = !pnode->vSendMsg.empty();
-        bool optimisticSend(allowOptimisticSend && pnode->vSendMsg.empty());
 
         //log total amount of bytes per command
         pnode->mapSendBytesPerMsgCmd[msg.command] += nTotalSize;
@@ -3453,11 +3467,8 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg, bool allowOpti
         if (nMessageSize)
             pnode->vSendMsg.push_back(std::move(msg.data));
 
-        // If write queue empty, attempt "optimistic write"
-        if (optimisticSend == true)
-            nBytesSent = SocketSendData(pnode);
         // wake up select() call in case there was no pending data before (so it was not selecting this socket for sending)
-        else if (!hasPendingData && wakeupSelectNeeded)
+        if (!hasPendingData && wakeupSelectNeeded)
             WakeSelect();
     }
     if (nBytesSent)
