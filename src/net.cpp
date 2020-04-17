@@ -1257,6 +1257,20 @@ void CConnman::DisconnectNodes()
             CNode* pnode = *it;
             if (pnode->fDisconnect)
             {
+                if (pnode->nDisconnectLingerTime == 0) {
+                    // let's not immediately close the socket but instead wait for at least 100ms so that there is a
+                    // chance to flush all/some pending data. Otherwise the other side might not receive REJECT messages
+                    // that were pushed right before setting fDisconnect=true
+                    // Flushing must happen in two places to ensure data can be received by the other side:
+                    //   1. vSendMsg must be empty and all messages sent via send(). This is ensured by SocketHandler()
+                    //      being called before DisconnectNodes and also by the linger time
+                    //   2. Internal socket send buffers must be flushed. This is ensured solely by the linger time
+                    pnode->nDisconnectLingerTime = GetTimeMillis() + 100;
+                    continue;
+                } else if (GetTimeMillis() < pnode->nDisconnectLingerTime) {
+                    continue;
+                }
+
                 if (fLogIPs) {
                     LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d fMasternode=%d\n",
                           pnode->GetId(), pnode->addr.ToString(), pnode->GetRefCount(), pnode->fInbound, pnode->fMasternode);
