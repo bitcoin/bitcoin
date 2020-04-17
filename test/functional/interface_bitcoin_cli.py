@@ -13,7 +13,6 @@ BLOCKS = 101
 BALANCE = (BLOCKS - 100) * 50
 
 class TestBitcoinCli(BitcoinTestFramework):
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -33,12 +32,12 @@ class TestBitcoinCli(BitcoinTestFramework):
         user, password = get_auth_cookie(self.nodes[0].datadir, self.chain)
 
         self.log.info("Test -stdinrpcpass option")
-        assert_equal(BLOCKS, self.nodes[0].cli('-rpcuser=%s' % user, '-stdinrpcpass', input=password).getblockcount())
-        assert_raises_process_error(1, "Incorrect rpcuser or rpcpassword", self.nodes[0].cli('-rpcuser=%s' % user, '-stdinrpcpass', input="foo").echo)
+        assert_equal(BLOCKS, self.nodes[0].cli('-rpcuser={}'.format(user), '-stdinrpcpass', input=password).getblockcount())
+        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword', self.nodes[0].cli('-rpcuser={}'.format(user), '-stdinrpcpass', input='foo').echo)
 
         self.log.info("Test -stdin and -stdinrpcpass")
-        assert_equal(["foo", "bar"], self.nodes[0].cli('-rpcuser=%s' % user, '-stdin', '-stdinrpcpass', input=password + "\nfoo\nbar").echo())
-        assert_raises_process_error(1, "Incorrect rpcuser or rpcpassword", self.nodes[0].cli('-rpcuser=%s' % user, '-stdin', '-stdinrpcpass', input="foo").echo)
+        assert_equal(['foo', 'bar'], self.nodes[0].cli('-rpcuser={}'.format(user), '-stdin', '-stdinrpcpass', input=password + '\nfoo\nbar').echo())
+        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword', self.nodes[0].cli('-rpcuser={}'.format(user), '-stdin', '-stdinrpcpass', input='foo').echo)
 
         self.log.info("Test connecting to a non-existing server")
         assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcport=1').echo)
@@ -52,7 +51,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.log.info("Test -getinfo returns expected network and blockchain info")
         if self.is_wallet_compiled():
             self.nodes[0].encryptwallet(password)
-        cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
+        cli_get_info = self.nodes[0].cli().send_cli('-getinfo')
         network_info = self.nodes[0].getnetworkinfo()
         blockchain_info = self.nodes[0].getblockchaininfo()
         assert_equal(cli_get_info['version'], network_info['version'])
@@ -76,20 +75,17 @@ class TestBitcoinCli(BitcoinTestFramework):
         else:
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
 
-        self.stop_node(0)
-
         self.log.info("Test -version with node stopped")
-        cli_response = self.nodes[0].cli("-version").send_cli()
+        self.stop_node(0)
+        cli_response = self.nodes[0].cli().send_cli('-version')
         assert "{} RPC client version".format(self.config['environment']['PACKAGE_NAME']) in cli_response
 
-        self.log.info("Test -rpcwait option waits for RPC connection instead of failing")
-        # Start node without RPC connection.
-        self.nodes[0].start()
-        # Verify failure without -rpcwait.
-        assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('getblockcount').echo)
-        # Verify success using -rpcwait.
-        assert_equal(BLOCKS, self.nodes[0].cli('-rpcwait', 'getblockcount').send_cli())
+        self.log.info("Test -rpcwait option successfully waits for RPC connection")
+        self.nodes[0].start()  # start node without RPC connection
+        self.nodes[0].wait_for_cookie_credentials()  # ensure cookie file is available to avoid race condition
+        blocks = self.nodes[0].cli('-rpcwait').send_cli('getblockcount')
         self.nodes[0].wait_for_rpc_connection()
+        assert_equal(blocks, BLOCKS)
 
 
 if __name__ == '__main__':
