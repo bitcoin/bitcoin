@@ -10,6 +10,10 @@ export CONTAINER_NAME=ci_native_valgrind
 export PACKAGES="valgrind clang llvm python3-zmq libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev"
 export USE_VALGRIND=1
 export NO_DEPENDS=1
-export TEST_RUNNER_EXTRA="--exclude rpc_bind"  # Excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547
+if [[ "${TRAVIS}" == "true" && "${TRAVIS_REPO_SLUG}" != "bitcoin/bitcoin" ]]; then
+  export TEST_RUNNER_EXTRA="wallet_disable"  # Only run wallet_disable as a smoke test to not hit the 50 min travis time limit
+else
+  export TEST_RUNNER_EXTRA="--exclude rpc_bind"  # Excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547
+fi
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=no CC=clang CXX=clang++"  # TODO enable GUI
