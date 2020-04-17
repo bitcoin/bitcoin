@@ -195,7 +195,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(pethereumtxmintdb->Exists(nBridgeTransferID)) {
         return FormatSyscoinErrorMessage(state, "mint-exists", bSanityCheck);
     } 
-    // ensure eth tx not already spent in current processing block or mempool (mapMintKeysMempool passed in)
+    // ensure eth tx not already spent in current processing block or mempool(mapMintKeysMempool passed in)
     auto itMap = mapMintKeys.emplace(nBridgeTransferID, txHash);
     if(!itMap.second) {
         return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
@@ -290,7 +290,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const CAssetAll
     }
     return good;
 }
-bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, EthereumMintTxMap &mapMintKeys, AssetMap &mapAssets){
+bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, EthereumMintTxMap &mapMintKeys){
     CMintSyscoin mintSyscoin(tx);
     if(mintSyscoin.IsNull()) {
         LogPrint(BCLog::SYS,"DisconnectMintAsset: Cannot unserialize data inside of this transaction relating to an assetallocationmint\n");
@@ -305,10 +305,10 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
         return true;
  
     if(IsSyscoinMintTx(tx.nVersion)) {
-        if(!DisconnectMintAsset(tx, txHash, mapMintKeys, mapAssets))
+        if(!DisconnectMintAsset(tx, txHash, mapMintKeys))
             return false;       
     }
-    else{
+    else {
         if (IsAssetTx(tx.nVersion)) {
             if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
                 if(!DisconnectAssetSend(tx, txHash, mapAssets))
@@ -404,7 +404,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
                 assetAllocationFromTx(tx.nVersion).c_str(),
                 txHash.ToString().c_str(),
                 nHeight,
-                fJustCheck ? "JUSTCHECK" : "BLOCK");      
+                "BLOCK");      
         }             
     }  
     return true;
