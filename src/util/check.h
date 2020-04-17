@@ -5,6 +5,10 @@
 #ifndef BITCOIN_UTIL_CHECK_H
 #define BITCOIN_UTIL_CHECK_H
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <tinyformat.h>
 
 #include <stdexcept>
