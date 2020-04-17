@@ -530,7 +530,10 @@ void CNode::CloseSocketDisconnect(CConnman* connman)
     connman->mapSendableNodes.erase(GetId());
     {
         LOCK(connman->cs_mapNodesWithDataToSend);
-        connman->mapNodesWithDataToSend.erase(GetId());
+        if (connman->mapNodesWithDataToSend.erase(GetId()) != 0) {
+            // See comment in PushMessage
+            Release();
+        }
     }
 
     LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
@@ -1694,6 +1697,8 @@ void CConnman::SocketHandler()
         vSendableNodes.reserve(mapNodesWithDataToSend.size());
         for (auto it = mapNodesWithDataToSend.begin(); it != mapNodesWithDataToSend.end(); ) {
             if (it->second->nSendMsgSize == 0) {
+                // See comment in PushMessage
+                it->second->Release();
                 it = mapNodesWithDataToSend.erase(it);
             } else {
                 if (it->second->fCanSendData) {
@@ -3626,7 +3631,13 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
         {
             LOCK(cs_mapNodesWithDataToSend);
-            mapNodesWithDataToSend.emplace(pnode->GetId(), pnode);
+            // we're not holding cs_vNodes here, so there is a chance of this node being disconnected shortly before
+            // we get here. Whoever called PushMessage still has a ref to CNode*, but will later Release() it, so we
+            // might end up having an entry in mapNodesWithDataToSend that is not in vNodes anymore. We need to
+            // Add/Release refs when adding/erasing mapNodesWithDataToSend.
+            if (mapNodesWithDataToSend.emplace(pnode->GetId(), pnode).second) {
+                pnode->AddRef();
+            }
         }
 
         // wake up select() call in case there was no pending data before (so it was not selecting this socket for sending)
