@@ -74,6 +74,8 @@ class LLMQSigningTest(DashTestFramework):
         self.mninfo[2].node.quorum("sign", 100, id, msgHash)
         wait_for_sigs(True, False, True, 15)
 
+        recsig_time = self.mocktime
+
         # Mine one more quorum, so that we have 2 active ones, nothing should change
         self.mine_quorum()
         assert_sigs_nochange(True, False, True, 3)
@@ -83,8 +85,8 @@ class LLMQSigningTest(DashTestFramework):
         self.mine_quorum()
         assert_sigs_nochange(True, False, True, 3)
 
-        # fast forward 6.5 days, recovered sig should still be valid
-        self.bump_mocktime(int(60 * 60 * 24 * 6.5))
+        # fast forward until 0.5 days before cleanup is expected, recovered sig should still be valid
+        self.bump_mocktime(recsig_time + int(60 * 60 * 24 * 6.5) - self.mocktime)
         # Cleanup starts every 5 seconds
         wait_for_sigs(True, False, True, 15)
         # fast forward 1 day, recovered sig should not be valid anymore
