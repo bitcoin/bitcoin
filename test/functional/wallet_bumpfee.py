@@ -82,7 +82,6 @@ class BumpFeeTest(BitcoinTestFramework):
         test_notmine_bumpfee_fails(self, rbf_node, peer_node, dest_address)
         test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_address)
         test_dust_to_fee(self, rbf_node, dest_address)
-        test_settxfee(self, rbf_node, dest_address)
         test_watchonly_psbt(self, peer_node, rbf_node, dest_address)
         test_rebumping(self, rbf_node, dest_address)
         test_rebumping_not_replaceable(self, rbf_node, dest_address)
@@ -90,6 +89,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_bumpfee_metadata(self, rbf_node, dest_address)
         test_locked_wallet_fails(self, rbf_node, dest_address)
         test_change_script_match(self, rbf_node, dest_address)
+        test_settxfee(self, rbf_node, dest_address)
         test_maxtxfee_fails(self, rbf_node, dest_address)
         # These tests wipe out a number of utxos that are expected in other tests
         test_small_output_with_feerate_succeeds(self, rbf_node, dest_address)
@@ -286,9 +286,15 @@ def test_settxfee(self, rbf_node, dest_address):
     assert_greater_than(Decimal("0.00001000"), abs(requested_feerate - actual_feerate))
     rbf_node.settxfee(Decimal("0.00000000"))  # unset paytxfee
 
+    # check that settxfee respects -maxtxfee
+    self.restart_node(1, ['-maxtxfee=0.000025'] + self.extra_args[1])
+    assert_raises_rpc_error(-8, "txfee cannot be more than wallet max tx fee", rbf_node.settxfee, Decimal('0.00003'))
+    self.restart_node(1, self.extra_args[1])
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+
 
 def test_maxtxfee_fails(self, rbf_node, dest_address):
-    self.log.info('Test that bumpfee fails when it hits -matxfee')
+    self.log.info('Test that bumpfee fails when it hits -maxtxfee')
     # size of bumped transaction (p2wpkh, 1 input, 2 outputs): 141 vbytes
     # expected bump fee of 141 vbytes * 0.00200000 BTC / 1000 vbytes = 0.00002820 BTC
     # which exceeds maxtxfee and is expected to raise
