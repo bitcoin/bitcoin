@@ -3529,7 +3529,7 @@ static bool SendRejectsAndCheckIfBanned(CNode* pnode, CConnman* connman)
     return false;
 }
 
-bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
+bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc, bool &fRetDidWork)
 {
     const CChainParams& chainparams = Params();
     //
@@ -3541,13 +3541,17 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     //  (x) data
     //
     bool fMoreWork = false;
+    fRetDidWork = false;
 
-    if (!pfrom->vRecvGetData.empty())
+    if (!pfrom->vRecvGetData.empty()) {
         ProcessGetData(pfrom, chainparams.GetConsensus(), connman, interruptMsgProc);
+        fRetDidWork = true;
+    }
 
     if (!pfrom->orphan_work_set.empty()) {
         LOCK2(cs_main, g_cs_orphans);
         ProcessOrphanTx(connman, pfrom->orphan_work_set);
+        fRetDidWork = true;
     }
 
     if (pfrom->fDisconnect)
@@ -3571,6 +3575,7 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
         pfrom->nProcessQueueSize -= msgs.front().vRecv.size() + CMessageHeader::HEADER_SIZE;
         pfrom->fPauseRecv = pfrom->nProcessQueueSize > connman->GetReceiveFloodSize();
         fMoreWork = !pfrom->vProcessMsg.empty();
+        fRetDidWork = true;
     }
     CNetMessage& msg(msgs.front());
 
@@ -3917,13 +3922,20 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         // transactions become unconfirmed and spams other nodes.
         if (!fReindex && !fImporting && !IsInitialBlockDownload())
         {
-            GetMainSignals().Broadcast(nTimeBestReceived, connman);
+            static int64_t nLastBroadcastTime = 0;
+            // HACK: Call this only once every few seconds. SendMessages is called once per peer, which makes this signal very expensive
+            // The proper solution would be to move this out of here, but this is not worth the effort right now as bitcoin#15632 will later do this.
+            // Luckily, the Broadcast signal is not used for anything else then CWallet::ResendWalletTransactionsBefore.
+            if (nNow - nLastBroadcastTime >= 5000000) {
+                GetMainSignals().Broadcast(nTimeBestReceived, connman);
+                nLastBroadcastTime = nNow;
+            }
         }
 
         //
         // Try sending block announcements via headers
         //
-        {
+        if (!pto->fMasternode) {
             // If we have less than MAX_BLOCKS_TO_ANNOUNCE in our
             // list of block hashes we're relaying, and our peer wants
             // headers announcements, then find the first header
@@ -4297,7 +4309,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         // Message: getdata (blocks)
         //
         std::vector<CInv> vGetData;
-        if (!pto->fClient && (fFetch || !IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        if (!pto->fClient && !pto->fMasternode && (fFetch || !IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams);
