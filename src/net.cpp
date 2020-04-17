@@ -2408,14 +2408,22 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     } else if (FindNode(std::string(pszDest)))
         return;
 
-    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- connecting to %s\n", __func__, addrConnect.ToString(false));
+    auto getIpStr = [&]() {
+        if (fLogIPs) {
+            return addrConnect.ToString(false);
+        } else {
+            return std::string("new peer");
+        }
+    };
+
+    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- connecting to %s\n", __func__, getIpStr());
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure);
 
     if (!pnode) {
-        LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- ConnectNode failed for %s\n", __func__, addrConnect.ToString(false));
+        LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- ConnectNode failed for %s\n", __func__, getIpStr());
         return;
     }
-    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- succesfully connected to %s, sock=%d, peer=%d\n", __func__, addrConnect.ToString(false), pnode->hSocket, pnode->GetId());
+    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- succesfully connected to %s, sock=%d, peer=%d\n", __func__, getIpStr(), pnode->hSocket, pnode->GetId());
     if (grantOutbound)
         grantOutbound->MoveTo(pnode->grantOutbound);
     if (fOneShot)
