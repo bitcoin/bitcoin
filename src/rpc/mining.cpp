@@ -282,19 +282,19 @@ static UniValue generateblock(const JSONRPCRequest& request)
     RPCHelpMan{"generateblock",
         "\nMine a block with a set of ordered transactions immediately to a specified address or descriptor (before the RPC call returns)\n",
         {
-            {"address/descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The address or descriptor to send the newly generated syscoin to."},
+            {"output", RPCArg::Type::STR, RPCArg::Optional::NO, "The address or descriptor to send the newly generated syscoin to."},
             {"transactions", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings which are either txids or raw transactions.\n"
                 "Txids must reference transactions currently in the mempool.\n"
                 "All transactions must be valid and in valid order, otherwise the block will be rejected.",
                 {
                     {"rawtx/txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                 },
-            }
+            },
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::STR_HEX, "hash", "hash of generated block"}
+                {RPCResult::Type::STR_HEX, "hash", "hash of generated block"},
             }
         },
         RPCExamples{
@@ -1281,7 +1281,7 @@ static const CRPCCommand commands[] =
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
     { "generating",         "generatetodescriptor",   &generatetodescriptor,   {"num_blocks","descriptor","maxtries"} },
-    { "generating",         "generateblock",          &generateblock,    {"address","transactions"} },
+    { "generating",         "generateblock",          &generateblock,          {"output","transactions"} },
 
     { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
