@@ -262,11 +262,6 @@ def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, int
 		packet = socket.recv(65565)
 		createTask('Process packet ' + src_ip, packet_received, packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface)
 
-	except:
-		print(f'Error: unable to start thread to sniff interface {interface}')
-		if packet_received(thread, packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface):
-			break
-
 # Called when a packet is sniffed from the network
 # Return true to end the thread
 def packet_received(thread, parent_thread, packet, socket, mirror_socket, from_ip, from_port, to_ip, to_port, interface):
