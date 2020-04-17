@@ -43,6 +43,8 @@ BEGIN_FOLD build
 DOCKER_EXEC make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && DOCKER_EXEC make $GOAL V=1 ; false )
 END_FOLD
 
-BEGIN_FOLD ccache_stats
+BEGIN_FOLD cache_stats
 DOCKER_EXEC "ccache --version | head -n 1 && ccache --show-stats"
+DOCKER_EXEC du -sh "${DEPENDS_DIR}"/*/
+DOCKER_EXEC du -sh "${PREVIOUS_RELEASES_DIR}"
 END_FOLD
