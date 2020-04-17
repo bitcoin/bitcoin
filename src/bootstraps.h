@@ -41,14 +41,14 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
 
 void printConfig(const altintegration::Config& config);
 void selectPopConfig(const ArgsManager& mgr);
-void SelectPopConfig(
-    std::string btcnet,
-    std::string vbknet,
+void selectPopConfig(
+    const std::string& btcnet,
+    const std::string& vbknet,
     bool popautoconfig = true,
     int btcstart = 0,
-    std::string btcblocks = {},
+    const std::string& btcblocks = {},
     int vbkstart = 0,
-    std::string vbkblocks = {});
+    const std::string& vbkblocks = {});
 
 
 #endif
