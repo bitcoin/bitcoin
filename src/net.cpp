@@ -1411,8 +1411,7 @@ bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &s
 
 #ifdef USE_WAKEUP_PIPE
     // We add a pipe to the read set so that the select() call can be woken up from the outside
-    // This is done when data is available for sending and at the same time optimistic sending was disabled
-    // when pushing the data.
+    // This is done when data is added to send buffers (vSendMsg) or when new peers are added
     // This is currently only implemented for POSIX compliant systems. This means that Windows will fall back to
     // timing out after 50ms and then trying to send. This is ok as we assume that heavy-load daemons are usually
     // run on Linux and friends.
@@ -3412,7 +3411,7 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
 }
 
-void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg, bool allowOptimisticSend)
+void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     size_t nMessageSize = msg.data.size();
     size_t nTotalSize = nMessageSize + CMessageHeader::HEADER_SIZE;
@@ -3430,7 +3429,6 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg, bool allowOpti
     {
         LOCK(pnode->cs_vSend);
         bool hasPendingData = !pnode->vSendMsg.empty();
-        bool optimisticSend(allowOptimisticSend && pnode->vSendMsg.empty());
 
         //log total amount of bytes per command
         pnode->mapSendBytesPerMsgCmd[msg.command] += nTotalSize;
@@ -3442,11 +3440,8 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg, bool allowOpti
         if (nMessageSize)
             pnode->vSendMsg.push_back(std::move(msg.data));
 
-        // If write queue empty, attempt "optimistic write"
-        if (optimisticSend == true)
-            nBytesSent = SocketSendData(pnode);
         // wake up select() call in case there was no pending data before (so it was not selecting this socket for sending)
-        else if (!hasPendingData && wakeupSelectNeeded)
+        if (!hasPendingData && wakeupSelectNeeded)
             WakeSelect();
     }
     if (nBytesSent)
