@@ -48,14 +48,14 @@ void printConfig(const altintegration::Config& config)
         config.alt->getIdentifier());
 }
 
-void SelectPopConfig(
-    std::string btcnet,
-    std::string vbknet,
+void selectPopConfig(
+    const std::string& btcnet,
+    const std::string& vbknet,
     bool popautoconfig,
     int btcstart,
-    std::string btcblocks,
+    const std::string& btcblocks,
     int vbkstart,
-    std::string vbkblocks)
+    const std::string& vbkblocks)
 {
     altintegration::Config popconfig;
 
@@ -82,7 +82,7 @@ void SelectPopConfig(
     if (vbknet == "test") {
         auto param = std::make_shared<altintegration::VbkChainParamsTest>();
         if (popautoconfig) {
-            popconfig.setVBK(testnetBTCstartHeight, testnetBTCblocks, param);
+            popconfig.setVBK(testnetVBKstartHeight, testnetVBKblocks, param);
         } else {
             popconfig.setVBK(vbkstart, parseBlocks(vbkblocks), param);
         }
@@ -101,19 +101,20 @@ void SelectPopConfig(
 
     auto& config = VeriBlock::getService<VeriBlock::Config>();
     config.popconfig = std::move(popconfig);
+    printConfig(config.popconfig);
 }
 
 void selectPopConfig(const ArgsManager& args)
 {
-    std::string btcnet = args.GetArg("-popbtcnetwork", "test");
-    std::string vbknet = args.GetArg("-popvbknetwork", "test");
+    std::string btcnet = args.GetArg("-popbtcnetwork", "regtest");
+    std::string vbknet = args.GetArg("-popvbknetwork", "regtest");
     bool popautoconfig = args.GetBoolArg("-popautoconfig", true);
     int btcstart = args.GetArg("-popbtcstartheight", 0);
     std::string btcblocks = args.GetArg("-popbtcblocks", "");
     int vbkstart = args.GetArg("-popvbkstartheight", 0);
     std::string vbkblocks = args.GetArg("-popvbkblocks", "");
 
-    SelectPopConfig(btcnet, vbknet, popautoconfig, btcstart, btcblocks, vbkstart, vbkblocks);
+    selectPopConfig(btcnet, vbknet, popautoconfig, btcstart, btcblocks, vbkstart, vbkblocks);
 }
 
 int testnetVBKstartHeight = 412589;

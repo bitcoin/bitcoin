@@ -25,7 +25,6 @@ inline int GetPopMerkleRootCommitmentIndex(const CBlock& block)
             auto& s = block.vtx[0]->vout[o].scriptPubKey;
             if (s.size() >= 37 && s[0] == OP_RETURN && s[1] == 0x23 && s[2] == 0x3a && s[3] == 0xe6 && s[4] == 0xca) {
                 commitpos = o;
-                break;
             }
         }
     }

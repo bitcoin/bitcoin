@@ -74,7 +74,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     ClearDatadirCache();
     SelectParams(chainName);
     VeriBlock::InitConfig();
-    SelectPopConfig("regtest", "regtest", true);
+    selectPopConfig("regtest", "regtest", true);
     VeriBlock::InitPopService();
     SeedInsecureRand();
     gArgs.ForceSetArg("-printtoconsole", "0");
@@ -175,6 +175,9 @@ TestChain100Setup::TestChain100Setup(): RegTestingSetup()
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
         m_coinbase_txns.push_back(b.vtx[0]);
     }
+
+    assert(ChainActive().Tip() != nullptr);
+    assert(ChainActive().Tip()->nHeight == 100);
 }
 
 // Create a new block with just given transactions, coinbase paying to

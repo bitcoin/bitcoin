@@ -48,8 +48,10 @@ public:
     bool parseBlockPopPayloads(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state, std::vector<altintegration::AltPayloads>* payloads) override;
     bool parseTxPopPayloads(const CBlock& block, const CTransaction& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state, altintegration::AltPayloads& payloads) override;
 
+    bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state) override;
     bool addAllBlockPayloads(const CBlockIndex& indexNew, const CBlock& fullBlock, BlockValidationState& state) override;
-    void removeAllBlockPayloads(const CBlockIndex& block) override;
+    void disconnectBlock(const uint256& block) override;
+
 
     bool evalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks) override;
     int compareForks(const CBlockIndex& left, const CBlockIndex& right) override;

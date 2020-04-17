@@ -1905,7 +1905,9 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     //VeriBlock : added ContextualCheckBlock() here becuse merkleRoot calculation  moved from the CheckBlock() to the ContextualCheckBlock()
 
-    if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck) && !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev, true)) {
+    if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck)
+        /*&& !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev, true)
+         */) {
         if (state.GetResult() == BlockValidationResult::BLOCK_MUTATED) {
             // We don't write down blocks to disk if they may have been
             // corrupted, so this should be impossible unless we're having hardware
@@ -2463,7 +2465,8 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
         }
     }
 
-    VeriBlock::getService<VeriBlock::PopService>().removeAllBlockPayloads(*pindexDelete);
+    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+    pop.disconnectBlock(pindexDelete->GetBlockHash());
 
     m_chain.SetTip(pindexDelete->pprev);
 
@@ -2602,9 +2605,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     disconnectpool.removeForBlock(blockConnecting.vtx);
 
     if (!VeriBlock::getService<VeriBlock::PopService>().addAllBlockPayloads(*pindexNew, blockConnecting, state)) {
-        if (state.IsInvalid()) {
-            InvalidBlockFound(pindexNew, state);
-        }
+        InvalidBlockFound(pindexNew, state);
         return error("%s : AddAllBlockPayloads %s failed, %s", __func__, pindexNew->GetBlockHash().ToString(), FormatStateMessage(state));
     }
 
@@ -3666,7 +3667,8 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
     if (ppindex)
         *ppindex = pindex;
 
-    return true;
+    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+    return pop.acceptBlock(*pindex, state);
 }
 
 // Exposed wrapper for AcceptBlockHeader
@@ -3713,8 +3715,6 @@ static FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, const CChai
         }
     }
 
-    // TODO save payloads on disk if it necessary
-    //VeriBlock::getService<VeriBlock::PopService>().savePopTxToDatabase(block, nHeight);
     return blockPos;
 }
 
@@ -3852,6 +3852,8 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, FormatStateMessage(state));
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
+    if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev, fCheckMerkleRoot))
+        return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.GetRejectReason());
     if (!::ChainstateActive().ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
         return false;
     assert(state.IsValid());
@@ -4632,6 +4634,11 @@ bool CChainState::LoadGenesisBlock(const CChainParams& chainparams)
         if (blockPos.IsNull())
             return error("%s: writing genesis block to disk failed", __func__);
         CBlockIndex* pindex = m_blockman.AddToBlockIndex(block);
+        auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+        BlockValidationState state;
+        if(!pop.acceptBlock(*pindex, state)){
+            return false;
+        }
         ReceivedBlockTransactions(block, pindex, blockPos, chainparams.GetConsensus());
     } catch (const std::runtime_error& e) {
         return error("%s: failed to write genesis block: %s", __func__, e.what());

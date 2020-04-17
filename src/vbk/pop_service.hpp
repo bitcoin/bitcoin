@@ -48,8 +48,9 @@ struct PopService {
     virtual bool parseBlockPopPayloads(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state, std::vector<altintegration::AltPayloads>* payloads) = 0;
     virtual bool parseTxPopPayloads(const CBlock& block, const CTransaction& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state, altintegration::AltPayloads& payloads) = 0;
 
+    virtual bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state) = 0;
     virtual bool addAllBlockPayloads(const CBlockIndex& indexNew, const CBlock& fullBlock, BlockValidationState& state) = 0;
-    virtual void removeAllBlockPayloads(const CBlockIndex& block) = 0;
+    virtual void disconnectBlock(const uint256& block) = 0;
 
     virtual bool evalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks) = 0;
     virtual int compareForks(const CBlockIndex& left, const CBlockIndex& right) = 0;
