@@ -90,7 +90,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
 
         # Force reorg to a longer chain
         node0.send_message(msg_headers(new_blocks))
-        node0.wait_for_getdata()
+        node0.wait_for_getdata([x.sha256 for x in new_blocks])
         for block in new_blocks:
             node0.send_and_ping(msg_block(block))
 
