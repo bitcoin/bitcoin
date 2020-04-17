@@ -2,9 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <vector>
-#include <assert.h>
+#include <util/asmap.h>
+
 #include <crypto/common.h>
+
+#include <cassert>
+#include <cstdint>
+#include <vector>
 
 namespace {
 
@@ -79,7 +83,8 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
             jump = DecodeJump(pos, endpos);
             if (bits == 0) break;
             if (ip[ip.size() - bits]) {
-                if (jump >= endpos - pos) break;
+                assert(endpos - pos >= 0);
+                if (jump >= static_cast<uint32_t>(endpos - pos)) break;
                 pos += jump;
             }
             bits--;
