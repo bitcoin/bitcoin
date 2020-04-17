@@ -9,6 +9,7 @@
 #include <version.h>
 
 #include <boost/test/unit_test.hpp>
+
 #include <iomanip>
 #include <sstream>
 #include <string>
