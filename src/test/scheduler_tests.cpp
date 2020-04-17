@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,8 +6,8 @@
 #include <scheduler.h>
 #include <util/time.h>
 
-#include <boost/thread.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/thread.hpp>
 
 BOOST_AUTO_TEST_SUITE(scheduler_tests)
 

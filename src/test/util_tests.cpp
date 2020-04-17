@@ -6,7 +6,7 @@
 
 #include <clientversion.h>
 #include <hash.h> // For Hash()
-#include <key.h> // For CKey
+#include <key.h>  // For CKey
 #include <optional.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
@@ -14,10 +14,10 @@
 #include <uint256.h>
 #include <util/message.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <util/moneystr.h>
+#include <util/spanparsing.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
-#include <util/spanparsing.h>
 #include <util/vector.h>
 
 #include <array>

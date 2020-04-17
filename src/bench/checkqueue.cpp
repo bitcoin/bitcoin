@@ -1,14 +1,16 @@
-// Copyright (c) 2015-2019 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <util/system.h>
 #include <checkqueue.h>
 #include <prevector.h>
-#include <vector>
-#include <boost/thread/thread.hpp>
 #include <random.h>
+#include <util/system.h>
+
+#include <boost/thread/thread.hpp>
+
+#include <vector>
 
 
 static const int MIN_CORES = 2;

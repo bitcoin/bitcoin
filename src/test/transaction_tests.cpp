@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,23 +6,23 @@
 #include <test/data/tx_valid.json.h>
 #include <test/util/setup_common.h>
 
-#include <clientversion.h>
 #include <checkqueue.h>
+#include <clientversion.h>
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <key.h>
-#include <validation.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <script/script.h>
+#include <script/script_error.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/script_error.h>
 #include <script/standard.h>
 #include <streams.h>
-#include <util/strencodings.h>
 #include <test/util/transaction_utils.h>
+#include <util/strencodings.h>
+#include <validation.h>
 
 #include <map>
 #include <string>
