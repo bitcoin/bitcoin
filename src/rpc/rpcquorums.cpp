@@ -186,15 +186,16 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 
         if (fMasternodeMode) {
             const CBlockIndex* pindexQuorum = chainActive[tipHeight - (tipHeight % params.dkgInterval)];
-            auto expectedConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, false);
+            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, false);
+            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
             g_connman->ForEachNode([&](const CNode* pnode) {
-                if (!pnode->verifiedProRegTxHash.IsNull() && expectedConnections.count(pnode->verifiedProRegTxHash)) {
+                if (!pnode->verifiedProRegTxHash.IsNull() && allConnections.count(pnode->verifiedProRegTxHash)) {
                     foundConnections.emplace(pnode->verifiedProRegTxHash, pnode->addr);
                 }
             });
             UniValue arr(UniValue::VARR);
-            for (auto& ec : expectedConnections) {
+            for (auto& ec : allConnections) {
                 UniValue obj(UniValue::VOBJ);
                 obj.push_back(Pair("proTxHash", ec.ToString()));
                 if (foundConnections.count(ec)) {
@@ -203,6 +204,7 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
                 } else {
                     obj.push_back(Pair("connected", false));
                 }
+                obj.push_back(Pair("outbound", outboundConnections.count(ec) != 0));
                 arr.push_back(obj);
             }
             quorumConnections.push_back(Pair(params.name, arr));
