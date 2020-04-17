@@ -18,6 +18,9 @@ class CBlockIndex;
 class CTxMemPool;
 class UniValue;
 struct NodeContext;
+namespace util {
+class Ref;
+} // namespace util
 
 static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
 
@@ -52,6 +55,7 @@ void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES],
 //! direct way to pass in state to RPC methods without globals.
 extern NodeContext* g_rpc_node;
 
-CTxMemPool& EnsureMemPool();
+NodeContext& EnsureNodeContext(const util::Ref& context);
+CTxMemPool& EnsureMemPool(const util::Ref& context);
 
 #endif

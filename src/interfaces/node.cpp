@@ -27,6 +27,7 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <ui_interface.h>
+#include <util/ref.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -80,7 +81,7 @@ public:
     bool appInitMain() override
     {
         m_context.chain = MakeChain(m_context);
-        return AppInitMain(m_context);
+        return AppInitMain(m_context_ref, m_context);
     }
     void appShutdown() override
     {
@@ -225,7 +226,7 @@ public:
     CFeeRate getDustRelayFee() override { return ::dustRelayFee; }
     UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) override
     {
-        JSONRPCRequest req;
+        JSONRPCRequest req(m_context_ref);
         req.params = params;
         req.strMethod = command;
         req.URI = uri;
@@ -323,6 +324,7 @@ public:
     }
     NodeContext* context() override { return &m_context; }
     NodeContext m_context;
+    util::Ref m_context_ref{m_context};
 };
 
 } // namespace

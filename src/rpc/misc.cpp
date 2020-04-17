@@ -15,6 +15,7 @@
 #include <script/descriptor.h>
 #include <util/check.h>
 #include <util/message.h> // For MessageSign(), MessageVerify()
+#include <util/ref.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 
@@ -366,8 +367,8 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VNUM});
     int64_t time = request.params[0].get_int64();
     SetMockTime(time);
-    if (g_rpc_node) {
-        for (const auto& chain_client : g_rpc_node->chain_clients) {
+    if (request.context.Has<NodeContext>()) {
+        for (const auto& chain_client : request.context.Get<NodeContext>().chain_clients) {
             chain_client->setMockTime(time);
         }
     }
@@ -398,9 +399,10 @@ static UniValue mockscheduler(const JSONRPCRequest& request)
     }
 
     // protect against null pointer dereference
-    CHECK_NONFATAL(g_rpc_node);
-    CHECK_NONFATAL(g_rpc_node->scheduler);
-    g_rpc_node->scheduler->MockForward(std::chrono::seconds(delta_seconds));
+    CHECK_NONFATAL(request.context.Has<NodeContext>());
+    NodeContext& node = request.context.Get<NodeContext>();
+    CHECK_NONFATAL(node.scheduler);
+    node.scheduler->MockForward(std::chrono::seconds(delta_seconds));
 
     return NullUniValue;
 }
