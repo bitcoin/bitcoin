@@ -4,20 +4,21 @@
 
 #include <addrdb.h>
 #include <addrman.h>
-#include <boost/test/unit_test.hpp>
 #include <chainparams.h>
 #include <clientversion.h>
 #include <net.h>
 #include <netbase.h>
 #include <serialize.h>
 #include <streams.h>
-#include <string>
 #include <test/util/setup_common.h>
 #include <util/memory.h>
 #include <util/string.h>
 #include <util/system.h>
 
+#include <boost/test/unit_test.hpp>
+
 #include <memory>
+#include <string>
 
 class CAddrManSerializationMock : public CAddrMan
 {

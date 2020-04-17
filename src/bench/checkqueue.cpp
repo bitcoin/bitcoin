@@ -3,11 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <boost/thread/thread.hpp>
 #include <checkqueue.h>
 #include <prevector.h>
 #include <random.h>
 #include <util/system.h>
+
+#include <boost/thread/thread.hpp>
+
 #include <vector>
 
 
