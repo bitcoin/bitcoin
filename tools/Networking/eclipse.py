@@ -347,7 +347,6 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, from_i
 # Called when a packet is sniffed from the network
 # Return true to end the thread
 def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, from_ip, from_port, to_ip, to_port, interface):
-	print('MIRROR')
 	if len(packet) >= 4:
 		is_bitcoin = (packet[0:4] == b'\xf9\xbe\xb4\xd9')
 	else:
