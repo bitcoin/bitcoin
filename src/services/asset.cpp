@@ -219,7 +219,6 @@ bool BuildAssetJson(const CAsset& asset, const int32_t& nAsset, UniValue& oAsset
 	oAsset.__pushKV("public_value", stringFromVch(asset.vchPubData));
     oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
 	oAsset.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
-	oAsset.__pushKV("burn_balance", ValueFromAssetAmount(asset.nBurnBalance, asset.nPrecision));
 	oAsset.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
 	oAsset.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
 	oAsset.__pushKV("update_flags", asset.nUpdateFlags);

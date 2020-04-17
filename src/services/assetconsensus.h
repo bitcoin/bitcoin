@@ -77,13 +77,12 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txHash, Asse
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
 bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
 bool DisconnectAssetTransfer(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
-bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets);
 bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, EthereumMintTxVec &vecMintKeys);
 bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys);
-bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, AssetMap& mapAssets, EthereumMintTxVec &vecMintKeys);
+bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, EthereumMintTxVec &vecMintKeys);
 bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAllocation, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap &mapAssets, const bool &bSanityCheck=false);
 bool CheckSyscoinInputs(const CTransaction& tx, const CAssetAllocation &theAssetAllocation, const uint256& txHash, TxValidationState &tstate, const int &nHeight, const int64_t& nTime);
 bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const CAssetAllocation &theAssetAllocation, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys);
-bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &theAssetAllocation, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap &mapAssets, const bool &bSanityCheck = false);
+bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &theAssetAllocation, const uint256& txHash, TxValidationState &tstate, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck = false);
 bool FormatSyscoinErrorMessage(TxValidationState &state, const std::string errorMessage, bool bErrorNotInvalid = true, bool bConsensus = true);
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H

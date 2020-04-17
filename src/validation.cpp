@@ -592,8 +592,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (!CheckTransaction(tx, state))
         return false; // state filled in by CheckTransaction
     // SYSCOIN
+    bool isAssetTx = false;
     CAssetAllocation allocation;
     if(IsSyscoinTx(tx.nVersion)){
+        isAssetTx = IsAssetTx(tx.nVersion);
         allocation = CAssetAllocation(tx);
         if(allocation.IsNull()) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-invalid-allocation");
@@ -694,6 +696,11 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // do all inputs exist?
     for (const CTxIn& txin : tx.vin) {
         if (!coins_cache.HaveCoinInCache(txin.prevout)) {
+            // asset tx must use confirmed inputs because non utxo information changes
+            // which may invalidate transactions even though they are entered into mempool
+            if(isAssetTx) {
+                return state.Invalid(TxValidationResult::TX_CONFLICT, "bad-txns-asset-inputs-missingorspent");
+            }
             coins_to_uncache.push_back(txin.prevout);
         }
         // Note: this call may add txin.prevout to the coins cache
