@@ -44,6 +44,28 @@ uint256 CLLMQUtils::BuildSignHash(Consensus::LLMQType llmqType, const uint256& q
     return h.GetHash();
 }
 
+uint256 CLLMQUtils::DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
+{
+    // We need to deterministically select who is going to initiate the connection. The naive way would be to simply
+    // return the min(proTxHash1, proTxHash2), but this would create a bias towards MNs with a numerically low
+    // hash. To fix this, we return the proTxHash that has the lowest value of:
+    //   hash(min(proTxHash1, proTxHash2), max(proTxHash1, proTxHash2), proTxHashX)
+    // where proTxHashX is the proTxHash to compare
+    uint256 h1;
+    uint256 h2;
+    if (proTxHash1 < proTxHash2) {
+        h1 = ::SerializeHash(std::make_tuple(proTxHash1, proTxHash2, proTxHash1));
+        h2 = ::SerializeHash(std::make_tuple(proTxHash1, proTxHash2, proTxHash2));
+    } else {
+        h1 = ::SerializeHash(std::make_tuple(proTxHash2, proTxHash1, proTxHash1));
+        h2 = ::SerializeHash(std::make_tuple(proTxHash2, proTxHash1, proTxHash2));
+    }
+    if (h1 < h2) {
+        return proTxHash1;
+    }
+    return proTxHash2;
+}
+
 std::set<uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound)
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
@@ -52,14 +74,12 @@ std::set<uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType,
     std::set<uint256> result;
 
     if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
-        uint256 forMemberHashed = ::SerializeHash(std::make_pair(forMember, pindexQuorum->GetBlockHash()));
         for (auto& dmn : mns) {
-            // this will cause deterministic behaviour between incoming and outgoing connections.
-            // Each member needs a connection to all other members, so we have each member paired. The below check
-            // will be true on one side and false on the other side of the pairing, so we avoid having both members
-            // initiating the connection.
-            uint256 otherMemberHashed = ::SerializeHash(std::make_pair(dmn->proTxHash, pindexQuorum->GetBlockHash()));
-            if (!onlyOutbound || otherMemberHashed < forMemberHashed) {
+            // Determine which of the two MNs (forMember vs dmn) should initiate the outbound connection and which
+            // one should wait for the inbound connection. We do this in a deterministic way, so that even when we
+            // end up with both connecting to each other, we know which one to disconnect
+            uint256 deterministicOutbound = DeterministicOutboundConnection(forMember, dmn->proTxHash);
+            if (!onlyOutbound || deterministicOutbound == dmn->proTxHash) {
                 result.emplace(dmn->proTxHash);
             }
         }
