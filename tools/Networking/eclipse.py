@@ -11,7 +11,7 @@ import os
 import random
 import re
 import socket
-import struct 
+import struct
 import sys
 import time
 
@@ -141,7 +141,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 
 	if verbose: print('Creating network socket...')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	
+
 	if verbose: print(f'Setting socket network interface to "{network_interface}"...')
 	success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
 	while success == -1:
@@ -194,7 +194,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		})
 	except:
 		print(f'Error: unable to start thread to sniff interface {interface}')
-	
+
 	if mirror_socket != None:
 		if verbose: print(f'Attaching mirror packet listener to {interface}')
 		try:
@@ -220,7 +220,7 @@ def mirror_make_fake_connection(socket, interface, src_ip, verbose=True):
 
 	if verbose: print('Creating network socket...')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	
+
 	if verbose: print(f'Setting socket network interface to "{network_interface}"...')
 	success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
 	while success == -1:
@@ -286,7 +286,7 @@ def packet_received(msg_raw, socket, mirror_socket, from_ip, from_port, to_ip, t
 		payload_valid = (msg_raw[4+12+4 : 4+12+4+4] == payload_checksum)
 		payload_length_valid = (len(msg_raw) - payload_length == 4+12+4+4)
 		# The payload is msg_raw[4+12+4+4:4+12+4+4+payload_length] but we'll let MsgSerializable.from_bytes decode it
-	else:	
+	else:
 		msg_type = ''
 		payload_length = 0
 		payload_valid = False
@@ -341,11 +341,12 @@ def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_
 		payload_valid = (msg_raw[4+12+4 : 4+12+4+4] == payload_checksum)
 		payload_length_valid = (len(msg_raw) - payload_length == 4+12+4+4)
 		# The payload is msg_raw[4+12+4+4:4+12+4+4+payload_length] but we'll let MsgSerializable.from_bytes decode it
-	else:	
+	else:
 		msg_type = ''
 		payload_length = 0
 		payload_valid = False
 		payload_length_valid = False
+
 
 	if not is_bitcoin: return False
 	if not payload_valid: return False
@@ -367,7 +368,7 @@ def mirror_packet_received(msg_raw, socket, orig_socket, from_ip, from_port, to_
 		else:
 			orig_socket.send(msg_raw) # Relay to the victim
 
-	except Exception as e:	
+	except Exception as e:
 		print("Closing socket because of error: " + str(e))
 		socket.close()
 		return True # End the thread
