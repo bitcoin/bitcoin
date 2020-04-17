@@ -778,7 +778,14 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // No transactions are allowed below minRelayTxFee except from disconnected
     // blocks
     // SYSCOIN only double fee-rate requirement for allocation spends if not RBF
-    if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state, IsZTx && !SignalsOptInRBF(tx))) return false;
+    const bool& isZDAGNoRBF = IsZTx && !SignalsOptInRBF(tx);
+    if (isZDAGNoRBF) {
+        const size_t& txTotalSize = tx.GetTotalSize();
+        if(txTotalSize > MAX_STANDARD_ZDAG_TX_SIZE) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool zdag tx too large", strprintf("%d > %d", txTotalSize, MAX_STANDARD_ZDAG_TX_SIZE));
+        }
+    }
+    if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state, isZDAGNoRBF)) return false;
 
     if (nAbsurdFee && nFees > nAbsurdFee)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD,

@@ -151,7 +151,7 @@ bool IsAssetAllocationTx(const int &nVersion) {
         nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND;
 }
 bool IsZdagTx(const int &nVersion){
-    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND;
 }
 bool IsSyscoinTx(const int &nVersion){
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
