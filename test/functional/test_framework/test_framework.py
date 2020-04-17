@@ -365,6 +365,8 @@ class BitcoinTestFramework():
 
     def disable_mocktime(self):
         self.mocktime = 0
+        for node in self.nodes:
+            node.mocktime = 0
 
     def bump_mocktime(self, t, update_nodes=True, nodes=None):
         self.mocktime += t
@@ -376,9 +378,13 @@ class BitcoinTestFramework():
         # with previous versions of the cache, set MOCKTIME
         # to regtest genesis time + (201 * 156)
         self.mocktime = GENESISTIME + (201 * 156)
+        for node in self.nodes:
+            node.mocktime = self.mocktime
 
     def set_genesis_mocktime(self):
         self.mocktime = GENESISTIME
+        for node in self.nodes:
+            node.mocktime = self.mocktime
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
 

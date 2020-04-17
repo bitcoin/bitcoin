@@ -47,7 +47,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Lets restart masternodes with closed ports and verify that they get banned even though they are connected to other MNs (via outbound connections)
         def close_mn_port(mn):
             self.stop_node(mn.node.index)
-            self.start_masternode(mn, ["-listen=0", "-mocktime=%d" % self.mocktime])
+            self.start_masternode(mn, ["-listen=0"])
             connect_nodes(mn.node, 0)
             # Make sure the to-be-banned node is still connected well via outbound connections
             for mn2 in self.mninfo:
@@ -61,7 +61,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         def force_old_mn_proto(mn):
             self.stop_node(mn.node.index)
-            self.start_masternode(mn, ["-pushversion=70216", "-mocktime=%d" % self.mocktime])
+            self.start_masternode(mn, ["-pushversion=70216"])
             connect_nodes(mn.node, 0)
             self.reset_probe_timeouts()
         self.test_banning(force_old_mn_proto, True, False, False)
@@ -105,7 +105,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
                 if restart:
                     self.stop_node(mn.node.index)
-                    self.start_masternode(mn, ["-mocktime=%d" % self.mocktime])
+                    self.start_masternode(mn)
                 else:
                     mn.node.setnetworkactive(True)
             connect_nodes(mn.node, 0)

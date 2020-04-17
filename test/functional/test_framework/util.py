@@ -358,6 +358,7 @@ def get_bip9_status(node, key):
 
 def set_node_times(nodes, t):
     for node in nodes:
+        node.mocktime = t
         node.setmocktime(t)
 
 def disconnect_nodes(from_connection, node_num):

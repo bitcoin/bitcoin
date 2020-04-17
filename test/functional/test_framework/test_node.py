@@ -58,6 +58,7 @@ class TestNode():
             self.binary = binary
         self.stderr = stderr
         self.coverage_dir = coverage_dir
+        self.mocktime = mocktime
         # Most callers will just need to add extra args to the standard list below. For those callers that need more flexibity, they can just set the args property directly.
         self.extra_args = extra_args
         self.args = [self.binary, "-datadir=" + self.datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
@@ -102,11 +103,14 @@ class TestNode():
             extra_args = self.extra_args
         if stderr is None:
             stderr = self.stderr
+        all_args = self.args + extra_args
+        if self.mocktime != 0:
+            all_args = all_args + ["-mocktime=%d" % self.mocktime]
         # Delete any existing cookie file -- if such a file exists (eg due to
         # unclean shutdown), it will get overwritten anyway by bitcoind, and
         # potentially interfere with our attempt to authenticate
         delete_cookie_file(self.datadir)
-        self.process = subprocess.Popen(self.args + extra_args, stderr=stderr, *args, **kwargs)
+        self.process = subprocess.Popen(all_args, stderr=stderr, *args, **kwargs)
         self.running = True
         self.log.debug("dashd started, waiting for RPC to come up")
 

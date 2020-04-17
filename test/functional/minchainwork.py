@@ -33,7 +33,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
 
     def setup_network(self):
         # Force CanDirectFetch to return false (otherwise nMinimumChainWork is ignored)
-        self.mocktime += 21 * 2.6 * 60
+        self.bump_mocktime(21 * 2.6 * 60)
         # This test relies on the chain setup being:
         # node0 <- node1 <- node2
         # Before leaving IBD, nodes prefer to download blocks from outbound
