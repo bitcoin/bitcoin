@@ -1600,7 +1600,7 @@ void CConnman::SocketHandler()
             sendSet = send_set.count(pnode->hSocket) > 0;
             errorSet = error_set.count(pnode->hSocket) > 0;
         }
-        if (recvSet || errorSet)
+        if (!pnode->fDisconnect && (recvSet || errorSet))
         {
             // typical socket buffer is 8K-64K
             char pchBuf[0x10000];
@@ -1677,6 +1677,9 @@ void CConnman::ThreadSocketHandler()
 
     while (!interruptNet)
     {
+        // Handle sockets before we do the next round of disconnects. This allows us to flush send buffers one last time
+        // before actually closing sockets. Receiving is however skipped in case a peer is pending to be disconnected
+        SocketHandler();
         if (GetTimeMillis() - nLastCleanupNodes > 1000) {
             ForEachNode(AllNodes, [&](CNode* pnode) {
                 InactivityCheck(pnode);
@@ -1685,7 +1688,6 @@ void CConnman::ThreadSocketHandler()
             nLastCleanupNodes = GetTimeMillis();
         }
         NotifyNumConnectionsChanged();
-        SocketHandler();
     }
 }
 
