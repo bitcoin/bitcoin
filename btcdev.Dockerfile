@@ -16,7 +16,7 @@ RUN apt-get update && \
 
 # install dependencies
 RUN apt-get update && apt-get upgrade -y && \
-    apt-get install --no-install-recommends -y \
+    apt-get install -y \
         libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools \
         libqrencode-dev \
         libprotobuf-dev protobuf-compiler \
@@ -38,14 +38,9 @@ RUN apt-get update && apt-get upgrade -y && \
         libboost-chrono-dev \
         libboost-test-dev \
         libboost-thread-dev \
-        libb2-dev
-
-# install tools
-RUN apt-get install --no-install-recommends -y \
+        libb2-dev \
         libz-dev \
         xz-utils \
-        gcc-9 \
-        g++-9 \
         llvm-9 \
         clang-9 \
         clang-tidy-9 \
@@ -55,14 +50,10 @@ RUN apt-get install --no-install-recommends -y \
         lcov \
         vim \
         unzip \
-        cmake \
-    && rm -rf /var/lib/apt/lists/*
+        cmake
 
 # set default compilers and tools
-RUN update-alternatives --install /usr/bin/gcov         gcov         /usr/bin/gcov-9               90 && \
-    update-alternatives --install /usr/bin/gcc          gcc          /usr/bin/gcc-9                90 && \
-    update-alternatives --install /usr/bin/g++          g++          /usr/bin/g++-9                90 && \
-    update-alternatives --install /usr/bin/clang        clang        /usr/lib/llvm-9/bin/clang-9   90 && \
+RUN update-alternatives --install /usr/bin/clang        clang        /usr/lib/llvm-9/bin/clang-9   90 && \
     update-alternatives --install /usr/bin/clang++      clang++      /usr/bin/clang++-9            90 && \
     update-alternatives --install /usr/bin/clang-tidy   clang-tidy   /usr/bin/clang-tidy-9         90 && \
     update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-9       90 && \
@@ -101,5 +92,7 @@ ENV PATH="${PATH}:${VCPKG_PATH}"
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 RUN pip3 install --upgrade setuptools wheel bashlex compiledb gcovr
+
+RUN apt-get install -y g++-mingw-w64-x86-64 mingw-w64-x86-64-dev mingw-w64
 
 WORKDIR /
