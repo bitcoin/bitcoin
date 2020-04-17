@@ -30,7 +30,7 @@ bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string error
             return state.Invalid(bConsensus? TxValidationResult::TX_CONSENSUS: TxValidationResult::TX_CONFLICT, errorMessage);
         }  
 }
-bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, EthereumMintTxVec &vecMintKeys)
+bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, EthereumMintTxMap &mapMintKeys)
 {
     if (!bSanityCheck)
         LogPrint(BCLog::SYS,"*** ASSET MINT %d %d %s %s bSanityCheck=%d\n", nHeight,
@@ -161,6 +161,9 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(nBridgeTransferID == 0) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-bridge-id", bSanityCheck);
     }
+    if(nBridgeTransferID != mintSyscoin.nBridgeTransferID) {
+        return FormatSyscoinErrorMessage(state, "mint-mismatch-bridge-id", bSanityCheck);
+    }
     // check transaction spv proofs
     dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
     dev::RLP rlpReceiptRoot(&mintSyscoin.vchReceiptRoot);
@@ -181,23 +184,23 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(mintSyscoin.vchTxValue.size() == 2) {
         const uint16_t &posTx = (static_cast<uint16_t>(mintSyscoin.vchTxValue[1])) | (static_cast<uint16_t>(mintSyscoin.vchTxValue[0]) << 8);
         vchTxValue = std::vector<unsigned char>(mintSyscoin.vchTxParentNodes.begin()+posTx, mintSyscoin.vchTxParentNodes.end());
-        hash = dev::sha3(vchTxValue);
     }
     else {
         vchTxValue = mintSyscoin.vchTxValue;
-        hash = dev::sha3(mintSyscoin.vchTxValue);
     }
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
     dev::RLP rlpTxPath(&vchTxPath);
-    const std::vector<unsigned char> &vchHash = hash.asBytes();
-    // ensure eth tx not already spent
-    if(pethereumtxmintdb->ExistsKey(vchHash)) {
+    // ensure eth tx not already spent in a previous block
+    if(pethereumtxmintdb->Exists(nBridgeTransferID)) {
         return FormatSyscoinErrorMessage(state, "mint-exists", bSanityCheck);
     } 
-    // add the key to flush to db later
-    vecMintKeys.emplace_back(std::make_pair(std::make_pair(vchHash, nBridgeTransferID), txHash));
-    
+    // ensure eth tx not already spent in current processing block or mempool (mapMintKeysMempool passed in)
+    auto itMap = mapMintKeys.emplace(nBridgeTransferID, txHash);
+    if(!itMap.second) {
+        return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
+    }
+     
     // verify receipt proof
     if(!VerifyProof(&vchTxPath, rlpReceiptValue, rlpReceiptParentNodes, rlpReceiptRoot)) {
         return FormatSyscoinErrorMessage(state, "mint-verify-receipt-proof", bSanityCheck);
@@ -264,18 +267,17 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }               
     return true;
 }
-bool CheckSyscoinInputs(const CTransaction& tx, const CAssetAllocation& allocation, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime) {
+bool CheckSyscoinInputs(const CTransaction& tx, const CAssetAllocation& allocation, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys) {
     if(nHeight < Params().GetConsensus().nUTXOAssetsBlock)
         return true;
     AssetMap mapAssets;
-    EthereumMintTxVec vecMintKeys;
-    return CheckSyscoinInputs(false, tx, allocation, txHash, state, true, nHeight, nTime, uint256(), false, mapAssets, vecMintKeys);
+    return CheckSyscoinInputs(false, tx, allocation, txHash, state, true, nHeight, nTime, uint256(), false, mapAssets, mapMintKeys);
 }
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const CAssetAllocation& allocation, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys) {
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const CAssetAllocation& allocation, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys) {
     bool good = true;
     try{
         if(IsSyscoinMintTx(tx.nVersion)) {
-            good = CheckSyscoinMint(ibd, tx, txHash, state, fJustCheck, bSanityCheck, nHeight, nTime, blockHash, vecMintKeys);
+            good = CheckSyscoinMint(ibd, tx, txHash, state, fJustCheck, bSanityCheck, nHeight, nTime, blockHash, mapMintKeys);
         }
         else if (IsAssetAllocationTx(tx.nVersion)) {
             good = CheckAssetAllocationInputs(tx, allocation, txHash, state, fJustCheck, nHeight, blockHash, bSanityCheck);
@@ -288,34 +290,22 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const CAssetAll
     }
     return good;
 }
-bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, EthereumMintTxVec &vecMintKeys, AssetMap &mapAssets){
+bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, EthereumMintTxMap &mapMintKeys, AssetMap &mapAssets){
     CMintSyscoin mintSyscoin(tx);
     if(mintSyscoin.IsNull()) {
         LogPrint(BCLog::SYS,"DisconnectMintAsset: Cannot unserialize data inside of this transaction relating to an assetallocationmint\n");
         return false;
     }
-    // remove eth spend tx from our internal db
-    dev::h256 hash;
-    if(mintSyscoin.vchTxValue.size() == 2) {
-        const unsigned short &posTx = ((mintSyscoin.vchTxValue[0]<<8)|(mintSyscoin.vchTxValue[1]));
-        const std::vector<unsigned char> &vchTxValue = std::vector<unsigned char>(mintSyscoin.vchTxParentNodes.begin()+posTx, mintSyscoin.vchTxParentNodes.end());
-        hash = dev::sha3(vchTxValue);
-    }
-    else {
-        hash = dev::sha3(mintSyscoin.vchTxValue);
-    }
-
-    const std::vector<unsigned char> &vchHash = hash.asBytes();
-    vecMintKeys.emplace_back(std::make_pair(std::make_pair(vchHash, 0), txHash));
+    mapMintKeys.emplace(mintSyscoin.nBridgeTransferID, txHash);
     return true;
 }
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys)
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys)
 {
     if(tx.IsCoinBase())
         return true;
  
     if(IsSyscoinMintTx(tx.nVersion)) {
-        if(!DisconnectMintAsset(tx, txHash, vecMintKeys, mapAssets))
+        if(!DisconnectMintAsset(tx, txHash, mapMintKeys, mapAssets))
             return false;       
     }
     else{
@@ -879,29 +869,25 @@ bool CEthereumTxRootsDB::FlushWrite(const EthereumTxRootMap &mapTxRoots) {
     LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx roots, block range (%d-%d)\n", mapTxRoots.size(), nFirst, nLast);
     return WriteBatch(batch);
 }
-bool CEthereumMintedTxDB::FlushWrite(const EthereumMintTxVec &vecMintKeys) {
-    if(vecMintKeys.empty())
+// called on connect
+bool CEthereumMintedTxDB::FlushWrite(const EthereumMintTxMap &mapMintKeys) {
+    if(mapMintKeys.empty())
         return true;
     CDBBatch batch(*this);
-    for (const auto &key : vecMintKeys) {
-        batch.Write(key.first.first, key.second);
-        // write the bridge transfer ID if it existed (should on mainnet, and testnet after canceltransfer feature introduced)
-        if(key.first.second > 0){
-            // create link between keys for reorg compatibility because bridge transfer id isn't serialized
-            // we could have easily done key.first.second, key.second but that would break under reorgs
-            batch.Write(key.first.second, key.first.first);
-        } 
+    for (const auto &key : mapMintKeys) {
+        batch.Write(key.first, key.second);
     }
-    LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx mints\n", vecMintKeys.size());
+    LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx mints\n", mapMintKeys.size());
     return WriteBatch(batch);
 }
-bool CEthereumMintedTxDB::FlushErase(const EthereumMintTxVec &vecMintKeys) {
-    if(vecMintKeys.empty())
+// called on disconnect
+bool CEthereumMintedTxDB::FlushErase(const EthereumMintTxMap &mapMintKeys) {
+    if(mapMintKeys.empty())
         return true;
     CDBBatch batch(*this);
-    for (const auto &key : vecMintKeys) {
-        batch.Erase(key.first.first);
+    for (const auto &key : mapMintKeys) {
+        batch.Erase(key.first);
     }
-    LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx mints\n", vecMintKeys.size());
+    LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx mints\n", mapMintKeys.size());
     return WriteBatch(batch);
 }

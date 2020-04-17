@@ -19,7 +19,8 @@
 #include <util/time.h>
 #include <validationinterface.h>
 // SYSCOIN
-#include <services/asset.h>
+#include <services/assetconsensus.h>
+extern EthereumMintTxMap mapMintKeysMempool;
 extern std::set<COutPoint> assetAllocationConflicts;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
@@ -431,6 +432,12 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     totalTxSize -= it->GetTxSize();
     cachedInnerUsage -= it->DynamicMemoryUsage();
     cachedInnerUsage -= memusage::DynamicUsage(mapLinks[it].parents) + memusage::DynamicUsage(mapLinks[it].children);
+    // SYSCOIN remove bridge transfer id from mempool structure
+    if(IsSyscoinMintTx(ptx->nVersion)) {
+        CMintSyscoin mintSyscoin(*ptx);
+        if(!mintSyscoin.IsNull())
+            mapMintKeysMempool.erase(mintSyscoin.nBridgeTransferID);
+    }
     mapLinks.erase(it);
     mapTx.erase(it);
     nTransactionsUpdated++;
