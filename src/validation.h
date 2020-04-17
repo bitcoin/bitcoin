@@ -359,8 +359,6 @@ enum DisconnectResult
     DISCONNECT_FAILED   // Something else went wrong.
 };
 
-class ConnectTrace;
-
 /** @see CChainState::FlushStateToDisk */
 enum class FlushStateMode {
     NONE,
@@ -764,8 +762,29 @@ public:
     std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 private:
-    bool ActivateBestChainStep(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool.cs);
-    bool ConnectTip(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool.cs);
+    //! A single block and block index pointer.
+    struct PerBlockConnectTrace {
+        const CBlockIndex* pindex = nullptr;
+        const std::shared_ptr<const CBlock> pblock;
+
+        PerBlockConnectTrace(CBlockIndex* index, std::shared_ptr<const CBlock> block)
+            : pindex(index), pblock(std::move(block))
+        {
+            assert(pindex);
+            assert(pblock);
+        }
+    };
+
+    /**
+     * Used to track blocks that were connected as part of a single
+     * ActivateBestChainStep call. After the ABCS call returns, a separate
+     * BlockConnected validationinterface signal is fired for each block that was
+     * connected in the ABCS call.
+     */
+    using ConnectTrace = std::vector<PerBlockConnectTrace>;
+
+    bool ActivateBestChainStep(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, CChainState::ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool.cs);
+    bool ConnectTip(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, CChainState::ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool.cs);
 
     void InvalidBlockFound(CBlockIndex *pindex, const BlockValidationState &state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
