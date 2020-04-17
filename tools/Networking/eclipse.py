@@ -29,7 +29,35 @@ num_identities = 8
 # Percentage (0 to 1) of packets to drop, else: relayed to victim
 eclipse_packet_drop_rate = 0
 
-
+seconds_delay = {
+	'version': 0,
+	'verack': 0,
+	'addr': 0,
+	'inv': 0,
+	'getdata': 0,
+	'merkleblock': 0,
+	'getblocks': 0,
+	'getheaders': 0,
+	'tx': 0,
+	'headers': 0,
+	'block': 0,
+	'getaddr': 0,
+	'mempool': 0,
+	'ping': 0,
+	'pong': 5,
+	'notfound': 0,
+	'filterload': 0,
+	'filteradd': 0,
+	'filterclear': 0,
+	'sendheaders': 0,
+	'feefilter': 0,
+	'sendcmpct': 0,
+	'cmpctblock': 0,
+	'getblocktxn': 0,
+	'blocktxn': 0,
+	'reject': 0,
+	'undocumented': 0
+}
 
 
 
@@ -346,6 +374,11 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, f
 	#msg = MsgSerializable.from_bytes(packet)
 
 	# Relay Bitcoin packets that aren't from the victim
+	if msg_type in seconds_delay:
+		if seconds_delay[msg_type] != 0:
+			print(f'**(* Delaying message by {seconds_delay[msg_type]} seconds ** {from_ip} --> {to_ip} ** {msg_type}')
+			time.sleep(seconds_delay[msg_type])
+
 	print(f'*** Mirrored response sent  ** {from_ip} --> {to_ip} ** {msg_type}')
 	if orig_socket == None: return False # If the original's socket isn't running, don't bother trying to relay
 	try:
