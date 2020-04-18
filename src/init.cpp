@@ -1973,7 +1973,7 @@ bool AppInitMain(NodeContext& node)
     fLiteMode = gArgs.GetBoolArg("-litemode", false);
 
     if(fLiteMode) {
-        InitWarning(_("You are starting in lite mode, all masternode-specific functionality is disabled.").translated);
+        LogPrintf("You are starting in lite mode, all masternode-specific functionality is disabled.\n");
     }
     
 
@@ -2151,9 +2151,11 @@ bool AppInitMain(NodeContext& node)
     int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
     bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-    StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
-	int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-	StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
+    if(Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+        StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
+        int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
+        StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
+    }
 
     return true;
 }

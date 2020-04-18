@@ -174,7 +174,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // Compute regular coinbase transaction.
     coinbaseTx.vout[0].nValue = blockReward + nFees;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
-    if (!chainparams.MineBlocksOnDemand() && nHeight > 1 && !fUnitTest) {
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !chainparams.MineBlocksOnDemand()) {
         if (masternodeSync.IsFailed()) {
             throw std::runtime_error("Masternode information has failed to sync, please restart your node!");
         }
@@ -190,7 +190,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     }
     // Update coinbase transaction with additional info about masternode and governance payments,
     // get some info back to pass to getblocktemplate
-    FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->txoutMasternode, pblocktemplate->voutSuperblock);
+    if(Params().NetworkIDString() != CBaseChainParams::REGTEST)
+        FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->txoutMasternode, pblocktemplate->voutSuperblock);
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());

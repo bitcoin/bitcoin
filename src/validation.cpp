@@ -1366,14 +1366,27 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 
     return ReadRawBlockFromDisk(block, block_pos, message_start);
 }
+CAmount GetBlockSubsidyRegtest(int nHeight, const Consensus::Params& consensusParams)
+{
+    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+    // Force block reward to zero when right shift is undefined.
+    if (halvings >= 64)
+        return 0;
 
+    CAmount nSubsidy = 50 * COIN;
+    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+    nSubsidy >>= halvings;
+    return nSubsidy;
+}
 CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensusParams, CAmount &nTotalRewardWithMasternodes, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight)
 {
-    static bool bRegtest = Params().NetworkIDString() == CBaseChainParams::REGTEST && !fUnitTest;
+    if(Params().NetworkIDString() == CBaseChainParams::REGTEST) {
+        nTotalRewardWithMasternodes = GetBlockSubsidyRegtest(nHeight, consensusParams);
+        return nTotalRewardWithMasternodes;
+    }
     if (nHeight == 0)
         return 50*COIN;
     if (nHeight == 1)
-    if (!bRegtest && nHeight == 1)
     {
         // SYSCOIN 4 snapshot
         nTotalRewardWithMasternodes = 554200000 * COIN;
@@ -3699,8 +3712,8 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-old", "block's timestamp is too early");
 
-    // SYSCOIN Check timestamp
-    if (!fUnitTest && block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
+    // Check timestamp
+    if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:

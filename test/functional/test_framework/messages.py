@@ -36,7 +36,8 @@ MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
 MAX_LOCATOR_SZ = 101
-MAX_BLOCK_BASE_SIZE = 1000000
+# SYSCOIN
+MAX_BLOCK_BASE_SIZE = 4000000
 
 COIN = 100000000  # 1 sys in satoshis
 MAX_MONEY = 888000000 * COIN
@@ -58,7 +59,7 @@ MSG_TYPE_MASK = 0xffffffff >> 2
 # Constants for the auxpow block version.
 VERSION_AUXPOW = (1 << 8)
 VERSION_CHAIN_START = (1 << 16)
-CHAIN_ID = 1
+CHAIN_ID = 4096
 
 
 # Serialization/deserialization tools

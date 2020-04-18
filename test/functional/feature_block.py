@@ -99,12 +99,6 @@ class FullBlockTest(SyscoinTestFramework):
         self.block_heights[self.genesis_hash] = 0
         self.spendable_outputs = []
 
-        # Activate P2SH at height 432.
-        blocks = []
-        for i in range(500):
-            blocks.append(self.next_block(10000 + i))
-        self.sync_blocks(blocks)
-
         # Create a new block
         b_dup_cb = self.next_block('dup_cb')
         b_dup_cb.vtx[0].vin[0].scriptSig = DUPLICATE_COINBASE_SCRIPT_SIG
@@ -353,7 +347,7 @@ class FullBlockTest(SyscoinTestFramework):
         self.log.info("Reject a block with coinbase input script size out of range")
         self.move_tip(15)
         b26 = self.next_block(26, spend=out[6])
-        b26.vtx[0].vin[0].scriptSig = self.set_script_len (b26.vtx[0].vin[0].scriptSig, 1)
+        b26.vtx[0].vin[0].scriptSig = b'\x00'
         b26.vtx[0].rehash()
         # update_block causes the merkle root to get updated, even with no new
         # transactions, and updates the required state.
@@ -367,7 +361,7 @@ class FullBlockTest(SyscoinTestFramework):
         # Now try a too-large-coinbase script
         self.move_tip(15)
         b28 = self.next_block(28, spend=out[6])
-         b28.vtx[0].vin[0].scriptSig = self.set_script_len (b28.vtx[0].vin[0].scriptSig, 101)
+        b28.vtx[0].vin[0].scriptSig = b'\x00' * 101
         b28.vtx[0].rehash()
         b28 = self.update_block(28, [])
         self.send_blocks([b28], success=False, reject_reason='bad-cb-length', reconnect=True)
@@ -379,7 +373,7 @@ class FullBlockTest(SyscoinTestFramework):
         # b30 has a max-sized coinbase scriptSig.
         self.move_tip(23)
         b30 = self.next_block(30)
-        b30.vtx[0].vin[0].scriptSig = self.set_script_len (b30.vtx[0].vin[0].scriptSig, 100)
+        b30.vtx[0].vin[0].scriptSig = b'\x00' * 100
         b30.vtx[0].rehash()
         b30 = self.update_block(30, [])
         self.send_blocks([b30], True)
@@ -624,7 +618,7 @@ class FullBlockTest(SyscoinTestFramework):
         self.log.info("Reject a block with no transactions")
         self.move_tip(44)
         b46 = CBlock()
-         b46.set_base_version(4)
+        b46.set_base_version(4)
         b46.nTime = b44.nTime + 1
         b46.hashPrevBlock = b44.sha256
         b46.nBits = 0x207fffff
@@ -1149,18 +1143,18 @@ class FullBlockTest(SyscoinTestFramework):
         self.log.info("Test transaction resurrection during a re-org")
         self.move_tip(76)
         b77 = self.next_block(77)
-        tx77 = self.create_and_sign_transaction(out[24], 5 * COIN)
+        tx77 = self.create_and_sign_transaction(out[24], 10 * COIN)
         b77 = self.update_block(77, [tx77])
         self.send_blocks([b77], True)
         self.save_spendable_output()
 
         b78 = self.next_block(78)
-        tx78 = self.create_tx(tx77, 0, 4 * COIN)
+        tx78 = self.create_tx(tx77, 0, 9 * COIN)
         b78 = self.update_block(78, [tx78])
         self.send_blocks([b78], True)
 
         b79 = self.next_block(79)
-        tx79 = self.create_tx(tx78, 0, 3 * COIN)
+        tx79 = self.create_tx(tx78, 0, 8 * COIN)
         b79 = self.update_block(79, [tx79])
         self.send_blocks([b79], True)
 
@@ -1253,11 +1247,10 @@ class FullBlockTest(SyscoinTestFramework):
         b89a = self.update_block("89a", [tx])
         self.send_blocks([b89a], success=False, reject_reason='bad-txns-inputs-missingorspent', reconnect=True)
 
-        self.log.info("Test a re-org of one day's worth of blocks (144 blocks)")
-
+        self.log.info("Test a re-org of one week's worth of blocks (1088 blocks)")
 
         self.move_tip(88)
-        LARGE_REORG_SIZE = 144
+        LARGE_REORG_SIZE = 1088
         blocks = []
         spend = out[32]
         for i in range(89, LARGE_REORG_SIZE + 89):
@@ -1296,7 +1289,7 @@ class FullBlockTest(SyscoinTestFramework):
 
         self.log.info("Reject a block with an invalid block header version")
         b_v1 = self.next_block('b_v1', version=1)
-        self.send_blocks([b_v1], success=False, force_send=True, reject_reason='bad-version(0x00000001)', reconnect=True)
+        self.send_blocks([b_v1], success=False, force_send=True, reject_reason='bad-version(0x10000001)', reconnect=True)
 
         self.move_tip(chain1_tip + 2)
         b_cb34 = self.next_block('b_cb34', version=4)
@@ -1333,7 +1326,7 @@ class FullBlockTest(SyscoinTestFramework):
         tx.rehash()
         return tx
 
-    def next_block(self, number, spend=None, additional_coinbase_value=0, script=CScript([OP_TRUE]), *, version=1):
+    def next_block(self, number, spend=None, additional_coinbase_value=0, script=CScript([OP_TRUE]), *, version=4):
         if self.tip is None:
             base_block_hash = self.genesis_hash
             block_time = int(time.time()) + 1
@@ -1413,7 +1406,7 @@ class FullBlockTest(SyscoinTestFramework):
         self.nodes[0].disconnect_p2ps()
         self.bootstrap_p2p(timeout=timeout)
 
-    def send_blocks(self, blocks, success=True, reject_reason=None, force_send=False, reconnect=False, timeout=960):
+    def send_blocks(self, blocks, success=True, reject_reason=None, force_send=False, reconnect=False, timeout=10):
         """Sends blocks to test node. Syncs and verifies that tip has advanced to most recent block.
 
         Call with success = False if the tip shouldn't advance to the most recent block."""
@@ -1421,15 +1414,7 @@ class FullBlockTest(SyscoinTestFramework):
 
         if reconnect:
             self.reconnect_p2p(timeout=timeout)
-            
-    def set_script_len(self, script, n):
-        """"Extends or shrinks the script to have length n."""
 
-         cur = len (script)
-        if cur >= n:
-            return script[:n]
-
-         return script + b'\x00' * (n - cur)
 
 if __name__ == '__main__':
     FullBlockTest().main()
