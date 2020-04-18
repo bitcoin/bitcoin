@@ -30,7 +30,7 @@ from test_framework.util import (
 WALLET_PASSPHRASE = "test"
 WALLET_PASSPHRASE_TIMEOUT = 3600
 
-# Fee rates (in BTC per 1000 vbytes)
+# Fee rates (in SYS per 1000 vbytes)
 INSUFFICIENT = 0.00001000
 ECONOMICAL   = 0.00050000
 NORMAL       = 0.00100000
@@ -63,7 +63,7 @@ class BumpFeeTest(SyscoinTestFramework):
 
         # fund rbf node with 10 coins of 0.001 sys (100,000 satoshis)
         self.log.info("Mining blocks...")
-        peer_node.generate(500) # Activates segwit at block 432.
+        peer_node.generate(110)
         self.sync_all()
         for i in range(25):
             peer_node.sendtoaddress(rbf_node_address, 0.001)
@@ -253,16 +253,16 @@ def test_dust_to_fee(self, rbf_node, dest_address):
     self.log.info('Test that bumped output that is dust is dropped to fee')
     rbfid = spend_one_input(rbf_node, dest_address)
     fulltx = rbf_node.getrawtransaction(rbfid, 1)
-    # The DER formatting used by Bitcoin to serialize ECDSA signatures means that signatures can have a
+    # The DER formatting used by Syscoin to serialize ECDSA signatures means that signatures can have a
     # variable size of 70-72 bytes (or possibly even less), with most being 71 or 72 bytes. The signature
     # in the witness is divided by 4 for the vsize, so this variance can take the weight across a 4-byte
     # boundary. Thus expected transaction size (p2wpkh, 1 input, 2 outputs) is 140-141 vbytes, usually 141.
     if not 140 <= fulltx["vsize"] <= 141:
         raise AssertionError("Invalid tx vsize of {} (140-141 expected), full tx: {}".format(fulltx["vsize"], fulltx))
-    # Bump with fee_rate of 0.00350250 BTC per 1000 vbytes to create dust.
-    # Expected fee is 141 vbytes * fee_rate 0.00350250 BTC / 1000 vbytes = 0.00049385 BTC.
-    # or occasionally 140 vbytes * fee_rate 0.00350250 BTC / 1000 vbytes = 0.00049035 BTC.
-    # Dust should be dropped to the fee, so actual bump fee is 0.00050000 BTC.
+    # Bump with fee_rate of 0.00350250 SYS per 1000 vbytes to create dust.
+    # Expected fee is 141 vbytes * fee_rate 0.00350250 SYS / 1000 vbytes = 0.00049385 SYS.
+    # or occasionally 140 vbytes * fee_rate 0.00350250 SYS / 1000 vbytes = 0.00049035 SYS.
+    # Dust should be dropped to the fee, so actual bump fee is 0.00050000 SYS.
     bumped_tx = rbf_node.bumpfee(rbfid, {"fee_rate": 0.00350250})
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
     assert_equal(bumped_tx["fee"], Decimal("0.00050000"))
@@ -296,7 +296,7 @@ def test_settxfee(self, rbf_node, dest_address):
 def test_maxtxfee_fails(self, rbf_node, dest_address):
     self.log.info('Test that bumpfee fails when it hits -maxtxfee')
     # size of bumped transaction (p2wpkh, 1 input, 2 outputs): 141 vbytes
-    # expected bump fee of 141 vbytes * 0.00200000 BTC / 1000 vbytes = 0.00002820 BTC
+    # expected bump fee of 141 vbytes * 0.00200000 SYS / 1000 vbytes = 0.00002820 SYS
     # which exceeds maxtxfee and is expected to raise
     self.restart_node(1, ['-maxtxfee=0.000025'] + self.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
@@ -498,7 +498,7 @@ def submit_block_with_tx(node, tx):
     tip = node.getbestblockhash()
     height = node.getblockcount() + 1
     block_time = node.getblockheader(tip)["mediantime"] + 1
-    block = create_block(int(tip, 16), create_coinbase(height), block_time, version=4)
+    block = create_block(int(tip, 16), create_coinbase(height), block_time)
     block.vtx.append(ctx)
     block.rehash()
     block.hashMerkleRoot = block.calc_merkle_root()

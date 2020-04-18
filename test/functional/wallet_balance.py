@@ -6,10 +6,8 @@
 from decimal import Decimal
 import struct
 
-
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE as ADDRESS_WATCHONLY
 from test_framework.test_framework import SyscoinTestFramework
-
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -145,7 +143,7 @@ class WalletTest(SyscoinTestFramework):
         # 2) Sent 10 from node B to node A with fee 0.01
         #
         # Then our node would report a confirmed balance of 40 + 50 - 10 = 80
-        # BTC, which is more than would be available if transaction 1 were
+        # SYS, which is more than would be available if transaction 1 were
         # replaced.
 
 

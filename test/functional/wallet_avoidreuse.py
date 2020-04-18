@@ -168,8 +168,8 @@ class AvoidReuseTest(SyscoinTestFramework):
 
     def test_sending_from_reused_address_without_avoid_reuse(self):
         '''
-        Test the same as test_sending_from_reused_address_fails, except send the 10 BTC with
-        the avoid_reuse flag set to false. This means the 10 BTC send should succeed,
+        Test the same as test_sending_from_reused_address_fails, except send the 10 SYS with
+        the avoid_reuse flag set to false. This means the 10 SYS send should succeed,
         where it fails in test_sending_from_reused_address_fails.
         '''
         self.log.info("Test sending from reused address with avoid_reuse=false")
@@ -181,9 +181,9 @@ class AvoidReuseTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
-        # listunspent should show 1 single, unused 10 btc output
+        # listunspent should show 1 single, unused 10 sys output
         assert_unspent(self.nodes[1], total_count=1, total_sum=10, reused_supported=True, reused_count=0)
-        # getbalances should show no used, 10 btc trusted
+        # getbalances should show no used, 10 sys trusted
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 10})
         # node 0 should not show a used entry, as it does not enable avoid_reuse
         assert("used" not in self.nodes[0].getbalances()["mine"])
@@ -192,39 +192,39 @@ class AvoidReuseTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
-        # listunspent should show 1 single, unused 5 btc output
+        # listunspent should show 1 single, unused 5 sys output
         assert_unspent(self.nodes[1], total_count=1, total_sum=5, reused_supported=True, reused_count=0)
-        # getbalances should show no used, 5 btc trusted
+        # getbalances should show no used, 5 sys trusted
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 5})
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
         self.nodes[0].generate(1)
         self.sync_all()
 
-        # listunspent should show 2 total outputs (5, 10 btc), one unused (5), one reused (10)
+        # listunspent should show 2 total outputs (5, 10 sys), one unused (5), one reused (10)
         assert_unspent(self.nodes[1], total_count=2, total_sum=15, reused_count=1, reused_sum=10)
-        # getbalances should show 10 used, 5 btc trusted
+        # getbalances should show 10 used, 5 sys trusted
         assert_balances(self.nodes[1], mine={"used": 10, "trusted": 5})
 
         self.nodes[1].sendtoaddress(address=retaddr, amount=10, avoid_reuse=False)
 
-        # listunspent should show 1 total outputs (5 btc), unused
+        # listunspent should show 1 total outputs (5 sys), unused
         assert_unspent(self.nodes[1], total_count=1, total_sum=5, reused_count=0)
-        # getbalances should show no used, 5 btc trusted
+        # getbalances should show no used, 5 sys trusted
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 5})
 
-        # node 1 should now have about 5 btc left (for both cases)
+        # node 1 should now have about 5 sys left (for both cases)
         assert_approx(self.nodes[1].getbalance(), 5, 0.001)
         assert_approx(self.nodes[1].getbalance(avoid_reuse=False), 5, 0.001)
 
     def test_sending_from_reused_address_fails(self, second_addr_type):
         '''
         Test the simple case where [1] generates a new address A, then
-        [0] sends 10 BTC to A.
-        [1] spends 5 BTC from A. (leaving roughly 5 BTC useable)
-        [0] sends 10 BTC to A again.
-        [1] tries to spend 10 BTC (fails; dirty).
-        [1] tries to spend 4 BTC (succeeds; change address sufficient)
+        [0] sends 10 SYS to A.
+        [1] spends 5 SYS from A. (leaving roughly 5 SYS useable)
+        [0] sends 10 SYS to A again.
+        [1] tries to spend 10 SYS (fails; dirty).
+        [1] tries to spend 4 SYS (succeeds; change address sufficient)
         '''
         self.log.info("Test sending from reused {} address fails".format(second_addr_type))
 
@@ -235,18 +235,18 @@ class AvoidReuseTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
-        # listunspent should show 1 single, unused 10 btc output
+        # listunspent should show 1 single, unused 10 sys output
         assert_unspent(self.nodes[1], total_count=1, total_sum=10, reused_supported=True, reused_count=0)
-        # getbalances should show no used, 10 btc trusted
+        # getbalances should show no used, 10 sys trusted
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 10})
 
         self.nodes[1].sendtoaddress(retaddr, 5)
         self.nodes[0].generate(1)
         self.sync_all()
 
-        # listunspent should show 1 single, unused 5 btc output
+        # listunspent should show 1 single, unused 5 sys output
         assert_unspent(self.nodes[1], total_count=1, total_sum=5, reused_supported=True, reused_count=0)
-        # getbalances should show no used, 5 btc trusted
+        # getbalances should show no used, 5 sys trusted
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 5})
 
         # For the second send, we transmute it to a related single-key address
@@ -265,9 +265,9 @@ class AvoidReuseTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
-        # listunspent should show 2 total outputs (5, 10 btc), one unused (5), one reused (10)
+        # listunspent should show 2 total outputs (5, 10 sys), one unused (5), one reused (10)
         assert_unspent(self.nodes[1], total_count=2, total_sum=15, reused_count=1, reused_sum=10)
-        # getbalances should show 10 used, 5 btc trusted
+        # getbalances should show 10 used, 5 sys trusted
         assert_balances(self.nodes[1], mine={"used": 10, "trusted": 5})
 
         # node 1 should now have a balance of 5 (no dirty) or 15 (including dirty)
@@ -278,12 +278,12 @@ class AvoidReuseTest(SyscoinTestFramework):
 
         self.nodes[1].sendtoaddress(retaddr, 4)
 
-        # listunspent should show 2 total outputs (1, 10 btc), one unused (1), one reused (10)
+        # listunspent should show 2 total outputs (1, 10 sys), one unused (1), one reused (10)
         assert_unspent(self.nodes[1], total_count=2, total_sum=11, reused_count=1, reused_sum=10)
-        # getbalances should show 10 used, 1 btc trusted
+        # getbalances should show 10 used, 1 sys trusted
         assert_balances(self.nodes[1], mine={"used": 10, "trusted": 1})
 
-        # node 1 should now have about 1 btc left (no dirty) and 11 (including dirty)
+        # node 1 should now have about 1 sys left (no dirty) and 11 (including dirty)
         assert_approx(self.nodes[1].getbalance(), 1, 0.001)
         assert_approx(self.nodes[1].getbalance(avoid_reuse=False), 11, 0.001)
 
@@ -319,10 +319,10 @@ class AvoidReuseTest(SyscoinTestFramework):
 
     def test_full_destination_group_is_preferred(self):
         '''
-        Test the case where [1] only has 11 outputs of 1 BTC in the same reused
-        address and tries to send a small payment of 0.5 BTC. The wallet
+        Test the case where [1] only has 11 outputs of 1 SYS in the same reused
+        address and tries to send a small payment of 0.5 SYS. The wallet
         should use 10 outputs from the reused address as inputs and not a
-        single 1 BTC input, in order to join several outputs from the reused
+        single 1 SYS input, in order to join several outputs from the reused
         address.
         '''
         self.log.info("Test that full destination groups are preferred in coin selection")
@@ -333,7 +333,7 @@ class AvoidReuseTest(SyscoinTestFramework):
         new_addr = self.nodes[1].getnewaddress()
         ret_addr = self.nodes[0].getnewaddress()
 
-        # Send 11 outputs of 1 BTC to the same, reused address in the wallet
+        # Send 11 outputs of 1 SYS to the same, reused address in the wallet
         for _ in range(11):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
@@ -350,8 +350,8 @@ class AvoidReuseTest(SyscoinTestFramework):
 
     def test_all_destination_groups_are_used(self):
         '''
-        Test the case where [1] only has 22 outputs of 1 BTC in the same reused
-        address and tries to send a payment of 20.5 BTC. The wallet
+        Test the case where [1] only has 22 outputs of 1 SYS in the same reused
+        address and tries to send a payment of 20.5 SYS. The wallet
         should use all 22 outputs from the reused address as inputs.
         '''
         self.log.info("Test that all destination groups are used")
@@ -362,7 +362,7 @@ class AvoidReuseTest(SyscoinTestFramework):
         new_addr = self.nodes[1].getnewaddress()
         ret_addr = self.nodes[0].getnewaddress()
 
-        # Send 22 outputs of 1 BTC to the same, reused address in the wallet
+        # Send 22 outputs of 1 SYS to the same, reused address in the wallet
         for _ in range(22):
             self.nodes[0].sendtoaddress(new_addr, 1)
 

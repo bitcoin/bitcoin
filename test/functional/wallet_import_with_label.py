@@ -17,7 +17,6 @@ from test_framework.wallet_util import test_address
 class ImportWithLabel(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args = [["-addresstype=bech32"]] * 2
         self.setup_clean_chain = True
 
     def skip_test_if_missing_module(self):

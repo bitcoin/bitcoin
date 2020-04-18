@@ -10,14 +10,6 @@ from .script import hash256, hash160, sha256, CScript, OP_0
 from .util import hex_str_to_bytes
 
 from . import segwit_addr
-#// SYSCOIN
-ADDRESS_BCRT1_UNSPENDABLE = 'sysrt1qa4vdyra69l8j30wg6g83kgksx3hnwzzte2z9af'
-
-
-class AddressType(enum.Enum):
-    bech32 = 'bech32'
-    p2sh_segwit = 'p2sh-segwit'
-    legacy = 'legacy'  # P2PKH
 
 ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
 ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj)#juyq9d97'
