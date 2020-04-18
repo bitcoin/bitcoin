@@ -7,6 +7,7 @@
 
 #include <keepass.h>
 #include <net.h>
+#include <scheduler.h>
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>
@@ -14,7 +15,11 @@
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-std::string GetWalletHelpString(bool showDebug)
+#include <privatesend/privatesend-client.h>
+
+#include <functional>
+
+std::string WalletInit::GetHelpString(bool showDebug)
 {
     std::string strUsage = HelpMessageGroup(_("Wallet options:"));
     strUsage += HelpMessageOpt("-disablewallet", _("Do not load the wallet and disable wallet RPC calls"));
@@ -51,6 +56,15 @@ std::string GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-keepassid=<id>", _("KeePassHttp id for the established association"));
     strUsage += HelpMessageOpt("-keepassname=<name>", _("Name to construct url for KeePass entry that stores the wallet passphrase"));
 
+    strUsage += HelpMessageGroup(_("PrivateSend options:"));
+    strUsage += HelpMessageOpt("-enableprivatesend", strprintf(_("Enable use of PrivateSend for funds stored in this wallet (0-1, default: %u)"), 0));
+    strUsage += HelpMessageOpt("-privatesendautostart", strprintf(_("Start PrivateSend automatically (0-1, default: %u)"), DEFAULT_PRIVATESEND_AUTOSTART));
+    strUsage += HelpMessageOpt("-privatesendmultisession", strprintf(_("Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)"), DEFAULT_PRIVATESEND_MULTISESSION));
+    strUsage += HelpMessageOpt("-privatesendsessions=<n>", strprintf(_("Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_SESSIONS, MAX_PRIVATESEND_SESSIONS, DEFAULT_PRIVATESEND_SESSIONS));
+    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_ROUNDS, MAX_PRIVATESEND_ROUNDS, DEFAULT_PRIVATESEND_ROUNDS));
+    strUsage += HelpMessageOpt("-privatesendamount=<n>", strprintf(_("Target PrivateSend balance (%u-%u, default: %u)"), MIN_PRIVATESEND_AMOUNT, MAX_PRIVATESEND_AMOUNT, DEFAULT_PRIVATESEND_AMOUNT));
+    strUsage += HelpMessageOpt("-privatesenddenoms=<n>", strprintf(_("Create up to N inputs of each denominated amount (%u-%u, default: %u)"), MIN_PRIVATESEND_DENOMS, MAX_PRIVATESEND_DENOMS, DEFAULT_PRIVATESEND_DENOMS));
+
     if (showDebug)
     {
         strUsage += HelpMessageGroup(_("Wallet debugging/testing options:"));
@@ -64,7 +78,7 @@ std::string GetWalletHelpString(bool showDebug)
     return strUsage;
 }
 
-bool WalletParameterInteraction()
+bool WalletInit::ParameterInteraction()
 {
     if (gArgs.IsArgSet("-masternodeblsprivkey") && gArgs.SoftSetBoolArg("-disablewallet", true)) {
         LogPrintf("%s: parameter interaction: -masternodeblsprivkey set -> setting -disablewallet=1\n", __func__);
@@ -200,10 +214,16 @@ bool WalletParameterInteraction()
         }
     }
 
+    if (gArgs.IsArgSet("-hdseed") && IsHex(gArgs.GetArg("-hdseed", "not hex")) && (gArgs.IsArgSet("-mnemonic") || gArgs.IsArgSet("-mnemonicpassphrase"))) {
+        gArgs.ForceRemoveArg("-mnemonic");
+        gArgs.ForceRemoveArg("-mnemonicpassphrase");
+        LogPrintf("%s: parameter interaction: can't use -hdseed and -mnemonic/-mnemonicpassphrase together, will prefer -seed\n", __func__);
+    }
+
     return true;
 }
 
-void RegisterWalletRPC(CRPCTable &t)
+void WalletInit::RegisterRPC(CRPCTable &t)
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return;
@@ -212,7 +232,7 @@ void RegisterWalletRPC(CRPCTable &t)
     RegisterWalletRPCCommands(t);
 }
 
-bool VerifyWallets()
+bool WalletInit::Verify()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return true;
@@ -283,7 +303,7 @@ bool VerifyWallets()
     return true;
 }
 
-bool OpenWallets()
+bool WalletInit::Open()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
@@ -301,27 +321,82 @@ bool OpenWallets()
     return true;
 }
 
-void StartWallets(CScheduler& scheduler) {
+void WalletInit::Start(CScheduler& scheduler)
+{
     for (CWalletRef pwallet : vpwallets) {
         pwallet->postInitProcess(scheduler);
     }
+    if (!fMasternodeMode && privateSendClient.fEnablePrivateSend) {
+        scheduler.scheduleEvery(std::bind(&CPrivateSendClientManager::DoMaintenance, std::ref(privateSendClient),
+                                            std::ref(*g_connman)), 1 * 1000);
+    }
 }
 
-void FlushWallets() {
+void WalletInit::Flush()
+{
+    if (privateSendClient.fEnablePrivateSend) {
+        // Stop PrivateSend, release keys
+        privateSendClient.fPrivateSendRunning = false;
+        privateSendClient.ResetPool();
+    }
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(false);
     }
 }
 
-void StopWallets() {
+void WalletInit::Stop()
+{
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(true);
     }
 }
 
-void CloseWallets() {
+void WalletInit::Close()
+{
     for (CWalletRef pwallet : vpwallets) {
         delete pwallet;
     }
     vpwallets.clear();
+}
+
+void WalletInit::AutoLockMasternodeCollaterals()
+{
+    // we can't do this before DIP3 is fully initialized
+    for (CWalletRef pwallet : vpwallets) {
+        pwallet->AutoLockMasternodeCollaterals();
+    }
+}
+
+void WalletInit::InitPrivateSendSettings()
+{
+    if (vpwallets.empty()) {
+        privateSendClient.fEnablePrivateSend = privateSendClient.fPrivateSendRunning = false;
+    } else {
+        privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", !fLiteMode);
+        privateSendClient.fPrivateSendRunning = vpwallets[0]->IsLocked() ? false : gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART);
+    }
+    privateSendClient.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
+    privateSendClient.nPrivateSendSessions = std::min(std::max((int)gArgs.GetArg("-privatesendsessions", DEFAULT_PRIVATESEND_SESSIONS), MIN_PRIVATESEND_SESSIONS), MAX_PRIVATESEND_SESSIONS);
+    privateSendClient.nPrivateSendRounds = std::min(std::max((int)gArgs.GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), MIN_PRIVATESEND_ROUNDS), MAX_PRIVATESEND_ROUNDS);
+    privateSendClient.nPrivateSendAmount = std::min(std::max((int)gArgs.GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), MIN_PRIVATESEND_AMOUNT), MAX_PRIVATESEND_AMOUNT);
+    privateSendClient.nPrivateSendDenoms = std::min(std::max((int)gArgs.GetArg("-privatesenddenoms", DEFAULT_PRIVATESEND_DENOMS), MIN_PRIVATESEND_DENOMS), MAX_PRIVATESEND_DENOMS);
+
+    if (privateSendClient.fEnablePrivateSend) {
+        LogPrintf("PrivateSend: autostart=%d, multisession=%d, "
+                  "sessions=%d, rounds=%d, amount=%d, denoms=%d\n",
+                  privateSendClient.fPrivateSendRunning, privateSendClient.fPrivateSendMultiSession,
+                  privateSendClient.nPrivateSendSessions, privateSendClient.nPrivateSendRounds,
+                  privateSendClient.nPrivateSendAmount, privateSendClient.nPrivateSendDenoms);
+    }
+
+}
+
+void WalletInit::InitKeePass()
+{
+    keePassInt.init();
+}
+
+bool WalletInit::InitAutoBackup()
+{
+    return CWallet::InitAutoBackup();
 }

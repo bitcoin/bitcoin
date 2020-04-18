@@ -36,8 +36,10 @@
 #include <warnings.h>
 
 #ifdef ENABLE_WALLET
+#include <wallet/init.h>
 #include <wallet/wallet.h>
 #endif
+#include <walletinitinterface.h>
 
 #include <memory>
 #include <stdint.h>
@@ -706,6 +708,11 @@ int main(int argc, char *argv[])
     // Start up the payment server early, too, so impatient users that click on
     // dash: links repeatedly have their payment requests routed to this process:
     app.createPaymentServer();
+
+    // Hook up the wallet init interface
+    g_wallet_init_interface.reset(new WalletInit);
+#else
+    g_wallet_init_interface.reset(new DummyWalletInit);
 #endif
 
     /// 9. Main GUI initialization
