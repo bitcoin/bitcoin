@@ -2635,23 +2635,23 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     if (!ReadBlockFromDisk(block, pindexDelete, chainparams.GetConsensus()))
         return error("DisconnectTip(): Failed to read block");
     // Apply the block atomically to the chain state.
+    // SYSCOIN
+    AssetMap mapAssets;
+    EthereumMintTxMap mapMintKeys;
+    std::vector<uint256> vecTXIDs;
     int64_t nStart = GetTimeMicros();
     {
         CCoinsViewCache view(&CoinsTip());
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
-        AssetMap mapAssets;
-        EthereumMintTxMap mapMintKeys;
-        std::vector<uint256> vecTXIDs;
         if (DisconnectBlock(block, pindexDelete, view, mapAssets, mapMintKeys, vecTXIDs) != DISCONNECT_OK)
             return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         bool flushed = view.Flush();
         assert(flushed);
-        // SYSCOIN 
-        if(pblockindexdb != nullptr){
-            if(!passetdb->Flush(mapAssets) || !pblockindexdb->FlushErase(vecTXIDs) || !pethereumtxmintdb->FlushErase(mapMintKeys)){
-                error("DisconnectTip(): Error flushing to asset dbs on disconnect");
-                return DISCONNECT_FAILED;
-            }
+    }
+    // SYSCOIN 
+    if(pblockindexdb != nullptr){
+        if(!passetdb->Flush(mapAssets) || !pblockindexdb->FlushErase(vecTXIDs) || !pethereumtxmintdb->FlushErase(mapMintKeys)){
+            return error("DisconnectTip(): Error flushing to asset dbs on disconnect %s", pindexDelete->GetBlockHash().ToString());
         }
     }
     LogPrint(BCLog::BENCH, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * MILLI);
@@ -2752,12 +2752,12 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     int64_t nTime2 = GetTimeMicros(); nTimeReadFromDisk += nTime2 - nTime1;
     int64_t nTime3;
     LogPrint(BCLog::BENCH, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
+    // SYSCOIN
+    AssetMap mapAssets;
+    EthereumMintTxMap mapMintKeys;
+    std::vector<std::pair<uint256, uint256> > blockIndex;
     {
         CCoinsViewCache view(&CoinsTip());
-        // SYSCOIN
-        AssetMap mapAssets;
-        EthereumMintTxMap mapMintKeys;
-        std::vector<std::pair<uint256, uint256> > blockIndex;
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, false, mapAssets, mapMintKeys, blockIndex);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
@@ -2769,14 +2769,14 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
         assert(nBlocksTotal > 0);
         LogPrint(BCLog::BENCH, "  - Connect total: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime3 - nTime2) * MILLI, nTimeConnectTotal * MICRO, nTimeConnectTotal * MILLI / nBlocksTotal);
         bool flushed = view.Flush();
-        assert(flushed);
-        // SYSCOIN
-        if(pblockindexdb){
-            if(!pblockindexdb->FlushWrite(blockIndex) || !passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushWrite(mapMintKeys)){
-                return error("Error flushing to asset dbs");
-            }
-        }        
+        assert(flushed);       
     }
+    // SYSCOIN
+    if(pblockindexdb){
+        if(!pblockindexdb->FlushWrite(blockIndex) || !passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushWrite(mapMintKeys)){
+            return error("Error flushing to Asset DBs: %s", pindexNew->GetBlockHash().ToString());
+        }
+    } 
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint(BCLog::BENCH, "  - Flush: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime4 - nTime3) * MILLI, nTimeFlush * MICRO, nTimeFlush * MILLI / nBlocksTotal);
     // Write the chain state to disk, if necessary.
