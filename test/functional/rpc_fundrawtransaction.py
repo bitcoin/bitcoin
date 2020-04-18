@@ -492,12 +492,20 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Drain the keypool.
         self.nodes[1].getnewaddress()
-        inputs = []
-        outputs = {self.nodes[0].getnewaddress():1.1}
+        inputs = self.nodes[1].listunspent()
+        # Deduce fee to produce a changeless transaction
+        # bnb doesn't work same way as in bitcoin, so, `value` is also calculated by different way
+        value = sum(input_it["amount"] for input_it in inputs) - Decimal("0.00002200")
+        outputs = {self.nodes[0].getnewaddress():value}
         rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
+        # fund a transaction that does not require a new key for the change output
+        self.nodes[1].fundrawtransaction(rawtx)
+
         # fund a transaction that requires a new key for the change output
         # creating the key must be impossible because the wallet is locked
-        assert_raises_rpc_error(-4, "Keypool ran out, please call keypoolrefill first", self.nodes[1].fundrawtransaction, rawtx)
+        outputs = {self.nodes[0].getnewaddress():1.1}
+        rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
+        assert_raises_rpc_error(-4, "Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.", self.nodes[1].fundrawtransaction, rawtx)
 
         # Refill the keypool.
         self.nodes[1].walletpassphrase("test", 100)
