@@ -274,7 +274,7 @@ class TestNode():
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(1.0 / poll_per_s)
-        self._raise_assertion_error("Unable to connect to dashd")
+        self._raise_assertion_error("Unable to connect to dashd after {}s".format(self.rpc_timeout))
 
     def generate(self, nblocks, maxtries=1000000):
         self.log.debug("TestNode.generate() dispatches `generate` call to `generatetoaddress`")
@@ -570,7 +570,6 @@ def arg_to_cli(arg):
 
 class TestNodeCLI():
     """Interface to dash-cli for an individual node"""
-
     def __init__(self, binary, datadir):
         self.options = []
         self.binary = binary
