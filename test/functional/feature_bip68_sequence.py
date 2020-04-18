@@ -374,7 +374,7 @@ class BIP68Test(SyscoinTestFramework):
         # make a block that violates bip68; ensure that the tip updates
         tip = int(self.nodes[0].getbestblockhash(), 16)
         block = create_block(tip, create_coinbase(self.nodes[0].getblockcount()+1))
-        block.nVersion = 3
+        block.set_base_version(3)
         block.vtx.extend([tx1, tx2, tx3])
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
