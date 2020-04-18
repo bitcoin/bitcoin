@@ -1382,7 +1382,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     node.chainman = &g_chainman;
     ChainstateManager& chainman = EnsureChainman(node);
 
-    node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, *node.mempool));
+    node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, *node.chainman, *node.mempool));
     RegisterValidationInterface(node.peer_logic.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
