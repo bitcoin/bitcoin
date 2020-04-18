@@ -2857,7 +2857,6 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 "with between minconf and maxconf (inclusive) confirmations.\n"
                 "Optionally filter to only include txouts paid to specified addresses.\n",
                 {
-                    {"asset_guid", RPCArg::Type::NUM, /* default */ "0", "Asset GUID to filter. 0(default) for Syscoin."},
                     {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},
                     {"maxconf", RPCArg::Type::NUM, /* default */ "9999999", "The maximum confirmations to filter"},
                     {"addresses", RPCArg::Type::ARR, /* default */ "empty array", "The syscoin addresses to filter",
@@ -2869,6 +2868,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
             "                  See description of \"safe\" attribute below."},
                     {"query_options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "JSON with query options",
                         {
+                            {"assetGuid", RPCArg::Type::NUM, /* default */ "0", "Asset GUID to filter. 0(default) for Syscoin."},
                             {"minimumAmount", RPCArg::Type::AMOUNT, /* default */ "0", "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"minimumAmountAsset", RPCArg::Type::AMOUNT, /* default */ "0", "Minimum asset value of each UTXO"},
                             {"maximumAmount", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
@@ -2891,7 +2891,6 @@ static UniValue listunspent(const JSONRPCRequest& request)
                             {RPCResult::Type::STR, "scriptPubKey", "the script key"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
                             {RPCResult::Type::STR_AMOUNT, "asset_amount", "the transaction output asset amount if asset output"},
-                            {RPCResult::Type::NUM, "asset_guid", "The asset unique identifier if asset output"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                             {RPCResult::Type::STR_HEX, "redeemScript", "The redeemScript if scriptPubKey is P2SH"},
                             {RPCResult::Type::STR, "witnessScript", "witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH"},
@@ -2914,28 +2913,22 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    int32_t nAsset = 0;
-    if (!request.params[0].isNull()) {
-        RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
-        nAsset = request.params[0].get_uint();
-    }
-
     int nMinDepth = 1;
-    if (!request.params[1].isNull()) {
+    if (!request.params[0].isNull()) {
         RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
         nMinDepth = request.params[1].get_int();
     }
 
     int nMaxDepth = 9999999;
-    if (!request.params[2].isNull()) {
-        RPCTypeCheckArgument(request.params[2], UniValue::VNUM);
-        nMaxDepth = request.params[2].get_int();
+    if (!request.params[1].isNull()) {
+        RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
+        nMaxDepth = request.params[1].get_int();
     }
 
     std::set<CTxDestination> destinations;
-    if (!request.params[3].isNull()) {
-        RPCTypeCheckArgument(request.params[3], UniValue::VARR);
-        UniValue inputs = request.params[3].get_array();
+    if (!request.params[2].isNull()) {
+        RPCTypeCheckArgument(request.params[2], UniValue::VARR);
+        UniValue inputs = request.params[2].get_array();
         for (unsigned int idx = 0; idx < inputs.size(); idx++) {
             const UniValue& input = inputs[idx];
             CTxDestination dest = DecodeDestination(input.get_str());
@@ -2949,9 +2942,9 @@ static UniValue listunspent(const JSONRPCRequest& request)
     }
 
     bool include_unsafe = true;
-    if (!request.params[4].isNull()) {
-        RPCTypeCheckArgument(request.params[4], UniValue::VBOOL);
-        include_unsafe = request.params[4].get_bool();
+    if (!request.params[3].isNull()) {
+        RPCTypeCheckArgument(request.params[3], UniValue::VBOOL);
+        include_unsafe = request.params[3].get_bool();
     }
 
     CAmount nMinimumAmount = 0;
@@ -2962,9 +2955,10 @@ static UniValue listunspent(const JSONRPCRequest& request)
     CAmount nMaximumAmountAsset = MAX_ASSET;
     CAmount nMinimumSumAmountAsset = MAX_ASSET;
     uint64_t nMaximumCount = 0;
+    int32_t nAsset = 0;
 
-    if (!request.params[5].isNull()) {
-        const UniValue& options = request.params[5].get_obj();
+    if (!request.params[4].isNull()) {
+        const UniValue& options = request.params[4].get_obj();
 
         if (options.exists("minimumAmount"))
             nMinimumAmount = AmountFromValue(options["minimumAmount"]);
@@ -2978,6 +2972,9 @@ static UniValue listunspent(const JSONRPCRequest& request)
         if (options.exists("maximumCount"))
             nMaximumCount = options["maximumCount"].get_int64();
         // SYSCOIN
+        if (options.exists("assetGuid"))
+            nAsset = AmountFromValue(options["assetGuid"]);
+
         if (options.exists("minimumAmountAsset"))
             nMinimumAmountAsset = AmountFromValue(options["minimumAmountAsset"]);
 

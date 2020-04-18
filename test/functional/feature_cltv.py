@@ -110,7 +110,7 @@ class BIP65Test(SyscoinTestFramework):
         block.set_base_version(3)
         block.solve()
 
-        with self.nodes[0].assert_debug_log(expected_msgs=['{}, bad-version(0x00010003)'.format(block.hash)]):
+        with self.nodes[0].assert_debug_log(expected_msgs=['{}, bad-version(0x10000003)'.format(block.hash)]):
             self.nodes[0].p2p.send_and_ping(msg_block(block))
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
             self.nodes[0].p2p.sync_with_ping()
