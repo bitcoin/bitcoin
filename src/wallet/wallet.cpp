@@ -2770,20 +2770,14 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 //  rediscover unknown transactions that were written with keys of ours to recover
                 //  post-backup change.
 
-                // Reserve a new key pair from key pool
-                if (!CanGetAddresses(true)) {
-                    strFailReason = _("Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.").translated;
-                    return false;
-                }
+                // Reserve a new key pair from key pool. If it fails, provide a dummy
+                // destination in case we don't need change.
                 CTxDestination dest;
-                bool ret = reservedest.GetReservedDestination(dest, true);
-                if (!ret)
-                {
-                    strFailReason = "Keypool ran out, please call keypoolrefill first";
-                    return false;
+                if (!reservedest.GetReservedDestination(dest, true)) {
+                    strFailReason = _("Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.").translated;
                 }
-
                 scriptChange = GetScriptForDestination(dest);
+                assert(!dest.empty() || scriptChange.empty());
             }
             CTxOut change_prototype_txout(0, scriptChange);
             coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
@@ -2998,6 +2992,11 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 nFeeRet = nFeeNeeded;
                 coin_selection_params.use_bnb = false;
                 continue;
+            }
+
+            // Give up if change keypool ran out and we failed to find a solution without change:
+            if (scriptChange.empty() && nChangePosInOut != -1) {
+                return false;
             }
         }
 
@@ -3294,7 +3293,7 @@ bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& des
 
     ReserveDestination reservedest(this, type);
     if (!reservedest.GetReservedDestination(dest, true)) {
-        error = "Error: Keypool ran out, please call keypoolrefill first";
+        error = _("Error: Keypool ran out, please call keypoolrefill first").translated;
         return false;
     }
 
