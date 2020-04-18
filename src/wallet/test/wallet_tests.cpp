@@ -516,7 +516,7 @@ public:
         CTransactionRef tx;
         CAmount fee;
         int changePos = -1;
-        std::string error;
+        bilingual_str error;
         CCoinControl dummy;
         {
             BOOST_CHECK(wallet->CreateTransaction({recipient}, tx, fee, changePos, error, dummy));
