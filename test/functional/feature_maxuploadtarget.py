@@ -35,7 +35,8 @@ class MaxUploadTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [["-maxuploadtarget=800", "-acceptnonstdtxn=1"]]
+        # SYSCOIN
+        self.extra_args = [["-maxuploadtarget=32000", "-acceptnonstdtxn=1"]]
         self.supports_cli = False
 
         # Cache for utxos, as the listunspent may take a long time later in the test
@@ -85,9 +86,9 @@ class MaxUploadTest(SyscoinTestFramework):
 
         getdata_request = msg_getdata()
         getdata_request.inv.append(CInv(2, big_old_block))
-
-        max_bytes_per_day = 800*1024*1024
-        daily_buffer = 144 * 4000000
+        # SYSCOIN
+        max_bytes_per_day = 32000*1024*1024
+        daily_buffer = 1440 * 16000000
         max_bytes_available = max_bytes_per_day - daily_buffer
         success_count = max_bytes_available // old_block_size
 
