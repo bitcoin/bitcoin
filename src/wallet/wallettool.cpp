@@ -120,7 +120,7 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
         }
         bilingual_str error;
         if (!WalletBatch::VerifyEnvironment(path, error)) {
-            tfm::format(std::cerr, "Error loading %s. Is wallet being used by other process?\n", name);
+            tfm::format(std::cerr, "%s\nError loading %s. Is wallet being used by other process?\n", error.original, name);
             return false;
         }
         std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
