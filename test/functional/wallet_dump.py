@@ -108,8 +108,7 @@ class WalletDumpTest(SyscoinTestFramework):
     def run_test(self):
         wallet_unenc_dump = os.path.join(self.nodes[0].datadir, "wallet.unencrypted.dump")
         wallet_enc_dump = os.path.join(self.nodes[0].datadir, "wallet.encrypted.dump")
-        # Activate segwit at height 432.
-        self.nodes[0].generate(500)
+
         # generate 30 addresses to compare against the dump
         # - 10 legacy P2PKH
         # - 10 P2SH-segwit
