@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
-# Copyright (c) 2010-2020 The Bitcoin Core developers
+# Copyright (c) 2010-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Syscoin test framework primitive and message structures
@@ -54,10 +54,12 @@ MSG_BLOCK = 2
 MSG_FILTERED_BLOCK = 3
 MSG_WITNESS_FLAG = 1 << 30
 MSG_TYPE_MASK = 0xffffffff >> 2
+
 # Constants for the auxpow block version.
 VERSION_AUXPOW = (1 << 8)
 VERSION_CHAIN_START = (1 << 16)
 CHAIN_ID = 1
+
 
 # Serialization/deserialization tools
 def sha256(s):
@@ -527,6 +529,7 @@ class CTransaction:
         return "CTransaction(nVersion=%i vin=%s vout=%s wit=%s nLockTime=%i)" \
             % (self.nVersion, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime)
 
+
 class CAuxPow(CTransaction):
     __slots__ = ("hashBlock", "vMerkleBranch", "nIndex",
                  "vChainMerkleBranch", "nChainIndex", "parentBlock")
@@ -584,11 +587,13 @@ class CBlockHeader:
         # Set auxpow chain ID.  Blocks without a chain ID are not accepted
         # by the regtest network consensus rules (since they are "legacy").
         self.set_base_version(1)
+
         self.hashPrevBlock = 0
         self.hashMerkleRoot = 0
         self.nTime = 0
         self.nBits = 0
         self.nNonce = 0
+        self.auxpow = None
         self.sha256 = None
         self.hash = None
 
@@ -704,9 +709,11 @@ class CBlock(CBlockHeader):
     def is_valid(self):
         self.calc_sha256()
         target = uint256_from_compact(self.nBits)
+
         # FIXME: Validation is not actually used anywhere.  If it is in
         # the future, need to implement basic auxpow checking.
         assert not self.is_auxpow()
+
         if self.sha256 > target:
             return False
         for tx in self.vtx:
