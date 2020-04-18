@@ -134,7 +134,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
 
-    g_chainman.InitializeChainstate();
+    m_node.chainman = &::g_chainman;
+    m_node.chainman->InitializeChainstate();
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
@@ -181,7 +182,8 @@ TestingSetup::~TestingSetup()
     m_node.mempool = nullptr;
     m_node.scheduler.reset();
     UnloadBlockIndex();
-    g_chainman.Reset();
+    m_node.chainman->Reset();
+    m_node.chainman = nullptr;
     pblocktree.reset();
 }
 
