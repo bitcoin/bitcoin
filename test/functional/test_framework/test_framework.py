@@ -74,6 +74,7 @@ class BitcoinTestFramework():
         self.nodes = []
         self.mocktime = 0
         self.supports_cli = False
+        self.extra_args_from_options = []
         self.set_test_params()
 
         assert hasattr(self, "num_nodes"), "Test must set self.num_nodes in set_test_params()"
@@ -105,6 +106,8 @@ class BitcoinTestFramework():
                           help="Attach a python debugger if test fails")
         parser.add_option("--usecli", dest="usecli", default=False, action="store_true",
                           help="use bitcoin-cli instead of RPC for all commands")
+        parser.add_option("--dashd-arg", dest="dashd_extra_args", default=[], type='string', action='append',
+                          help="Pass extra args to all dashd instances")
         self.add_options(parser)
         (self.options, self.args) = parser.parse_args()
 
@@ -115,6 +118,8 @@ class BitcoinTestFramework():
         check_json_precision()
 
         self.options.cachedir = os.path.abspath(self.options.cachedir)
+
+        self.extra_args_from_options = self.options.dashd_extra_args
 
         # Set up temp directory and start logging
         if self.options.tmpdir:
@@ -254,7 +259,7 @@ class BitcoinTestFramework():
         assert_equal(len(binary), num_nodes)
         old_num_nodes = len(self.nodes)
         for i in range(num_nodes):
-            self.nodes.append(TestNode(old_num_nodes + i, self.options.tmpdir, extra_args[i], rpchost, timewait=timewait, binary=binary[i], stderr=stderr, mocktime=self.mocktime, coverage_dir=self.options.coveragedir, use_cli=self.options.usecli))
+            self.nodes.append(TestNode(old_num_nodes + i, self.options.tmpdir, extra_args[i], self.extra_args_from_options, rpchost, timewait=timewait, binary=binary[i], stderr=stderr, mocktime=self.mocktime, coverage_dir=self.options.coveragedir, use_cli=self.options.usecli))
 
     def start_node(self, i, *args, **kwargs):
         """Start a dashd"""
@@ -446,7 +451,7 @@ class BitcoinTestFramework():
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
                 if extra_args is not None:
                     args.extend(extra_args)
-                self.nodes.append(TestNode(i, self.options.cachedir, extra_args=[], rpchost=None, timewait=None, binary=None, stderr=stderr, mocktime=self.mocktime, coverage_dir=None))
+                self.nodes.append(TestNode(i, self.options.cachedir, extra_args=[], extra_args_from_options=self.extra_args_from_options, rpchost=None, timewait=None, binary=None, stderr=stderr, mocktime=self.mocktime, coverage_dir=None))
                 self.nodes[i].args = args
                 self.start_node(i)
 

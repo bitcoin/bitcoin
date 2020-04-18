@@ -44,7 +44,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, dirname, extra_args, rpchost, timewait, binary, stderr, mocktime, coverage_dir, use_cli=False):
+    def __init__(self, i, dirname, extra_args, extra_args_from_options, rpchost, timewait, binary, stderr, mocktime, coverage_dir, use_cli=False):
         self.index = i
         self.datadir = os.path.join(dirname, "node" + str(i))
         self.rpchost = rpchost
@@ -62,6 +62,7 @@ class TestNode():
         self.mocktime = mocktime
         # Most callers will just need to add extra args to the standard list below. For those callers that need more flexibity, they can just set the args property directly.
         self.extra_args = extra_args
+        self.extra_args_from_options = extra_args_from_options
         self.args = [self.binary, "-datadir=" + self.datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
 
         self.cli = TestNodeCLI(os.getenv("BITCOINCLI", "dash-cli"), self.datadir)
@@ -104,7 +105,7 @@ class TestNode():
             extra_args = self.extra_args
         if stderr is None:
             stderr = self.stderr
-        all_args = self.args + extra_args
+        all_args = self.args + self.extra_args_from_options + extra_args
         if self.mocktime != 0:
             all_args = all_args + ["-mocktime=%d" % self.mocktime]
         # Delete any existing cookie file -- if such a file exists (eg due to

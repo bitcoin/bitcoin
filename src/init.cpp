@@ -409,6 +409,15 @@ void OnRPCStopped()
     LogPrint(BCLog::RPC, "RPC stopped.\n");
 }
 
+std::string GetSupportedSocketEventsStr()
+{
+    std::string strSupportedModes = "'select'";
+#ifdef USE_POLL
+    strSupportedModes += ", 'poll'";
+#endif
+    return strSupportedModes;
+}
+
 std::string HelpMessage(HelpMessageMode mode)
 {
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
@@ -495,6 +504,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-proxy=<ip:port>", _("Connect through SOCKS5 proxy"));
     strUsage += HelpMessageOpt("-proxyrandomize", strprintf(_("Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)"), DEFAULT_PROXYRANDOMIZE));
     strUsage += HelpMessageOpt("-seednode=<ip>", _("Connect to a node to retrieve peer addresses, and disconnect"));
+    strUsage += HelpMessageOpt("-socketevents=<mode>", strprintf(_("Socket events mode, which must be one of: %s (default: %s)"), GetSupportedSocketEventsStr(), DEFAULT_SOCKETEVENTS));
     strUsage += HelpMessageOpt("-timeout=<n>", strprintf(_("Specify connection timeout in milliseconds (minimum: 1, default: %d)"), DEFAULT_CONNECT_TIMEOUT));
     strUsage += HelpMessageOpt("-torcontrol=<ip>:<port>", strprintf(_("Tor control port to use if onion listening enabled (default: %s)"), DEFAULT_TOR_CONTROL));
     strUsage += HelpMessageOpt("-torpassword=<pass>", _("Tor control port password (default: empty)"));
@@ -2223,6 +2233,18 @@ bool AppInitMain()
             connOptions.m_specified_outgoing = connect;
         }
     }
+
+    std::string strSocketEventsMode = gArgs.GetArg("-socketevents", DEFAULT_SOCKETEVENTS);
+    if (strSocketEventsMode == "select") {
+        connOptions.socketEventsMode = CConnman::SOCKETEVENTS_SELECT;
+#ifdef USE_POLL
+    } else if (strSocketEventsMode == "poll") {
+        connOptions.socketEventsMode = CConnman::SOCKETEVENTS_POLL;
+#endif
+    } else {
+        return InitError(strprintf(_("Invalid -socketevents ('%s') specified. Only these modes are supported: %s"), strSocketEventsMode, GetSupportedSocketEventsStr()));
+    }
+
     if (!connman.Start(scheduler, connOptions)) {
         return false;
     }

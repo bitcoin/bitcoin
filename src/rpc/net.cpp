@@ -442,6 +442,7 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
             "  \"timeoffset\": xxxxx,                   (numeric) the time offset\n"
             "  \"connections\": xxxxx,                  (numeric) the number of connections\n"
             "  \"networkactive\": true|false,           (bool) whether p2p networking is enabled\n"
+            "  \"socketevents\": \"xxx/\",              (string) the socket events mode, either epoll, poll or select\n"
             "  \"networks\": [                          (array) information per network\n"
             "  {\n"
             "    \"name\": \"xxx\",                     (string) network (ipv4, ipv6 or onion)\n"
@@ -485,6 +486,18 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
     if (g_connman) {
         obj.push_back(Pair("networkactive", g_connman->GetNetworkActive()));
         obj.push_back(Pair("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)));
+        std::string strSocketEvents;
+        switch (g_connman->GetSocketEventsMode()) {
+            case CConnman::SOCKETEVENTS_SELECT:
+                strSocketEvents = "select";
+                break;
+            case CConnman::SOCKETEVENTS_POLL:
+                strSocketEvents = "poll";
+                break;
+            default:
+                assert(false);
+        }
+        obj.push_back(Pair("socketevents", strSocketEvents));
     }
     obj.push_back(Pair("networks",      GetNetworksInfo()));
     obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
