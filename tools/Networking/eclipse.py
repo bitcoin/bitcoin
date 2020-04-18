@@ -531,4 +531,6 @@ if __name__ == '__main__':
 	print(f'\nSUCCESSFUL CONNECTIONS: {len(identity_address)}\n')
 
 	# Wait for all threads (sniffers) to end before ending the main thread
-	map(lambda thread: thread.join(), threads)
+	#map(lambda thread: thread.join(), threads)
+	while(True):
+		time.sleep(60)
