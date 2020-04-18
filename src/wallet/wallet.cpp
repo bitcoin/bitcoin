@@ -2258,7 +2258,6 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins(interfaces::Ch
             }
         }
     }
-    LogPrintf("ListCoins result %d\n", result.size());
     return result;
 }
 
