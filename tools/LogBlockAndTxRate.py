@@ -24,92 +24,30 @@ def fetchHeader():
 	line += 'MempoolSize,'
 	line += 'MempoolBytes,'
 
-	line += 'Connections,'
-
-	line += 'ClocksPerSec,'
 	line += '# TX,'
 	line += '# TX Diff,'
-	line += 'TX ClocksSum Diff,'
-	line += 'TX ClocksAvg Diff,'
-	line += 'TX ClocksAvg,'
-	line += 'TX ClocksMax,'
-	line += 'TX BytesSum Diff,'
-	line += 'TX BytesAvg Diff,'
-	line += 'TX BytesAvg,'
-	line += 'TX BytesMax,'
 	line += '# BLOCK,'
 	line += '# BLOCK Diff,'
-	line += 'BLOCK ClocksSum Diff,'
-	line += 'BLOCK ClocksAvg Diff,'
-	line += 'BLOCK ClocksAvg,'
-	line += 'BLOCK ClocksMax,'
-	line += 'BLOCK BytesSum Diff,'
-	line += 'BLOCK BytesAvg Diff,'
-	line += 'BLOCK BytesAvg,'
-	line += 'BLOCK BytesMax,'
 	line += '# CMPCTBLOCK,'
 	line += '# CMPCTBLOCK Diff,'
-	line += 'CMPCTBLOCK ClocksSum Diff,'
-	line += 'CMPCTBLOCK ClocksAvg Diff,'
-	line += 'CMPCTBLOCK ClocksAvg,'
-	line += 'CMPCTBLOCK ClocksMax,'
-	line += 'CMPCTBLOCK BytesSum Diff,'
-	line += 'CMPCTBLOCK BytesAvg Diff,'
-	line += 'CMPCTBLOCK BytesAvg,'
-	line += 'CMPCTBLOCK BytesMax,'
+
+	line += 'Connections,'
 	return line
 
 prevNumMsgs = {}
-prevClocksSum = {}
-prevBytesSum = {}
 
 def parseMessage(message, string):
 	line = ''
 	numMsgs = re.findall(r'([0-9\.]+) msgs', string)[0]
-	matches = re.findall(r'\[[0-9\., ]+\]', string)
-	if len(matches) != 2:
-		return None
-	match1 = json.loads(matches[0])
-	match2 = json.loads(matches[1])
 
 	numMsgsDiff = int(numMsgs)
 	if message in prevNumMsgs:
 		numMsgsDiff = int(numMsgs) - int(prevNumMsgs[message])
 
-	clocksSumDiff = int(match1[0])
-	clocksAvgDiff = clocksSumDiff
-	if message in prevClocksSum:
-		clocksSumDiff = int(match1[0]) - int(prevClocksSum[message])
-		clocksAvgDiff = 0
-		if numMsgsDiff != 0:
-			clocksAvgDiff = clocksSumDiff / numMsgsDiff
-
-	bytesSumDiff = int(match2[0])
-	bytesAvgDiff = bytesSumDiff
-	if message in prevBytesSum:
-		bytesSumDiff = int(match2[0]) - int(prevBytesSum[message])
-		bytesAvgDiff = 0
-		if numMsgsDiff != 0:
-			bytesAvgDiff = bytesSumDiff / numMsgsDiff
-
 	line += str(numMsgs) + ','		# Num
 	line += str(numMsgsDiff) + ','	# Num Diff
 
-	line += str(clocksSumDiff) + ','
-	line += str(clocksAvgDiff) + ','
-
-	line += str(match1[1]) + ','	# ClocksAvg
-	line += str(match1[2]) + ','	# ClocksMax
-
-	line += str(bytesSumDiff) + ','
-	line += str(bytesAvgDiff) + ','
-
-	line += str(match2[1]) + ','	# BytesAvg
-	line += str(match2[2])			# BytesMax
-
 	prevNumMsgs[message] = numMsgs
-	prevClocksSum[message] = match1[0]
-	prevBytesSum[message] = match2[0]
 	return line
 
 
@@ -155,17 +93,11 @@ def fetch():
 	line += str(mempoolinfo['size']) + ','
 	line += str(mempoolinfo['bytes']) + ','
 
-	#if 'size' in mempoolinfo: line += str(mempoolinfo['size']) + ','
-	#else: line += ','
-	#if 'bytes' in mempoolinfo: line += str(mempoolinfo['bytes']) + ','
-	#else: line += ','
-
-	line += addresses + ','
-
-	line += str(messages['CLOCKS PER SECOND']) + ','
 	line += parseMessage('TX', messages['TX']) + ','
 	line += parseMessage('BLOCK', messages['BLOCK']) + ','
 	line += parseMessage('CMPCTBLOCK', messages['CMPCTBLOCK']) + ','
+
+	line += addresses + ','
 	return line
 
 def log(file, targetDateTime, count = 1):
