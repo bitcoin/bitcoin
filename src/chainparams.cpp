@@ -413,13 +413,13 @@ public:
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
 
-        m_is_test_chain = true;
-        fDefaultConsistencyChecks = false;
+        fDefaultConsistencyChecks = true;
         fRequireStandard = true;
-        // privKey: cPPpaK9LCXjGGXVJUqcrtEMVQw5tALMuN3WsVuPCWFf9tswYYDvY
-        strSporkAddress = "TCSJVL68KFq9FdbfxB2KhTcWp6rHD7vePs";
-        nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
+        m_is_test_chain = true;
         m_is_mockable_chain = true;
+        // privKey: cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW
+        strSporkAddress = "mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z";
+        nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
        /* 
         
 
@@ -435,13 +435,13 @@ public:
             0
         };
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,65);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "sysrt";
+        bech32_hrp = "bcrt";
     }
 
     /**
