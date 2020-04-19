@@ -15,6 +15,7 @@
 #include <uint256.h>
 #include <version.h>
 
+#include <atomic>
 #include <stdint.h>
 #include <string>
 
@@ -331,9 +332,10 @@ enum ServiceFlags : uint64_t {
  * If the NODE_NONE return value is changed, contrib/seeds/makeseeds.py
  * should be updated appropriately to filter for the same nodes.
  */
-static ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
-    return ServiceFlags(NODE_NETWORK);
-}
+ServiceFlags GetDesirableServiceFlags(ServiceFlags services);
+
+/** Set the current IBD status in order to figure out the desirable service flags */
+void SetServiceFlagsIBDCache(bool status);
 
 /**
  * A shortcut for (services & GetDesirableServiceFlags(services))
@@ -346,10 +348,10 @@ static inline bool HasAllDesirableServiceFlags(ServiceFlags services) {
 
 /**
  * Checks if a peer with the given service flags may be capable of having a
- * robust address-storage DB. Currently an alias for checking NODE_NETWORK.
+ * robust address-storage DB.
  */
 static inline bool MayHaveUsefulAddressDB(ServiceFlags services) {
-    return services & NODE_NETWORK;
+    return (services & NODE_NETWORK) || (services & NODE_NETWORK_LIMITED);
 }
 
 /** A CService with information about it as peer */
