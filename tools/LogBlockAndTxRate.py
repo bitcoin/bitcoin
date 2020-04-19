@@ -82,6 +82,7 @@ def fetch():
 		avgPingTime = totalPingTime / numPingTimes
 	else:
 		avgPingTime = 'N/A'
+
 	line = str(now) + ','
 	line += str((now - datetime.datetime(1970, 1, 1)).total_seconds()) + ','
 	line += str(numPeers) + ','
