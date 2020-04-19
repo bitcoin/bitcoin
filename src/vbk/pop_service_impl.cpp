@@ -251,7 +251,6 @@ bool PopServiceImpl::addAllBlockPayloads(const CBlockIndex& indexNew, const CBlo
     std::vector<altintegration::AltPayloads> payloads;
     if (!parseBlockPopPayloads(connecting, indexNew, Params().GetConsensus(), state, &payloads)) {
         return error("[%s] block %s failed stateless validation: %s, %s", __func__, connecting.GetHash().ToString(), instate.GetPath(), instate.GetDebugMessage());
-        ;
     }
 
     if (!payloads.empty() && !altTree->addPayloads(containing, payloads, instate)) {

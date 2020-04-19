@@ -427,14 +427,14 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             assert(ancestors.size() == 1);
             TxValidationState txstate;
 
-            // TODO add payloads validation if it necessary
-            if (nPopTx < config.max_pop_tx_amount /*&&
-                !VeriBlock::getService<VeriBlock::PopService>().addTemporaryPayloads(iter->GetSharedTx(), *::ChainActive().Tip(), chainparams.GetConsensus(), txstate)*/) {
-
-                failedTx.insert(iter);
-                failedPopTx.insert(iter);
-                continue;
-            }
+//            // TODO add payloads validation if it necessary
+//            if (nPopTx < config.max_pop_tx_amount /*&&
+//                !VeriBlock::getService<VeriBlock::PopService>().addTemporaryPayloads(iter->GetSharedTx(), *::ChainActive().Tip(), chainparams.GetConsensus(), txstate)*/) {
+//
+//                failedTx.insert(iter);
+//                failedPopTx.insert(iter);
+//                continue;
+//            }
         }
 
         // This transaction will make it in; reset the failed counter.
