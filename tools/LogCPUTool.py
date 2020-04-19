@@ -1,3 +1,5 @@
+# INCOMPLETE SCRIPT
+
 import os
 import sys
 import re
@@ -64,8 +66,8 @@ class CPUToolThreadManager(threading.Thread):
 	def isRunning():
 		return self._stop_event.is_set()
 
-	
-	
+
+
 
 
 
@@ -73,7 +75,7 @@ class CPUToolThreadManager(threading.Thread):
 if __name__ == '__main__':
 	global fileName, bitcoindPID, CPUPercent
 	fileName = 'CPUToolLog.csv'
-	
+
 	bitcoindPID = getPID()
 	if bitcoindPID == -1:
 		print('Bitcoin is not running. Please run this script when bitcoin is running.')
