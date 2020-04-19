@@ -33,7 +33,8 @@ def fetchHeader():
 	line += 'BlocksPerSec,'
 	line += 'BlocksPerSecAvg,'
 	line += 'NumCmpctBlockMsgs,'
-	line += 'CMPCTBLOCKs Per Sec Avg,'
+	line += 'CmpctBlocksPerSec,'
+	line += 'CmpctBlocksPerSecAvg,'
 	line += ','
 	line += 'Connections,'
 	return line
