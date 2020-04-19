@@ -158,8 +158,6 @@ public:
 bool IsDeprecatedRPCEnabled(const std::string& method);
 
 extern CRPCTable tableRPC;
-// SYSCOIN    
-extern UniValue gettxoutproof(const JSONRPCRequest& request);
 void StartRPC();
 void InterruptRPC();
 void StopRPC();

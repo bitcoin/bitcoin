@@ -433,7 +433,7 @@ void SetupServerArgs(NodeContext& node)
 
     // Hidden Options
     std::vector<std::string> hidden_args = {
-        "-masternode","-unittest","-tpstest", "-dbcrashratio", "-forcecompactdb",
+        "-masternode","-unittest", "-dbcrashratio", "-forcecompactdb",
         // GUI args. These will be overwritten by SetupUIArgs for the GUI
         "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-splash", "-uiplatform"};
 
@@ -489,7 +489,6 @@ void SetupServerArgs(NodeContext& node)
     gArgs.AddArg("-assetindex=<n>", strprintf("Wallet is Asset aware, won't spend assets when sending only Syscoin (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);		
     
     gArgs.AddArg("-sysxasset=<n>", strprintf("SYSX Asset Guid specified when running unit tests (default: %u)", defaultChainParams->GetConsensus().nSYSXAsset), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-tpstest", strprintf("TPSTest for unittest. Leave false"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-unittest", strprintf("Set by unit test suite. Leave false"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
  
@@ -1963,7 +1962,6 @@ bool AppInitMain(NodeContext& node)
     // if unit test then make sure geth is shown as synced as well
     fGethSynced = fUnitTest;
     
-    fTPSTest = gArgs.GetBoolArg("-tpstest", false);
     fZMQWalletStatus = gArgs.IsArgSet("-zmqpubwalletstatus");
     fZMQEthStatus = gArgs.IsArgSet("-zmqpubethstatus");
     fZMQNetworkStatus = gArgs.IsArgSet("-zmqpubnetworkstatus");

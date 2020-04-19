@@ -812,8 +812,7 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
     SignTransaction(mtx, &keystore, coins, request.params[3], result);
     return result;
 }
-// SYSCOIN
-UniValue sendrawtransaction(const JSONRPCRequest& request)
+static UniValue sendrawtransaction(const JSONRPCRequest& request)
 {
     RPCHelpMan{"sendrawtransaction",
                 "\nSubmit a raw transaction (serialized, hex-encoded) to local node and network.\n"

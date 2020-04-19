@@ -21,8 +21,6 @@ extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
-// SYSCOIN service rpc functions
-extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 extern RecursiveMutex cs_setethstatus;
 using namespace std;
 UniValue convertaddress(const JSONRPCRequest& request)	
@@ -80,101 +78,6 @@ UniValue convertaddress(const JSONRPCRequest& request)
     ret.pushKV("v4address", currentV4Address); 	
     return ret;	
 }
-int64_t nTPSTestingStartTime = 0;
-UniValue tpstestinfo(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-	if (request.fHelp || 0 != params.size())
-		throw runtime_error("tpstestinfo\n"
-			"Gets TPS Test information for receivers of assetallocation transfers\n");
-	if(!fTPSTest)
-		throw JSONRPCError(RPC_MISC_ERROR, "This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'.");
-	
-	UniValue oTPSTestResults(UniValue::VOBJ);
-	UniValue oTPSTestReceivers(UniValue::VARR);
-	UniValue oTPSTestReceiversMempool(UniValue::VARR);
-	oTPSTestResults.__pushKV("enabled", fTPSTestEnabled);
-    oTPSTestResults.__pushKV("testinitiatetime", (int64_t)nTPSTestingStartTime);
-   
-	/*for (auto &receivedTime : mempool) {
-		UniValue oTPSTestStatusObj(UniValue::VOBJ);
-		oTPSTestStatusObj.__pushKV("txid", receivedTime.first.GetHex());
-		oTPSTestStatusObj.__pushKV("time", receivedTime.second);
-		oTPSTestReceiversMempool.push_back(oTPSTestStatusObj);
-	}*/
-	oTPSTestResults.__pushKV("receivers", oTPSTestReceiversMempool);
-	return oTPSTestResults;
-}
-UniValue tpstestsetenabled(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-	if (request.fHelp || 1 != params.size())
-		throw runtime_error("tpstestsetenabled [enabled]\n"
-			"\nSet TPS Test to enabled/disabled state. Must have -tpstest configuration set to make this call.\n"
-			"\nArguments:\n"
-			"1. enabled                  (boolean, required) TPS Test enabled state. Set to true for enabled and false for disabled.\n"
-			"\nExample:\n"
-			+ HelpExampleCli("tpstestsetenabled", "true"));
-	if(!fTPSTest)
-		throw JSONRPCError(RPC_MISC_ERROR, "This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again.");
-	fTPSTestEnabled = params[0].get_bool();
-	if (!fTPSTestEnabled) {
-		nTPSTestingStartTime = 0;
-	}
-	UniValue result(UniValue::VOBJ);
-	result.__pushKV("status", "success");
-	return result;
-}
-void RunTest(){
-    std::chrono::microseconds duration(nTPSTestingStartTime);
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::microseconds> dt(duration);
-    std::this_thread::sleep_until(dt);
-    for (auto &txReq : vecTPSRawTransactions) {
-        sendrawtransaction(txReq);
-    }
-    nTPSTestingStartTime = GetTimeMicros();
-}
-UniValue tpstestadd(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-	if (request.fHelp || 1 > params.size() || params.size() > 2)
-		throw runtime_error("tpstestadd [starttime] [{\"tx\":\"hex\"},...]\n"
-			"\nAdds raw transactions to the test raw tx queue to be sent to the network at starttime.\n"
-			"\nArguments:\n"
-			"1. starttime                  (numeric, required) Unix epoch time in micro seconds for when to send the raw transaction queue to the network. If set to 0, will not send transactions until you call this function again with a defined starttime.\n"
-			"2. \"raw transactions\"                (array, not-required) A json array of signed raw transaction strings\n"
-			"     [\n"
-			"       {\n"
-			"         \"tx\":\"hex\",    (string, required) The transaction hex\n"
-			"       } \n"
-			"       ,...\n"
-			"     ]\n"
-			"\nExample:\n"
-			+ HelpExampleCli("tpstestadd", "\"223233433839384\" \"[{\\\"tx\\\":\\\"first raw hex tx\\\"},{\\\"tx\\\":\\\"second raw hex tx\\\"}]\""));
-	if (!fTPSTest)
-		throw JSONRPCError(RPC_MISC_ERROR, "This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'.");
-
-	nTPSTestingStartTime = params[0].get_int64();
-	UniValue txs;
-	if(params.size() > 1)
-		txs = params[1].get_array();
-	if (fTPSTestEnabled) {
-		for (unsigned int idx = 0; idx < txs.size(); idx++) {
-			const UniValue& tx = txs[idx];
-			UniValue paramsRawTx(UniValue::VARR);
-			paramsRawTx.push_back(find_value(tx.get_obj(), "tx").get_str());
-
-			JSONRPCRequest request;
-			request.params = paramsRawTx;
-			vecTPSRawTransactions.push_back(request);
-		}
-		if (nTPSTestingStartTime > 0) {
-            std::thread t(RunTest);
-            t.detach();
-		}
-	}
-	UniValue result(UniValue::VOBJ);
-	result.__pushKV("status", "success");
-	return result;
-}
-
 
 int CheckActorsInTransactionGraph(const uint256& lookForTxHash){
     LOCK(cs_main);
@@ -876,9 +779,6 @@ static const CRPCCommand commands[] =
     { "syscoin",            "assetinfo",                        &assetinfo,                     {"asset_guid"}},
     { "syscoin",            "listassets",                       &listassets,                    {"count","from","options"} },
     { "syscoin",            "assetallocationverifyzdag",        &assetallocationverifyzdag,     {"txid"} },
-    { "syscoin",            "tpstestinfo",                      &tpstestinfo,                   {} },
-    { "syscoin",            "tpstestadd",                       &tpstestadd,                    {"starttime","rawtxs"} },
-    { "syscoin",            "tpstestsetenabled",                &tpstestsetenabled,             {"enabled"} },
     { "syscoin",            "syscoinsetethstatus",              &syscoinsetethstatus,           {"syncing_status","highestBlock"} },
     { "syscoin",            "syscoinsetethheaders",             &syscoinsetethheaders,          {"headers"} },
     { "syscoin",            "syscoinclearethheaders",           &syscoinclearethheaders,        {} },

@@ -56,7 +56,6 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
     whichType = Solver(scriptPubKey, vSolutions);
 
     if (whichType == TX_NONSTANDARD) {
-        LogPrintf("IsStandard: non standard\n");
         return false;
     } else if (whichType == TX_MULTISIG) {
         unsigned char m = vSolutions.front()[0];
@@ -68,7 +67,6 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
             return false;
     } else if (whichType == TX_NULL_DATA &&
                (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes * 100 )) {
-                   LogPrintf("IsStandard: too big\n");
           return false;
     }
 
