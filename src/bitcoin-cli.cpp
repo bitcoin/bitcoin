@@ -551,11 +551,19 @@ static int CommandLineRPC(int argc, char *argv[])
     return nRet;
 }
 
-int main(int argc, char* argv[])
-{
 #ifdef WIN32
+// Export main() and ensure working ASLR on Windows.
+// Exporting a symbol will prevent the linker from stripping
+// the .reloc section from the binary, which is a requirement
+// for ASLR. This is a temporary workaround until a fixed
+// version of binutils is used for releases.
+__declspec(dllexport) int main(int argc, char* argv[])
+{
     util::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
+#else
+int main(int argc, char* argv[])
+{
 #endif
     SetupEnvironment();
     if (!SetupNetworking()) {
