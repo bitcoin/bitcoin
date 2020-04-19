@@ -413,10 +413,11 @@ def fetch():
 	line += str(avgPingTime) + ','
 	line += str(totalBanScore) + ','
 
+	print(f'{blockcount} {mempoolinfo['size']} {mempoolinfo['bytes']}')
 	line += str(blockcount) + ','
 	line += str(mempoolinfo['size']) + ','
 	line += str(mempoolinfo['bytes']) + ','
-	
+
 	#if 'size' in mempoolinfo: line += str(mempoolinfo['size']) + ','
 	#else: line += ','
 	#if 'bytes' in mempoolinfo: line += str(mempoolinfo['bytes']) + ','
