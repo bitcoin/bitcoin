@@ -7,19 +7,6 @@ from threading import Timer
 numSecondsPerSample = 0.1
 
 
-# Compute the blocks per second and tx per second
-lastBlockcount = 0
-lastMempoolSize = 0
-numAcceptedBlocksPerSec = 0
-numAcceptedBlocksPerSecTime = 0
-numAcceptedTxPerSec = 0
-numAcceptedTxPerSecTime = 0
-acceptedBlocksPerSecSum = 0
-acceptedBlocksPerSecCount = 0
-acceptedTxPerSecSum = 0
-acceptedTxPerSecCount = 0
-
-
 def bitcoin(cmd):
 	return os.popen('./../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd).read()
 
@@ -93,6 +80,18 @@ def parseMessage(message, string, time):
 	prevNumMsgs[message] = numMsgs
 	return line
 
+
+# Compute the blocks per second and tx per second
+lastBlockcount = 0
+lastMempoolSize = 0
+numAcceptedBlocksPerSec = 0
+numAcceptedBlocksPerSecTime = 0
+numAcceptedTxPerSec = 0
+numAcceptedTxPerSecTime = 0
+acceptedBlocksPerSecSum = 0
+acceptedBlocksPerSecCount = 0
+acceptedTxPerSecSum = 0
+acceptedTxPerSecCount = 0
 
 def fetch():
 	now = datetime.datetime.now()
@@ -181,8 +180,8 @@ def log(file, targetDateTime, count = 1):
 		#	file.close()
 		#	return
 		count += 1
-	except:
-		print('\nLOGGER PAUSED. Start the Bitcoin node when you are ready.')
+	except Exception as e:
+		print(f'\nLOGGER PAUSED. Start the Bitcoin node when you are ready. ({e})')
 		pass
 	targetDateTime = targetDateTime + datetime.timedelta(seconds = numSecondsPerSample)
 	delay = getDelay(targetDateTime)
