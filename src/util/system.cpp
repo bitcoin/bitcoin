@@ -66,6 +66,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <thread>
 // SYSCOIN only features
+#include <chainparams.h>
 #include <boost/algorithm/string.hpp>
 #include <signal.h>
 #include <rpc/server.h>
@@ -1032,6 +1033,8 @@ bool StopGethNode(pid_t &pid)
     return true;
 }
 bool CheckSpecs(std::string &errMsg, bool bMiner){
+    if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
+        return true;
     meminfo_t memInfo = parse_meminfo();
     LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
     if(memInfo.MemTotalMiB < (bMiner? 8000: 3800))
