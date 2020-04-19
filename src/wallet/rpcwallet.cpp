@@ -2624,7 +2624,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
             RPCHelpMan{"loadwallet",
                 "\nLoads a wallet from a wallet file or directory."
                 "\nNote that all wallet command-line options used when starting syscoind will be"
-                "\napplied to the new wallet (eg -zapwallettxes, upgradewallet, rescan, etc).\n",
+                "\napplied to the new wallet (eg -zapwallettxes, rescan, etc).\n",
                 {
                     {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
                 },
@@ -4078,7 +4078,7 @@ UniValue sethdseed(const JSONRPCRequest& request)
 
     // Do not do anything to non-HD wallets
     if (!pwallet->CanSupportFeature(FEATURE_HD)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set a HD seed on a non-HD wallet. Start with -upgradewallet in order to upgrade a non-HD wallet to HD");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set a HD seed on a non-HD wallet. Use the upgradewallet RPC in order to upgrade a non-HD wallet to HD");
     }
 
     EnsureWalletIsUnlocked(pwallet);
@@ -4304,6 +4304,44 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
 namespace
 {
 
+static UniValue upgradewallet(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    RPCHelpMan{"upgradewallet",
+        "\nUpgrade the wallet. Upgrades to the latest version if no version number is specified\n"
+        "New keys may be generated and a new wallet backup will need to be made.",
+        {
+            {"version", RPCArg::Type::NUM, /* default */ strprintf("%d", FEATURE_LATEST), "The version number to upgrade to. Default is the latest wallet version"}
+        },
+        RPCResults{},
+        RPCExamples{
+            HelpExampleCli("upgradewallet", "169900")
+            + HelpExampleRpc("upgradewallet", "169900")
+        }
+    }.Check(request);
+
+    RPCTypeCheck(request.params, {UniValue::VNUM}, true);
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    int version = 0;
+    if (!request.params[0].isNull()) {
+        version = request.params[0].get_int();
+    }
+
+    std::string error;
+    std::vector<std::string> warnings;
+    if (!pwallet->UpgradeWallet(version, error, warnings)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, error);
+    }
+    return error;
+}
 /**
  * Helper class that keeps track of reserved keys that are used for mining
  * coinbases.  We also keep track of the block hash(es) that have been
@@ -4417,14 +4455,6 @@ ReservedKeysForMining g_mining_keys;
 } // anonymous namespace
 
 UniValue getauxblock(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
     /* RPCHelpMan::Check is not applicable here since we have the
        custom check for exactly zero or two arguments.  */
     if (request.fHelp
@@ -4555,6 +4585,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "signmessage",                      &signmessage,                   {"address","message"} },
     { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },
     { "wallet",             "unloadwallet",                     &unloadwallet,                  {"wallet_name"} },
+    { "wallet",             "upgradewallet",                    &upgradewallet,                 {"version"} },
     { "wallet",             "walletcreatefundedpsbt",           &walletcreatefundedpsbt,        {"inputs","outputs","locktime","options","bip32derivs"} },
     { "wallet",             "walletlock",                       &walletlock,                    {} },
     { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout"} },
