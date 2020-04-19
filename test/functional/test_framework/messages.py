@@ -59,7 +59,7 @@ MSG_TYPE_MASK = 0xffffffff >> 2
 # Constants for the auxpow block version.
 VERSION_AUXPOW = (1 << 8)
 VERSION_CHAIN_START = (1 << 16)
-CHAIN_ID = 4096
+CHAIN_ID = 0x1000
 
 
 # Serialization/deserialization tools
@@ -522,7 +522,7 @@ class CTransaction:
     def is_valid(self):
         self.calc_sha256()
         for tout in self.vout:
-            if tout.nValue < 0 or tout.nValue > 21000000 * COIN:
+            if tout.nValue < 0 or tout.nValue > 888000000 * COIN:
                 return False
         return True
 
@@ -587,7 +587,8 @@ class CBlockHeader:
     def set_null(self):
         # Set auxpow chain ID.  Blocks without a chain ID are not accepted
         # by the regtest network consensus rules (since they are "legacy").
-        self.set_base_version(1)
+        # SYSCOIN
+        self.set_base_version(4)
 
         self.hashPrevBlock = 0
         self.hashMerkleRoot = 0

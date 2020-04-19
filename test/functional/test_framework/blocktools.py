@@ -49,8 +49,8 @@ TIME_GENESIS_BLOCK = 1296688602
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
-
-def create_block(hashprev, coinbase, ntime=None, *, version=1):
+# SYSCOIN
+def create_block(hashprev, coinbase, ntime=None, *, version=4):
     """Create a block (with regtest difficulty)."""
     block = CBlock()
     block.set_base_version(version)
