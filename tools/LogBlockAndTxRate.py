@@ -45,7 +45,7 @@ def parseMessage(message, string):
 		numMsgsDiff = int(numMsgs) - int(prevNumMsgs[message])
 
 	line += str(numMsgs) + ','		# Num
-	line += str(numMsgsDiff) + ','	# Num Diff
+	line += str(numMsgsDiff)		# Num Diff
 
 	prevNumMsgs[message] = numMsgs
 	return line
