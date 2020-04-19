@@ -4,7 +4,7 @@ import json
 import datetime
 from threading import Timer
 
-numSecondsPerSample = 10
+numSecondsPerSample = 0.1
 
 #def getmyIP():
 #	return os.popen('curl \'http://myexternalip.com/raw\'').read() + ':8333'
