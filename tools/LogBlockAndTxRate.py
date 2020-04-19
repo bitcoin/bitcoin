@@ -66,6 +66,10 @@ def parseMessage(message, string, time):
 	if message in numMsgsPerSecond: # If it exists, read it
 		msgsPerSecond = numMsgsPerSecond[message]
 
+	if message not in sumOfMsgsPerSecond: # Initialization
+		sumOfMsgsPerSecond[message] = 0
+		countOfMsgsPerSecond[message] = 0
+
 	sumOfMsgsPerSecond[message] += msgsPerSecond
 	countOfMsgsPerSecond[message] += 1
 
