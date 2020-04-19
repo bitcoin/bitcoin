@@ -776,8 +776,6 @@ bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
 
 bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 {
-    // SYSCOIN
-    auto locked_chain = chain().lock();
     LOCK(cs_wallet);
 
     WalletBatch batch(*database, "r+", fFlushOnClose);
@@ -875,6 +873,8 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     // SYSCOIN
     if(fZMQWalletRawTx)
     {
+        // SYSCOIN
+        auto locked_chain = chain().lock();
         UniValue ret(UniValue::VARR);
         ListTransactions(*locked_chain, this, wtx, 0, true, ret, ISMINE_SPENDABLE | ISMINE_WATCH_ONLY, nullptr);
         std::string retString = ret.write();
