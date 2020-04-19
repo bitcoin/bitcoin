@@ -379,7 +379,7 @@ def fetch():
 	now = datetime.datetime.now()
 	messages = json.loads(bitcoin('getmsginfo'))
 	peerinfo = json.loads(bitcoin('getpeerinfo'))
-	blockcount = bitcoin('getblockcount')
+	blockcount = bitcoin('getblockcount').strip()
 	mempoolinfo = json.loads(bitcoin('getmempoolinfo'))
 	numPeers = len(peerinfo)
 	addresses = ''
@@ -413,7 +413,6 @@ def fetch():
 	line += str(avgPingTime) + ','
 	line += str(totalBanScore) + ','
 
-	print(f'{blockcount} {mempoolinfo["size"]} {mempoolinfo["bytes"]}')
 	line += str(blockcount) + ','
 	line += str(mempoolinfo['size']) + ','
 	line += str(mempoolinfo['bytes']) + ','
