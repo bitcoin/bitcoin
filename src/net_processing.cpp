@@ -2038,7 +2038,7 @@ void static ProcessOrphanTx(CConnman* connman, CTxMemPool& mempool, std::set<uin
         auto orphan_it = mapOrphanTransactions.find(orphanHash);
         if (orphan_it == mapOrphanTransactions.end()) continue;
 
-        const CTransactionRef &porphanTx = orphan_it->second.tx;
+        const CTransactionRef porphanTx = orphan_it->second.tx;
         const CTransaction& orphanTx = *porphanTx;
         NodeId fromPeer = orphan_it->second.fromPeer;
         // Use a new TxValidationState because orphans come from different peers (and we call
@@ -4083,7 +4083,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     }
                     // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
                     // A heap is used so that not all items need sorting if only a few are being sent.
-                    CompareInvMempoolOrder compareInvMempoolOrder(&mempool);
+                    CompareInvMempoolOrder compareInvMempoolOrder(&m_mempool);
                     std::make_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
                     // No reason to drain out at many times the network's capacity,
                     // especially since we have many peers and some will draw much shorter delays.

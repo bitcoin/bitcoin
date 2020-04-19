@@ -17,9 +17,9 @@ extern RecursiveMutex cs_main;
 extern RecursiveMutex g_cs_orphans;
 
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
-static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 1000;
+static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 /** Default number of orphan+recently-replaced txn to keep around for block reconstruction */
-static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 1000;
+static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
 static const bool DEFAULT_PEERBLOOMFILTERS = false;
 
 class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
