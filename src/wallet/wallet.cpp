@@ -4791,7 +4791,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
         }
 
         {
-            WalletRescanReserver reserver(walletInstance.get());
+            WalletRescanReserver reserver(*walletInstance);
             if (!reserver.reserve() || (ScanResult::SUCCESS != walletInstance->ScanForWalletTransactions(chain.getBlockHash(rescan_height), rescan_height, {} /* max height */, reserver, true /* update */).status)) {
                 error = _("Failed to rescan the wallet during initialization");
                 return nullptr;

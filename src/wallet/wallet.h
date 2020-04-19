@@ -1371,35 +1371,36 @@ void MaybeResendWalletTxs();
 class WalletRescanReserver
 {
 private:
-    CWallet* m_wallet;
+    CWallet& m_wallet;
     bool m_could_reserve;
 public:
-    explicit WalletRescanReserver(CWallet* w) : m_wallet(w), m_could_reserve(false) {}
+    explicit WalletRescanReserver(CWallet& w) : m_wallet(w), m_could_reserve(false) {}
 
     bool reserve()
     {
         assert(!m_could_reserve);
-        if (m_wallet->fScanningWallet.exchange(true)) {
+        if (m_wallet.fScanningWallet.exchange(true)) {
             return false;
         }
-        m_wallet->m_scanning_start = GetTimeMillis();
-        m_wallet->m_scanning_progress = 0;
-        m_wallet->fAbortRescan = false;
+        m_wallet.m_scanning_start = GetTimeMillis();
+        m_wallet.m_scanning_progress = 0;
+        m_wallet.fAbortRescan = false;
         m_could_reserve = true;
         return true;
     }
 
     bool isReserved() const
     {
-        return (m_could_reserve && m_wallet->fScanningWallet);
+        return (m_could_reserve && m_wallet.fScanningWallet);
     }
 
     ~WalletRescanReserver()
     {
         if (m_could_reserve) {
-            m_wallet->fScanningWallet = false;
+            m_wallet.fScanningWallet = false;
         }
     }
+
 };
 
 // Calculate the size of the transaction assuming all signatures are max size
