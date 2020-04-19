@@ -39,12 +39,12 @@ class LLMQSigningTest(DashTestFramework):
         msgHashConflict = "0000000000000000000000000000000000000000000000000000000000000003"
 
         def check_sigs(hasrecsigs, isconflicting1, isconflicting2):
-            for mn in self.mninfo:
-                if mn.node.quorum("hasrecsig", 100, id, msgHash) != hasrecsigs:
+            for node in self.nodes:
+                if node.quorum("hasrecsig", 100, id, msgHash) != hasrecsigs:
                     return False
-                if mn.node.quorum("isconflicting", 100, id, msgHash) != isconflicting1:
+                if node.quorum("isconflicting", 100, id, msgHash) != isconflicting1:
                     return False
-                if mn.node.quorum("isconflicting", 100, id, msgHashConflict) != isconflicting2:
+                if node.quorum("isconflicting", 100, id, msgHashConflict) != isconflicting2:
                     return False
             return True
 
@@ -114,6 +114,9 @@ class LLMQSigningTest(DashTestFramework):
             # Need to re-connect so that it later gets the recovered sig
             mn.node.setnetworkactive(True)
             connect_nodes(mn.node, 0)
+            # Make sure node0 has received qsendrecsigs from the previously isolated node
+            mn.node.ping()
+            wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
             # Let 1 second pass so that the next node is used for recovery, which should succeed
             self.bump_mocktime(1)
             wait_for_sigs(True, False, True, 5)
