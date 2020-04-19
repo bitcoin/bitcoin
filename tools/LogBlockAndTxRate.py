@@ -26,17 +26,22 @@ def fetchHeader():
 
 	line += '# TX,'
 	line += '# TX Diff,'
+	line += 'TXs Per Sec,'
 	line += '# BLOCK,'
 	line += '# BLOCK Diff,'
+	line += 'BLOCKs Per Sec,'
 	line += '# CMPCTBLOCK,'
 	line += '# CMPCTBLOCK Diff,'
+	line += 'CMPCTBLOCKs Per Sec,'
 
 	line += 'Connections,'
 	return line
 
 prevNumMsgs = {}
+numMsgsPerSecond = {}
+numMsgsPerSecondTime = {}
 
-def parseMessage(message, string):
+def parseMessage(message, string, time):
 	line = ''
 	numMsgs = re.findall(r'([0-9\.]+) msgs', string)[0]
 
@@ -44,8 +49,22 @@ def parseMessage(message, string):
 	if message in prevNumMsgs:
 		numMsgsDiff = int(numMsgs) - int(prevNumMsgs[message])
 
+	if numMsgsDiff != 0: # Calculate the messages per second = numMessages / (timestamp - timestampOfLastMessageOccurance)
+		oldTime = 0
+		if message in numMsgsPerSecondTime:
+			oldTime = numMsgsPerSecondTime[message]
+
+		numMsgsPerSecond[message] = numMsgsDiff / (time - oldTime)
+		numMsgsPerSecondTime[message] = time
+
+	msgsPerSecond = 0
+	if message in numMsgsPerSecond: # If it exists, read it
+		msgsPerSecond = numMsgsPerSecond[message]
+
 	line += str(numMsgs) + ','		# Num
-	line += str(numMsgsDiff)		# Num Diff
+	line += str(numMsgsDiff) + ','	# Num Diff
+	line += str(msgsPerSecond)		# Rate
+
 
 	prevNumMsgs[message] = numMsgs
 	return line
@@ -83,8 +102,10 @@ def fetch():
 	else:
 		avgPingTime = 'N/A'
 
+	seconds = (now - datetime.datetime(1970, 1, 1)).total_seconds()
+
 	line = str(now) + ','
-	line += str((now - datetime.datetime(1970, 1, 1)).total_seconds()) + ','
+	line += str(seconds) + ','
 	line += str(numPeers) + ','
 	line += str(noResponsePings) + ','
 	line += str(avgPingTime) + ','
@@ -94,9 +115,9 @@ def fetch():
 	line += str(mempoolinfo['size']) + ','
 	line += str(mempoolinfo['bytes']) + ','
 
-	line += parseMessage('TX', messages['TX']) + ','
-	line += parseMessage('BLOCK', messages['BLOCK']) + ','
-	line += parseMessage('CMPCTBLOCK', messages['CMPCTBLOCK']) + ','
+	line += parseMessage('TX', messages['TX'], seconds) + ','
+	line += parseMessage('BLOCK', messages['BLOCK'], seconds) + ','
+	line += parseMessage('CMPCTBLOCK', messages['CMPCTBLOCK'], seconds) + ','
 
 	line += addresses + ','
 	return line
