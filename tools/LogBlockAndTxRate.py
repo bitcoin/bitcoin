@@ -75,7 +75,7 @@ def parseMessage(message, string, time):
 
 	line += str(numMsgs) + ','		# Num
 	line += str(numMsgsDiff) + ','	# Num Diff
-	line += str(msgsPerSecond)		# Rate
+	line += str(msgsPerSecond) + ','	# Rate
 	line += str(sumOfMsgsPerSecond[message] / countOfMsgsPerSecond[message])		# Rate average
 
 
