@@ -34,7 +34,7 @@ def fetchHeader():
 	line += 'BlocksPerSecAvg,'
 	line += 'NumCmpctBlockMsgs,'
 	line += 'CMPCTBLOCKs Per Sec Avg,'
-
+	line += ','
 	line += 'Connections,'
 	return line
 
@@ -169,6 +169,7 @@ def fetch():
 	line += parseMessage('BLOCK', messages['BLOCK'], seconds) + ','
 	line += parseMessage('CMPCTBLOCK', messages['CMPCTBLOCK'], seconds) + ','
 
+	line += ','
 	line += addresses + ','
 	return line
 
