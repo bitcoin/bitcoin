@@ -106,7 +106,7 @@ class ReserveDestination;
 constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::BECH32};
 
 //! Default for -changetype
-constexpr OutputType DEFAULT_CHANGE_TYPE{OutputType::BECH32};
+constexpr OutputType DEFAULT_CHANGE_TYPE{OutputType::CHANGE_AUTO};
 
 static constexpr uint64_t KNOWN_WALLET_FLAGS =
         WALLET_FLAG_AVOID_REUSE
