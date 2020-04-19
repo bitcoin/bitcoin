@@ -71,7 +71,7 @@ public:
         vecSessionCollaterals(),
         fUnitTest(false) {}
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
 
     bool HasTimedOut();
     void CheckTimeout(CConnman& connman);

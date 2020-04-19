@@ -23,7 +23,7 @@
 
 CPrivateSendClientManager privateSendClient;
 
-void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
     if (fMasternodeMode) return;
     if (!fEnablePrivateSend) return;
@@ -39,7 +39,7 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
     if (strCommand == NetMsgType::DSQUEUE) {
         if (pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
             LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            if (g_enable_bip61) {
+            if (enable_bip61) {
                 connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand,
                                                                                       REJECT_OBSOLETE, strprintf(
                                 "Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));
@@ -125,12 +125,12 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
                strCommand == NetMsgType::DSCOMPLETE) {
         LOCK(cs_deqsessions);
         for (auto& session : deqSessions) {
-            session.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            session.ProcessMessage(pfrom, strCommand, vRecv, connman, enable_bip61);
         }
     }
 }
 
-void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
     if (fMasternodeMode) return;
     if (!privateSendClient.fEnablePrivateSend) return;
@@ -139,7 +139,7 @@ void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& 
     if (strCommand == NetMsgType::DSSTATUSUPDATE) {
         if (pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
             LogPrint(BCLog::PRIVATESEND, "DSSTATUSUPDATE -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            if (g_enable_bip61) {
+            if (enable_bip61) {
                 connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand,
                                                                                       REJECT_OBSOLETE, strprintf(
                                 "Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));
@@ -160,7 +160,7 @@ void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& 
     } else if (strCommand == NetMsgType::DSFINALTX) {
         if (pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
             LogPrint(BCLog::PRIVATESEND, "DSFINALTX -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            if (g_enable_bip61) {
+            if (enable_bip61) {
                 connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand,
                                                                                       REJECT_OBSOLETE, strprintf(
                                 "Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));
@@ -190,7 +190,7 @@ void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& 
     } else if (strCommand == NetMsgType::DSCOMPLETE) {
         if (pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
             LogPrint(BCLog::PRIVATESEND, "DSCOMPLETE -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            if (g_enable_bip61) {
+            if (enable_bip61) {
                 connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand,
                                                                                       REJECT_OBSOLETE, strprintf(
                                 "Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));

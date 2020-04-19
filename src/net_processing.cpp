@@ -3512,12 +3512,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     {
         //probably one the extensions
 #ifdef ENABLE_WALLET
-        privateSendClient.ProcessMessage(pfrom, strCommand, vRecv, *connman);
+        privateSendClient.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
 #endif // ENABLE_WALLET
-        privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, *connman);
+        privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
         sporkManager.ProcessSpork(pfrom, strCommand, vRecv, *connman);
         masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
-        governance.ProcessMessage(pfrom, strCommand, vRecv, *connman);
+        governance.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
         CMNAuth::ProcessMessage(pfrom, strCommand, vRecv, *connman);
         llmq::quorumBlockProcessor->ProcessMessage(pfrom, strCommand, vRecv, *connman);
         llmq::quorumDKGSessionManager->ProcessMessage(pfrom, strCommand, vRecv, *connman);
