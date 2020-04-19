@@ -94,6 +94,7 @@ acceptedTxPerSecSum = 0
 acceptedTxPerSecCount = 0
 
 def fetch():
+	global lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
 	now = datetime.datetime.now()
 	messages = json.loads(bitcoin('getmsginfo'))
 	peerinfo = json.loads(bitcoin('getpeerinfo'))
