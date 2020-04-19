@@ -27,12 +27,14 @@ def fetchHeader():
 	line += '# TX,'
 	line += '# TX Diff,'
 	line += 'TXs Per Sec,'
+	line += 'TXs Per Sec Avg,'
 	line += '# BLOCK,'
 	line += '# BLOCK Diff,'
 	line += 'BLOCKs Per Sec,'
+	line += 'BLOCKs Per Sec Avg,'
 	line += '# CMPCTBLOCK,'
 	line += '# CMPCTBLOCK Diff,'
-	line += 'CMPCTBLOCKs Per Sec,'
+	line += 'CMPCTBLOCKs Per Sec Avg,'
 
 	line += 'Connections,'
 	return line
@@ -40,6 +42,9 @@ def fetchHeader():
 prevNumMsgs = {}
 numMsgsPerSecond = {}
 numMsgsPerSecondTime = {}
+
+sumOfMsgsPerSecond = {} # Used to compute the average
+countOfMsgsPerSecond = {} # Used to compute the average
 
 def parseMessage(message, string, time):
 	line = ''
@@ -61,9 +66,13 @@ def parseMessage(message, string, time):
 	if message in numMsgsPerSecond: # If it exists, read it
 		msgsPerSecond = numMsgsPerSecond[message]
 
+	sumOfMsgsPerSecond[message] += msgsPerSecond
+	countOfMsgsPerSecond[message] += 1
+
 	line += str(numMsgs) + ','		# Num
 	line += str(numMsgsDiff) + ','	# Num Diff
 	line += str(msgsPerSecond)		# Rate
+	line += str(sumOfMsgsPerSecond[message] / countOfMsgsPerSecond[message])		# Rate average
 
 
 	prevNumMsgs[message] = numMsgs
