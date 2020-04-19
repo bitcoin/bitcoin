@@ -22,7 +22,7 @@ import datetime
 attacker_ip = '10.0.2.15'
 
 # Specify the victim's IP, and port (8333 for Bitcoin)
-victim_ip = '10.0.2.4'
+victim_ip = '10.0.2.5'
 victim_port = 8333
 
 # How many identities should run simultaneously
