@@ -19,11 +19,12 @@ def fetchHeader():
 	line += 'InactivePeers,'
 	line += 'AvgPingTime,'
 	line += 'TotalBanScore,'
-	line += 'Connections,'
 
 	line += 'BlockHeight,'
 	line += 'MempoolSize,'
 	line += 'MempoolBytes,'
+
+	line += 'Connections,'
 
 	line += 'ClocksPerSec,'
 	line += '# VERSION,'
@@ -411,13 +412,18 @@ def fetch():
 	line += str(noResponsePings) + ','
 	line += str(avgPingTime) + ','
 	line += str(totalBanScore) + ','
-	line += addresses + ','
 
 	line += str(blockcount) + ','
-	if 'size' in mempoolinfo: line += str(mempoolinfo['size']) + ','
-	else: line += ','
-	if 'bytes' in mempoolinfo: line += str(mempoolinfo['bytes']) + ','
-	else: line += ','
+	line += str(mempoolinfo['size']) + ','
+	line += str(mempoolinfo['bytes']) + ','
+	
+	#if 'size' in mempoolinfo: line += str(mempoolinfo['size']) + ','
+	#else: line += ','
+	#if 'bytes' in mempoolinfo: line += str(mempoolinfo['bytes']) + ','
+	#else: line += ','
+
+	line += addresses + ','
+
 
 	line += str(messages['CLOCKS PER SECOND']) + ','
 	line += parseMessage('VERSION', messages['VERSION']) + ','
