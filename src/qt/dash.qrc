@@ -71,6 +71,7 @@
         <file alias="checked">res/images/checked.png</file>
         <file alias="dash_logo_horizontal">res/images/dash_logo_horizontal.png</file>
         <file alias="dash_logo_toolbar">res/images/dash_logo_toolbar.png</file>
+        <file alias="dash_logo_toolbar_blue">res/images/dash_logo_toolbar_blue.png</file>
         <file alias="qtreeview_selected">res/images/qtreeview_selected.png</file>
         <file alias="splash">res/images/splash.png</file>
         <file alias="unchecked">res/images/unchecked.png</file>
