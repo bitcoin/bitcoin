@@ -209,7 +209,8 @@ def attack(socket, src_ip, src_port, dst_ip, dst_port, interface):
 			time.sleep(seconds_between_version_packets)
 		try:
 			socket.send(block_packet().to_bytes())
-		except:
+		except Exception as e:
+			print(e)
 			break
 	close_connection(socket, src_ip, src_port, interface)
 	print(f'Peer was banned ({src_ip} : {src_port})')
