@@ -1,7 +1,7 @@
 from _thread import start_new_thread
 from bitcoin.messages import *
 from bitcoin.net import CAddress
-from bitcoin.core import CBlockHeader
+from bitcoin.core import CBlock
 from io import BytesIO as _BytesIO
 import atexit
 import bitcoin
@@ -96,7 +96,7 @@ def block_packet_bytes():
 	hashMerkleRoot = bytearray(random.getrandbits(8) for _ in range(32))
 	nTime = int((datetime.datetime.now() - datetime.datetime(1970, 1, 1)).total_seconds())#.to_bytes(8, 'little')
 	nNonce = random.getrandbits(32)
-	msg = CBlockHeader(
+	msg = CBlock(
 		nVersion=bitcoin_protocolversion,
 		hashPrevBlock=hashPrevBlock,
 		#hashPrevBlock='\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
@@ -104,11 +104,23 @@ def block_packet_bytes():
 		#hashMerkleRoot='\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
 		nTime=nTime,
 		nBits=0,
-		nNonce=nNonce
+		nNonce=nNonce,
+		vtx=()
 	)
+	name = 'block'
 	f = _BytesIO()
-	block_packet().stream_serialize(f)
-	return f.getvalue()
+	msg.stream_serialize(f)
+	body = f.getvalue()
+	res = b'\xf9\xbe\xb4\xd9'
+	res += name.encode()
+	res += b"\x00" * (12 - len(name))
+	res += struct.pack(b"<I", len(body))
+	# add checksum
+	th = hashlib.sha256(body).digest()
+	h = hashlib.sha256(th).digest()
+	res += h[:4]
+	res += body
+	return res
 
 # Construct a version packet using python-bitcoinlib
 def version_packet(src_ip, dst_ip, src_port, dst_port):
