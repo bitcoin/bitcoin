@@ -77,9 +77,6 @@ class PSBTTest(SyscoinTestFramework):
         connect_nodes(self.nodes[0], 2)
 
     def run_test(self):
-        # Activate segwit at height 432.
-        self.nodes[0].generate (500)
-        self.sync_all()
         # Create and fund a raw tx for sending 10 SYS
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
 

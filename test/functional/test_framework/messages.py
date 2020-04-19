@@ -587,8 +587,7 @@ class CBlockHeader:
     def set_null(self):
         # Set auxpow chain ID.  Blocks without a chain ID are not accepted
         # by the regtest network consensus rules (since they are "legacy").
-        # SYSCOIN
-        self.set_base_version(4)
+        self.set_base_version(1)
 
         self.hashPrevBlock = 0
         self.hashMerkleRoot = 0
