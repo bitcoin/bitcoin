@@ -512,15 +512,32 @@ void CConnman::DumpBanlist()
         banmap.size(), GetTimeMillis() - nStart);
 }
 
-void CNode::CloseSocketDisconnect()
+void CNode::CloseSocketDisconnect(CConnman* connman)
 {
+    AssertLockHeld(connman->cs_vNodes);
+
     fDisconnect = true;
     LOCK(cs_hSocket);
-    if (hSocket != INVALID_SOCKET)
-    {
-        LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
-        CloseSocket(hSocket);
+    if (hSocket == INVALID_SOCKET) {
+        return;
     }
+
+    fHasRecvData = false;
+    fCanSendData = false;
+
+    connman->mapSocketToNode.erase(hSocket);
+    connman->mapReceivableNodes.erase(GetId());
+    connman->mapSendableNodes.erase(GetId());
+    {
+        LOCK(connman->cs_mapNodesWithDataToSend);
+        if (connman->mapNodesWithDataToSend.erase(GetId()) != 0) {
+            // See comment in PushMessage
+            Release();
+        }
+    }
+
+    LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
+    CloseSocket(hSocket);
 }
 
 void CConnman::ClearBanned()
@@ -914,7 +931,7 @@ const uint256& CNetMessage::GetMessageHash() const
     return data_hash;
 }
 
-size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_vSend)
+size_t CConnman::SocketSendData(CNode *pnode) EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_vSend)
 {
     auto it = pnode->vSendMsg.begin();
     size_t nSentSize = 0;
@@ -941,6 +958,7 @@ size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pno
                 it++;
             } else {
                 // could not send full message; stop sending more
+                pnode->fCanSendData = false;
                 break;
             }
         } else {
@@ -954,6 +972,7 @@ size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pno
                 }
             }
             // couldn't send anything at all
+            pnode->fCanSendData = false;
             break;
         }
     }
@@ -963,6 +982,7 @@ size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pno
         assert(pnode->nSendSize == 0);
     }
     pnode->vSendMsg.erase(pnode->vSendMsg.begin(), it);
+    pnode->nSendMsgSize = pnode->vSendMsg.size();
     return nSentSize;
 }
 
@@ -1231,6 +1251,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
+        mapSocketToNode.emplace(pnode->hSocket, pnode);
         WakeSelect();
     }
 }
@@ -1285,7 +1306,7 @@ void CConnman::DisconnectNodes()
                 pnode->grantOutbound.Release();
 
                 // close socket and cleanup
-                pnode->CloseSocketDisconnect();
+                pnode->CloseSocketDisconnect(this);
 
                 // hold in disconnected pool until all refs are released
                 pnode->Release();
@@ -1389,23 +1410,8 @@ bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &s
         LOCK(cs_vNodes);
         for (CNode* pnode : vNodes)
         {
-            // Implement the following logic:
-            // * If there is data to send, select() for sending data. As this only
-            //   happens when optimistic write failed, we choose to first drain the
-            //   write buffer in this case before receiving more. This avoids
-            //   needlessly queueing received data, if the remote peer is not themselves
-            //   receiving data. This means properly utilizing TCP flow control signalling.
-            // * Otherwise, if there is space left in the receive buffer, select() for
-            //   receiving data.
-            // * Hand off all complete messages to the processor, to be handled without
-            //   blocking here.
-
-            bool select_recv = !pnode->fPauseRecv;
-            bool select_send;
-            {
-                LOCK(pnode->cs_vSend);
-                select_send = !pnode->vSendMsg.empty();
-            }
+            bool select_recv = !pnode->fHasRecvData;
+            bool select_send = !pnode->fCanSendData;
 
             LOCK(pnode->cs_hSocket);
             if (pnode->hSocket == INVALID_SOCKET)
@@ -1414,7 +1420,6 @@ bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &s
             error_set.insert(pnode->hSocket);
             if (select_send) {
                 send_set.insert(pnode->hSocket);
-                continue;
             }
             if (select_recv) {
                 recv_set.insert(pnode->hSocket);
@@ -1435,11 +1440,11 @@ bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &s
 }
 
 #ifdef USE_POLL
-void CConnman::SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set)
+void CConnman::SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll)
 {
     std::set<SOCKET> recv_select_set, send_select_set, error_select_set;
     if (!GenerateSelectSet(recv_select_set, send_select_set, error_select_set)) {
-        interruptNet.sleep_for(std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS));
+        if (!fOnlyPoll) interruptNet.sleep_for(std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS));
         return;
     }
 
@@ -1467,7 +1472,7 @@ void CConnman::SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &se
     }
 
     wakeupSelectNeeded = true;
-    int r = poll(vpollfds.data(), vpollfds.size(), SELECT_TIMEOUT_MILLISECONDS);
+    int r = poll(vpollfds.data(), vpollfds.size(), fOnlyPoll ? 0 : SELECT_TIMEOUT_MILLISECONDS);
     wakeupSelectNeeded = false;
     if (r < 0) {
         return;
@@ -1483,7 +1488,7 @@ void CConnman::SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &se
 }
 #endif
 
-void CConnman::SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set)
+void CConnman::SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll)
 {
     std::set<SOCKET> recv_select_set, send_select_set, error_select_set;
     if (!GenerateSelectSet(recv_select_set, send_select_set, error_select_set)) {
@@ -1496,7 +1501,7 @@ void CConnman::SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &
     //
     struct timeval timeout;
     timeout.tv_sec  = 0;
-    timeout.tv_usec = SELECT_TIMEOUT_MILLISECONDS * 1000; // frequency to poll pnode->vSend
+    timeout.tv_usec = fOnlyPoll ? 0 : SELECT_TIMEOUT_MILLISECONDS * 1000; // frequency to poll pnode->vSend
 
     fd_set fdsetRecv;
     fd_set fdsetSend;
@@ -1558,16 +1563,16 @@ void CConnman::SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &
     }
 }
 
-void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set)
+void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll)
 {
     switch (socketEventsMode) {
 #ifdef USE_POLL
         case SOCKETEVENTS_POLL:
-            SocketEventsPoll(recv_set, send_set, error_set);
+            SocketEventsPoll(recv_set, send_set, error_set, fOnlyPoll);
             break;
 #endif
         case SOCKETEVENTS_SELECT:
-            SocketEventsSelect(recv_set, send_set, error_set);
+            SocketEventsSelect(recv_set, send_set, error_set, fOnlyPoll);
             break;
         default:
             assert(false);
@@ -1576,8 +1581,26 @@ void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_s
 
 void CConnman::SocketHandler()
 {
+    bool fOnlyPoll = false;
+    {
+        // check if we have work to do and thus should avoid waiting for events
+        LOCK2(cs_vNodes, cs_mapNodesWithDataToSend);
+        if (!mapReceivableNodes.empty()) {
+            fOnlyPoll = true;
+        } else if (!mapSendableNodes.empty() && !mapNodesWithDataToSend.empty()) {
+            // we must check if at least one of the nodes with pending messages is also sendable, as otherwise a single
+            // node would be able to make the network thread busy with polling
+            for (auto& p : mapNodesWithDataToSend) {
+                if (mapSendableNodes.count(p.first)) {
+                    fOnlyPoll = true;
+                    break;
+                }
+            }
+        }
+    }
+
     std::set<SOCKET> recv_set, send_set, error_set;
-    SocketEvents(recv_set, send_set, error_set);
+    SocketEvents(recv_set, send_set, error_set, fOnlyPoll);
 
 #ifdef USE_WAKEUP_PIPE
     // drain the wakeup pipe
@@ -1605,98 +1628,208 @@ void CConnman::SocketHandler()
         }
     }
 
-    //
-    // Service each socket
-    //
-    std::vector<CNode*> vNodesCopy = CopyNodeVector();
-    for (CNode* pnode : vNodesCopy)
+    std::vector<CNode*> vErrorNodes;
+    std::vector<CNode*> vReceivableNodes;
+    std::vector<CNode*> vSendableNodes;
     {
-        if (interruptNet)
-            return;
-
-        //
-        // Receive
-        //
-        bool recvSet = false;
-        bool sendSet = false;
-        bool errorSet = false;
-        {
-            LOCK(pnode->cs_hSocket);
-            if (pnode->hSocket == INVALID_SOCKET)
+        LOCK(cs_vNodes);
+        for (auto hSocket : error_set) {
+            auto it = mapSocketToNode.find(hSocket);
+            if (it == mapSocketToNode.end()) {
                 continue;
-            recvSet = recv_set.count(pnode->hSocket) > 0;
-            sendSet = send_set.count(pnode->hSocket) > 0;
-            errorSet = error_set.count(pnode->hSocket) > 0;
+            }
+            it->second->AddRef();
+            vErrorNodes.emplace_back(it->second);
         }
-        if (!pnode->fDisconnect && (recvSet || errorSet))
-        {
-            // typical socket buffer is 8K-64K
-            char pchBuf[0x10000];
-            int nBytes = 0;
-            {
-                LOCK(pnode->cs_hSocket);
-                if (pnode->hSocket == INVALID_SOCKET)
-                    continue;
-                nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
+        for (auto hSocket : recv_set) {
+            if (error_set.count(hSocket)) {
+                // no need to handle it twice
+                continue;
             }
-            if (nBytes > 0)
-            {
-                bool notify = false;
-                if (!pnode->ReceiveMsgBytes(pchBuf, nBytes, notify))
-                    pnode->CloseSocketDisconnect();
-                RecordBytesRecv(nBytes);
-                if (notify) {
-                    size_t nSizeAdded = 0;
-                    auto it(pnode->vRecvMsg.begin());
-                    for (; it != pnode->vRecvMsg.end(); ++it) {
-                        if (!it->complete())
-                            break;
-                        nSizeAdded += it->vRecv.size() + CMessageHeader::HEADER_SIZE;
-                    }
-                    {
-                        LOCK(pnode->cs_vProcessMsg);
-                        pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
-                        pnode->nProcessQueueSize += nSizeAdded;
-                        pnode->fPauseRecv = pnode->nProcessQueueSize > nReceiveFloodSize;
-                    }
-                    WakeMessageHandler();
-                }
+
+            auto it = mapSocketToNode.find(hSocket);
+            if (it == mapSocketToNode.end()) {
+                continue;
             }
-            else if (nBytes == 0)
-            {
-                // socket closed gracefully
-                if (!pnode->fDisconnect) {
-                    LogPrint(BCLog::NET, "socket closed\n");
-                }
-                pnode->CloseSocketDisconnect();
+
+            auto jt = mapReceivableNodes.emplace(it->second->GetId(), it->second);
+            assert(jt.first->second == it->second);
+            it->second->fHasRecvData = true;
+        }
+        for (auto hSocket : send_set) {
+            auto it = mapSocketToNode.find(hSocket);
+            if (it == mapSocketToNode.end()) {
+                continue;
             }
-            else if (nBytes < 0)
-            {
-                // error
-                int nErr = WSAGetLastError();
-                if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
-                {
-                    if (!pnode->fDisconnect)
-                        LogPrintf("socket recv error %s\n", NetworkErrorString(nErr));
-                    pnode->CloseSocketDisconnect();
+
+            auto jt = mapSendableNodes.emplace(it->second->GetId(), it->second);
+            assert(jt.first->second == it->second);
+            it->second->fCanSendData = true;
+        }
+
+        // collect nodes that have a receivable socket
+        // also clean up mapReceivableNodes from nodes that were receivable in the last iteration but aren't anymore
+        vReceivableNodes.reserve(mapReceivableNodes.size());
+        for (auto it = mapReceivableNodes.begin(); it != mapReceivableNodes.end(); ) {
+            if (!it->second->fHasRecvData) {
+                it = mapReceivableNodes.erase(it);
+            } else {
+                // Implement the following logic:
+                // * If there is data to send, try sending data. As this only
+                //   happens when optimistic write failed, we choose to first drain the
+                //   write buffer in this case before receiving more. This avoids
+                //   needlessly queueing received data, if the remote peer is not themselves
+                //   receiving data. This means properly utilizing TCP flow control signalling.
+                // * Otherwise, if there is space left in the receive buffer (!fPauseRecv), try
+                //   receiving data (which should succeed as the socket signalled as receivable).
+                if (!it->second->fPauseRecv && it->second->nSendMsgSize == 0 && !it->second->fDisconnect) {
+                    it->second->AddRef();
+                    vReceivableNodes.emplace_back(it->second);
                 }
+                ++it;
             }
         }
 
-        //
-        // Send
-        //
-        if (sendSet)
-        {
-            LOCK(pnode->cs_vSend);
-            size_t nBytes = SocketSendData(pnode);
-            if (nBytes) {
-                RecordBytesSent(nBytes);
+        // collect nodes that have data to send and have a socket with non-empty write buffers
+        // also clean up mapNodesWithDataToSend from nodes that had messages to send in the last iteration
+        // but don't have any in this iteration
+        LOCK(cs_mapNodesWithDataToSend);
+        vSendableNodes.reserve(mapNodesWithDataToSend.size());
+        for (auto it = mapNodesWithDataToSend.begin(); it != mapNodesWithDataToSend.end(); ) {
+            if (it->second->nSendMsgSize == 0) {
+                // See comment in PushMessage
+                it->second->Release();
+                it = mapNodesWithDataToSend.erase(it);
+            } else {
+                if (it->second->fCanSendData) {
+                    it->second->AddRef();
+                    vSendableNodes.emplace_back(it->second);
+                }
+                ++it;
             }
         }
-
     }
-    ReleaseNodeVector(vNodesCopy);
+
+    for (CNode* pnode : vErrorNodes)
+    {
+        if (interruptNet) {
+            break;
+        }
+        // let recv() return errors and then handle it
+        SocketRecvData(pnode);
+    }
+
+    for (CNode* pnode : vReceivableNodes)
+    {
+        if (interruptNet) {
+            break;
+        }
+        if (pnode->fPauseRecv) {
+            continue;
+        }
+
+        SocketRecvData(pnode);
+    }
+
+    for (CNode* pnode : vSendableNodes) {
+        if (interruptNet) {
+            break;
+        }
+
+        LOCK(pnode->cs_vSend);
+        size_t nBytes = SocketSendData(pnode);
+        if (nBytes) {
+            RecordBytesSent(nBytes);
+        }
+    }
+
+    ReleaseNodeVector(vErrorNodes);
+    ReleaseNodeVector(vReceivableNodes);
+    ReleaseNodeVector(vSendableNodes);
+
+    if (interruptNet) {
+        return;
+    }
+
+    {
+        LOCK(cs_vNodes);
+        // remove nodes from mapSendableNodes, so that the next iteration knows that there is no work to do
+        // (even if there are pending messages to be sent)
+        for (auto it = mapSendableNodes.begin(); it != mapSendableNodes.end(); ) {
+            if (!it->second->fCanSendData) {
+                LogPrint(BCLog::NET, "%s -- remove mapSendableNodes, peer=%d\n", __func__, it->second->GetId());
+                it = mapSendableNodes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
+size_t CConnman::SocketRecvData(CNode *pnode)
+{
+    // typical socket buffer is 8K-64K
+    char pchBuf[0x10000];
+    int nBytes = 0;
+    {
+        LOCK(pnode->cs_hSocket);
+        if (pnode->hSocket == INVALID_SOCKET)
+            return 0;
+        nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
+        if (nBytes < (int)sizeof(pchBuf)) {
+            pnode->fHasRecvData = false;
+        }
+    }
+    if (nBytes > 0)
+    {
+        bool notify = false;
+        if (!pnode->ReceiveMsgBytes(pchBuf, nBytes, notify)) {
+            LOCK(cs_vNodes);
+            pnode->CloseSocketDisconnect(this);
+        }
+        RecordBytesRecv(nBytes);
+        if (notify) {
+            size_t nSizeAdded = 0;
+            auto it(pnode->vRecvMsg.begin());
+            for (; it != pnode->vRecvMsg.end(); ++it) {
+                if (!it->complete())
+                    break;
+                nSizeAdded += it->vRecv.size() + CMessageHeader::HEADER_SIZE;
+            }
+            {
+                LOCK(pnode->cs_vProcessMsg);
+                pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
+                pnode->nProcessQueueSize += nSizeAdded;
+                pnode->fPauseRecv = pnode->nProcessQueueSize > nReceiveFloodSize;
+            }
+            WakeMessageHandler();
+        }
+    }
+    else if (nBytes == 0)
+    {
+        // socket closed gracefully
+        if (!pnode->fDisconnect) {
+            LogPrint(BCLog::NET, "socket closed\n");
+        }
+        LOCK(cs_vNodes);
+        pnode->CloseSocketDisconnect(this);
+    }
+    else if (nBytes < 0)
+    {
+        // error
+        int nErr = WSAGetLastError();
+        if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
+        {
+            if (!pnode->fDisconnect)
+                LogPrintf("socket recv error %s\n", NetworkErrorString(nErr));
+            LOCK(cs_vNodes);
+            pnode->CloseSocketDisconnect(this);
+        }
+    }
+    if (nBytes < 0) {
+        return 0;
+    }
+    return (size_t)nBytes;
 }
 
 void CConnman::ThreadSocketHandler()
@@ -2477,6 +2610,11 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (fMasternodeProbe)
         pnode->fMasternodeProbe = true;
 
+    {
+        LOCK(cs_vNodes);
+        mapSocketToNode.emplace(pnode->hSocket, pnode);
+    }
+
     m_msgproc->InitializeNode(pnode);
     {
         LOCK(cs_vNodes);
@@ -2935,9 +3073,13 @@ void CConnman::Stop()
         fAddressesInitialized = false;
     }
 
-    // Close sockets
-    for (CNode* pnode : vNodes)
-        pnode->CloseSocketDisconnect();
+    {
+        LOCK(cs_vNodes);
+
+        // Close sockets
+        for (CNode *pnode : vNodes)
+            pnode->CloseSocketDisconnect(this);
+    }
     for (ListenSocket& hListenSocket : vhListenSocket)
         if (hListenSocket.socket != INVALID_SOCKET)
             if (!CloseSocket(hListenSocket.socket))
@@ -2951,6 +3093,12 @@ void CConnman::Stop()
         DeleteNode(pnode);
     }
     vNodes.clear();
+    mapSocketToNode.clear();
+    mapReceivableNodes.clear();
+    {
+        LOCK(cs_mapNodesWithDataToSend);
+        mapNodesWithDataToSend.clear();
+    }
     vNodesDisconnected.clear();
     vhListenSocket.clear();
     semOutbound.reset();
@@ -3425,7 +3573,10 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     fPauseRecv = false;
     fPauseSend = false;
+    fHasRecvData = false;
+    fCanSendData = false;
     nProcessQueueSize = 0;
+    nSendMsgSize = 0;
 
     for (const std::string &msg : getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;
@@ -3476,6 +3627,18 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         pnode->vSendMsg.push_back(std::move(serializedHeader));
         if (nMessageSize)
             pnode->vSendMsg.push_back(std::move(msg.data));
+        pnode->nSendMsgSize = pnode->vSendMsg.size();
+
+        {
+            LOCK(cs_mapNodesWithDataToSend);
+            // we're not holding cs_vNodes here, so there is a chance of this node being disconnected shortly before
+            // we get here. Whoever called PushMessage still has a ref to CNode*, but will later Release() it, so we
+            // might end up having an entry in mapNodesWithDataToSend that is not in vNodes anymore. We need to
+            // Add/Release refs when adding/erasing mapNodesWithDataToSend.
+            if (mapNodesWithDataToSend.emplace(pnode->GetId(), pnode).second) {
+                pnode->AddRef();
+            }
+        }
 
         // wake up select() call in case there was no pending data before (so it was not selecting this socket for sending)
         if (!hasPendingData && wakeupSelectNeeded)

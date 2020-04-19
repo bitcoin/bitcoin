@@ -133,6 +133,7 @@ struct CSerializedNetMsg
 class NetEventsInterface;
 class CConnman
 {
+friend class CNode;
 public:
 
     enum NumConnections {
@@ -485,10 +486,10 @@ private:
     void InactivityCheck(CNode *pnode);
     bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
 #ifdef USE_POLL
-    void SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+    void SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
 #endif
-    void SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
-    void SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+    void SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
+    void SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
     void SocketHandler();
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
@@ -509,7 +510,8 @@ private:
 
     NodeId GetNewNodeId();
 
-    size_t SocketSendData(CNode *pnode) const;
+    size_t SocketSendData(CNode *pnode);
+    size_t SocketRecvData(CNode* pnode);
     //!check is the banlist has unwritten changes
     bool BannedSetIsDirty();
     //!set the "dirty" flag for the banlist
@@ -563,6 +565,7 @@ private:
     mutable CCriticalSection cs_vPendingMasternodes;
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;
+    std::unordered_map<SOCKET, CNode*> mapSocketToNode;
     mutable CCriticalSection cs_vNodes;
     mutable CCriticalSection cs_vNodesDisconnected;
     std::atomic<NodeId> nLastNodeId;
@@ -600,6 +603,13 @@ private:
     std::atomic<bool> wakeupSelectNeeded{false};
 
     SocketEventsMode socketEventsMode;
+
+    /** Protected by cs_vNodes */
+    std::unordered_map<NodeId, CNode*> mapReceivableNodes GUARDED_BY(cs_vNodes);
+    std::unordered_map<NodeId, CNode*> mapSendableNodes GUARDED_BY(cs_vNodes);
+    /** Protected by cs_mapNodesWithDataToSend */
+    std::unordered_map<NodeId, CNode*> mapNodesWithDataToSend GUARDED_BY(cs_mapNodesWithDataToSend);
+    mutable CCriticalSection cs_mapNodesWithDataToSend;
 
     std::thread threadDNSAddressSeed;
     std::thread threadSocketHandler;
@@ -787,6 +797,7 @@ public:
     size_t nSendOffset; // offset inside the first vSendMsg already sent
     uint64_t nSendBytes GUARDED_BY(cs_vSend);
     std::list<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
+    std::atomic<size_t> nSendMsgSize;
     CCriticalSection cs_vSend;
     CCriticalSection cs_hSocket;
     CCriticalSection cs_vRecv;
@@ -848,6 +859,10 @@ public:
 
     std::atomic_bool fPauseRecv;
     std::atomic_bool fPauseSend;
+
+    std::atomic_bool fHasRecvData;
+    std::atomic_bool fCanSendData;
+
 protected:
 
     mapMsgCmdSize mapSendBytesPerMsgCmd;
@@ -1051,7 +1066,7 @@ public:
         vBlockHashesToAnnounce.push_back(hash);
     }
 
-    void CloseSocketDisconnect();
+    void CloseSocketDisconnect(CConnman* connman);
 
     void copyStats(CNodeStats &stats);
 
