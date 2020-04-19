@@ -166,6 +166,7 @@ protected:
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
+    std::map<std::string, std::string> settings_defaults GUARDED_BY(cs_args);
 
     NODISCARD bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
 
@@ -329,6 +330,11 @@ public:
      * useful for troubleshooting.
      */
     void LogArgs() const;
+
+    /**
+     * Map of default setting values
+     */
+    const std::map<std::string, std::string> GetSettingsDefaults() const;
 
 private:
     // Helper function for LogArgs().

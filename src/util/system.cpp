@@ -67,6 +67,8 @@
 #include <thread>
 #include <typeinfo>
 #include <univalue.h>
+#include <map>
+#include <regex>
 
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
@@ -425,6 +427,14 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, unsig
 
     if (flags & ArgsManager::NETWORK_ONLY) {
         m_network_only_args.emplace(arg_name);
+    }
+
+    // Add default setting value to defaults map
+    // by extracting a substring from arg's description.
+    std::regex re("default: (\\w+)");
+    std::smatch m;
+    if (std::regex_search(help, m, re) && m.size() > 0) {
+        settings_defaults.emplace(arg_name, m.str(1));
     }
 }
 
@@ -867,16 +877,25 @@ void ArgsManager::logArgsPrefix(
     const std::string& section,
     const std::map<std::string, std::vector<util::SettingsValue>>& args) const
 {
+    LOCK(cs_args);
     std::string section_str = section.empty() ? "" : "[" + section + "] ";
     for (const auto& arg : args) {
+        auto search = settings_defaults.find('-' + arg.first);
+        auto default_str = search != settings_defaults.end() ? ", default=" + search->second : "";
         for (const auto& value : arg.second) {
             Optional<unsigned int> flags = GetArgFlags('-' + arg.first);
             if (flags) {
                 std::string value_str = (*flags & SENSITIVE) ? "****" : value.write();
-                LogPrintf("%s %s%s=%s\n", prefix, section_str, arg.first, value_str);
+                LogPrintf("%s %s%s=%s%s\n", prefix, section_str, arg.first, value_str, default_str);
             }
         }
     }
+}
+
+const std::map<std::string, std::string> ArgsManager::GetSettingsDefaults() const
+{
+    LOCK(cs_args);
+    return settings_defaults;
 }
 
 void ArgsManager::LogArgs() const
