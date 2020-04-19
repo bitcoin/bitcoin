@@ -6,8 +6,19 @@ from threading import Timer
 
 numSecondsPerSample = 0.1
 
-#def getmyIP():
-#	return os.popen('curl \'http://myexternalip.com/raw\'').read() + ':8333'
+
+# Compute the blocks per second and tx per second
+lastBlockcount = 0
+lastMempoolSize = 0
+numAcceptedBlocksPerSec = 0
+numAcceptedBlocksPerSecTime = 0
+numAcceptedTxPerSec = 0
+numAcceptedTxPerSecTime = 0
+acceptedBlocksPerSecSum = 0
+acceptedBlocksPerSecCount = 0
+acceptedTxPerSecSum = 0
+acceptedTxPerSecCount = 0
+
 
 def bitcoin(cmd):
 	return os.popen('./../src/bitcoin-cli -rpcuser=cybersec -rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame -rpcport=8332 ' + cmd).read()
@@ -23,17 +34,18 @@ def fetchHeader():
 	line += 'BlockHeight,'
 	line += 'MempoolSize,'
 	line += 'MempoolBytes,'
+	line += 'AcceptedBlocksPerSec'
+	line += 'AcceptedBlocksPerSecAvg'
+	line += 'AcceptedTxPerSec'
+	line += 'AcceptedTxPerSecAvg'
 
-	line += '# TX,'
-	line += '# TX Diff,'
-	line += 'TXs Per Sec,'
-	line += 'TXs Per Sec Avg,'
-	line += '# BLOCK,'
-	line += '# BLOCK Diff,'
-	line += 'BLOCKs Per Sec,'
-	line += 'BLOCKs Per Sec Avg,'
-	line += '# CMPCTBLOCK,'
-	line += '# CMPCTBLOCK Diff,'
+	line += 'NumTxMsgs,'
+	line += 'TxsPerSec,'
+	line += 'TxsPerSecAvg,'
+	line += 'NumBlockMsgs,'
+	line += 'BlocksPerSec,'
+	line += 'BlocksPerSecAvg,'
+	line += 'NumCmpctBlockMsgs,'
 	line += 'CMPCTBLOCKs Per Sec Avg,'
 
 	line += 'Connections,'
@@ -74,7 +86,6 @@ def parseMessage(message, string, time):
 	countOfMsgsPerSecond[message] += 1
 
 	line += str(numMsgs) + ','		# Num
-	line += str(numMsgsDiff) + ','	# Num Diff
 	line += str(msgsPerSecond) + ','	# Rate
 	line += str(sumOfMsgsPerSecond[message] / countOfMsgsPerSecond[message])		# Rate average
 
@@ -87,7 +98,7 @@ def fetch():
 	now = datetime.datetime.now()
 	messages = json.loads(bitcoin('getmsginfo'))
 	peerinfo = json.loads(bitcoin('getpeerinfo'))
-	blockcount = bitcoin('getblockcount').strip()
+	blockcount = int(bitcoin('getblockcount').strip())
 	mempoolinfo = json.loads(bitcoin('getmempoolinfo'))
 	numPeers = len(peerinfo)
 	addresses = ''
@@ -127,6 +138,32 @@ def fetch():
 	line += str(blockcount) + ','
 	line += str(mempoolinfo['size']) + ','
 	line += str(mempoolinfo['bytes']) + ','
+
+	# Compute the blocks per second and tx per second
+	blockcountDiff = blockcount - lastBlockcount
+	mempoolSizeDiff = mempoolinfo['size'] - lastMempoolSize
+	lastBlockcount = blockcount
+	lastMempoolSize = mempoolinfo['size']
+
+	#numMsgsDiff / (time - oldTime)
+	if blockcountDiff != 0:
+		numAcceptedBlocksPerSec = blockcountDiff / (seconds - numAcceptedBlocksPerSecTime)
+		numAcceptedBlocksPerSecTime = seconds
+
+	if mempoolSizeDiff != 0:
+		numAcceptedTxPerSec = mempoolSizeDiff / (seconds - numAcceptedTxPerSecTime)
+		numAcceptedTxPerSecTime = seconds
+
+	acceptedBlocksPerSecSum += numAcceptedBlocksPerSec
+	acceptedBlocksPerSecCount += 1
+	acceptedTxPerSecSum += numAcceptedTxPerSec
+	acceptedTxPerSecCount += 1
+
+	line += str(numAcceptedBlocksPerSec) + ','
+	line += str(acceptedBlocksPerSecSum / acceptedBlocksPerSecCount) + ','
+	line += str(numAcceptedTxPerSec) + ','
+	line += str(acceptedTxPerSecSum / acceptedTxPerSecCount) + ','
+
 
 	line += parseMessage('TX', messages['TX'], seconds) + ','
 	line += parseMessage('BLOCK', messages['BLOCK'], seconds) + ','
