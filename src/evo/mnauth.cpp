@@ -28,8 +28,8 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
         if (pnode->receivedMNAuthChallenge.IsNull()) {
             return;
         }
-        // We include fInbound in signHash to forbid interchanging of challenges by a man in the middle. This way
-        // we protect ourself against MITM in this form:
+        // We include fInbound in signHash to forbid interchanging of challenges by a man in the middle (MITM). This way
+        // we protect ourselves against MITM in this form:
         //   node1 <- Eve -> node2
         // It does not protect against:
         //   node1 -> Eve -> node2
@@ -49,7 +49,7 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
 void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
     if (!masternodeSync.IsBlockchainSynced()) {
-        // we can't really verify MNAUTH messages when we don't have the latest MN list
+        // we can't verify MNAUTH messages when we don't have the latest MN list
         return;
     }
 
@@ -70,7 +70,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         }
 
         if ((~pnode->nServices) & (NODE_NETWORK | NODE_BLOOM)) {
-            // either NODE_NETWORK or NODE_BLOOM bit is missiing in node's services
+            // either NODE_NETWORK or NODE_BLOOM bit is missing in node's services
             LOCK(cs_main);
             Misbehaving(pnode->GetId(), 100, "mnauth from a node with invalid services");
             return;
@@ -92,8 +92,8 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         auto dmn = mnList.GetMN(mnauth.proRegTxHash);
         if (!dmn) {
             LOCK(cs_main);
-            // in case he was unlucky and not up to date, just let him be connected as a regular node, which gives him
-            // a chance to get up-to-date and thus realize by himself that he's not a MN anymore. We still give him a
+            // in case node was unlucky and not up to date, just let it be connected as a regular node, which gives it
+            // a chance to get up-to-date and thus realize that it's not a MN anymore. We still give it a
             // low DoS score.
             Misbehaving(pnode->GetId(), 10, "missing mnauth masternode");
             return;
@@ -108,8 +108,8 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
 
         if (!mnauth.sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator.Get(), signHash)) {
             LOCK(cs_main);
-            // Same as above, MN seems to not know about his fate yet, so give him a chance to update. If this is a
-            // malicious actor (DoSing us), we'll ban him soon.
+            // Same as above, MN seems to not know its fate yet, so give it a chance to update. If this is a
+            // malicious node (DoSing us), it'll get banned soon.
             Misbehaving(pnode->GetId(), 10, "mnauth signature verification failed");
             return;
         }
@@ -117,7 +117,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         if (!pnode->fInbound) {
             mmetaman.GetMetaInfo(mnauth.proRegTxHash)->SetLastOutboundSuccess(GetAdjustedTime());
             if (pnode->fMasternodeProbe) {
-                LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- masternode probe successful for %s, disconnecting. peer=%d\n",
+                LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode probe successful for %s, disconnecting. peer=%d\n",
                          mnauth.proRegTxHash.ToString(), pnode->GetId());
                 pnode->fDisconnect = true;
                 return;
