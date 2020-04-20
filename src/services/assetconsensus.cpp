@@ -269,6 +269,8 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
 bool CheckSyscoinInputs(const CTransaction& tx, const CAssetAllocation& allocation, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys) {
     if(nHeight < Params().GetConsensus().nUTXOAssetsBlock)
         return true;
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
+        return false;
     AssetMap mapAssets;
     return CheckSyscoinInputs(false, tx, allocation, txHash, state, true, nHeight, nTime, uint256(), false, mapAssets, mapMintKeys);
 }
