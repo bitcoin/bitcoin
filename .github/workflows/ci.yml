@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 name: CI
 
 on:
@@ -246,5 +245,4 @@ jobs:
           --disable-bench
           --disable-gmock
       - name: make
->>>>>>> d5f3418fea8357ef36787b1798515311b76a3c8c
         run: make -j2
