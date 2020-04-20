@@ -457,9 +457,6 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
     // Call CheckInputScripts() to cache signature and script validity against current tip consensus rules.
     return CheckInputScripts(tx, state, view, flags, /* cacheSigStore = */ true, /* cacheFullSciptStore = */ true, txdata);
 }
-static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache;
-static uint256 scriptExecutionCacheNonce(GetRandHash());
-static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
 namespace {
 
@@ -1659,7 +1656,7 @@ bool CScriptCheck::operator()() {
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
     return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *txdata), &error);
 }
-// SYSCOIN
+
 int GetSpendHeight(const CCoinsViewCache& inputs)
 {
     LOCK(cs_main);
@@ -1667,6 +1664,9 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
     return pindexPrev->nHeight + 1;
 }
 
+static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache;
+static uint256 scriptExecutionCacheNonce(GetRandHash());
+static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
 void InitScriptExecutionCache() {
     // nMaxCacheSize is unsigned. If -maxsigcachesize is set to zero,
@@ -2208,7 +2208,11 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 //  artificially set the default assumed verified block further back.
                 // The test against nMinimumChainWork prevents the skipping when denied access to any chain at
                 //  least as good as the expected chain.
-                fScriptChecks = (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, chainparams.GetConsensus()) <= 60 * 60 * 24 * 7 * 2);
+                // SYSCOIN
+                int64_t timeForWork = 1209600;
+                if(fRegTest)
+                    timeForWork /= 10;
+                fScriptChecks = (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, chainparams.GetConsensus()) <= timeForWork);
             }
         }
     }
