@@ -21,6 +21,7 @@ from test_framework.messages import (
     CTxInWitness,
     CTxOut,
     CTxWitness,
+    MAX_BLOCK_BASE_SIZE,
     MSG_WITNESS_FLAG,
     NODE_NETWORK,
     NODE_WITNESS,
@@ -86,7 +87,6 @@ VB_PERIOD = 144
 VB_TOP_BITS = 0x20000000
 
 MAX_SIGOP_COST = 80000
-MAX_BLOCK_BASE_SIZE = 1000000
 SEGWIT_HEIGHT = 120
 
 class UTXO():
@@ -245,6 +245,7 @@ class SegWitTest(SyscoinTestFramework):
         self.test_block_relay()
         self.test_getblocktemplate_before_lockin()
         self.test_unnecessary_witness_before_segwit_activation()
+        # SYSCOIN
         #self.test_witness_tx_relay_before_segwit_activation()
         self.test_standardness_v0()
 
@@ -855,9 +856,8 @@ class SegWitTest(SyscoinTestFramework):
         block = self.build_next_block()
         add_witness_commitment(block)
         block.solve()
-        # SYSCOIN
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.append(b'a' * 5000000)
-        assert get_virtual_size(block) > MAX_BLOCK_BASE_SIZE
+        assert get_virtual_size(block) > MAX_BLOCK_BASE_SIZE/4
 
         # We can't send over the p2p network, because this is too big to relay
         # TODO: repeat this test with a block that can be relayed
@@ -866,7 +866,7 @@ class SegWitTest(SyscoinTestFramework):
         assert self.nodes[0].getbestblockhash() != block.hash
 
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.pop()
-        assert get_virtual_size(block) < MAX_BLOCK_BASE_SIZE
+        assert get_virtual_size(block) < MAX_BLOCK_BASE_SIZE/4
         self.nodes[0].submitblock(block.serialize().hex())
 
         assert self.nodes[0].getbestblockhash() == block.hash
@@ -901,7 +901,8 @@ class SegWitTest(SyscoinTestFramework):
         # This should give us plenty of room to tweak the spending tx's
         # virtual size.
         NUM_DROPS = 200  # 201 max ops per script!
-        NUM_OUTPUTS = 50
+        # SYSCOIN
+        NUM_OUTPUTS = 200
 
         witness_program = CScript([OP_2DROP] * NUM_DROPS + [OP_TRUE])
         witness_hash = uint256_from_str(sha256(witness_program))
@@ -938,7 +939,9 @@ class SegWitTest(SyscoinTestFramework):
             block.vtx[-1].wit.vtxinwit[int(i / (2 * NUM_DROPS))].scriptWitness.stack[i % (2 * NUM_DROPS)] = b'a' * (195 + extra_bytes)
             additional_bytes -= extra_bytes
             i += 1
-
+        # SYSCOIN
+        cur_length = len(block.vtx[-1].wit.vtxinwit[int(i / (2 * NUM_DROPS))].scriptWitness.stack[i % (2 * NUM_DROPS)])
+        block.vtx[-1].wit.vtxinwit[int(i / (2 * NUM_DROPS))].scriptWitness.stack[i % (2 * NUM_DROPS)] = b'a' * (cur_length + 4)
         block.vtx[0].vout.pop()  # Remove old commitment
         add_witness_commitment(block)
         block.solve()
@@ -952,7 +955,8 @@ class SegWitTest(SyscoinTestFramework):
 
         # Now resize the second transaction to make the block fit.
         cur_length = len(block.vtx[-1].wit.vtxinwit[0].scriptWitness.stack[0])
-        block.vtx[-1].wit.vtxinwit[0].scriptWitness.stack[0] = b'a' * (cur_length - 1)
+        # SYSCOIN
+        block.vtx[-1].wit.vtxinwit[0].scriptWitness.stack[0] = b'a' * (cur_length - 4)
         block.vtx[0].vout.pop()
         add_witness_commitment(block)
         block.solve()
