@@ -5,7 +5,7 @@ $(package)_file_name=$($(package)_version).tar.gz
 $(package)_sha256_hash=820d689e4657cc248881931dc017bd06c75812535c090c9c396ea3d02a24d885
 
 define $(package)_config_cmds
-  cmake -DCMAKE_INSTALL_PREFIX=$($(package)_staging_dir)$(host_prefix) -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF -B .
+  cmake -DCMAKE_C_COMPILER=$(CC) -DCMAKE_CXX_COMPILER=$(CXX) -DCMAKE_INSTALL_PREFIX=$($(package)_staging_dir)$(host_prefix) -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF -B .
 endef
 
 define $(package)_build_cmds
@@ -15,5 +15,3 @@ endef
 define $(package)_stage_cmds
   $(MAKE) install
 endef
-
-

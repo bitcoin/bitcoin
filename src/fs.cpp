@@ -123,7 +123,7 @@ std::string get_filesystem_error_message(const fs::filesystem_error& e)
 
 static std::string openmodeToStr(std::ios_base::openmode mode)
 {
-    switch (mode & ~std::ios_base::ate) {
+    switch ((int)(mode & ~std::ios_base::ate)) {
     case std::ios_base::out:
     case std::ios_base::out | std::ios_base::trunc:
         return "w";
