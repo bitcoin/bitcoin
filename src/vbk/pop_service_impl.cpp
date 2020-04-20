@@ -231,10 +231,17 @@ bool PopServiceImpl::acceptBlock(const CBlockIndex& indexNew, BlockValidationSta
     return true;
 }
 
-bool PopServiceImpl::addAllBlockPayloads(const CBlockIndex& indexNew, const CBlock& connecting, BlockValidationState& state)
+bool PopServiceImpl::checkPopPayloads(const CBlockIndex& indexPrev, const CBlock& fullBlock, BlockValidationState& state)
+{
+    // does not modify internal state, so no locking required
+    altintegration::AltTree copy = *altTree;
+    return addAllPayloadsToBlockImpl(copy, indexPrev, fullBlock, state);
+}
+
+bool PopServiceImpl::addAllBlockPayloads(const CBlockIndex& indexPrev, const CBlock& connecting, BlockValidationState& state)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    return addAllPayloadsToBlockImpl(*altTree, indexNew, connecting, state);
+    return addAllPayloadsToBlockImpl(*altTree, indexPrev, connecting, state);
 }
 
 bool PopServiceImpl::evalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks)
@@ -414,7 +421,7 @@ bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char
     return true;
 }
 
-bool parseBlockPopPayloadsImpl(const CBlock& block, const CBlockIndex& pindexThis, const Consensus::Params& params, BlockValidationState& state, std::vector<altintegration::AltPayloads>* payloads) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool parseBlockPopPayloadsImpl(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state, std::vector<altintegration::AltPayloads>* payloads) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     const auto& config = getService<Config>();
     size_t numOfPopTxes = 0;
@@ -434,7 +441,7 @@ bool parseBlockPopPayloadsImpl(const CBlock& block, const CBlockIndex& pindexThi
         if (!parseTxPopPayloadsImpl(*tx, params, txstate, p)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, txstate.GetRejectReason(), txstate.GetDebugMessage());
         }
-        p.containingBlock = blockToAltBlock(pindexThis);
+        p.containingBlock = blockToAltBlock(pindexPrev.nHeight + 1, block.GetBlockHeader());
 
         if (payloads) {
             payloads->push_back(std::move(p));
@@ -487,13 +494,13 @@ bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& par
     return true;
 }
 
-bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex& indexNew, const CBlock& block, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex& indexPrev, const CBlock& block, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    auto containing = VeriBlock::blockToAltBlock(indexNew);
+    auto containing = VeriBlock::blockToAltBlock(indexPrev.nHeight + 1, block.GetBlockHeader());
 
     altintegration::ValidationState instate;
     std::vector<altintegration::AltPayloads> payloads;
-    if (!parseBlockPopPayloadsImpl(block, indexNew, Params().GetConsensus(), state, &payloads)) {
+    if (!parseBlockPopPayloadsImpl(block, indexPrev, Params().GetConsensus(), state, &payloads)) {
         return error("[%s] block %s failed stateless validation: %s", __func__, block.GetHash().ToString(), instate.toString());
     }
 

@@ -182,14 +182,20 @@ UniValue submitpop(const JSONRPCRequest& request)
     CScript script;
 
     const UniValue& vtb_array = request.params[1].get_array();
+    LogPrint(BCLog::POP, "Submitpop called with ATV and VTBs=%d", vtb_array.size());
     for (uint32_t idx = 0u, size = vtb_array.size(); idx < size; ++idx) {
-        auto vtb = ParseHexV(vtb_array[idx], "vtb[" + std::to_string(idx) + "]");
+        auto& vtbhex = vtb_array[idx];
+        auto vtb = ParseHexV(vtbhex, "vtb[" + std::to_string(idx) + "]");
         script << vtb << OP_CHECKVTB;
+        LogPrint(BCLog::POP, "VTB%d=\"%s\"", idx, vtbhex.get_str());
     }
 
-    auto atv = ParseHexV(request.params[0], "atv");
+    auto& atvhex = request.params[0];
+    auto atv = ParseHexV(atvhex, "atv");
     script << atv << OP_CHECKATV;
     script << OP_CHECKPOP;
+
+    LogPrint(BCLog::POP, "ATV=\"%s\"", atvhex.get_str());
 
     return createPopTx(script);
 }
