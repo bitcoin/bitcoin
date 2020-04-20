@@ -3826,7 +3826,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
                             "as an array to keep the API stable if multiple labels are enabled in the future.",
                         {
                             {RPCResult::Type::STR, "label name", "The label name. Defaults to \"\"."},
-                            {RPCResult::Type::OBJ, "", "label data, DEPRECATED, will be removed in 0.21. To re-enable, launch bitcoind with `-deprecatedrpc=labelspurpose`",
+                            {RPCResult::Type::OBJ, "", "label data, DEPRECATED, will be removed in 0.21. To re-enable, launch syscoind with `-deprecatedrpc=labelspurpose`",
                             {
                                 {RPCResult::Type::STR, "name", "The label name. Defaults to \"\"."},
                                 {RPCResult::Type::STR, "purpose", "The purpose of the associated address (send or receive)."},
