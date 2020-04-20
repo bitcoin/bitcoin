@@ -8,6 +8,7 @@
 #include <mutex>
 #include <vector>
 
+#include <util/system.h>
 #include <veriblock/altintegration.hpp>
 #include <veriblock/blockchain/alt_block_tree.hpp>
 #include <veriblock/config.hpp>
@@ -21,7 +22,7 @@ private:
     std::shared_ptr<altintegration::AltTree> altTree;
 
 public:
-    altintegration::AltTree& getAltTree()
+    altintegration::AltTree& getAltTree() override
     {
         return *altTree;
     }
@@ -45,17 +46,19 @@ public:
 
     void rewardsCalculateOutputs(const int& blockHeight, const CBlockIndex& endorsedBlock, const CBlockIndex& contaningBlocksTip, const CBlockIndex* difficulty_start_interval, const CBlockIndex* difficulty_end_interval, std::map<CScript, int64_t>& outputs) override;
 
-    bool parseBlockPopPayloads(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state, std::vector<altintegration::AltPayloads>* payloads) override;
-    bool parseTxPopPayloads(const CBlock& block, const CTransaction& tx, const CBlockIndex& pindexPrev, const Consensus::Params& params, TxValidationState& state, altintegration::AltPayloads& payloads) override;
-
     bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state) override;
     bool addAllBlockPayloads(const CBlockIndex& indexNew, const CBlock& fullBlock, BlockValidationState& state) override;
-    void disconnectBlock(const uint256& block) override;
-
+    void invalidateBlockByHash(const uint256& block) override;
+    bool setState(const uint256& block) override;
 
     bool evalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks) override;
     int compareForks(const CBlockIndex& left, const CBlockIndex& right) override;
 };
+
+bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& params, TxValidationState& state, altintegration::AltPayloads& payloads);
+bool parseBlockPopPayloadsImpl(const CBlock& block, const CBlockIndex& pindexThis, const Consensus::Params& params, BlockValidationState& state, std::vector<altintegration::AltPayloads>* payloads);
+bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks);
+bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex& indexNew, const CBlock& block, BlockValidationState& state);
 
 } // namespace VeriBlock
 #endif //BITCOIN_SRC_VBK_POP_SERVICE_POP_SERVICE_IMPL_HPP

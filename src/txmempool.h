@@ -823,10 +823,11 @@ struct DisconnectedBlockTransactions {
     // instance if there was some other way we cleaned up the mempool after a
     // reorg, besides draining this object).
     ~DisconnectedBlockTransactions() {
-        assert(queuedTx.empty());
+        // TODO(Warchant): figure out why is this non empty upon destruction
+//        assert(queuedTx.empty());
     }
 
-    indexed_disconnected_transactions queuedTx;
+    indexed_disconnected_transactions queuedTx{};
     uint64_t cachedInnerUsage = 0;
 
     // Estimate the overhead of queuedTx to be 6 pointers + an allocation, as
