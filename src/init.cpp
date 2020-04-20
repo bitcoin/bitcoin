@@ -432,7 +432,7 @@ void SetupServerArgs(NodeContext& node)
 
     // Hidden Options
     std::vector<std::string> hidden_args = {
-        "-masternode","-unittest", "-dbcrashratio", "-forcecompactdb",
+        "-masternode", "-dbcrashratio", "-forcecompactdb",
         // GUI args. These will be overwritten by SetupUIArgs for the GUI
         "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-splash", "-uiplatform"};
 
@@ -489,8 +489,7 @@ void SetupServerArgs(NodeContext& node)
     
     gArgs.AddArg("-sysxasset=<n>", strprintf("SYSX Asset Guid specified when running unit tests (default: %u)", defaultChainParams->GetConsensus().nSYSXAsset), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-unittest", strprintf("Set by unit test suite. Leave false"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
- 
+
     gArgs.AddArg("-blockfilterindex=<type>",
                  strprintf("Maintain an index of compact filters by block (default: %s, values: %s).", DEFAULT_BLOCKFILTERINDEX, ListBlockFilterTypes()) +
                  " If <type> is not supplied or if <type> = 1, indexes for all known types are enabled.",
@@ -1804,8 +1803,7 @@ bool AppInitMain(NodeContext& node)
 
                         const CBlockIndex* tip = chainstate->m_chain.Tip();
                         RPCNotifyBlockChange(true, tip);
-                        // SYSCOIN
-                        if (!gArgs.GetBoolArg("-unittest", false) && tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
+                        if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
                             strLoadError = _("The block database contains a block which appears to be from the future. "
                                     "This may be due to your computer's date and time being set incorrectly. "
                                     "Only rebuild the block database if you are sure that your computer's date and time are correct").translated;
@@ -2142,12 +2140,12 @@ bool AppInitMain(NodeContext& node)
     }, DUMP_BANS_INTERVAL);
 
     // SYSCOIN
-    UninterruptibleSleep(std::chrono::milliseconds{1000});
     int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
     int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
     bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
     if(!fRegTest) {
+        UninterruptibleSleep(std::chrono::milliseconds{1000});
         StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
         int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
         StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
