@@ -598,7 +598,8 @@ void Win32Logger::Logv( const char* format, va_list ap )
         }
 
         assert(p <= limit);
-        DWORD hasWritten = 0;
+        // TODO: I commented this out to fix a MinGW compilation error.
+        // DWORD hasWritten = 0;
         if(_pFileProxy){
             _pFileProxy->Append(Slice(base, p - base));
             _pFileProxy->Flush();
