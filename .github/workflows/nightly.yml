@@ -50,6 +50,12 @@ jobs:
       - name: make check
         timeout-minutes: 20
         run: make check
+      - name: upload logs
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: test-suite.log
+          path: src/test-suite.log
       - name: Collect coverage
         run: |
           lcov -c -d src -o cov.info
