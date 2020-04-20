@@ -431,8 +431,6 @@ public:
         }
         return false;
     }
-    // SYSCOIN
-    CTransaction& operator=(const CTransaction& tx);
 };
 
 /** A mutable version of CTransaction. */
