@@ -113,7 +113,8 @@ FUZZ_SUITE_LD_COMMON = \
 
 ### VeriBlock section start
 # path is relative to src
-VBK_TESTS =
+VBK_TESTS = \
+	vbk/test/unit/e2e_poptx.cpp
 
 if USE_GMOCK
   VBK_TESTS += vbk/test/unit/gmock_tests.cpp
@@ -208,9 +209,9 @@ BITCOIN_TESTS =\
   test/util_tests.cpp \
   test/validation_block_tests.cpp \
   test/versionbits_tests.cpp \
-  test/txvalidationcache_tests.cpp
-#  test/txindex_tests.cpp
-#   test/blockfilter_index_tests.cpp
+  test/txvalidationcache_tests.cpp \
+  test/txindex_tests.cpp \
+  test/blockfilter_index_tests.cpp
 
 if ENABLE_PROPERTY_TESTS
 BITCOIN_TESTS += \

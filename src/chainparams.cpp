@@ -23,6 +23,8 @@
 #include "bootstraps.h"
 #include <veriblock/blockchain/alt_chain_params.hpp>
 
+#define VBK_VERSION 0x10000000
+
 /**
  * Main network
  */
@@ -66,7 +68,7 @@ public:
         pchMessageStart[0] = 0x3a;
         pchMessageStart[1] = 0xe6;
         pchMessageStart[2] = 0xca;
-        pchMessageStart[3] = 0x01; // testnet has 0x02
+        pchMessageStart[3] = VBK_VERSION + 1;
         nDefaultPort = 8333;
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 280;
@@ -151,7 +153,7 @@ public:
         pchMessageStart[0] = 0x3a;
         pchMessageStart[1] = 0xe6;
         pchMessageStart[2] = 0xca;
-        pchMessageStart[3] = 0x02; // mainnet has 0x01
+        pchMessageStart[3] = VBK_VERSION + 2; // mainnet has 0x01
         nDefaultPort = 18333;
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 30;
@@ -239,7 +241,7 @@ public:
         pchMessageStart[0] = 0x3a;
         pchMessageStart[1] = 0xe6;
         pchMessageStart[2] = 0xca;
-        pchMessageStart[3] = 0x03; // main has 0x01, test has 0x02
+        pchMessageStart[3] = VBK_VERSION + 3; // main has 0x01, test has 0x02
         nDefaultPort = 18444;
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 0;
