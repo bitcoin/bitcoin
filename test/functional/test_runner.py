@@ -199,7 +199,8 @@ BASE_SCRIPTS = [
     'rpc_dumptxoutset.py',
     'feature_minchainwork.py',
     'rpc_estimatefee.py',
-    'rpc_getblockstats.py',
+    # renable with SYS data
+    #'rpc_getblockstats.py',
     'wallet_create_tx.py',
     'p2p_fingerprint.py',
     'feature_uacomment.py',
