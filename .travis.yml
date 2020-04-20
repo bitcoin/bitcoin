@@ -82,7 +82,7 @@ jobs:
         - set -o errexit; source ./ci/lint/06_script.sh
 
     - stage: test
-      name: 'ARM  [GOAL: install]  [buster]'
+      name: 'ARM  [GOAL: install]  [buster]  [unit tests, functional tests]'
       arch: arm64  # Can disable QEMU_USER_CMD and run the tests natively without qemu
       env: >-
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
@@ -118,7 +118,7 @@ jobs:
 #        QEMU_USER_CMD=""
 
     - stage: test
-      name: 'Win64  [GOAL: deploy]  [no gui, no functional tests]'
+      name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
 
@@ -148,6 +148,16 @@ jobs:
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_valgrind.sh"
 
+    - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
+
+    - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, fuzzers under valgrind]'
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_native_fuzz_with_valgrind.sh"
+        
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
       env: >-

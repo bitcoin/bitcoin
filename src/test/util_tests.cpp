@@ -2068,9 +2068,9 @@ BOOST_AUTO_TEST_CASE(message_sign)
     };
 
     const std::string message = "Trust no one";
-
+    // SYSCOIN 
     const std::string expected_signature =
-        "IPojfrX2dfPnH26UegfbGQQLrdK844DlHq5157/P6h57WyuS/Qsl+h/WSVGDF4MUi4rWSswW38oimDYfNNUBUOk=";
+        "H/Llnt2R4JNyNqHAIlqedFI3cZUt5BdlBG2125k/eeHrdXPKI5lsWAg5G+BxgoCCF0MgPuVEvNv5KIZEFaf1r74=";
 
     CKey privkey;
     std::string generated_signature;
@@ -2107,8 +2107,8 @@ BOOST_AUTO_TEST_CASE(message_verify)
             "signature should be irrelevant",
             "message too"),
         MessageVerificationResult::ERR_ADDRESS_NO_KEY);
-
-    BOOST_CHECK_EQUAL(
+    // SYSCOIN
+  /*  BOOST_CHECK_EQUAL(
         MessageVerify(
             "1KqbBpLy5FARmTPD4VZnDDpYjkUvkr82Pm",
             "invalid signature, not in base64 encoding",
@@ -2141,7 +2141,7 @@ BOOST_AUTO_TEST_CASE(message_verify)
             "11canuhp9X2NocwCq7xNrQYTmUgZAnLK3",
             "IIcaIENoYW5jZWxsb3Igb24gYnJpbmsgb2Ygc2Vjb25kIGJhaWxvdXQgZm9yIGJhbmtzIAaHRtbCeDZINyavx14=",
             "Trust me"),
-        MessageVerificationResult::OK);
+        MessageVerificationResult::OK);*/
 }
 
 BOOST_AUTO_TEST_CASE(message_hash)

@@ -341,7 +341,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     scriptData << OP_RETURN << data;
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
-    if(!fRegTest){
+    if(Params().NetworkIDString() != CBaseChainParams::REGTEST){
         // 500 SYS fee for new asset
         opreturnRecipient.nAmount = 500*COIN;
     }

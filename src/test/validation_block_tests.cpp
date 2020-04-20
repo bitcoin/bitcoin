@@ -4,7 +4,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <auxpow.h>
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
@@ -19,17 +18,10 @@
 
 #include <thread>
 
-struct RegtestingSetup : public TestingSetup {
-    RegtestingSetup() : TestingSetup(CBaseChainParams::REGTEST) {
-        // SYSCOIN
-        TurnOffSegwitForUnitTests();
-    }
-};
-
 static const std::vector<unsigned char> V_OP_TRUE{OP_TRUE};
 
 namespace validation_block_tests {
-struct MinerTestingSetup : public RegtestingSetup {
+struct MinerTestingSetup : public RegTestingSetup {
     std::shared_ptr<CBlock> Block(const uint256& prev_hash);
     std::shared_ptr<const CBlock> GoodBlock(const uint256& prev_hash);
     std::shared_ptr<const CBlock> BadBlock(const uint256& prev_hash);
@@ -200,7 +192,6 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
             }
 
             // to make sure that eventually we process the full chain - do it here
-
             for (auto block : blocks) {
                 if (block->vtx.size() == 1) {
                     bool processed = ProcessNewBlock(Params(), block, true, &ignored);

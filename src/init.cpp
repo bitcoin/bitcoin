@@ -1964,7 +1964,7 @@ bool AppInitMain(NodeContext& node)
     fZMQWalletRawTx = gArgs.IsArgSet("-zmqpubwalletrawtx");
 
      //lite mode disables all masternode functionality
-    fRegTest = gArgs.GetBoolArg("-regtest", false);
+    bool fRegTest = gArgs.GetBoolArg("-regtest", false);
     fLiteMode = gArgs.GetBoolArg("-litemode", fRegTest);
     // if regtest then make sure geth is shown as synced as well
     fGethSynced = fRegTest;

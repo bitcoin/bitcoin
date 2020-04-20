@@ -1377,7 +1377,7 @@ CAmount GetBlockSubsidyRegtest(int nHeight, const Consensus::Params& consensusPa
 }
 CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensusParams, CAmount &nTotalRewardWithMasternodes, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight)
 {
-    if(fRegTest) {
+    if(Params().NetworkIDString() == CBaseChainParams::REGTEST) {
         nTotalRewardWithMasternodes = GetBlockSubsidyRegtest(nHeight, consensusParams);
         return nTotalRewardWithMasternodes;
     }
@@ -2210,7 +2210,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 //  least as good as the expected chain.
                 // SYSCOIN
                 int64_t timeForWork = 1209600;
-                if(fRegTest)
+                if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
                     timeForWork /= 10;
                 fScriptChecks = (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, chainparams.GetConsensus()) <= timeForWork);
             }
@@ -2377,7 +2377,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     std::string strError = "";
     if (pindex->nHeight > 1 && !IsBlockValueValid(block, pindex->nHeight, nTotalRewardWithMasternodes, nFees, strError)) {
-        LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);
+        LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%lld vs limit=%lld)\n", block.vtx[0]->GetValueOut(), blockReward);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
     }
     // END SYSCOIN

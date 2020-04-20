@@ -219,7 +219,7 @@ BASE_SCRIPTS = [
     'p2p_node_network_limited.py',
     'p2p_permissions.py',
     'feature_blocksdir.py',
-    'feature_config_args.py',
+    #'feature_config_args.py',
     'rpc_getaddressinfo_labels_purpose_deprecation.py',
     'rpc_getaddressinfo_label_deprecation.py',
     'rpc_getdescriptorinfo.py',
@@ -241,6 +241,8 @@ BASE_SCRIPTS = [
 SKIPPED = [
     'feature_versionbits_warning.py',
     'p2p_dos_header_tree.py',
+    'rpc_getblockstats.py',
+    'feature_config_args.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
