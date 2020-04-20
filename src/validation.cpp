@@ -1719,8 +1719,14 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
         }
     }
 
+    auto prevHash = pindex->pprev->GetBlockHash();
+    if (!VeriBlock::getService<VeriBlock::PopService>().setState(prevHash)) {
+        error("DisconnectBlock(): setState failed");
+        return DISCONNECT_FAILED;
+    }
+
     // move best block pointer to prevout block
-    view.SetBestBlock(pindex->pprev->GetBlockHash());
+    view.SetBestBlock(prevHash);
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
@@ -2145,6 +2151,11 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
+
+    if (!VeriBlock::getService<VeriBlock::PopService>().addAllBlockPayloads(*pindex, block, state)) {
+        return error("%s : AddAllBlockPayloads %s failed, %s", __func__, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+    }
+
     int64_t nTime3 = GetTimeMicros();
     nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
@@ -2465,9 +2476,6 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
         }
     }
 
-    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-    pop.disconnectBlock(pindexDelete->GetBlockHash());
-
     m_chain.SetTip(pindexDelete->pprev);
 
     UpdateTip(pindexDelete->pprev, chainparams);
@@ -2603,11 +2611,6 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     // Remove conflicting transactions from the mempool.;
     mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
     disconnectpool.removeForBlock(blockConnecting.vtx);
-
-    if (!VeriBlock::getService<VeriBlock::PopService>().addAllBlockPayloads(*pindexNew, blockConnecting, state)) {
-        InvalidBlockFound(pindexNew, state);
-        return error("%s : AddAllBlockPayloads %s failed, %s", __func__, pindexNew->GetBlockHash().ToString(), FormatStateMessage(state));
-    }
 
     // Update m_chain & related variables.
     m_chain.SetTip(pindexNew);

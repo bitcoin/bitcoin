@@ -19,31 +19,35 @@ void printConfig(const altintegration::Config& config)
     std::string vbklast = config.vbk.blocks.empty() ? "<empty>" : config.vbk.blocks.rbegin()->getHash().toHex();
     std::string vbkfirst = config.vbk.blocks.empty() ? "<empty>" : config.vbk.blocks.begin()->getHash().toHex();
 
+
     assert(config.alt);
 
     LogPrintf(R"(Applied POP config:
  BTC:
+  network     : %s
   startHeight : %d
   total blocks: %d
   first       : %s
   last        : %s
 
  VBK:
+  network     : %s
   startHeight : %d
   total blocks: %d
   first       : %s
   last        : %s
 
  ALT:
+  network     : %s
   block height: %d
   block hash  : %s
   chain id    : %d
 )",
-        config.btc.startHeight, config.btc.blocks.size(), btcfirst, btclast,
+        config.btc.params->networkName(), config.btc.startHeight, config.btc.blocks.size(), btcfirst, btclast,
 
-        config.vbk.startHeight, config.vbk.blocks.size(), vbkfirst, vbklast,
+        config.vbk.params->networkName(), config.vbk.startHeight, config.vbk.blocks.size(), vbkfirst, vbklast,
 
-        config.alt->getBootstrapBlock().height,
+        Params().NetworkIDString(), config.alt->getBootstrapBlock().height,
         HexStr(config.alt->getBootstrapBlock().hash),
         config.alt->getIdentifier());
 }

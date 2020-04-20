@@ -1,16 +1,17 @@
 #ifndef BITCOIN_SRC_VBK_UTIL_HPP
 #define BITCOIN_SRC_VBK_UTIL_HPP
 
-#include <streams.h>
-#include <version.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <streams.h>
+#include <version.h>
 
-#include <vbk/service_locator.hpp>
 #include <vbk/config.hpp>
+#include <vbk/service_locator.hpp>
 
-#include <amount.h>
 #include <algorithm>
+#include <amount.h>
+#include <chain.h>
 #include <functional>
 
 
@@ -88,7 +89,8 @@ inline CAmount getCoinbaseSubsidy(const CAmount& subsidy)
     return subsidy * (100 - VeriBlock::getService<VeriBlock::Config>().POP_REWARD_PERCENTAGE) / 100;
 }
 
-inline CMutableTransaction MakePopTx(const CScript& scriptSig) {
+inline CMutableTransaction MakePopTx(const CScript& scriptSig)
+{
     CMutableTransaction tx;
 
     tx.vout.resize(1);
@@ -136,6 +138,22 @@ inline CBlockHeader headerFromBytes(const std::vector<uint8_t>& v)
     CBlockHeader header;
     stream >> header;
     return header;
+}
+
+inline altintegration::AltBlock blockToAltBlock(int nHeight, const CBlockHeader& block)
+{
+    altintegration::AltBlock alt;
+    alt.height = nHeight;
+    alt.timestamp = block.nTime;
+    alt.previousBlock = std::vector<uint8_t>(block.hashPrevBlock.begin(), block.hashPrevBlock.end());
+    auto hash = block.GetHash();
+    alt.hash = std::vector<uint8_t>(hash.begin(), hash.end());
+    return alt;
+}
+
+inline altintegration::AltBlock blockToAltBlock(const CBlockIndex& index)
+{
+    return blockToAltBlock(index.nHeight, index.GetBlockHeader());
 }
 
 } // namespace VeriBlock
