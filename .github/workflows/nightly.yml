@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 name: CI (nightly)
 
 on:
@@ -85,4 +86,99 @@ jobs:
           --disable-bench
           --disable-gmock
       - name: make
+=======
+name: CI (nightly)
+
+on:
+  schedule:
+    # create nightly full builds at midnight
+    - cron:  '0 0 * * *'
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+        with:
+          path: main
+      - name: get version for alt-integration-cpp
+        run: echo "::set-env name=ALTINTEGRATION_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/altintegration.mk | head -n1)"
+      - name: alt-integration-cpp release version
+        run: echo Using alt-integration-cpp version $ALTINTEGRATION_VERSION
+      - name: add bitcoin ppa
+        run: sudo add-apt-repository ppa:bitcoin/bitcoin
+      - name: install build requirements
+        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
+      - name: install dependencies
+        run: sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libqrencode-dev
+      - name: install alt-integration-cpp
+        run: |
+          (
+          cd /opt;
+          wget https://github.com/VeriBlock/alt-integration-cpp/archive/${ALTINTEGRATION_VERSION}.tar.gz;
+          tar -xf ${ALTINTEGRATION_VERSION}.tar.gz;
+          cd alt-integration-cpp-${ALTINTEGRATION_VERSION};
+          mkdir build;
+          cd build;
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF;
+          make -j2;
+          sudo make install
+          )
+      - name: autogen
+        run: ./autogen.sh
+      - name: configure
+        run: ./configure
+          --enable-werror
+          --disable-bench
+          --disable-gmock
+          --enable-lcov
+          --enable-lcov-branch-coverage
+      - name: make
+        run: make -j2
+      - name: make check
+        timeout-minutes: 20
+        run: make check
+      - name: upload logs
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: test-suite.log
+          path: src/test-suite.log
+      - name: Collect coverage
+        run: |
+          lcov -c -d src -o cov.info
+          gcovr --xml cov.xml -j2 -v -s -b -r src
+      - name: Run sonarqube
+        run: sonar-scanner -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
+  x86_64-w64-mingw32:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+        with:
+          path: main
+
+      - name: install build requirements
+        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git g++-mingw-w64-x86-64
+      - name: set the default mingw32 g++ compiler option to posix
+        run: sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+      - name: strip out problematic Windows %PATH% imported var
+        run: PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g')
+      - name: set variables and build dependencies for x86_64-w64
+        env:
+          CC: x86_64-w64-mingw32-gcc
+          CXX: x86_64-w64-mingw32-g++
+          HOST: x86_64-w64-mingw32
+        run: cd depends && make -j2
+      - name: autogen
+        run: ./autogen.sh
+      - name: configure
+        run: CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+          --enable-werror
+          --disable-bench
+          --disable-gmock
+      - name: make
+>>>>>>> d5f3418fea8357ef36787b1798515311b76a3c8c
         run: make -j2
