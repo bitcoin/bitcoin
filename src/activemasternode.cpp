@@ -20,7 +20,7 @@ void CActiveMasternode::ManageState(CConnman& connman)
         LogPrint(BCLog::MN, "CActiveMasternode::ManageState -- Not a masternode, returning\n");
         return;
     }
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST && !masternodeSync.IsBlockchainSynced()) {
+    if(!fRegTest && !masternodeSync.IsBlockchainSynced()) {
         LogPrint(BCLog::MN, "CActiveMasternode::ManageState -- %s: %s\n", GetStateString(), GetStatus());
         return;
     }

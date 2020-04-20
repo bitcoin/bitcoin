@@ -676,7 +676,7 @@ bool CMasternodeMan::GetMasternodeRanks(CMasternodeMan::rank_pair_vec_t& vecMast
 void CMasternodeMan::ProcessMasternodeConnections(CConnman& connman)
 {
     //we don't care about this for regtest
-    if(Params().NetworkIDString() == CBaseChainParams::REGTEST) return;
+    if(fRegTest) return;
 
     connman.ForEachNode([](CNode* pnode) {
         if(pnode->fMasternode) {

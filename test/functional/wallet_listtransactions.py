@@ -91,8 +91,10 @@ class ListTransactionsTest(SyscoinTestFramework):
                             {"category": "receive", "amount": Decimal("0.44")},
                             {"txid": txid})
 
-        pubkey = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['pubkey']
-        multisig = self.nodes[1].createmultisig(1, [pubkey])
+        address = self.nodes[1].getnewaddress()
+        pubkey = self.nodes[1].getaddressinfo(address)['pubkey']
+        # SYSCOIN
+        multisig = self.nodes[1].createmultisig(1, [pubkey], 'legacy')
         self.nodes[0].importaddress(multisig["redeemScript"], "watchonly", False, True)
         txid = self.nodes[1].sendtoaddress(multisig["address"], 0.1)
         self.nodes[1].generate(1)

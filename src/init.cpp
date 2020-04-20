@@ -321,7 +321,6 @@ void Shutdown(NodeContext& node)
     passetdb.reset();
     pethereumtxrootsdb.reset();
     pethereumtxmintdb.reset();
-    pblockindexdb.reset();
     {
         LOCK(cs_main);
         for (CChainState* chainstate : g_chainman.GetAll()) {
@@ -1659,12 +1658,10 @@ bool AppInitMain(NodeContext& node)
                 passetdb.reset();
                 pethereumtxrootsdb.reset();
                 pethereumtxmintdb.reset();
-                pblockindexdb.reset();
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState));    
                 // we don't need to ever reset the txroots db because it is an external chain not related to syscoin chain
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));
                 pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset || fReindexChainState));
-                pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReset || fReindexChainState));
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
@@ -1954,13 +1951,6 @@ bool AppInitMain(NodeContext& node)
         }
         block_notify_genesis_wait_connection.disconnect();
     }
-	// SYSCOIN
-    fUnitTest = gArgs.GetBoolArg("-unittest", false);
-    if(fUnitTest){
-        SetSYSXAssetForUnitTests(gArgs.GetArg("-sysxasset", Params().GetConsensus().nSYSXAsset));
-    }
-    // if unit test then make sure geth is shown as synced as well
-    fGethSynced = fUnitTest;
     
     fZMQWalletStatus = gArgs.IsArgSet("-zmqpubwalletstatus");
     fZMQEthStatus = gArgs.IsArgSet("-zmqpubethstatus");
@@ -1968,8 +1958,10 @@ bool AppInitMain(NodeContext& node)
     fZMQWalletRawTx = gArgs.IsArgSet("-zmqpubwalletrawtx");
 
      //lite mode disables all masternode functionality
-    fLiteMode = gArgs.GetBoolArg("-litemode", false);
-
+    fRegTest = gArgs.GetBoolArg("-regtest", false);
+    fLiteMode = gArgs.GetBoolArg("-litemode", fRegTest);
+    // if regtest then make sure geth is shown as synced as well
+    fGethSynced = fRegTest;
     if(fLiteMode) {
         LogPrintf("You are starting in lite mode, all masternode-specific functionality is disabled.\n");
     }
@@ -2149,7 +2141,7 @@ bool AppInitMain(NodeContext& node)
     int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
     bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+    if(!fRegTest) {
         StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
         int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
         StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);

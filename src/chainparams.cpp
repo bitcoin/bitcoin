@@ -341,7 +341,7 @@ class CRegTestParams : public CChainParams {
 public:
     explicit CRegTestParams(const ArgsManager& args) {
         strNetworkID =  CBaseChainParams::REGTEST;
-        //consensus.BIP16Exception = uint256();
+        consensus.BIP16Exception = uint256();
         consensus.BIP16Height = 1;
         consensus.BIP34Height = 500; // BIP34 activated on regtest (Used in functional tests)
         consensus.BIP34Hash = uint256();
@@ -458,13 +458,14 @@ public:
 void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 {
     if (gArgs.IsArgSet("-segwitheight")) {
-        int64_t height = gArgs.GetArg("-segwitheight", 0);
+        int64_t height = gArgs.GetArg("-segwitheight", consensus.SegwitHeight);
         if (height < -1 || height >= std::numeric_limits<int>::max()) {
             throw std::runtime_error(strprintf("Activation height %ld for segwit is out of valid range. Use -1 to disable segwit.", height));
         } else if (height == -1) {
             LogPrintf("Segwit disabled for testing\n");
             height = std::numeric_limits<int>::max();
         }
+        consensus.SegwitHeight = static_cast<int>(height);
     }
 
     if (!args.IsArgSet("-vbparams")) return;

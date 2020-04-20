@@ -1380,7 +1380,7 @@ CAmount GetBlockSubsidyRegtest(int nHeight, const Consensus::Params& consensusPa
 }
 CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensusParams, CAmount &nTotalRewardWithMasternodes, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight)
 {
-    if(Params().NetworkIDString() == CBaseChainParams::REGTEST) {
+    if(fRegTest) {
         nTotalRewardWithMasternodes = GetBlockSubsidyRegtest(nHeight, consensusParams);
         return nTotalRewardWithMasternodes;
     }
@@ -2059,10 +2059,37 @@ public:
 static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS] GUARDED_BY(cs_main);
 
 
+// 0.13.0 was shipped with a segwit deployment defined for testnet, but not for
+// mainnet. We no longer need to support disabling the segwit deployment
+// except for testing purposes, due to limitations of the functional test
+// environment. See test/functional/p2p-segwit.py.
+static bool IsScriptWitnessEnabled(const Consensus::Params& params)
+{
+    return params.SegwitHeight != std::numeric_limits<int>::max();
+}
+
 static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     AssertLockHeld(cs_main);
 
-    unsigned int flags = SCRIPT_VERIFY_P2SH;
+    unsigned int flags = SCRIPT_VERIFY_NONE;
+
+    // BIP16 didn't become active until Apr 1 2012 (on mainnet, and
+    // retroactively applied to testnet)
+    // However, only one historical block violated the P2SH rules (on both
+    // mainnet and testnet), so for simplicity, always leave P2SH
+    // on except for the one violating block.
+    if (consensusparams.BIP16Exception.IsNull() || // no bip16 exception on this chain
+        pindex->phashBlock == nullptr || // this is a new candidate block, eg from TestBlockValidity()
+        *pindex->phashBlock != consensusparams.BIP16Exception) // this block isn't the historical exception
+    {
+        flags |= SCRIPT_VERIFY_P2SH;
+    }
+
+    // Enforce WITNESS rules whenever P2SH is in effect (and the segwit
+    // deployment is defined).
+    if (flags & SCRIPT_VERIFY_P2SH && IsScriptWitnessEnabled(consensusparams)) {
+        flags |= SCRIPT_VERIFY_WITNESS;
+    }
 
     // Start enforcing the DERSIG (BIP66) rule
     if (pindex->nHeight >= consensusparams.BIP66Height) {
@@ -2082,10 +2109,6 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     // Start enforcing BIP147 NULLDUMMY (activated simultaneously with segwit)
     if (IsWitnessEnabled(pindex->pprev, consensusparams)) {
         flags |= SCRIPT_VERIFY_NULLDUMMY;
-        // Enforce WITNESS rules whenever P2SH is in effect (and the segwit
-        // deployment is defined).
-        flags |= SCRIPT_VERIFY_WITNESS;
-        
     }
 
     return flags;
@@ -2662,8 +2685,8 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
         assert(flushed);
     }
     // SYSCOIN 
-    if(pblockindexdb != nullptr){
-        if(!passetdb->Flush(mapAssets) || !pblockindexdb->FlushErase(vecTXIDs) || !pethereumtxmintdb->FlushErase(mapMintKeys)){
+    if(passetdb != nullptr){
+        if(!passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushErase(mapMintKeys)){
             return error("DisconnectTip(): Error flushing to asset dbs on disconnect %s", pindexDelete->GetBlockHash().ToString());
         }
     }
@@ -2785,8 +2808,8 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
         assert(flushed);       
     }
     // SYSCOIN
-    if(pblockindexdb){
-        if(!pblockindexdb->FlushWrite(blockIndex) || !passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushWrite(mapMintKeys)){
+    if(passetdb){
+        if(!passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushWrite(mapMintKeys)){
             return error("Error flushing to Asset DBs: %s", pindexNew->GetBlockHash().ToString());
         }
     } 
@@ -3598,9 +3621,8 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
-    // Segwit is enabled together with P2SH, when the current block (not prev)
-    // is at the threshold height.
-    return pindexPrev != nullptr && pindexPrev->nHeight + 1 >= params.BIP16Height;
+    int height = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+    return (height >= params.SegwitHeight);
 }
 
 int GetWitnessCommitmentIndex(const CBlock& block)
@@ -3738,9 +3760,9 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
 {
     const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
 
-    // Start enforcing BIP113 (Median Time Past) together with P2SH.
+    // Start enforcing BIP113 (Median Time Past).
     int nLockTimeFlags = 0;
-    if (nHeight >= consensusParams.BIP16Height) {
+    if (nHeight >= consensusParams.CSVHeight) {
         assert(pindexPrev != nullptr);
         nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
     }
@@ -3775,7 +3797,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness reserved value). In case there are
     //   multiple, the last one is used.
     bool fHaveWitness = false;
-    if (IsWitnessEnabled(pindexPrev, consensusParams)) {
+    if (nHeight >= consensusParams.SegwitHeight) {
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != -1) {
             bool malleated = false;

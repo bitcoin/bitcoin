@@ -231,11 +231,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 	if(asset.IsNull())
 		return false;
 
-    const uint256& txHash = tx.GetHash();
-    uint256 blockhash;
-    pblockindexdb->ReadBlockHash(txHash, blockhash);
-        	
-
+    const uint256& txHash = tx.GetHash();  	
 	entry.__pushKV("txtype", assetFromTx(tx.nVersion));
 	entry.__pushKV("asset_guid", asset.assetAllocation.voutAssets.begin()->first);
     entry.__pushKV("symbol", asset.strSymbol);
@@ -257,8 +253,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 		entry.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
         entry.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
 		entry.__pushKV("precision", asset.nPrecision);
-	}
-    entry.__pushKV("blockhash", blockhash.GetHex());  
+	} 
     return true;
 }
 

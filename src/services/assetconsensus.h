@@ -9,16 +9,6 @@
 #include <primitives/transaction.h>
 #include <services/asset.h>
 class TxValidationState;
-class CBlockIndexDB : public CDBWrapper {
-public:
-    CBlockIndexDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "blockindex", nCacheSize, fMemory, fWipe) {}
-    
-    bool ReadBlockHash(const uint256& txid, uint256& block_hash){
-        return Read(txid, block_hash);
-    } 
-    bool FlushWrite(const std::vector<std::pair<uint256, uint256> > &blockIndex);
-    bool FlushErase(const std::vector<uint256> &vecTXIDs);
-};
 class EthereumTxRoot {
     public:
     std::vector<unsigned char> vchBlockHash;
@@ -61,7 +51,6 @@ public:
     bool FlushErase(const EthereumMintTxMap &mapMintKeys);
     bool FlushWrite(const EthereumMintTxMap &mapMintKeys);
 };
-extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 extern std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);

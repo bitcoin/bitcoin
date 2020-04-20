@@ -517,25 +517,26 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     uint256 hash_block;
     CTransactionRef txCollateral;
     uint256 blockhash;
-    if(!pblockindexdb->ReadBlockHash(nCollateralHash, blockhash)){
-        strError = strprintf("Can't find collateral blockhash %s in asset index", blockhash.ToString());
-        LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
-        return false;   
-    }
-      
-    CBlockIndex* blockindex = nullptr;
+    CBlockIndex* pblockindex = nullptr;
     {
         LOCK(cs_main);
-        blockindex = LookupBlockIndex(blockhash);
+        const Coin& coin = AccessByTxid(::ChainstateActive().CoinsTip(), nCollateralHash);
+        if (!coin.IsSpent()) {
+            pblockindex = ::ChainActive()[coin.nHeight];
+        } else {
+            LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
+            return false; 
+        }
     }
-    if(!blockindex){
+      
+    if(!pblockindex){
         strError = strprintf("Can't find collateral blockhash %s", blockhash.ToString());
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;   
     }
      
-    if (GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), hash_block, blockindex))
-        nConfirmationsIn = ::ChainActive().Height() - blockindex->nHeight + 1;
+    if (GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), hash_block, pblockindex))
+        nConfirmationsIn = ::ChainActive().Height() - pblockindex->nHeight + 1;
     else{
         strError = strprintf("Can't find collateral tx %s", GetCollateralHash().ToString());
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);

@@ -76,13 +76,16 @@ class BlockchainTest(SyscoinTestFramework):
 
     def _test_getblockchaininfo(self):
         self.log.info("Test getblockchaininfo")
-
+        # SYSCOIN
         keys = [
             'bestblockhash',
             'blocks',
             'chain',
             'chainwork',
             'difficulty',
+            'geth_current_block', 
+            'geth_sync_status', 
+            'geth_total_blocks',
             'headers',
             'initialblockdownload',
             'mediantime',
@@ -123,7 +126,7 @@ class BlockchainTest(SyscoinTestFramework):
         assert res['automatic_pruning']
         assert_equal(res['prune_target_size'], 576716800)
         assert_greater_than(res['size_on_disk'], 0)
-
+        # SYSCOIN
         assert_equal(res['softforks'], {
             'bip34': {'type': 'buried', 'active': False, 'height': 500},
             'bip66': {'type': 'buried', 'active': False, 'height': 1251},
@@ -142,8 +145,8 @@ class BlockchainTest(SyscoinTestFramework):
                         'period': 144,
                         'threshold': 108,
                         'elapsed': 57,
-                        'count': 57,
-                        'possible': True,
+                        'count': 0,
+                        'possible': False,
                     },
                 },
                 'active': False}

@@ -33,15 +33,17 @@ class DumptxoutsetTest(SyscoinTestFramework):
         assert_equal(out['base_height'], 100)
         assert_equal(out['path'], str(expected_path))
         # Blockhash should be deterministic based on mocked time.
+        # SYSCOIN
         assert_equal(
             out['base_hash'],
-            '6fd417acba2a8738b06fee43330c50d58e6a725046c3d843c8dd7e51d46d1ed6')
+            '6623a1cb592271d2db4765496dfe4f462b4ac5acf4d553ba54d07f908ab90f3d')
 
         with open(str(expected_path), 'rb') as f:
             digest = hashlib.sha256(f.read()).hexdigest()
             # UTXO snapshot hash should be deterministic based on mocked time.
+            # SYSCOIN
             assert_equal(
-                digest, 'be032e5f248264ba08e11099ac09dbd001f6f87ffc68bf0f87043d8146d50664')
+                digest, '039918c897c9e7dc51e056f651fa7bd8dd567a845eb8d90b2b262d43a972935f')
 
         # Specifying a path to an existing file will fail.
         assert_raises_rpc_error(

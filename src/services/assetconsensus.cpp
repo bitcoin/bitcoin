@@ -17,7 +17,6 @@
 #include <utility> // std::unique
 #include <services/witnessaddress.h>
 #include <key_io.h>
-std::unique_ptr<CBlockIndexDB> pblockindexdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 extern RecursiveMutex cs_setethstatus;
@@ -240,7 +239,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(!ExtractDestination(tx.vout[0].scriptPubKey, dest)) {
         return FormatSyscoinErrorMessage(state, "mint-extract-destination", bSanityCheck);  
     }
-    if(!fUnitTest) {
+    if(!fRegTest) {
         if(EncodeDestination(dest) != witnessAddress.ToString()) {
             return FormatSyscoinErrorMessage(state, "mint-mismatch-destination", bSanityCheck);  
         }
@@ -359,7 +358,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
             if(nBurnAmount != nAmountAsset) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-mismatch-amount", bSanityCheck);
             }
-            if(!fUnitTest && nAsset != Params().GetConsensus().nSYSXAsset) {
+            if(!fRegTest && nAsset != Params().GetConsensus().nSYSXAsset) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-sysx-asset", bSanityCheck);
             }
         }
@@ -388,7 +387,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
                 if(nBurnAmount != tx.vout[0].nValue) {
                     return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
                 }  
-                if(!fUnitTest && nAsset != Params().GetConsensus().nSYSXAsset) {
+                if(!fRegTest && nAsset != Params().GetConsensus().nSYSXAsset) {
                     return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bSanityCheck);
                 }  
             }            
@@ -563,7 +562,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
             if(vecVout.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-size", bSanityCheck);
             }
-            if (!fUnitTest && tx.vout[nOut].nValue < 500*COIN) {
+            if (!fRegTest && tx.vout[nOut].nValue < 500*COIN) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
             if (nAsset <= (SYSCOIN_TX_VERSION_ALLOCATION_SEND*10)) {
@@ -681,27 +680,6 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
                 fJustCheck ? "JUSTCHECK" : "BLOCK");
     } 
     return true;
-}
-bool CBlockIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs) {
-    if(vecTXIDs.empty())
-        return true;
-
-    CDBBatch batch(*this);
-    for (const uint256 &txid : vecTXIDs) {
-        batch.Erase(txid);
-    }
-    LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDs.size());
-    return WriteBatch(batch);
-}
-bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint256> > &blockIndex){
-    if(blockIndex.empty())
-        return true;
-    CDBBatch batch(*this);
-    for (const auto &pair : blockIndex) {
-        batch.Write(pair.first, pair.second);
-    }
-    LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", blockIndex.size());
-    return WriteBatch(batch);
 }
 bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     LOCK(cs_setethstatus);

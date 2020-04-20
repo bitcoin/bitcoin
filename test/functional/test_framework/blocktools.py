@@ -44,7 +44,8 @@ from io import BytesIO
 MAX_BLOCK_SIGOPS = 20000
 
 # Genesis block time (regtest)
-TIME_GENESIS_BLOCK = 1296688602
+# SYSCOIN
+TIME_GENESIS_BLOCK = 1553040331
 
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
@@ -56,7 +57,8 @@ def create_block(hashprev, coinbase, ntime=None, *, version=1):
     block.set_base_version(version)
     if ntime is None:
         import time
-        block.nTime = int(time.time() + 600)
+        # SYSCOIN
+        block.nTime = int(time.time() + 60)
     else:
         block.nTime = ntime
     block.hashPrevBlock = hashprev

@@ -39,13 +39,13 @@
 // SYSCOIN
 class JSONRPCRequest;
 extern bool fMasternodeMode;
-extern bool fUnitTest;
 extern bool bGethTestnet;
 extern bool fZMQWalletStatus;
 extern bool fZMQEthStatus;
 extern bool fZMQNetworkStatus;
 extern bool fZMQWalletRawTx;
 extern bool fLiteMode;
+extern bool fRegTest;
 extern uint32_t fGethSyncHeight;
 extern uint32_t fGethCurrentHeight;
 extern std::string fGethSyncStatus;

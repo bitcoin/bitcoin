@@ -21,7 +21,8 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     hex_str_to_bytes,
 )
-
+# SYSCOIN
+from test_framework.auxpow_testing import mineAuxpowBlock
 from test_framework.messages import BLOCK_HEADER_SIZE
 
 class ReqType(Enum):

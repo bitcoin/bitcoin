@@ -374,19 +374,6 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
-    // SYSCOIN
-    else{
-        if(!pblockindexdb->ReadBlockHash(hash, hashBlock)){
-            return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found"); 
-        }
-        {
-            LOCK(cs_main);
-            blockindex = LookupBlockIndex(hashBlock);
-        }
-        if(!blockindex){
-            return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found"); 
-        }
-    }
 
     CTransactionRef tx;
    
