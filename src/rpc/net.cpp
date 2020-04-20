@@ -941,18 +941,20 @@ static UniValue sendMessage(std::string msg, std::string rawArgs, bool printResu
         } else if(msg == "block") {
           //std::shared_ptr<const CBlock> block;
 
-            uint64_t nonce = 0;
-            while (nonce == 0) {
-                GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
-            }
+	      uint64_t nonce = 0;
+	      while (nonce == 0) {
+	          GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
+	      }
 
-          CBlockHeader block;
-          block.nVersion       = 0x20400000;
-          block.hashPrevBlock  = GetRandHash();
-          block.hashMerkleRoot = GetRandHash();
-          block.nTime          = GetAdjustedTime();
-          block.nBits          = 0;
-          block.nNonce         = nonce;
+          CBlockHeader header;
+          header.nVersion       = 0x20400000;
+          header.hashPrevBlock  = GetRandHash();
+          header.hashMerkleRoot = GetRandHash();
+          header.nTime          = GetAdjustedTime();
+          header.nBits          = 0;
+          header.nNonce         = nonce;
+
+          CBlock block(header);
 
           netMsg = CNetMsgMaker(PROTOCOL_VERSION).Make(NetMsgType::BLOCK, block);
           g_rpc_node->connman->PushMessage(pnode, CNetMsgMaker(PROTOCOL_VERSION).Make(NetMsgType::BLOCK, block));
