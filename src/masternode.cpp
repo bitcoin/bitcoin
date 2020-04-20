@@ -194,7 +194,7 @@ void CMasternode::Check(bool fForce)
         }
     }
     
-    if (!fRegTest) {  
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {  
         if (sigTime <= 0 || IsBroadcastedWithin(MASTERNODE_MIN_MNP_SECONDS*10)) {  
             nActiveState = MASTERNODE_PRE_ENABLED;  
             if (nActiveStatePrev != nActiveState) { 
@@ -292,7 +292,7 @@ bool CMasternode::IsValidNetAddr(CService addrIn)
 {
     // TODO: regtest is fine with any addresses for now,
     // should probably be a bit smarter if one day we start to implement tests for this
-    return fRegTest ||
+    return Params().NetworkIDString() == CBaseChainParams::REGTEST ||
             (addrIn.IsIPv4() && IsReachable(addrIn) && addrIn.IsRoutable());
 }
 

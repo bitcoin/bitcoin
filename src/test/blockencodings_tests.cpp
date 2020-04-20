@@ -14,11 +14,7 @@
 
 std::vector<std::pair<uint256, CTransactionRef>> extra_txn;
 
-struct RegtestingSetup : public TestingSetup {
-    RegtestingSetup() : TestingSetup(CBaseChainParams::REGTEST) {}
-};
-
-BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegtestingSetup)
+BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegTestingSetup)
 static void SetBlockVersion(CPureBlockHeader& header, int32_t baseVersion) {
   const int32_t nChainId = Params().GetConsensus().nAuxpowChainId;
   header.SetBaseVersion(baseVersion, nChainId);

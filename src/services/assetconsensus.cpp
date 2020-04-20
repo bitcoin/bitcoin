@@ -239,14 +239,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(!ExtractDestination(tx.vout[0].scriptPubKey, dest)) {
         return FormatSyscoinErrorMessage(state, "mint-extract-destination", bSanityCheck);  
     }
-    if(!fRegTest) {
+    if(Params().NetworkIDString() != CBaseChainParams::REGTEST) {
         if(EncodeDestination(dest) != witnessAddress.ToString()) {
             return FormatSyscoinErrorMessage(state, "mint-mismatch-destination", bSanityCheck);  
         }
-        if(nAssetEth != nAsset) {
-            return FormatSyscoinErrorMessage(state, "mint-mismatch-asset", bSanityCheck);
-        }
-    } 
+    }
+    if(nAssetEth != nAsset) {
+        return FormatSyscoinErrorMessage(state, "mint-mismatch-asset", bSanityCheck);
+    }
     if(outputAmount <= 0) {
         return FormatSyscoinErrorMessage(state, "mint-value-negative", bSanityCheck);
     }
@@ -358,7 +358,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
             if(nBurnAmount != nAmountAsset) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-mismatch-amount", bSanityCheck);
             }
-            if(!fRegTest && nAsset != Params().GetConsensus().nSYSXAsset) {
+            if(nAsset != Params().GetConsensus().nSYSXAsset) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-sysx-asset", bSanityCheck);
             }
         }
@@ -387,7 +387,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
                 if(nBurnAmount != tx.vout[0].nValue) {
                     return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
                 }  
-                if(!fRegTest && nAsset != Params().GetConsensus().nSYSXAsset) {
+                if(nAsset != Params().GetConsensus().nSYSXAsset) {
                     return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bSanityCheck);
                 }  
             }            
@@ -562,7 +562,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
             if(vecVout.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-size", bSanityCheck);
             }
-            if (!fRegTest && tx.vout[nOut].nValue < 500*COIN) {
+            if (tx.vout[nOut].nValue < 500*COIN) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
             if (nAsset <= (SYSCOIN_TX_VERSION_ALLOCATION_SEND*10)) {
