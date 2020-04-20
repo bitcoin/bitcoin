@@ -182,7 +182,7 @@ void Intro::setDataDirectory(const QString &dataDir)
     }
 }
 
-bool Intro::showIfNeeded(bool& did_show_intro, bool& prune)
+bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
 {
     did_show_intro = false;
 
@@ -233,7 +233,7 @@ bool Intro::showIfNeeded(bool& did_show_intro, bool& prune)
         }
 
         // Additional preferences:
-        prune = intro.ui->prune->isChecked();
+        prune_MiB = intro.ui->prune->isChecked() ? PruneGBtoMiB(intro.m_prune_target_gb) : int64_t(0);
 
         settings.setValue("strDataDir", dataDir);
         settings.setValue("fReset", false);
