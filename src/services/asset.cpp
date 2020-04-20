@@ -258,8 +258,9 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 }
 
 bool CAssetDB::Flush(const AssetMap &mapAssets){
-    if(mapAssets.empty())
+    if(mapAssets.empty()) {
         return true;
+	}
 	int write = 0;
 	int erase = 0;
     CDBBatch batch(*this);

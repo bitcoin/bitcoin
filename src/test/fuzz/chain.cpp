@@ -10,7 +10,8 @@
 
 #include <cstdint>
 #include <vector>
-
+// SYSCOIN
+#include <chainparams.h>
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
@@ -30,8 +31,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)disk_block_index->HaveTxsDownloaded();
     (void)disk_block_index->IsValid();
     (void)disk_block_index->ToString();
-
-    const CBlockHeader block_header = disk_block_index->GetBlockHeader();
+    // SYSCOIN
+    const CBlockHeader block_header = disk_block_index->GetBlockHeader(Params().GetConsensus());
     (void)CDiskBlockIndex{*disk_block_index};
     (void)disk_block_index->BuildSkip();
 

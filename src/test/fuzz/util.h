@@ -120,12 +120,6 @@ NODISCARD bool MultiplicationOverflow(const T i, const T j) noexcept
     }
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-#endif // SYSCOIN_TEST_FUZZ_UTIL_H
-=======
-=======
->>>>>>> bfef72d0f... Merge #18565: tests: Add fuzzing harnesses for classes/functions in policy/fees.h, checkqueue.h and cuckoocache.h. Add fuzzing coverage.
 template <class T>
 NODISCARD bool AdditionOverflow(const T i, const T j) noexcept
 {
@@ -137,5 +131,4 @@ NODISCARD bool AdditionOverflow(const T i, const T j) noexcept
     return std::numeric_limits<T>::max() - i < j;
 }
 
-#endif // BITCOIN_TEST_FUZZ_UTIL_H
->>>>>>> 7b9a2dc86... tests: Add fuzzing harness for AdditionOverflow(...)
+#endif // SYSCOIN_TEST_FUZZ_UTIL_H
