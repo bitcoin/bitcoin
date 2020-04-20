@@ -26,6 +26,7 @@
 #include <vbk/merkle.hpp>
 #include <vbk/pop_service.hpp>
 #include <vbk/util.hpp>
+#include <vbk/pop_service_impl.hpp>
 
 #include <algorithm>
 #include <utility>
@@ -310,6 +311,8 @@ template<typename MempoolComparatorTagName>
 void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated)
 {
     auto& config = VeriBlock::getService<VeriBlock::Config>();
+    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+    altintegration::AltTree altTreeCopy = pop.getAltTree();
 
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
@@ -427,13 +430,14 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             assert(ancestors.size() == 1);
             TxValidationState txstate;
 
-            // TODO add payloads validation if it necessary
-            if (nPopTx < config.max_pop_tx_amount /*&&
-                !VeriBlock::getService<VeriBlock::PopService>().addTemporaryPayloads(iter->GetSharedTx(), *::ChainActive().Tip(), chainparams.GetConsensus(), txstate)*/) {
-
-                failedTx.insert(iter);
-                failedPopTx.insert(iter);
-                continue;
+            if (nPopTx < config.max_pop_tx_amount) {
+                altintegration::AltPayloads p;
+                // do a stateless validation of pop payloads
+                if (!VeriBlock::parseTxPopPayloadsImpl(iter->GetTx(), chainparams.GetConsensus(), txstate, p)) {
+                    failedTx.insert(iter);
+                    failedPopTx.insert(iter);
+                    continue;
+                }
             }
         }
 
