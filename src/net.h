@@ -1158,7 +1158,6 @@ public:
     std::atomic<int64_t> nLastTXTime{0};
 
     struct TxRelay {
-        TxRelay() { }
         mutable RecursiveMutex cs_filter;
         // We use fRelayTxes for two purposes -
         // a) it allows us to not relay tx invs before receiving the peer's version message
