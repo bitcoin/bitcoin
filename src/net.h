@@ -809,14 +809,13 @@ public:
     RecursiveMutex cs_inventory;
 
     struct TxRelay {
-        TxRelay() { pfilter = MakeUnique<CBloomFilter>(); }
         mutable RecursiveMutex cs_filter;
         // We use fRelayTxes for two purposes -
         // a) it allows us to not relay tx invs before receiving the peer's version message
         // b) the peer may tell us in its version message that we should not relay tx invs
         //    unless it loads a bloom filter.
         bool fRelayTxes GUARDED_BY(cs_filter){false};
-        std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter) GUARDED_BY(cs_filter);
+        std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter) GUARDED_BY(cs_filter){nullptr};
 
         mutable RecursiveMutex cs_tx_inventory;
         CRollingBloomFilter filterInventoryKnown GUARDED_BY(cs_tx_inventory){50000, 0.000001};
