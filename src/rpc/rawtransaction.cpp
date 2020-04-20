@@ -188,16 +188,6 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
         }
         in_active_chain = ::ChainActive().Contains(blockindex);
-    }else {      
-        LOCK(cs_main);
-        uint256 blockhash;
-        if(pblockindexdb->ReadBlockHash(hash, blockhash)){
-            blockindex = LookupBlockIndex(blockhash);
-            if (!blockindex) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
-            }
-            in_active_chain = ::ChainActive().Contains(blockindex);
-        }
     }
 
     bool f_txindex_ready = false;
@@ -277,13 +267,6 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
-    // SYSCOIN
-    } else if(setTxids.size() == 1){      
-        LOCK(cs_main);
-        uint256 blockhash;
-        if(!pblockindexdb->ReadBlockHash(oneTxid, blockhash))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
-        pblockindex = LookupBlockIndex(blockhash);     
     }else {
         LOCK(cs_main);
 
@@ -296,7 +279,6 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
             }
         }
     }
-
 
     // Allow txindex to catch up if we need to query it and before we acquire cs_main.
     if (g_txindex && !pblockindex) {

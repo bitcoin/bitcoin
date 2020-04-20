@@ -174,15 +174,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // Compute regular coinbase transaction.
     coinbaseTx.vout[0].nValue = blockReward + nFees;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
-    if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !chainparams.MineBlocksOnDemand()) {
+    if (!fRegTest && !chainparams.MineBlocksOnDemand()) {
         if (masternodeSync.IsFailed()) {
             throw std::runtime_error("Masternode information has failed to sync, please restart your node!");
         }
         if (!masternodeSync.IsSynced()) {
             throw std::runtime_error("Masternode information has not synced, please wait until it finishes before mining!");
-        }
-        if(fLiteMode){
-             throw std::runtime_error("You cannot mine in lite mode, set litemode=0 in your conf file!");
         }
         if(fGethSyncStatus != "synced"){
             throw std::runtime_error("Please wait until Geth is synced to the tip before mining! Use getblockchaininfo to detect Geth sync status.");
@@ -190,7 +187,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     }
     // Update coinbase transaction with additional info about masternode and governance payments,
     // get some info back to pass to getblocktemplate
-    if(Params().NetworkIDString() != CBaseChainParams::REGTEST)
+    if(!fRegTest)
         FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->txoutMasternode, pblocktemplate->voutSuperblock);
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));

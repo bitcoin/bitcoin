@@ -72,9 +72,9 @@
 #include <rpc/server.h>
 #include <util/time.h>
 bool fMasternodeMode = false;
-bool fUnitTest = false;
 bool bGethTestnet = false;
 bool fLiteMode = false;
+bool fRegTest = false;
 bool fZMQWalletStatus = false;
 bool fZMQNetworkStatus = false;
 bool fZMQEthStatus = false;
@@ -1000,7 +1000,7 @@ bool StopGethNode(pid_t &pid)
 {
     if(pid < 0)
         return false;
-    if(fUnitTest)
+    if(fRegTest)
         return true;
     if(pid){
         try{
@@ -1047,7 +1047,7 @@ bool CheckSpecs(std::string &errMsg, bool bMiner){
 }
 bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
 {
-    if(fUnitTest)
+    if(fRegTest)
         return true;
     LogPrintf("%s: Starting geth on wsport %d rpcport %d (testnet=%d)...\n", __func__, websocketport, ethrpcport, bGethTestnet? 1:0);
     std::string gethFilename = GetGethFilename();
@@ -1249,7 +1249,7 @@ bool StopRelayerNode(pid_t &pid)
 {
     if(pid < 0)
         return false;
-    if(fUnitTest)
+    if(fRegTest)
         return true;
     if(pid){
         try{
@@ -1282,7 +1282,7 @@ bool StopRelayerNode(pid_t &pid)
 
 bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int websocketport, int ethrpcport)
 {
-    if(fUnitTest)
+    if(fRegTest)
         return true;
     
     std::string relayerFilename = GetRelayerFilename();

@@ -163,10 +163,8 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
 {
     CAssetAllocation assetallocation(tx);
     if(assetallocation.IsNull())
-        return false;
+        return false; 
     const uint256& txHash = tx.GetHash();
-    uint256 blockhash;
-    pblockindexdb->ReadBlockHash(txHash, blockhash);
     entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
     entry.__pushKV("txid", txHash.GetHex());
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
@@ -192,7 +190,6 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     }
 
     entry.__pushKV("allocations", oAssetAllocationReceiversArray);
-    entry.__pushKV("blockhash", blockhash.GetHex()); 
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
          CBurnSyscoin burnSyscoin(tx);
          entry.__pushKV("ethereum_destination", "0x" + HexStr(burnSyscoin.vchEthAddress));
@@ -205,8 +202,6 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
 bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &entry){
     CMintSyscoin mintSyscoin(tx);
     if (!mintSyscoin.IsNull()) {
-        uint256 blockhash;
-        pblockindexdb->ReadBlockHash(txHash, blockhash);
         entry.__pushKV("txtype", "assetallocationmint");
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
         CAmount nTotal = 0;
@@ -232,7 +227,6 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &
     
         entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
         entry.__pushKV("txid", txHash.GetHex());
-        entry.__pushKV("blockhash", blockhash.GetHex());
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.__pushKV("bridgetransferid", mintSyscoin.nBridgeTransferID);   
         oSPVProofObj.__pushKV("txvalue", HexStr(mintSyscoin.vchTxValue));   

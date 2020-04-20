@@ -14,6 +14,7 @@
 #include <policy/policy.h>
 #include <chrono>
 #include <consensus/validation.h>
+#include <index/txindex.h>
 using namespace std;
 extern std::string exePath;
 extern std::string EncodeDestination(const CTxDestination& dest);
@@ -309,68 +310,46 @@ UniValue listassets(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_MISC_ERROR, "Scan failed");
     return oRes;
 }
-UniValue getblockhashbytxid(const JSONRPCRequest& request)
-{
-    RPCHelpMan{"getblockhashbytxid",
-        "\nReturns hash of block in best-block-chain at txid provided.\n",
-        {
-            {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "A transaction that is in the block."}
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "hex", "The block hash that contains the txid"},
-            }},
-        RPCExamples{
-            HelpExampleCli("getblockhashbytxid", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
-            + HelpExampleRpc("getblockhashbytxid", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
-        }
-    }.Check(request);
-    LOCK(cs_main);
-
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
-
-    uint256 blockhash;
-    if(!pblockindexdb->ReadBlockHash(hash, blockhash))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
-
-    const CBlockIndex* pblockindex = LookupBlockIndex(blockhash);
-    if (!pblockindex) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-    }
-    UniValue res{UniValue::VOBJ};
-    res.__pushKV("hex", pblockindex->GetBlockHash().GetHex());
-    return res;
-}
 UniValue syscoingetspvproof(const JSONRPCRequest& request)
 {
     RPCHelpMan{"syscoingetspvproof",
     "\nReturns SPV proof for use with inter-chain transfers.\n",
     {
-        {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "A transaction that is in the block"}
+        {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "A transaction that is in the block"},
+        {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED_NAMED_ARG, "If specified, looks for txid in the block with this hash"}
     },
     RPCResult{
         RPCResult::Type::STR, "proof", "JSON representation of merkle proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)"},
-    RPCExamples{
-        HelpExampleCli("syscoingetspvproof", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
-        + HelpExampleRpc("syscoingetspvproof", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
-    }
+    RPCExamples{""},
     }.Check(request);
     LOCK(cs_main);
     UniValue res(UniValue::VOBJ);
     uint256 txhash = ParseHashV(request.params[0], "parameter 1");
-    uint256 blockhash;
-    if(!pblockindexdb->ReadBlockHash(txhash, blockhash))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
-    
-    CBlockIndex* pblockindex = LookupBlockIndex(blockhash);
-    if (!pblockindex) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    CBlockIndex* pblockindex = nullptr;
+    uint256 hashBlock;
+    if (!request.params[1].isNull()) {
+        hashBlock = ParseHashV(request.params[1], "blockhash");
+        pblockindex = LookupBlockIndex(hashBlock);
+        if (!pblockindex) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+        }
+    }
+
+
+    // Allow txindex to catch up if we need to query it and before we acquire cs_main.
+    if (g_txindex && !pblockindex) {
+        g_txindex->BlockUntilSyncedToCurrentChain();
     }
     CTransactionRef tx;
-    uint256 hash_block;
-    if (!GetTransaction(txhash, tx, Params().GetConsensus(), hash_block, pblockindex))   
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not found"); 
+    if (pblockindex == nullptr)
+    {
+        if (!GetTransaction(txhash, tx, Params().GetConsensus(), hashBlock) || hashBlock.IsNull())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
+        pblockindex = LookupBlockIndex(hashBlock);
+        if (!pblockindex) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");
+        }
+    }
 
     CBlock block;
     if (IsBlockPruned(pblockindex)) {
@@ -387,9 +366,9 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     }   
     CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
     ssBlock << pblockindex->GetBlockHeader(Params().GetConsensus());
-    const std::string &rawTx = EncodeHexTx(CTransaction(*tx), PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+    const std::string &rawTx = EncodeHexTx(*tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
     res.__pushKV("transaction",rawTx);
-    res.__pushKV("blockhash", blockhash.GetHex());
+    res.__pushKV("blockhash", hashBlock.GetHex());
     // get first 80 bytes of header (non auxpow part)
     res.__pushKV("header", HexStr(ssBlock.begin(), ssBlock.begin()+80));
     UniValue siblings(UniValue::VARR);
@@ -481,7 +460,7 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     UniValue ret(UniValue::VOBJ);
     UniValue retArray(UniValue::VARR);
     static uint64_t nLastExecTime = GetSystemTimeInSeconds();
-    if(!fUnitTest && GetSystemTimeInSeconds() - nLastExecTime <= 60){
+    if(!fRegTest && GetSystemTimeInSeconds() - nLastExecTime <= 60){
         LogPrint(BCLog::SYS, "Please wait at least 1 minute between status calls\n");
         ret.__pushKV("missing_blocks", retArray);
         return ret;
@@ -651,68 +630,20 @@ UniValue syscoincheckmint(const JSONRPCRequest& request)
     RPCResult{
         RPCResult::Type::OBJ, "", "",
         {
-            {RPCResult::Type::STR, "txtype", "The syscoin transaction type"},
-            {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
-            {RPCResult::Type::STR, "symbol", "The asset symbol"},
             {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-            {RPCResult::Type::NUM, "height", "The blockheight of the transaction"},
-            {RPCResult::Type::STR, "sender", "The address of the sender"},
-            {RPCResult::Type::ARR, "allocations", "(array of json receiver objects)",
-                {
-                    {RPCResult::Type::OBJ, "", "",
-                    {
-                            {RPCResult::Type::STR, "address", "The address of the receiver"},
-                            {RPCResult::Type::NUM, "amount", "The amount of the transaction"},
-                    }},
-                }},
-            {RPCResult::Type::NUM, "total", "The total amount in this transaction"},
-            {RPCResult::Type::BOOL, "confirmed", "If the transaction is confirmed"},
-            {RPCResult::Type::STR, "spv_proof", "Ethereum SPV Proofs for transaction and receipt"},
-            {RPCResult::Type::BOOL, "in_active_chain", "Whether block found with syscoin transaction is in the active chain or not"},
         }}, 
     RPCExamples{
         HelpExampleCli("syscoincheckmint", "1221")
         + HelpExampleRpc("syscoincheckmint", "1221")
     }
     }.Check(request);
-    bool in_active_chain = false;
-    CBlockIndex* blockindex = nullptr;
     const uint32_t nBridgeTransferID = request.params[0].get_uint();
     uint256 sysTxid;
     if(!pethereumtxmintdb || !pethereumtxmintdb->Read(nBridgeTransferID, sysTxid)){
        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read Syscoin transaction using Bridge Transfer ID");
     }
-    {
-        LOCK(cs_main);
-        uint256 blockhash;
-        if(pblockindexdb->ReadBlockHash(sysTxid, blockhash)){
-            blockindex = LookupBlockIndex(blockhash);
-            if (!blockindex) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
-            }
-            in_active_chain = ::ChainActive().Contains(blockindex);
-        }
-    }
-
-    CTransactionRef txRef;
-    uint256 hash_block;
-    if (!GetTransaction(sysTxid, txRef, Params().GetConsensus(), hash_block, blockindex)) {
-        std::string errmsg;
-        if (blockindex) {
-            if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {
-                throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
-            }
-            errmsg = "No such transaction found in the provided block";
-        } else {
-            errmsg = "No such mempool or blockchain transaction";
-        }
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg);
-    }
-
     UniValue output(UniValue::VOBJ);
-    if(!DecodeSyscoinRawtransaction(*txRef, output))
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Not a Syscoin transaction");
-    output.pushKV("in_active_chain", in_active_chain);
+    output.pushKV("txid", sysTxid.GetHex());
     return output;
 } 
 CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const uint8_t &nPrecision, CTxDestination & address) {
@@ -772,7 +703,6 @@ static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
     //  --------------------- ------------------------          -----------------------         ----------
     { "syscoin",            "syscoingettxroots",                &syscoingettxroots,             {"height"} },
-    { "syscoin",            "getblockhashbytxid",               &getblockhashbytxid,            {"txid"} },
     { "syscoin",            "syscoingetspvproof",               &syscoingetspvproof,            {"txid"} },
     { "syscoin",            "convertaddress",                   &convertaddress,                {"address"} },
     { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {}},

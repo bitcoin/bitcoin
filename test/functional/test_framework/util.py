@@ -322,8 +322,6 @@ def initialize_datadir(dirname, n, chain):
         f.write("printtoconsole=0\n")
         f.write("upnp=0\n")
         f.write("shrinkdebugfile=0\n")
-        f.write("unittest=1\n")
-        f.write("litemode=1\n")
         os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
         os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     return datadir
@@ -576,8 +574,8 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
 
 def mine_large_block(node, utxos=None):
     # generate a 66k transaction,
-    # and 56 of them is close to the 4MB block limit
-    num = 56
+    # and 14 of them is close to the 1MB block limit
+    num = 14
     txouts = gen_return_txouts()
     utxos = utxos if utxos is not None else []
     if len(utxos) < num:
