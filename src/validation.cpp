@@ -744,22 +744,28 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     std::string errString;
     if (!m_pool.CalculateMemPoolAncestors(*entry, setAncestors, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants, m_limit_descendant_size, errString)) {
-        setAncestors.clear();
-        // If CalculateMemPoolAncestors fails second time, we want the original error string.
-        std::string dummy_err_string;
         // Contracting/payment channels CPFP carve-out:
         // If the new transaction is relatively small (up to 40k weight)
         // and has at most one ancestor (ie ancestor limit of 2, including
-        // the new transaction), allow it if its parent has exactly the
-        // descendant limit descendants.
+        // the new transaction), allow it if its parent is at descendant limits
+        // up to an additional EXTRA_DESCENDANT_TX_COUNT_LIMIT small tx limit.
         //
         // This allows protocols which rely on distrusting counterparties
         // being able to broadcast descendants of an unconfirmed transaction
-        // to be secure by simply only having two immediately-spendable
-        // outputs - one for each counterparty. For more info on the uses for
+        // to be secure by simply only having N immediately-spendable
+        // outputs - one for each counterparty. This is also a handy anti-pinning
+        // rule for transaction batching and other custodial payout schemes. For more info on the uses for
         // this, see https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/016518.html
-        if (nSize >  EXTRA_DESCENDANT_TX_SIZE_LIMIT ||
-                !m_pool.CalculateMemPoolAncestors(*entry, setAncestors, 2, m_limit_ancestor_size, m_limit_descendants + 1, m_limit_descendant_size + EXTRA_DESCENDANT_TX_SIZE_LIMIT, dummy_err_string)) {
+
+        // Immediately bail from carve-out logic if transaction isn't relatively small
+        if (nSize >  EXTRA_DESCENDANT_TX_SIZE_LIMIT) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", errString);
+        }
+
+        setAncestors.clear();
+        // If CalculateMemPoolAncestors fails second time, we want the original error string.
+        std::string dummy_err_string;
+        if (!m_pool.CalculateMemPoolAncestors(*entry, setAncestors, 2, m_limit_ancestor_size, m_limit_descendants + EXTRA_DESCENDANT_TX_COUNT_LIMIT, m_limit_descendant_size + EXTRA_DESCENDANT_TX_SIZE_LIMIT*EXTRA_DESCENDANT_TX_COUNT_LIMIT, dummy_err_string)) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", errString);
         }
     }

@@ -66,6 +66,11 @@ static const unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT = 101;
  * configurable as it doesn't materially change DoS parameters.
  */
 static const unsigned int EXTRA_DESCENDANT_TX_SIZE_LIMIT = 10000;
+/**
+ * Each package is allowed this many EXTRA_DESCENDANT_TX_SIZE_LIMIT sized
+ * or less additional transactions.
+ */
+static const unsigned int EXTRA_DESCENDANT_TX_COUNT_LIMIT = 100;
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
 static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 336;
 /** Maximum kilobytes for transactions to store for processing during reorg */
