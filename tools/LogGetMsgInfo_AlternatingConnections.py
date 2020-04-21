@@ -275,7 +275,7 @@ acceptedBlocksPerSecCount = 0
 acceptedTxPerSecSum = 0
 acceptedTxPerSecCount = 0
 
-def parseMessage(message, string):
+def parseMessage(message, string, time):
 	line = ''
 	numMsgs = re.findall(r"([0-9\.]+) msgs", string)[0]
 	matches = re.findall(r"\[[0-9\., ]+\]", string)
@@ -413,33 +413,33 @@ def fetch(now):
 	line += str(acceptedTxPerSecSum / acceptedTxPerSecCount) + ','
 
 	line += str(messages["CLOCKS PER SECOND"]) + ","
-	line += parseMessage("VERSION", messages["VERSION"]) + ","
-	line += parseMessage("VERACK", messages["VERACK"]) + ","
-	line += parseMessage("ADDR", messages["ADDR"]) + ","
-	line += parseMessage("INV", messages["INV"]) + ","
-	line += parseMessage("GETDATA", messages["GETDATA"]) + ","
-	line += parseMessage("MERKLEBLOCK", messages["MERKLEBLOCK"]) + ","
-	line += parseMessage("GETBLOCKS", messages["GETBLOCKS"]) + ","
-	line += parseMessage("GETHEADERS", messages["GETHEADERS"]) + ","
-	line += parseMessage("TX", messages["TX"]) + ","
-	line += parseMessage("HEADERS", messages["HEADERS"]) + ","
-	line += parseMessage("BLOCK", messages["BLOCK"]) + ","
-	line += parseMessage("GETADDR", messages["GETADDR"]) + ","
-	line += parseMessage("MEMPOOL", messages["MEMPOOL"]) + ","
-	line += parseMessage("PING", messages["PING"]) + ","
-	line += parseMessage("PONG", messages["PONG"]) + ","
-	line += parseMessage("NOTFOUND", messages["NOTFOUND"]) + ","
-	line += parseMessage("FILTERLOAD", messages["FILTERLOAD"]) + ","
-	line += parseMessage("FILTERADD", messages["FILTERADD"]) + ","
-	line += parseMessage("FILTERCLEAR", messages["FILTERCLEAR"]) + ","
-	line += parseMessage("SENDHEADERS", messages["SENDHEADERS"]) + ","
-	line += parseMessage("FEEFILTER", messages["FEEFILTER"]) + ","
-	line += parseMessage("SENDCMPCT", messages["SENDCMPCT"]) + ","
-	line += parseMessage("CMPCTBLOCK", messages["CMPCTBLOCK"]) + ","
-	line += parseMessage("GETBLOCKTXN", messages["GETBLOCKTXN"]) + ","
-	line += parseMessage("BLOCKTXN", messages["BLOCKTXN"]) + ","
-	line += parseMessage("REJECT", messages["REJECT"]) + ","
-	line += parseMessage("[UNDOCUMENTED]", messages["[UNDOCUMENTED]"]) + ","
+	line += parseMessage("VERSION", messages["VERSION"], seconds) + ","
+	line += parseMessage("VERACK", messages["VERACK"], seconds) + ","
+	line += parseMessage("ADDR", messages["ADDR"], seconds) + ","
+	line += parseMessage("INV", messages["INV"], seconds) + ","
+	line += parseMessage("GETDATA", messages["GETDATA"], seconds) + ","
+	line += parseMessage("MERKLEBLOCK", messages["MERKLEBLOCK"], seconds) + ","
+	line += parseMessage("GETBLOCKS", messages["GETBLOCKS"], seconds) + ","
+	line += parseMessage("GETHEADERS", messages["GETHEADERS"], seconds) + ","
+	line += parseMessage("TX", messages["TX"], seconds) + ","
+	line += parseMessage("HEADERS", messages["HEADERS"], seconds) + ","
+	line += parseMessage("BLOCK", messages["BLOCK"], seconds) + ","
+	line += parseMessage("GETADDR", messages["GETADDR"], seconds) + ","
+	line += parseMessage("MEMPOOL", messages["MEMPOOL"], seconds) + ","
+	line += parseMessage("PING", messages["PING"], seconds) + ","
+	line += parseMessage("PONG", messages["PONG"], seconds) + ","
+	line += parseMessage("NOTFOUND", messages["NOTFOUND"], seconds) + ","
+	line += parseMessage("FILTERLOAD", messages["FILTERLOAD"], seconds) + ","
+	line += parseMessage("FILTERADD", messages["FILTERADD"], seconds) + ","
+	line += parseMessage("FILTERCLEAR", messages["FILTERCLEAR"], seconds) + ","
+	line += parseMessage("SENDHEADERS", messages["SENDHEADERS"], seconds) + ","
+	line += parseMessage("FEEFILTER", messages["FEEFILTER"], seconds) + ","
+	line += parseMessage("SENDCMPCT", messages["SENDCMPCT"], seconds) + ","
+	line += parseMessage("CMPCTBLOCK", messages["CMPCTBLOCK"], seconds) + ","
+	line += parseMessage("GETBLOCKTXN", messages["GETBLOCKTXN"], seconds) + ","
+	line += parseMessage("BLOCKTXN", messages["BLOCKTXN"], seconds) + ","
+	line += parseMessage("REJECT", messages["REJECT"], seconds) + ","
+	line += parseMessage("[UNDOCUMENTED]", messages["[UNDOCUMENTED]"], seconds) + ","
 	return line
 
 def resetNode(file, numConnections):
