@@ -567,7 +567,6 @@ private:
     std::list<CNode*> vNodesDisconnected;
     std::unordered_map<SOCKET, CNode*> mapSocketToNode;
     mutable CCriticalSection cs_vNodes;
-    mutable CCriticalSection cs_vNodesDisconnected;
     std::atomic<NodeId> nLastNodeId;
     unsigned int nPrevNodeCount;
 
