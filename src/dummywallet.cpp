@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <support/allocators/secure.h>
 #include <util/system.h>
 #include <walletinitinterface.h>
-#include <support/allocators/secure.h>
 
 class CWallet;
 enum class WalletCreationStatus;
@@ -41,7 +41,6 @@ void DummyWalletInit::AddWalletOptions() const
         "-salvagewallet",
         "-spendzeroconfchange",
         "-txconfirmtarget=<n>",
-        "-upgradewallet",
         "-wallet=<path>",
         "-walletbroadcast",
         "-walletdir=<dir>",

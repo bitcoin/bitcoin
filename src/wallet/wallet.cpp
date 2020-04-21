@@ -4092,8 +4092,7 @@ bool CWallet::UpgradeWallet(int version, std::string& error, std::vector<std::st
 {
     int prev_version = GetVersion();
     int nMaxVersion = version;
-    if (nMaxVersion == 0) // the -upgradewallet without argument case
-    {
+    if (nMaxVersion == 0) {
         WalletLogPrintf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
         nMaxVersion = FEATURE_LATEST;
         SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
