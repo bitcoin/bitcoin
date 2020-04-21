@@ -326,7 +326,7 @@ def parseMessage(message, string, time):
 	line += str(numMsgs) + ','		# Num MSG
 
 	line += str(msgsPerSecond) + ','	# Rate
-	line += str(sumOfMsgsPerSecond[message] / countOfMsgsPerSecond[message])		# Rate average
+	line += str(sumOfMsgsPerSecond[message] / countOfMsgsPerSecond[message]) + ','
 
 	line += str(match1[1]) + ','	# Clocks Avg
 	line += str(match1[2]) + ','	# Clocks Max
