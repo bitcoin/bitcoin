@@ -2655,8 +2655,6 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 {
     std::vector<COutPoint> vOutpoints;
     coinControl.ListSelected(vOutpoints);
-    if(coinControl.assetInfo)
-        LogPrintf("FundTransaction assetInfo %d %lld count inputs %d\n", coinControl.assetInfo->nAsset, coinControl.assetInfo->nValue, vOutpoints.size());
     std::vector<CRecipient> vecSend;
 
     // Turn the txout set into a CRecipient vector.
