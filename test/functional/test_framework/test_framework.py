@@ -543,7 +543,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Check that each peer has at least one connection
             assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
             time.sleep(wait)
-        raise AssertionError("Block sync timed out:{}".format("".join("\n  {!r}".format(b) for b in best_hash)))
+        raise AssertionError("Block sync timed out after {}s:{}".format(
+            timeout,
+            "".join("\n  {!r}".format(b) for b in best_hash),
+        ))
 
     def sync_mempools(self, nodes=None, wait=1, timeout=60, flush_scheduler=True, wait_func=None):
         """
@@ -568,7 +571,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             if wait_func is not None:
                 wait_func()
             time.sleep(wait)
-        raise AssertionError("Mempool sync timed out:{}".format("".join("\n  {!r}".format(m) for m in pool)))
+        raise AssertionError("Mempool sync timed out after {}s:{}".format(
+            timeout,
+            "".join("\n  {!r}".format(m) for m in pool),
+        ))
 
     def sync_all(self, nodes=None):
         self.sync_blocks(nodes)
