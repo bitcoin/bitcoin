@@ -323,10 +323,13 @@ bool IsReachable(const CNetAddr& addr)
 }
 
 
-CNode* CConnman::FindNode(const CNetAddr& ip)
+CNode* CConnman::FindNode(const CNetAddr& ip, bool fExcludeDisconnecting)
 {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes) {
+        if (fExcludeDisconnecting && pnode->fDisconnect) {
+            continue;
+        }
         if ((CNetAddr)pnode->addr == ip) {
             return pnode;
         }
@@ -334,10 +337,13 @@ CNode* CConnman::FindNode(const CNetAddr& ip)
     return nullptr;
 }
 
-CNode* CConnman::FindNode(const CSubNet& subNet)
+CNode* CConnman::FindNode(const CSubNet& subNet, bool fExcludeDisconnecting)
 {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes) {
+        if (fExcludeDisconnecting && pnode->fDisconnect) {
+            continue;
+        }
         if (subNet.Match((CNetAddr)pnode->addr)) {
             return pnode;
         }
@@ -345,10 +351,13 @@ CNode* CConnman::FindNode(const CSubNet& subNet)
     return nullptr;
 }
 
-CNode* CConnman::FindNode(const std::string& addrName)
+CNode* CConnman::FindNode(const std::string& addrName, bool fExcludeDisconnecting)
 {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes) {
+        if (fExcludeDisconnecting && pnode->fDisconnect) {
+            continue;
+        }
         if (pnode->GetAddrName() == addrName) {
             return pnode;
         }
@@ -356,10 +365,13 @@ CNode* CConnman::FindNode(const std::string& addrName)
     return nullptr;
 }
 
-CNode* CConnman::FindNode(const CService& addr)
+CNode* CConnman::FindNode(const CService& addr, bool fExcludeDisconnecting)
 {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes) {
+        if (fExcludeDisconnecting && pnode->fDisconnect) {
+            continue;
+        }
         if ((CService)pnode->addr == addr) {
             return pnode;
         }
