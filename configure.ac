@@ -256,7 +256,7 @@ AC_ARG_ENABLE([gprof],
     [enable_gprof=$enableval],
     [enable_gprof=no])
 
-dnl Pass compiler & liner flags that make builds deterministic
+dnl Pass compiler & linker flags that make builds deterministic
 AC_ARG_ENABLE([determinism],
     [AS_HELP_STRING([--enable-determinism],
                     [Enable compilation flags that make builds deterministic (default is no)])],
