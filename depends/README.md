@@ -50,32 +50,32 @@ The paths are automatically configured and no other options are needed unless ta
 
 - see [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
 
-#### For linux (including i386, ARM) cross compilation
+#### For Linux (including i386, ARM) cross compilation
 
-Common linux dependencies:
+Common Linux dependencies:
 
     sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch
 
-For linux ARM cross compilation:
+For Linux ARM cross compilation:
 
     sudo apt-get install g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
 
-For linux AARCH64 cross compilation:
+For Linux AARCH64 cross compilation:
 
     sudo apt-get install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
 
-For linux POWER 64-bit cross compilation (there are no packages for 32-bit):
+For Linux POWER 64-bit cross compilation (there are no packages for 32-bit):
 
     sudo apt-get install g++-powerpc64-linux-gnu binutils-powerpc64-linux-gnu g++-powerpc64le-linux-gnu binutils-powerpc64le-linux-gnu
 
-For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
+For Linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
 
     sudo apt-get install g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
 
 RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_bitcoin` executable (see https://github.com/bitcoin/bitcoin/pull/13543),
 this is apparently fixed in gcc-8.1.0.
 
-For linux S390X cross compilation:
+For Linux S390X cross compilation:
 
     sudo apt-get install g++-s390x-linux-gnu binutils-s390x-linux-gnu
 
@@ -100,10 +100,19 @@ options will be passed to bitcoin's configure. In this case, `--disable-wallet`.
 
 ### Additional targets
 
-    download: run 'make download' to fetch all sources without building them
-    download-osx: run 'make download-osx' to fetch all sources needed for macOS builds
-    download-win: run 'make download-win' to fetch all sources needed for win builds
-    download-linux: run 'make download-linux' to fetch all sources needed for linux builds
+    make download # fetch all sources without building them
+
+For macOS:
+
+    make download-osx # fetch all sources needed for macOS builds
+
+For Windows:
+
+    make download-win # fetch all sources needed for win builds
+
+For Linux:
+
+    make download-linux # to fetch all sources needed for linux builds
 
 
 ### Android
