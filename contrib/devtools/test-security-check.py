@@ -64,13 +64,15 @@ class TestSecurityChecks(unittest.TestCase):
         cc = 'clang'
         write_testcode(source)
 
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace', '-Wl,-allow_stack_execute']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fno-stack-protector']),
+            (1, executable+': failed PIE NOUNDEFS NX Canary'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fstack-protector-all']),
             (1, executable+': failed PIE NOUNDEFS NX'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-fstack-protector-all']),
             (1, executable+': failed PIE NOUNDEFS'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-fstack-protector-all']),
             (1, executable+': failed PIE'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie','-fstack-protector-all']),
             (0, ''))
 
 if __name__ == '__main__':
