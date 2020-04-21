@@ -69,14 +69,19 @@ class MempoolPackagesTest(BitcoinTestFramework):
         fee = Decimal("0.0001")
         # MAX_ANCESTORS transactions off a confirmed tx should be fine
         chain = []
+        witness_chain = []
         for i in range(MAX_ANCESTORS):
             (txid, sent_value) = self.chain_transaction(self.nodes[0], txid, 0, value, fee, 1)
             value = sent_value
             chain.append(txid)
+            # We need the wtxids to check P2P announcements
+            fulltx = self.nodes[0].getrawtransaction(txid)
+            witnesstx = self.nodes[0].decoderawtransaction(fulltx, True)
+            witness_chain.append(witnesstx['hash'])
 
         # Wait until mempool transactions have passed initial broadcast (sent inv and received getdata)
         # Otherwise, getrawmempool may be inconsistent with getmempoolentry if unbroadcast changes in between
-        self.nodes[0].p2p.wait_for_broadcast(chain)
+        self.nodes[0].p2p.wait_for_broadcast(witness_chain)
 
         # Check mempool has MAX_ANCESTORS transactions in it, and descendant and ancestor
         # count and fees should look correct

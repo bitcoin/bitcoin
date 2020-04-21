@@ -12,6 +12,7 @@ from test_framework.messages import (
     FromHex,
     MSG_TX,
     MSG_TYPE_MASK,
+    MSG_WTX,
     msg_inv,
     msg_notfound,
 )
@@ -36,7 +37,7 @@ class TestP2PConn(P2PInterface):
 
     def on_getdata(self, message):
         for i in message.inv:
-            if i.type & MSG_TYPE_MASK == MSG_TX:
+            if i.type & MSG_TYPE_MASK == MSG_TX or i.type & MSG_TYPE_MASK == MSG_WTX:
                 self.tx_getdata_count += 1
 
 
@@ -64,7 +65,7 @@ class TxDownloadTest(BitcoinTestFramework):
         txid = 0xdeadbeef
 
         self.log.info("Announce the txid from each incoming peer to node 0")
-        msg = msg_inv([CInv(t=MSG_TX, h=txid)])
+        msg = msg_inv([CInv(t=MSG_WTX, h=txid)])
         for p in self.nodes[0].p2ps:
             p.send_and_ping(msg)
 
@@ -136,13 +137,13 @@ class TxDownloadTest(BitcoinTestFramework):
         with mininode_lock:
             p.tx_getdata_count = 0
 
-        p.send_message(msg_inv([CInv(t=MSG_TX, h=i) for i in txids]))
+        p.send_message(msg_inv([CInv(t=MSG_WTX, h=i) for i in txids]))
         wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT, lock=mininode_lock)
         with mininode_lock:
             assert_equal(p.tx_getdata_count, MAX_GETDATA_IN_FLIGHT)
 
         self.log.info("Now check that if we send a NOTFOUND for a transaction, we'll get one more request")
-        p.send_message(msg_notfound(vec=[CInv(t=MSG_TX, h=txids[0])]))
+        p.send_message(msg_notfound(vec=[CInv(t=MSG_WTX, h=txids[0])]))
         wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT + 1, timeout=10, lock=mininode_lock)
         with mininode_lock:
             assert_equal(p.tx_getdata_count, MAX_GETDATA_IN_FLIGHT + 1)
