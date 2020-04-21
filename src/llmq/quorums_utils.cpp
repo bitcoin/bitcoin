@@ -75,6 +75,9 @@ std::set<uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType,
 
     if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
         for (auto& dmn : mns) {
+            if (dmn->proTxHash == forMember) {
+                continue;
+            }
             // Determine which of the two MNs (forMember vs dmn) should initiate the outbound connection and which
             // one should wait for the inbound connection. We do this in a deterministic way, so that even when we
             // end up with both connecting to each other, we know which one to disconnect
