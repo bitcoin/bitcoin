@@ -339,6 +339,7 @@ def parseMessage(message, string):
 
 
 def fetch(now):
+	global lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
 	try:
 		messages = json.loads(bitcoin("getmsginfo"))
 		peerinfo = json.loads(bitcoin("getpeerinfo"))
