@@ -2149,6 +2149,8 @@ bool AppInitMain(NodeContext& node)
         StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
         int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
         StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
+    } else {
+        SetSYSXAssetForUnitTests(gArgs.GetArg("-sysxasset", Params().GetConsensus().nSYSXAsset));
     }
 
     return true;
