@@ -154,13 +154,13 @@ std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocati
 {
     try {
         if (!CWallet::Verify(chain, location, false, error, warnings)) {
-            error = Untranslated("Wallet file verification failed: ") + error;
+            error = Untranslated("Wallet file verification failed.") + Untranslated(" ") + error;
             return nullptr;
         }
 
         std::shared_ptr<CWallet> wallet = CWallet::CreateWalletFromFile(chain, location, error, warnings);
         if (!wallet) {
-            error = Untranslated("Wallet loading failed: ") + error;
+            error = Untranslated("Wallet loading failed.") + Untranslated(" ") + error;
             return nullptr;
         }
         AddWallet(wallet);
