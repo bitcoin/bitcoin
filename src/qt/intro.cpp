@@ -17,6 +17,7 @@
 
 #include <interfaces/node.h>
 #include <util/system.h>
+#include <validation.h>
 
 #include <QFileDialog>
 #include <QSettings>
@@ -139,15 +140,23 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
     );
     ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(PACKAGE_NAME));
 
+    const int min_prune_target_GB = std::ceil(MIN_DISK_SPACE_FOR_BLOCK_FILES / 1e9);
+    ui->pruneGB->setRange(min_prune_target_GB, std::numeric_limits<int>::max());
     if (gArgs.GetArg("-prune", 0) > 1) { // -prune=1 means enabled, above that it's a size in MiB
         ui->prune->setChecked(true);
         ui->prune->setEnabled(false);
     }
-    ui->prune->setText(tr("Discard blocks after verification, except most recent %1 GB (prune)").arg(m_prune_target_gb));
+    ui->pruneGB->setValue(m_prune_target_gb);
+    ui->pruneGB->setToolTip(ui->prune->toolTip());
     UpdatePruneLabels(ui->prune->isChecked());
 
     connect(ui->prune, &QCheckBox::toggled, [this](bool prune_checked) {
         UpdatePruneLabels(prune_checked);
+        UpdateFreeSpaceLabel();
+    });
+    connect(ui->pruneGB, QOverload<int>::of(&QSpinBox::valueChanged), [this](int prune_GB) {
+        m_prune_target_gb = prune_GB;
+        UpdatePruneLabels(ui->prune->isChecked());
         UpdateFreeSpaceLabel();
     });
 
@@ -371,6 +380,7 @@ void Intro::UpdatePruneLabels(bool prune_checked)
         storageRequiresMsg = tr("Approximately %1 GB of data will be stored in this directory.");
     }
     ui->lblExplanation3->setVisible(prune_checked);
+    ui->pruneGB->setEnabled(prune_checked);
     ui->sizeWarningLabel->setText(
         tr("%1 will download and store a copy of the Bitcoin block chain.").arg(PACKAGE_NAME) + " " +
         storageRequiresMsg.arg(m_required_space_gb) + " " +
