@@ -13,11 +13,16 @@ numSecondsPerSample = 1
 rowsPerNodeReset = 5		# Number of rows for cach numconnections file
 
 os.system('clear')
-datadir = '/media/sim/BITCOIN' # Virtual machine shared folder
-if os.path.exists('/media/sf_Bitcoin'):
-	datadir = '/media/sf_Bitcoin' # Virtual machine shared folder
-elif os.path.exists('../blocks'):
-	datadir = '..' # Super computer shared folder
+
+datadir = '' # Virtual machine shared folder
+if os.path.exists('/media/sf_Bitcoin/blocks'):
+	datadir = ' -datadir=/media/sf_Bitcoin' # Virtual machine shared folder
+elif os.path.exists('/media/sf_BitcoinVictim/blocks'):
+	datadir = ' -datadir=/media/sf_BitcoinVictim'
+elif os.path.exists('/media/sf_BitcoinAttacker/blocks'):
+	datadir = ' -datadir=/media/sf_BitcoinAttacker'
+elif os.path.exists('/media/sim/BITCOIN/blocks'):
+	datadir = ' -datadir=/media/sim/BITCOIN'
 
 
 #def getmyIP():
@@ -527,7 +532,7 @@ def log(file, targetDateTime, count, maxConnections):
 		#	file.close()
 		#	return
 		if(count % rowsPerNodeReset == 0):
-			maxConnections = 1 + maxConnections % 8 # Bound the max connections to 8 peers
+			maxConnections = 1 + maxConnections % 10 # Bound the max connections to 10 peers
 			try:
 				file = resetNode(file, maxConnections)
 			except Exception as e:
@@ -559,7 +564,7 @@ def init():
 	filesList = filesList.replace(os.path.expanduser('~/Desktop/Logs_GetMsgInfo_AlternatingConnections/'), '')
 	print(filesList)
 	print()
-	maxConnections = int(input(f'Starting at file "Sample {fileSampleNumber + 1} numConnections X.csv"\nHow many connections should be made? (From 1 to 8): '))
+	maxConnections = int(input(f'Starting at file "Sample {fileSampleNumber + 1} numConnections X.csv"\nHow many connections should be made? (From 1 to 10): '))
 	print()
 	path = os.path.expanduser('~/Desktop/Logs_GetMsgInfo_AlternatingConnections')
 	if not os.path.exists(path):
