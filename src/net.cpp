@@ -1290,8 +1290,10 @@ void CConnman::DisconnectNodes()
                     //      being called before DisconnectNodes and also by the linger time
                     //   2. Internal socket send buffers must be flushed. This is ensured solely by the linger time
                     pnode->nDisconnectLingerTime = GetTimeMillis() + 100;
+                    ++it;
                     continue;
                 } else if (GetTimeMillis() < pnode->nDisconnectLingerTime) {
+                    ++it;
                     continue;
                 }
 
