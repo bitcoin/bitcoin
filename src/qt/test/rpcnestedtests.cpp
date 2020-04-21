@@ -14,7 +14,7 @@
 #include <QDir>
 #include <QtGlobal>
 
-static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
+static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request, const NodeContext& node)
 {
     if (request.fHelp) {
         return "help message";

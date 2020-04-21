@@ -53,13 +53,12 @@ static Mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock;
 
-CTxMemPool& EnsureMemPool()
+CTxMemPool& EnsureMemPool(const NodeContext& node)
 {
-    CHECK_NONFATAL(g_rpc_node);
-    if (!g_rpc_node->mempool) {
+    if (!node.mempool) {
         throw JSONRPCError(RPC_CLIENT_MEMPOOL_DISABLED, "Mempool disabled or instance not found");
     }
-    return *g_rpc_node->mempool;
+    return *node.mempool;
 }
 
 /* Calculate the difficulty for a given block index.
@@ -170,7 +169,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     return result;
 }
 
-static UniValue getblockcount(const JSONRPCRequest& request)
+static UniValue getblockcount(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getblockcount",
                 "\nReturns the height of the most-work fully-validated chain.\n"
@@ -188,7 +187,7 @@ static UniValue getblockcount(const JSONRPCRequest& request)
     return ::ChainActive().Height();
 }
 
-static UniValue getbestblockhash(const JSONRPCRequest& request)
+static UniValue getbestblockhash(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getbestblockhash",
                 "\nReturns the hash of the best (tip) block in the most-work fully-validated chain.\n",
@@ -215,7 +214,7 @@ void RPCNotifyBlockChange(bool ibd, const CBlockIndex * pindex)
     cond_blockchange.notify_all();
 }
 
-static UniValue waitfornewblock(const JSONRPCRequest& request)
+static UniValue waitfornewblock(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"waitfornewblock",
                 "\nWaits for a specific new block and returns useful info about it.\n"
@@ -254,7 +253,7 @@ static UniValue waitfornewblock(const JSONRPCRequest& request)
     return ret;
 }
 
-static UniValue waitforblock(const JSONRPCRequest& request)
+static UniValue waitforblock(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"waitforblock",
                 "\nWaits for a specific new block and returns useful info about it.\n"
@@ -297,7 +296,7 @@ static UniValue waitforblock(const JSONRPCRequest& request)
     return ret;
 }
 
-static UniValue waitforblockheight(const JSONRPCRequest& request)
+static UniValue waitforblockheight(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"waitforblockheight",
                 "\nWaits for (at least) block height and returns the height and hash\n"
@@ -340,7 +339,7 @@ static UniValue waitforblockheight(const JSONRPCRequest& request)
     return ret;
 }
 
-static UniValue syncwithvalidationinterfacequeue(const JSONRPCRequest& request)
+static UniValue syncwithvalidationinterfacequeue(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"syncwithvalidationinterfacequeue",
                 "\nWaits for the validation interface queue to catch up on everything that was there when we entered this function.\n",
@@ -356,7 +355,7 @@ static UniValue syncwithvalidationinterfacequeue(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-static UniValue getdifficulty(const JSONRPCRequest& request)
+static UniValue getdifficulty(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getdifficulty",
                 "\nReturns the proof-of-work difficulty as a multiple of the minimum difficulty.\n",
@@ -489,7 +488,7 @@ UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose)
     }
 }
 
-static UniValue getrawmempool(const JSONRPCRequest& request)
+static UniValue getrawmempool(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getrawmempool",
                 "\nReturns all transaction ids in memory pool as a json array of string transaction ids.\n"
@@ -519,10 +518,10 @@ static UniValue getrawmempool(const JSONRPCRequest& request)
     if (!request.params[0].isNull())
         fVerbose = request.params[0].get_bool();
 
-    return MempoolToJSON(EnsureMemPool(), fVerbose);
+    return MempoolToJSON(EnsureMemPool(node), fVerbose);
 }
 
-static UniValue getmempoolancestors(const JSONRPCRequest& request)
+static UniValue getmempoolancestors(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getmempoolancestors",
                 "\nIf txid is in the mempool, returns all in-mempool ancestors.\n",
@@ -549,7 +548,7 @@ static UniValue getmempoolancestors(const JSONRPCRequest& request)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-    const CTxMemPool& mempool = EnsureMemPool();
+    CTxMemPool& mempool = EnsureMemPool(node);
     LOCK(mempool.cs);
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
@@ -582,7 +581,7 @@ static UniValue getmempoolancestors(const JSONRPCRequest& request)
     }
 }
 
-static UniValue getmempooldescendants(const JSONRPCRequest& request)
+static UniValue getmempooldescendants(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getmempooldescendants",
                 "\nIf txid is in the mempool, returns all in-mempool descendants.\n",
@@ -612,7 +611,7 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-    const CTxMemPool& mempool = EnsureMemPool();
+    CTxMemPool& mempool = EnsureMemPool(node);
     LOCK(mempool.cs);
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
@@ -645,7 +644,7 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
     }
 }
 
-static UniValue getmempoolentry(const JSONRPCRequest& request)
+static UniValue getmempoolentry(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getmempoolentry",
                 "\nReturns mempool data for given transaction\n",
@@ -662,7 +661,7 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
-    const CTxMemPool& mempool = EnsureMemPool();
+    CTxMemPool& mempool = EnsureMemPool(node);
     LOCK(mempool.cs);
 
     CTxMemPool::txiter it = mempool.mapTx.find(hash);
@@ -676,7 +675,7 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
     return info;
 }
 
-static UniValue getblockhash(const JSONRPCRequest& request)
+static UniValue getblockhash(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getblockhash",
                 "\nReturns hash of block in best-block-chain at height provided.\n",
@@ -701,7 +700,7 @@ static UniValue getblockhash(const JSONRPCRequest& request)
     return pblockindex->GetBlockHash().GetHex();
 }
 
-static UniValue getblockheader(const JSONRPCRequest& request)
+static UniValue getblockheader(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getblockheader",
                 "\nIf verbose is false, returns a string that is serialized, hex-encoded data for blockheader 'hash'.\n"
@@ -801,7 +800,7 @@ static CBlockUndo GetUndoChecked(const CBlockIndex* pblockindex)
     return blockUndo;
 }
 
-static UniValue getblock(const JSONRPCRequest& request)
+static UniValue getblock(const JSONRPCRequest& request, const NodeContext& node)
 {
     RPCHelpMan{"getblock",
                 "\nIf verbosity is 0, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
@@ -894,7 +893,7 @@ static UniValue getblock(const JSONRPCRequest& request)
     return blockToJSON(block, tip, pblockindex, verbosity >= 2);
 }
 
-static UniValue pruneblockchain(const JSONRPCRequest& request)
+static UniValue pruneblockchain(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"pruneblockchain", "",
                 {
@@ -949,7 +948,7 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
     return uint64_t(block->nHeight);
 }
 
-static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
+static UniValue gettxoutsetinfo(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"gettxoutsetinfo",
                 "\nReturns statistics about the unspent transaction output set.\n"
@@ -994,7 +993,7 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue gettxout(const JSONRPCRequest& request)
+UniValue gettxout(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"gettxout",
                 "\nReturns details about an unspent transaction output.\n",
@@ -1045,7 +1044,7 @@ UniValue gettxout(const JSONRPCRequest& request)
     CCoinsViewCache* coins_view = &::ChainstateActive().CoinsTip();
 
     if (fMempool) {
-        const CTxMemPool& mempool = EnsureMemPool();
+        CTxMemPool& mempool = EnsureMemPool(node);
         LOCK(mempool.cs);
         CCoinsViewMemPool view(coins_view, mempool);
         if (!view.GetCoin(out, coin) || mempool.isSpent(out)) {
@@ -1073,7 +1072,7 @@ UniValue gettxout(const JSONRPCRequest& request)
     return ret;
 }
 
-static UniValue verifychain(const JSONRPCRequest& request)
+static UniValue verifychain(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"verifychain",
                 "\nVerifies blockchain database.\n",
@@ -1163,7 +1162,7 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     softforks.pushKV(name, rv);
 }
 
-UniValue getblockchaininfo(const JSONRPCRequest& request)
+UniValue getblockchaininfo(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getblockchaininfo",
                 "Returns an object containing various state info regarding blockchain processing.\n",
@@ -1279,7 +1278,7 @@ struct CompareBlocksByHeight
     }
 };
 
-static UniValue getchaintips(const JSONRPCRequest& request)
+static UniValue getchaintips(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getchaintips",
                 "Return information about all known tips in the block tree,"
@@ -1393,7 +1392,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     return ret;
 }
 
-static UniValue getmempoolinfo(const JSONRPCRequest& request)
+static UniValue getmempoolinfo(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getmempoolinfo",
                 "\nReturns details on the active state of the TX memory pool.\n",
@@ -1415,10 +1414,10 @@ static UniValue getmempoolinfo(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    return MempoolInfoToJSON(EnsureMemPool());
+            return MempoolInfoToJSON(EnsureMemPool(node));
 }
 
-static UniValue preciousblock(const JSONRPCRequest& request)
+static UniValue preciousblock(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"preciousblock",
                 "\nTreats a block as if it were received before others with the same work.\n"
@@ -1455,7 +1454,7 @@ static UniValue preciousblock(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-static UniValue invalidateblock(const JSONRPCRequest& request)
+static UniValue invalidateblock(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"invalidateblock",
                 "\nPermanently marks a block as invalid, as if it violated a consensus rule.\n",
@@ -1493,7 +1492,7 @@ static UniValue invalidateblock(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-static UniValue reconsiderblock(const JSONRPCRequest& request)
+static UniValue reconsiderblock(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"reconsiderblock",
                 "\nRemoves invalidity status of a block, its ancestors and its descendants, reconsider them for activation.\n"
@@ -1530,7 +1529,7 @@ static UniValue reconsiderblock(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-static UniValue getchaintxstats(const JSONRPCRequest& request)
+static UniValue getchaintxstats(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getchaintxstats",
                 "\nCompute statistics about the total number and rate of transactions in the chain.\n",
@@ -1663,7 +1662,7 @@ static inline bool SetHasKeys(const std::set<T>& set, const Tk& key, const Args&
 // outpoint (needed for the utxo index) + nHeight + fCoinBase
 static constexpr size_t PER_UTXO_OVERHEAD = sizeof(COutPoint) + sizeof(uint32_t) + sizeof(bool);
 
-static UniValue getblockstats(const JSONRPCRequest& request)
+static UniValue getblockstats(const JSONRPCRequest& request, const NodeContext& node)
 {
     RPCHelpMan{"getblockstats",
                 "\nCompute per block statistics for a given window. All amounts are in satoshis.\n"
@@ -1922,7 +1921,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
     return ret;
 }
 
-static UniValue savemempool(const JSONRPCRequest& request)
+static UniValue savemempool(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"savemempool",
                 "\nDumps the mempool to disk. It will fail until the previous dump is fully loaded.\n",
@@ -1934,11 +1933,11 @@ static UniValue savemempool(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    const CTxMemPool& mempool = EnsureMemPool();
+            CTxMemPool& mempool = EnsureMemPool(node);
 
-    if (!mempool.IsLoaded()) {
-        throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
-    }
+            if (!mempool.IsLoaded()) {
+                throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
+            }
 
     if (!DumpMempool(mempool)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Unable to dump mempool to disk");
@@ -2006,7 +2005,7 @@ public:
     }
 };
 
-UniValue scantxoutset(const JSONRPCRequest& request)
+UniValue scantxoutset(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"scantxoutset",
                 "\nEXPERIMENTAL warning: this call may be removed or changed in future releases.\n"
@@ -2157,7 +2156,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
     return result;
 }
 
-static UniValue getblockfilter(const JSONRPCRequest& request)
+static UniValue getblockfilter(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getblockfilter",
                 "\nRetrieve a BIP 157 content filter for a particular block.\n",
@@ -2238,7 +2237,7 @@ static UniValue getblockfilter(const JSONRPCRequest& request)
  *
  * @see SnapshotMetadata
  */
-UniValue dumptxoutset(const JSONRPCRequest& request)
+UniValue dumptxoutset(const JSONRPCRequest& request, const NodeContext& node)
 {
     RPCHelpMan{
         "dumptxoutset",
@@ -2386,5 +2385,3 @@ static const CRPCCommand commands[] =
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }
-
-NodeContext* g_rpc_node = nullptr;

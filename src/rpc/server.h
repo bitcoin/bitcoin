@@ -7,6 +7,7 @@
 #define BITCOIN_RPC_SERVER_H
 
 #include <amount.h>
+#include <node/context.h>
 #include <rpc/request.h>
 
 #include <map>
@@ -81,7 +82,7 @@ void RPCUnsetTimerInterface(RPCTimerInterface *iface);
  */
 void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nSeconds);
 
-typedef UniValue(*rpcfn_type)(const JSONRPCRequest& jsonRequest);
+typedef UniValue (*rpcfn_type)(const JSONRPCRequest& jsonRequest, const NodeContext& node);
 
 class CRPCCommand
 {
@@ -89,20 +90,22 @@ public:
     //! RPC method handler reading request and assigning result. Should return
     //! true if request is fully handled, false if it should be passed on to
     //! subsequent handlers.
-    using Actor = std::function<bool(const JSONRPCRequest& request, UniValue& result, bool last_handler)>;
+    using Actor = std::function<bool(const JSONRPCRequest& request, UniValue& result, bool last_handler, const NodeContext& node)>;
 
-    //! Constructor taking Actor callback supporting multiple handlers.
+    //! Constructor taking Actor callback supporting multiple handlers
     CRPCCommand(std::string category, std::string name, Actor actor, std::vector<std::string> args, intptr_t unique_id)
         : category(std::move(category)), name(std::move(name)), actor(std::move(actor)), argNames(std::move(args)),
           unique_id(unique_id)
     {
     }
 
-    //! Simplified constructor taking plain rpcfn_type function pointer.
     CRPCCommand(const char* category, const char* name, rpcfn_type fn, std::initializer_list<const char*> args)
-        : CRPCCommand(category, name,
-                      [fn](const JSONRPCRequest& request, UniValue& result, bool) { result = fn(request); return true; },
-                      {args.begin(), args.end()}, intptr_t(fn))
+        : CRPCCommand(
+              category,
+              name,
+              [fn](const JSONRPCRequest& request, UniValue& result, bool last_handler, const NodeContext& node) { result = fn(request, node); return true; },
+              {args.begin(), args.end()},
+              intptr_t(fn))
     {
     }
 
@@ -120,6 +123,8 @@ class CRPCTable
 {
 private:
     std::map<std::string, std::vector<const CRPCCommand*>> mapCommands;
+    NodeContext* pnode = nullptr;
+
 public:
     CRPCTable();
     std::string help(const std::string& name, const JSONRPCRequest& helpreq) const;
@@ -153,6 +158,10 @@ public:
      */
     bool appendCommand(const std::string& name, const CRPCCommand* pcmd);
     bool removeCommand(const std::string& name, const CRPCCommand* pcmd);
+    /**
+     * Adds the current node context to be forwarded to RPC functions
+     */
+    void addNodeContext(NodeContext* pnode);
 };
 
 bool IsDeprecatedRPCEnabled(const std::string& method);

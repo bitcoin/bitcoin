@@ -90,7 +90,7 @@ static void RescanWallet(CWallet& wallet, const WalletRescanReserver& reserver, 
     }
 }
 
-UniValue importprivkey(const JSONRPCRequest& request)
+UniValue importprivkey(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -194,7 +194,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue abortrescan(const JSONRPCRequest& request)
+UniValue abortrescan(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -222,7 +222,7 @@ UniValue abortrescan(const JSONRPCRequest& request)
     return true;
 }
 
-UniValue importaddress(const JSONRPCRequest& request)
+UniValue importaddress(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -326,7 +326,7 @@ UniValue importaddress(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue importprunedfunds(const JSONRPCRequest& request)
+UniValue importprunedfunds(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -386,7 +386,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No addresses in wallet correspond to included transaction");
 }
 
-UniValue removeprunedfunds(const JSONRPCRequest& request)
+UniValue removeprunedfunds(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -426,7 +426,7 @@ UniValue removeprunedfunds(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue importpubkey(const JSONRPCRequest& request)
+UniValue importpubkey(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -515,7 +515,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
 }
 
 
-UniValue importwallet(const JSONRPCRequest& request)
+UniValue importwallet(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -674,7 +674,7 @@ UniValue importwallet(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue dumpprivkey(const JSONRPCRequest& request)
+UniValue dumpprivkey(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -722,7 +722,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
 }
 
 
-UniValue dumpwallet(const JSONRPCRequest& request)
+UniValue dumpwallet(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -1264,7 +1264,7 @@ static int64_t GetImportTimestamp(const UniValue& data, int64_t now)
     throw JSONRPCError(RPC_TYPE_ERROR, "Missing required timestamp field for key");
 }
 
-UniValue importmulti(const JSONRPCRequest& mainRequest)
+UniValue importmulti(const JSONRPCRequest& mainRequest, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(mainRequest);
     CWallet* const pwallet = wallet.get();

@@ -5,6 +5,7 @@
 
 #include <rpc/server.h>
 
+#include <node/context.h>
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
@@ -26,7 +27,7 @@ static std::string rpcWarmupStatus GUARDED_BY(cs_rpcWarmup) = "RPC server starte
 static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
 static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
-static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler);
+static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler, const NodeContext& node);
 
 struct RPCCommandExecutionInfo
 {
@@ -99,7 +100,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
         {
             UniValue unused_result;
             if (setDone.insert(pcmd->unique_id).second)
-                pcmd->actor(jreq, unused_result, true /* last_handler */);
+                pcmd->actor(jreq, unused_result, true /* last_handler */, *pnode);
         }
         catch (const std::exception& e)
         {
@@ -127,7 +128,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
     return strRet;
 }
 
-UniValue help(const JSONRPCRequest& jsonRequest)
+UniValue help(const JSONRPCRequest& jsonRequest, const NodeContext& node)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw std::runtime_error(
@@ -151,7 +152,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
 }
 
 
-UniValue stop(const JSONRPCRequest& jsonRequest)
+UniValue stop(const JSONRPCRequest& jsonRequest, const NodeContext& node)
 {
     static const std::string RESULT{PACKAGE_NAME " stopping"};
     // Accept the deprecated and ignored 'detach' boolean argument
@@ -175,7 +176,7 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     return RESULT;
 }
 
-static UniValue uptime(const JSONRPCRequest& jsonRequest)
+static UniValue uptime(const JSONRPCRequest& jsonRequest, const NodeContext& node)
 {
             RPCHelpMan{"uptime",
                 "\nReturns the total uptime of the server.\n",
@@ -192,7 +193,7 @@ static UniValue uptime(const JSONRPCRequest& jsonRequest)
     return GetTime() - GetStartupTime();
 }
 
-static UniValue getrpcinfo(const JSONRPCRequest& request)
+static UniValue getrpcinfo(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getrpcinfo",
                 "\nReturns details of the RPC server.\n",
@@ -257,6 +258,12 @@ CRPCTable::CRPCTable()
         pcmd = &vRPCCommands[vcidx];
         mapCommands[pcmd->name].push_back(pcmd);
     }
+}
+
+void CRPCTable::addNodeContext(NodeContext* pnode_ctx)
+{
+    CHECK_NONFATAL(pnode_ctx);
+    pnode = pnode_ctx;
 }
 
 bool CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
@@ -432,7 +439,7 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     if (it != mapCommands.end()) {
         UniValue result;
         for (const auto& command : it->second) {
-            if (ExecuteCommand(*command, request, result, &command == &it->second.back())) {
+            if (ExecuteCommand(*command, request, result, &command == &it->second.back(), *pnode)) {
                 return result;
             }
         }
@@ -440,16 +447,16 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
 }
 
-static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler)
+static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler, const NodeContext& node)
 {
     try
     {
         RPCCommandExecution execution(request.strMethod);
         // Execute, convert arguments to array if necessary
         if (request.params.isObject()) {
-            return command.actor(transformNamedArguments(request, command.argNames), result, last_handler);
+            return command.actor(transformNamedArguments(request, command.argNames), result, last_handler, node);
         } else {
-            return command.actor(request, result, last_handler);
+            return command.actor(request, result, last_handler, node);
         }
     }
     catch (const std::exception& e)

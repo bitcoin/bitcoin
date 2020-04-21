@@ -26,7 +26,7 @@
 
 #include <univalue.h>
 
-static UniValue validateaddress(const JSONRPCRequest& request)
+static UniValue validateaddress(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"validateaddress",
                 "\nReturn information about the given bitcoin address.\n",
@@ -70,7 +70,7 @@ static UniValue validateaddress(const JSONRPCRequest& request)
     return ret;
 }
 
-static UniValue createmultisig(const JSONRPCRequest& request)
+static UniValue createmultisig(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"createmultisig",
                 "\nCreates a multi-signature address with n signature of m keys required.\n"
@@ -136,7 +136,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue getdescriptorinfo(const JSONRPCRequest& request)
+UniValue getdescriptorinfo(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getdescriptorinfo",
             {"\nAnalyses a descriptor.\n"},
@@ -176,7 +176,7 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue deriveaddresses(const JSONRPCRequest& request)
+UniValue deriveaddresses(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"deriveaddresses",
             {"\nDerives one or more addresses corresponding to an output descriptor.\n"
@@ -255,7 +255,7 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
     return addresses;
 }
 
-static UniValue verifymessage(const JSONRPCRequest& request)
+static UniValue verifymessage(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"verifymessage",
                 "\nVerify a signed message\n",
@@ -302,7 +302,7 @@ static UniValue verifymessage(const JSONRPCRequest& request)
     return false;
 }
 
-static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
+static UniValue signmessagewithprivkey(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"signmessagewithprivkey",
                 "\nSign a message with the private key of an address\n",
@@ -340,7 +340,7 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
     return signature;
 }
 
-static UniValue setmocktime(const JSONRPCRequest& request)
+static UniValue setmocktime(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"setmocktime",
                 "\nSet the local time to given timestamp (-regtest only)\n",
@@ -366,16 +366,14 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VNUM});
     int64_t time = request.params[0].get_int64();
     SetMockTime(time);
-    if (g_rpc_node) {
-        for (const auto& chain_client : g_rpc_node->chain_clients) {
-            chain_client->setMockTime(time);
-        }
+    for (const auto& chain_client : node.chain_clients) {
+        chain_client->setMockTime(time);
     }
 
     return NullUniValue;
 }
 
-static UniValue mockscheduler(const JSONRPCRequest& request)
+static UniValue mockscheduler(const JSONRPCRequest& request, const NodeContext& node)
 {
     RPCHelpMan{"mockscheduler",
         "\nBump the scheduler into the future (-regtest only)\n",
@@ -398,9 +396,8 @@ static UniValue mockscheduler(const JSONRPCRequest& request)
     }
 
     // protect against null pointer dereference
-    CHECK_NONFATAL(g_rpc_node);
-    CHECK_NONFATAL(g_rpc_node->scheduler);
-    g_rpc_node->scheduler->MockForward(std::chrono::seconds(delta_seconds));
+    CHECK_NONFATAL(node.scheduler);
+    node.scheduler->MockForward(std::chrono::seconds(delta_seconds));
 
     return NullUniValue;
 }
@@ -437,7 +434,7 @@ static std::string RPCMallocInfo()
 }
 #endif
 
-static UniValue getmemoryinfo(const JSONRPCRequest& request)
+static UniValue getmemoryinfo(const JSONRPCRequest& request, const NodeContext& node)
 {
     /* Please, avoid using the word "pool" here in the RPC interface or help,
      * as users will undoubtedly confuse it with the other "memory pool"
@@ -508,7 +505,7 @@ static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
     }
 }
 
-UniValue logging(const JSONRPCRequest& request)
+UniValue logging(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"logging",
             "Gets and sets the logging configuration.\n"
@@ -576,7 +573,7 @@ UniValue logging(const JSONRPCRequest& request)
     return result;
 }
 
-static UniValue echo(const JSONRPCRequest& request)
+static UniValue echo(const JSONRPCRequest& request, const NodeContext& node)
 {
     if (request.fHelp)
         throw std::runtime_error(

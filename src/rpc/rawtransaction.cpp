@@ -72,7 +72,7 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
     }
 }
 
-static UniValue getrawtransaction(const JSONRPCRequest& request)
+static UniValue getrawtransaction(const JSONRPCRequest& request, const NodeContext& node)
 {
     RPCHelpMan{
                 "getrawtransaction",
@@ -222,7 +222,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
-static UniValue gettxoutproof(const JSONRPCRequest& request)
+static UniValue gettxoutproof(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"gettxoutproof",
                 "\nReturns a hex-encoded proof that \"txid\" was included in a block.\n"
@@ -315,7 +315,7 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
     return strHex;
 }
 
-static UniValue verifytxoutproof(const JSONRPCRequest& request)
+static UniValue verifytxoutproof(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"verifytxoutproof",
                 "\nVerifies that a proof points to a transaction in a block, returning the transaction it commits to\n"
@@ -360,7 +360,7 @@ static UniValue verifytxoutproof(const JSONRPCRequest& request)
     return res;
 }
 
-static UniValue createrawtransaction(const JSONRPCRequest& request)
+static UniValue createrawtransaction(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"createrawtransaction",
                 "\nCreate a transaction spending the given inputs and creating new outputs.\n"
@@ -429,7 +429,7 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
     return EncodeHexTx(CTransaction(rawTx));
 }
 
-static UniValue decoderawtransaction(const JSONRPCRequest& request)
+static UniValue decoderawtransaction(const JSONRPCRequest& request, const NodeContext& node)
 {
     RPCHelpMan{"decoderawtransaction",
                 "\nReturn a JSON object representing the serialized, hex-encoded transaction.\n",
@@ -525,7 +525,7 @@ static std::string GetAllOutputTypes()
     return ret;
 }
 
-static UniValue decodescript(const JSONRPCRequest& request)
+static UniValue decodescript(const JSONRPCRequest& request, const NodeContext& node)
 {
     RPCHelpMan{"decodescript",
                 "\nDecode a hex-encoded script.\n",
@@ -616,7 +616,7 @@ static UniValue decodescript(const JSONRPCRequest& request)
     return r;
 }
 
-static UniValue combinerawtransaction(const JSONRPCRequest& request)
+static UniValue combinerawtransaction(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"combinerawtransaction",
                 "\nCombine multiple partially signed transactions into one transaction.\n"
@@ -659,7 +659,7 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     {
-        const CTxMemPool& mempool = EnsureMemPool();
+        CTxMemPool& mempool = EnsureMemPool(node);
         LOCK(cs_main);
         LOCK(mempool.cs);
         CCoinsViewCache &viewChain = ::ChainstateActive().CoinsTip();
@@ -699,7 +699,7 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
     return EncodeHexTx(CTransaction(mergedTx));
 }
 
-static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
+static UniValue signrawtransactionwithkey(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"signrawtransactionwithkey",
                 "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
@@ -784,7 +784,7 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
     for (const CTxIn& txin : mtx.vin) {
         coins[txin.prevout]; // Create empty map entry keyed by prevout.
     }
-    FindCoins(*g_rpc_node, coins);
+    FindCoins(node, coins);
 
     // Parse the prevtxs array
     ParsePrevouts(request.params[2], &keystore, coins);
@@ -794,7 +794,7 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
     return result;
 }
 
-static UniValue sendrawtransaction(const JSONRPCRequest& request)
+static UniValue sendrawtransaction(const JSONRPCRequest& request, const NodeContext& node)
 {
     RPCHelpMan{"sendrawtransaction",
                 "\nSubmit a raw transaction (serialized, hex-encoded) to local node and network.\n"
@@ -843,7 +843,7 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
 
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    const TransactionError err = BroadcastTransaction(*g_rpc_node, tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }
@@ -851,7 +851,7 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
     return tx->GetHash().GetHex();
 }
 
-static UniValue testmempoolaccept(const JSONRPCRequest& request)
+static UniValue testmempoolaccept(const JSONRPCRequest& request, const NodeContext& node)
 {
     RPCHelpMan{"testmempoolaccept",
                 "\nReturns result of mempool acceptance tests indicating if raw transaction (serialized, hex-encoded) would be accepted by mempool.\n"
@@ -910,7 +910,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
                                              DEFAULT_MAX_RAW_TX_FEE_RATE :
                                              CFeeRate(AmountFromValue(request.params[1]));
 
-    CTxMemPool& mempool = EnsureMemPool();
+    CTxMemPool& mempool = EnsureMemPool(node);
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
     CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
 
@@ -961,7 +961,7 @@ static std::string WriteHDKeypath(std::vector<uint32_t>& keypath)
     return keypath_str;
 }
 
-UniValue decodepsbt(const JSONRPCRequest& request)
+UniValue decodepsbt(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"decodepsbt",
                 "\nReturn a JSON object representing the serialized, base64-encoded partially signed Bitcoin transaction.\n",
@@ -1266,7 +1266,7 @@ UniValue decodepsbt(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue combinepsbt(const JSONRPCRequest& request)
+UniValue combinepsbt(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"combinepsbt",
                 "\nCombine multiple partially signed Bitcoin transactions into one transaction.\n"
@@ -1314,7 +1314,7 @@ UniValue combinepsbt(const JSONRPCRequest& request)
     return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
 }
 
-UniValue finalizepsbt(const JSONRPCRequest& request)
+UniValue finalizepsbt(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"finalizepsbt",
                 "Finalize the inputs of a PSBT. If the transaction is fully signed, it will produce a\n"
@@ -1371,7 +1371,7 @@ UniValue finalizepsbt(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue createpsbt(const JSONRPCRequest& request)
+UniValue createpsbt(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"createpsbt",
                 "\nCreates a transaction in the Partially Signed Transaction format.\n"
@@ -1449,7 +1449,7 @@ UniValue createpsbt(const JSONRPCRequest& request)
     return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
 }
 
-UniValue converttopsbt(const JSONRPCRequest& request)
+UniValue converttopsbt(const JSONRPCRequest& request, const NodeContext& node)
 {
     RPCHelpMan{"converttopsbt",
                 "\nConverts a network serialized transaction to a PSBT. This should be used only with createrawtransaction and fundrawtransaction\n"
@@ -1516,7 +1516,7 @@ UniValue converttopsbt(const JSONRPCRequest& request)
     return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
 }
 
-UniValue utxoupdatepsbt(const JSONRPCRequest& request)
+UniValue utxoupdatepsbt(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"utxoupdatepsbt",
             "\nUpdates all segwit inputs and outputs in a PSBT with data from output descriptors, the UTXO set or the mempool.\n",
@@ -1561,7 +1561,7 @@ UniValue utxoupdatepsbt(const JSONRPCRequest& request)
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     {
-        const CTxMemPool& mempool = EnsureMemPool();
+        CTxMemPool& mempool = EnsureMemPool(node);
         LOCK2(cs_main, mempool.cs);
         CCoinsViewCache &viewChain = ::ChainstateActive().CoinsTip();
         CCoinsViewMemPool viewMempool(&viewChain, mempool);
@@ -1604,7 +1604,7 @@ UniValue utxoupdatepsbt(const JSONRPCRequest& request)
     return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
 }
 
-UniValue joinpsbts(const JSONRPCRequest& request)
+UniValue joinpsbts(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"joinpsbts",
             "\nJoins multiple distinct PSBTs with different inputs and outputs into one PSBT with inputs and outputs from all of the PSBTs\n"
@@ -1697,7 +1697,7 @@ UniValue joinpsbts(const JSONRPCRequest& request)
     return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
 }
 
-UniValue analyzepsbt(const JSONRPCRequest& request)
+UniValue analyzepsbt(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"analyzepsbt",
             "\nAnalyzes and provides information about the current status of a PSBT and its inputs\n",

@@ -7,6 +7,7 @@
 #include <chainparams.h>
 #include <crypto/hmac_sha256.h>
 #include <httpserver.h>
+#include <node/context.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <ui_interface.h>
@@ -151,7 +152,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     return multiUserAuthorized(strUserPass);
 }
 
-static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
+static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string&, NodeContext* pnode)
 {
     // JSONRPC handles only POST
     if (req->GetRequestMethod() != HTTPRequest::POST) {
@@ -288,15 +289,15 @@ static bool InitRPCAuthentication()
     return true;
 }
 
-bool StartHTTPRPC()
+bool StartHTTPRPC(NodeContext* pnode)
 {
     LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");
     if (!InitRPCAuthentication())
         return false;
 
-    RegisterHTTPHandler("/", true, HTTPReq_JSONRPC);
+    RegisterHTTPHandler("/", true, HTTPReq_JSONRPC, pnode);
     if (g_wallet_init_interface.HasWalletSupport()) {
-        RegisterHTTPHandler("/wallet/", false, HTTPReq_JSONRPC);
+        RegisterHTTPHandler("/wallet/", false, HTTPReq_JSONRPC, pnode);
     }
     struct event_base* eventBase = EventBase();
     assert(eventBase);

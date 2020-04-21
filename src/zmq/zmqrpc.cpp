@@ -13,7 +13,7 @@
 
 namespace {
 
-UniValue getzmqnotifications(const JSONRPCRequest& request)
+UniValue getzmqnotifications(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"getzmqnotifications",
                 "\nReturns information about the active ZeroMQ notifications.\n",

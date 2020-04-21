@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_RPCWALLET_H
 
 #include <memory>
+#include <node/context.h>
 #include <string>
 #include <vector>
 
@@ -22,12 +23,6 @@ class Chain;
 class Handler;
 }
 
-//! Pointer to chain interface that needs to be declared as a global to be
-//! accessible loadwallet and createwallet methods. Due to limitations of the
-//! RPC framework, there's currently no direct way to pass in state to RPC
-//! methods without globals.
-extern interfaces::Chain* g_rpc_chain;
-
 void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique_ptr<interfaces::Handler>>& handlers);
 
 /**
@@ -42,6 +37,6 @@ void EnsureWalletIsUnlocked(const CWallet*);
 bool EnsureWalletIsAvailable(const CWallet*, bool avoidException);
 LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create = false);
 
-UniValue getaddressinfo(const JSONRPCRequest& request);
-UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
+UniValue getaddressinfo(const JSONRPCRequest& request, const NodeContext* prpc_node);
+UniValue signrawtransactionwithwallet(const JSONRPCRequest& request, const NodeContext* prpc_node);
 #endif //BITCOIN_WALLET_RPCWALLET_H

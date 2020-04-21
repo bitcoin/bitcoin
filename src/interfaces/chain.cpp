@@ -189,10 +189,10 @@ class RpcHandlerImpl : public Handler
 public:
     explicit RpcHandlerImpl(const CRPCCommand& command) : m_command(command), m_wrapped_command(&command)
     {
-        m_command.actor = [this](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
+        m_command.actor = [this](const JSONRPCRequest& request, UniValue& result, bool last_handler, const NodeContext& node) {
             if (!m_wrapped_command) return false;
             try {
-                return m_wrapped_command->actor(request, result, last_handler);
+                return m_wrapped_command->actor(request, result, last_handler, node);
             } catch (const UniValue& e) {
                 // If this is not the last handler and a wallet not found
                 // exception was thrown, return false so the next handler can

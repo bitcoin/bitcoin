@@ -6,14 +6,16 @@
 
 #include <chainparamsbase.h>
 #include <compat.h>
-#include <util/threadnames.h>
-#include <util/system.h>
-#include <util/strencodings.h>
 #include <netbase.h>
+#include <node/context.h>
 #include <rpc/protocol.h> // For HTTP status codes
 #include <shutdown.h>
 #include <sync.h>
 #include <ui_interface.h>
+#include <util/check.h>
+#include <util/strencodings.h>
+#include <util/system.h>
+#include <util/threadnames.h>
 
 #include <deque>
 #include <memory>
@@ -46,13 +48,12 @@ static const size_t MAX_HEADERS_SIZE = 8192;
 class HTTPWorkItem final : public HTTPClosure
 {
 public:
-    HTTPWorkItem(std::unique_ptr<HTTPRequest> _req, const std::string &_path, const HTTPRequestHandler& _func):
-        req(std::move(_req)), path(_path), func(_func)
+    HTTPWorkItem(std::unique_ptr<HTTPRequest> _req, const std::string& _path, const HTTPRequestHandler& _func, NodeContext* pnode = nullptr) : req(std::move(_req)), path(_path), func(_func), pnode(pnode)
     {
     }
     void operator()() override
     {
-        func(req.get(), path);
+        func(req.get(), path, pnode);
     }
 
     std::unique_ptr<HTTPRequest> req;
@@ -60,6 +61,7 @@ public:
 private:
     std::string path;
     HTTPRequestHandler func;
+    NodeContext* pnode;
 };
 
 /** Simple work queue for distributing work over multiple threads.
@@ -125,13 +127,13 @@ public:
 
 struct HTTPPathHandler
 {
-    HTTPPathHandler(std::string _prefix, bool _exactMatch, HTTPRequestHandler _handler):
-        prefix(_prefix), exactMatch(_exactMatch), handler(_handler)
+    HTTPPathHandler(std::string _prefix, bool _exactMatch, HTTPRequestHandler _handler, NodeContext* pnode = nullptr) : prefix(_prefix), exactMatch(_exactMatch), handler(_handler), pnode(pnode)
     {
     }
     std::string prefix;
     bool exactMatch;
     HTTPRequestHandler handler;
+    NodeContext* pnode;
 };
 
 /** HTTP module state */
@@ -212,6 +214,8 @@ std::string RequestMethodString(HTTPRequest::RequestMethod m)
 /** HTTP request callback */
 static void http_request_cb(struct evhttp_request* req, void* arg)
 {
+    CHECK_NONFATAL(arg);
+    NodeContext* pnode = (NodeContext*)arg;
     // Disable reading to work around a libevent bug, fixed in 2.2.0.
     if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
         evhttp_connection* conn = evhttp_request_get_connection(req);
@@ -262,7 +266,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
 
     // Dispatch to worker thread
     if (i != iend) {
-        std::unique_ptr<HTTPWorkItem> item(new HTTPWorkItem(std::move(hreq), path, i->handler));
+        std::unique_ptr<HTTPWorkItem> item(new HTTPWorkItem(std::move(hreq), path, i->handler, pnode));
         assert(workQueue);
         if (workQueue->Enqueue(item.get()))
             item.release(); /* if true, queue took ownership */
@@ -355,7 +359,7 @@ static void libevent_log_cb(int severity, const char *msg)
         LogPrint(BCLog::LIBEVENT, "libevent: %s\n", msg);
 }
 
-bool InitHTTPServer()
+bool InitHTTPServer(NodeContext* pnode)
 {
     if (!InitHTTPAllowList())
         return false;
@@ -388,7 +392,7 @@ bool InitHTTPServer()
     evhttp_set_timeout(http, gArgs.GetArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));
     evhttp_set_max_headers_size(http, MAX_HEADERS_SIZE);
     evhttp_set_max_body_size(http, MAX_SIZE);
-    evhttp_set_gencb(http, http_request_cb, nullptr);
+    evhttp_set_gencb(http, http_request_cb, pnode);
 
     if (!HTTPBindAddresses(http)) {
         LogPrintf("Unable to bind any endpoint for RPC server\n");
@@ -637,10 +641,10 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
     }
 }
 
-void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)
+void RegisterHTTPHandler(const std::string& prefix, bool exactMatch, const HTTPRequestHandler& handler, NodeContext* pnode)
 {
     LogPrint(BCLog::HTTP, "Registering HTTP handler for %s (exactmatch %d)\n", prefix, exactMatch);
-    pathHandlers.push_back(HTTPPathHandler(prefix, exactMatch, handler));
+    pathHandlers.push_back(HTTPPathHandler(prefix, exactMatch, handler, pnode));
 }
 
 void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)

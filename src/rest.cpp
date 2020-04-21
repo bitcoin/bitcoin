@@ -80,13 +80,13 @@ static bool RESTERR(HTTPRequest* req, enum HTTPStatusCode status, std::string me
  * @param[in]  req the HTTP request
  * return pointer to the mempool or nullptr if no mempool found
  */
-static CTxMemPool* GetMemPool(HTTPRequest* req)
+static CTxMemPool* GetMemPool(HTTPRequest* req, const NodeContext& node)
 {
-    if (!g_rpc_node || !g_rpc_node->mempool) {
+    if (!node.mempool) {
         RESTERR(req, HTTP_NOT_FOUND, "Mempool disabled or instance not found");
         return nullptr;
     }
-    return g_rpc_node->mempool;
+    return node.mempool;
 }
 
 static RetFormat ParseDataFormat(std::string& param, const std::string& strReq)
@@ -135,7 +135,8 @@ static bool CheckWarmup(HTTPRequest* req)
 }
 
 static bool rest_headers(HTTPRequest* req,
-                         const std::string& strURIPart)
+    const std::string& strURIPart,
+    NodeContext* pnode)
 {
     if (!CheckWarmup(req))
         return false;
@@ -275,20 +276,20 @@ static bool rest_block(HTTPRequest* req,
     }
 }
 
-static bool rest_block_extended(HTTPRequest* req, const std::string& strURIPart)
+static bool rest_block_extended(HTTPRequest* req, const std::string& strURIPart, NodeContext* pnode)
 {
     return rest_block(req, strURIPart, true);
 }
 
-static bool rest_block_notxdetails(HTTPRequest* req, const std::string& strURIPart)
+static bool rest_block_notxdetails(HTTPRequest* req, const std::string& strURIPart, NodeContext* pnode)
 {
     return rest_block(req, strURIPart, false);
 }
 
 // A bit of a hack - dependency on a function defined in rpc/blockchain.cpp
-UniValue getblockchaininfo(const JSONRPCRequest& request);
+UniValue getblockchaininfo(const JSONRPCRequest& request, const NodeContext& node);
 
-static bool rest_chaininfo(HTTPRequest* req, const std::string& strURIPart)
+static bool rest_chaininfo(HTTPRequest* req, const std::string& strURIPart, NodeContext* pnode)
 {
     if (!CheckWarmup(req))
         return false;
@@ -299,7 +300,7 @@ static bool rest_chaininfo(HTTPRequest* req, const std::string& strURIPart)
     case RetFormat::JSON: {
         JSONRPCRequest jsonRequest;
         jsonRequest.params = UniValue(UniValue::VARR);
-        UniValue chainInfoObject = getblockchaininfo(jsonRequest);
+        UniValue chainInfoObject = getblockchaininfo(jsonRequest, *pnode);
         std::string strJSON = chainInfoObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
@@ -311,11 +312,11 @@ static bool rest_chaininfo(HTTPRequest* req, const std::string& strURIPart)
     }
 }
 
-static bool rest_mempool_info(HTTPRequest* req, const std::string& strURIPart)
+static bool rest_mempool_info(HTTPRequest* req, const std::string& strURIPart, NodeContext* pnode)
 {
     if (!CheckWarmup(req))
         return false;
-    const CTxMemPool* mempool = GetMemPool(req);
+    const CTxMemPool* mempool = GetMemPool(req, *pnode);
     if (!mempool) return false;
     std::string param;
     const RetFormat rf = ParseDataFormat(param, strURIPart);
@@ -335,10 +336,10 @@ static bool rest_mempool_info(HTTPRequest* req, const std::string& strURIPart)
     }
 }
 
-static bool rest_mempool_contents(HTTPRequest* req, const std::string& strURIPart)
+static bool rest_mempool_contents(HTTPRequest* req, const std::string& strURIPart, NodeContext* pnode)
 {
     if (!CheckWarmup(req)) return false;
-    const CTxMemPool* mempool = GetMemPool(req);
+    const CTxMemPool* mempool = GetMemPool(req, *pnode);
     if (!mempool) return false;
     std::string param;
     const RetFormat rf = ParseDataFormat(param, strURIPart);
@@ -358,7 +359,7 @@ static bool rest_mempool_contents(HTTPRequest* req, const std::string& strURIPar
     }
 }
 
-static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
+static bool rest_tx(HTTPRequest* req, const std::string& strURIPart, NodeContext* pnode)
 {
     if (!CheckWarmup(req))
         return false;
@@ -414,7 +415,7 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
     }
 }
 
-static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
+static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart, NodeContext* pnode)
 {
     if (!CheckWarmup(req))
         return false;
@@ -523,7 +524,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         };
 
         if (fCheckMemPool) {
-            const CTxMemPool* mempool = GetMemPool(req);
+            const CTxMemPool* mempool = GetMemPool(req, *pnode);
             if (!mempool) return false;
             // use db+mempool as cache backend in case user likes to query mempool
             LOCK2(cs_main, mempool->cs);
@@ -601,7 +602,8 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
 }
 
 static bool rest_blockhash_by_height(HTTPRequest* req,
-                       const std::string& str_uri_part)
+    const std::string& str_uri_part,
+    NodeContext* pnode)
 {
     if (!CheckWarmup(req)) return false;
     std::string height_str;
@@ -648,7 +650,7 @@ static bool rest_blockhash_by_height(HTTPRequest* req,
 
 static const struct {
     const char* prefix;
-    bool (*handler)(HTTPRequest* req, const std::string& strReq);
+    bool (*handler)(HTTPRequest* req, const std::string& strReq, NodeContext* pnode);
 } uri_prefixes[] = {
       {"/rest/tx/", rest_tx},
       {"/rest/block/notxdetails/", rest_block_notxdetails},
@@ -661,10 +663,10 @@ static const struct {
       {"/rest/blockhashbyheight/", rest_blockhash_by_height},
 };
 
-void StartREST()
+void StartREST(NodeContext* pnode)
 {
     for (unsigned int i = 0; i < ARRAYLEN(uri_prefixes); i++)
-        RegisterHTTPHandler(uri_prefixes[i].prefix, false, uri_prefixes[i].handler);
+        RegisterHTTPHandler(uri_prefixes[i].prefix, false, uri_prefixes[i].handler, pnode);
 }
 
 void InterruptREST()

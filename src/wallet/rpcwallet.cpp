@@ -182,7 +182,7 @@ static std::string LabelFromValue(const UniValue& value)
     return label;
 }
 
-static UniValue getnewaddress(const JSONRPCRequest& request)
+static UniValue getnewaddress(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -235,7 +235,7 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
     return EncodeDestination(dest);
 }
 
-static UniValue getrawchangeaddress(const JSONRPCRequest& request)
+static UniValue getrawchangeaddress(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -281,7 +281,7 @@ static UniValue getrawchangeaddress(const JSONRPCRequest& request)
 }
 
 
-static UniValue setlabel(const JSONRPCRequest& request)
+static UniValue setlabel(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -353,7 +353,7 @@ static CTransactionRef SendMoney(interfaces::Chain::Lock& locked_chain, CWallet 
     return tx;
 }
 
-static UniValue sendtoaddress(const JSONRPCRequest& request)
+static UniValue sendtoaddress(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -449,7 +449,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
     return tx->GetHash().GetHex();
 }
 
-static UniValue listaddressgroupings(const JSONRPCRequest& request)
+static UniValue listaddressgroupings(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -512,7 +512,7 @@ static UniValue listaddressgroupings(const JSONRPCRequest& request)
     return jsonGroupings;
 }
 
-static UniValue signmessage(const JSONRPCRequest& request)
+static UniValue signmessage(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -618,7 +618,7 @@ static CAmount GetReceived(interfaces::Chain::Lock& locked_chain, const CWallet&
 }
 
 
-static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
+static UniValue getreceivedbyaddress(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -659,7 +659,7 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 }
 
 
-static UniValue getreceivedbylabel(const JSONRPCRequest& request)
+static UniValue getreceivedbylabel(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -700,7 +700,7 @@ static UniValue getreceivedbylabel(const JSONRPCRequest& request)
 }
 
 
-static UniValue getbalance(const JSONRPCRequest& request)
+static UniValue getbalance(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -758,7 +758,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
     return ValueFromAmount(bal.m_mine_trusted + (include_watchonly ? bal.m_watchonly_trusted : 0));
 }
 
-static UniValue getunconfirmedbalance(const JSONRPCRequest &request)
+static UniValue getunconfirmedbalance(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -785,7 +785,7 @@ static UniValue getunconfirmedbalance(const JSONRPCRequest &request)
 }
 
 
-static UniValue sendmany(const JSONRPCRequest& request)
+static UniValue sendmany(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -920,7 +920,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
     return tx->GetHash().GetHex();
 }
 
-static UniValue addmultisigaddress(const JSONRPCRequest& request)
+static UniValue addmultisigaddress(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -1163,7 +1163,7 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, const CWalle
     return ret;
 }
 
-static UniValue listreceivedbyaddress(const JSONRPCRequest& request)
+static UniValue listreceivedbyaddress(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -1215,7 +1215,7 @@ static UniValue listreceivedbyaddress(const JSONRPCRequest& request)
     return ListReceived(*locked_chain, pwallet, request.params, false);
 }
 
-static UniValue listreceivedbylabel(const JSONRPCRequest& request)
+static UniValue listreceivedbylabel(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -1377,7 +1377,7 @@ static const std::vector<RPCResult> TransactionDescriptionString()
                "may be unknown for unconfirmed transactions not in the mempool"}};
 }
 
-UniValue listtransactions(const JSONRPCRequest& request)
+UniValue listtransactions(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -1491,7 +1491,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
     return result;
 }
 
-static UniValue listsinceblock(const JSONRPCRequest& request)
+static UniValue listsinceblock(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -1633,7 +1633,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
     return ret;
 }
 
-static UniValue gettransaction(const JSONRPCRequest& request)
+static UniValue gettransaction(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -1747,7 +1747,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     return entry;
 }
 
-static UniValue abandontransaction(const JSONRPCRequest& request)
+static UniValue abandontransaction(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -1792,7 +1792,7 @@ static UniValue abandontransaction(const JSONRPCRequest& request)
 }
 
 
-static UniValue backupwallet(const JSONRPCRequest& request)
+static UniValue backupwallet(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -1829,7 +1829,7 @@ static UniValue backupwallet(const JSONRPCRequest& request)
 }
 
 
-static UniValue keypoolrefill(const JSONRPCRequest& request)
+static UniValue keypoolrefill(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -1877,7 +1877,7 @@ static UniValue keypoolrefill(const JSONRPCRequest& request)
 }
 
 
-static UniValue walletpassphrase(const JSONRPCRequest& request)
+static UniValue walletpassphrase(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -1969,7 +1969,7 @@ static UniValue walletpassphrase(const JSONRPCRequest& request)
 }
 
 
-static UniValue walletpassphrasechange(const JSONRPCRequest& request)
+static UniValue walletpassphrasechange(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -2020,7 +2020,7 @@ static UniValue walletpassphrasechange(const JSONRPCRequest& request)
 }
 
 
-static UniValue walletlock(const JSONRPCRequest& request)
+static UniValue walletlock(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -2061,7 +2061,7 @@ static UniValue walletlock(const JSONRPCRequest& request)
 }
 
 
-static UniValue encryptwallet(const JSONRPCRequest& request)
+static UniValue encryptwallet(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -2122,7 +2122,7 @@ static UniValue encryptwallet(const JSONRPCRequest& request)
     return "wallet encrypted; The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup.";
 }
 
-static UniValue lockunspent(const JSONRPCRequest& request)
+static UniValue lockunspent(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -2249,7 +2249,7 @@ static UniValue lockunspent(const JSONRPCRequest& request)
     return true;
 }
 
-static UniValue listlockunspent(const JSONRPCRequest& request)
+static UniValue listlockunspent(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -2305,7 +2305,7 @@ static UniValue listlockunspent(const JSONRPCRequest& request)
     return ret;
 }
 
-static UniValue settxfee(const JSONRPCRequest& request)
+static UniValue settxfee(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -2349,7 +2349,7 @@ static UniValue settxfee(const JSONRPCRequest& request)
     return true;
 }
 
-static UniValue getbalances(const JSONRPCRequest& request)
+static UniValue getbalances(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const rpc_wallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(rpc_wallet.get(), request.fHelp)) {
@@ -2417,7 +2417,7 @@ static UniValue getbalances(const JSONRPCRequest& request)
     return balances;
 }
 
-static UniValue getwalletinfo(const JSONRPCRequest& request)
+static UniValue getwalletinfo(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -2508,7 +2508,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
     return obj;
 }
 
-static UniValue listwalletdir(const JSONRPCRequest& request)
+static UniValue listwalletdir(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"listwalletdir",
                 "Returns a list of wallets in the wallet directory.\n",
@@ -2543,7 +2543,7 @@ static UniValue listwalletdir(const JSONRPCRequest& request)
     return result;
 }
 
-static UniValue listwallets(const JSONRPCRequest& request)
+static UniValue listwallets(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"listwallets",
                 "Returns a list of currently loaded wallets.\n"
@@ -2576,7 +2576,7 @@ static UniValue listwallets(const JSONRPCRequest& request)
     return obj;
 }
 
-static UniValue loadwallet(const JSONRPCRequest& request)
+static UniValue loadwallet(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"loadwallet",
                 "\nLoads a wallet from a wallet file or directory."
@@ -2612,7 +2612,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
 
     std::string error;
     std::vector<std::string> warning;
-    std::shared_ptr<CWallet> const wallet = LoadWallet(*g_rpc_chain, location, error, warning);
+    std::shared_ptr<CWallet> const wallet = LoadWallet(*node.chain, location, error, warning);
     if (!wallet) throw JSONRPCError(RPC_WALLET_ERROR, error);
 
     UniValue obj(UniValue::VOBJ);
@@ -2622,7 +2622,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
     return obj;
 }
 
-static UniValue setwalletflag(const JSONRPCRequest& request)
+static UniValue setwalletflag(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -2690,7 +2690,7 @@ static UniValue setwalletflag(const JSONRPCRequest& request)
     return res;
 }
 
-static UniValue createwallet(const JSONRPCRequest& request)
+static UniValue createwallet(const JSONRPCRequest& request, const NodeContext& node)
 {
     RPCHelpMan{
         "createwallet",
@@ -2740,7 +2740,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
 
     std::string error;
     std::shared_ptr<CWallet> wallet;
-    WalletCreationStatus status = CreateWallet(*g_rpc_chain, passphrase, flags, request.params[0].get_str(), error, warnings, wallet);
+    WalletCreationStatus status = CreateWallet(*node.chain, passphrase, flags, request.params[0].get_str(), error, warnings, wallet);
     switch (status) {
         case WalletCreationStatus::CREATION_FAILED:
             throw JSONRPCError(RPC_WALLET_ERROR, error);
@@ -2758,7 +2758,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
     return obj;
 }
 
-static UniValue unloadwallet(const JSONRPCRequest& request)
+static UniValue unloadwallet(const JSONRPCRequest& request, const NodeContext& node)
 {
             RPCHelpMan{"unloadwallet",
                 "Unloads the wallet referenced by the request endpoint otherwise unloads the wallet specified in the argument.\n"
@@ -2799,7 +2799,7 @@ static UniValue unloadwallet(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-static UniValue listunspent(const JSONRPCRequest& request)
+static UniValue listunspent(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -3133,7 +3133,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
     }
 }
 
-static UniValue fundrawtransaction(const JSONRPCRequest& request)
+static UniValue fundrawtransaction(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -3233,7 +3233,7 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
+UniValue signrawtransactionwithwallet(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -3328,7 +3328,7 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
     return result;
 }
 
-static UniValue bumpfee(const JSONRPCRequest& request)
+static UniValue bumpfee(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -3501,7 +3501,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue rescanblockchain(const JSONRPCRequest& request)
+UniValue rescanblockchain(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -3702,7 +3702,7 @@ static UniValue AddressBookDataToJSON(const CAddressBookData& data, const bool v
     return ret;
 }
 
-UniValue getaddressinfo(const JSONRPCRequest& request)
+UniValue getaddressinfo(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -3845,7 +3845,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     return ret;
 }
 
-static UniValue getaddressesbylabel(const JSONRPCRequest& request)
+static UniValue getaddressesbylabel(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -3905,7 +3905,7 @@ static UniValue getaddressesbylabel(const JSONRPCRequest& request)
     return ret;
 }
 
-static UniValue listlabels(const JSONRPCRequest& request)
+static UniValue listlabels(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -3961,7 +3961,7 @@ static UniValue listlabels(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue sethdseed(const JSONRPCRequest& request)
+UniValue sethdseed(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -4039,7 +4039,7 @@ UniValue sethdseed(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue walletprocesspsbt(const JSONRPCRequest& request)
+UniValue walletprocesspsbt(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -4106,7 +4106,7 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
+UniValue walletcreatefundedpsbt(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -4231,7 +4231,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     return result;
 }
 
-static UniValue upgradewallet(const JSONRPCRequest& request)
+static UniValue upgradewallet(const JSONRPCRequest& request, const NodeContext& node)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -4270,16 +4270,16 @@ static UniValue upgradewallet(const JSONRPCRequest& request)
     return error;
 }
 
-UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
-UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
-UniValue importprivkey(const JSONRPCRequest& request);
-UniValue importaddress(const JSONRPCRequest& request);
-UniValue importpubkey(const JSONRPCRequest& request);
-UniValue dumpwallet(const JSONRPCRequest& request);
-UniValue importwallet(const JSONRPCRequest& request);
-UniValue importprunedfunds(const JSONRPCRequest& request);
-UniValue removeprunedfunds(const JSONRPCRequest& request);
-UniValue importmulti(const JSONRPCRequest& request);
+UniValue abortrescan(const JSONRPCRequest& request, const NodeContext& node); // in rpcdump.cpp
+UniValue dumpprivkey(const JSONRPCRequest& request, const NodeContext& node); // in rpcdump.cpp
+UniValue importprivkey(const JSONRPCRequest& request, const NodeContext& node);
+UniValue importaddress(const JSONRPCRequest& request, const NodeContext& node);
+UniValue importpubkey(const JSONRPCRequest& request, const NodeContext& node);
+UniValue dumpwallet(const JSONRPCRequest& request, const NodeContext& node);
+UniValue importwallet(const JSONRPCRequest& request, const NodeContext& node);
+UniValue importprunedfunds(const JSONRPCRequest& request, const NodeContext& node);
+UniValue removeprunedfunds(const JSONRPCRequest& request, const NodeContext& node);
+UniValue importmulti(const JSONRPCRequest& request, const NodeContext& node);
 
 void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique_ptr<interfaces::Handler>>& handlers)
 {
@@ -4351,4 +4351,3 @@ static const CRPCCommand commands[] =
         handlers.emplace_back(chain.handleRpc(commands[vcidx]));
 }
 
-interfaces::Chain* g_rpc_chain = nullptr;
