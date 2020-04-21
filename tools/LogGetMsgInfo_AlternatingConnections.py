@@ -5,7 +5,7 @@ import time
 import datetime
 import subprocess
 import glob
-import sys
+import traceback
 from threading import Timer
 
 
@@ -513,9 +513,8 @@ def log(file, targetDateTime, count, maxConnections):
 		count += 1
 	except Exception as e:
 		print('\nLOGGER PAUSED. Hold on...')
-		exc_type, exc_obj, exc_tb = sys.exc_info()
-		fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-		print(exc_type, fname, exc_tb.tb_lineno)
+		print(e)
+		print(traceback.format_exc())
 
 
 	targetDateTime = targetDateTime + datetime.timedelta(seconds = numSecondsPerSample)
