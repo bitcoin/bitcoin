@@ -142,7 +142,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
 
-    addPackageTxs<VeriBlock::poptx_priority<ancestor_score>>(nPackagesSelected, nDescendantsUpdated);
+    addPackageTxs<VeriBlock::poptx_priority<ancestor_score>>(nPackagesSelected, nDescendantsUpdated, *pindexPrev);
 
     int64_t nTime1 = GetTimeMicros();
 
@@ -174,7 +174,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
     BlockValidationState state;
-    if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
+    if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false, true)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }
     int64_t nTime2 = GetTimeMicros();
@@ -308,11 +308,23 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
 template<typename MempoolComparatorTagName>
-void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated)
+void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, CBlockIndex& prevIndex)
 {
     auto& config = VeriBlock::getService<VeriBlock::Config>();
     auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+    // do a full copy of alt tree, and do stateful validation against this tree.
+    // then, discard this copy
     altintegration::AltTree altTreeCopy = pop.getAltTree();
+
+    // dummy pop tx containing block
+    altintegration::AltBlock dummyContainingBlock{};
+    dummyContainingBlock.height = prevIndex.nHeight + 1;
+    dummyContainingBlock.previousBlock = prevIndex.GetBlockHash().asVector();
+    dummyContainingBlock.timestamp = pblock->GetBlockTime();
+
+    altintegration::ValidationState state;
+    bool ret = altTreeCopy.acceptBlock(dummyContainingBlock, state);
+    assert(ret);
 
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
@@ -434,6 +446,13 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
                 altintegration::AltPayloads p;
                 // do a stateless validation of pop payloads
                 if (!VeriBlock::parseTxPopPayloadsImpl(iter->GetTx(), chainparams.GetConsensus(), txstate, p)) {
+                    LogPrint(BCLog::POP, "%s: tx %s is statelessly invalid: %s", __func__, iter->GetTx().GetHash().ToString(), txstate.GetRejectReason());
+                    failedTx.insert(iter);
+                    failedPopTx.insert(iter);
+                    continue;
+                }
+                if(!altTreeCopy.addPayloads(dummyContainingBlock, {p}, state, true)) {
+                    LogPrint(BCLog::POP, "%s: tx %s is statefully invalid: %s", __func__, iter->GetTx().GetHash().ToString(), state.toString());
                     failedTx.insert(iter);
                     failedPopTx.insert(iter);
                     continue;
@@ -468,7 +487,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     }
 }
 
-template void BlockAssembler::addPackageTxs<ancestor_score>(int &nPackagesSelected, int &nDescendantsUpdated);
+template void BlockAssembler::addPackageTxs<ancestor_score>(int &nPackagesSelected, int &nDescendantsUpdated, CBlockIndex& prevIndex);
 
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {
