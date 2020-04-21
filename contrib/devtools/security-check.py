@@ -223,6 +223,20 @@ def check_MACHO_LAZY_BINDINGS(executable) -> bool:
                 return False
     return True
 
+def check_MACHO_Canary(executable) -> bool:
+    '''
+    Check for use of stack canary
+    '''
+    p = subprocess.Popen([OTOOL_CMD, '-Iv', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+    ok = False
+    for line in stdout.splitlines():
+        if '___stack_chk_fail' in line:
+            ok = True
+    return ok
+
 CHECKS = {
 'ELF': [
     ('PIE', check_ELF_PIE),
@@ -239,7 +253,8 @@ CHECKS = {
     ('PIE', check_MACHO_PIE),
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
     ('NX', check_MACHO_NX),
-    ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS)
+    ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS),
+    ('Canary', check_MACHO_Canary)
 ]
 }
 
