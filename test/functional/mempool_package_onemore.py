@@ -14,6 +14,7 @@ from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_r
 
 MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25
+TOO_LONG_DESC = "too-long-mempool-chain, too many descendants"
 
 class MempoolPackagesTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -48,12 +49,19 @@ class MempoolPackagesTest(BitcoinTestFramework):
         vout = utxo[0]['vout']
         value = utxo[0]['amount']
 
+        # Make sure we're not chaining off anything yet.
+        assert_equal(len(self.nodes[0].getrawmempool(True)), 0)
+
         fee = Decimal("0.0002")
         # MAX_ANCESTORS transactions off a confirmed tx should be fine
         chain = []
-        for _ in range(4):
+        # First tx has 3 outputs
+        (txid, sent_value) = self.chain_transaction(self.nodes[0], [txid], [vout], value, fee, 3)
+        vout = 0
+        value = sent_value
+        chain.append([txid, value])
+        for _ in range(3):
             (txid, sent_value) = self.chain_transaction(self.nodes[0], [txid], [vout], value, fee, 2)
-            vout = 0
             value = sent_value
             chain.append([txid, value])
         for _ in range(MAX_ANCESTORS - 4):
@@ -68,16 +76,20 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Adding one more transaction on to the chain should fail.
         assert_raises_rpc_error(-26, "too-long-mempool-chain, too many unconfirmed ancestors [limit: 25]", self.chain_transaction, self.nodes[0], [txid], [0], value, fee, 1)
         # ...even if it chains on from some point in the middle of the chain.
-        assert_raises_rpc_error(-26, "too-long-mempool-chain, too many descendants", self.chain_transaction, self.nodes[0], [chain[2][0]], [1], chain[2][1], fee, 1)
-        assert_raises_rpc_error(-26, "too-long-mempool-chain, too many descendants", self.chain_transaction, self.nodes[0], [chain[1][0]], [1], chain[1][1], fee, 1)
+        assert_raises_rpc_error(-26, TOO_LONG_DESC, self.chain_transaction, self.nodes[0], [chain[2][0]], [1], chain[2][1], fee, 1)
+        assert_raises_rpc_error(-26, TOO_LONG_DESC, self.chain_transaction, self.nodes[0], [chain[1][0]], [1], chain[1][1], fee, 1)
         # ...even if it chains on to two parent transactions with one in the chain.
-        assert_raises_rpc_error(-26, "too-long-mempool-chain, too many descendants", self.chain_transaction, self.nodes[0], [chain[0][0], second_chain], [1, 0], chain[0][1] + second_chain_value, fee, 1)
+        assert_raises_rpc_error(-26, TOO_LONG_DESC, self.chain_transaction, self.nodes[0], [chain[0][0], second_chain], [1, 0], chain[0][1] + second_chain_value, fee, 1)
         # ...especially if its > 40k weight
-        assert_raises_rpc_error(-26, "too-long-mempool-chain, too many descendants", self.chain_transaction, self.nodes[0], [chain[0][0]], [1], chain[0][1], fee, 350)
+        assert_raises_rpc_error(-26, TOO_LONG_DESC, self.chain_transaction, self.nodes[0], [chain[0][0]], [1], chain[0][1], fee, 350)
         # But not if it chains directly off the first transaction
         (replacable_txid, replacable_orig_value) = self.chain_transaction(self.nodes[0], [chain[0][0]], [1], chain[0][1], fee, 1)
         # and the second chain should work just fine
         self.chain_transaction(self.nodes[0], [second_chain], [0], second_chain_value, fee, 1)
+
+        # But now that we're at the additional carve-out limit, the third base output being spent will be rejected
+        # For both ancestor's descendant limits
+        assert_raises_rpc_error(-26, TOO_LONG_DESC, self.chain_transaction, self.nodes[0], [chain[0][0]], [2], chain[0][1], fee, 1)
 
         # Make sure we can RBF the chain which used our carve-out rule
         second_tx_outputs = {self.nodes[0].getrawtransaction(replacable_txid, True)["vout"][0]['scriptPubKey']['addresses'][0]: replacable_orig_value - (Decimal(1) / Decimal(100))}
