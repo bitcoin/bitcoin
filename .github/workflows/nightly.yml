@@ -3,7 +3,7 @@ name: CI (nightly)
 on:
   schedule:
     # create nightly full builds at midnight
-    - cron:  '0 2 * * *'
+    - cron:  '0 0 * * *'
 
 jobs:
   linux:
@@ -27,7 +27,7 @@ jobs:
       - name: install build requirements
         run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
       - name: install dependencies
-        run: sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libqrencode-dev lcov
+        run: sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libqrencode-dev lcov gcovr
       - name: install sonar
         env:
           SONAR_CLI_VERSION: 4.2.0.1873
