@@ -10,7 +10,7 @@ from threading import Timer
 
 startupDelay = 0			# Number of seconds to wait after each node start up
 numSecondsPerSample = 1
-rowsPerNodeReset = 5		# Number of rows for cach numconnections file
+rowsPerNodeReset = 10		# Number of rows for cach numconnections file
 
 os.system('clear')
 
