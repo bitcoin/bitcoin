@@ -3290,11 +3290,12 @@ void CConnman::AddPendingProbeConnections(const std::set<uint256> &proTxHashes)
 size_t CConnman::GetNodeCount(NumConnections flags)
 {
     LOCK(cs_vNodes);
-    if (flags == CConnman::CONNECTIONS_ALL) // Shortcut if we want total
-        return vNodes.size();
 
     int nNum = 0;
     for (const auto& pnode : vNodes) {
+        if (pnode->fDisconnect) {
+            continue;
+        }
         if (flags & (pnode->fInbound ? CONNECTIONS_IN : CONNECTIONS_OUT)) {
             nNum++;
         }
@@ -3314,6 +3315,9 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)
     LOCK(cs_vNodes);
     vstats.reserve(vNodes.size());
     for (CNode* pnode : vNodes) {
+        if (pnode->fDisconnect) {
+            continue;
+        }
         vstats.emplace_back();
         pnode->copyStats(vstats.back());
     }
