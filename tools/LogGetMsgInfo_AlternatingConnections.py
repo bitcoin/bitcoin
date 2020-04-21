@@ -10,7 +10,7 @@ from threading import Timer
 
 startupDelay = 0			# Number of seconds to wait after each node start up
 numSecondsPerSample = 1
-rowsPerNodeReset = 50		# Number of rows for cach numconnections file
+rowsPerNodeReset = 20		# Number of rows for cach numconnections file
 
 os.system('clear')
 
@@ -564,7 +564,7 @@ def init():
 	filesList = filesList.replace(os.path.expanduser('~/Desktop/Logs_GetMsgInfo_AlternatingConnections/'), '')
 	print(filesList)
 	print()
-	maxConnections = int(input(f'Starting at file "Sample {fileSampleNumber + 1} numConnections X.csv"\nHow many connections should be made? (From 0 to 10): '))
+	maxConnections = int(input(f'Starting at file "Sample {fileSampleNumber + 1} numConnections X.csv"\nHow many connections should be made? (From 1 to 10): '))
 	print()
 	path = os.path.expanduser('~/Desktop/Logs_GetMsgInfo_AlternatingConnections')
 	if not os.path.exists(path):
@@ -572,7 +572,7 @@ def init():
 
 	file = resetNode(None, maxConnections)#open(os.path.expanduser(f'~/Desktop/Logs_GetMsgInfo_AlternatingConnections/sample0.csv'), "w+")
 	targetDateTime = datetime.datetime.now()
-	log(file, targetDateTime, 0, maxConnections)
+	log(file, targetDateTime, 1, maxConnections)
 
 
 init()
