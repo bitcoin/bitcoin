@@ -18,6 +18,11 @@ jobs:
         uses: actions/checkout@v1
         with:
           path: main
+      - name: Extract branch name & commit
+        id: extract_branch
+        run: |
+          echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
+          echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
       - name: Prepare ccache timestamp
         id: cache_timestamp
         run: |
@@ -64,6 +69,14 @@ jobs:
           --disable-gmock
       - name: make
         run: make -j2
+      - name: make deploy
+        if: success()
+        run: make linux-deploy
+      - name: create artifacts
+        if: success()
+        run: |
+          mv ./release vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
+          tar czvf vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}.tar.gz vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}/
       - name: make check
         timeout-minutes: 20
         run: make check
@@ -81,6 +94,11 @@ jobs:
         uses: actions/checkout@v1
         with:
           path: main
+      - name: Extract branch name & commit
+        id: extract_branch
+        run: |
+          echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
+          echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
       - name: Prepare ccache timestamp
         id: cache_timestamp
         run: |
@@ -114,14 +132,21 @@ jobs:
           CXX: x86_64-w64-mingw32-g++
           HOST: x86_64-w64-mingw32
           BASE_CACHE: ~/.depends_cache
-        run: cd depends && make -j2 NO_QT=1
+        run: cd depends && make -j2
       - name: autogen
         run: ./autogen.sh
       - name: configure
         run: CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
-          --without-gui
           --enable-werror
           --disable-bench
           --disable-gmock
       - name: make
         run: make -j2
+      - name: make deploy
+        if: success()
+        run: make deploy
+      - name: create artifacts
+        if: success()
+        run: |
+          mv ./release vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}.zip vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
