@@ -7,7 +7,11 @@ from collections import defaultdict
 import time
 
 from test_framework.blocktools import create_block, create_coinbase
-from test_framework.messages import ToHex
+from test_framework.messages import (
+    MSG_TX,
+    MSG_WTX,
+    ToHex,
+)
 from test_framework.mininode import P2PInterface, mininode_lock
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, wait_until
@@ -21,7 +25,7 @@ class P2PStoreTxInvs(P2PInterface):
     def on_inv(self, message):
         # Store how many times invs have been received for each tx.
         for i in message.inv:
-            if i.type == 1:
+            if i.type == MSG_TX or i.type == MSG_WTX:
                 # save txid
                 self.tx_invs_received[i.hash] += 1
 
@@ -39,7 +43,8 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         node.add_p2p_connection(P2PStoreTxInvs())
 
         self.log.info("Create a new transaction and wait until it's broadcast")
-        txid = int(node.sendtoaddress(node.getnewaddress(), 1), 16)
+        txid = node.sendtoaddress(node.getnewaddress(), 1)
+        wtxid = int(node.getrawtransaction(txid, 1)['hash'], 16)
 
         # Wallet rebroadcast is first scheduled 1 sec after startup (see
         # nNextResend in ResendWalletTransactions()). Sleep for just over a
@@ -48,7 +53,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         time.sleep(1.1)
 
         # Can take a few seconds due to transaction trickling
-        wait_until(lambda: node.p2p.tx_invs_received[txid] >= 1, lock=mininode_lock)
+        wait_until(lambda: node.p2p.tx_invs_received[wtxid] >= 1, lock=mininode_lock)
 
         # Add a second peer since txs aren't rebroadcast to the same peer (see filterInventoryKnown)
         node.add_p2p_connection(P2PStoreTxInvs())
@@ -67,13 +72,13 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         # Transaction should not be rebroadcast
         node.syncwithvalidationinterfacequeue()
         node.p2ps[1].sync_with_ping()
-        assert_equal(node.p2ps[1].tx_invs_received[txid], 0)
+        assert_equal(node.p2ps[1].tx_invs_received[wtxid], 0)
 
         self.log.info("Transaction should be rebroadcast after 30 minutes")
         # Use mocktime and give an extra 5 minutes to be sure.
         rebroadcast_time = int(time.time()) + 41 * 60
         node.setmocktime(rebroadcast_time)
-        wait_until(lambda: node.p2ps[1].tx_invs_received[txid] >= 1, lock=mininode_lock)
+        wait_until(lambda: node.p2ps[1].tx_invs_received[wtxid] >= 1, lock=mininode_lock)
 
 
 if __name__ == '__main__':

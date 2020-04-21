@@ -34,7 +34,7 @@ from test_framework.messages import (
     msg_tx,
     msg_block,
     msg_no_witness_tx,
-    msg_wtxidrelay,
+    msg_verack,
     ser_uint256,
     ser_vector,
     sha256,
@@ -159,8 +159,10 @@ class TestP2PConn(P2PInterface):
 
     def on_version(self, message):
         if self.wtxidrelay:
-            self.send_message(msg_wtxidrelay())
-        super().on_version(message)
+            super().on_version(message)
+        else:
+            self.send_message(msg_verack())
+            self.nServices = message.nServices
 
     def on_getdata(self, message):
         self.lastgetdata = message.inv
