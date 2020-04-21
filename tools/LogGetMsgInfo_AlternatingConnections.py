@@ -348,6 +348,7 @@ def fetch(now):
 	except Exception as e:
 		raise Exception('Unable to access Bitcoin console...')
 
+	seconds = (now - datetime.datetime(1970, 1, 1)).total_seconds()
 	numPeers = len(peerinfo)
 	addresses = ''
 	totalBanScore = 0
@@ -374,7 +375,7 @@ def fetch(now):
 	else:
 		avgPingTime = '0'
 	line = str(now) + ","
-	line += str((now - datetime.datetime(1970, 1, 1)).total_seconds()) + ","
+	line += str(seconds) + ","
 	line += str(numPeers) + ","
 	line += str(noResponsePings) + ","
 	line += str(avgPingTime) + ","
