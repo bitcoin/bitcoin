@@ -1,8 +1,8 @@
 package=altintegration
-$(package)_version=42f2c8dcda2bc0128f7a1a0c2a764e8cef958f86
+$(package)_version=56da423eb8c983131139a5f265fe185cfe6b083b
 $(package)_download_path=https://github.com/VeriBlock/alt-integration-cpp/archive/
 $(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=faeadac852251a45561146e6a31a39ab7be47e14785325cc374a69e36b83d5b1
+$(package)_sha256_hash=9c2288e48a47ecb1c9d94c36f3acabffb91718d9c366110c52785563e4d0a355
 
 define $(package)_config_cmds
   cmake -DCMAKE_C_COMPILER=$(CC) -DCMAKE_CXX_COMPILER=$(CXX) -DCMAKE_INSTALL_PREFIX=$($(package)_staging_dir)$(host_prefix) -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF -B .
