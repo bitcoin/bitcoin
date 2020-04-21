@@ -110,8 +110,6 @@ jobs:
         run: PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g')
       - name: set variables and build dependencies for x86_64-w64
         env:
-          CC: x86_64-w64-mingw32-gcc
-          CXX: x86_64-w64-mingw32-g++
           HOST: x86_64-w64-mingw32
         run: cd depends && make -j2
       - name: autogen
