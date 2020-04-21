@@ -20,8 +20,6 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    alert_filename = None  # Set by setup_network
-
     def run_test(self):
         # Start with a 200 block chain
         assert_equal(self.nodes[0].getblockcount(), 200)
@@ -76,9 +74,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         spend_101_id = self.nodes[0].sendrawtransaction(spend_101_raw)
         spend_102_1_id = self.nodes[0].sendrawtransaction(spend_102_1_raw)
 
-        self.sync_all(timeout=720)
-
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_101_id, spend_102_1_id, timelock_tx_id})
+        self.sync_all()
 
         for node in self.nodes:
             node.invalidateblock(last_block[0])
@@ -91,10 +88,9 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         for node in self.nodes:
             node.invalidateblock(new_blocks[0])
 
-        self.sync_all(timeout=720)
-
         # mempool should be empty.
         assert_equal(set(self.nodes[0].getrawmempool()), set())
+        self.sync_all()
 
 
 if __name__ == '__main__':
