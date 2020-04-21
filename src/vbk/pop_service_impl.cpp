@@ -494,7 +494,7 @@ bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& par
     return true;
 }
 
-bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex& indexPrev, const CBlock& block, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex& indexPrev, const CBlock& block, BlockValidationState& state, bool atomic) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     auto containing = VeriBlock::blockToAltBlock(indexPrev.nHeight + 1, block.GetBlockHeader());
 
@@ -508,7 +508,7 @@ bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex&
         return error("[%s] block %s is not accepted by altTree: %s", __func__, block.GetHash().ToString(), instate.toString());
     }
 
-    if (!payloads.empty() && !tree.addPayloads(containing, payloads, instate)) {
+    if (!payloads.empty() && !tree.addPayloads(containing, payloads, instate, atomic)) {
         return error("[%s] block %s failed stateful pop validation: %s", __func__, block.GetHash().ToString(), instate.toString());
     }
 

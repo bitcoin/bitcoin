@@ -3861,8 +3861,8 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.GetRejectReason());
     if (!::ChainstateActive().ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
         return false;
-    if(fCheckPop && VeriBlock::getService<VeriBlock::PopService>().checkPopPayloads(*pindexPrev, block, state)) {
-        return error("%s: Consensus::Pop : %s", __func__, state.GetRejectReason());
+    if(fCheckPop && !VeriBlock::getService<VeriBlock::PopService>().checkPopPayloads(*pindexPrev, block, state)) {
+        return error("%s: Consensus::Pop: %s", __func__, state.GetRejectReason());
     }
     assert(state.IsValid());
 
