@@ -503,19 +503,19 @@ def log(file, targetDateTime, count, maxConnections):
 		if len(line) != 0:
 			file.write(line + '\n')
 			file.flush()
-		#if count >= 3600:
-		#	file.close()
-		#	return
-		if(count % rowsPerNodeReset == 0):
-			maxConnections = 1 + maxConnections % 10 # Bound the max connections to 10 peers
-			try:
-				file = resetNode(file, maxConnections)
-			except Exception as e:
-				print('ERROR: ' + e)
+			#if count >= 3600:
+			#	file.close()
+			#	return
+			if(count % rowsPerNodeReset == 0):
+				maxConnections = 1 + maxConnections % 10 # Bound the max connections to 10 peers
+				try:
+					file = resetNode(file, maxConnections)
+				except Exception as e:
+					print('ERROR: ' + e)
 
-			targetDateTime = datetime.datetime.now()
+				targetDateTime = datetime.datetime.now()
 
-		count += 1
+			count += 1
 	except Exception as e:
 		print('\nLOGGER PAUSED. Hold on...')
 		print(e)
