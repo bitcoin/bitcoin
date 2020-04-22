@@ -4,7 +4,7 @@ import json
 import datetime
 from threading import Timer
 
-numSecondsPerSample = 0.02
+numSecondsPerSample = 0.05
 
 #def getmyIP():
 #	return os.popen('curl \'http://myexternalip.com/raw\'').read() + ':8333'
@@ -51,7 +51,7 @@ def fetch(now):
 	line = ''
 	line += str(now) + ',' # Timestamp
 
-	
+
 	timestamp = (now - datetime.datetime(1970, 1, 1)).total_seconds()
 	timestampDiff = timestamp - lastTimestamp
 	lastTimestamp = timestamp
@@ -61,6 +61,7 @@ def fetch(now):
 	connections = json.loads(bitcoin('list'))
 	addressLogged = False
 	for addr in connections:
+		print(f'{addr} : {connections[addr]}')
 		line += addr + ',' # Address
 		line += str(connections[addr]) + ',' # Banscore
 		addressLogged = True
