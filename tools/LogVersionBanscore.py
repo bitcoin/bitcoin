@@ -65,7 +65,6 @@ def fetch(now):
 		line += addr + ',' # Address
 		line += str(connections[addr]) + ',' # Banscore
 		addressLogged = True
-		break
 	if not addressLogged:
 		line += ',' # Address
 		line += ',' # Banscore
