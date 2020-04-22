@@ -15,7 +15,140 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 // SYSCOIN
-extern bool DecodeSyscoinRawtransaction(const CTransactionRef& rawTx, const uint256 &hashBlock, UniValue& output);
+#include <services/asset.h>
+bool AssetAllocationTxToJSON(const CTransactionRef &tx, const uint256& hashBlock, UniValue &entry) {
+    const uint256& txHash = tx->GetHash();
+    entry.__pushKV("txtype", stringFromSyscoinTx(tx->nVersion));
+    entry.__pushKV("txid", txHash.GetHex());
+    entry.__pushKV("blockhash", hashBlock.GetHex());  
+    UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+    CAmount nTotal = 0;
+    CAsset dbAsset;
+    for(const auto &it: tx->voutAssets) {
+        UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+        const int32_t &nAsset = it.first;
+        GetAsset(nAsset, dbAsset);
+        oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+        oAssetAllocationReceiversObj.__pushKV("symbol", dbAsset.strSymbol);
+        UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
+        for(const auto& voutAsset: it.second){
+            nTotal += voutAsset.nValue;
+            UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
+            oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
+            oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAssetAmount(voutAsset.nValue, dbAsset.nPrecision));
+            oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
+        }
+        oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
+        oAssetAllocationReceiversObj.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
+        oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+    }
+
+    entry.__pushKV("allocations", oAssetAllocationReceiversArray);
+    if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
+         CBurnSyscoin burnSyscoin(tx);
+         entry.__pushKV("ethereum_destination", "0x" + HexStr(burnSyscoin.vchEthAddress));
+         entry.__pushKV("ethereum_contract", "0x" + HexStr(dbAsset.vchContract));
+    }
+    return true;
+}
+
+
+bool AssetMintTxToJson(const CTransactionRef& tx, const uint256& txHash, const uint256& hashBlock, UniValue &entry) {
+    CMintSyscoin mintSyscoin(tx);
+    if (!mintSyscoin.IsNull()) {
+        entry.__pushKV("txtype", "assetallocationmint");
+        entry.__pushKV("txid", txHash.GetHex());
+        entry.__pushKV("blockhash", hashBlock.GetHex());  
+        UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+        CAmount nTotal = 0;
+        for(const auto &it: tx->voutAssets) {
+            UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+            const int32_t &nAsset = it.first;
+            CAsset dbAsset;
+            GetAsset(nAsset, dbAsset);
+            oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+            oAssetAllocationReceiversObj.__pushKV("symbol", dbAsset.strSymbol);
+            UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
+            for(const auto& voutAsset: it.second){
+                nTotal += voutAsset.nValue;
+                UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
+                oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
+                oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAssetAmount(voutAsset.nValue, dbAsset.nPrecision));
+                oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
+            }
+            oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
+            oAssetAllocationReceiversObj.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
+            oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+        }
+    
+        entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
+        UniValue oSPVProofObj(UniValue::VOBJ);
+        oSPVProofObj.__pushKV("bridgetransferid", mintSyscoin.nBridgeTransferID);   
+        oSPVProofObj.__pushKV("txvalue", HexStr(mintSyscoin.vchTxValue));   
+        oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
+        oSPVProofObj.__pushKV("txroot", HexStr(mintSyscoin.vchTxRoot));
+        oSPVProofObj.__pushKV("txpath", HexStr(mintSyscoin.vchTxPath)); 
+        oSPVProofObj.__pushKV("receiptvalue", HexStr(mintSyscoin.vchReceiptValue));   
+        oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes)); 
+        oSPVProofObj.__pushKV("receiptroot", HexStr(mintSyscoin.vchReceiptRoot)); 
+        oSPVProofObj.__pushKV("ethblocknumber", mintSyscoin.nBlockNumber); 
+        entry.__pushKV("spv_proof", oSPVProofObj); 
+        return true;
+    } 
+    return false;
+}
+bool AssetTxToJSON(const CTransactionRef& tx, const uint256 &hashBlock, UniValue &entry) {
+	CAsset asset(tx);
+	if(asset.IsNull())
+		return false;
+    CAsset dbAsset;
+    const int32_t &nAsset = asset.assetAllocation.voutAssets.begin()->first;
+    GetAsset(nAsset, dbAsset);
+    entry.__pushKV("txtype", stringFromSyscoinTx(tx->nVersion));
+    entry.__pushKV("txid", tx->GetHash().GetHex());  
+    entry.__pushKV("blockhash", hashBlock.GetHex());  
+	entry.__pushKV("asset_guid", nAsset);
+    entry.__pushKV("symbol", dbAsset.strSymbol);
+	if (!asset.vchPubData.empty())
+		entry.__pushKV("public_value", stringFromVch(asset.vchPubData));
+
+	if (!asset.vchContract.empty())
+		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
+
+	if (asset.nUpdateFlags > 0)
+		entry.__pushKV("update_flags", asset.nUpdateFlags);
+
+	if (asset.nBalance > 0)
+		entry.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, dbAsset.nPrecision));
+
+	if (tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+		entry.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
+        entry.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
+		entry.__pushKV("precision", asset.nPrecision);
+	}
+    return true;
+}
+bool SysTxToJSON(const CTransactionRef& tx, const uint256 &hashBlock, UniValue& output) {
+    bool found = false;
+    if (IsAssetTx(tx->nVersion) && tx->nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
+        found = AssetTxToJSON(tx, hashBlock, output);
+    else if (IsAssetAllocationTx(tx->nVersion) || tx->nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
+        found = AssetAllocationTxToJSON(tx, hashBlock, output);
+    return found;
+}
+
+bool DecodeSyscoinRawtransaction(const CTransactionRef& rawTx, const uint256 &hashBlock, UniValue& output) {
+    bool found = false;
+    if(IsSyscoinMintTx(rawTx->nVersion)) {
+        found = AssetMintTxToJson(rawTx, rawTx->GetHash(), hashBlock, output);
+    }
+    else if (IsAssetTx(rawTx->nVersion) || IsAssetAllocationTx(rawTx->nVersion)) {
+        found = SysTxToJSON(rawTx, hashBlock, output);
+    }
+    
+    return found;
+}
+
 UniValue ValueFromAmount(const CAmount& amount)
 {
     bool sign = amount < 0;

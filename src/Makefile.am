@@ -346,6 +346,8 @@ libsyscoin_server_a_SOURCES = \
   masternodeman.cpp \
   messagesigner.cpp \
   netfulfilledman.cpp \
+  rpc/masternode.cpp \
+  rpc/governance.cpp \
   spork.cpp \
   addrdb.cpp \
   addrman.cpp \
@@ -542,6 +544,7 @@ libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
   auxpow.cpp \
+  services/asset.cpp \
   base58.cpp \
   bech32.cpp \
   bloom.cpp \
@@ -549,6 +552,8 @@ libsyscoin_common_a_SOURCES = \
   coins.cpp \
   compressor.cpp \
   core_read.cpp \
+  core_write.cpp \
+  dbwrapper.cpp \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
@@ -698,11 +703,14 @@ endif
 
 syscoin_tx_LDADD = \
   $(LIBUNIVALUE) \
-  $(LIBSYSOIN_COMMON) \
+  $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
+  $(LIBLEVELDB) \
+  $(LIBLEVELDB_SSE42) \
   $(LIBSECP256K1)
+  
 
 syscoin_tx_LDADD += $(BOOST_LIBS)
 #
