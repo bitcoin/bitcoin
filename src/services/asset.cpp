@@ -3,104 +3,54 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <validation.h>
-#include <boost/algorithm/string.hpp>
-#include <services/assetconsensus.h>
-#include <validationinterface.h>
-#include <boost/thread.hpp>
-#include <services/rpc/assetrpc.h>
-#include <rpc/server.h>
-#include <chainparams.h>
-#include <core_io.h>
-extern std::string EncodeDestination(const CTxDestination& dest);
-extern CTxDestination DecodeDestination(const std::string& str);
-extern UniValue ValueFromAmount(const CAmount& amount);
-extern UniValue DescribeAddress(const CTxDestination& dest);
-extern CAmount AmountFromValue(const UniValue& value);
-
+#include <services/asset.h>
+#include <consensus/validation.h>
 std::unique_ptr<CAssetDB> passetdb;
-using namespace std;
 
-unsigned int GetSyscoinDataOutput(const CTransaction& tx) {
-	for (unsigned int i = 0; i<tx.vout.size(); i++) {
-		if (tx.vout[i].scriptPubKey.IsUnspendable())
-			return i;
-	}
-	return -1;
-}
-string stringFromValue(const UniValue& value) {
-	string strName = value.get_str();
-	return strName;
-}
-vector<unsigned char> vchFromValue(const UniValue& value) {
-	string strName = value.get_str();
-	unsigned char *strbeg = (unsigned char*)strName.c_str();
-	return vector<unsigned char>(strbeg, strbeg + strName.size());
+std::string stringFromSyscoinTx(const int &nVersion) {
+    switch (nVersion) {
+    case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
+		return "assetactivate";
+    case SYSCOIN_TX_VERSION_ASSET_UPDATE:
+		return "assetupdate";     
+	case SYSCOIN_TX_VERSION_ASSET_SEND:
+		return "assetsend";
+	case SYSCOIN_TX_VERSION_ALLOCATION_SEND:
+		return "assetallocationsend";
+	case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
+		return "assetallocationburntoethereum"; 
+	case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
+		return "assetallocationburntosyscoin";
+	case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
+		return "syscoinburntoassetallocation";            
+    case SYSCOIN_TX_VERSION_ALLOCATION_MINT:
+        return "assetallocationmint";   
+    default:
+        return "<unknown assetallocation op>";
+    }
 }
 
 std::vector<unsigned char> vchFromString(const std::string &str) {
 	unsigned char *strbeg = (unsigned char*)str.c_str();
-	return vector<unsigned char>(strbeg, strbeg + str.size());
+	return std::vector<unsigned char>(strbeg, strbeg + str.size());
 }
-string stringFromVch(const vector<unsigned char> &vch) {
-	string res;
-	vector<unsigned char>::const_iterator vi = vch.begin();
+std::string stringFromVch(const std::vector<unsigned char> &vch) {
+	std::string res;
+	std::vector<unsigned char>::const_iterator vi = vch.begin();
 	while (vi != vch.end()) {
 		res += (char)(*vi);
 		vi++;
 	}
 	return res;
 }
-bool GetSyscoinData(const CTransaction &tx, vector<unsigned char> &vchData, int& nOut)
-{
-	nOut = GetSyscoinDataOutput(tx);
-	if (nOut == -1)
-		return false;
-
-	const CScript &scriptPubKey = tx.vout[nOut].scriptPubKey;
-	return GetSyscoinData(scriptPubKey, vchData);
-}
-bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData)
-{
-	CScript::const_iterator pc = scriptPubKey.begin();
-	opcodetype opcode;
-	if (!scriptPubKey.GetOp(pc, opcode))
-		return false;
-	if (opcode != OP_RETURN)
-		return false;
-	if (!scriptPubKey.GetOp(pc, opcode, vchData))
-		return false;
-    const unsigned int & nSize = scriptPubKey.size();
-    // allow up to 80 bytes of data after our stack on standard asset transactions
-    unsigned int nDifferenceAllowed = 83;
-    // if data is more than 1 byte we used 2 bytes to store the varint (good enough for 64kb which is within limit of opreturn data on sys tx's)
-    if(nSize >= 0xff){
-        nDifferenceAllowed++;
-    }
-    if(nSize > (vchData.size() + nDifferenceAllowed)){
-        LogPrint(BCLog::SYS, "GetSyscoinData too big scriptPubKey size %d vchData %d\n", scriptPubKey.size(), vchData.size()); 
-        return false;
-    }
-	return true;
-}
 
 
 
-string assetFromTx(const int &nVersion) {
-    switch (nVersion) {
-    case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
-        return "assetactivate";
-    case SYSCOIN_TX_VERSION_ASSET_UPDATE:
-        return "assetupdate";
-	case SYSCOIN_TX_VERSION_ASSET_SEND:
-		return "assetsend";
-    default:
-        return "<unknown asset op>";
-    }
-}
-bool CAsset::UnserializeFromData(const vector<unsigned char> &vchData) {
+
+bool CAsset::UnserializeFromData(const std::vector<unsigned char> &vchData) {
     try {
 		CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
-		dsAsset >> *this;
+		Unserialize(dsAsset);
     } catch (std::exception &e) {
 		SetNull();
         return false;
@@ -108,8 +58,8 @@ bool CAsset::UnserializeFromData(const vector<unsigned char> &vchData) {
 	return true;
 }
 
-bool CAsset::UnserializeFromTx(const CTransaction &tx) {
-	vector<unsigned char> vchData;
+bool CAsset::UnserializeFromTx(const CTransactionRef &tx) {
+	std::vector<unsigned char> vchData;
 	int nOut;
 	if (!GetSyscoinData(tx, vchData, nOut))
 	{
@@ -123,67 +73,9 @@ bool CAsset::UnserializeFromTx(const CTransaction &tx) {
 	}
     return true;
 }
-bool FlushSyscoinDBs() {
-    bool ret = true;
-     if (pethereumtxrootsdb != nullptr)
-     {
-        if(!pethereumtxrootsdb->PruneTxRoots(fGethCurrentHeight))
-        {
-            LogPrintf("Failed to write to prune Ethereum TX Roots database!\n");
-            ret = false;
-        }
-        if (!pethereumtxrootsdb->Flush()) {
-            LogPrintf("Failed to write to ethereum tx root database!\n");
-            ret = false;
-        } 
-     }
-	return ret;
-}
 
-bool IsSyscoinMintTx(const int &nVersion){
-    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT;
-}
-bool IsAssetTx(const int &nVersion){
-    return nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE || nVersion == SYSCOIN_TX_VERSION_ASSET_SEND;
-}
-bool IsAssetAllocationTx(const int &nVersion) {
-    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION ||
-        nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND;
-}
-bool IsZdagTx(const int &nVersion){
-    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND;
-}
-bool IsSyscoinTx(const int &nVersion){
-    return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
-}
-bool IsSyscoinWithNoInputTx(const int &nVersion){
-    return nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
-}
 
-bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
-    vector<vector<unsigned char> > vvch;
-    bool found = false;
-    if(IsSyscoinMintTx(rawTx.nVersion)) {
-        found = AssetMintTxToJson(rawTx, rawTx.GetHash(), output);
-    }
-    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion)) {
-        found = SysTxToJSON(rawTx, output);
-    }
-    
-    return found;
-}
-
-bool SysTxToJSON(const CTransaction& tx, UniValue& output)
-{
-    bool found = false;
-    if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
-        found = AssetTxToJSON(tx, output);
-    else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
-        found = AssetAllocationTxToJSON(tx, output);
-    return found;
-}
-int32_t GenerateSyscoinGuid(const COutPoint& outPoint)
-{
+int32_t GenerateSyscoinGuid(const COutPoint& outPoint) {
     const arith_uint256 &txidArith = UintToArith256(outPoint.hash);
     int32_t low32 = (int32_t)txidArith.GetLow64();
     low32 += outPoint.n;
@@ -196,11 +88,10 @@ int32_t GenerateSyscoinGuid(const COutPoint& outPoint)
     return low32;
 }
 
-void CAsset::Serialize( vector<unsigned char> &vchData) {
+void CAsset::SerializeData( std::vector<unsigned char> &vchData) {
     CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
-    dsAsset << *this;
-	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
-
+    Serialize(dsAsset);
+	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 }
 
 bool GetAsset(const int32_t &nAsset,
@@ -210,50 +101,42 @@ bool GetAsset(const int32_t &nAsset,
     return true;
 }
 
-
-
-bool BuildAssetJson(const CAsset& asset, const int32_t& nAsset, UniValue& oAsset)
-{
-    oAsset.__pushKV("asset_guid", nAsset);
-    oAsset.__pushKV("symbol", asset.strSymbol);
-	oAsset.__pushKV("public_value", stringFromVch(asset.vchPubData));
-    oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
-	oAsset.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
-	oAsset.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
-	oAsset.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
-	oAsset.__pushKV("update_flags", asset.nUpdateFlags);
-	oAsset.__pushKV("precision", asset.nPrecision);
-	return true;
-}
-bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
-{
-	CAsset asset(tx);
-	if(asset.IsNull())
-		return false;
-
-    const uint256& txHash = tx.GetHash();  	
-	entry.__pushKV("txtype", assetFromTx(tx.nVersion));
-	entry.__pushKV("asset_guid", asset.assetAllocation.voutAssets.begin()->first);
-    entry.__pushKV("symbol", asset.strSymbol);
-    entry.__pushKV("txid", txHash.GetHex());
-    
-	if (!asset.vchPubData.empty())
-		entry.__pushKV("public_value", stringFromVch(asset.vchPubData));
-
-	if (!asset.vchContract.empty())
-		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
-
-	if (asset.nUpdateFlags > 0)
-		entry.__pushKV("update_flags", asset.nUpdateFlags);
-
-	if (asset.nBalance > 0)
-		entry.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
-
-	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-		entry.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
-        entry.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
-		entry.__pushKV("precision", asset.nPrecision);
-	} 
+bool ReserializeAssetCommitment(CMutableTransaction& mtx) {
+    // load tx.voutAssets from tx.vout.assetInfo info
+    mtx.LoadAssetsFromVout();
+    CTransactionRef tx(MakeTransactionRef(mtx));
+    // store tx.voutAssets into OP_RETURN data overwriting previous commitment
+    std::vector<unsigned char> data;
+    if(IsSyscoinMintTx(tx->nVersion)) {
+        CMintSyscoin mintSyscoin(tx);
+        mintSyscoin.assetAllocation.voutAssets = tx->voutAssets;
+        mintSyscoin.SerializeData(data);
+    } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
+        CBurnSyscoin burnSyscoin(tx);
+        burnSyscoin.assetAllocation.voutAssets = tx->voutAssets;
+        burnSyscoin.SerializeData(data);
+    } else if(IsAssetTx(tx->nVersion)) {
+        CAsset asset(tx);
+        asset.assetAllocation.voutAssets = tx->voutAssets;
+        asset.SerializeData(data); 
+    } else if(IsAssetAllocationTx(tx->nVersion)) {
+        CAssetAllocation allocation(tx);
+        allocation.voutAssets = tx->voutAssets;
+        allocation.SerializeData(data); 
+    }
+    CScript scriptData;
+    scriptData << OP_RETURN << data;
+    bool bFoundData = false;
+    for(auto& vout: mtx.vout) {
+        if(vout.scriptPubKey.IsUnspendable()) {
+            vout.scriptPubKey = scriptData;
+            bFoundData = true;
+            break;
+        }
+    }
+    if(!bFoundData) {
+        return false;
+    }
     return true;
 }
 
@@ -279,54 +162,28 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
     LogPrint(BCLog::SYS, "Flushing %d assets (erased %d, written %d)\n", mapAssets.size(), erase, write);
     return WriteBatch(batch);
 }
-bool CAssetDB::ScanAssets(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes) {
-	string strTxid = "";
-    int32_t nAsset = 0;
-	if (!oOptions.isNull()) {
-		const UniValue &txid = find_value(oOptions, "txid");
-		if (txid.isStr()) {
-			strTxid = txid.get_str();
-		}
-		const UniValue &assetObj = find_value(oOptions, "asset_guid");
-		if (assetObj.isNum()) {
-			nAsset = assetObj.get_uint();
-		}
-	}
-	std::unique_ptr<CDBIterator> pcursor(NewIterator());
-	pcursor->SeekToFirst();
-	CAsset txPos;
-	int32_t key = 0;
-	uint32_t index = 0;
-	while (pcursor->Valid()) {
-		boost::this_thread::interruption_point();
-		try {
-            key = 0;
-			if (pcursor->GetKey(key) && key != 0 && (nAsset == 0 || nAsset != key)) {
-				pcursor->GetValue(txPos);
-                if(txPos.IsNull()){
-                    pcursor->Next();
-                    continue;
-                }
-				UniValue oAsset(UniValue::VOBJ);
-				if (!BuildAssetJson(txPos, key, oAsset))
-				{
-					pcursor->Next();
-					continue;
-				}
-				index += 1;
-				if (index <= from) {
-					pcursor->Next();
-					continue;
-				}
-				oRes.push_back(oAsset);
-				if (index >= count + from)
-					break;
-			}
-			pcursor->Next();
-		}
-		catch (std::exception &e) {
-			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
-		}
-	}
-	return true;
+
+template<typename Stream>
+void CAsset::Serialize(Stream &s) const {	
+    s << assetAllocation;
+    s << vchPubData;
+    s << strSymbol;
+    s << nUpdateFlags;
+    s << nPrecision;
+    s << vchContract;
+    ::Serialize(s, Using<AmountCompression>(nBalance));
+    ::Serialize(s, Using<AmountCompression>(nTotalSupply));
+    ::Serialize(s, Using<AmountCompression>(nMaxSupply));
+}
+template<typename Stream>
+void CAsset::Unserialize(Stream &s) {	
+    s >> assetAllocation;
+    s >> vchPubData;
+    s >> strSymbol;
+    s >> nUpdateFlags;
+    s >> nPrecision;
+    s >> vchContract;
+    ::Unserialize(s, Using<AmountCompression>(nBalance));
+    ::Unserialize(s, Using<AmountCompression>(nTotalSupply));
+    ::Unserialize(s, Using<AmountCompression>(nMaxSupply));
 }

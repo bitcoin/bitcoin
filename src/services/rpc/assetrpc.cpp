@@ -5,27 +5,224 @@
 #include <boost/algorithm/string.hpp>
 #include <rpc/util.h>
 #include <services/assetconsensus.h>
+#include <services/asset.h>
 #include <services/rpc/assetrpc.h>
 #include <chainparams.h>
 #include <rpc/server.h>
-#include <validationinterface.h>
 #include <thread>
 #include <policy/rbf.h>
 #include <policy/policy.h>
-#include <chrono>
-#include <consensus/validation.h>
 #include <index/txindex.h>
-using namespace std;
+#include <core_io.h>
 extern std::string exePath;
+extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
-extern UniValue ValueFromAmount(const CAmount& amount);
-extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
-extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
-extern RecursiveMutex cs_setethstatus;
-using namespace std;
-UniValue convertaddress(const JSONRPCRequest& request)	
-{	
+
+bool AssetMintTxToJson(const CTransactionRef& tx, const uint256& txHash, const uint256& hashBlock, UniValue &entry);
+
+bool AssetAllocationTxToJSON(const CTransactionRef &tx, const uint256& hashBlock, UniValue &entry);
+
+bool SysTxToJSON(const CTransactionRef& tx, const uint256 &hashBlock, UniValue& output) {
+    bool found = false;
+    if (IsAssetTx(tx->nVersion) && tx->nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
+        found = AssetTxToJSON(tx, hashBlock, output);
+    else if (IsAssetAllocationTx(tx->nVersion) || tx->nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
+        found = AssetAllocationTxToJSON(tx, hashBlock, output);
+    return found;
+}
+
+bool DecodeSyscoinRawtransaction(const CTransactionRef& rawTx, const uint256 &hashBlock, UniValue& output) {
+    bool found = false;
+    if(IsSyscoinMintTx(rawTx->nVersion)) {
+        found = AssetMintTxToJson(rawTx, rawTx->GetHash(), hashBlock, output);
+    }
+    else if (IsAssetTx(rawTx->nVersion) || IsAssetAllocationTx(rawTx->nVersion)) {
+        found = SysTxToJSON(rawTx, hashBlock, output);
+    }
+    
+    return found;
+}
+
+bool BuildAssetJson(const CAsset& asset, const int32_t& nAsset, UniValue& oAsset) {
+    oAsset.__pushKV("asset_guid", nAsset);
+    oAsset.__pushKV("symbol", asset.strSymbol);
+	oAsset.__pushKV("public_value", stringFromVch(asset.vchPubData));
+    oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
+	oAsset.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
+	oAsset.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
+	oAsset.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
+	oAsset.__pushKV("update_flags", asset.nUpdateFlags);
+	oAsset.__pushKV("precision", asset.nPrecision);
+	return true;
+}
+
+bool AssetTxToJSON(const CTransactionRef& tx, const uint256 &hashBlock, UniValue &entry) {
+	CAsset asset(tx);
+	if(asset.IsNull())
+		return false;
+    CAsset dbAsset;
+    const int32_t &nAsset = asset.assetAllocation.voutAssets.begin()->first;
+    GetAsset(nAsset, dbAsset);
+    entry.__pushKV("txtype", stringFromSyscoinTx(tx->nVersion));
+    entry.__pushKV("txid", tx->GetHash().GetHex());  
+    entry.__pushKV("blockhash", hashBlock.GetHex());  
+	entry.__pushKV("asset_guid", nAsset);
+    entry.__pushKV("symbol", dbAsset.strSymbol);
+	if (!asset.vchPubData.empty())
+		entry.__pushKV("public_value", stringFromVch(asset.vchPubData));
+
+	if (!asset.vchContract.empty())
+		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
+
+	if (asset.nUpdateFlags > 0)
+		entry.__pushKV("update_flags", asset.nUpdateFlags);
+
+	if (asset.nBalance > 0)
+		entry.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, dbAsset.nPrecision));
+
+	if (tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+		entry.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
+        entry.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
+		entry.__pushKV("precision", asset.nPrecision);
+	}
+    return true;
+}
+bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes) {
+	std::string strTxid = "";
+    int32_t nAsset = 0;
+	if (!oOptions.isNull()) {
+		const UniValue &txid = find_value(oOptions, "txid");
+		if (txid.isStr()) {
+			strTxid = txid.get_str();
+		}
+		const UniValue &assetObj = find_value(oOptions, "asset_guid");
+		if (assetObj.isNum()) {
+			nAsset = assetObj.get_uint();
+		}
+	}
+	std::unique_ptr<CDBIterator> pcursor(passetdb.NewIterator());
+	pcursor->SeekToFirst();
+	CAsset txPos;
+	int32_t key = 0;
+	uint32_t index = 0;
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+            key = 0;
+			if (pcursor->GetKey(key) && key != 0 && (nAsset == 0 || nAsset != key)) {
+				pcursor->GetValue(txPos);
+                if(txPos.IsNull()){
+                    pcursor->Next();
+                    continue;
+                }
+				UniValue oAsset(UniValue::VOBJ);
+				if (!BuildAssetJson(txPos, key, oAsset))
+				{
+					pcursor->Next();
+					continue;
+				}
+				index += 1;
+				if (index <= from) {
+					pcursor->Next();
+					continue;
+				}
+				oRes.push_back(oAsset);
+				if (index >= count + from)
+					break;
+			}
+			pcursor->Next();
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+		}
+	}
+	return true;
+}
+
+bool AssetAllocationTxToJSON(const CTransactionRef &tx, const uint256& hashBlock, UniValue &entry) {
+    const uint256& txHash = tx->GetHash();
+    entry.__pushKV("txtype", stringFromSyscoinTx(tx->nVersion));
+    entry.__pushKV("txid", txHash.GetHex());
+    entry.__pushKV("blockhash", hashBlock.GetHex());  
+    UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+    CAmount nTotal = 0;
+    CAsset dbAsset;
+    for(const auto &it: tx->voutAssets) {
+        UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+        const int32_t &nAsset = it.first;
+        GetAsset(nAsset, dbAsset);
+        oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+        oAssetAllocationReceiversObj.__pushKV("symbol", dbAsset.strSymbol);
+        UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
+        for(const auto& voutAsset: it.second){
+            nTotal += voutAsset.nValue;
+            UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
+            oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
+            oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAssetAmount(voutAsset.nValue, dbAsset.nPrecision));
+            oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
+        }
+        oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
+        oAssetAllocationReceiversObj.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
+        oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+    }
+
+    entry.__pushKV("allocations", oAssetAllocationReceiversArray);
+    if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
+         CBurnSyscoin burnSyscoin(tx);
+         entry.__pushKV("ethereum_destination", "0x" + HexStr(burnSyscoin.vchEthAddress));
+         entry.__pushKV("ethereum_contract", "0x" + HexStr(dbAsset.vchContract));
+    }
+    return true;
+}
+
+
+bool AssetMintTxToJson(const CTransactionRef& tx, const uint256& txHash, const uint256& hashBlock, UniValue &entry) {
+    CMintSyscoin mintSyscoin(tx);
+    if (!mintSyscoin.IsNull()) {
+        entry.__pushKV("txtype", "assetallocationmint");
+        entry.__pushKV("txid", txHash.GetHex());
+        entry.__pushKV("blockhash", hashBlock.GetHex());  
+        UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+        CAmount nTotal = 0;
+        for(const auto &it: tx->voutAssets) {
+            UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+            const int32_t &nAsset = it.first;
+            CAsset dbAsset;
+            GetAsset(nAsset, dbAsset);
+            oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+            oAssetAllocationReceiversObj.__pushKV("symbol", dbAsset.strSymbol);
+            UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
+            for(const auto& voutAsset: it.second){
+                nTotal += voutAsset.nValue;
+                UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
+                oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
+                oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAssetAmount(voutAsset.nValue, dbAsset.nPrecision));
+                oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
+            }
+            oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
+            oAssetAllocationReceiversObj.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
+            oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+        }
+    
+        entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
+        UniValue oSPVProofObj(UniValue::VOBJ);
+        oSPVProofObj.__pushKV("bridgetransferid", mintSyscoin.nBridgeTransferID);   
+        oSPVProofObj.__pushKV("txvalue", HexStr(mintSyscoin.vchTxValue));   
+        oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
+        oSPVProofObj.__pushKV("txroot", HexStr(mintSyscoin.vchTxRoot));
+        oSPVProofObj.__pushKV("txpath", HexStr(mintSyscoin.vchTxPath)); 
+        oSPVProofObj.__pushKV("receiptvalue", HexStr(mintSyscoin.vchReceiptValue));   
+        oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes)); 
+        oSPVProofObj.__pushKV("receiptroot", HexStr(mintSyscoin.vchReceiptRoot)); 
+        oSPVProofObj.__pushKV("ethblocknumber", mintSyscoin.nBlockNumber); 
+        entry.__pushKV("spv_proof", oSPVProofObj); 
+        return true;
+    } 
+    return false;
+}
+
+UniValue convertaddress(const JSONRPCRequest& request)	 {	
 
     RPCHelpMan{"convertaddress",	
         "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3.\n",	
@@ -80,7 +277,7 @@ UniValue convertaddress(const JSONRPCRequest& request)
     return ret;	
 }
 
-int CheckActorsInTransactionGraph(const uint256& lookForTxHash){
+int CheckActorsInTransactionGraph(const uint256& lookForTxHash) {
     LOCK(cs_main);
     LOCK(mempool.cs);
     {
@@ -117,6 +314,7 @@ int CheckActorsInTransactionGraph(const uint256& lookForTxHash){
     }
     return ZDAG_STATUS_OK;
 }
+
 int VerifyTransactionGraph(const uint256& lookForTxHash) {  
     int status = CheckActorsInTransactionGraph(lookForTxHash);
     if(status != ZDAG_STATUS_OK){
@@ -155,8 +353,6 @@ UniValue assetallocationverifyzdag(const JSONRPCRequest& request) {
 	return oAssetAllocationStatus;
 }
 
-
-
 UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     RPCHelpMan{"syscoindecoderawtransaction",
@@ -168,11 +364,10 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
         RPCResult::Type::OBJ, "", "",
         {
             {RPCResult::Type::STR, "txtype", "The syscoin transaction type"},
+            {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+            {RPCResult::Type::STR_HEX, "blockhash", "Block confirming the transaction, if any"},
             {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
             {RPCResult::Type::STR, "symbol", "The asset symbol"},
-            {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-            {RPCResult::Type::NUM, "height", "The blockheight of the transaction"},
-            {RPCResult::Type::STR, "sender", "The address of the sender"},
             {RPCResult::Type::ARR, "allocations", "(array of json receiver objects)",
                 {
                     {RPCResult::Type::OBJ, "", "",
@@ -182,7 +377,6 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
                     }},
                 }},
             {RPCResult::Type::NUM, "total", "The total amount in this transaction"},
-            {RPCResult::Type::BOOL, "confirmed", "If the transaction is confirmed"},
         }}, 
     RPCExamples{
         HelpExampleCli("syscoindecoderawtransaction", "\"hexstring\"")
@@ -190,16 +384,27 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
     }
     }.Check(request);
 
-    string hexstring = params[0].get_str();
+    std::string hexstring = params[0].get_str();
     CMutableTransaction tx;
-    if(!DecodeHexTx(tx, hexstring, false, true))
-        DecodeHexTx(tx, hexstring, true, true);
-    CTransaction rawTx(tx);
-    if (rawTx.IsNull())
+    if(!DecodeHexTx(tx, hexstring, false, true)) {
+        if(!DecodeHexTx(tx, hexstring, true, true)) {
+             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not decode transaction");
+        }
+    }
+    CTransactionRef rawTx(MakeTransactionRef(std::move(tx)));
+    if (rawTx->IsNull())
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not decode transaction");
     
+    CBlockIndex* blockindex = nullptr;
+    uint256 hashBlock = uint256();
+    if (g_txindex) {
+        g_txindex->BlockUntilSyncedToCurrentChain();
+    }
+    // block may not be found
+    GetTransaction(rawTx->GetHash(), rawTx, Params().GetConsensus(), hashBlock, blockindex);
+
     UniValue output(UniValue::VOBJ);
-    if(!DecodeSyscoinRawtransaction(rawTx, output))
+    if(!DecodeSyscoinRawtransaction(rawTx, hashBlock, output))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Not a Syscoin transaction");
     return output;
 }
@@ -243,6 +448,7 @@ UniValue assetinfo(const JSONRPCRequest& request) {
         oAsset.clear();
     return oAsset;
 }
+
 UniValue listassets(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     RPCHelpMan{"listassets",
@@ -306,12 +512,12 @@ UniValue listassets(const JSONRPCRequest& request) {
         options = params[2];
     }
     UniValue oRes(UniValue::VARR);
-    if (!passetdb->ScanAssets(count, from, options, oRes))
+    if (!ScanAssets(*passetdb, count, from, options, oRes))
         throw JSONRPCError(RPC_MISC_ERROR, "Scan failed");
     return oRes;
 }
-UniValue syscoingetspvproof(const JSONRPCRequest& request)
-{
+
+UniValue syscoingetspvproof(const JSONRPCRequest& request) {
     RPCHelpMan{"syscoingetspvproof",
     "\nReturns SPV proof for use with inter-chain transfers.\n",
     {
@@ -407,6 +613,7 @@ UniValue syscoinstopgeth(const JSONRPCRequest& request) {
     ret.__pushKV("status", "success");
     return ret;
 }
+
 UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     RPCHelpMan{"syscoinstartgeth",
     "\nStarts Geth and the relayer.\n",
@@ -437,6 +644,7 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     ret.__pushKV("status", "success");
     return ret;
 }
+
 UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     RPCHelpMan{"syscoinsetethstatus",
@@ -465,7 +673,7 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
         ret.__pushKV("missing_blocks", retArray);
         return ret;
     }
-    string status = params[0].get_str();
+    std::string status = params[0].get_str();
     uint32_t highestBlock = params[1].get_uint();
     const uint32_t nGethOldHeight = fGethCurrentHeight;
     
@@ -504,6 +712,7 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     nLastExecTime = GetSystemTimeInSeconds();
     return ret;
 }
+
 UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     RPCHelpMan{"syscoinsetethheaders",
@@ -545,16 +754,16 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         if(tupleArray.size() != 6)
             throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid size in a Ethereum header input, should be size of 6");
         const uint32_t &nHeight = tupleArray[0].get_uint();
-        string blockHash = tupleArray[1].get_str();
+        std::string blockHash = tupleArray[1].get_str();
         boost::erase_all(blockHash, "0x");  // strip 0x
         txRoot.vchBlockHash = ParseHex(blockHash);
-        string prevHash = tupleArray[2].get_str();
+        std::string prevHash = tupleArray[2].get_str();
         boost::erase_all(prevHash, "0x");  // strip 0x
         txRoot.vchPrevHash = ParseHex(prevHash);
-        string txRootStr = tupleArray[3].get_str();
+        std::string txRootStr = tupleArray[3].get_str();
         boost::erase_all(txRootStr, "0x");  // strip 0x
         txRoot.vchTxRoot = ParseHex(txRootStr);
-        string txReceiptRoot = tupleArray[4].get_str();
+        std::string txReceiptRoot = tupleArray[4].get_str();
         boost::erase_all(txReceiptRoot, "0x");  // strip 0x
         txRoot.vchReceiptRoot = ParseHex(txReceiptRoot);
         const int64_t &nTimestamp = tupleArray[5].get_int64();
@@ -566,6 +775,7 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     ret.__pushKV("status", res? "success": "fail");
     return ret;
 }
+
 UniValue syscoinclearethheaders(const JSONRPCRequest& request) {
     RPCHelpMan{"syscoinclearethheaders",
         "\nClears Ethereum headers in Syscoin.\n",
@@ -585,8 +795,8 @@ UniValue syscoinclearethheaders(const JSONRPCRequest& request) {
     ret.__pushKV("status", res? "success": "fail");
     return ret;
 }
-UniValue syscoingettxroots(const JSONRPCRequest& request)
-{
+
+UniValue syscoingettxroots(const JSONRPCRequest& request) {
     RPCHelpMan{"syscoingettxroot",
     "\nGet Ethereum transaction and receipt roots based on block height.\n",
     {
@@ -620,8 +830,8 @@ UniValue syscoingettxroots(const JSONRPCRequest& request)
     
     return ret;
 } 
-UniValue syscoincheckmint(const JSONRPCRequest& request)
-{
+
+UniValue syscoincheckmint(const JSONRPCRequest& request) {
     RPCHelpMan{"syscoincheckmint",
     "\nGet the Syscoin mint transaction by looking up using Bridge Transfer ID.\n",
     {
@@ -646,58 +856,7 @@ UniValue syscoincheckmint(const JSONRPCRequest& request)
     output.pushKV("txid", sysTxid.GetHex());
     return output;
 } 
-CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const uint8_t &nPrecision, CTxDestination & address) {
-    UniValue publicObj;
-    if(!publicObj.read(public_data))
-        return -1;
-    const UniValue &auxFeesObj = find_value(publicObj, "aux_fees");
-    if(!auxFeesObj.isObject())
-        return -1;
-    const UniValue &addressObj = find_value(auxFeesObj, "address");
-    if(!addressObj.isStr())
-        return -1;
-    address = DecodeDestination(addressObj.get_str());
-    const UniValue &feeStructObj = find_value(auxFeesObj, "fee_struct");
-    if(!feeStructObj.isArray())
-        return -1;
-    const UniValue &feeStructArray = feeStructObj.get_array();
-    if(feeStructArray.size() == 0)
-        return -1;
-     
-    CAmount nAccumulatedFee = 0;
-    CAmount nBoundAmount = 0;
-    CAmount nNextBoundAmount = 0;
-    double nRate = 0;
-    for(unsigned int i =0;i<feeStructArray.size();i++){
-        if(!feeStructArray[i].isArray())
-            return -1;
-        const UniValue &feeStruct = feeStructArray[i].get_array();
-        const UniValue &feeStructNext = feeStructArray[i < feeStructArray.size()-1? i+1:i].get_array();
-        if(!feeStruct[0].isStr() && !feeStruct[0].isNum())
-            return -1;
-        if(!feeStructNext[0].isStr() && !feeStructNext[0].isNum())
-                return -1;   
-        UniValue boundValue = feeStruct[0]; 
-        UniValue nextBoundValue = feeStructNext[0]; 
-        nBoundAmount = AssetAmountFromValue(boundValue, nPrecision);
-        nNextBoundAmount = AssetAmountFromValue(nextBoundValue, nPrecision);
-        if(!feeStruct[1].isStr())
-            return -1;
-        if(!ParseDouble(feeStruct[1].get_str(), &nRate))
-            return -1;
-        // case where amount is in between the bounds
-        if(nAmount >= nBoundAmount && nAmount < nNextBoundAmount){
-            break;    
-        }
-        nBoundAmount = nNextBoundAmount - nBoundAmount;
-        // must be last bound
-        if(nBoundAmount <= 0){
-            return (nAmount - nNextBoundAmount) * nRate + nAccumulatedFee;
-        }
-        nAccumulatedFee += (nBoundAmount * nRate);
-    }
-    return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
-}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames

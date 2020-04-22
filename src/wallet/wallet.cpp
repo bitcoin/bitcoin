@@ -36,7 +36,7 @@
 
 #include <boost/algorithm/string/replace.hpp>
 // SYSCOIN
-#include <services/assetconsensus.h>
+#include <services/asset.h>
 #include <util/system.h>
 #include <masternodeconfig.h>
 extern void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter_ismine, const std::string* filter_label) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet);
@@ -871,7 +871,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     }
 #endif
     // SYSCOIN
-    if(fZMQWalletRawTx)
+    /*if(fZMQWalletRawTx)
     {
         // SYSCOIN
         auto locked_chain = chain().lock();
@@ -881,7 +881,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
         // just make sure we have some data to send
         if(retString.size() > 10)
             GetMainSignals().NotifySyscoinUpdate(ret.write().c_str(), "walletrawtx");
-    }
+    }*/
     return true;
 }
 
@@ -1585,8 +1585,8 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
                                     this->GetHash().ToString());
             address = CNoDestination();
         }
-
-        COutputEntry output = {address, txout.nValue, (int)i};
+        // SYSCOIN
+        COutputEntry output = {address, txout.nValue, (int)i, txout.assetInfo};
 
         // If we are debited by the transaction, add the output as a "sent" entry
         if (nDebit > 0)
@@ -2166,7 +2166,7 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
             if (wtx.tx->vout[i].nValue < nMinimumAmount || wtx.tx->vout[i].nValue > nMaximumAmount)
                 continue;
             // SYSCOIN
-            if (wtx.tx->vout[i].assetInfo.nAsset > 0 && (wtx.tx->vout[i].assetInfo.nValue < nMinimumAmountAsset || wtx.tx->vout[i].assetInfo.nValue > nMaximumAmountAsset))
+            if (!wtx.tx->vout[i].assetInfo.IsNull() && (wtx.tx->vout[i].assetInfo.nValue < nMinimumAmountAsset || wtx.tx->vout[i].assetInfo.nValue > nMaximumAmountAsset))
                 continue;
 
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(entry.first, i)))
@@ -2208,7 +2208,7 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
                 }
             }
             // SYSCOIN
-            if (nMinimumSumAmountAsset != MAX_ASSET && wtx.tx->vout[i].assetInfo.nAsset > 0) {
+            if (nMinimumSumAmountAsset != MAX_ASSET && !wtx.tx->vout[i].assetInfo.IsNull()) {
                 nTotalAsset += wtx.tx->vout[i].assetInfo.nValue;
                 if (nTotalAsset >= nMinimumSumAmountAsset) {
                     return;
@@ -2682,8 +2682,12 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 
     if (nChangePosInOut != -1) {
         tx.vout.insert(tx.vout.begin() + nChangePosInOut, tx_new->vout[nChangePosInOut]);
-        // SYSCOIN
-        tx.vout[nChangePosInOut].assetInfo = tx_new->vout[nChangePosInOut].assetInfo;
+        // SYSCOIN this will invalidate tx.voutAssets so resync it
+        tx.LoadAssetsFromVout();
+        // we should see same number output, if not we have no way to know if it will be accepted since it will take more gas fees likely
+        if(tx.voutAssets.size() != tx_new->voutAssets.size()) {
+            return false;
+        }
     }
 
     // Copy output sizes from new transaction; they may have had the fee
@@ -2819,7 +2823,10 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
     }
 
     CMutableTransaction txNew;
-
+    // SYSCOIN
+    if(tx) {
+        txNew.nVersion = tx->nVersion;
+    }
     FeeCalculation feeCalc;
     CAmount nFeeNeeded;
     int nBytes;
@@ -3011,6 +3018,13 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                         }
                         std::vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosInOut;
                         txNew.vout.insert(position, newTxOut);
+                        // if this was an asset change output, resync tx.voutAssets with the new output in txNew.vout
+                        if(isAssetChange) {
+                            if(!ReserializeAssetCommitment(txNew)) {
+                                strFailReason = _("Reserialize asset commitment failed after change output added").translated;
+                                return false;     
+                            }
+                        }
     
                     }
                 } else {
@@ -4276,12 +4290,12 @@ void CWallet::LockMasternodeOutputs(){
             LogPrintf("  %s %s - locked successfully\n", mne.getTxHash(), mne.getOutputIndex());
         }
     }
-    if(fZMQWalletStatus){
-        UniValue oWalletState(UniValue::VOBJ);
+    /*if(fZMQWalletStatus){
+        UniValue oWalletState(balue::VOBJ);
         oWalletState.pushKV("name", GetName());
         oWalletState.pushKV("status", "ready");
         GetMainSignals().NotifySyscoinUpdate(oWalletState.write().c_str(), "walletstatus");
-    }
+    }*/
 }
 void CWallet::postInitProcess()
 {

@@ -95,6 +95,7 @@
 #include <netfulfilledman.h>
 #include <flatdatabase.h>
 #include <services/assetconsensus.h>
+#include <services/asset.h>
 #include <services/rpc/wallet/assetwalletrpc.h>
 #include <key_io.h>
 #include <util/executable_path/include/boost/executable_path.hpp>

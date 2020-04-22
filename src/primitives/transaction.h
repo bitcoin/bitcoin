@@ -11,11 +11,11 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
-
-static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 // SYSCOIN
-class CAssetAllocation;
-class CAssetCoinInfo;
+#include <dbwrapper.h>
+class TxValidationState;
+class CAsset;
+static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -285,6 +285,8 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
         throw std::ios_base::failure("Unknown transaction optional data");
     }
     s >> tx.nLockTime;
+    // SYSCOIN
+    tx.LoadAssets();
 }
 
 template<typename Stream, typename TxType>
@@ -315,8 +317,36 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
     }
     s << tx.nLockTime;
 }
+// SYSCOIN
+template<typename Stream, typename AssetOutType>
+void SerializeAssetOut(AssetOutType& assetOut, Stream& s);
 
+template<typename Stream, typename AssetOutType>
+void UnserializeAssetOut(AssetOutType& assetOut, Stream& s);
+class CAssetOut {
+public:
+    uint32_t n;
+    CAmount nValue;
 
+    template<typename Stream>
+    void Serialize(Stream &s) const {SerializeAssetOut(*this, s);}
+
+    template<typename Stream>
+    void Unserialize(Stream &s) {UnserializeAssetOut(*this, s);}
+
+    CAssetOut(const uint32_t &nIn, const CAmount& nAmountIn): n(nIn), nValue(nAmountIn) {}
+	CAssetOut() {
+		nValue = 0;
+        n = 0;
+	}
+    inline friend bool operator==(const CAssetOut &a, const CAssetOut &b) {
+		return (a.n == b.n && a.nValue == b.nValue);
+	}
+    inline friend bool operator!=(const CAssetOut &a, const CAssetOut &b) {
+		return !(a == b);
+	}
+};
+typedef std::map<int32_t, std::vector<CAssetOut> > assetOutputType;
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
@@ -343,6 +373,8 @@ public:
     const std::vector<CTxOut> vout;
     const int32_t nVersion;
     const uint32_t nLockTime;
+    // SYSCOIN
+    const assetOutputType voutAssets;
 
 private:
     /** Memory only. */
@@ -364,21 +396,6 @@ public:
     inline void Serialize(Stream& s) const {
         SerializeTransaction(*this, s);
     }
-    // SYSCOIN
-    template <typename Stream>
-    inline void SerializeAssetInfo(Stream& s) const {
-        std::vector<CTxOut>& voutRef = *const_cast<std::vector<CTxOut>*>(&vout);
-        for (size_t i = 0; i < voutRef.size(); i++) {
-            s << voutRef[i].assetInfo;
-        }
-    }
-    template <typename Stream>
-    inline void UnserializeAssetInfo(Stream& s) const {
-        std::vector<CTxOut>& voutRef = *const_cast<std::vector<CTxOut>*>(&vout);
-        for (size_t i = 0; i < voutRef.size(); i++) {
-            s >> voutRef[i].assetInfo;
-        }
-    }
     /** This deserializing constructor is provided instead of an Unserialize method.
      *  Unserialize is not possible, since it would require overwriting const fields. */
     template <typename Stream>
@@ -394,7 +411,7 @@ public:
     // Return sum of txouts.
     CAmount GetValueOut() const;
     // SYSCOIN
-    CAmount GetAssetValueOut(const CAssetAllocation& allocation) const;
+    bool GetAssetValueOut(const bool &isAssetTx, std::unordered_map<int32_t, CAmount> &mapAssetOut, TxValidationState& state) const;
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 
@@ -431,6 +448,8 @@ public:
         }
         return false;
     }
+    // SYSCOIN
+    bool HasAssets() const;
 };
 
 /** A mutable version of CTransaction. */
@@ -440,6 +459,8 @@ struct CMutableTransaction
     std::vector<CTxOut> vout;
     int32_t nVersion;
     uint32_t nLockTime;
+    // SYSCOIN
+    assetOutputType voutAssets;
 
     CMutableTransaction();
     explicit CMutableTransaction(const CTransaction& tx);
@@ -474,10 +495,181 @@ struct CMutableTransaction
         }
         return false;
     }
+    // SYSCOIN
+    bool HasAssets() const;
+    void LoadAssets();
+    // from vouts, store assetInfo in voutAssets
+    inline void LoadAssetsFromVout() 
+    {
+        voutAssets.clear();
+        for(unsigned int i = 0; i< vout.size(); i++) {
+            const CTxOut& txOut = vout[i];
+            if(!txOut.assetInfo.IsNull()) {
+                voutAssets[txOut.assetInfo.nAsset].push_back(CAssetOut(i, txOut.assetInfo.nValue));
+            }
+        }      
+    }
 };
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
 static inline CTransactionRef MakeTransactionRef() { return std::make_shared<const CTransaction>(); }
 template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
+// SYSCOIN
+const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 128;
+const int SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION = 129;
+const int SYSCOIN_TX_VERSION_ASSET_ACTIVATE = 130;
+const int SYSCOIN_TX_VERSION_ASSET_UPDATE = 131;
+const int SYSCOIN_TX_VERSION_ASSET_SEND = 132;
+const int SYSCOIN_TX_VERSION_ALLOCATION_MINT = 133;
+const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM = 134;
+const int SYSCOIN_TX_VERSION_ALLOCATION_SEND = 135;
 
+const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY = 0x7400;
+enum {
+	ZDAG_NOT_FOUND = -1,
+	ZDAG_STATUS_OK = 0,
+	ZDAG_WARNING_RBF,
+    ZDAG_WARNING_NOT_ZDAG_TX,
+    ZDAG_WARNING_SIZE_OVER_POLICY,
+	ZDAG_MAJOR_CONFLICT
+};
+class CAssetAllocation {
+public:
+    assetOutputType voutAssets;
+    
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        s << voutAssets;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream &s)  {
+        s >> voutAssets;
+    }
+
+	CAssetAllocation() {
+		SetNull();
+	}
+	explicit CAssetAllocation(const CTransactionRef &tx) {
+		SetNull();
+		UnserializeFromTx(tx);
+	}
+	
+	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
+		return (a.voutAssets == b.voutAssets
+			);
+	}
+    CAssetAllocation(const CAssetAllocation&) = delete;
+    CAssetAllocation(CAssetAllocation && other) = default;
+    CAssetAllocation& operator=( CAssetAllocation& a ) = delete;
+	CAssetAllocation& operator=( CAssetAllocation&& a ) = default;
+ 
+	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
+		return !(a == b);
+	}
+	inline void SetNull() { voutAssets.clear();}
+    inline bool IsNull() const { return voutAssets.empty();}
+	bool UnserializeFromTx(const CTransactionRef &tx);
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+	void SerializeData(std::vector<unsigned char>& vchData);
+};
+class CMintSyscoin {
+public:
+    CAssetAllocation assetAllocation;
+    std::vector<unsigned char> vchTxValue;
+    std::vector<unsigned char> vchTxParentNodes;
+    std::vector<unsigned char> vchTxRoot;
+    std::vector<unsigned char> vchTxPath;
+    std::vector<unsigned char> vchReceiptValue;
+    std::vector<unsigned char> vchReceiptParentNodes;
+    std::vector<unsigned char> vchReceiptRoot;
+    std::vector<unsigned char> vchReceiptPath;   
+    uint32_t nBlockNumber;
+    uint32_t nBridgeTransferID;
+
+    CMintSyscoin() {
+        SetNull();
+    }
+    explicit CMintSyscoin(const CTransactionRef &tx) {
+        SetNull();
+        UnserializeFromTx(tx);
+    }
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        s << assetAllocation;
+        s << VARINT(nBridgeTransferID);
+        s << VARINT(nBlockNumber);
+        s << vchTxValue;
+        s << vchTxParentNodes;
+        s << vchTxRoot;
+        s << vchTxPath;   
+        s << vchReceiptValue;
+        s << vchReceiptParentNodes;
+        s << vchReceiptRoot;
+        s << vchReceiptPath;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream &s) {
+        s >> assetAllocation;
+        s >> VARINT(nBridgeTransferID);
+        s >> VARINT(nBlockNumber);
+        s >> vchTxValue;
+        s >> vchTxParentNodes;
+        s >> vchTxRoot;
+        s >> vchTxPath;   
+        s >> vchReceiptValue;
+        s >> vchReceiptParentNodes;
+        s >> vchReceiptRoot;
+        s >> vchReceiptPath;
+    }
+
+    inline void SetNull() { assetAllocation.SetNull(); vchTxRoot.clear(); vchTxValue.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); vchReceiptRoot.clear(); vchReceiptValue.clear(); vchReceiptParentNodes.clear(); vchReceiptPath.clear(); nBridgeTransferID = 0; nBlockNumber = 0;  }
+    inline bool IsNull() const { return (vchTxValue.empty() && vchReceiptValue.empty()); }
+    bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+    bool UnserializeFromTx(const CTransactionRef &tx);
+    void SerializeData(std::vector<unsigned char>& vchData);
+};
+class CBurnSyscoin {
+public:
+    CAssetAllocation assetAllocation;
+    std::vector<unsigned char> vchEthAddress;
+    CBurnSyscoin() {
+        SetNull();
+    }
+    explicit CBurnSyscoin(const CTransactionRef &tx) {
+        SetNull();
+        UnserializeFromTx(tx);
+    }
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        s << assetAllocation;
+        s << vchEthAddress;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream &s) {
+        s >> assetAllocation;
+        s >> vchEthAddress;
+    }
+
+    inline void SetNull() { assetAllocation.SetNull(); vchEthAddress.clear();  }
+    inline bool IsNull() const { return (vchEthAddress.empty() && assetAllocation.IsNull()); }
+    bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+    bool UnserializeFromTx(const CTransactionRef &tx);
+    void SerializeData(std::vector<unsigned char>& vchData);
+};
+bool IsSyscoinTx(const int &nVersion);
+bool IsAssetAllocationTx(const int &nVersion);
+bool IsZdagTx(const int &nVersion);
+bool IsSyscoinWithNoInputTx(const int &nVersion);
+bool IsAssetTx(const int &nVersion);
+bool IsSyscoinMintTx(const int &nVersion);
+unsigned int GetSyscoinDataOutput(const CTransactionRef& tx);
+bool GetSyscoinData(const CTransactionRef &tx, std::vector<unsigned char> &vchData, int& nOut);
+bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
+typedef std::unordered_map<uint32_t, uint256> EthereumMintTxMap;
+typedef std::unordered_map<int32_t, CAsset > AssetMap;
 #endif // SYSCOIN_PRIMITIVES_TRANSACTION_H

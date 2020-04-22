@@ -434,7 +434,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     cachedInnerUsage -= memusage::DynamicUsage(mapLinks[it].parents) + memusage::DynamicUsage(mapLinks[it].children);
     // SYSCOIN remove bridge transfer id from mempool structure
     if(IsSyscoinMintTx(ptx->nVersion)) {
-        CMintSyscoin mintSyscoin(*ptx);
+        CMintSyscoin mintSyscoin(ptx);
         if(!mintSyscoin.IsNull())
             mapMintKeysMempool.erase(mintSyscoin.nBridgeTransferID);
     }
@@ -662,16 +662,9 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
 {
     TxValidationState dummy_state; // Not used. CheckTxInputs() should always pass
     CAmount txfee = 0;
-    // SYSCOIN
-    CAssetAllocation allocation;
-    CTransaction txTmp = tx;
-    if(IsSyscoinTx(tx.nVersion)) {
-        allocation = CAssetAllocation(tx);
-        assert(!allocation.IsNull());
-    }
-    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(txTmp, dummy_state, mempoolDuplicate, spendheight, txfee, allocation);
+    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee);
     assert(fCheckResult);
-    UpdateCoins(txTmp, mempoolDuplicate, std::numeric_limits<int>::max());
+    UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
 }
 
 void CTxMemPool::check(const CCoinsViewCache *pcoins) const

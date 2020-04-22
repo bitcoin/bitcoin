@@ -59,7 +59,7 @@
 #include <masternodeman.h>
 #include <masternodepayments.h>
 #include <services/assetconsensus.h>
-#include <services/assetallocation.h>
+#include <services/asset.h>
 #include <algorithm> // std::unique
 extern RecursiveMutex cs_setethstatus;
 EthereumMintTxMap mapMintKeysMempool;
@@ -591,15 +591,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return false; // state filled in by CheckTransaction
     // SYSCOIN
     bool isAssetTx = false;
-    CAssetAllocation allocation;
-    if(IsSyscoinTx(tx.nVersion)){
+    if(tx.HasAssets()) {
         isAssetTx = IsAssetTx(tx.nVersion);
-        allocation = CAssetAllocation(tx);
-        if(allocation.IsNull()) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-invalid-allocation");
-        }
         TxValidationState tx_state;
-        if (!CheckSyscoinInputs(tx, allocation, hash, tx_state, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), mapMintKeysMempool)) {
+        if (!CheckSyscoinInputs(tx, hash, tx_state, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), mapMintKeysMempool)) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-syscoin-tx", tx_state.ToString()); 
         } 
     }     
@@ -729,8 +724,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
 
     CAmount nFees = 0;
-    // SYSCOIN
-    if (!Consensus::CheckTxInputs(*const_cast<CTransaction*>(&tx), state, m_view, GetSpendHeight(m_view), nFees, allocation)) {
+    if (!Consensus::CheckTxInputs(tx, state, m_view, GetSpendHeight(m_view), nFees)) {
         return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
     }
 
@@ -1928,7 +1922,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 Coin coin;
                 bool is_spent = view.SpendCoin(out, &coin);
                 // SYSCOIN
-                if(coin.out.assetInfo.nAsset > 0) {
+                if(!coin.out.assetInfo.IsNull()) {
                     CAssetCoinInfo& txCoinInfo = *const_cast<CAssetCoinInfo*>(&tx.vout[o].assetInfo);
                     txCoinInfo.nAsset = coin.out.assetInfo.nAsset;
                     txCoinInfo.nValue = coin.out.assetInfo.nValue;
@@ -2269,16 +2263,10 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         {
             TxValidationState tx_state;
             // SYSCOIN
-            CAssetAllocation allocation;
-            if(IsSyscoinTx(tx.nVersion)){
-                allocation = CAssetAllocation(tx);
-                if(allocation.IsNull()) {
-                    LogPrintf("ERROR: %s: Consensus::CheckSyscoinInputs allocation deserialization failed\n", __func__);
-                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "block-allocation-parse-failed");
-                }
+            if(tx.HasAssets()){
                 TxValidationState tx_state;
                 // just temp var not used in !fJustCheck mode
-                if (!CheckSyscoinInputs(ibd, tx, allocation, txHash, tx_state, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, mapMintKeys)){
+                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, mapMintKeys)){
                     // Any transaction validation failure in ConnectBlock is a block consensus failure
                     state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                                 tx_state.GetRejectReason(), tx_state.GetDebugMessage());
@@ -2287,8 +2275,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             }
 
             CAmount txfee = 0;
-            // SYSCOIN
-            if (!Consensus::CheckTxInputs(*const_cast<CTransaction*>(&tx), tx_state, view, pindex->nHeight, txfee, allocation)) {
+            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                             tx_state.GetRejectReason(), tx_state.GetDebugMessage());
@@ -3847,7 +3834,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
             // do this check only when not in IBD (initial block download) or litemode
             // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
             EthereumTxRoot txRootDB;
-            CMintSyscoin mintSyscoin(*txRef);
+            CMintSyscoin mintSyscoin(txRef);
             if(!mintSyscoin.IsNull()){
                 const bool &ethTxRootShouldExist = !::ChainstateActive().IsInitialBlockDownload() && !fLiteMode && fLoaded && fGethSynced;
                 {
@@ -3867,13 +3854,13 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
                     if(nTime < txRootDB.nTimestamp) {
                         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "invalid-timestamp", "Time must be in the present or future, not passed");
                     }
-                    else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? 10800: 604800)) {
+                    else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? TESTNET_MAX_MINT_AGE: MAINNET_MAX_MINT_AGE)) {
                         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-blockheight-too-old", "Time must be between 1 week and 1 hour old");
                     }
                     // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
                     // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-                    else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? 600: 3600)) {
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-insufficient-confirmations", "Time must be between 1 week and 1 hour old");
+                    else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? TESTNET_MIN_MINT_AGE: MAINNET_MIN_MINT_AGE)) {
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-insufficient-confirmations", "You must wait atleast 1 hour to mint");
                     }
                 } 
             }

@@ -10,8 +10,9 @@
 #include <util/strencodings.h>
 #include <assert.h>
 // SYSCOIN
-const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 128;
-const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY = 0x7400;
+#include <compressor.h>
+#include <services/asset.h>
+#include <consensus/validation.h>
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
@@ -89,9 +90,10 @@ uint256 CTransaction::ComputeWitnessHash() const
 }
 
 /* For backward compatibility, the hash is initialized to 0. TODO: remove the need for this default constructor entirely. */
-CTransaction::CTransaction() : vin(), vout(), nVersion(CTransaction::CURRENT_VERSION), nLockTime(0), hash{}, m_witness_hash{} {}
-CTransaction::CTransaction(const CMutableTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime), hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
-CTransaction::CTransaction(CMutableTransaction&& tx) : vin(std::move(tx.vin)), vout(std::move(tx.vout)), nVersion(tx.nVersion), nLockTime(tx.nLockTime), hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
+// SYSCOIN
+CTransaction::CTransaction() : vin(), vout(), nVersion(CTransaction::CURRENT_VERSION), nLockTime(0), voutAssets(), hash{}, m_witness_hash{} {}
+CTransaction::CTransaction(const CMutableTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime), voutAssets(tx.voutAssets), hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
+CTransaction::CTransaction(CMutableTransaction&& tx) : vin(std::move(tx.vin)), vout(std::move(tx.vout)), nVersion(tx.nVersion), nLockTime(tx.nLockTime), voutAssets(tx.voutAssets), hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
 
 CAmount CTransaction::GetValueOut() const
 {
@@ -132,4 +134,274 @@ std::string CTransaction::ToString() const
     for (const auto& tx_out : vout)
         str += "    " + tx_out.ToString() + "\n";
     return str;
+}
+
+// SYSCOIN
+bool CTransaction::HasAssets() const
+{
+    return IsSyscoinTx(nVersion);
+}
+
+bool CMutableTransaction::HasAssets() const
+{
+    return IsSyscoinTx(nVersion);
+}
+
+void CMutableTransaction::LoadAssets()
+{
+    if(HasAssets()) {
+        CAssetAllocation allocation(MakeTransactionRef(*this));
+        if(allocation.IsNull()) {
+            throw std::ios_base::failure("Unknown asset data");
+        }
+        voutAssets = std::move(allocation.voutAssets);
+        const size_t &nVoutSize = vout.size();
+        for(const auto &it: voutAssets) {
+            const int32_t &nAsset = it.first;
+            if(it.second.empty()) {
+                throw std::ios_base::failure("asset empty outputs");
+            }
+            for(const auto& voutAsset: it.second) {
+                const uint32_t& nOut = voutAsset.n;
+                if(nOut > nVoutSize) {
+                    throw std::ios_base::failure("asset vout out of range");
+                }
+                // store in vout
+                CAssetCoinInfo& coinInfo = vout[nOut].assetInfo;
+                coinInfo.nAsset = std::move(nAsset);
+                coinInfo.nValue = std::move(voutAsset.nValue);
+            }
+        }       
+    }
+}
+bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<int32_t, CAmount> &mapAssetOut, TxValidationState& state) const
+{
+    std::unordered_set<uint32_t> setUsedIndex;
+    for(const auto &it: voutAssets) {
+        CAmount nTotal = 0;
+        const int32_t &nAsset = it.first;
+        if(nAsset < 0) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-negative-guid");
+        }
+        // never allow more than 1 zero value output per asset
+        // this bool should be sufficient because later on uniqueness per asset is enforced with bad-txns-asset-not-unique check
+        bool bFoundZeroValOutput = false;
+        for(const auto& voutAsset: it.second) {
+            const CAmount& nAmount = voutAsset.nValue;
+            nTotal += nAmount;
+            if(nAmount == 0) {
+                // 0 amount output not possible for anything except asset tx (new/update/send)
+                if(!isAssetTx) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-zero-out-non-asset");
+                }
+                // only 1 is allowed for change
+                if(bFoundZeroValOutput) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-zero-out-found");
+                } 
+                else {
+                    bFoundZeroValOutput = true;
+                }
+            }
+            else if(!AssetRange(nAmount) || !AssetRange(nTotal)) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-outofrange");
+            }
+            auto itSet = setUsedIndex.emplace(voutAsset.n);
+            if(!itSet.second) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-not-unique");
+            }
+        }
+        // zero value output is required (even though it is sending 0, receiving 0) for asset tx
+        if(isAssetTx && !bFoundZeroValOutput) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-no-zero-out-found");
+        }
+        if(nTotal > 0 && !AssetRange(nTotal)) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-total-outofrange");
+        }
+        auto itRes = mapAssetOut.emplace(nAsset, nTotal);
+        if(!itRes.second) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-not-unique");
+        }
+    }
+    return true;
+}
+RecursiveMutex cs_setethstatus;
+
+bool IsSyscoinMintTx(const int &nVersion) {
+    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT;
+}
+
+bool IsAssetTx(const int &nVersion) {
+    return nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE || nVersion == SYSCOIN_TX_VERSION_ASSET_SEND;
+}
+
+bool IsAssetAllocationTx(const int &nVersion) {
+    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION ||
+        nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+}
+
+bool IsZdagTx(const int &nVersion) {
+    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+}
+
+bool IsSyscoinTx(const int &nVersion) {
+    return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
+}
+
+bool IsSyscoinWithNoInputTx(const int &nVersion) {
+    return nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
+}
+
+unsigned int GetSyscoinDataOutput(const CTransactionRef& tx) {
+	for (unsigned int i = 0; i<tx->vout.size(); i++) {
+		if (tx->vout[i].scriptPubKey.IsUnspendable())
+			return i;
+	}
+	return -1;
+}
+
+bool GetSyscoinData(const CTransactionRef &tx, std::vector<unsigned char> &vchData, int& nOut)
+{
+	nOut = GetSyscoinDataOutput(tx);
+	if (nOut == -1)
+		return false;
+
+	const CScript &scriptPubKey = tx->vout[nOut].scriptPubKey;
+	return GetSyscoinData(scriptPubKey, vchData);
+}
+
+bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData)
+{
+	CScript::const_iterator pc = scriptPubKey.begin();
+	opcodetype opcode;
+	if (!scriptPubKey.GetOp(pc, opcode))
+		return false;
+	if (opcode != OP_RETURN)
+		return false;
+	if (!scriptPubKey.GetOp(pc, opcode, vchData))
+		return false;
+    const unsigned int & nSize = scriptPubKey.size();
+    // allow up to 80 bytes of data after our stack on standard asset transactions
+    unsigned int nDifferenceAllowed = 83;
+    // if data is more than 1 byte we used 2 bytes to store the varint (good enough for 64kb which is within limit of opreturn data on sys tx's)
+    if(nSize >= 0xff){
+        nDifferenceAllowed++;
+    }
+    if(nSize > (vchData.size() + nDifferenceAllowed)){
+        return false;
+    }
+	return true;
+}
+
+bool CAssetAllocation::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+    try {
+        CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
+        Unserialize(dsAsset);
+    } catch (std::exception &e) {
+		SetNull();
+        return false;
+    }
+	return true;
+}
+bool CAssetAllocation::UnserializeFromTx(const CTransactionRef &tx) {
+	std::vector<unsigned char> vchData;
+	int nOut;
+    if (!GetSyscoinData(tx, vchData, nOut))
+    {
+        SetNull();
+        return false;
+    }
+    if(!UnserializeFromData(vchData))
+    {	
+        SetNull();
+        return false;
+    }
+    
+    return true;
+}
+
+void CAssetAllocation::SerializeData( std::vector<unsigned char> &vchData) {
+    CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
+    Serialize(dsAsset);
+	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
+
+}
+
+bool CMintSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+    try {
+        CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
+        Unserialize(dsMS);
+    } catch (std::exception &e) {
+        SetNull();
+        return false;
+    }
+    return true;
+}
+
+bool CMintSyscoin::UnserializeFromTx(const CTransactionRef &tx) {
+    std::vector<unsigned char> vchData;
+    int nOut;
+    if (!GetSyscoinData(tx, vchData, nOut))
+    {
+        SetNull();
+        return false;
+    }
+    if(!UnserializeFromData(vchData))
+    {   
+        SetNull();
+        return false;
+    }  
+    return true;
+}
+
+void CMintSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
+    CDataStream dsMint(SER_NETWORK, PROTOCOL_VERSION);
+    Serialize(dsMint);
+    vchData = std::vector<unsigned char>(dsMint.begin(), dsMint.end());
+}
+
+bool CBurnSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+    try {
+        CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
+        Unserialize(dsMS);
+    } catch (std::exception &e) {
+        SetNull();
+        return false;
+    }
+    return true;
+}
+
+bool CBurnSyscoin::UnserializeFromTx(const CTransactionRef &tx) {
+    if(tx->nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM)
+        return false;
+    std::vector<unsigned char> vchData;
+    int nOut;
+    if (!GetSyscoinData(tx, vchData, nOut))
+    {
+        SetNull();
+        return false;
+    }
+    if(!UnserializeFromData(vchData))
+    {   
+        SetNull();
+        return false;
+    }
+    return true;
+}
+
+void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
+    CDataStream dsBurn(SER_NETWORK, PROTOCOL_VERSION);
+    Serialize(dsBurn);
+    vchData = std::vector<unsigned char>(dsBurn.begin(), dsBurn.end());
+}
+
+template<typename Stream, typename AssetOutType>
+void SerializeAssetOut(AssetOutType& assetOut, Stream& s) {
+    s << VARINT(assetOut.n);
+    ::Serialize(s, Using<AmountCompression>(assetOut.nValue));	
+}
+
+template<typename Stream, typename AssetOutType>
+void UnserializeAssetOut(AssetOutType& assetOut, Stream& s) {
+    s >> VARINT(assetOut.n);
+    ::Unserialize(s, Using<AmountCompression>(assetOut.nValue));	
 }
