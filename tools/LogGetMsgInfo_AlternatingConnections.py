@@ -24,7 +24,7 @@ elif os.path.exists('/media/sf_BitcoinAttacker/blocks'):
 	datadir = ' -datadir=/media/sf_BitcoinAttacker'
 elif os.path.exists('/media/sim/BITCOIN/blocks'):
 	datadir = ' -datadir=/media/sim/BITCOIN'
-
+numSkippedSamples = 0
 
 #def getmyIP():
 #	return os.popen('curl \'http://myexternalip.com/raw\'').read() + ':8333'
@@ -354,11 +354,8 @@ def fetch(now):
 	seconds = (now - datetime.datetime(1970, 1, 1)).total_seconds()
 	numPeers = len(peerinfo)
 
-	if numPeers != maxConnections:
-		if numSkippedSamples is None: numSkippedSamples = 0
-		numSkippedSamples += 1
-	else:
-		numSkippedSamples = 0
+	if numPeers != maxConnections: numSkippedSamples += 1
+	else: numSkippedSamples = 0
 	addresses = ''
 	totalBanScore = 0
 	totalPingTime = 0
