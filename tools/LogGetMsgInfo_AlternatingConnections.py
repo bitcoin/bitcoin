@@ -55,12 +55,12 @@ def fetchHeader():
 	line += 'Connections,'
 
 	line += 'BlockHeight,'
+	line += 'Num AcceptedBlocks PerSec,'
+	line += 'Avg AcceptedBlocks PerSec,'
 	line += 'MempoolSize,'
 	line += 'MempoolBytes,'
-	line += 'AcceptedBlocksPerSec,'
-	line += 'AcceptedBlocksPerSecAvg,'
-	line += 'AcceptedTxPerSec,'
-	line += 'AcceptedTxPerSecAvg,'
+	line += 'Num AcceptedTx PerSec,'
+	line += 'Avg AcceptedTx PerSec,'
 
 	line += 'ClocksPerSec,'
 	line += '# VERSION Msgs,'
@@ -553,9 +553,13 @@ def parseMessage(message, string, time):
 def fetch(now):
 	global numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
 	try:
+		blockcount = int(bitcoin('getblockcount').strip())
+		if numPeers != maxConnections:
+			numSkippedSamples += 1
+			print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
+			return ''
 		messages = json.loads(bitcoin('getmsginfo'))
 		peerinfo = json.loads(bitcoin('getpeerinfo'))
-		blockcount = int(bitcoin('getblockcount').strip())
 		mempoolinfo = json.loads(bitcoin('getmempoolinfo'))
 	except Exception as e:
 		raise Exception('Unable to access Bitcoin console...')
@@ -595,9 +599,6 @@ def fetch(now):
 	line += str(totalBanScore) + ','
 	line += addresses + ','
 
-	line += str(blockcount) + ','
-	line += str(mempoolinfo['size']) + ','
-	line += str(mempoolinfo['bytes']) + ','
 
 	# Compute the blocks per second and tx per second
 	blockcountDiff = blockcount - lastBlockcount
@@ -619,8 +620,12 @@ def fetch(now):
 	acceptedTxPerSecSum += numAcceptedTxPerSec
 	acceptedTxPerSecCount += 1
 
+	line += str(blockcount) + ','
 	line += str(numAcceptedBlocksPerSec) + ','
 	line += str(acceptedBlocksPerSecSum / acceptedBlocksPerSecCount) + ','
+	line += str(mempoolinfo['size']) + ','
+	line += str(mempoolinfo['bytes']) + ','
+
 	line += str(numAcceptedTxPerSec) + ','
 	line += str(acceptedTxPerSecSum / acceptedTxPerSecCount) + ','
 
@@ -655,11 +660,7 @@ def fetch(now):
 
 	line += str(numSkippedSamples) + ','
 
-	if numPeers != maxConnections:
-		numSkippedSamples += 1
-		print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
-		return ''
-	else: numSkippedSamples = 0
+	numSkippedSamples = 0
 	return line
 
 def resetNode(file, numConnections):
