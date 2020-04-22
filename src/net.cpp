@@ -1872,9 +1872,9 @@ void CConnman::ThreadSocketHandler()
             ForEachNode(AllNodes, [&](CNode* pnode) {
                 InactivityCheck(pnode);
             });
-            DisconnectNodes();
             nLastCleanupNodes = GetTimeMillis();
         }
+        DisconnectNodes();
         NotifyNumConnectionsChanged();
     }
 }
