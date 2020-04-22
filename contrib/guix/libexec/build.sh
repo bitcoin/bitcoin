@@ -141,19 +141,17 @@ make -C depends --jobs="$MAX_JOBS" HOST="$HOST" \
 # Source Tarball Building #
 ###########################
 
-# Create the source tarball and move it to "${OUTDIR}/src" if not already there
-if [ -z "$(find "${OUTDIR}/src" -name 'bitcoin-*.tar.gz')" ]; then
-    ./autogen.sh
-    env CONFIG_SITE="${BASEPREFIX}/${HOST}/share/config.site" ./configure --prefix=/
-    make dist GZIP_ENV='-9n' ${V:+V=1}
-    mkdir -p "${OUTDIR}/src"
-    mv "$(find "${PWD}" -name 'bitcoin-*.tar.gz')" "${OUTDIR}/src/"
-fi
+# Define DISTNAME variable.
+# shellcheck source=contrib/gitian-descriptors/assign_DISTNAME
+source contrib/gitian-descriptors/assign_DISTNAME
 
-# Determine the full path to our source tarball
-SOURCEDIST="$(find "${OUTDIR}/src" -name 'bitcoin-*.tar.gz')"
-# Determine our distribution name (e.g. bitcoin-0.18.0)
-DISTNAME="$(basename "$SOURCEDIST" '.tar.gz')"
+GIT_ARCHIVE="${OUTDIR}/src/${DISTNAME}.tar.gz"
+
+# Create the source tarball if not already there
+if [ ! -e "$GIT_ARCHIVE" ]; then
+    mkdir -p "$(dirname "$GIT_ARCHIVE")"
+    git archive --output="$GIT_ARCHIVE" HEAD
+fi
 
 ###########################
 # Binary Tarball Building #
@@ -187,7 +185,9 @@ export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
     cd "$DISTSRC"
 
     # Extract the source tarball
-    tar --strip-components=1 -xf "${SOURCEDIST}"
+    tar -xf "${GIT_ARCHIVE}"
+
+    ./autogen.sh
 
     # Configure this DISTSRC for $HOST
     # shellcheck disable=SC2086
@@ -234,7 +234,15 @@ export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
 
     case "$HOST" in
         *mingw*)
-            cp -f --target-directory="$OUTDIR" ./*-setup-unsigned.exe
+            # This step not only moves the unsigned NSIS executable to
+            # "${OUTDIR}", but also renames it
+            #
+            # from:
+            #   bitcoin-@PACKAGE_VERSION@-win64-setup-unsigned.exe
+            # to:
+            #   ${DISTNAME}-win64-setup-unsigned.exe
+            #
+            cp -f ./bitcoin-*-win64-setup-unsigned.exe "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
             ;;
     esac
     (
@@ -264,7 +272,7 @@ export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
                 cp "${DISTSRC}/doc/README_windows.txt" "${DISTNAME}/readme.txt"
                 ;;
             *linux*)
-                cp "${DISTSRC}/doc/README.md" "${DISTNAME}/"
+                cp "${DISTSRC}/README.md" "${DISTNAME}/"
                 ;;
         esac
 
@@ -307,7 +315,7 @@ case "$HOST" in
         (
             cd ./windeploy
             mkdir unsigned
-            cp --target-directory=unsigned/ "$OUTDIR"/bitcoin-*-setup-unsigned.exe
+            cp --target-directory=unsigned/ "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
             find . -print0 \
                 | sort --zero-terminated \
                 | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
