@@ -711,8 +711,8 @@ def resetNode(file, numConnections):
 
 	return file
 
-def log(file, targetDateTime, count, maxConnections):
-	global fileSampleNumber
+def log(file, targetDateTime, count):
+	global maxConnections, fileSampleNumber
 	try:
 		now = datetime.datetime.now()
 		line = fetch(now)
@@ -741,7 +741,7 @@ def log(file, targetDateTime, count, maxConnections):
 
 	targetDateTime = targetDateTime + datetime.timedelta(seconds = numSecondsPerSample)
 	delay = getDelay(targetDateTime)
-	Timer(delay, log, [file, targetDateTime, count, maxConnections]).start()
+	Timer(delay, log, [file, targetDateTime, count]).start()
 
 def getDelay(time):
 	return (time - datetime.datetime.now()).total_seconds()
