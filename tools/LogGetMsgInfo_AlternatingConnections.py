@@ -495,7 +495,7 @@ def resetNode(file, numConnections):
 	return file
 
 def log(file, targetDateTime, count, maxConnections):
-	global maxConnections, fileSampleNumber
+	global fileSampleNumber
 	try:
 		now = datetime.datetime.now()
 		print(f'Line: {str(count)}, File: {fileSampleNumber}, Max Connections: {maxConnections}, Off by {(now - targetDateTime).total_seconds()} seconds.')
