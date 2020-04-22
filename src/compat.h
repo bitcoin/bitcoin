@@ -72,6 +72,7 @@ typedef unsigned int SOCKET;
 #define WSAENOTSOCK         EBADF
 #define INVALID_SOCKET      (SOCKET)(~0)
 #define SOCKET_ERROR        -1
+#define SD_SEND             SHUT_WR
 #endif
 
 #ifdef WIN32

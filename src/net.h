@@ -457,7 +457,6 @@ public:
 
     void WakeMessageHandler();
     void WakeSelect();
-    void DisconnectNodes();
 
     /** Attempts to obfuscate tx time through exponentially distributed emitting.
         Works assuming that a single interval is used.
@@ -482,6 +481,7 @@ private:
     void ThreadOpenConnections(std::vector<std::string> connect);
     void ThreadMessageHandler();
     void AcceptConnection(const ListenSocket& hListenSocket);
+    void DisconnectNodes();
     void NotifyNumConnectionsChanged();
     void InactivityCheck(CNode *pnode);
     bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
@@ -497,10 +497,10 @@ private:
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
-    CNode* FindNode(const CNetAddr& ip);
-    CNode* FindNode(const CSubNet& subNet);
-    CNode* FindNode(const std::string& addrName);
-    CNode* FindNode(const CService& addr);
+    CNode* FindNode(const CNetAddr& ip, bool fExcludeDisconnecting = true);
+    CNode* FindNode(const CSubNet& subNet, bool fExcludeDisconnecting = true);
+    CNode* FindNode(const std::string& addrName, bool fExcludeDisconnecting = true);
+    CNode* FindNode(const CService& addr, bool fExcludeDisconnecting = true);
 
     bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest = nullptr, bool fCountFailure = false);
@@ -567,7 +567,6 @@ private:
     std::list<CNode*> vNodesDisconnected;
     std::unordered_map<SOCKET, CNode*> mapSocketToNode;
     mutable CCriticalSection cs_vNodes;
-    mutable CCriticalSection cs_vNodesDisconnected;
     std::atomic<NodeId> nLastNodeId;
     unsigned int nPrevNodeCount;
 
@@ -841,6 +840,8 @@ public:
     std::atomic_bool fSuccessfullyConnected;
     std::atomic_bool fDisconnect;
     std::atomic<int64_t> nDisconnectLingerTime{0};
+    std::atomic_bool fSocketShutdown{false};
+    std::atomic_bool fOtherSideDisconnected { false };
     // We use fRelayTxes for two purposes -
     // a) it allows us to not relay tx invs before receiving the peer's version message
     // b) the peer may tell us in its version message that we should not relay tx invs

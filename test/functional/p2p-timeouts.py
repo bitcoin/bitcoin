@@ -65,7 +65,7 @@ class TimeoutsTest(BitcoinTestFramework):
         no_verack_node.send_message(msg_ping())
         no_version_node.send_message(msg_ping())
 
-        sleep(31)
+        sleep(32)
 
         assert not no_verack_node.connected
         assert not no_version_node.connected

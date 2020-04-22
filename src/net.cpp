@@ -323,10 +323,13 @@ bool IsReachable(const CNetAddr& addr)
 }
 
 
-CNode* CConnman::FindNode(const CNetAddr& ip)
+CNode* CConnman::FindNode(const CNetAddr& ip, bool fExcludeDisconnecting)
 {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes) {
+        if (fExcludeDisconnecting && pnode->fDisconnect) {
+            continue;
+        }
         if ((CNetAddr)pnode->addr == ip) {
             return pnode;
         }
@@ -334,10 +337,13 @@ CNode* CConnman::FindNode(const CNetAddr& ip)
     return nullptr;
 }
 
-CNode* CConnman::FindNode(const CSubNet& subNet)
+CNode* CConnman::FindNode(const CSubNet& subNet, bool fExcludeDisconnecting)
 {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes) {
+        if (fExcludeDisconnecting && pnode->fDisconnect) {
+            continue;
+        }
         if (subNet.Match((CNetAddr)pnode->addr)) {
             return pnode;
         }
@@ -345,10 +351,13 @@ CNode* CConnman::FindNode(const CSubNet& subNet)
     return nullptr;
 }
 
-CNode* CConnman::FindNode(const std::string& addrName)
+CNode* CConnman::FindNode(const std::string& addrName, bool fExcludeDisconnecting)
 {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes) {
+        if (fExcludeDisconnecting && pnode->fDisconnect) {
+            continue;
+        }
         if (pnode->GetAddrName() == addrName) {
             return pnode;
         }
@@ -356,10 +365,13 @@ CNode* CConnman::FindNode(const std::string& addrName)
     return nullptr;
 }
 
-CNode* CConnman::FindNode(const CService& addr)
+CNode* CConnman::FindNode(const CService& addr, bool fExcludeDisconnecting)
 {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes) {
+        if (fExcludeDisconnecting && pnode->fDisconnect) {
+            continue;
+        }
         if ((CService)pnode->addr == addr) {
             return pnode;
         }
@@ -1263,7 +1275,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 void CConnman::DisconnectNodes()
 {
     {
-        LOCK2(cs_vNodes, cs_vNodesDisconnected);
+        LOCK(cs_vNodes);
 
         if (!fNetworkActive) {
             // Disconnect any connected nodes
@@ -1281,18 +1293,34 @@ void CConnman::DisconnectNodes()
             CNode* pnode = *it;
             if (pnode->fDisconnect)
             {
-                if (pnode->nDisconnectLingerTime == 0) {
-                    // let's not immediately close the socket but instead wait for at least 100ms so that there is a
-                    // chance to flush all/some pending data. Otherwise the other side might not receive REJECT messages
-                    // that were pushed right before setting fDisconnect=true
-                    // Flushing must happen in two places to ensure data can be received by the other side:
-                    //   1. vSendMsg must be empty and all messages sent via send(). This is ensured by SocketHandler()
-                    //      being called before DisconnectNodes and also by the linger time
-                    //   2. Internal socket send buffers must be flushed. This is ensured solely by the linger time
-                    pnode->nDisconnectLingerTime = GetTimeMillis() + 100;
-                    continue;
-                } else if (GetTimeMillis() < pnode->nDisconnectLingerTime) {
-                    continue;
+                // If we were the ones who initiated the disconnect, we must assume that the other side wants to see
+                // pending messages. If the other side initiated the disconnect (or disconnected after we've shutdown
+                // the socket), we can be pretty sure that they are not interested in any pending messages anymore and
+                // thus can immediately close the socket.
+                if (!pnode->fOtherSideDisconnected) {
+                    if (pnode->nDisconnectLingerTime == 0) {
+                        // let's not immediately close the socket but instead wait for at least 100ms so that there is a
+                        // chance to flush all/some pending data. Otherwise the other side might not receive REJECT messages
+                        // that were pushed right before setting fDisconnect=true
+                        // Flushing must happen in two places to ensure data can be received by the other side:
+                        //   1. vSendMsg must be empty and all messages sent via send(). This is ensured by SocketHandler()
+                        //      being called before DisconnectNodes and also by the linger time
+                        //   2. Internal socket send buffers must be flushed. This is ensured solely by the linger time
+                        pnode->nDisconnectLingerTime = GetTimeMillis() + 100;
+                    }
+                    if (GetTimeMillis() < pnode->nDisconnectLingerTime) {
+                        // everything flushed to the kernel?
+                        if (!pnode->fSocketShutdown && pnode->nSendMsgSize == 0) {
+                            LOCK(pnode->cs_hSocket);
+                            if (pnode->hSocket != INVALID_SOCKET) {
+                                // Give the other side a chance to detect the disconnect as early as possible (recv() will return 0)
+                                ::shutdown(pnode->hSocket, SD_SEND);
+                            }
+                            pnode->fSocketShutdown = true;
+                        }
+                        ++it;
+                        continue;
+                    }
                 }
 
                 if (fLogIPs) {
@@ -1320,10 +1348,7 @@ void CConnman::DisconnectNodes()
             }
         }
     }
-    std::vector<CNode*> vNodesToDelete;
     {
-        LOCK(cs_vNodesDisconnected);
-
         // Delete disconnected nodes
         std::list<CNode*> vNodesDisconnectedCopy = vNodesDisconnected;
         for (auto it = vNodesDisconnected.begin(); it != vNodesDisconnected.end(); )
@@ -1343,17 +1368,13 @@ void CConnman::DisconnectNodes()
                 }
                 if (fDelete) {
                     it = vNodesDisconnected.erase(it);
-                    vNodesToDelete.emplace_back(pnode);
+                    DeleteNode(pnode);
                 }
             }
             if (!fDelete) {
                 ++it;
             }
         }
-    }
-    // Call DeleteNode without any locks held
-    for (auto pnode : vNodesToDelete) {
-        DeleteNode(pnode);
     }
 }
 
@@ -1816,6 +1837,7 @@ size_t CConnman::SocketRecvData(CNode *pnode)
             LogPrint(BCLog::NET, "socket closed\n");
         }
         LOCK(cs_vNodes);
+        pnode->fOtherSideDisconnected = true; // avoid lingering
         pnode->CloseSocketDisconnect(this);
     }
     else if (nBytes < 0)
@@ -1827,6 +1849,7 @@ size_t CConnman::SocketRecvData(CNode *pnode)
             if (!pnode->fDisconnect)
                 LogPrintf("socket recv error %s\n", NetworkErrorString(nErr));
             LOCK(cs_vNodes);
+            pnode->fOtherSideDisconnected = true; // avoid lingering
             pnode->CloseSocketDisconnect(this);
         }
     }
@@ -1849,9 +1872,9 @@ void CConnman::ThreadSocketHandler()
             ForEachNode(AllNodes, [&](CNode* pnode) {
                 InactivityCheck(pnode);
             });
-            DisconnectNodes();
             nLastCleanupNodes = GetTimeMillis();
         }
+        DisconnectNodes();
         NotifyNumConnectionsChanged();
     }
 }
@@ -2567,9 +2590,6 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (!fNetworkActive) {
         return;
     }
-    // Ensure nodes with fDisconnect==true are actually disconnected and evicted, otherwise we might end up finding that
-    // node here when we're re-connecting, which would cause OpenNetworkConnection to bail out
-    DisconnectNodes();
     if (!pszDest) {
         // banned or exact match?
         if (IsBanned(addrConnect) || FindNode(addrConnect.ToStringIPPort()))
@@ -3286,11 +3306,12 @@ void CConnman::AddPendingProbeConnections(const std::set<uint256> &proTxHashes)
 size_t CConnman::GetNodeCount(NumConnections flags)
 {
     LOCK(cs_vNodes);
-    if (flags == CConnman::CONNECTIONS_ALL) // Shortcut if we want total
-        return vNodes.size();
 
     int nNum = 0;
     for (const auto& pnode : vNodes) {
+        if (pnode->fDisconnect) {
+            continue;
+        }
         if (flags & (pnode->fInbound ? CONNECTIONS_IN : CONNECTIONS_OUT)) {
             nNum++;
         }
@@ -3310,6 +3331,9 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)
     LOCK(cs_vNodes);
     vstats.reserve(vNodes.size());
     for (CNode* pnode : vNodes) {
+        if (pnode->fDisconnect) {
+            continue;
+        }
         vstats.emplace_back();
         pnode->copyStats(vstats.back());
     }
