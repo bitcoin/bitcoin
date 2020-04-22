@@ -256,7 +256,7 @@ AC_ARG_ENABLE([gprof],
     [enable_gprof=$enableval],
     [enable_gprof=no])
 
-dnl Pass compiler & liner flags that make builds deterministic
+dnl Pass compiler & linker flags that make builds deterministic
 AC_ARG_ENABLE([determinism],
     [AS_HELP_STRING([--enable-determinism],
                     [Enable compilation flags that make builds deterministic (default is no)])],
@@ -861,6 +861,9 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
   ]
 )
 
+dnl thread_local is currently disabled when building with glibc back compat.
+dnl Our minimum supported glibc is 2.17, however support for thread_local
+dnl did not arrive in glibc until 2.18.
 if test "x$use_thread_local" = xyes || { test "x$use_thread_local" = xauto && test "x$use_glibc_compat" = xno; }; then
   TEMP_LDFLAGS="$LDFLAGS"
   LDFLAGS="$TEMP_LDFLAGS $PTHREAD_CFLAGS"
