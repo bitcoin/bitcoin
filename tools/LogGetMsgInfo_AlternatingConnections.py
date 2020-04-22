@@ -355,7 +355,7 @@ def fetch(now):
 	numPeers = len(peerinfo)
 
 	if numPeers != maxConnections:
-		if numSkippedSamples == None: numSkippedSamples = 0
+		if numSkippedSamples is None: numSkippedSamples = 0
 		numSkippedSamples += 1
 	else:
 		numSkippedSamples = 0
