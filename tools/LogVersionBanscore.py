@@ -16,8 +16,9 @@ def fetchHeader():
 	line = 'Timestamp,'
 	line += 'Timestamp (Seconds),'
 	line += 'Timestamp Diff,'
-	line += 'Address,'
-	line += 'Banscore,'
+	line += 'Addresses,'
+	line += 'Banscores,'
+	line += 'Banscore Sum,'
 
 	line += '# VERSION,'
 	line += '# VERSION Diff,'
@@ -59,15 +60,18 @@ def fetch(now):
 	line += str(timestamp) + ',' # Timestamp (Seconds)
 	line += str(timestampDiff) + ',' # Timestamp Diff
 	connections = json.loads(bitcoin('list'))
-	addressLogged = False
+
+	addresses = ''
+	banscores = ''
+	banscoreSum = 0
 	for addr in connections:
-		print(f'{addr} : {connections[addr]}')
-		line += addr + ',' # Address
-		line += str(connections[addr]) + ',' # Banscore
-		addressLogged = True
-	if not addressLogged:
-		line += ',' # Address
-		line += ',' # Banscore
+		addresses += str(addr) + ' '
+		banscores += str(connections[addr]) + ' '
+		banscoreSum += connections[addr]
+
+	line += addresses.strip() + ','
+	line += banscores.strip() + ','
+	line += str(banscoreSum) + ','
 
 	messages = json.loads(bitcoin('getmsginfo'))
 	line += parseMessage('VERSION', messages['VERSION']) + ','
