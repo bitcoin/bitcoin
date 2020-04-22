@@ -62,6 +62,42 @@ distribution provides binaries for the RISC-V platform.
 Notable changes
 ===============
 
+P2P and network changes
+-----------------------
+
+Updated RPCs
+------------
+
+Changes to Wallet or GUI related RPCs can be found in the GUI or Wallet section below.
+
+New RPCs
+--------
+
+Build System
+------------
+
+Updated settings
+----------------
+
+Changes to Wallet or GUI related settings can be found in the GUI or Wallet  section below.
+
+New settings
+------------
+
+Wallet
+------
+
+#### Wallet RPC changes
+
+GUI changes
+-----------
+
+Low-level changes
+=================
+
+Tests
+-----
+
 Credits
 =======
 
