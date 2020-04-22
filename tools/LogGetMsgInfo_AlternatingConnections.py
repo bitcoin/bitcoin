@@ -354,8 +354,6 @@ def fetch(now):
 	seconds = (now - datetime.datetime(1970, 1, 1)).total_seconds()
 	numPeers = len(peerinfo)
 
-	if numPeers != maxConnections: numSkippedSamples += 1
-	else: numSkippedSamples = 0
 	addresses = ''
 	totalBanScore = 0
 	totalPingTime = 0
@@ -447,9 +445,12 @@ def fetch(now):
 	line += parseMessage('[UNDOCUMENTED]', messages['[UNDOCUMENTED]'], seconds) + ','
 
 	line += str(numSkippedSamples) + ','
+
 	if numPeers != maxConnections:
+		numSkippedSamples += 1
 		print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}.')
 		return ''
+	else: numSkippedSamples = 0
 	return line
 
 def resetNode(file, numConnections):
