@@ -446,13 +446,13 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
                 altintegration::AltPayloads p;
                 // do a stateless validation of pop payloads
                 if (!VeriBlock::parseTxPopPayloadsImpl(iter->GetTx(), chainparams.GetConsensus(), txstate, p)) {
-                    LogPrint(BCLog::POP, "%s: tx %s is statelessly invalid: %s", __func__, iter->GetTx().GetHash().ToString(), txstate.GetRejectReason());
+                    LogPrint(BCLog::POP, "%s: tx %s is statelessly invalid: %s\n", __func__, iter->GetTx().GetHash().ToString(), txstate.GetRejectReason());
                     failedTx.insert(iter);
                     failedPopTx.insert(iter);
                     continue;
                 }
                 if(!altTreeCopy.addPayloads(dummyContainingBlock, {p}, state, true)) {
-                    LogPrint(BCLog::POP, "%s: tx %s is statefully invalid: %s", __func__, iter->GetTx().GetHash().ToString(), state.toString());
+                    LogPrint(BCLog::POP, "%s: tx %s is statefully invalid: %s\n", __func__, iter->GetTx().GetHash().ToString(), state.toString());
                     failedTx.insert(iter);
                     failedPopTx.insert(iter);
                     continue;
