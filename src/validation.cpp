@@ -1676,10 +1676,11 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
             return DISCONNECT_FAILED; // adding output for transaction without known metadata
         }
     }
-    // The potential_overwrite parameter to AddCoin is only allowed to be false if we know for
-    // sure that the coin did not already exist in the cache. As we have queried for that above
-    // using HaveCoin, we don't need to guess. When fClean is false, a coin already existed and
-    // it is an overwrite.
+    // If the coin already exists as an unspent coin in the cache, then the
+    // possible_overwrite parameter to AddCoin must be set to true. We have
+    // already checked whether an unspent coin exists above using HaveCoin, so
+    // we don't need to guess. When fClean is false, an unspent coin already
+    // existed and it is an overwrite.
     view.AddCoin(out, std::move(undo), !fClean);
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
