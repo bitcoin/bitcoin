@@ -1293,20 +1293,34 @@ void CConnman::DisconnectNodes()
             CNode* pnode = *it;
             if (pnode->fDisconnect)
             {
-                if (pnode->nDisconnectLingerTime == 0) {
-                    // let's not immediately close the socket but instead wait for at least 100ms so that there is a
-                    // chance to flush all/some pending data. Otherwise the other side might not receive REJECT messages
-                    // that were pushed right before setting fDisconnect=true
-                    // Flushing must happen in two places to ensure data can be received by the other side:
-                    //   1. vSendMsg must be empty and all messages sent via send(). This is ensured by SocketHandler()
-                    //      being called before DisconnectNodes and also by the linger time
-                    //   2. Internal socket send buffers must be flushed. This is ensured solely by the linger time
-                    pnode->nDisconnectLingerTime = GetTimeMillis() + 100;
-                    ++it;
-                    continue;
-                } else if (GetTimeMillis() < pnode->nDisconnectLingerTime) {
-                    ++it;
-                    continue;
+                // If we were the ones who initiated the disconnect, we must assume that the other side wants to see
+                // pending messages. If the other side initiated the disconnect (or disconnected after we've shutdown
+                // the socket), we can be pretty sure that they are not interested in any pending messages anymore and
+                // thus can immediately close the socket.
+                if (!pnode->fOtherSideDisconnected) {
+                    if (pnode->nDisconnectLingerTime == 0) {
+                        // let's not immediately close the socket but instead wait for at least 100ms so that there is a
+                        // chance to flush all/some pending data. Otherwise the other side might not receive REJECT messages
+                        // that were pushed right before setting fDisconnect=true
+                        // Flushing must happen in two places to ensure data can be received by the other side:
+                        //   1. vSendMsg must be empty and all messages sent via send(). This is ensured by SocketHandler()
+                        //      being called before DisconnectNodes and also by the linger time
+                        //   2. Internal socket send buffers must be flushed. This is ensured solely by the linger time
+                        pnode->nDisconnectLingerTime = GetTimeMillis() + 100;
+                    }
+                    if (GetTimeMillis() < pnode->nDisconnectLingerTime) {
+                        // everything flushed to the kernel?
+                        if (!pnode->fSocketShutdown && pnode->nSendMsgSize == 0) {
+                            LOCK(pnode->cs_hSocket);
+                            if (pnode->hSocket != INVALID_SOCKET) {
+                                // Give the other side a chance to detect the disconnect as early as possible (recv() will return 0)
+                                ::shutdown(pnode->hSocket, SD_SEND);
+                            }
+                            pnode->fSocketShutdown = true;
+                        }
+                        ++it;
+                        continue;
+                    }
                 }
 
                 if (fLogIPs) {
@@ -1823,6 +1837,7 @@ size_t CConnman::SocketRecvData(CNode *pnode)
             LogPrint(BCLog::NET, "socket closed\n");
         }
         LOCK(cs_vNodes);
+        pnode->fOtherSideDisconnected = true; // avoid lingering
         pnode->CloseSocketDisconnect(this);
     }
     else if (nBytes < 0)
@@ -1834,6 +1849,7 @@ size_t CConnman::SocketRecvData(CNode *pnode)
             if (!pnode->fDisconnect)
                 LogPrintf("socket recv error %s\n", NetworkErrorString(nErr));
             LOCK(cs_vNodes);
+            pnode->fOtherSideDisconnected = true; // avoid lingering
             pnode->CloseSocketDisconnect(this);
         }
     }
