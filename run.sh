@@ -46,7 +46,7 @@ elif [ -d "/media/sim/BITCOIN/blocks/" ]; then
 	src/bitcoind -datadir=/media/sim/BITCOIN/ -debug=researcher
 else
 	echo "datadir = ~/.bitcoin/"
-	if [ ! -f "~/.bitcoin/bitcoin.conf" ]; then
+	if [ ! -f "$HOME/.bitcoin/bitcoin.conf" ]; then
 		echo "Resetting configuration file"
 		echo "server = 1" > ~/.bitcoin/bitcoin.conf
 		echo "rpcuser=cybersec" >> ~/.bitcoin/bitcoin.conf
