@@ -27,7 +27,7 @@ static const int MAX_PRIVATESEND_AMOUNT = MAX_MONEY / COIN;
 static const int DEFAULT_PRIVATESEND_SESSIONS = 4;
 static const int DEFAULT_PRIVATESEND_ROUNDS = 4;
 static const int DEFAULT_PRIVATESEND_AMOUNT = 1000;
-static const int DEFAULT_PRIVATESEND_DENOMS = 300;
+static const int DEFAULT_PRIVATESEND_DENOMS = 50;
 
 static const bool DEFAULT_PRIVATESEND_AUTOSTART = false;
 static const bool DEFAULT_PRIVATESEND_MULTISESSION = false;
