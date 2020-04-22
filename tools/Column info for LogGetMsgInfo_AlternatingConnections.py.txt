@@ -1,0 +1,206 @@
+
+Timestamp:	The time in which the sample was taken (in human readable format)
+Timestamp (Seconds):	The time in which the sample was taken (in number of seconds since 1/01/1970)
+NumPeers:	The current number of peer connections
+InactivePeers:	Number of peers that have not responded to the ping message
+AvgPingTime:	The average network latency of the peer
+TotalBanScore:	The misbehavior score of each peer summed together
+Connections:	A list of the current peer connections
+BlockHeight:	The block height of this particular full node
+MempoolSize:	The number of unconfirmed transactions currently in the mempool
+MempoolBytes:	The number of bytes that the mempool is currently taking up
+AcceptedBlocksPerSec:	The change in block height over the change in time for the most recent block update
+AcceptedBlocksPerSecAvg:	The average of all previous AcceptedBlocksPerSec values
+AcceptedTxPerSec:	The change in mempool size over the change in time for the most recent mempool size update
+AcceptedTxPerSecAvg:	The average of all previous AcceptedTxPerSec values
+ClocksPerSec:	The number of clock cycles that occur each second within Bitcoin Core
+# VERSION Msgs:	The total number of VERSION messages received thus far
+Num VERSION PerSec:	The change in number of messages over the change in time for the most recent VERSION message received
+Avg VERSION PerSec:	The average number of VERSION messages received per second thus far (the average of all previous Num VERSION PerSec values)
+ClocksAvg VERSION:	The average number of clocks that it took to process this message
+ClocksMax VERSION:	The maximum number of clocks that it took to process this message
+BytesAvg VERSION:	The average number of bytes that this message took up
+BytesMax VERSION:	The maximum number of bytes that this message took up
+# VERACK Msgs:	The total number of VERACK messages received thus far
+Num VERACK PerSec:	The change in number of messages over the change in time for the most recent VERACK message received
+Avg VERACK PerSec:	The average number of VERACK messages received per second thus far (the average of all previous Num VERACK PerSec values)
+ClocksAvg VERACK:	The average number of clocks that it took to process this message
+ClocksMax VERACK:	The maximum number of clocks that it took to process this message
+BytesAvg VERACK:	The average number of bytes that this message took up
+BytesMax VERACK:	The maximum number of bytes that this message took up
+# ADDR Msgs:	The total number of ADDR messages received thus far
+Num ADDR PerSec:	The change in number of messages over the change in time for the most recent ADDR message received
+Avg ADDR PerSec:	The average number of ADDR messages received per second thus far (the average of all previous Num ADDR PerSec values)
+ClocksAvg ADDR:	The average number of clocks that it took to process this message
+ClocksMax ADDR:	The maximum number of clocks that it took to process this message
+BytesAvg ADDR:	The average number of bytes that this message took up
+BytesMax ADDR:	The maximum number of bytes that this message took up
+# INV Msgs:	The total number of INV messages received thus far
+Num INV PerSec:	The change in number of messages over the change in time for the most recent INV message received
+Avg INV PerSec:	The average number of INV messages received per second thus far (the average of all previous Num INV PerSec values)
+ClocksAvg INV:	The average number of clocks that it took to process this message
+ClocksMax INV:	The maximum number of clocks that it took to process this message
+BytesAvg INV:	The average number of bytes that this message took up
+BytesMax INV:	The maximum number of bytes that this message took up
+# GETDATA Msgs:	The total number of GETDATA messages received thus far
+Num GETDATA PerSec:	The change in number of messages over the change in time for the most recent GETDATA message received
+Avg GETDATA PerSec:	The average number of GETDATA messages received per second thus far (the average of all previous Num GETDATA PerSec values)
+ClocksAvg GETDATA:	The average number of clocks that it took to process this message
+ClocksMax GETDATA:	The maximum number of clocks that it took to process this message
+BytesAvg GETDATA:	The average number of bytes that this message took up
+BytesMax GETDATA:	The maximum number of bytes that this message took up
+# MERKLEBLOCK Msgs:	The total number of MERKLEBLOCK messages received thus far
+Num MERKLEBLOCK PerSec:	The change in number of messages over the change in time for the most recent MERKLEBLOCK message received
+Avg MERKLEBLOCK PerSec:	The average number of MERKLEBLOCK messages received per second thus far (the average of all previous Num MERKLEBLOCK PerSec values)
+ClocksAvg MERKLEBLOCK:	The average number of clocks that it took to process this message
+ClocksMax MERKLEBLOCK:	The maximum number of clocks that it took to process this message
+BytesAvg MERKLEBLOCK:	The average number of bytes that this message took up
+BytesMax MERKLEBLOCK:	The maximum number of bytes that this message took up
+# GETBLOCKS Msgs:	The total number of GETBLOCKS messages received thus far
+Num GETBLOCKS PerSec:	The change in number of messages over the change in time for the most recent GETBLOCKS message received
+Avg GETBLOCKS PerSec:	The average number of GETBLOCKS messages received per second thus far (the average of all previous Num GETBLOCKS PerSec values)
+ClocksAvg GETBLOCKS:	The average number of clocks that it took to process this message
+ClocksMax GETBLOCKS:	The maximum number of clocks that it took to process this message
+BytesAvg GETBLOCKS:	The average number of bytes that this message took up
+BytesMax GETBLOCKS:	The maximum number of bytes that this message took up
+# GETHEADERS Msgs:	The total number of GETHEADERS messages received thus far
+Num GETHEADERS PerSec:	The change in number of messages over the change in time for the most recent GETHEADERS message received
+Avg GETHEADERS PerSec:	The average number of GETHEADERS messages received per second thus far (the average of all previous Num GETHEADERS PerSec values)
+ClocksAvg GETHEADERS:	The average number of clocks that it took to process this message
+ClocksMax GETHEADERS:	The maximum number of clocks that it took to process this message
+BytesAvg GETHEADERS:	The average number of bytes that this message took up
+BytesMax GETHEADERS:	The maximum number of bytes that this message took up
+# TX Msgs:	The total number of TX messages received thus far
+Num TX PerSec:	The change in number of messages over the change in time for the most recent TX message received
+Avg TX PerSec:	The average number of TX messages received per second thus far (the average of all previous Num TX PerSec values)
+ClocksAvg TX:	The average number of clocks that it took to process this message
+ClocksMax TX:	The maximum number of clocks that it took to process this message
+BytesAvg TX:	The average number of bytes that this message took up
+BytesMax TX:	The maximum number of bytes that this message took up
+# HEADERS Msgs:	The total number of HEADERS messages received thus far
+Num HEADERS PerSec:	The change in number of messages over the change in time for the most recent HEADERS message received
+Avg HEADERS PerSec:	The average number of HEADERS messages received per second thus far (the average of all previous Num HEADERS PerSec values)
+ClocksAvg HEADERS:	The average number of clocks that it took to process this message
+ClocksMax HEADERS:	The maximum number of clocks that it took to process this message
+BytesAvg HEADERS:	The average number of bytes that this message took up
+BytesMax HEADERS:	The maximum number of bytes that this message took up
+# BLOCK Msgs:	The total number of BLOCK messages received thus far
+Num BLOCK PerSec:	The change in number of messages over the change in time for the most recent BLOCK message received
+Avg BLOCK PerSec:	The average number of BLOCK messages received per second thus far (the average of all previous Num BLOCK PerSec values)
+ClocksAvg BLOCK:	The average number of clocks that it took to process this message
+ClocksMax BLOCK:	The maximum number of clocks that it took to process this message
+BytesAvg BLOCK:	The average number of bytes that this message took up
+BytesMax BLOCK:	The maximum number of bytes that this message took up
+# GETADDR Msgs:	The total number of GETADDR messages received thus far
+Num GETADDR PerSec:	The change in number of messages over the change in time for the most recent GETADDR message received
+Avg GETADDR PerSec:	The average number of GETADDR messages received per second thus far (the average of all previous Num GETADDR PerSec values)
+ClocksAvg GETADDR:	The average number of clocks that it took to process this message
+ClocksMax GETADDR:	The maximum number of clocks that it took to process this message
+BytesAvg GETADDR:	The average number of bytes that this message took up
+BytesMax GETADDR:	The maximum number of bytes that this message took up
+# MEMPOOL Msgs:	The total number of MEMPOOL messages received thus far
+Num MEMPOOL PerSec:	The change in number of messages over the change in time for the most recent MEMPOOL message received
+Avg MEMPOOL PerSec:	The average number of MEMPOOL messages received per second thus far (the average of all previous Num MEMPOOL PerSec values)
+ClocksAvg MEMPOOL:	The average number of clocks that it took to process this message
+ClocksMax MEMPOOL:	The maximum number of clocks that it took to process this message
+BytesAvg MEMPOOL:	The average number of bytes that this message took up
+BytesMax MEMPOOL:	The maximum number of bytes that this message took up
+# PING Msgs:	The total number of PING messages received thus far
+Num PING PerSec:	The change in number of messages over the change in time for the most recent PING message received
+Avg PING PerSec:	The average number of PING messages received per second thus far (the average of all previous Num PING PerSec values)
+ClocksAvg PING:	The average number of clocks that it took to process this message
+ClocksMax PING:	The maximum number of clocks that it took to process this message
+BytesAvg PING:	The average number of bytes that this message took up
+BytesMax PING:	The maximum number of bytes that this message took up
+# PONG Msgs:	The total number of PONG messages received thus far
+Num PONG PerSec:	The change in number of messages over the change in time for the most recent PONG message received
+Avg PONG PerSec:	The average number of PONG messages received per second thus far (the average of all previous Num PONG PerSec values)
+ClocksAvg PONG:	The average number of clocks that it took to process this message
+ClocksMax PONG:	The maximum number of clocks that it took to process this message
+BytesAvg PONG:	The average number of bytes that this message took up
+BytesMax PONG:	The maximum number of bytes that this message took up
+# NOTFOUND Msgs:	The total number of NOTFOUND messages received thus far
+Num NOTFOUND PerSec:	The change in number of messages over the change in time for the most recent NOTFOUND message received
+Avg NOTFOUND PerSec:	The average number of NOTFOUND messages received per second thus far (the average of all previous Num NOTFOUND PerSec values)
+ClocksAvg NOTFOUND:	The average number of clocks that it took to process this message
+ClocksMax NOTFOUND:	The maximum number of clocks that it took to process this message
+BytesAvg NOTFOUND:	The average number of bytes that this message took up
+BytesMax NOTFOUND:	The maximum number of bytes that this message took up
+# FILTERLOAD Msgs:	The total number of FILTERLOAD messages received thus far
+Num FILTERLOAD PerSec:	The change in number of messages over the change in time for the most recent FILTERLOAD message received
+Avg FILTERLOAD PerSec:	The average number of FILTERLOAD messages received per second thus far (the average of all previous Num FILTERLOAD PerSec values)
+ClocksAvg FILTERLOAD:	The average number of clocks that it took to process this message
+ClocksMax FILTERLOAD:	The maximum number of clocks that it took to process this message
+BytesAvg FILTERLOAD:	The average number of bytes that this message took up
+BytesMax FILTERLOAD:	The maximum number of bytes that this message took up
+# FILTERADD Msgs:	The total number of FILTERADD messages received thus far
+Num FILTERADD PerSec:	The change in number of messages over the change in time for the most recent FILTERADD message received
+Avg FILTERADD PerSec:	The average number of FILTERADD messages received per second thus far (the average of all previous Num FILTERADD PerSec values)
+ClocksAvg FILTERADD:	The average number of clocks that it took to process this message
+ClocksMax FILTERADD:	The maximum number of clocks that it took to process this message
+BytesAvg FILTERADD:	The average number of bytes that this message took up
+BytesMax FILTERADD:	The maximum number of bytes that this message took up
+# FILTERCLEAR Msgs:	The total number of FILTERCLEAR messages received thus far
+Num FILTERCLEAR PerSec:	The change in number of messages over the change in time for the most recent FILTERCLEAR message received
+Avg FILTERCLEAR PerSec:	The average number of FILTERCLEAR messages received per second thus far (the average of all previous Num FILTERCLEAR PerSec values)
+ClocksAvg FILTERCLEAR:	The average number of clocks that it took to process this message
+ClocksMax FILTERCLEAR:	The maximum number of clocks that it took to process this message
+BytesAvg FILTERCLEAR:	The average number of bytes that this message took up
+BytesMax FILTERCLEAR:	The maximum number of bytes that this message took up
+# SENDHEADERS Msgs:	The total number of SENDHEADERS messages received thus far
+Num SENDHEADERS PerSec:	The change in number of messages over the change in time for the most recent SENDHEADERS message received
+Avg SENDHEADERS PerSec:	The average number of SENDHEADERS messages received per second thus far (the average of all previous Num SENDHEADERS PerSec values)
+ClocksAvg SENDHEADERS:	The average number of clocks that it took to process this message
+ClocksMax SENDHEADERS:	The maximum number of clocks that it took to process this message
+BytesAvg SENDHEADERS:	The average number of bytes that this message took up
+BytesMax SENDHEADERS:	The maximum number of bytes that this message took up
+# FEEFILTER Msgs:	The total number of FEEFILTER messages received thus far
+Num FEEFILTER PerSec:	The change in number of messages over the change in time for the most recent FEEFILTER message received
+Avg FEEFILTER PerSec:	The average number of FEEFILTER messages received per second thus far (the average of all previous Num FEEFILTER PerSec values)
+ClocksAvg FEEFILTER:	The average number of clocks that it took to process this message
+ClocksMax FEEFILTER:	The maximum number of clocks that it took to process this message
+BytesAvg FEEFILTER:	The average number of bytes that this message took up
+BytesMax FEEFILTER:	The maximum number of bytes that this message took up
+# SENDCMPCT Msgs:	The total number of SENDCMPCT messages received thus far
+Num SENDCMPCT PerSec:	The change in number of messages over the change in time for the most recent SENDCMPCT message received
+Avg SENDCMPCT PerSec:	The average number of SENDCMPCT messages received per second thus far (the average of all previous Num SENDCMPCT PerSec values)
+ClocksAvg SENDCMPCT:	The average number of clocks that it took to process this message
+ClocksMax SENDCMPCT:	The maximum number of clocks that it took to process this message
+BytesAvg SENDCMPCT:	The average number of bytes that this message took up
+BytesMax SENDCMPCT:	The maximum number of bytes that this message took up
+# CMPCTBLOCK Msgs:	The total number of CMPCTBLOCK messages received thus far
+Num CMPCTBLOCK PerSec:	The change in number of messages over the change in time for the most recent CMPCTBLOCK message received
+Avg CMPCTBLOCK PerSec:	The average number of CMPCTBLOCK messages received per second thus far (the average of all previous Num CMPCTBLOCK PerSec values)
+ClocksAvg CMPCTBLOCK:	The average number of clocks that it took to process this message
+ClocksMax CMPCTBLOCK:	The maximum number of clocks that it took to process this message
+BytesAvg CMPCTBLOCK:	The average number of bytes that this message took up
+BytesMax CMPCTBLOCK:	The maximum number of bytes that this message took up
+# GETBLOCKTXN Msgs:	The total number of GETBLOCKTXN messages received thus far
+Num GETBLOCKTXN PerSec:	The change in number of messages over the change in time for the most recent GETBLOCKTXN message received
+Avg GETBLOCKTXN PerSec:	The average number of GETBLOCKTXN messages received per second thus far (the average of all previous Num GETBLOCKTXN PerSec values)
+ClocksAvg GETBLOCKTXN:	The average number of clocks that it took to process this message
+ClocksMax GETBLOCKTXN:	The maximum number of clocks that it took to process this message
+BytesAvg GETBLOCKTXN:	The average number of bytes that this message took up
+BytesMax GETBLOCKTXN:	The maximum number of bytes that this message took up
+# BLOCKTXN Msgs:	The total number of BLOCKTXN messages received thus far
+Num BLOCKTXN PerSec:	The change in number of messages over the change in time for the most recent BLOCKTXN message received
+Avg BLOCKTXN PerSec:	The average number of BLOCKTXN messages received per second thus far (the average of all previous Num BLOCKTXN PerSec values)
+ClocksAvg BLOCKTXN:	The average number of clocks that it took to process this message
+ClocksMax BLOCKTXN:	The maximum number of clocks that it took to process this message
+BytesAvg BLOCKTXN:	The average number of bytes that this message took up
+BytesMax BLOCKTXN:	The maximum number of bytes that this message took up
+# REJECT Msgs:	The total number of REJECT messages received thus far
+Num REJECT PerSec:	The change in number of messages over the change in time for the most recent REJECT message received
+Avg REJECT PerSec:	The average number of REJECT messages received per second thus far (the average of all previous Num REJECT PerSec values)
+ClocksAvg REJECT:	The average number of clocks that it took to process this message
+ClocksMax REJECT:	The maximum number of clocks that it took to process this message
+BytesAvg REJECT:	The average number of bytes that this message took up
+BytesMax REJECT:	The maximum number of bytes that this message took up
+# [UNDOCUMENTED] Msgs:	The total number of undocumented messages received thus far
+Num [UNDOCUMENTED] PerSec:	The change in number of messages over the change in time for the most recent undocumented message received
+Avg [UNDOCUMENTED] PerSec:	The average number of undocumented messages received per second thus far (the average of all previous Num [UNDOCUMENTED] PerSec values)
+ClocksAvg [UNDOCUMENTED]:	The average number of clocks that it took to process this message
+ClocksMax [UNDOCUMENTED]:	The maximum number of clocks that it took to process this message
+BytesAvg [UNDOCUMENTED]:	The average number of bytes that this message took up
+BytesMax [UNDOCUMENTED]:	The maximum number of bytes that this message took up
+NumSkippedSamples:	The number of rows that were skipped before this row (because the number of connections was not equal to the correct value)

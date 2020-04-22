@@ -657,7 +657,7 @@ def fetch(now):
 
 	if numPeers != maxConnections:
 		numSkippedSamples += 1
-		print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}.')
+		print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
 		return ''
 	else: numSkippedSamples = 0
 	return line
