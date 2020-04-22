@@ -508,9 +508,9 @@ def log(file, targetDateTime, count, maxConnections):
 	global fileSampleNumber
 	try:
 		now = datetime.datetime.now()
-		print(f'Line: {str(count)}, File: {fileSampleNumber}, Max Connections: {maxConnections}, Off by {(now - targetDateTime).total_seconds()} seconds.')
 		line = fetch(now)
 		if len(line) != 0:
+			print(f'Line: {str(count)}, File: {fileSampleNumber}, Max Connections: {maxConnections}, Off by {(now - targetDateTime).total_seconds()} seconds.')
 			file.write(line + '\n')
 			file.flush()
 			#if count >= 3600:
