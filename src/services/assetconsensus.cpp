@@ -14,19 +14,6 @@
 #include <services/witnessaddress.h>
 #include <services/asset.h>
 
-
-#include <validation.h>
-#include <boost/thread.hpp>
-#include <boost/algorithm/string.hpp>
-#include <future>
-#include <validationinterface.h>
-#include <services/assetconsensus.h>
-#include <services/rpc/assetrpc.h>
-#include <rpc/server.h>
-#include <chainparams.h>
-#include <services/witnessaddress.h>
-#include <key_io.h>
-#include <core_io.h>
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 extern RecursiveMutex cs_setethstatus;
