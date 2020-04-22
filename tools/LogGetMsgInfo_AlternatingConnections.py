@@ -552,20 +552,21 @@ def parseMessage(message, string, time):
 
 def fetch(now):
 	global numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
+	numPeers = 0
 	try:
-		blockcount = int(bitcoin('getblockcount').strip())
+		peerinfo = json.loads(bitcoin('getpeerinfo'))
+		numPeers = len(peerinfo)
 		if numPeers != maxConnections:
 			numSkippedSamples += 1
 			print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
 			return ''
 		messages = json.loads(bitcoin('getmsginfo'))
-		peerinfo = json.loads(bitcoin('getpeerinfo'))
+		blockcount = int(bitcoin('getblockcount').strip())
 		mempoolinfo = json.loads(bitcoin('getmempoolinfo'))
 	except Exception as e:
 		raise Exception('Unable to access Bitcoin console...')
 
 	seconds = (now - datetime.datetime(1970, 1, 1)).total_seconds()
-	numPeers = len(peerinfo)
 
 	addresses = ''
 	totalBanScore = 0
