@@ -354,8 +354,11 @@ def fetch(now):
 	seconds = (now - datetime.datetime(1970, 1, 1)).total_seconds()
 	numPeers = len(peerinfo)
 
-	if numPeers != maxConnections: numSkippedSamples += 1
-	else: numSkippedSamples = 0
+	if numPeers != maxConnections:
+		if numSkippedSamples == None: numSkippedSamples = 0
+		numSkippedSamples += 1
+	else:
+		numSkippedSamples = 0
 	addresses = ''
 	totalBanScore = 0
 	totalPingTime = 0
