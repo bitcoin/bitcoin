@@ -76,7 +76,7 @@ jobs:
         if: success()
         run: |
           mv ./release vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
-          tar czvf vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-linux.tar.gz vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}/
+          tar czvf vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}/
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -85,7 +85,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-linux.tar.gz
+          source: vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
           target: ${{ secrets.ARTIFACT_PATH }}
       - name: make check
         timeout-minutes: 20
@@ -157,7 +157,7 @@ jobs:
         if: success()
         run: |
           mv ./release vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-win64.zip vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-windows-qt-x64.zip vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -166,5 +166,77 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-win64.zip
+          source: vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-windows-qt-x64.zip
           target: ${{ secrets.ARTIFACT_PATH }}
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+        with:
+          path: main
+      - name: Extract branch name & commit
+        id: extract_branch
+        run: |
+          echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
+          echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
+      - name: Prepare ccache timestamp
+        id: cache_timestamp
+        run: |
+          current_date=`date +%Y%m%d_%H%M%SZ`
+          echo "::set-output name=timestamp::${current_date}"
+      - name: ccache cache files
+        uses: actions/cache@v1.1.0
+        with:
+          path: ~/.ccache
+          key: macos-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
+          restore-keys: |
+            macos-ccache-
+      - name: get version for alt-integration-cpp
+        run: echo "::set-env name=ALTINTEGRATION_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/altintegration.mk | head -n1)"
+      - name: alt-integration-cpp release version
+        run: echo Using alt-integration-cpp version $ALTINTEGRATION_VERSION
+      - name: install homebrew
+        run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+      - name: install dependencies
+        run: brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python3 libevent librsvg ccache qrencode qt zeromq
+      - name: install alt-integration-cpp
+        run: |
+          (
+          cd /tmp;
+          wget https://github.com/overcookedpanda/alt-integration-cpp/archive/${ALTINTEGRATION_VERSION}.tar.gz;
+          tar -xf ${ALTINTEGRATION_VERSION}.tar.gz;
+          cd alt-integration-cpp-${ALTINTEGRATION_VERSION};
+          mkdir build;
+          cd build;
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF;
+          make -j2;
+          sudo make install
+          )
+      - name: autogen
+        run: ./autogen.sh
+      - name: configure
+        run: ./configure
+          --enable-werror
+          --disable-bench
+          --disable-gmock
+      - name: make
+        run: make -j2
+      - name: create artifacts
+        if: success()
+        run: |
+          mv ./release vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-macosx-qt-x64.zip vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
+      - name: upload artifacts
+        if: success()
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.ARTIFACT_HOST }}
+          username: ${{ secrets.ARTIFACT_USER }}
+          key: ${{ secrets.ARTIFACT_KEY }}
+          passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
+          source: vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-macosx-qt-x64.tar.gz
+          target: ${{ secrets.ARTIFACT_PATH }}
+      - name: make check
+        run: make check
