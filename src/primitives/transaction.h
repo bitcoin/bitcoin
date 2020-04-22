@@ -531,14 +531,10 @@ public:
     assetOutputType voutAssets;
     
     template<typename Stream>
-    void Serialize(Stream &s) const {
-        s << voutAssets;
-    }
+    void Serialize(Stream &s) const;
 
     template<typename Stream>
-    void Unserialize(Stream &s)  {
-        s >> voutAssets;
-    }
+    void Unserialize(Stream &s);
 
 	CAssetAllocation() {
 		SetNull();
@@ -588,34 +584,10 @@ public:
     }
 
     template<typename Stream>
-    void Serialize(Stream &s) const {
-        s << assetAllocation;
-        s << VARINT(nBridgeTransferID);
-        s << VARINT(nBlockNumber);
-        s << vchTxValue;
-        s << vchTxParentNodes;
-        s << vchTxRoot;
-        s << vchTxPath;   
-        s << vchReceiptValue;
-        s << vchReceiptParentNodes;
-        s << vchReceiptRoot;
-        s << vchReceiptPath;
-    }
+    void Serialize(Stream &s) const;
 
     template<typename Stream>
-    void Unserialize(Stream &s) {
-        s >> assetAllocation;
-        s >> VARINT(nBridgeTransferID);
-        s >> VARINT(nBlockNumber);
-        s >> vchTxValue;
-        s >> vchTxParentNodes;
-        s >> vchTxRoot;
-        s >> vchTxPath;   
-        s >> vchReceiptValue;
-        s >> vchReceiptParentNodes;
-        s >> vchReceiptRoot;
-        s >> vchReceiptPath;
-    }
+    void Unserialize(Stream &s);
 
     inline void SetNull() { assetAllocation.SetNull(); vchTxRoot.clear(); vchTxValue.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); vchReceiptRoot.clear(); vchReceiptValue.clear(); vchReceiptParentNodes.clear(); vchReceiptPath.clear(); nBridgeTransferID = 0; nBlockNumber = 0;  }
     inline bool IsNull() const { return (vchTxValue.empty() && vchReceiptValue.empty()); }
@@ -636,16 +608,10 @@ public:
     }
 
     template<typename Stream>
-    void Serialize(Stream &s) const {
-        s << assetAllocation;
-        s << vchEthAddress;
-    }
+    void Serialize(Stream &s) const;
 
     template<typename Stream>
-    void Unserialize(Stream &s) {
-        s >> assetAllocation;
-        s >> vchEthAddress;
-    }
+    void Unserialize(Stream &s);
 
     inline void SetNull() { assetAllocation.SetNull(); vchEthAddress.clear();  }
     inline bool IsNull() const { return (vchEthAddress.empty() && assetAllocation.IsNull()); }

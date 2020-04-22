@@ -19,6 +19,7 @@
 #include <util/moneystr.h>
 #include <core_io.h>
 #include <services/asset.h>
+#include <node/transaction.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern RecursiveMutex cs_setethstatus;
@@ -179,11 +180,10 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
 }
 
 void TestTransaction(const CTransactionRef& tx) {
-    const CFeeRate max_raw_tx_fee_rate{COIN / 10}; // same as DEFAULT_MAX_RAW_TX_FEE_RATE
     AssertLockHeld(cs_main);
     CTxMemPool& mempool = EnsureMemPool();
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
-    CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
+    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(virtual_size);
 
     TxValidationState state;
     bool test_accept_res = AcceptToMemoryPool(mempool, state, tx,

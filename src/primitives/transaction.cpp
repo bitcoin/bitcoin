@@ -340,6 +340,15 @@ void CAssetAllocation::SerializeData( std::vector<unsigned char> &vchData) {
 
 }
 
+void CAssetAllocation::Serialize(Stream &s) const {
+    s << voutAssets;
+}
+
+template<typename Stream>
+void CAssetAllocation::Unserialize(Stream &s)  {
+    s >> voutAssets;
+}
+
 bool CMintSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
     try {
         CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
@@ -371,6 +380,36 @@ void CMintSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
     CDataStream dsMint(SER_NETWORK, PROTOCOL_VERSION);
     Serialize(dsMint);
     vchData = std::vector<unsigned char>(dsMint.begin(), dsMint.end());
+}
+
+template<typename Stream>
+void CMintSyscoin::Serialize(Stream &s) const {
+    s << assetAllocation;
+    s << VARINT(nBridgeTransferID);
+    s << VARINT(nBlockNumber);
+    s << vchTxValue;
+    s << vchTxParentNodes;
+    s << vchTxRoot;
+    s << vchTxPath;   
+    s << vchReceiptValue;
+    s << vchReceiptParentNodes;
+    s << vchReceiptRoot;
+    s << vchReceiptPath;
+}
+
+template<typename Stream>
+void CMintSyscoin::Unserialize(Stream &s) {
+    s >> assetAllocation;
+    s >> VARINT(nBridgeTransferID);
+    s >> VARINT(nBlockNumber);
+    s >> vchTxValue;
+    s >> vchTxParentNodes;
+    s >> vchTxRoot;
+    s >> vchTxPath;   
+    s >> vchReceiptValue;
+    s >> vchReceiptParentNodes;
+    s >> vchReceiptRoot;
+    s >> vchReceiptPath;
 }
 
 bool CBurnSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
@@ -406,6 +445,18 @@ void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
     CDataStream dsBurn(SER_NETWORK, PROTOCOL_VERSION);
     Serialize(dsBurn);
     vchData = std::vector<unsigned char>(dsBurn.begin(), dsBurn.end());
+}
+
+template<typename Stream>
+void CBurnSyscoin::Serialize(Stream &s) const {
+    s << assetAllocation;
+    s << vchEthAddress;
+}
+
+template<typename Stream>
+void CBurnSyscoin::Unserialize(Stream &s) {
+    s >> assetAllocation;
+    s >> vchEthAddress;
 }
 
 template<typename Stream>
