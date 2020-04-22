@@ -17,12 +17,16 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     CScript script = ConsumeScript(fuzzed_data_provider);
     while (fuzzed_data_provider.remaining_bytes() > 0) {
         switch (fuzzed_data_provider.ConsumeIntegralInRange(0, 7)) {
-        case 0:
-            script += ConsumeScript(fuzzed_data_provider);
+        case 0: {
+            CScript s = ConsumeScript(fuzzed_data_provider);
+            script = std::move(s);
             break;
-        case 1:
-            script = script + ConsumeScript(fuzzed_data_provider);
+        }
+        case 1: {
+            const CScript& s = ConsumeScript(fuzzed_data_provider);
+            script = s;
             break;
+        }
         case 2:
             script << fuzzed_data_provider.ConsumeIntegral<int64_t>();
             break;
