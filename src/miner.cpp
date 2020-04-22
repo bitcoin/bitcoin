@@ -334,8 +334,8 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
     // A list of failed PoP transactions to delete after we finish assembling the block
     CTxMemPool::setEntries failedPopTx;
-    // TODO(VeriBlock): refactor
-    CTxMemPool::setEntries succeededPopTx;
+    // TODO(VeriBlock): temporary fix. remove
+    std::vector<altintegration::AltPayloads> addedPayloads;
 
     // Start by adding all descendants of previously added txs to mapModifiedTx
     // and modifying them for their already included ancestors
@@ -460,7 +460,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
                     continue;
                 }
 
-                succeededPopTx.insert(iter);
+                addedPayloads.push_back(std::move(p));
             }
         }
 
@@ -491,12 +491,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     }
 
     // TODO(VeriBlock): this is temporal fix
-    std::for_each(succeededPopTx.rbegin(), succeededPopTx.rend(), [&](const CTxMemPool::txiter& tx){
-        altintegration::AltPayloads p;
-        TxValidationState txstate;
-        bool ret = VeriBlock::parseTxPopPayloadsImpl(iter->GetTx(), chainparams.GetConsensus(), txstate, p);
-        assert(ret);
-
+    std::for_each(addedPayloads.rbegin(), addedPayloads.rend(), [&](const altintegration::AltPayloads& p){
         altTreeCopy.removePayloads(dummyContainingBlock, {p});
     });
 
