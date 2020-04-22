@@ -717,7 +717,7 @@ def log(file, targetDateTime, count, maxConnections):
 		now = datetime.datetime.now()
 		line = fetch(now)
 		if len(line) != 0:
-			print(f'Line: {str(count)}, File: {fileSampleNumber}, Max Connections: {maxConnections}, Off by {(now - targetDateTime).total_seconds()} seconds.')
+			print(f'Line: {str(count)}, File: {fileSampleNumber}, Connections: {maxConnections}, Off by {(now - targetDateTime).total_seconds()} seconds.')
 			file.write(line + '\n')
 			file.flush()
 			#if count >= 3600:
