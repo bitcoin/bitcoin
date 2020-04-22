@@ -17,20 +17,18 @@ else
 fi
 END_FOLD
 
-DOCKER_EXEC mkdir -p build
-export P_CI_DIR="$P_CI_DIR/build"
+DOCKER_EXEC mkdir -p "${BASE_BUILD_DIR}"
+export P_CI_DIR="${BASE_BUILD_DIR}"
 
 BEGIN_FOLD configure
-DOCKER_EXEC ../configure --cache-file=config.cache $SYSCOIN_CONFIG_ALL $SYSCOIN_CONFIG || ( (DOCKER_EXEC cat config.log) && false)
+DOCKER_EXEC "${BASE_ROOT_DIR}/configure" --cache-file=config.cache $SYSCOIN_CONFIG_ALL $SYSCOIN_CONFIG || ( (DOCKER_EXEC cat config.log) && false)
 END_FOLD
 
 BEGIN_FOLD distdir
-# Create folder on host and docker, so that `cd` works
-mkdir -p "syscoin-$HOST"
 DOCKER_EXEC make distdir VERSION=$HOST
 END_FOLD
 
-export P_CI_DIR="$P_CI_DIR/syscoin-$HOST"
+export P_CI_DIR="${BASE_BUILD_DIR}/syscoin-$HOST"
 
 BEGIN_FOLD configure
 DOCKER_EXEC ./configure --cache-file=../config.cache $SYSCOIN_CONFIG_ALL $SYSCOIN_CONFIG || ( (DOCKER_EXEC cat config.log) && false)

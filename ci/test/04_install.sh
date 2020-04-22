@@ -18,7 +18,7 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
   ${CI_RETRY_EXE} pip3 install $PIP_PACKAGES
 fi
 
-mkdir -p "${BASE_SCRATCH_DIR}"
+# Create folders that are mounted into the docker
 mkdir -p "${CCACHE_DIR}"
 mkdir -p "${PREVIOUS_RELEASES_DIR}"
 
