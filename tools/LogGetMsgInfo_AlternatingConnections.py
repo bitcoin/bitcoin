@@ -252,6 +252,8 @@ def fetchHeader():
 	line += 'ClocksMax [UNDOCUMENTED],'
 	line += 'BytesAvg [UNDOCUMENTED],'
 	line += 'BytesMax [UNDOCUMENTED],'
+
+	line += 'NumSkippedSamples,'
 	return line
 
 prevNumMsgs = {}
@@ -340,7 +342,7 @@ def parseMessage(message, string, time):
 
 
 def fetch(now):
-	global lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
+	global numSkippedSamples, lastBlockcount, lastMempoolSize, numAcceptedBlocksPerSec, numAcceptedBlocksPerSecTime, numAcceptedTxPerSec, numAcceptedTxPerSecTime, acceptedBlocksPerSecSum, acceptedBlocksPerSecCount, acceptedTxPerSecSum, acceptedTxPerSecCount
 	try:
 		messages = json.loads(bitcoin('getmsginfo'))
 		peerinfo = json.loads(bitcoin('getpeerinfo'))
@@ -351,6 +353,9 @@ def fetch(now):
 
 	seconds = (now - datetime.datetime(1970, 1, 1)).total_seconds()
 	numPeers = len(peerinfo)
+
+	if numPeers != maxConnections: numSkippedSamples += 1
+	else: numSkippedSamples = 0
 	addresses = ''
 	totalBanScore = 0
 	totalPingTime = 0
@@ -440,6 +445,8 @@ def fetch(now):
 	line += parseMessage('BLOCKTXN', messages['BLOCKTXN'], seconds) + ','
 	line += parseMessage('REJECT', messages['REJECT'], seconds) + ','
 	line += parseMessage('[UNDOCUMENTED]', messages['[UNDOCUMENTED]'], seconds) + ','
+
+	line += str(numSkippedSamples) + ','
 	if numPeers != maxConnections:
 		print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}.')
 		return ''
