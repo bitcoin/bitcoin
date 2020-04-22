@@ -540,7 +540,7 @@ def init():
 	filesList = filesList.replace(os.path.expanduser('~/Desktop/Logs_GetMsgInfo_AlternatingConnections/'), '')
 	print(filesList)
 	print()
-	maxConnections = int(input(f'Starting at file 'Sample {fileSampleNumber + 1} numConnections X.csv'\nHow many connections should be made? (From 1 to 10): '))
+	maxConnections = int(input(f'Starting at file "Sample {fileSampleNumber + 1} numConnections X.csv"\nHow many connections should be made? (From 1 to 10): '))
 	print()
 	path = os.path.expanduser('~/Desktop/Logs_GetMsgInfo_AlternatingConnections')
 	if not os.path.exists(path):
