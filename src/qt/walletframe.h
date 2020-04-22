@@ -87,6 +87,9 @@ public Q_SLOTS:
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
 
+    /** Load Partially Signed Bitcoin Transaction */
+    void gotoLoadPSBT();
+
     /** Encrypt the wallet */
     void encryptWallet();
     /** Backup the wallet */

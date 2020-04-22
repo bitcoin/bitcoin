@@ -145,6 +145,7 @@ private:
     QAction* usedReceivingAddressesAction = nullptr;
     QAction* signMessageAction = nullptr;
     QAction* verifyMessageAction = nullptr;
+    QAction* m_load_psbt_action = nullptr;
     QAction* aboutAction = nullptr;
     QAction* receiveCoinsMenuAction = nullptr;
     QAction* optionsAction = nullptr;
@@ -327,6 +328,8 @@ public Q_SLOTS:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
+    /** Show load Partially Signed Dash Transaction dialog */
+    void gotoLoadPSBT();
 
     /** Show open dialog */
     void openClicked();
