@@ -18,6 +18,9 @@
 // modified to measure performance of other types of scripts.
 static void VerifyScriptBench(benchmark::State& state)
 {
+    const ECCVerifyHandle verify_handle;
+    ECC_Start();
+
     const int flags = SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH;
     const int witnessversion = 0;
 
@@ -69,6 +72,7 @@ static void VerifyScriptBench(benchmark::State& state)
         assert(csuccess == 1);
 #endif
     }
+    ECC_Stop();
 }
 
 static void VerifyNestedIfScript(benchmark::State& state) {
