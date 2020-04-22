@@ -306,7 +306,7 @@ void OptionsModel::SetPruneMiB(int64_t prune_target_mib, bool force)
         const int prune_target_gb = PruneMiBtoGB(prune_target_mib);
         settings.setValue("nPruneSize", prune_target_gb);
     }
-    std::string prune_val = prune ? ToString(prune_target_mib) : "0";
+    std::string prune_val = ToString(prune_target_mib);
     gArgs.ModifyRWConfigFile("prune", prune_val);
     if (force) {
         gArgs.ForceSetArg("-prune", prune_val);
