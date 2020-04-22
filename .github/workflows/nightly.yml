@@ -2,8 +2,8 @@ name: CI (nightly)
 
 on:
   schedule:
-    # create nightly full builds at midnight
-    - cron:  '0 0 * * *'
+    # create nightly full builds at 02:30 utc
+    - cron:  '30 2 * * *'
 
 jobs:
   linux:
@@ -95,7 +95,7 @@ jobs:
       - name: Collect coverage
         run: |
           lcov -c -d src -o cov.info
-          gcovr --xml cov.xml -j2 -v -s -b -r src
+          gcovr --xml -v -s -b -r src
       - name: Run sonarqube
         if: success()
         run: sonar-scanner -Dsonar.login=${{ secrets.SONAR_TOKEN }}
