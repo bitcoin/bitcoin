@@ -174,7 +174,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
     BlockValidationState state;
-    if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false, true)) {
+    if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }
     int64_t nTime2 = GetTimeMicros();
@@ -325,6 +325,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     altintegration::ValidationState state;
     bool ret = altTreeCopy.acceptBlock(dummyContainingBlock, state);
     assert(ret);
+    (void) ret;
 
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
@@ -453,7 +454,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
                     failedPopTx.insert(iter);
                     continue;
                 }
-                if(!altTreeCopy.addPayloads(dummyContainingBlock, {p}, state, true)) {
+                if (!altTreeCopy.addPayloads(dummyContainingBlock, {p}, state, true)) {
                     LogPrint(BCLog::POP, "%s: tx %s is statefully invalid: %s\n", __func__, iter->GetTx().GetHash().ToString(), state.toString());
                     failedTx.insert(iter);
                     failedPopTx.insert(iter);
@@ -486,15 +487,14 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     }
 
     // delete invalid PoP transactions
-    for (auto & tx: failedPopTx) {
+    for (auto& tx : failedPopTx) {
         mempool.removeRecursive(tx->GetTx(), MemPoolRemovalReason::BLOCK); // FIXME: a more appropriate removal reason
     }
 
     // TODO(VeriBlock): this is temporal fix
-    std::for_each(addedPayloads.rbegin(), addedPayloads.rend(), [&](const altintegration::AltPayloads& p){
+    std::for_each(addedPayloads.rbegin(), addedPayloads.rend(), [&](const altintegration::AltPayloads& p) {
         altTreeCopy.removePayloads(dummyContainingBlock, {p});
     });
-
 }
 
 template void BlockAssembler::addPackageTxs<ancestor_score>(int &nPackagesSelected, int &nDescendantsUpdated, CBlockIndex& prevIndex);
