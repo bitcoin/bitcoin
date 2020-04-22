@@ -38,6 +38,10 @@ void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique
  */
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
 
+bool IsMultiwalletJSONRPCRequest(const JSONRPCRequest& request);
+typedef UniValue(*rpcfn_type)(const JSONRPCRequest& jsonRequest);
+UniValue ExecForeachWalletJSONRPCRequest(JSONRPCRequest mutable_request, const rpcfn_type& func);
+
 void EnsureWalletIsUnlocked(const CWallet*);
 bool EnsureWalletIsAvailable(const CWallet*, bool avoidException);
 LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create = false);

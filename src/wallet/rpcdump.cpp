@@ -92,6 +92,10 @@ static void RescanWallet(CWallet& wallet, const WalletRescanReserver& reserver, 
 
 UniValue importprivkey(const JSONRPCRequest& request)
 {
+    if (IsMultiwalletJSONRPCRequest(request)) {
+        return ExecForeachWalletJSONRPCRequest(request, &importprivkey);
+    }
+
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
@@ -224,6 +228,10 @@ UniValue abortrescan(const JSONRPCRequest& request)
 
 UniValue importaddress(const JSONRPCRequest& request)
 {
+    if (IsMultiwalletJSONRPCRequest(request)) {
+        return ExecForeachWalletJSONRPCRequest(request, &importaddress);
+    }
+
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
@@ -328,6 +336,10 @@ UniValue importaddress(const JSONRPCRequest& request)
 
 UniValue importprunedfunds(const JSONRPCRequest& request)
 {
+    if (IsMultiwalletJSONRPCRequest(request)) {
+        return ExecForeachWalletJSONRPCRequest(request, &importprunedfunds);
+    }
+
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
@@ -388,6 +400,10 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
 
 UniValue removeprunedfunds(const JSONRPCRequest& request)
 {
+    if (IsMultiwalletJSONRPCRequest(request)) {
+        return ExecForeachWalletJSONRPCRequest(request, &removeprunedfunds);
+    }
+
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
@@ -428,6 +444,10 @@ UniValue removeprunedfunds(const JSONRPCRequest& request)
 
 UniValue importpubkey(const JSONRPCRequest& request)
 {
+    if (IsMultiwalletJSONRPCRequest(request)) {
+        return ExecForeachWalletJSONRPCRequest(request, &importpubkey);
+    }
+
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
@@ -517,6 +537,10 @@ UniValue importpubkey(const JSONRPCRequest& request)
 
 UniValue importwallet(const JSONRPCRequest& request)
 {
+    if (IsMultiwalletJSONRPCRequest(request)) {
+        return ExecForeachWalletJSONRPCRequest(request, &importwallet);
+    }
+
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
@@ -676,6 +700,10 @@ UniValue importwallet(const JSONRPCRequest& request)
 
 UniValue dumpprivkey(const JSONRPCRequest& request)
 {
+    if (IsMultiwalletJSONRPCRequest(request)) {
+        return ExecForeachWalletJSONRPCRequest(request, &dumpprivkey);
+    }
+
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
@@ -1266,6 +1294,10 @@ static int64_t GetImportTimestamp(const UniValue& data, int64_t now)
 
 UniValue importmulti(const JSONRPCRequest& mainRequest)
 {
+    if (IsMultiwalletJSONRPCRequest(mainRequest)) {
+        return ExecForeachWalletJSONRPCRequest(mainRequest, &importmulti);
+    }
+
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(mainRequest);
     CWallet* const pwallet = wallet.get();
     if (!EnsureWalletIsAvailable(pwallet, mainRequest.fHelp)) {
