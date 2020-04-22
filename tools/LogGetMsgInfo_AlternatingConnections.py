@@ -482,9 +482,6 @@ def resetNode(file, numConnections):
 		configData += '\n' + 'maxconnections=' + str(numConnections)
 		with open(datadir + '/bitcoin.conf', 'w') as configFile:
 			configFile.write(configData)
-		with open(datadir + '/bitcoin.conf', 'r') as configFile:
-			result = configFile.read()
-			print(f'!!!!!!!!!!!!!!!!!!!!!!!!!!! Config data {result}')
 	except:
 		print('ERROR: Failed to update bitcoin.conf')
 
