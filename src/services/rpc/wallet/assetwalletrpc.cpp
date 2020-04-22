@@ -13,11 +13,9 @@
 #include <policy/policy.h>
 #include <services/assetconsensus.h>
 #include <consensus/validation.h>
-#include <script/signingprovider.h>
 #include <wallet/coincontrol.h>
 #include <rpc/server.h>
 #include <wallet/wallet.h>
-#include <wallet/coinselection.h>
 #include <chainparams.h>
 #include <util/moneystr.h>
 #include <core_io.h>
@@ -180,63 +178,6 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
     }
     return true;
 }
-
-class CCountSigsVisitor : public boost::static_visitor<void> {
-private:
-    const SigningProvider * const provider;
-    int &nNumSigs;
-
-public:
-    CCountSigsVisitor(const SigningProvider& _provider, int &numSigs) : provider(&_provider), nNumSigs(numSigs) { }
-
-    void Process(const CScript &script) {
-        txnouttype type;
-        std::vector<CTxDestination> vDest;
-        int nRequired;
-        if (ExtractDestinations(script, type, vDest, nRequired)) {
-            for(const CTxDestination &dest: vDest)
-                boost::apply_visitor(*this, dest);
-        }
-    }
-    void operator()(const CKeyID &keyId) {
-        nNumSigs++;
-    }
-    void operator()(const PKHash &pkhash) {
-        nNumSigs++;
-    }
-
-    void operator()(const CScriptID &scriptId) {
-        CScript script;
-        if (provider && provider->GetCScript(scriptId, script))
-            Process(script);
-    }
-    void operator()(const WitnessV0ScriptHash& scriptID)
-    {
-        CScript script;
-        CRIPEMD160 hasher;
-        uint160 hash;
-        hasher.Write(scriptID.begin(), 32).Finalize(hash.begin());
-        if (provider && provider->GetCScript(CScriptID(hash), script)) {
-            Process(script);
-        }
-    }
-    void operator()(const ScriptHash& scripthash)
-    {
-        CScriptID scriptID(scripthash);
-        UniValue obj(UniValue::VOBJ);
-        CScript subscript;
-        if (provider && provider->GetCScript(scriptID, subscript)) {
-            Process(subscript);
-        }
-    }
-
-    void operator()(const WitnessV0KeyHash& keyid) {
-        nNumSigs++;
-    }
-
-    template<typename X>
-    void operator()(const X &none) {}
-};
 
 void TestTransaction(const CTransactionRef& tx) {
     const CFeeRate max_raw_tx_fee_rate{COIN / 10}; // same as DEFAULT_MAX_RAW_TX_FEE_RATE
