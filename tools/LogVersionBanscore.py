@@ -16,6 +16,7 @@ def fetchHeader():
 	line = 'Timestamp,'
 	line += 'Timestamp (Seconds),'
 	line += 'Timestamp Diff,'
+	line += 'Num Conenctions,'
 	line += 'Addresses,'
 	line += 'Banscores,'
 	line += 'Banscore Sum,'
@@ -69,6 +70,7 @@ def fetch(now):
 		banscores += str(connections[addr]) + ' '
 		banscoreSum += connections[addr]
 
+	line += str(len(connections)) + ','
 	line += addresses.strip() + ','
 	line += banscores.strip() + ','
 	line += str(banscoreSum) + ','
