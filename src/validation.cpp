@@ -3841,7 +3841,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     return true;
 }
 
-bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckPop)
+bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     AssertLockHeld(cs_main);
     assert(pindexPrev && pindexPrev == ::ChainActive().Tip());
@@ -3861,9 +3861,6 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.GetRejectReason());
     if (!::ChainstateActive().ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
         return false;
-    if(fCheckPop && !VeriBlock::getService<VeriBlock::PopService>().checkPopPayloads(*pindexPrev, block, state)) {
-        return error("%s: Consensus::Pop: %s", __func__, state.GetRejectReason());
-    }
     assert(state.IsValid());
 
     return true;
