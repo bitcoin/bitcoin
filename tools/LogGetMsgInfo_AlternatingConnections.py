@@ -476,6 +476,7 @@ def resetNode(file, numConnections):
 	except:
 		print('ERROR: Failed to create new file.')
 	try:
+		print(f'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!{datadir}')
 		with open(datadir + '/bitcoin.conf', 'r') as configFile:
 			configData = configFile.read()
 		configData = re.sub(r'\s*maxconnections\s*=\s*[0-9]+', '', configData)
