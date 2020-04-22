@@ -297,12 +297,17 @@ static const QString GetDefaultProxyAddress()
     return QString("%1:%2").arg(DEFAULT_GUI_PROXY_HOST).arg(DEFAULT_GUI_PROXY_PORT);
 }
 
-void OptionsModel::SetPruneEnabled(bool prune, bool force)
+void OptionsModel::SetPruneMiB(int64_t prune_target_mib, bool force)
 {
+    const bool prune = prune_target_mib > 1;
     QSettings settings;
     settings.setValue("bPrune", prune);
-    const int64_t prune_target_mib = PruneGBtoMiB(settings.value("nPruneSize").toInt());
+    if (prune) {
+        const int prune_target_gb = PruneMiBtoGB(prune_target_mib);
+        settings.setValue("nPruneSize", prune_target_gb);
+    }
     std::string prune_val = prune ? ToString(prune_target_mib) : "0";
+    gArgs.ModifyRWConfigFile("prune", prune_val);
     if (force) {
         gArgs.ForceSetArg("-prune", prune_val);
         return;
@@ -310,16 +315,6 @@ void OptionsModel::SetPruneEnabled(bool prune, bool force)
     if (!gArgs.SoftSetArg("-prune", prune_val)) {
         addOverriddenOption("-prune");
     }
-}
-
-void OptionsModel::SetPruneTargetGB(int prune_target_gb, bool force)
-{
-    const bool prune = prune_target_gb > 0;
-    if (prune) {
-        QSettings settings;
-        settings.setValue("nPruneSize", prune_target_gb);
-    }
-    SetPruneEnabled(prune, force);
 }
 
 // read QSettings values and return them
