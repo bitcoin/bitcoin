@@ -39,11 +39,7 @@
 #include <univalue.h>
 
 // SYSCOIN
-#include <services/assetconsensus.h>
-#include <base58.h>
-#include <bech32.h>
-#include <rpc/blockchain.h>
-
+extern bool ListTransactionSyscoinInfo(const CWalletTx& wtx, const CAssetCoinInfo assetInfo, const std::string strCategory, UniValue& output);
 using interfaces::FoundBlock;
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 static const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
@@ -1295,9 +1291,6 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWallet* cons
     wtx.GetAmounts(listReceived, listSent, nFee, filter_ismine);
 
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
-    // SYSCOIN
-    const uint256 &txHash = (*wtx.tx).GetHash();
-    std::map<uint256, bool> mapSysTx = std::map<uint256, bool>();
     // Sent
     if (!filter_label)
     {
@@ -1322,13 +1315,11 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWallet* cons
                 WalletTxToJSON(pwallet->chain(), locked_chain, wtx, entry);
             entry.pushKV("abandoned", wtx.isAbandoned());
             // SYSCOIN
-            const CTransaction& tx = *wtx.tx;
-            UniValue output(UniValue::VOBJ);
-            if(DecodeSyscoinRawtransaction(tx, output)){
-                entry.pushKV("systx", output);
-                if (mapSysTx.find(txHash) != mapSysTx.end())
-                    continue;
-                mapSysTx[txHash] = true;
+            if(!s.assetInfo.IsNull()) {
+                UniValue output(UniValue::VOBJ);
+                if(ListTransactionSyscoinInfo(wtx, s.assetInfo, "send", output)){
+                    entry.pushKV("systx", output);
+                }
             }
             ret.push_back(entry);
         }
@@ -1374,13 +1365,11 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWallet* cons
             if (fLong)
                 WalletTxToJSON(pwallet->chain(), locked_chain, wtx, entry);
             // SYSCOIN
-            const CTransaction& tx = *wtx.tx;
-            UniValue output(UniValue::VOBJ);
-            if(DecodeSyscoinRawtransaction(tx, output)){
-                entry.pushKV("systx", output);
-                if (mapSysTx.find(txHash) != mapSysTx.end())
-                    continue;
-                mapSysTx[txHash] = true;  
+            if(!r.assetInfo.IsNull()) {
+                UniValue output(UniValue::VOBJ);
+                if(ListTransactionSyscoinInfo(wtx, r.assetInfo, "receive", output)){
+                    entry.pushKV("systx", output);
+                }
             }
            
             ret.push_back(entry);

@@ -50,10 +50,6 @@ struct DisconnectedBlockTransactions;
 struct PrecomputedTransactionData;
 struct LockPoints;
 
-// SYSCOIN
-class CAsset;
-typedef std::unordered_map<int32_t, CAsset > AssetMap;
-typedef std::unordered_map<uint32_t, uint256> EthereumMintTxMap;
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
 /** Default for -limitancestorcount, max number of in-mempool ancestors */

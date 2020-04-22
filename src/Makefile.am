@@ -104,7 +104,6 @@ endif
 SYSCOIN_CORE_H = \
   services/witnessaddress.h \
   services/asset.h \
-  services/assetallocation.h \
   services/assetconsensus.h \
   services/rpc/assetrpc.h \
   services/rpc/wallet/assetwalletrpc.h \
@@ -329,7 +328,6 @@ libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CP
 libsyscoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_server_a_SOURCES = \
   services/asset.cpp \
-  services/assetallocation.cpp \
   services/assetconsensus.cpp \
   services/rpc/assetrpc.cpp \
   core_write.cpp \
@@ -348,8 +346,6 @@ libsyscoin_server_a_SOURCES = \
   masternodeman.cpp \
   messagesigner.cpp \
   netfulfilledman.cpp \
-  rpc/masternode.cpp \
-  rpc/governance.cpp \
   spork.cpp \
   addrdb.cpp \
   addrman.cpp \
@@ -513,6 +509,7 @@ libsyscoin_consensus_a_SOURCES = \
   consensus/params.h \
   consensus/tx_check.cpp \
   consensus/validation.h \
+  compressor.cpp \
   hash.cpp \
   hash.h \
   prevector.h \

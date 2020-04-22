@@ -234,6 +234,8 @@ struct COutputEntry
     CTxDestination destination;
     CAmount amount;
     int vout;
+    // SYSCOIN
+    CAssetCoinInfo assetInfo;
 };
 
 /** Legacy class used for deserializing vtxPrev for backwards compatibility.
@@ -408,8 +410,6 @@ public:
         uint256 serializedHash = isAbandoned() ? ABANDON_HASH : m_confirm.hashBlock;
         int serializedIndex = isAbandoned() || isConflicted() ? -1 : m_confirm.nIndex;
         s << tx << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << fFromMe << dummy_bool;
-        // SYSCOIN
-        tx->SerializeAssetInfo(s);
     }
 
     template<typename Stream>
@@ -422,8 +422,6 @@ public:
         bool dummy_bool; //! Used to be fSpent
         int serializedIndex;
         s >> tx >> m_confirm.hashBlock >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> mapValue >> vOrderForm >> fTimeReceivedIsTxTime >> nTimeReceived >> fFromMe >> dummy_bool;
-        // SYSCOIN
-        tx->UnserializeAssetInfo(s);
         /* At serialization/deserialization, an nIndex == -1 means that hashBlock refers to
          * the earliest block in the chain we know this or any in-wallet ancestor conflicts
          * with. If nIndex == -1 and hashBlock is ABANDON_HASH, it means transaction is abandoned.

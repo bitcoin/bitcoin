@@ -156,8 +156,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     }
     return nSigOps;
 }
-// SYSCOIN remove const CTransaction
-bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const CCoinsViewCache &inputs, int nSpendHeight, CAmount& txfee, const CAssetAllocation &allocation)
+bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache &inputs, int nSpendHeight, CAmount& txfee)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -165,12 +164,10 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
                          strprintf("%s: inputs missing/spent", __func__));
     }
     const bool &isSyscoinWithNoInputTx = IsSyscoinWithNoInputTx(tx.nVersion);
-    const bool &isSyscoinTx = IsSyscoinTx(tx.nVersion);
     const bool &isAssetTx = IsAssetTx(tx.nVersion);
     CAmount nValueIn = 0;
     std::unordered_map<int32_t, CAmount> mapAssetIn;
     std::unordered_map<int32_t, CAmount> mapAssetOut;
-    std::unordered_set<uint32_t> setUsedIndex;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
@@ -181,7 +178,7 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
             return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
-        if(coin.out.assetInfo.nAsset > 0) {
+        if(!coin.out.assetInfo.IsNull()) {
             auto inRes = mapAssetIn.emplace(coin.out.assetInfo.nAsset, coin.out.assetInfo.nValue);
             if(!inRes.second) {
                 inRes.first->second += coin.out.assetInfo.nValue;
@@ -207,66 +204,10 @@ bool Consensus::CheckTxInputs(CTransaction& tx, TxValidationState& state, const 
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
     }
-    if(isSyscoinTx) {
-        if(allocation.voutAssets.empty()) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-empty-map-out");
-        }
-        // CTxOut does not serialize assetInfo to make it consistent with Bitcoin serializaion, CTxOutInfo (used by utxo db) persists assetInfo
-        // it will add txoutinfo based on vout.assetInfo
-        std::vector<CTxOut>& vout = *const_cast<std::vector<CTxOut>*>(&tx.vout);
-        // clear out assetinfo so it can be re-assigned to the right vout
-        for(auto& v: vout) {
-            v.assetInfo.SetNull();
-        }
-        for(const auto &it: allocation.voutAssets) {
-            const int32_t &nAsset = it.first;
-            if(it.second.empty()) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-empty-out");
-            }
-            CAmount nTotal = 0;
-            // never allow more than 1 change output (zero value output) per asset
-            // this bool should be sufficient because later on uniqueness per asset is enforced with bad-txns-asset-not-unique check
-            bool bFoundChange = false;
-            for(const auto& voutAsset: it.second) {
-                const CAmount& nAmount = voutAsset.nValue;
-                nTotal += nAmount;
-                if(nAmount == 0) {
-                    // 0 amount output not possible for anything except asset tx (new/update/send)
-                    if(!isAssetTx) {
-                        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-zero-change-non-asset");
-                    }
-                    // only 1 is allowed for change
-                    if(bFoundChange) {
-                        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-change-out-found");
-                    } 
-                    else {
-                        bFoundChange = true;
-                    }
-                }
-                else if(!AssetRange(nAmount) || !AssetRange(nTotal)) {
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-outofrange");
-                }
-                const uint32_t& nOut = voutAsset.n;
-                auto itSet = setUsedIndex.emplace(nOut);
-                if(!itSet.second) {
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-not-unique");
-                }
-                if(nOut > vout.size()) {
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-invalid-vout-index");
-                }
-                vout[nOut].assetInfo = CAssetCoinInfo(nAsset, nAmount);
-            }
-            // change is required (even though it is sending 0, receiving 0) for asset tx
-            if(isAssetTx && !bFoundChange) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-no-change-found");
-            }
-            if(nTotal > 0 && !AssetRange(nTotal)) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-total-outofrange");
-            }
-            auto itRes = mapAssetOut.emplace(it.first, nTotal);
-            if(!itRes.second) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-not-unique");
-            }
+    // SYSCOIN
+    if(tx.HasAssets()) {
+        if(!tx.GetAssetValueOut(isAssetTx, mapAssetOut, state)) {
+            return false; // state is filled by GetAssetValueOut
         }
         // if input was used, validate it against output (note, no fees for assets in == out)
         if(!isSyscoinWithNoInputTx && mapAssetIn != mapAssetOut) {

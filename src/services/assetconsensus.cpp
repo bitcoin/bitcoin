@@ -11,16 +11,26 @@
 #include <ethereum/address.h>
 #include <ethereum/common.h>
 #include <ethereum/commondata.h>
+#include <services/witnessaddress.h>
+#include <services/asset.h>
+
+
+#include <validation.h>
 #include <boost/thread.hpp>
-#include <services/rpc/assetrpc.h>
+#include <boost/algorithm/string.hpp>
+#include <future>
 #include <validationinterface.h>
-#include <utility> // std::unique
+#include <services/assetconsensus.h>
+#include <services/rpc/assetrpc.h>
+#include <rpc/server.h>
+#include <chainparams.h>
 #include <services/witnessaddress.h>
 #include <key_io.h>
+#include <core_io.h>
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 extern RecursiveMutex cs_setethstatus;
-using namespace std;
+extern std::string EncodeDestination(const CTxDestination& dest);
 bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string errorMessage, bool bErrorNotInvalid, bool bConsensus){
         if(bErrorNotInvalid) {
             return state.Error(errorMessage);
@@ -29,6 +39,33 @@ bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string error
             return state.Invalid(bConsensus? TxValidationResult::TX_CONSENSUS: TxValidationResult::TX_CONFLICT, errorMessage);
         }  
 }
+
+std::string CWitnessAddress::ToString() const {
+    if(nVersion == 0){
+        if (vchWitnessProgram.size() == WITNESS_V0_KEYHASH_SIZE) {
+            return EncodeDestination(WitnessV0KeyHash(vchWitnessProgram));
+        }
+        else if (vchWitnessProgram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
+            return EncodeDestination(WitnessV0ScriptHash(vchWitnessProgram));
+        }
+    }
+    return "";
+}
+
+bool CWitnessAddress::IsValid() const {
+    const size_t& size = vchWitnessProgram.size();
+    // this is a hard limit 2->40
+    if(size < 2 || size > 40){
+        return false;
+    }
+    // BIP 142, version 0 must be of p2wpkh or p2wpsh size
+    if(nVersion == 0){
+        return (size == WITNESS_V0_KEYHASH_SIZE || size == WITNESS_V0_SCRIPTHASH_SIZE);
+    }
+    // otherwise mark as valid for future softfork expansion
+    return true;
+}
+
 bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, EthereumMintTxMap &mapMintKeys)
 {
     if (!bSanityCheck)
@@ -36,14 +73,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
             fJustCheck ? "JUSTCHECK" : "BLOCK", bSanityCheck? 1: 0);
     // unserialize mint object from txn, check for valid
-    CMintSyscoin mintSyscoin(tx);
+    CMintSyscoin mintSyscoin(MakeTransactionRef(tx));
     if(mintSyscoin.IsNull()) {
         return FormatSyscoinErrorMessage(state, "mint-unserialize", bSanityCheck);
     }
-    if(mintSyscoin.assetAllocation.voutAssets.size() != 1) {
+    if(tx.voutAssets.size() != 1) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-vout-map-size", bSanityCheck);
     }
-    auto it = mintSyscoin.assetAllocation.voutAssets.begin();
+    auto it = tx.voutAssets.begin();
     const int32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
     if(vecVout.size() != 1) {
@@ -73,13 +110,13 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             return FormatSyscoinErrorMessage(state, "invalid-timestamp", bSanityCheck);
         }
         // 3 hr on testnet and 1 week on mainnet
-        else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? 10800: 604800)) {
+        else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? TESTNET_MAX_MINT_AGE: MAINNET_MAX_MINT_AGE)) {
             return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", bSanityCheck);
         } 
         
         // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
         // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-        else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? 600: 3600)) {
+        else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? TESTNET_MIN_MINT_AGE: MAINNET_MIN_MINT_AGE)) {
             return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", bSanityCheck);
         }
     }
@@ -257,7 +294,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(!fJustCheck) {
         if(!bSanityCheck && nHeight > 0) {   
             LogPrint(BCLog::SYS,"CONNECTED ASSET MINT: op=%s asset=%d hash=%s height=%d fJustCheck=%s\n",
-                assetAllocationFromTx(tx.nVersion).c_str(),
+                stringFromSyscoinTx(tx.nVersion).c_str(),
                 nAsset,
                 txHash.ToString().c_str(),
                 nHeight,
@@ -266,25 +303,25 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }               
     return true;
 }
-bool CheckSyscoinInputs(const CTransaction& tx, const CAssetAllocation& allocation, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys) {
-    if(nHeight < Params().GetConsensus().nUTXOAssetsBlock)
+bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys) {
+    if(Params().NetworkIDString() != CBaseChainParams::REGTEST && nHeight < Params().GetConsensus().nUTXOAssetsBlock)
         return true;
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
         return false;
     AssetMap mapAssets;
-    return CheckSyscoinInputs(false, tx, allocation, txHash, state, true, nHeight, nTime, uint256(), false, mapAssets, mapMintKeys);
+    return CheckSyscoinInputs(false, tx, txHash, state, true, nHeight, nTime, uint256(), false, mapAssets, mapMintKeys);
 }
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const CAssetAllocation& allocation, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys) {
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys) {
     bool good = true;
     try{
         if(IsSyscoinMintTx(tx.nVersion)) {
             good = CheckSyscoinMint(ibd, tx, txHash, state, fJustCheck, bSanityCheck, nHeight, nTime, blockHash, mapMintKeys);
         }
         else if (IsAssetAllocationTx(tx.nVersion)) {
-            good = CheckAssetAllocationInputs(tx, allocation, txHash, state, fJustCheck, nHeight, blockHash, bSanityCheck);
+            good = CheckAssetAllocationInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, bSanityCheck);
         }
         else if (IsAssetTx(tx.nVersion)) {
-            good = CheckAssetInputs(tx, allocation, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck);
+            good = CheckAssetInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck);
         } 
     } catch (...) {
         return FormatSyscoinErrorMessage(state, "checksyscoininputs-exception", bSanityCheck);
@@ -292,7 +329,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const CAssetAll
     return good;
 }
 bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, EthereumMintTxMap &mapMintKeys){
-    CMintSyscoin mintSyscoin(tx);
+    CMintSyscoin mintSyscoin(MakeTransactionRef(tx));
     if(mintSyscoin.IsNull()) {
         LogPrint(BCLog::SYS,"DisconnectMintAsset: Cannot unserialize data inside of this transaction relating to an assetallocationmint\n");
         return false;
@@ -326,14 +363,14 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
     } 
     return true;       
 }
-bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &theAssetAllocation, const uint256& txHash, TxValidationState &state,
+bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
         const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck) {
     if (!bSanityCheck)
         LogPrint(BCLog::SYS,"*** ASSET ALLOCATION %d %d %s %s bSanityCheck=%d\n", nHeight,
             ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
             fJustCheck ? "JUSTCHECK" : "BLOCK", bSanityCheck? 1: 0);
         
-    const unsigned int &nOut = GetSyscoinDataOutput(tx);
+    const unsigned int &nOut = GetSyscoinDataOutput(MakeTransactionRef(tx));
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
     }
@@ -342,10 +379,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
         break; 
         case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
         {   
-            if(theAssetAllocation.voutAssets.size() != 1) {
+            if(tx.voutAssets.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-vout-map-size", bSanityCheck);
             }
-            auto it = theAssetAllocation.voutAssets.begin();
+            auto it = tx.voutAssets.begin();
             const int32_t &nAsset = it->first;
             const std::vector<CAssetOut> &vecVout = it->second;
             if(vecVout.size() != 1) {
@@ -368,10 +405,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
         {
-            if(theAssetAllocation.voutAssets.size() != 1) {
+            if(tx.voutAssets.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-burn-invalid-vout-map-size", bSanityCheck);
             }
-            auto it = theAssetAllocation.voutAssets.begin();
+            auto it = tx.voutAssets.begin();
             const int32_t &nAsset = it->first;
             const std::vector<CAssetOut> &vecVout = it->second;
             if(vecVout.size() != 1) {
@@ -402,7 +439,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
     if(!fJustCheck){
         if(!bSanityCheck && nHeight > 0) {  
             LogPrint(BCLog::SYS,"CONNECTED ASSET ALLOCATION: op=%s hash=%s height=%d fJustCheck=%s\n",
-                assetAllocationFromTx(tx.nVersion).c_str(),
+                stringFromSyscoinTx(tx.nVersion).c_str(),
                 txHash.ToString().c_str(),
                 nHeight,
                 "BLOCK");      
@@ -411,15 +448,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CAssetAllocation &
     return true;
 }
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
-    CAssetAllocation theAssetAllocation(tx);
-    if(theAssetAllocation.IsNull()) {
-        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not decode asset allocation in asset send\n");
-        return false;
-    } 
-    auto it = theAssetAllocation.voutAssets.begin();
+    auto it = tx.voutAssets.begin();
     const int32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
-    const unsigned int &nOut = GetSyscoinDataOutput(tx);
+    const unsigned int &nOut = GetSyscoinDataOutput(MakeTransactionRef(tx));
     if(nOut < 0) {
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not find data output\n");
         return false;
@@ -451,12 +483,12 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
 }
 bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     CAsset dbAsset;
-    CAsset theAsset(tx);
+    CAsset theAsset(MakeTransactionRef(tx));
     if(theAsset.IsNull()) {
         LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not decode asset\n");
         return false;
     }
-    auto it = theAsset.assetAllocation.voutAssets.begin();
+    auto it = tx.voutAssets.begin();
     const int32_t &nAsset = it->first;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
@@ -487,12 +519,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     return true;  
 }
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
-    CAssetAllocation theAssetAllocation(tx);
-    if(theAssetAllocation.IsNull()) {
-        LogPrint(BCLog::SYS,"DisconnectAssetActivate: Could not decode asset allocation in asset activate\n");
-        return false;
-    } 
-    auto it = theAssetAllocation.voutAssets.begin();
+    auto it = tx.voutAssets.begin();
     const int32_t &nAsset = it->first;
     #if __cplusplus > 201402 
     mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
@@ -501,7 +528,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
     #endif 
     return true;  
 }
-bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAllocation, const uint256& txHash, TxValidationState &state,
+bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
         const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap& mapAssets, const bool &bSanityCheck) {
     if (passetdb == nullptr)
         return false;
@@ -512,23 +539,22 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
 
     // unserialize asset from txn, check for valid
     CAsset theAsset;
-    vector<unsigned char> vchData;
-
+    std::vector<unsigned char> vchData;
+    const CTransactionRef &txRef = MakeTransactionRef(tx);
     if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND) {
-        theAsset = CAsset(tx);
+        theAsset = CAsset(txRef);
         if(theAsset.IsNull()) {
             return FormatSyscoinErrorMessage(state, "asset-unserialize", bSanityCheck);
         }
     }
-    const unsigned int &nOut = GetSyscoinDataOutput(tx);
+    const unsigned int &nOut = GetSyscoinDataOutput(txRef);
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "asset-missing-burn-output", bSanityCheck);
     } 
-    const CAssetAllocation & allocation = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND ? theAssetAllocation : theAsset.assetAllocation;
-    if(allocation.voutAssets.size() != 1) {
+    if(tx.voutAssets.size() != 1) {
         return FormatSyscoinErrorMessage(state, "asset-invalid-vout-map-size", bSanityCheck);
     }
-    auto it = allocation.voutAssets.begin();
+    auto it = tx.voutAssets.begin();
     const int32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
     CAsset dbAsset;
@@ -614,10 +640,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
             }
             if (theAsset.nPrecision != storedAssetRef.nPrecision) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
-            }
-            if (theAsset.strSymbol != storedAssetRef.strSymbol) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
-            }         
+            }      
             if (theAsset.nBalance > 0 && !(storedAssetRef.nUpdateFlags & ASSET_UPDATE_SUPPLY)) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
             }          
@@ -675,7 +698,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CAssetAllocation &theAssetAl
     
     if (!bSanityCheck) {
         LogPrint(BCLog::SYS,"CONNECTED ASSET: tx=%s asset=%d hash=%s height=%d fJustCheck=%s\n",
-                assetFromTx(tx.nVersion).c_str(),
+                stringFromSyscoinTx(tx.nVersion).c_str(),
                 nAsset,
                 txHash.ToString().c_str(),
                 nHeight,
@@ -688,7 +711,7 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     uint32_t fNewGethCurrentHeight = fGethCurrentHeight;
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
-    vector<uint32_t> vecHeightKeys;
+    std::vector<uint32_t> vecHeightKeys;
     uint32_t nKey = 0;
     uint32_t cutoffHeight = 0;
     if(fNewGethSyncHeight > 0) {
@@ -727,7 +750,7 @@ bool CEthereumTxRootsDB::Init() {
 }
 bool CEthereumTxRootsDB::Clear() {
     LOCK(cs_setethstatus);
-    vector<uint32_t> vecHeightKeys;
+    std::vector<uint32_t> vecHeightKeys;
     uint32_t nKey = 0;
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
@@ -752,7 +775,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     LOCK(cs_setethstatus);
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
-    vector<uint32_t> vecHeightKeys;
+    std::vector<uint32_t> vecHeightKeys;
     uint32_t nKey = 0;
     uint32_t nKeyIndex = 0;
     uint32_t nCurrentSyncHeight = 0;
@@ -786,7 +809,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
         }
     }
     if(mapTxRoots.size() < 2) {
-        vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nCurrentSyncHeight));
+        vecMissingBlockRanges.emplace_back(std::make_pair(nKeyCutoff, nCurrentSyncHeight));
         return;
     }
     auto setIt = mapTxRoots.begin();
@@ -794,7 +817,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     setIt++;
     // we should have at least DOWNLOAD_ETHEREUM_TX_ROOTS roots available from the tip for consensus checks
     if(nCurrentSyncHeight >= DOWNLOAD_ETHEREUM_TX_ROOTS && nKeyIndex > nKeyCutoff) {
-        vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nKeyIndex-1));
+        vecMissingBlockRanges.emplace_back(std::make_pair(nKeyCutoff, nKeyIndex-1));
     }
     std::vector<unsigned char> vchPrevHash;
     std::vector<uint32_t> vecRemoveKeys;
@@ -803,7 +826,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
             const uint32_t &key = setIt->first;
             const uint32_t &nNextKeyIndex = nKeyIndex+1;
             if (key != nNextKeyIndex && (key-1) >= nNextKeyIndex)
-                vecMissingBlockRanges.emplace_back(make_pair(nNextKeyIndex, key-1));
+                vecMissingBlockRanges.emplace_back(std::make_pair(nNextKeyIndex, key-1));
             // if continious index we want to ensure hash chain is also continious
             else {
                 // if prevhash of prev txroot != hash of this tx root then request inconsistent roots again
@@ -813,7 +836,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
                 if(txRoot.vchPrevHash != txRootPrev.vchBlockHash){
                     // get a range of -50 to +50 around effected tx root to minimize chance that you will be requesting 1 root at a time in a long range fork
                     // this is fine because relayer fetches hundreds headers at a time anyway
-                    vecMissingBlockRanges.emplace_back(make_pair(std::max(0,(int32_t)key-50), std::min((int32_t)key+50, (int32_t)nCurrentSyncHeight)));
+                    vecMissingBlockRanges.emplace_back(std::make_pair(std::max(0,(int32_t)key-50), std::min((int32_t)key+50, (int32_t)nCurrentSyncHeight)));
                     vecRemoveKeys.push_back(key);
                 }
             }
@@ -870,4 +893,20 @@ bool CEthereumMintedTxDB::FlushErase(const EthereumMintTxMap &mapMintKeys) {
     }
     LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx mints\n", mapMintKeys.size());
     return WriteBatch(batch);
+}
+bool FlushSyscoinDBs() {
+    bool ret = true;
+     if (pethereumtxrootsdb != nullptr)
+     {
+        if(!pethereumtxrootsdb->PruneTxRoots(fGethCurrentHeight))
+        {
+            LogPrintf("Failed to write to prune Ethereum TX Roots database!\n");
+            ret = false;
+        }
+        if (!pethereumtxrootsdb->Flush()) {
+            LogPrintf("Failed to write to ethereum tx root database!\n");
+            ret = false;
+        } 
+     }
+	return ret;
 }
