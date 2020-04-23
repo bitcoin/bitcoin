@@ -1196,9 +1196,8 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
 /* ************************************************************************** */
 /* Merge mining.  */
 
- std::unique_ptr<AuxpowMiner> g_auxpow_miner;
 
- UniValue createauxblock(const JSONRPCRequest& request)
+UniValue createauxblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -1235,10 +1234,10 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
     }
     const CScript scriptPubKey = GetScriptForDestination(coinbaseScript);
 
-     return g_auxpow_miner->createAuxBlock(scriptPubKey);
+    return AuxpowMiner::get ().createAuxBlock(scriptPubKey);
 }
 
- UniValue submitauxblock(const JSONRPCRequest& request)
+UniValue submitauxblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
@@ -1256,8 +1255,7 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
                     + HelpExampleRpc("submitauxblock", "\"hash\" \"serialised auxpow\"")
                 },
             }.ToString());
-
-     return g_auxpow_miner->submitAuxBlock(request.params[0].get_str(),
+     return AuxpowMiner::get ().submitAuxBlock(request.params[0].get_str(),
                                           request.params[1].get_str());
 }
 

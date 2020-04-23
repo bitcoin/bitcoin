@@ -13,7 +13,6 @@
 #include <policy/fees.h>
 #include <policy/rbf.h>
 #include <rpc/auxpow_miner.h>
-#include <rpc/mining.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
