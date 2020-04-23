@@ -379,7 +379,6 @@ libsyscoin_server_a_SOURCES = \
   policy/rbf.cpp \
   policy/settings.cpp \
   pow.cpp \
-  primitives/transaction.cpp \
   rest.cpp \
   rpc/auxpow_miner.cpp \
   rpc/blockchain.cpp \
@@ -571,6 +570,7 @@ libsyscoin_common_a_SOURCES = \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/standard.cpp \
+  services/asset.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
   $(SYSCOIN_CORE_H)
