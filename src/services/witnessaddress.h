@@ -1,7 +1,6 @@
 ﻿#ifndef SYSCOIN_SERVICES_WITNESSADDRESS_H
 #define SYSCOIN_SERVICES_WITNESSADDRESS_H
 #include <serialize.h>
-#include <script/standard.h>
 class CWitnessAddress{
 public:
     unsigned char nVersion;

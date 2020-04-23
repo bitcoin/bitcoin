@@ -7,13 +7,10 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <ethereum/ethereum.h>
-#include <ethereum/sha3.h>
 #include <ethereum/address.h>
-#include <ethereum/common.h>
-#include <ethereum/commondata.h>
 #include <services/witnessaddress.h>
 #include <services/asset.h>
-
+#include <script/standard.h>
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 extern RecursiveMutex cs_setethstatus;
