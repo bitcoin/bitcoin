@@ -10,7 +10,7 @@
 #include <util/strencodings.h>
 #include <assert.h>
 // SYSCOIN
-#include <services/asset.h>
+#include <dbwrapper.h>
 #include <consensus/validation.h>
 #include <pubkey.h>
 #include <script/standard.h>
