@@ -398,7 +398,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if(vecVout.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-burn-invalid-vout-size", bSanityCheck);
             } 
-            if(vecVout[0].n != nOut) {
+            if(vecVout[0].n != (unsigned int)nOut) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-wrong-burn-index", bSanityCheck);
             }
             const CAmount &nBurnAmount = vecVout[0].nValue;
