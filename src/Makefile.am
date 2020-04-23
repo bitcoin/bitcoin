@@ -550,6 +550,7 @@ libsyscoin_common_a_SOURCES = \
   coins.cpp \
   core_read.cpp \
   core_write.cpp \
+  dbwrapper.cpp \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
@@ -569,6 +570,7 @@ libsyscoin_common_a_SOURCES = \
   script/signingprovider.cpp \
   script/standard.cpp \
   services/asset.cpp \
+  services/assetconsensus.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
   $(SYSCOIN_CORE_H)
