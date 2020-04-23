@@ -584,6 +584,7 @@ libsyscoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_util_a_SOURCES = \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
+  chainparams.cpp \
   clientversion.cpp \
   compat/glibc_sanity_fdelt.cpp \
   compat/glibc_sanity.cpp \
