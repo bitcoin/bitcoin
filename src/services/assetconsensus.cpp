@@ -354,7 +354,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
             fJustCheck ? "JUSTCHECK" : "BLOCK", bSanityCheck? 1: 0);
         
-    const unsigned int &nOut = GetSyscoinDataOutput(tx);
+    const int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
     }
@@ -435,7 +435,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
     auto it = tx.voutAssets.begin();
     const int32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
-    const unsigned int &nOut = GetSyscoinDataOutput(tx);
+    const int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not find data output\n");
         return false;
@@ -530,7 +530,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             return FormatSyscoinErrorMessage(state, "asset-unserialize", bSanityCheck);
         }
     }
-    const unsigned int &nOut = GetSyscoinDataOutput(tx);
+    const int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "asset-missing-burn-output", bSanityCheck);
     } 

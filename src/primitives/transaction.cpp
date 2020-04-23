@@ -265,7 +265,7 @@ bool IsSyscoinWithNoInputTx(const int &nVersion) {
     return nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
 }
 
-unsigned int GetSyscoinDataOutput(const CTransaction& tx) {
+int GetSyscoinDataOutput(const CTransaction& tx) {
 	for (unsigned int i = 0; i<tx.vout.size(); i++) {
 		if (tx.vout[i].scriptPubKey.IsUnspendable())
 			return i;
