@@ -716,7 +716,7 @@ endif
 
 syscoin_wallet_LDADD = \
   $(LIBSYSCOIN_WALLET_TOOL) \
-  $($(syscoind_LDADD))
+  $(syscoind_LDADD)
 
 #
 
