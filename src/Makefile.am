@@ -700,7 +700,7 @@ if TARGET_WINDOWS
 syscoin_tx_SOURCES += syscoin-tx-res.rc
 endif
 
-syscoin_tx_LDADD = $(syscoind_LDADD)
+syscoin_tx_LDADD = $(LIBSYSCOIN_WALLET) $(syscoind_LDADD)
 
   
 #
