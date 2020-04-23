@@ -379,6 +379,7 @@ libsyscoin_server_a_SOURCES = \
   policy/rbf.cpp \
   policy/settings.cpp \
   pow.cpp \
+  primitives/transaction.cpp \
   rest.cpp \
   rpc/auxpow_miner.cpp \
   rpc/blockchain.cpp \
