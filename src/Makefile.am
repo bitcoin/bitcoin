@@ -545,7 +545,6 @@ libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
   auxpow.cpp \
-  services/asset.cpp \
   base58.cpp \
   bech32.cpp \
   bloom.cpp \
@@ -554,7 +553,6 @@ libsyscoin_common_a_SOURCES = \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
-  dbwrapper.cpp \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
