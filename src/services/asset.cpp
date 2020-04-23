@@ -144,26 +144,3 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx) {
     }
     return true;
 }
-
-bool CAssetDB::Flush(const AssetMap &mapAssets){
-    if(mapAssets.empty()) {
-        return true;
-	}
-	int write = 0;
-	int erase = 0;
-    CDBBatch batch(*this);
-    std::map<std::string, std::vector<int32_t> > mapGuids;
-    std::vector<int32_t> emptyVec;
-    for (const auto &key : mapAssets) {
-		if (key.second.IsNull()) {
-			erase++;
-			batch.Erase(key.first);
-		}
-		else {
-			write++;
-			batch.Write(key.first, key.second);
-		}
-    }
-    LogPrint(BCLog::SYS, "Flushing %d assets (erased %d, written %d)\n", mapAssets.size(), erase, write);
-    return WriteBatch(batch);
-}
