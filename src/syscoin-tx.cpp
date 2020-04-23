@@ -29,13 +29,9 @@
 #include <stdio.h>
 
 #include <boost/algorithm/string.hpp>
-// SYSCOIN
-#include <util/url.h>
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
 static const int CONTINUE_EXECUTION=-1;
-// SYSCOIN
-UrlDecodeFn* const URL_DECODE = urlDecode;
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 static void SetupSyscoinTxArgs()
