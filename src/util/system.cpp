@@ -999,8 +999,6 @@ bool StopGethNode(pid_t &pid)
 {
     if(pid < 0)
         return false;
-    if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
-        return true;
     if(pid){
         try{
             KillProcess(pid);
@@ -1030,8 +1028,6 @@ bool StopGethNode(pid_t &pid)
     return true;
 }
 bool CheckSpecs(std::string &errMsg, bool bMiner){
-    if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
-        return true;
     meminfo_t memInfo = parse_meminfo();
     LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
     if(memInfo.MemTotalMiB < (bMiner? 8000: 3800))
@@ -1046,8 +1042,6 @@ bool CheckSpecs(std::string &errMsg, bool bMiner){
 }
 bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
 {
-    if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
-        return true;
     LogPrintf("%s: Starting geth on wsport %d rpcport %d (testnet=%d)...\n", __func__, websocketport, ethrpcport, bGethTestnet? 1:0);
     std::string gethFilename = GetGethFilename();
     
@@ -1248,8 +1242,6 @@ bool StopRelayerNode(pid_t &pid)
 {
     if(pid < 0)
         return false;
-    if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
-        return true;
     if(pid){
         try{
             KillProcess(pid);
@@ -1280,10 +1272,7 @@ bool StopRelayerNode(pid_t &pid)
 }
 
 bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int websocketport, int ethrpcport)
-{
-    if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
-        return true;
-    
+{   
     std::string relayerFilename = GetRelayerFilename();
     // stop any relayer process  before starting
     StopRelayerNode(pid);

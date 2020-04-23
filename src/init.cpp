@@ -352,8 +352,10 @@ void Shutdown(NodeContext& node)
     node.args = nullptr;
     if (node.mempool) node.mempool = nullptr;
     // SYSCOIN
-	StopRelayerNode(relayerPID);
-    StopGethNode(gethPID);
+    if(Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+        StopRelayerNode(relayerPID);
+        StopGethNode(gethPID);
+    }
     node.scheduler.reset();
 
     try {
