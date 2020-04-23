@@ -408,13 +408,13 @@ void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
     vchData = std::vector<unsigned char>(dsBurn.begin(), dsBurn.end());
 }
 
-template<typename Stream, typename AssetOutType>
+template<typename AssetOutType, typename Stream>
 void SerializeAssetOut(AssetOutType& assetOut, Stream& s) {
     s << VARINT(assetOut.n);
     ::Serialize(s, Using<AmountCompression>(assetOut.nValue));	
 }
 
-template<typename Stream, typename AssetOutType>
+template<typename AssetOutType, typename Stream>
 void UnserializeAssetOut(AssetOutType& assetOut, Stream& s) {
     s >> VARINT(assetOut.n);
     ::Unserialize(s, Using<AmountCompression>(assetOut.nValue));	
