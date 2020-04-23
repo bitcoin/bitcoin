@@ -34,7 +34,6 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <rpc/auxpow_miner.h>
-#include <rpc/mining.h>
 #include <policy/settings.h>
 #include <rpc/blockchain.h>
 #include <rpc/register.h>
@@ -256,10 +255,7 @@ void Shutdown(NodeContext& node)
         LOCK2(::cs_main, ::g_cs_orphans);
         node.connman->StopNodes();
     }
-    // SYSCOIN
-    if (g_auxpow_miner != nullptr) {
-        g_auxpow_miner.reset();
-    }
+
     StopTorControl();
 
     // After everything has been shut down, but before things get flushed, stop the
@@ -1437,7 +1433,6 @@ bool AppInitMain(NodeContext& node)
 #if ENABLE_ZMQ
     RegisterZMQRPCCommands(tableRPC);
 #endif
-    g_auxpow_miner.reset(new AuxpowMiner());
 
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
