@@ -33,7 +33,6 @@
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-#include <rpc/auxpow_miner.h>
 #include <policy/settings.h>
 #include <rpc/blockchain.h>
 #include <rpc/register.h>
