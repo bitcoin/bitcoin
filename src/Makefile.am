@@ -708,7 +708,9 @@ syscoin_tx_LDADD = \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
-  $(LIBSECP256K1)
+  $(LIBMEMENV) \
+  $(LIBSECP256K1) \
+  $(LIBETHEREUM)
 
 syscoin_tx_LDADD += $(BOOST_LIBS)
   
