@@ -150,7 +150,6 @@ SYSCOIN_CORE_H = \
   compat/cpuid.h \
   compat/endian.h \
   compat/sanity.h \
-  compressor.h \
   consensus/consensus.h \
   consensus/tx_check.h \
   consensus/tx_verify.h \
@@ -512,7 +511,6 @@ libsyscoin_consensus_a_SOURCES = \
   consensus/params.h \
   consensus/tx_check.cpp \
   consensus/validation.h \
-  compressor.cpp \
   hash.cpp \
   hash.h \
   prevector.h \
@@ -550,7 +548,6 @@ libsyscoin_common_a_SOURCES = \
   bloom.cpp \
   chainparams.cpp \
   coins.cpp \
-  compressor.cpp \
   core_read.cpp \
   core_write.cpp \
   dbwrapper.cpp \

@@ -7,7 +7,6 @@
 #define SYSCOIN_COINS_H
 
 #include <primitives/transaction.h>
-#include <compressor.h>
 #include <core_memusage.h>
 #include <crypto/siphash.h>
 #include <memusage.h>
