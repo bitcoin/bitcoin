@@ -54,8 +54,8 @@ bool CWitnessAddress::IsValid() const {
 bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, EthereumMintTxMap &mapMintKeys)
 {
     if (!bSanityCheck)
-        LogPrint(BCLog::SYS,"*** ASSET MINT %d %d %s %s bSanityCheck=%d\n", nHeight,
-            ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
+        LogPrint(BCLog::SYS,"*** ASSET MINT %d %s %s bSanityCheck=%d\n", nHeight,
+            txHash.ToString().c_str(),
             fJustCheck ? "JUSTCHECK" : "BLOCK", bSanityCheck? 1: 0);
     // unserialize mint object from txn, check for valid
     CMintSyscoin mintSyscoin(tx);
@@ -351,8 +351,8 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
         const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck) {
     if (!bSanityCheck)
-        LogPrint(BCLog::SYS,"*** ASSET ALLOCATION %d %d %s %s bSanityCheck=%d\n", nHeight,
-            ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
+        LogPrint(BCLog::SYS,"*** ASSET ALLOCATION %d %s %s bSanityCheck=%d\n", nHeight,
+            txHash.ToString().c_str(),
             fJustCheck ? "JUSTCHECK" : "BLOCK", bSanityCheck? 1: 0);
         
     const int &nOut = GetSyscoinDataOutput(tx);
@@ -518,8 +518,8 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     if (passetdb == nullptr)
         return false;
     if (!bSanityCheck)
-        LogPrint(BCLog::SYS, "*** ASSET %d %d %s %s\n", nHeight,
-            ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
+        LogPrint(BCLog::SYS, "*** ASSET %d %s %s\n", nHeight,
+            txHash.ToString().c_str(),
             fJustCheck ? "JUSTCHECK" : "BLOCK");
 
     // unserialize asset from txn, check for valid
