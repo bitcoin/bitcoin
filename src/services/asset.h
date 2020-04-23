@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_SERVICES_ASSET_H
 #define SYSCOIN_SERVICES_ASSET_H
 #include <primitives/transaction.h>
-
+#include <dbwrapper.h>
 static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_VALUE_LENGTH = 512;
 static const int64_t MAINNET_MAX_MINT_AGE = 604800; // 1 week in seconds

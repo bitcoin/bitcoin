@@ -11,8 +11,6 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
-// SYSCOIN
-#include <dbwrapper.h>
 class TxValidationState;
 class CAsset;
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
