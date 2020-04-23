@@ -205,7 +205,7 @@ jobs:
         run: |
           (
           cd /tmp;
-          wget https://github.com/overcookedpanda/alt-integration-cpp/archive/${ALTINTEGRATION_VERSION}.tar.gz;
+          wget https://github.com/VeriBlock/alt-integration-cpp/archive/${ALTINTEGRATION_VERSION}.tar.gz;
           tar -xf ${ALTINTEGRATION_VERSION}.tar.gz;
           cd alt-integration-cpp-${ALTINTEGRATION_VERSION};
           mkdir build;
@@ -223,20 +223,20 @@ jobs:
           --disable-gmock
       - name: make
         run: make -j2
-      - name: create artifacts
-        if: success()
-        run: |
-          mv ./release vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-macosx-qt-x64.zip vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
-      - name: upload artifacts
-        if: success()
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.ARTIFACT_HOST }}
-          username: ${{ secrets.ARTIFACT_USER }}
-          key: ${{ secrets.ARTIFACT_KEY }}
-          passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-macosx-qt-x64.tar.gz
-          target: ${{ secrets.ARTIFACT_PATH }}
+#      - name: create artifacts
+#        if: success()
+#        run: |
+#          mv ./release vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
+#          zip -r9 vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-macosx-qt-x64.zip vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
+#      - name: upload artifacts
+#        if: success()
+#        uses: appleboy/scp-action@master
+#        with:
+#          host: ${{ secrets.ARTIFACT_HOST }}
+#          username: ${{ secrets.ARTIFACT_USER }}
+#          key: ${{ secrets.ARTIFACT_KEY }}
+#          passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
+#          source: vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-macosx-qt-x64.tar.gz
+#          target: ${{ secrets.ARTIFACT_PATH }}
       - name: make check
         run: make check
