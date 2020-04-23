@@ -5,7 +5,6 @@
 #ifndef SYSCOIN_SERVICES_ASSET_H
 #define SYSCOIN_SERVICES_ASSET_H
 #include <primitives/transaction.h>
-#include <dbwrapper.h>
 static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_VALUE_LENGTH = 512;
 static const int64_t MAINNET_MAX_MINT_AGE = 604800; // 1 week in seconds
@@ -97,18 +96,7 @@ public:
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
-class CAssetDB : public CDBWrapper {
-public:
-    CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {}
-    bool EraseAsset(const int32_t& nAsset) {
-        return Erase(nAsset);
-    }   
-    bool ReadAsset(const int32_t& nAsset, CAsset& asset) {
-        return Read(nAsset, asset);
-    }  	
-    bool Flush(const AssetMap &mapAssets);
-};
+
 static CAsset emptyAsset;
 bool GetAsset(const int32_t &nAsset,CAsset& txPos);
-extern std::unique_ptr<CAssetDB> passetdb;
 #endif // SYSCOIN_SERVICES_ASSET_H

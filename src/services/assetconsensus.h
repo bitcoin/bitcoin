@@ -42,6 +42,7 @@ public:
     bool FlushErase(const std::vector<uint32_t> &vecHeightKeys);
     bool FlushWrite(const EthereumTxRootMap &mapTxRoots);
 };
+
 class CEthereumMintedTxDB : public CDBWrapper {
 public:
     CEthereumMintedTxDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "ethereumminttx", nCacheSize, fMemory, fWipe) {
@@ -49,6 +50,19 @@ public:
     bool FlushErase(const EthereumMintTxMap &mapMintKeys);
     bool FlushWrite(const EthereumMintTxMap &mapMintKeys);
 };
+
+class CAssetDB : public CDBWrapper {
+public:
+    CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {}
+    bool EraseAsset(const int32_t& nAsset) {
+        return Erase(nAsset);
+    }   
+    bool ReadAsset(const int32_t& nAsset, CAsset& asset) {
+        return Read(nAsset, asset);
+    }  	
+    bool Flush(const AssetMap &mapAssets);
+};
+extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 extern std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);

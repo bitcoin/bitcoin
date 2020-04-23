@@ -550,7 +550,6 @@ libsyscoin_common_a_SOURCES = \
   coins.cpp \
   core_read.cpp \
   core_write.cpp \
-  dbwrapper.cpp \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
