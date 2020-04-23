@@ -72,7 +72,7 @@ jobs:
         if: success()
         run: |
           mv ./release vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
-          tar czvf vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-linux-qt-x64.tar.gz vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}/
+          tar czvf vbtc-nightly-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-linux-qt-x64.tar.gz vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}/
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -81,7 +81,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-linux-qt-x64.tar.gz
+          source: vbtc-nightly-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-linux-qt-x64.tar.gz
           target: ${{ secrets.ARTIFACT_PATH }}
       - name: make check
         timeout-minutes: 20
@@ -211,7 +211,7 @@ jobs:
         if: success()
         run: |
           mv ./release vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-windows-qt-x64.zip vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vbtc-nightly-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-windows-qt-x64.zip vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts
         if: success()
         uses: appleboy/scp-action@master
@@ -220,7 +220,7 @@ jobs:
           username: ${{ secrets.ARTIFACT_USER }}
           key: ${{ secrets.ARTIFACT_KEY }}
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vbtc-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-windows-qt-x64.zip
+          source: vbtc-nightly-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.git_hash }}-windows-qt-x64.zip
           target: ${{ secrets.ARTIFACT_PATH }}
 
   macos:
@@ -259,7 +259,7 @@ jobs:
         run: |
           (
           cd /tmp;
-          wget https://github.com/overcookedpanda/alt-integration-cpp/archive/${ALTINTEGRATION_VERSION}.tar.gz;
+          wget https://github.com/VeriBlock/alt-integration-cpp/archive/${ALTINTEGRATION_VERSION}.tar.gz;
           tar -xf ${ALTINTEGRATION_VERSION}.tar.gz;
           cd alt-integration-cpp-${ALTINTEGRATION_VERSION};
           mkdir build;
