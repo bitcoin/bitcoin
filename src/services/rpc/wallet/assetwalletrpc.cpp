@@ -15,7 +15,6 @@
 #include <consensus/validation.h>
 #include <wallet/coincontrol.h>
 #include <rpc/server.h>
-#include <wallet/wallet.h>
 #include <chainparams.h>
 #include <util/moneystr.h>
 #include <core_io.h>
