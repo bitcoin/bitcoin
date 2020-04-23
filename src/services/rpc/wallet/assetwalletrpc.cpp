@@ -179,30 +179,10 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
 }
 
 void TestTransaction(const CTransactionRef& tx) {
-    AssertLockHeld(cs_main);
-    CTxMemPool& mempool = EnsureMemPool();
-    int64_t virtual_size = GetVirtualTransactionSize(*tx);
-    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(virtual_size);
 
-    TxValidationState state;
-    bool test_accept_res = AcceptToMemoryPool(mempool, state, tx,
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
-
-    if (!test_accept_res) {
-        if (state.IsInvalid()) {
-            if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "missing-inputs");
-            } else {
-                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("%s", state.ToString()));
-            }
-        } else {
-            throw JSONRPCError(RPC_WALLET_ERROR, state.ToString());
-        }
-    }
 }
 
 UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
-    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -289,7 +269,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 }
 
 UniValue assetnew(const JSONRPCRequest& request) {
-    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -543,7 +522,6 @@ UniValue CreateAssetUpdateTx(interfaces::Chain::Lock& locked_chain, const int32_
 }
 
 UniValue assetupdate(const JSONRPCRequest& request) {
-    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -637,7 +615,6 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 }
 
 UniValue assettransfer(const JSONRPCRequest& request) {
-    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -685,7 +662,6 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 }
 
 UniValue assetsendmany(const JSONRPCRequest& request) {
-    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -815,7 +791,6 @@ UniValue assetsend(const JSONRPCRequest& request) {
 }
 
 UniValue assetallocationsendmany(const JSONRPCRequest& request) {
-    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -954,7 +929,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 }
 
 UniValue assetallocationburn(const JSONRPCRequest& request) {
-    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
@@ -1042,7 +1016,6 @@ std::vector<unsigned char> ushortToBytes(unsigned short paramShort) {
 }
 
 UniValue assetallocationmint(const JSONRPCRequest& request) {
-    LOCK2(cs_main, ::mempool.cs);
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     auto locked_chain = pwallet->chain().lock();
