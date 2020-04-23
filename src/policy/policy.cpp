@@ -9,8 +9,6 @@
 
 #include <consensus/validation.h>
 #include <coins.h>
-// SYSCOIN
-#include <services/assetconsensus.h>
 CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {
     // "Dust" is defined in terms of dustRelayFee,
