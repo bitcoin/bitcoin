@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_SERVICES_ASSETCONSENSUS_H
 #define SYSCOIN_SERVICES_ASSETCONSENSUS_H
 #include <primitives/transaction.h>
-
+#include <dbwrapper.h>
 class TxValidationState;
 class CCoinsViewCache;
 class EthereumTxRoot {
