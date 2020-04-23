@@ -60,7 +60,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
             fJustCheck ? "JUSTCHECK" : "BLOCK", bSanityCheck? 1: 0);
     // unserialize mint object from txn, check for valid
-    CMintSyscoin mintSyscoin(MakeTransactionRef(tx));
+    CMintSyscoin mintSyscoin(tx);
     if(mintSyscoin.IsNull()) {
         return FormatSyscoinErrorMessage(state, "mint-unserialize", bSanityCheck);
     }
@@ -316,7 +316,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
     return good;
 }
 bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, EthereumMintTxMap &mapMintKeys){
-    CMintSyscoin mintSyscoin(MakeTransactionRef(tx));
+    CMintSyscoin mintSyscoin(tx);
     if(mintSyscoin.IsNull()) {
         LogPrint(BCLog::SYS,"DisconnectMintAsset: Cannot unserialize data inside of this transaction relating to an assetallocationmint\n");
         return false;
@@ -357,7 +357,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
             fJustCheck ? "JUSTCHECK" : "BLOCK", bSanityCheck? 1: 0);
         
-    const unsigned int &nOut = GetSyscoinDataOutput(MakeTransactionRef(tx));
+    const unsigned int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
     }
@@ -438,7 +438,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
     auto it = tx.voutAssets.begin();
     const int32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
-    const unsigned int &nOut = GetSyscoinDataOutput(MakeTransactionRef(tx));
+    const unsigned int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not find data output\n");
         return false;
@@ -470,7 +470,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
 }
 bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     CAsset dbAsset;
-    CAsset theAsset(MakeTransactionRef(tx));
+    CAsset theAsset(tx);
     if(theAsset.IsNull()) {
         LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not decode asset\n");
         return false;
@@ -527,14 +527,13 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     // unserialize asset from txn, check for valid
     CAsset theAsset;
     std::vector<unsigned char> vchData;
-    const CTransactionRef &txRef = MakeTransactionRef(tx);
     if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND) {
-        theAsset = CAsset(txRef);
+        theAsset = CAsset(tx);
         if(theAsset.IsNull()) {
             return FormatSyscoinErrorMessage(state, "asset-unserialize", bSanityCheck);
         }
     }
-    const unsigned int &nOut = GetSyscoinDataOutput(txRef);
+    const unsigned int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "asset-missing-burn-output", bSanityCheck);
     } 

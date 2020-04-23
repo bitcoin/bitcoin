@@ -44,7 +44,7 @@ public:
     CAsset() {
         SetNull();
     }
-    explicit CAsset(const CTransactionRef &tx) {
+    explicit CAsset(const CTransaction &tx) {
         SetNull();
         UnserializeFromTx(tx);
     }
@@ -74,7 +74,7 @@ public:
     }
     inline void SetNull() { ClearAsset(); nPrecision = 8; nMaxSupply = -1; nTotalSupply = -1; nBalance = -1; }
     inline bool IsNull() const { return (nBalance == -1 && nTotalSupply == -1 && nMaxSupply == -1); }
-    bool UnserializeFromTx(const CTransactionRef &tx);
+    bool UnserializeFromTx(const CTransaction &tx);
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     void SerializeData(std::vector<unsigned char>& vchData);
 };

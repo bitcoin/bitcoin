@@ -267,7 +267,7 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
     GetTransaction(rawTx->GetHash(), rawTx, Params().GetConsensus(), hashBlock, blockindex);
 
     UniValue output(UniValue::VOBJ);
-    if(!DecodeSyscoinRawtransaction(rawTx, hashBlock, output))
+    if(!DecodeSyscoinRawtransaction(*rawTx, hashBlock, output))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Not a Syscoin transaction");
     return output;
 }

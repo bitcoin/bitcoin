@@ -16,15 +16,15 @@
 #include <util/strencodings.h>
 // SYSCOIN
 #include <services/asset.h>
-bool AssetAllocationTxToJSON(const CTransactionRef &tx, const uint256& hashBlock, UniValue &entry) {
-    const uint256& txHash = tx->GetHash();
-    entry.__pushKV("txtype", stringFromSyscoinTx(tx->nVersion));
+bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, UniValue &entry) {
+    const uint256& txHash = tx.GetHash();
+    entry.__pushKV("txtype", stringFromSyscoinTx(tx.nVersion));
     entry.__pushKV("txid", txHash.GetHex());
     entry.__pushKV("blockhash", hashBlock.GetHex());  
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;
     CAsset dbAsset;
-    for(const auto &it: tx->voutAssets) {
+    for(const auto &it: tx.voutAssets) {
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
         const int32_t &nAsset = it.first;
         GetAsset(nAsset, dbAsset);
@@ -44,7 +44,7 @@ bool AssetAllocationTxToJSON(const CTransactionRef &tx, const uint256& hashBlock
     }
 
     entry.__pushKV("allocations", oAssetAllocationReceiversArray);
-    if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
          CBurnSyscoin burnSyscoin(tx);
          entry.__pushKV("ethereum_destination", "0x" + HexStr(burnSyscoin.vchEthAddress));
          entry.__pushKV("ethereum_contract", "0x" + HexStr(dbAsset.vchContract));
@@ -53,7 +53,7 @@ bool AssetAllocationTxToJSON(const CTransactionRef &tx, const uint256& hashBlock
 }
 
 
-bool AssetMintTxToJson(const CTransactionRef& tx, const uint256& txHash, const uint256& hashBlock, UniValue &entry) {
+bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint256& hashBlock, UniValue &entry) {
     CMintSyscoin mintSyscoin(tx);
     if (!mintSyscoin.IsNull()) {
         entry.__pushKV("txtype", "assetallocationmint");
@@ -61,7 +61,7 @@ bool AssetMintTxToJson(const CTransactionRef& tx, const uint256& txHash, const u
         entry.__pushKV("blockhash", hashBlock.GetHex());  
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
         CAmount nTotal = 0;
-        for(const auto &it: tx->voutAssets) {
+        for(const auto &it: tx.voutAssets) {
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
             const int32_t &nAsset = it.first;
             CAsset dbAsset;
@@ -97,15 +97,15 @@ bool AssetMintTxToJson(const CTransactionRef& tx, const uint256& txHash, const u
     } 
     return false;
 }
-bool AssetTxToJSON(const CTransactionRef& tx, const uint256 &hashBlock, UniValue &entry) {
+bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &entry) {
 	CAsset asset(tx);
 	if(asset.IsNull())
 		return false;
     CAsset dbAsset;
     const int32_t &nAsset = asset.assetAllocation.voutAssets.begin()->first;
     GetAsset(nAsset, dbAsset);
-    entry.__pushKV("txtype", stringFromSyscoinTx(tx->nVersion));
-    entry.__pushKV("txid", tx->GetHash().GetHex());  
+    entry.__pushKV("txtype", stringFromSyscoinTx(tx.nVersion));
+    entry.__pushKV("txid", tx.GetHash().GetHex());  
     entry.__pushKV("blockhash", hashBlock.GetHex());  
 	entry.__pushKV("asset_guid", nAsset);
     entry.__pushKV("symbol", dbAsset.strSymbol);
@@ -121,28 +121,28 @@ bool AssetTxToJSON(const CTransactionRef& tx, const uint256 &hashBlock, UniValue
 	if (asset.nBalance > 0)
 		entry.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, dbAsset.nPrecision));
 
-	if (tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
 		entry.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
         entry.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
 		entry.__pushKV("precision", asset.nPrecision);
 	}
     return true;
 }
-bool SysTxToJSON(const CTransactionRef& tx, const uint256 &hashBlock, UniValue& output) {
+bool SysTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue& output) {
     bool found = false;
-    if (IsAssetTx(tx->nVersion) && tx->nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
+    if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetTxToJSON(tx, hashBlock, output);
-    else if (IsAssetAllocationTx(tx->nVersion) || tx->nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
+    else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetAllocationTxToJSON(tx, hashBlock, output);
     return found;
 }
 
-bool DecodeSyscoinRawtransaction(const CTransactionRef& rawTx, const uint256 &hashBlock, UniValue& output) {
+bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, const uint256 &hashBlock, UniValue& output) {
     bool found = false;
-    if(IsSyscoinMintTx(rawTx->nVersion)) {
-        found = AssetMintTxToJson(rawTx, rawTx->GetHash(), hashBlock, output);
+    if(IsSyscoinMintTx(rawTx.nVersion)) {
+        found = AssetMintTxToJson(rawTx, rawTx.GetHash(), hashBlock, output);
     }
-    else if (IsAssetTx(rawTx->nVersion) || IsAssetAllocationTx(rawTx->nVersion)) {
+    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion)) {
         found = SysTxToJSON(rawTx, hashBlock, output);
     }
     
@@ -380,7 +380,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     entry.pushKV("vout", vout);
     // SYSCOIN
     UniValue output(UniValue::VOBJ);
-    if(DecodeSyscoinRawtransaction(MakeTransactionRef(tx), hashBlock, output))
+    if(DecodeSyscoinRawtransaction(tx, hashBlock, output))
         entry.pushKV("systx", output);
     if (!hashBlock.IsNull())
         entry.pushKV("blockhash", hashBlock.GetHex());

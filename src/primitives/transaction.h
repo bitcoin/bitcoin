@@ -550,11 +550,10 @@ public:
 	CAssetAllocation() {
 		SetNull();
 	}
-	explicit CAssetAllocation(const CTransactionRef &tx) {
+    explicit CAssetAllocation(const CTransaction &tx) {
 		SetNull();
 		UnserializeFromTx(tx);
 	}
-	
 	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return (a.voutAssets == b.voutAssets
 			);
@@ -569,7 +568,7 @@ public:
 	}
 	inline void SetNull() { voutAssets.clear();}
     inline bool IsNull() const { return voutAssets.empty();}
-	bool UnserializeFromTx(const CTransactionRef &tx);
+    bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	void SerializeData(std::vector<unsigned char>& vchData);
 };
@@ -590,7 +589,7 @@ public:
     CMintSyscoin() {
         SetNull();
     }
-    explicit CMintSyscoin(const CTransactionRef &tx) {
+    explicit CMintSyscoin(const CTransaction &tx) {
         SetNull();
         UnserializeFromTx(tx);
     }
@@ -628,7 +627,7 @@ public:
     inline void SetNull() { assetAllocation.SetNull(); vchTxRoot.clear(); vchTxValue.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); vchReceiptRoot.clear(); vchReceiptValue.clear(); vchReceiptParentNodes.clear(); vchReceiptPath.clear(); nBridgeTransferID = 0; nBlockNumber = 0;  }
     inline bool IsNull() const { return (vchTxValue.empty() && vchReceiptValue.empty()); }
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
-    bool UnserializeFromTx(const CTransactionRef &tx);
+    bool UnserializeFromTx(const CTransaction &tx);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
 class CBurnSyscoin {
@@ -638,7 +637,7 @@ public:
     CBurnSyscoin() {
         SetNull();
     }
-    explicit CBurnSyscoin(const CTransactionRef &tx) {
+    explicit CBurnSyscoin(const CTransaction &tx) {
         SetNull();
         UnserializeFromTx(tx);
     }
@@ -658,7 +657,7 @@ public:
     inline void SetNull() { assetAllocation.SetNull(); vchEthAddress.clear();  }
     inline bool IsNull() const { return (vchEthAddress.empty() && assetAllocation.IsNull()); }
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
-    bool UnserializeFromTx(const CTransactionRef &tx);
+    bool UnserializeFromTx(const CTransaction &tx);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
 bool IsSyscoinTx(const int &nVersion);
@@ -667,8 +666,8 @@ bool IsZdagTx(const int &nVersion);
 bool IsSyscoinWithNoInputTx(const int &nVersion);
 bool IsAssetTx(const int &nVersion);
 bool IsSyscoinMintTx(const int &nVersion);
-unsigned int GetSyscoinDataOutput(const CTransactionRef& tx);
-bool GetSyscoinData(const CTransactionRef &tx, std::vector<unsigned char> &vchData, int& nOut);
+unsigned int GetSyscoinDataOutput(const CTransaction& tx);
+bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, int& nOut);
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
 typedef std::unordered_map<uint32_t, uint256> EthereumMintTxMap;
 typedef std::unordered_map<int32_t, CAsset > AssetMap;

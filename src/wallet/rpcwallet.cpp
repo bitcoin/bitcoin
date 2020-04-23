@@ -2820,8 +2820,8 @@ static UniValue unloadwallet(const JSONRPCRequest& request)
 
     return NullUniValue;
 }
-
-static UniValue listunspent(const JSONRPCRequest& request)
+// SYSCOIN
+UniValue listunspent(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     const CWallet* const pwallet = wallet.get();
@@ -2937,6 +2937,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
     int32_t nAsset = 0;
 
     if (!request.params[4].isNull()) {
+        LogPrintf("options\n");
         const UniValue& options = request.params[4].get_obj();
 
         if (options.exists("minimumAmount"))
@@ -2951,8 +2952,10 @@ static UniValue listunspent(const JSONRPCRequest& request)
         if (options.exists("maximumCount"))
             nMaximumCount = options["maximumCount"].get_int64();
         // SYSCOIN
-        if (options.exists("assetGuid"))
-            nAsset = AmountFromValue(options["assetGuid"]);
+        if (options.exists("assetGuid")) {
+            nAsset = options["assetGuid"].get_int();
+            LogPrintf("nAsset %d\n", nAsset);
+        }
 
         if (options.exists("minimumAmountAsset"))
             nMinimumAmountAsset = AmountFromValue(options["minimumAmountAsset"]);

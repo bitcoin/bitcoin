@@ -107,7 +107,7 @@ bool SysWtxToJSON(const CWalletTx& wtx, const CAssetCoinInfo &assetInfo, const s
 bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const std::string &strCategory, UniValue &entry) {
     if(!AllocationWtxToJson(wtx, assetInfo, strCategory, entry))
         return false;
-    CAsset asset(wtx.tx);
+    CAsset asset(*wtx.tx);
     if (!asset.IsNull()) {
         if (!asset.vchPubData.empty())
             entry.__pushKV("public_value", stringFromVch(asset.vchPubData));
@@ -135,7 +135,7 @@ bool AssetAllocationWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetI
     if(!AllocationWtxToJson(wtx, assetInfo, strCategory, entry))
         return false;
     if(wtx.tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-         CBurnSyscoin burnSyscoin(wtx.tx);
+         CBurnSyscoin burnSyscoin(*wtx.tx);
          if (!burnSyscoin.IsNull()) {
             CAsset dbAsset;
             GetAsset(assetInfo.nAsset, dbAsset);
@@ -150,7 +150,7 @@ bool AssetAllocationWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetI
 bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const std::string &strCategory, UniValue &entry) {
     if(!AllocationWtxToJson(wtx, assetInfo, strCategory, entry))
         return false;
-    CMintSyscoin mintSyscoin(wtx.tx);
+    CMintSyscoin mintSyscoin(*wtx.tx);
     if (!mintSyscoin.IsNull()) {
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.__pushKV("bridgetransferid", mintSyscoin.nBridgeTransferID);   
@@ -174,9 +174,9 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
     entry.__pushKV("asset_guid", assetInfo.nAsset);
     entry.__pushKV("symbol", dbAsset.strSymbol);
     if(strCategory == "send") {
-        entry.__pushKV("amount", ValueFromAssetAmount(assetInfo.nValue, dbAsset.nPrecision));
-    } else if (strCategory == "receive") {
         entry.__pushKV("amount", ValueFromAssetAmount(-assetInfo.nValue, dbAsset.nPrecision));
+    } else if (strCategory == "receive") {
+        entry.__pushKV("amount", ValueFromAssetAmount(assetInfo.nValue, dbAsset.nPrecision));
     }
     return true;
 }
@@ -246,7 +246,7 @@ void TestTransaction(const CTransactionRef& tx) {
     CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
 
     TxValidationState state;
-    bool test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx),
+    bool test_accept_res = AcceptToMemoryPool(mempool, state, tx,
             nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
 
     if (!test_accept_res) {
@@ -486,19 +486,29 @@ UniValue assetnew(const JSONRPCRequest& request) {
     std::string strFailReason;
     int nChangePosRet = -1;
     CCoinControl coin_control;
-    bool lockUnspents = false;
+    bool lockUnspents = false;   
+    mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
-    mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
     data.clear();
     // generate deterministic guid based on input txid
     const int32_t &nAsset = GenerateSyscoinGuid(mtx.vin[0].prevout);
     newAsset.assetAllocation.voutAssets.clear();
     newAsset.assetAllocation.voutAssets[nAsset].push_back(CAssetOut(0, 0));
-   
-    if(!ReserializeAssetCommitment(mtx)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Reserialize asset commitment failed");
+    newAsset.SerializeData(data);
+    scriptData.clear();
+    scriptData << OP_RETURN << data;
+    CreateFeeRecipient(scriptData, opreturnRecipient);
+    // 500 SYS fee for new asset
+    opreturnRecipient.nAmount = 500*COIN;
+    mtx.vout.clear();
+    mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+    mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
+    nFeeRequired = 0;
+    nChangePosRet = -1;
+    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
     if(!pwallet->SignTransaction(mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
@@ -557,8 +567,8 @@ UniValue CreateAssetUpdateTx(interfaces::Chain::Lock& locked_chain, const int32_
     else {
         recp = { GetScriptForDestination(dest), nGas, true };  
     }
-    // order matters, after the calling function adds whatever outputs for assets, we need to add the
-    // change back to a new output proceeding the asset outputs, other outputs can come after
+    // order matters here as vecSend is in sync with asset commitment, it may change later when
+    // change is added but it will resync the commitment there
     vecSend.push_back(recp);
     vecSend.push_back(opreturnRecipient);
     std::set<int> setSubtractFeeFromOutputs;
@@ -980,7 +990,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     bool lockUnspents = false;
     std::set<int> setSubtractFeeFromOutputs;
     // if zdag double the fee rate
-    if(!coin_control.m_signal_bip125_rbf) {
+    if(coin_control.m_signal_bip125_rbf == false) {
         coin_control.m_feerate = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE*2);
     }
     mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
@@ -1271,16 +1281,18 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     bool m_signal_bip125_rbf = false;
     if (!request.params[3].isNull()) {
         m_signal_bip125_rbf = request.params[3].get_bool();
-    }        
+    }  
+    UniValue replaceableObj(UniValue::VBOOL);
+    replaceableObj.setBool(m_signal_bip125_rbf);
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     outputObj.__pushKV("asset_guid", nAsset);
     outputObj.__pushKV("address", params[1].get_str());
     outputObj.__pushKV("amount", ValueFromAssetAmount(nAmount, theAsset.nPrecision));
-    outputObj.__pushKV("replaceable", m_signal_bip125_rbf);
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(output);
+    paramsFund.push_back(replaceableObj);
     JSONRPCRequest requestMany;
     requestMany.params = paramsFund;
     requestMany.URI = request.URI;
@@ -1379,6 +1391,50 @@ UniValue convertaddresswallet(const JSONRPCRequest& request) {
     return ret;	
 }
 
+
+UniValue listunspentasset(const JSONRPCRequest& request) {	
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);	
+    CWallet* const pwallet = wallet.get();	
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {	
+        return NullUniValue;	
+    }	
+    RPCHelpMan{"listunspentasset",
+    "\nHelper function which just calls listunspent to find unspent UTXO's for an asset.",   
+    {	
+        {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."},	
+        {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},	
+    },	
+    RPCResult{
+        RPCResult::Type::STR, "result", "Result"
+    },		
+    RPCExamples{	
+        HelpExampleCli("listunspentasset", "2328882 0")	
+        + HelpExampleRpc("listunspentasset", "2328882 0")	
+    }}.Check(request);	
+    int32_t nAsset = request.params[0].get_int();
+    int nMinDepth = 1;
+    if (!request.params[1].isNull()) {
+        nMinDepth = request.params[1].get_int();
+    }
+    int nMaxDepth = 9999999;
+    bool include_unsafe = true;
+    UniValue paramsFund(UniValue::VARR);
+    UniValue addresses(UniValue::VARR);
+    UniValue includeSafe(UniValue::VBOOL);
+    includeSafe.setBool(include_unsafe);
+    paramsFund.push_back(nMinDepth);
+    paramsFund.push_back(nMaxDepth);
+    paramsFund.push_back(addresses);
+    paramsFund.push_back(includeSafe);
+    
+    UniValue options(UniValue::VOBJ);
+    options.__pushKV("assetGuid", nAsset);
+    paramsFund.push_back(options);
+    JSONRPCRequest requestSpent;
+    requestSpent.params = paramsFund;
+    requestSpent.URI = request.URI;
+    return listunspent(requestSpent);  
+}
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
@@ -1396,6 +1452,7 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","amounts"}},
     { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address_receiver","amount","replaceable"}},
     { "syscoinwallet",            "assetallocationsendmany",          &assetallocationsendmany,       {"amounts","replaceable"}},
+    { "syscoinwallet",            "listunspentasset",                 &listunspentasset,              {"asset_guid","minconf"}},
 };
 // clang-format on
 
