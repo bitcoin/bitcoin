@@ -3064,7 +3064,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
             int r = epoll_ctl(epollfd, EPOLL_CTL_ADD, wakeupPipe[0], &event);
             if (r != 0) {
                 LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                         epollfd, EPOLL_CTL_DEL, wakeupPipe[0], NetworkErrorString(WSAGetLastError()));
+                         epollfd, EPOLL_CTL_ADD, wakeupPipe[0], NetworkErrorString(WSAGetLastError()));
                 return false;
             }
         }
