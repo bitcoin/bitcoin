@@ -6,7 +6,7 @@
 #include <services/asset.h>
 #include <services/assetconsensus.h>
 #include <consensus/validation.h>
-#include <consensus/dbwrapper.h>
+#include <dbwrapper.h>
 
 std::string stringFromSyscoinTx(const int &nVersion) {
     switch (nVersion) {
