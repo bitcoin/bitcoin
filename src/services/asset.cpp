@@ -4,6 +4,7 @@
 
 #include <validation.h>
 #include <services/asset.h>
+#include <services/assetconsensus.h>
 #include <consensus/validation.h>
 
 std::string stringFromSyscoinTx(const int &nVersion) {
