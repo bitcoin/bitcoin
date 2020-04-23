@@ -316,21 +316,16 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
     s << tx.nLockTime;
 }
 // SYSCOIN
-template<typename Stream, typename AssetOutType>
-void SerializeAssetOut(AssetOutType& assetOut, Stream& s);
-
-template<typename Stream, typename AssetOutType>
-void UnserializeAssetOut(AssetOutType& assetOut, Stream& s);
 class CAssetOut {
 public:
     uint32_t n;
     CAmount nValue;
 
     template<typename Stream>
-    void Serialize(Stream &s) const {SerializeAssetOut(*this, s);}
+    void Serialize(Stream &s) const;
 
     template<typename Stream>
-    void Unserialize(Stream &s) {UnserializeAssetOut(*this, s);}
+    void Unserialize(Stream &s);
 
     CAssetOut(const uint32_t &nIn, const CAmount& nAmountIn): n(nIn), nValue(nAmountIn) {}
 	CAssetOut() {
