@@ -50,7 +50,7 @@ implicit-integer-sign-change:bloom.cpp
 implicit-integer-sign-change:chain.*
 implicit-integer-sign-change:coins.h
 implicit-integer-sign-change:compat/stdin.cpp
-implicit-integer-sign-change:compressor.h
+implicit-integer-sign-change:primitives/transaction.h
 implicit-integer-sign-change:crypto/*
 implicit-integer-sign-change:key.cpp
 implicit-integer-sign-change:noui.cpp
