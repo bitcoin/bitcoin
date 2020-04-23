@@ -142,7 +142,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
 
-    addPackageTxs<VeriBlock::poptx_priority<ancestor_score>>(nPackagesSelected, nDescendantsUpdated);
+    addPackageTxs<VeriBlock::poptx_priority<ancestor_score>>(nPackagesSelected, nDescendantsUpdated, *pindexPrev);
 
     int64_t nTime1 = GetTimeMicros();
 
@@ -308,11 +308,24 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
 template<typename MempoolComparatorTagName>
-void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated)
+void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, CBlockIndex& prevIndex)
 {
     auto& config = VeriBlock::getService<VeriBlock::Config>();
     auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+    // do a full copy of alt tree, and do stateful validation against this tree.
+    // then, discard this copy
     altintegration::AltTree altTreeCopy = pop.getAltTree();
+
+    // dummy pop tx containing block
+    altintegration::AltBlock dummyContainingBlock{};
+    dummyContainingBlock.height = prevIndex.nHeight + 1;
+    dummyContainingBlock.previousBlock = prevIndex.GetBlockHash().asVector();
+    dummyContainingBlock.timestamp = pblock->GetBlockTime();
+
+    altintegration::ValidationState state;
+    bool ret = altTreeCopy.acceptBlock(dummyContainingBlock, state);
+    assert(ret);
+    (void) ret;
 
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
@@ -322,6 +335,8 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
     // A list of failed PoP transactions to delete after we finish assembling the block
     CTxMemPool::setEntries failedPopTx;
+    // TODO(VeriBlock): temporary fix. remove
+    std::vector<altintegration::AltPayloads> addedPayloads;
 
     // Start by adding all descendants of previously added txs to mapModifiedTx
     // and modifying them for their already included ancestors
@@ -434,10 +449,19 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
                 altintegration::AltPayloads p;
                 // do a stateless validation of pop payloads
                 if (!VeriBlock::parseTxPopPayloadsImpl(iter->GetTx(), chainparams.GetConsensus(), txstate, p)) {
+                    LogPrint(BCLog::POP, "%s: tx %s is statelessly invalid: %s\n", __func__, iter->GetTx().GetHash().ToString(), txstate.GetRejectReason());
                     failedTx.insert(iter);
                     failedPopTx.insert(iter);
                     continue;
                 }
+                if (!altTreeCopy.addPayloads(dummyContainingBlock, {p}, state, true)) {
+                    LogPrint(BCLog::POP, "%s: tx %s is statefully invalid: %s\n", __func__, iter->GetTx().GetHash().ToString(), state.toString());
+                    failedTx.insert(iter);
+                    failedPopTx.insert(iter);
+                    continue;
+                }
+
+                addedPayloads.push_back(std::move(p));
             }
         }
 
@@ -463,12 +487,17 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     }
 
     // delete invalid PoP transactions
-    for (auto & tx: failedPopTx) {
+    for (auto& tx : failedPopTx) {
         mempool.removeRecursive(tx->GetTx(), MemPoolRemovalReason::BLOCK); // FIXME: a more appropriate removal reason
     }
+
+    // TODO(VeriBlock): this is temporal fix
+    std::for_each(addedPayloads.rbegin(), addedPayloads.rend(), [&](const altintegration::AltPayloads& p) {
+        altTreeCopy.removePayloads(dummyContainingBlock, {p});
+    });
 }
 
-template void BlockAssembler::addPackageTxs<ancestor_score>(int &nPackagesSelected, int &nDescendantsUpdated);
+template void BlockAssembler::addPackageTxs<ancestor_score>(int &nPackagesSelected, int &nDescendantsUpdated, CBlockIndex& prevIndex);
 
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {

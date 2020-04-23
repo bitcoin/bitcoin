@@ -1,12 +1,18 @@
 package=altintegration
-$(package)_version=42f2c8dcda2bc0128f7a1a0c2a764e8cef958f86
+$(package)_version=55945a121b9ca49becb980f8a7433b36585c3edd
 $(package)_download_path=https://github.com/VeriBlock/alt-integration-cpp/archive/
 $(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=faeadac852251a45561146e6a31a39ab7be47e14785325cc374a69e36b83d5b1
+$(package)_sha256_hash=2eb173a47836c28c14a28efd8305b9c4364a3c26509229d2e125e0919322e5a7
 
-define $(package)_config_cmds
-  cmake -DCMAKE_C_COMPILER=$(CC) -DCMAKE_CXX_COMPILER=$(CXX) -DCMAKE_INSTALL_PREFIX=$($(package)_staging_dir)$(host_prefix) -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF -B .
-endef
+ifeq ($(HOST), x86_64-w64-mingw32)
+  define $(package)_config_cmds
+    cmake -DCMAKE_C_COMPILER=$(HOST)-gcc -DCMAKE_CXX_COMPILER=$(HOST)-g++ -DCMAKE_INSTALL_PREFIX=$($(package)_staging_dir)$(host_prefix) -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF -B .
+  endef
+else
+  define $(package)_config_cmds
+    cmake -DCMAKE_INSTALL_PREFIX=$($(package)_staging_dir)$(host_prefix) -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF -B .
+  endef
+endif
 
 define $(package)_build_cmds
   $(MAKE)

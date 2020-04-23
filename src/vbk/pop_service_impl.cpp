@@ -235,13 +235,13 @@ bool PopServiceImpl::checkPopPayloads(const CBlockIndex& indexPrev, const CBlock
 {
     // does not modify internal state, so no locking required
     altintegration::AltTree copy = *altTree;
-    return addAllPayloadsToBlockImpl(copy, indexPrev, fullBlock, state);
+    return addAllPayloadsToBlockImpl(copy, indexPrev, fullBlock, state, true, true);
 }
 
 bool PopServiceImpl::addAllBlockPayloads(const CBlockIndex& indexPrev, const CBlock& connecting, BlockValidationState& state)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    return addAllPayloadsToBlockImpl(*altTree, indexPrev, connecting, state);
+    return addAllPayloadsToBlockImpl(*altTree, indexPrev, connecting, state, true, false);
 }
 
 bool PopServiceImpl::evalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks)
@@ -494,7 +494,7 @@ bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& par
     return true;
 }
 
-bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex& indexPrev, const CBlock& block, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex& indexPrev, const CBlock& block, BlockValidationState& state, bool atomic, bool cleanupAfter) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     auto containing = VeriBlock::blockToAltBlock(indexPrev.nHeight + 1, block.GetBlockHeader());
 
@@ -508,12 +508,15 @@ bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex&
         return error("[%s] block %s is not accepted by altTree: %s", __func__, block.GetHash().ToString(), instate.toString());
     }
 
-    if (!payloads.empty() && !tree.addPayloads(containing, payloads, instate)) {
+    if (!payloads.empty() && !tree.addPayloads(containing, payloads, instate, atomic)) {
         return error("[%s] block %s failed stateful pop validation: %s", __func__, block.GetHash().ToString(), instate.toString());
+    }
+
+    if (cleanupAfter) {
+        tree.removePayloads(containing, payloads);
     }
 
     return true;
 }
 
 } // namespace VeriBlock
-
