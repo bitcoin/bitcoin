@@ -727,10 +727,10 @@ endif
 
 # FIXME: Remove SERVER once we have cleaned up assets+getauxblock!
 syscoin_wallet_LDADD = \
-  $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_WALLET_TOOL) \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_COMMON) \
+  $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO) \
