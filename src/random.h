@@ -67,7 +67,15 @@
  * Thread-safe.
  */
 void GetRandBytes(unsigned char* buf, int num) noexcept;
+/** Generate a random integer in the range [0..range). Precondition: range > 0 */
 uint64_t GetRand(uint64_t nMax) noexcept;
+// Templates cannot be used here to avoid stating explicitly what precision is
+// desired in the result. A hypothetical `template<typename T> T GetRandDur(T)`
+// invoked on a `std::chrono::hours` argument will only ever return a duration
+// with the resolution of 1 hours, which may be unexpected when assigning to a
+// variable of a higher resolution duration like `std::chrono::seconds`.
+
+/** Generate a random duration in the range [0..duration_max). Precondition: duration_max.count() > 0 */
 std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) noexcept;
 int GetRandInt(int nMax) noexcept;
 uint256 GetRandHash() noexcept;

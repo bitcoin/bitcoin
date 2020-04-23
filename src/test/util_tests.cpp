@@ -1348,6 +1348,13 @@ BOOST_AUTO_TEST_CASE(gettime)
     BOOST_CHECK((GetTime() & ~0xFFFFFFFFLL) == 0);
 }
 
+BOOST_AUTO_TEST_CASE(util_time_GetRandTime)
+{
+    // Check that GetRand* can not magically increase the resolution of the result
+    std::chrono::nanoseconds rand = GetRandMicros(std::chrono::microseconds{1});
+    BOOST_CHECK_EQUAL(rand.count(), 0);
+}
+
 BOOST_AUTO_TEST_CASE(util_time_GetTime)
 {
     SetMockTime(111);

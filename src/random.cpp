@@ -14,15 +14,13 @@
 #include <wincrypt.h>
 #endif
 #include <logging.h>  // for LogPrintf()
+#include <randomenv.h>
+#include <support/allocators/secure.h>
 #include <sync.h>     // for Mutex
 #include <util/time.h> // for GetTimeMicros()
 
 #include <stdlib.h>
 #include <thread>
-
-#include <randomenv.h>
-
-#include <support/allocators/secure.h>
 
 #ifndef WIN32
 #include <fcntl.h>
