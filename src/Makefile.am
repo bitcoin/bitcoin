@@ -717,7 +717,7 @@ syscoin_tx_LDADD += $(BOOST_LIBS)
 
 # syscoin-wallet binary #
 syscoin_wallet_SOURCES = syscoin-wallet.cpp
-syscoin_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(LEVELDB_CPPFLAGS)
 syscoin_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 syscoin_wallet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
