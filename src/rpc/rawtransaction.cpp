@@ -40,8 +40,6 @@
 
 #include <univalue.h>
 // SYSCOIN
-#include <services/assetconsensus.h>
-// SYSCOIN
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 {
     // Call into TxToUniv() in syscoin-common to decode the transaction hex.
@@ -217,8 +215,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     TxToJSON(*tx, hash_block, result);
     return result;
 }
-// SYSCOIN
-UniValue gettxoutproof(const JSONRPCRequest& request)
+static UniValue gettxoutproof(const JSONRPCRequest& request)
 {
             RPCHelpMan{"gettxoutproof",
                 "\nReturns a hex-encoded proof that \"txid\" was included in a block.\n"

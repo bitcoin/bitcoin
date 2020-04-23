@@ -11,7 +11,6 @@
 #include <wallet/rpcwallet.h>
 #include <wallet/fees.h>
 #include <policy/policy.h>
-#include <services/assetconsensus.h>
 #include <consensus/validation.h>
 #include <wallet/coincontrol.h>
 #include <rpc/server.h>
@@ -1124,37 +1123,6 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     mintSyscoin.vchReceiptRoot = ParseHex(vchReceiptRoot);
     mintSyscoin.vchReceiptParentNodes = ParseHex(vchReceiptParentNodes);
     
-    EthereumTxRoot txRootDB;
-    const bool &ethTxRootShouldExist = !fLiteMode && fLoaded && fGethSynced;
-    if(!ethTxRootShouldExist){
-        throw JSONRPCError(RPC_MISC_ERROR, "Network is not ready to accept your mint transaction please wait...");
-    }
-    {
-        LOCK(cs_setethstatus);
-        // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
-        // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
-        if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
-            if(ethTxRootShouldExist){
-                throw JSONRPCError(RPC_MISC_ERROR, "Missing transaction root for SPV proof at Ethereum block: " + itostr(mintSyscoin.nBlockNumber));
-            }
-        } 
-    } 
-    if(ethTxRootShouldExist){
-        const int64_t &nTime = ::ChainActive().Tip()->GetMedianTimePast();
-        // time must be between 1 week and 1 hour old to be accepted
-        if(nTime < txRootDB.nTimestamp) {
-            throw JSONRPCError(RPC_MISC_ERROR, "Invalid Ethereum timestamp, it cannot be earlier than the Syscoin median block timestamp. Please wait a few minutes and try again...");
-        }
-        else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? TESTNET_MAX_MINT_AGE: MAINNET_MAX_MINT_AGE)) {
-            throw JSONRPCError(RPC_MISC_ERROR, "The block height is too old, your SPV proof is invalid. SPV Proof must be done within 1 week of the burn transaction on Ethereum blockchain");
-        } 
-        
-        // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
-        else if((nTime - txRootDB.nTimestamp) <  ((bGethTestnet == true)? TESTNET_MIN_MINT_AGE: MAINNET_MIN_MINT_AGE)){
-            throw JSONRPCError(RPC_MISC_ERROR, "Not enough confirmations on Ethereum to process this mint transaction. Must wait one hour for the transaction to settle.");
-        }
-        
-    }
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
     CTxOut change_prototype_txout(0, scriptPubKey);
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };

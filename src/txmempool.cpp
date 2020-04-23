@@ -18,8 +18,7 @@
 #include <util/moneystr.h>
 #include <util/time.h>
 #include <validationinterface.h>
-// SYSCOIN
-#include <services/assetconsensus.h>
+
 extern EthereumMintTxMap mapMintKeysMempool;
 extern std::set<COutPoint> assetAllocationConflicts;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,

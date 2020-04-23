@@ -12,7 +12,6 @@
 #include <masternodesync.h>
 #include <masternodeman.h>
 #include <messagesigner.h>
-#include <services/assetconsensus.h>
 #include <univalue.h>
 
 CGovernanceObject::CGovernanceObject():
