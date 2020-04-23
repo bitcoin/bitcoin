@@ -666,7 +666,7 @@ bool IsZdagTx(const int &nVersion);
 bool IsSyscoinWithNoInputTx(const int &nVersion);
 bool IsAssetTx(const int &nVersion);
 bool IsSyscoinMintTx(const int &nVersion);
-unsigned int GetSyscoinDataOutput(const CTransaction& tx);
+int GetSyscoinDataOutput(const CTransaction& tx);
 bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, int& nOut);
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
 typedef std::unordered_map<uint32_t, uint256> EthereumMintTxMap;

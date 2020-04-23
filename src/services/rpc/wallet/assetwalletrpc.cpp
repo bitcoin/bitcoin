@@ -987,8 +987,9 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         
     UniValue amountObj = params[1];
 	CAmount nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
-    if (nAmount <= 0)
+    if (nAmount <= 0) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
+    }
 	std::string ethAddress = params[2].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
     CScript scriptData;
