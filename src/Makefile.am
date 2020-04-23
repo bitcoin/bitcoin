@@ -500,7 +500,7 @@ crypto_libsyscoin_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
 crypto_libsyscoin_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
-libsyscoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(LEVELDB_CPPFLAGS)
+libsyscoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_consensus_a_SOURCES = \
   amount.h \
@@ -693,7 +693,7 @@ syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
 
 # syscoin-tx binary #
 syscoin_tx_SOURCES = syscoin-tx.cpp
-syscoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(LEVELDB_CPPFLAGS)
+syscoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 syscoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 syscoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
