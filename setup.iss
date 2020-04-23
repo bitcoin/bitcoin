@@ -5,7 +5,7 @@
 #define MyAppVersion "2.26"
 #define MyAppPublisher "VeriBlock Incorporated"
 #define MyAppURL "https://www.veriblock.org"
-#define MyAppExeName "bitcoin-qt.exe"
+#define MyAppExeName "vbitcoin-qt.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -35,11 +35,11 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\git\repo\vbk-ri-btc\src\qt\bitcoin-qt.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\git\repo\vbk-ri-btc\bitcoin.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\git\repo\vbk-ri-btc\bitcoin.conf"; DestDir: "{userappdata}\bitcoin\"; Flags: ignoreversion
-Source: "C:\git\repo\vbk-ri-btc\src\bitcoin-cli.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\git\repo\vbk-ri-btc\src\bitcoind.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\git\repo\vbk-ri-btc\src\qt\vbitcoin-qt.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\git\repo\vbk-ri-btc\vbitcoin.conf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\git\repo\vbk-ri-btc\vbitcoin.conf"; DestDir: "{userappdata}\vbitcoin\"; Flags: ignoreversion
+Source: "C:\git\repo\vbk-ri-btc\src\vbitcoin-cli.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\git\repo\vbk-ri-btc\src\vbitcoind.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\git\repo\vbk-ri-btc\README.md"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 

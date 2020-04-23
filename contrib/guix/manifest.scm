@@ -107,7 +107,7 @@ chain for " target " development."))
                                   (base-gcc (make-gcc-rpath-link
                                              (make-ssp-fixed-gcc gcc-9))))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
-desirable for building Bitcoin Core release binaries."
+desirable for building vBitcoin Core release binaries."
   (make-cross-toolchain target
                    base-gcc-for-libc
                    base-kernel-headers

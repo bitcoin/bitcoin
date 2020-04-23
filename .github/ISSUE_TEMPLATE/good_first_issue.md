@@ -10,7 +10,7 @@ assignees: ''
 
 #### Useful skills:
 
-<!-- (For example, “C++11 std::thread”, “Qt5 GUI and async GUI design” or “basic understanding of Bitcoin mining and the Bitcoin Core RPC interface”.) -->
+<!-- (For example, “C++11 std::thread”, “Qt5 GUI and async GUI design” or “basic understanding of vBitcoin mining and the vBitcoin Core RPC interface”.) -->
 
 #### Want to work on this issue?
 
@@ -18,4 +18,4 @@ The purpose of the `good first issue` label is to highlight which issues are sui
 
 You do not need to request permission to start working on this. You are encouraged to comment on the issue if you are planning to work on it. This will help other contributors monitor which issues are actively being addressed and is also an effective way to request assistance if and when you need it.
 
-For guidance on contributing, please read [CONTRIBUTING.md](https://github.com/bitcoin/bitcoin/blob/master/CONTRIBUTING.md) before opening your pull request.
+For guidance on contributing, please read [CONTRIBUTING.md](https://github.com/VeriBlock/vbk-ri-btc/blob/master/CONTRIBUTING.md) before opening your pull request.

@@ -61,7 +61,7 @@ don't have test cases for.
 - Set the `self.setup_clean_chain` variable in `set_test_params()` to control whether
   or not to use the cached data directories. The cached data directories
   contain a 200-block pre-mined blockchain and wallets for four nodes. Each node
-  has 25 mature blocks (25x50=1250 BTC) in its wallet.
+  has 25 mature blocks (25x50=1250 vBTC) in its wallet.
 - When calling RPCs with lots of arguments, consider using named keyword
   arguments instead of positional arguments to make the intent of the call
   clear to readers.

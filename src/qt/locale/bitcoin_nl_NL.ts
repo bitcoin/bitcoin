@@ -62,12 +62,12 @@
         <translation>Ontvangstadres</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Dit zijn uw Bitcoin adressen voor het versturen van betalingen. Controleer altijd het bedrag en het ontvangstadres voordat u munten verstuurd.</translation>
+        <source>These are your vBitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Dit zijn uw vBitcoin adressen voor het versturen van betalingen. Controleer altijd het bedrag en het ontvangstadres voordat u munten verstuurd.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Dit zijn uw Bitcoin adressen voor het ontvangen van betalingen. Het wordt aanbevolen om voor elke transactie een nieuw ontvangstadres te gebruiken.</translation>
+        <source>These are your vBitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Dit zijn uw vBitcoin adressen voor het ontvangen van betalingen. Het wordt aanbevolen om voor elke transactie een nieuw ontvangstadres te gebruiken.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -338,8 +338,8 @@
         <translation>Blokken op schijf herindexeren...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Verstuur coins naar een Bitcoin adres</translation>
+        <source>Send coins to a vBitcoin address</source>
+        <translation>Verstuur coins naar een vBitcoin adres</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -390,12 +390,12 @@
         <translation>Versleutel de privé sleutels die bij je portemonnee horen</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Signeer berichten met je Bitcoin adres om te bewijzen dat ze van jou zijn</translation>
+        <source>Sign messages with your vBitcoin addresses to prove you own them</source>
+        <translation>Signeer berichten met je vBitcoin adres om te bewijzen dat ze van jou zijn</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifieer berichten om er zeker van te zijn dat ze met specifieke Bitcoin adressen ondertekent zijn</translation>
+        <source>Verify messages to ensure they were signed with specified vBitcoin addresses</source>
+        <translation>Verifieer berichten om er zeker van te zijn dat ze met specifieke vBitcoin adressen ondertekent zijn</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -470,8 +470,8 @@
         <translation>Up to date</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Open het %1 help bericht om een lijst met Bitcoin commando-regel opties te krijgen</translation>
+        <source>Show the %1 help message to get a list with possible vBitcoin command-line options</source>
+        <translation>Open het %1 help bericht om een lijst met vBitcoin commando-regel opties te krijgen</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -540,8 +540,8 @@
         <translation>Portemonnee is &lt;b&gt;versleuteld&lt;/b&gt; op dit moment &lt;b&gt;vergrendeld&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Een fatale error is voorgekomen. Bitcoin kan niet langer veilig verder gaan en sluit daardoor af.</translation>
+        <source>A fatal error occurred. vBitcoin can no longer continue safely and will quit.</source>
+        <translation>Een fatale error is voorgekomen. vBitcoin kan niet langer veilig verder gaan en sluit daardoor af.</translation>
     </message>
 </context>
 <context>

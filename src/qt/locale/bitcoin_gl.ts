@@ -182,7 +182,7 @@
         <translation>Reindexando bloques no disco...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a vBitcoin address</source>
         <translation>Enviar moedas a unha dirección Bitcoin</translation>
     </message>
     <message>
@@ -226,12 +226,12 @@
         <translation>Encriptar as claves privadas que pertencen ao teu moedeiro</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Asina mensaxes cos teus enderezos Bitcoin para probar que che pertencen</translation>
+        <source>Sign messages with your vBitcoin addresses to prove you own them</source>
+        <translation>Asina mensaxes cos teus enderezos vBitcoin para probar que che pertencen</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifica mensaxes para asegurar que foron asinados con enderezos Bitcoin específicos.</translation>
+        <source>Verify messages to ensure they were signed with specified vBitcoin addresses</source>
+        <translation>Verifica mensaxes para asegurar que foron asinados con enderezos vBitcoin específicos.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -587,8 +587,8 @@
         <translation>Experto</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abrir automáticamente o porto do cliente Bitcoin no router. Esto so funciona se o teu router soporta UPnP e está habilitado.</translation>
+        <source>Automatically open the vBitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Abrir automáticamente o porto do cliente vBitcoin no router. Esto so funciona se o teu router soporta UPnP e está habilitado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -694,8 +694,8 @@
         <translation>Formulario</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>A información amosada por estar desactualizada. O teu moedeiro sincronízase automáticamente coa rede Bitcoin despois de que se estableza unha conexión, mais este proceso non está todavía rematado.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the vBitcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>A información amosada por estar desactualizada. O teu moedeiro sincronízase automáticamente coa rede vBitcoin despois de que se estableza unha conexión, mais este proceso non está todavía rematado.</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -1129,7 +1129,7 @@
         <translation>Copiar a sinatura actual ao portapapeis do sistema</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this vBitcoin address</source>
         <translation>Asina a mensaxe para probar que posúes este enderezo Bitcoin</translation>
     </message>
     <message>
@@ -1149,8 +1149,8 @@
         <translation>&amp;Verificar Mensaxe</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Verificar a mensaxe para asegurar que foi asinada coa dirección Bitcoin especificada</translation>
+        <source>Verify the message to ensure it was signed with the specified vBitcoin address</source>
+        <translation>Verificar a mensaxe para asegurar que foi asinada coa dirección vBitcoin especificada</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
