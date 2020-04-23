@@ -208,7 +208,6 @@ SYSCOIN_CORE_H = \
   rpc/blockchain.h \
   rpc/auxpow_miner.h \
   rpc/client.h \
-  rpc/mining.h \
   rpc/protocol.h \
   rpc/rawtransaction_util.h \
   rpc/register.h \
@@ -729,7 +728,6 @@ endif
 syscoin_wallet_LDADD = \
   $(LIBSYSCOIN_WALLET_TOOL) \
   $(LIBSYSCOIN_WALLET) \
-  $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_UTIL) \
@@ -739,8 +737,7 @@ syscoin_wallet_LDADD = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBUNIVALUE) \
-  $(LIBETHEREUM)
+  $(LIBUNIVALUE)
 
 syscoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
 #

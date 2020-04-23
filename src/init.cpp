@@ -548,10 +548,7 @@ void SetupServerArgs(NodeContext& node)
 
 #if ENABLE_ZMQ
     // SYSCOIN
-    gArgs.AddArg("-zmqpubwalletstatus=<address>", "Enable publish wallet status (when wallet loads and is ready) in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubethstatus=<address>", "Enable publish Ethereum status updates in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
-    gArgs.AddArg("-zmqpubnetworkstatus=<address>", "Enable publish network updates when a peer is connected or disconnected in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
-    gArgs.AddArg("-zmqpubwalletrawtx=<address>", "Enable publish all wallet related transactions in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubhashblock=<address>", "Enable publish hash block in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubhashtx=<address>", "Enable publish hash transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubrawblock=<address>", "Enable publish raw block in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
@@ -564,10 +561,7 @@ void SetupServerArgs(NodeContext& node)
     gArgs.AddArg("-zmqpubrawmempooltxhwm=<n>", strprintf("Set publish raw mempool transaction outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
 #else
     // SYSCOIN
-    hidden_args.emplace_back("-zmqpubwalletstatus=<address>");
     hidden_args.emplace_back("-zmqpubethstatus=<address>");
-    hidden_args.emplace_back("-zmqpubnetworkstatus=<address>");
-    hidden_args.emplace_back("-zmqpubwalletrawtx=<address>");
     hidden_args.emplace_back("-zmqpubhashblock=<address>");
     hidden_args.emplace_back("-zmqpubhashtx=<address>");
     hidden_args.emplace_back("-zmqpubrawblock=<address>");
@@ -1958,11 +1952,8 @@ bool AppInitMain(NodeContext& node)
         }
         block_notify_genesis_wait_connection.disconnect();
     }
-    
-    fZMQWalletStatus = gArgs.IsArgSet("-zmqpubwalletstatus");
+    // SYSCOIN
     fZMQEthStatus = gArgs.IsArgSet("-zmqpubethstatus");
-    fZMQNetworkStatus = gArgs.IsArgSet("-zmqpubnetworkstatus");
-    fZMQWalletRawTx = gArgs.IsArgSet("-zmqpubwalletrawtx");
 
      //lite mode disables all masternode functionality
     bool fRegTest = gArgs.GetBoolArg("-regtest", false);

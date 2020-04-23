@@ -47,12 +47,8 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
     // SYSCOIN
-    factories["pubrawmempooltx"] = CZMQAbstractNotifier::Create<CZMQPublishRawMempoolTransactionNotifier>;
-    factories["pubwalletstatus"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
     factories["pubethstatus"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
-    factories["pubnetworkstatus"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
-    factories["pubwalletrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
-
+    factories["pubrawmempooltx"] = CZMQAbstractNotifier::Create<CZMQPublishRawMempoolTransactionNotifier>;
     for (const auto& entry : factories)
     {
         std::string arg("-zmq" + entry.first);

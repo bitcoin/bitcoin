@@ -1050,13 +1050,6 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
     }
-    // SYSCOIN
-    if(fZMQNetworkStatus){
-        UniValue oNetworkStatus(UniValue::VOBJ);
-        oNetworkStatus.pushKV("connections", (int)GetNodeCount(CConnman::CONNECTIONS_ALL));
-        GetMainSignals().NotifySyscoinUpdate(oNetworkStatus.write().c_str(), "networkstatus");
-    } 
-
     // We received a new connection, harvest entropy from the time (and our peer count)
     RandAddEvent((uint32_t)id);
 }
@@ -2074,12 +2067,6 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
     }
-    // SYSCOIN
-    if(fZMQNetworkStatus){
-        UniValue oNetworkStatus(UniValue::VOBJ);
-        oNetworkStatus.pushKV("connections", (int)GetNodeCount(CConnman::CONNECTIONS_ALL));
-        GetMainSignals().NotifySyscoinUpdate(oNetworkStatus.write().c_str(), "networkstatus");
-    } 
 }
 // SYSCOIN
 void CConnman::OpenMasternodeConnection(const CAddress &addrConnect) {

@@ -40,10 +40,7 @@
 class JSONRPCRequest;
 extern bool fMasternodeMode;
 extern bool bGethTestnet;
-extern bool fZMQWalletStatus;
 extern bool fZMQEthStatus;
-extern bool fZMQNetworkStatus;
-extern bool fZMQWalletRawTx;
 extern bool fLiteMode;
 extern uint32_t fGethSyncHeight;
 extern uint32_t fGethCurrentHeight;
