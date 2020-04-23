@@ -36,11 +36,8 @@
 
 #include <boost/algorithm/string/replace.hpp>
 // SYSCOIN
-#include <services/asset.h>
-#include <util/system.h>
+#include <services/asset.h> // ReserializeAssetCommitment
 #include <masternodeconfig.h>
-#include <univalue.h>
-extern void ListTransactions(interfaces::Chain::Lock& locked_chain, const CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter_ismine, const std::string* filter_label) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet);
 
 using interfaces::FoundBlock;
 
@@ -871,18 +868,6 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
         t.detach(); // thread runs free
     }
 #endif
-    // SYSCOIN
-    if(fZMQWalletRawTx)
-    {
-        // SYSCOIN
-        auto locked_chain = chain().lock();
-        UniValue ret(UniValue::VARR);
-        ListTransactions(*locked_chain, this, wtx, 0, true, ret, ISMINE_SPENDABLE | ISMINE_WATCH_ONLY, nullptr);
-        std::string retString = ret.write();
-        // just make sure we have some data to send
-        if(retString.size() > 10)
-            GetMainSignals().NotifySyscoinUpdate(ret.write().c_str(), "walletrawtx");
-    }
     return true;
 }
 
@@ -4291,12 +4276,6 @@ void CWallet::LockMasternodeOutputs(){
             }
             LogPrintf("  %s %s - locked successfully\n", mne.getTxHash(), mne.getOutputIndex());
         }
-    }
-    if(fZMQWalletStatus){
-        UniValue oWalletState(UniValue::VOBJ);
-        oWalletState.pushKV("name", GetName());
-        oWalletState.pushKV("status", "ready");
-        GetMainSignals().NotifySyscoinUpdate(oWalletState.write().c_str(), "walletstatus");
     }
 }
 void CWallet::postInitProcess()

@@ -13,10 +13,7 @@
                 -zmqpubrawblock=tcp://127.0.0.1:28370 \
                 -zmqpubhashtx=tcp://127.0.0.1:28370 \
                 -zmqpubhashblock=tcp://127.0.0.1:28370 \
-                -zmqpubwalletstatus=tcp://127.0.0.1:28370 \
-                -zmqpubethstatus=tcp://127.0.0.1:28370 \
-                -zmqpubnetworkstatus=tcp://127.0.0.1:28370 \
-                -zmqpubwalletrawtx=tcp://127.0.0.1:28370
+                -zmqpubethstatus=tcp://127.0.0.1:28370
 
     We use the asyncio library here.  `self.handle()` installs itself as a
     future at the end of the function.  Since it never returns with the event

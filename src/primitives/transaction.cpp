@@ -14,6 +14,7 @@
 #include <consensus/validation.h>
 #include <pubkey.h>
 #include <script/standard.h>
+#include <services/asset.h>
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
@@ -422,7 +423,6 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<in
     }
     return true;
 }
-RecursiveMutex cs_setethstatus;
 
 bool IsSyscoinMintTx(const int &nVersion) {
     return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT;

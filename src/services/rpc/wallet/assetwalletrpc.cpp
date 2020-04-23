@@ -21,7 +21,6 @@
 #include <node/transaction.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
-extern RecursiveMutex cs_setethstatus;
 
 CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const uint8_t &nPrecision, CTxDestination & address) {
     UniValue publicObj;
