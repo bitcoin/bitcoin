@@ -3834,7 +3834,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
             // do this check only when not in IBD (initial block download) or litemode
             // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
             EthereumTxRoot txRootDB;
-            CMintSyscoin mintSyscoin(txRef);
+            CMintSyscoin mintSyscoin(*txRef);
             if(!mintSyscoin.IsNull()){
                 const bool &ethTxRootShouldExist = !::ChainstateActive().IsInitialBlockDownload() && !fLiteMode && fLoaded && fGethSynced;
                 {

@@ -31,6 +31,7 @@ extern interfaces::Chain* g_rpc_chain;
 void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique_ptr<interfaces::Handler>>& handlers);
 // SYSCOIN
 void RegisterAssetWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique_ptr<interfaces::Handler>>& handlers);
+UniValue listunspent(const JSONRPCRequest& request);
 /**
  * Figures out what wallet, if any, to use for a JSONRPCRequest.
  *

@@ -434,7 +434,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     cachedInnerUsage -= memusage::DynamicUsage(mapLinks[it].parents) + memusage::DynamicUsage(mapLinks[it].children);
     // SYSCOIN remove bridge transfer id from mempool structure
     if(IsSyscoinMintTx(ptx->nVersion)) {
-        CMintSyscoin mintSyscoin(ptx);
+        CMintSyscoin mintSyscoin(*ptx);
         if(!mintSyscoin.IsNull())
             mapMintKeysMempool.erase(mintSyscoin.nBridgeTransferID);
     }
