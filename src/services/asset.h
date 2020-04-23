@@ -56,10 +56,29 @@ public:
 
     }
     template<typename Stream>
-    void Serialize(Stream &s) const;
-
+    inline void Serialize(Stream &s) const {	
+        s << assetAllocation;
+        s << vchPubData;
+        s << strSymbol;
+        s << nUpdateFlags;
+        s << nPrecision;
+        s << vchContract;
+        ::Serialize(s, Using<AmountCompression>(nBalance));
+        ::Serialize(s, Using<AmountCompression>(nTotalSupply));
+        ::Serialize(s, Using<AmountCompression>(nMaxSupply));
+    }
     template<typename Stream>
-    void Unserialize(Stream &s);
+    inline void Unserialize(Stream &s) {	
+        s >> assetAllocation;
+        s >> vchPubData;
+        s >> strSymbol;
+        s >> nUpdateFlags;
+        s >> nPrecision;
+        s >> vchContract;
+        ::Unserialize(s, Using<AmountCompression>(nBalance));
+        ::Unserialize(s, Using<AmountCompression>(nTotalSupply));
+        ::Unserialize(s, Using<AmountCompression>(nMaxSupply));
+    }
 
 
     inline friend bool operator==(const CAsset &a, const CAsset &b) {

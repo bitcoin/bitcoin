@@ -167,28 +167,3 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
     LogPrint(BCLog::SYS, "Flushing %d assets (erased %d, written %d)\n", mapAssets.size(), erase, write);
     return WriteBatch(batch);
 }
-
-template<typename Stream>
-void CAsset::Serialize(Stream &s) const {	
-    s << assetAllocation;
-    s << vchPubData;
-    s << strSymbol;
-    s << nUpdateFlags;
-    s << nPrecision;
-    s << vchContract;
-    ::Serialize(s, Using<AmountCompression>(nBalance));
-    ::Serialize(s, Using<AmountCompression>(nTotalSupply));
-    ::Serialize(s, Using<AmountCompression>(nMaxSupply));
-}
-template<typename Stream>
-void CAsset::Unserialize(Stream &s) {	
-    s >> assetAllocation;
-    s >> vchPubData;
-    s >> strSymbol;
-    s >> nUpdateFlags;
-    s >> nPrecision;
-    s >> vchContract;
-    ::Unserialize(s, Using<AmountCompression>(nBalance));
-    ::Unserialize(s, Using<AmountCompression>(nTotalSupply));
-    ::Unserialize(s, Using<AmountCompression>(nMaxSupply));
-}
