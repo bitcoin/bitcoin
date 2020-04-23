@@ -80,8 +80,6 @@ static const int64_t TIMESTAMP_MIN = 0;
 //! if set, all keys will be derived by using BIP39/BIP44
 static const bool DEFAULT_USE_HD_WALLET = false;
 
-bool AutoBackupWallet (CWallet* wallet, const std::string& strWalletFile_, std::string& strBackupWarningRet, std::string& strBackupErrorRet);
-
 class CBlockIndex;
 class CCoinControl;
 class COutput;
@@ -1221,8 +1219,9 @@ public:
      */
     void postInitProcess(CScheduler& scheduler);
 
-    /* Initialize AutoBackup functionality */
+    /* AutoBackup functionality */
     static bool InitAutoBackup();
+    bool AutoBackupWallet(const fs::path& wallet_path, std::string& strBackupWarningRet, std::string& strBackupErrorRet);
 
     bool BackupWallet(const std::string& strDest);
 

@@ -5106,7 +5106,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         // Try to create wallet backup right after new wallet was created
         std::string strBackupWarning;
         std::string strBackupError;
-        if(!AutoBackupWallet(walletInstance, "", strBackupWarning, strBackupError)) {
+        if(!walletInstance->AutoBackupWallet("", strBackupWarning, strBackupError)) {
             if (!strBackupWarning.empty()) {
                 InitWarning(strBackupWarning);
             }
@@ -5249,20 +5249,8 @@ bool CWallet::InitAutoBackup()
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
         return true;
 
-    std::string strWarning;
-    std::string strError;
-
     nWalletBackups = gArgs.GetArg("-createwalletbackups", 10);
     nWalletBackups = std::max(0, std::min(10, nWalletBackups));
-
-    std::string strWalletFile = gArgs.GetArg("-wallet", "");
-
-    if(!AutoBackupWallet(nullptr, strWalletFile, strWarning, strError)) {
-        if (!strWarning.empty())
-            InitWarning(strWarning);
-        if (!strError.empty())
-            return InitError(strError);
-    }
 
     return true;
 }
@@ -5273,11 +5261,11 @@ bool CWallet::BackupWallet(const std::string& strDest)
 }
 
 // This should be called carefully:
-// either supply "wallet" (if already loaded) or "strWalletFile" (if wallet wasn't loaded yet)
-bool AutoBackupWallet(CWallet* wallet, const std::string& strWalletFile_, std::string& strBackupWarningRet, std::string& strBackupErrorRet)
+// either supply the actual wallet_path to make a raw copy of wallet.dat or "" to backup current instance via BackupWallet()
+bool CWallet::AutoBackupWallet(const fs::path& wallet_path, std::string& strBackupWarningRet, std::string& strBackupErrorRet)
 {
     strBackupWarningRet = strBackupErrorRet = "";
-    std::string strWalletFile = "";
+    std::string strWalletName = m_name.empty() ? "wallet.dat" : m_name;
 
     if (nWalletBackups <= 0) {
         LogPrintf("Automatic wallet backups are disabled!\n");
@@ -5285,6 +5273,7 @@ bool AutoBackupWallet(CWallet* wallet, const std::string& strWalletFile_, std::s
     }
 
     fs::path backupsDir = GetBackupsDir();
+    backupsDir.make_preferred();
 
     if (!fs::exists(backupsDir))
     {
@@ -5307,32 +5296,33 @@ bool AutoBackupWallet(CWallet* wallet, const std::string& strWalletFile_, std::s
 
     // Create backup of the ...
     std::string dateTimeStr = DateTimeStrFormat(".%Y-%m-%d-%H-%M", GetTime());
-    if (wallet)
-    {
+    if (wallet_path.empty()) {
         // ... opened wallet
-        LOCK2(cs_main, wallet->cs_wallet);
-        strWalletFile = wallet->GetName();
-        fs::path backupFile = backupsDir / (strWalletFile + dateTimeStr);
-        if(!wallet->BackupWallet(backupFile.string())) {
+        LOCK2(cs_main, cs_wallet);
+        fs::path backupFile = backupsDir / (strWalletName + dateTimeStr);
+        backupFile.make_preferred();
+        if (!BackupWallet(backupFile.string())) {
             strBackupWarningRet = strprintf(_("Failed to create backup %s!"), backupFile.string());
             LogPrintf("%s\n", strBackupWarningRet);
             nWalletBackups = -1;
             return false;
         }
+
         // Update nKeysLeftSinceAutoBackup using current external keypool size
-        wallet->nKeysLeftSinceAutoBackup = wallet->KeypoolCountExternalKeys();
-        LogPrintf("nKeysLeftSinceAutoBackup: %d\n", wallet->nKeysLeftSinceAutoBackup);
-        if(wallet->IsLocked(true)) {
+        nKeysLeftSinceAutoBackup = KeypoolCountExternalKeys();
+        LogPrintf("nKeysLeftSinceAutoBackup: %d\n", nKeysLeftSinceAutoBackup);
+        if (IsLocked(true)) {
             strBackupWarningRet = _("Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.");
             LogPrintf("%s\n", strBackupWarningRet);
             nWalletBackups = -2;
             return false;
         }
     } else {
-        // ... strWalletFile file
-        strWalletFile = strWalletFile_;
-        fs::path sourceFile = GetDataDir() / strWalletFile;
-        fs::path backupFile = backupsDir / (strWalletFile + dateTimeStr);
+        // ... strWalletName file
+        std::string strSourceFile;
+        CDBEnv* env = GetWalletEnv(wallet_path, strSourceFile);
+        fs::path sourceFile = wallet_path / strSourceFile;
+        fs::path backupFile = backupsDir / (strWalletName + dateTimeStr);
         sourceFile.make_preferred();
         backupFile.make_preferred();
         if (fs::exists(backupFile))
@@ -5358,7 +5348,6 @@ bool AutoBackupWallet(CWallet* wallet, const std::string& strWalletFile_, std::s
     typedef std::multimap<std::time_t, fs::path> folder_set_t;
     folder_set_t folder_set;
     fs::directory_iterator end_iter;
-    backupsDir.make_preferred();
     // Build map of backup files for current(!) wallet sorted by last write time
     fs::path currentFile;
     for (fs::directory_iterator dir_iter(backupsDir); dir_iter != end_iter; ++dir_iter)
@@ -5368,8 +5357,7 @@ bool AutoBackupWallet(CWallet* wallet, const std::string& strWalletFile_, std::s
         {
             currentFile = dir_iter->path().filename();
             // Only add the backups for the current wallet, e.g. wallet.dat.*
-            if(dir_iter->path().stem().string() == strWalletFile)
-            {
+            if (dir_iter->path().stem().string() == strWalletName) {
                 folder_set.insert(folder_set_t::value_type(fs::last_write_time(dir_iter->path()), *dir_iter));
             }
         }

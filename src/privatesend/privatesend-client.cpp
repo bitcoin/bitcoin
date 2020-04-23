@@ -757,7 +757,7 @@ bool CPrivateSendClientManager::CheckAutomaticBackup()
             std::string warningString;
             std::string errorString;
 
-            if (!AutoBackupWallet(GetWallets()[0], "", warningString, errorString)) {
+            if (!GetWallets()[0]->AutoBackupWallet("", warningString, errorString)) {
                 if (!warningString.empty()) {
                     // There were some issues saving backup but yet more or less safe to continue
                     LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientManager::CheckAutomaticBackup -- WARNING! Something went wrong on automatic backup: %s\n", warningString);

@@ -535,7 +535,7 @@ bool WalletModel::autoBackupWallet(QString& strBackupWarningRet, QString& strBac
 {
     std::string strBackupWarning;
     std::string strBackupError;
-    bool result = AutoBackupWallet(wallet, "", strBackupWarning, strBackupError);
+    bool result = wallet->AutoBackupWallet("", strBackupWarning, strBackupError);
     strBackupWarningRet = QString::fromStdString(strBackupWarning);
     strBackupErrorRet = QString::fromStdString(strBackupError);
     return result;

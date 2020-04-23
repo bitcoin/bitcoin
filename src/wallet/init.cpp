@@ -284,6 +284,15 @@ bool WalletInit::Verify()
             return InitError(strError);
         }
 
+        std::string strWarning;
+        std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(walletFile, CWalletDBWrapper::Create(wallet_path));
+        if (!tempWallet->AutoBackupWallet(wallet_path, strWarning, strError)) {
+            if (!strWarning.empty())
+                InitWarning(strWarning);
+            if (!strError.empty())
+                return InitError(strError);
+        }
+
         if (gArgs.GetBoolArg("-salvagewallet", false)) {
             // Recover readable keypairs:
             CWallet dummyWallet("dummy", CWalletDBWrapper::CreateDummy());
@@ -293,7 +302,6 @@ bool WalletInit::Verify()
             }
         }
 
-        std::string strWarning;
         bool dbV = CWalletDB::VerifyDatabaseFile(wallet_path, strWarning, strError);
         if (!strWarning.empty()) {
             InitWarning(strWarning);
