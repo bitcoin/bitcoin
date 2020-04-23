@@ -41,8 +41,8 @@
 #include <univalue.h>
 // SYSCOIN
 #include <services/assetconsensus.h>
-
-static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
+// SYSCOIN
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 {
     // Call into TxToUniv() in syscoin-common to decode the transaction hex.
     //
