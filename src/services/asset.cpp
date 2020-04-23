@@ -5,7 +5,6 @@
 #include <validation.h>
 #include <services/asset.h>
 #include <consensus/validation.h>
-std::unique_ptr<CAssetDB> passetdb;
 
 std::string stringFromSyscoinTx(const int &nVersion) {
     switch (nVersion) {
