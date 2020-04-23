@@ -340,6 +340,7 @@ void CAssetAllocation::SerializeData( std::vector<unsigned char> &vchData) {
 
 }
 
+template<typename Stream>
 void CAssetAllocation::Serialize(Stream &s) const {
     s << voutAssets;
 }
