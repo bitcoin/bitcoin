@@ -725,7 +725,9 @@ if TARGET_WINDOWS
 syscoin_wallet_SOURCES += syscoin-wallet-res.rc
 endif
 
+# FIXME: Remove SERVER once we have cleaned up assets+getauxblock!
 syscoin_wallet_LDADD = \
+  $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_WALLET_TOOL) \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_COMMON) \
@@ -737,7 +739,8 @@ syscoin_wallet_LDADD = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBUNIVALUE)
+  $(LIBUNIVALUE) \
+  $(LIBETHEREUM)
 
 syscoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
 #
