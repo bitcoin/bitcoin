@@ -355,8 +355,6 @@ class CompactBlocksTest(BitcoinTestFramework):
         # request
         for announce in ["inv", "header"]:
             block = self.build_block_on_tip(node)
-            with mininode_lock:
-                test_node.last_message.pop("getdata", None)
 
             if announce == "inv":
                 test_node.send_message(msg_inv([CInv(MSG_BLOCK, block.sha256)]))
@@ -365,10 +363,8 @@ class CompactBlocksTest(BitcoinTestFramework):
                 test_node.send_header_for_blocks([block])
             else:
                 test_node.send_header_for_blocks([block])
-            wait_until(lambda: "getdata" in test_node.last_message, timeout=30, lock=mininode_lock)
-            assert_equal(len(test_node.last_message["getdata"].inv), 1)
+            test_node.wait_for_getdata([block.sha256], timeout=30)
             assert_equal(test_node.last_message["getdata"].inv[0].type, MSG_CMPCT_BLOCK)
-            assert_equal(test_node.last_message["getdata"].inv[0].hash, block.sha256)
 
             # Send back a compactblock message that omits the coinbase
             comp_block = HeaderAndShortIDs()
@@ -533,10 +529,8 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(node.getbestblockhash(), 16), block.hashPrevBlock)
 
         # We should receive a getdata request
-        wait_until(lambda: "getdata" in test_node.last_message, timeout=10, lock=mininode_lock)
-        assert_equal(len(test_node.last_message["getdata"].inv), 1)
+        test_node.wait_for_getdata([block.sha256], timeout=10)
         assert test_node.last_message["getdata"].inv[0].type == MSG_BLOCK
-        assert_equal(test_node.last_message["getdata"].inv[0].hash, block.sha256)
 
         # Deliver the block
         test_node.send_and_ping(msg_block(block))
