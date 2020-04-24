@@ -19,16 +19,13 @@
 #include <validationinterface.h>
 #include <version.h>
 
-#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <iosfwd>
 #include <iostream>
-#include <map>
 #include <memory>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -43,19 +40,6 @@ const std::string LIMIT_TO_MESSAGE_TYPE{TO_STRING(MESSAGE_TYPE)};
 #else
 const std::string LIMIT_TO_MESSAGE_TYPE;
 #endif
-
-const std::map<std::string, std::set<std::string>> EXPECTED_DESERIALIZATION_EXCEPTIONS = {
-    {"CDataStream::read(): end of data: iostream error", {"addr", "block", "blocktxn", "cmpctblock", "feefilter", "filteradd", "filterload", "getblocks", "getblocktxn", "getdata", "getheaders", "headers", "inv", "notfound", "ping", "sendcmpct", "tx"}},
-    {"CompactSize exceeds limit of type: iostream error", {"cmpctblock"}},
-    {"differential value overflow: iostream error", {"getblocktxn"}},
-    {"index overflowed 16 bits: iostream error", {"getblocktxn"}},
-    {"index overflowed 16-bits: iostream error", {"cmpctblock"}},
-    {"indexes overflowed 16 bits: iostream error", {"getblocktxn"}},
-    {"non-canonical ReadCompactSize(): iostream error", {"addr", "block", "blocktxn", "cmpctblock", "filteradd", "filterload", "getblocks", "getblocktxn", "getdata", "getheaders", "headers", "inv", "notfound", "tx"}},
-    {"ReadCompactSize(): size too large: iostream error", {"addr", "block", "blocktxn", "cmpctblock", "filteradd", "filterload", "getblocks", "getblocktxn", "getdata", "getheaders", "headers", "inv", "notfound", "tx"}},
-    {"Superfluous witness record: iostream error", {"block", "blocktxn", "cmpctblock", "tx"}},
-    {"Unknown transaction optional data: iostream error", {"block", "blocktxn", "cmpctblock", "tx"}},
-};
 
 const TestingSetup* g_setup;
 } // namespace
@@ -91,13 +75,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     g_setup->m_node.peer_logic->InitializeNode(&p2p_node);
     try {
         (void)ProcessMessage(&p2p_node, random_message_type, random_bytes_data_stream, GetTimeMillis(), Params(), *g_setup->m_node.mempool, g_setup->m_node.connman.get(), g_setup->m_node.banman.get(), std::atomic<bool>{false});
-    } catch (const std::ios_base::failure& e) {
-        const std::string exception_message{e.what()};
-        const auto p = EXPECTED_DESERIALIZATION_EXCEPTIONS.find(exception_message);
-        if (p == EXPECTED_DESERIALIZATION_EXCEPTIONS.cend() || p->second.count(random_message_type) == 0) {
-            std::cout << "Unexpected exception when processing message type \"" << random_message_type << "\": " << exception_message << std::endl;
-            assert(false);
-        }
+    } catch (const std::ios_base::failure&) {
     }
     SyncWithValidationInterfaceQueue();
 }
