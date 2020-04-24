@@ -144,7 +144,7 @@ public:
 
     interfaces::Node& node() const { return m_node; }
     interfaces::Wallet& wallet() const { return *m_wallet; }
-    ClientModel& clientModel() const { return m_client_model; }
+    int getNumBlocks() const { return cachedNumBlocks; }
 
     QString getWalletName() const;
     QString getDisplayName() const;
