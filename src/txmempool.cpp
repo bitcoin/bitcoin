@@ -18,7 +18,8 @@
 #include <util/moneystr.h>
 #include <util/time.h>
 #include <validationinterface.h>
-
+// SYSCOIN
+#include <util/rbf.h>
 extern EthereumMintTxMap mapMintKeysMempool;
 extern std::set<COutPoint> assetAllocationConflicts;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
@@ -554,8 +555,7 @@ bool CTxMemPool::existsConflicts(const CTransaction &tx)
     }
     return false;
 }
-// regardless of RBF or not, we want to know if there are any conflicts for ZDAG, because ZDAG is not compliant with RBF
-// this will return if there are ANY conflicts and stop ZDAG transactions from returning OK status
+
 void CTxMemPool::removeConflicts(const CTransaction &tx)
 {
     // Remove transactions which depend on inputs of tx, recursively
@@ -594,6 +594,17 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
             if (txConflict != tx) {
                 txiter conflictit = mapTx.find(txConflict.GetHash());
                 assert(conflictit != mapTx.end());
+                // if transaction in question was signalling RBF but conflicting transaction was not
+                // prefer the conflict version over this one as prescedence over time based ordering
+                // if both signal RBF, just choose the first one in mempool based on time below (they wouldn't have been used for point-of-sale anyway due to RBF)
+                const bool &thisRBF = SignalsOptInRBF(tx);
+                const bool &otherRBF = SignalsOptInRBF(txConflict);
+                if(thisRBF && !otherRBF) {
+                    return false;
+                // if this transaction is non-RBF but conflict signals it, prefer this one regardless of time order
+                } else if(!thisRBF && otherRBF) {
+                    return true;
+                }
                 // if conflicting transaction was received before the transaction in question
                 // idea is to mine the oldest transaction in event of conflict
                 // upon block, the conflict is removed
