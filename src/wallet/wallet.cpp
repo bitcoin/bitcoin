@@ -2276,7 +2276,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
 {
     setCoinsRet.clear();
     nValueRet = 0;
-
+    CAmount nValueRetInternal = 0;
     std::vector<OutputGroup> utxo_pool;
     // SYSCOIN
     std::vector<OutputGroup> utxo_pool_asset;
@@ -2340,6 +2340,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
         if(bAsset) {
             bnb_used = false;
             // SYSCOIN
+            
             bAssetSolver = KnapsackSolver(nTargetValueAsset, utxo_pool_asset, setCoinsRet, nValueRetAsset);
             // from returned coins, see if we need to also add more gas or do we have enough already
             for(const auto& inputCoin: setCoinsRet) {
@@ -2348,7 +2349,11 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
             // remove attached gas from asset inputs from how much we thought we needed before
             nTarget -= nValueRet;
         }
-        bool bBaseSysSolver = nTarget <= 0 || KnapsackSolver(nTarget, utxo_pool, setCoinsRet, nValueRet);
+        bool bBaseSysSolver = nTarget <= 0 || KnapsackSolver(nTarget, utxo_pool, setCoinsRet, nValueRetInternal);
+        // add new gas value to returned amount
+        nValueRet += nValueRetInternal;
+        // reduce target by amount returned
+        nTarget -= nValueRetInternal;
         // if funding asset but not enough gas found in non-asset utxo's look in asset utxo's for gas
         if(bAsset && !bBaseSysSolver && nTarget > 0) {
             // remove previously selected coins setCoinsRet from utxo_pool_asset
@@ -2358,8 +2363,12 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
                     outputGroup.Discard(inputCoin);
                 }
             }
-            bBaseSysSolver = !utxo_pool_asset.empty() && KnapsackSolver(nTarget, utxo_pool_asset, setCoinsRet, nValueRet);
-            // from returned coins, account for asset amounts returned which will be sent back as change
+            // only look for reduced target coins
+            bBaseSysSolver = KnapsackSolver(nTarget, utxo_pool_asset, setCoinsRet, nValueRetInternal);
+            // add new gas value to returned amount
+            nValueRet += nValueRetInternal;
+            // from returned coins, tally total asset amount. setCoinsRet is cumulative throughout KnapsackSolver calls
+            nValueRetAsset = 0;
             for(const auto& inputCoin: setCoinsRet) {
                 nValueRetAsset += inputCoin.effective_value_asset.nValue;
             }
@@ -2964,7 +2973,12 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                         coin_selection_params.change_spend_size = (size_t)change_spend_size;
                     }
                     coin_selection_params.effective_fee = nFeeRateNeeded;
-                    if (!SelectCoins(vAvailableCoins, nValueToSelect, nValueToSelectAsset, setCoins, nValueIn, nValueInAsset, coin_control, coin_selection_params, bnb_used))
+                    // SYSCOIN
+                    CAmount nValueToSelectPlusAssetChange = nValueToSelect;
+                    if(coin_control.assetInfo) {
+                        nValueToSelectPlusAssetChange += MIN_CHANGE;
+                    }
+                    if (!SelectCoins(vAvailableCoins, nValueToSelectPlusAssetChange, nValueToSelectAsset, setCoins, nValueIn, nValueInAsset, coin_control, coin_selection_params, bnb_used))
                     {
                         // If BnB was used, it was the first pass. No longer the first pass and continue loop with knapsack.
                         if (bnb_used) {
@@ -2987,16 +3001,14 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 const bool& isAssetChange = (nChangeAsset.nAsset > 0 && nChangeAsset.nValue > 0);
                 if (nChange > 0 || isAssetChange)
                 {
-                    // SYSCOIN
-                    if(isAssetChange) {
-                        // if asset has change but no change for SYS, assign some dust output so the asset change can get into an output
-                        if(nChange <= 0) {
-                            nChange = GetDustThreshold(change_prototype_txout, discard_rate);
-                        }
-                    }
                     // Fill a vout to ourself
                     CTxOut newTxOut(nChange, scriptChange);
                     if(isAssetChange) {
+                        // if asset has change but no change for SYS, assign some dust output so the asset change can get into an output
+                        const CAmount &nDust = GetDustThreshold(change_prototype_txout, discard_rate);
+                        if(newTxOut.nValue <= nDust) {
+                            newTxOut.nValue = nDust;
+                        }
                         newTxOut.assetInfo = nChangeAsset;
                     }
                     // Never create dust outputs; if we would, just
@@ -3052,7 +3064,6 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     strFailReason = _("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.").translated;
                     return false;
                 }
-
                 if (nFeeRet >= nFeeNeeded) {
                     // Reduce fee to only the needed amount if possible. This
                     // prevents potential overpayment in fees if the coins
