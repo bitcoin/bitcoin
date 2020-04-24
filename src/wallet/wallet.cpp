@@ -5321,7 +5321,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, std::string& strBack
         // ... strWalletName file
         std::string strSourceFile;
         CDBEnv* env = GetWalletEnv(wallet_path, strSourceFile);
-        fs::path sourceFile = wallet_path / strSourceFile;
+        fs::path sourceFile = env->Directory() / strSourceFile;
         fs::path backupFile = backupsDir / (strWalletName + dateTimeStr);
         sourceFile.make_preferred();
         backupFile.make_preferred();
