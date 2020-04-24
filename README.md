@@ -3,15 +3,15 @@ VeriBlock
 
 Fork created at [8830cb58abc888144a1edb9b2fba427716cc45d8](https://github.com/bitcoin/bitcoin/commit/8830cb58abc888144a1edb9b2fba427716cc45d8).
 
-Bitcoin Core integration/staging tree
+VeriBlock Bitcoin Core integration/staging tree
 =====================================
 
-https://bitcoincore.org
+https://veriblock.org
 
-What is Bitcoin?
+What is vBitcoin?
 ----------------
 
-Bitcoin is an experimental digital currency that enables instant payments to
+vBitcoin is an experimental digital currency that enables instant payments to
 anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
 out collectively by the network. Bitcoin Core is the name of open source

@@ -5,49 +5,49 @@
 # See "man systemd.service" for details.
 
 # Note that almost all daemon options could be specified in
-# /etc/bitcoin/bitcoin.conf, but keep in mind those explicitly
+# /etc/vbitcoin/vbitcoin.conf, but keep in mind those explicitly
 # specified as arguments in ExecStart= will override those in the
 # config file.
 
 [Unit]
-Description=Bitcoin daemon
+Description=vBitcoin daemon
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/bitcoind -daemon \
-                            -pid=/run/bitcoind/bitcoind.pid \
-                            -conf=/etc/bitcoin/bitcoin.conf \
-                            -datadir=/var/lib/bitcoind
+ExecStart=/usr/bin/vbitcoind -daemon \
+                            -pid=/run/vbitcoind/vbitcoind.pid \
+                            -conf=/etc/vbitcoin/vbitcoin.conf \
+                            -datadir=/var/lib/vbitcoind
 
 # Make sure the config directory is readable by the service user
 PermissionsStartOnly=true
-ExecStartPre=/bin/chgrp bitcoin /etc/bitcoin
+ExecStartPre=/bin/chgrp vbitcoin /etc/vbitcoin
 
 # Process management
 ####################
 
 Type=forking
-PIDFile=/run/bitcoind/bitcoind.pid
+PIDFile=/run/vbitcoind/vbitcoind.pid
 Restart=on-failure
 TimeoutStopSec=600
 
 # Directory creation and permissions
 ####################################
 
-# Run as bitcoin:bitcoin
-User=bitcoin
-Group=bitcoin
+# Run as vbitcoin:vbitcoin
+User=vbitcoin
+Group=vbitcoin
 
-# /run/bitcoind
-RuntimeDirectory=bitcoind
+# /run/vbitcoind
+RuntimeDirectory=vbitcoind
 RuntimeDirectoryMode=0710
 
-# /etc/bitcoin
-ConfigurationDirectory=bitcoin
+# /etc/vbitcoin
+ConfigurationDirectory=vbitcoin
 ConfigurationDirectoryMode=0710
 
-# /var/lib/bitcoind
-StateDirectory=bitcoind
+# /var/lib/vbitcoind
+StateDirectory=vbitcoind
 StateDirectoryMode=0710
 
 # Hardening measures

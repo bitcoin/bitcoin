@@ -13,7 +13,7 @@ can be found in the contrib/init folder.
 Service User
 ---------------------------------
 
-All three Linux startup configurations assume the existence of a "bitcoin" user
+All three Linux startup configurations assume the existence of a "vbitcoin" user
 and group.  They must be created before attempting to use these scripts.
 The macOS configuration assumes bitcoind will be set up for the current user.
 
@@ -73,10 +73,10 @@ bitcoin group to do so (e.g. when `-sysperms` is specified). This does not allow
 for the listing of files under the directory.
 
 NOTE: It is not currently possible to override `datadir` in
-`/etc/bitcoin/bitcoin.conf` with the current systemd, OpenRC, and Upstart init
+`/etc/vbitcoin/vbitcoin.conf` with the current systemd, OpenRC, and Upstart init
 files out-of-the-box. This is because the command line options specified in the
 init files take precedence over the configurations in
-`/etc/bitcoin/bitcoin.conf`. However, some init systems have their own
+`/etc/vbitcoin/vbitcoin.conf`. However, some init systems have their own
 configuration mechanisms that would allow for overriding the command line
 options specified in the init files (e.g. setting `BITCOIND_DATADIR` for
 OpenRC).
@@ -84,9 +84,9 @@ OpenRC).
 ### macOS
 
 Binary:              `/usr/local/bin/bitcoind`
-Configuration file:  `~/Library/Application Support/Bitcoin/bitcoin.conf`
-Data directory:      `~/Library/Application Support/Bitcoin`
-Lock file:           `~/Library/Application Support/Bitcoin/.lock`
+Configuration file:  `~/Library/Application Support/vBitcoin/vbitcoin.conf`
+Data directory:      `~/Library/Application Support/vBitcoin`
+Lock file:           `~/Library/Application Support/vBitcoin/.lock`
 
 Installing Service Configuration
 -----------------------------------

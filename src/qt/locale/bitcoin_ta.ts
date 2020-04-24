@@ -58,7 +58,7 @@
         <translation>முகவரிகள் பெறப்படுகின்றன</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your vBitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>இவை பணம் அனுப்புவதற்கு உங்கள் பிட்கின் முகவரிகள். நாணயங்களை அனுப்புவதற்கு முன் எப்பொழுதும் தொகையும் பெறுதலையும் சரிபார்க்கவும்.</translation>
     </message>
     <message>
@@ -314,7 +314,7 @@
         <translation>ப்ராக்ஸி இயக்கப்பட்டது: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a vBitcoin address</source>
         <translation>ஒரு விக்கிபீடியா முகவரிக்கு நாணயங்களை அனுப்பவும்</translation>
     </message>
     <message>
@@ -358,11 +358,11 @@
         <translation>உங்கள் பணப்பைச் சேர்ந்த தனிப்பட்ட விசைகளை குறியாக்குக</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your vBitcoin addresses to prove you own them</source>
         <translation>உங்கள் பிட்டினின் முகவரியுடன் செய்திகளை உங்களிடம் வைத்திருப்பதை நிரூபிக்க</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified vBitcoin addresses</source>
         <translation>குறிப்பிடப்பட்ட விக்கிபீடியா முகவர்களுடன் கையொப்பமிடப்பட்டதை உறுதிப்படுத்த, செய்திகளை சரிபார்க்கவும்</translation>
     </message>
     <message>
@@ -395,7 +395,7 @@
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation>ஒரு Bitcoin திறக்க: URI அல்லது பணம் கோரிக்கை</translation>
+        <translation>ஒரு vBitcoin திறக்க: URI அல்லது பணம் கோரிக்கை</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -446,8 +446,8 @@
         <translation>முகவரிகள் பெறுதல்</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>சாத்தியமான Bitcoin கட்டளை-வரி விருப்பங்களைக் கொண்ட பட்டியலைப் பெற %1 உதவிச் செய்தியைக் காட்டு</translation>
+        <source>Show the %1 help message to get a list with possible vBitcoin command-line options</source>
+        <translation>சாத்தியமான vBitcoin கட்டளை-வரி விருப்பங்களைக் கொண்ட பட்டியலைப் பெற %1 உதவிச் செய்தியைக் காட்டு</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -534,7 +534,7 @@
         <translation>Wallet குறியாக்கப்பட்டு தற்போது பூட்டப்பட்டுள்ளது</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
+        <source>A fatal error occurred. vBitcoin can no longer continue safely and will quit.</source>
         <translation>Wallet குறியாக்கப்பட்டு தற்போது பூட்டப்பட்டுள்ளது</translation>
     </message>
 </context>
@@ -730,7 +730,7 @@
         <translation>முகவரியை அனுப்புவதைத் திருத்து</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <source>The entered address "%1" is not a valid vBitcoin address.</source>
         <translation>உள்ளிட்ட முகவரி "%1" என்பது செல்லுபடியாகும் விக்கிபீடியா முகவரி அல்ல.</translation>
     </message>
     <message>
@@ -839,7 +839,7 @@
         <translation>இந்த அடைவில் %1 ஜிபி தரவு சேமிக்கப்படும்.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
+        <source>%1 will download and store a copy of the vBitcoin block chain.</source>
         <translation>Bitcoin தொகுதி சங்கிலியின் நகலை %1 பதிவிறக்கம் செய்து சேமித்து வைக்கும்.</translation>
     </message>
     <message>
@@ -1051,8 +1051,8 @@
         <translation>&amp; உறுதிப்படுத்தப்படாத மாற்றத்தை செலவழிக்கவும்</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>ரூட்டரில் Bitcoin கிளையன்ட் போர்ட் தானாக திறக்க. இது உங்கள் திசைவி UPnP ஐ ஆதரிக்கும் போது மட்டுமே இயங்குகிறது.</translation>
+        <source>Automatically open the vBitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>ரூட்டரில் vBitcoin கிளையன்ட் போர்ட் தானாக திறக்க. இது உங்கள் திசைவி UPnP ஐ ஆதரிக்கும் போது மட்டுமே இயங்குகிறது.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1067,7 +1067,7 @@
         <translation>Incomin &amp; g இணைப்புகளை அனுமதிக்கவும்</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <source>Connect to the vBitcoin network through a SOCKS5 proxy.</source>
         <translation>Bitcoin பிணையத்துடன் SOCKS5 ப்ராக்ஸி மூலம் இணைக்கவும்.</translation>
     </message>
     <message>
@@ -1103,7 +1103,7 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <source>Connect to the vBitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
         <translation>டார் மறைக்கப்பட்ட சேவைகளை தனித்த SOCKS5 ப்ராக்ஸி மூலம் பிட்கோடு நெட்வொர்க்குடன் இணைக்கவும்.</translation>
     </message>
     <message>
@@ -1214,7 +1214,7 @@
         <translation>படிவம்</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the vBitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>காட்டப்படும் தகவல் காலாவதியானதாக இருக்கலாம். ஒரு இணைப்பு நிறுவப்பட்ட பிறகு, உங்கள் பணப்பை தானாக பிட்கோடு நெட்வொர்க்குடன் ஒத்திசைக்கிறது, ஆனால் இந்த செயல்முறை இன்னும் முடிவடையவில்லை.</translation>
     </message>
     <message>
@@ -1317,7 +1317,7 @@
         <translation>தவறான கட்டண முகவரி %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid vBitcoin address or malformed URI parameters.</source>
         <translation>URI அலச முடியாது! தவறான பிட்கின் முகவரி அல்லது தவறான URI அளவுருக்கள் காரணமாக இது ஏற்படலாம்.</translation>
     </message>
     <message>
@@ -1419,7 +1419,7 @@
         <translation>விலை</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a vBitcoin address (e.g. %1)</source>
         <translation>ஒரு விக்கிபீடியா முகவரியை உள்ளிடவும் (எ.கா. %1)</translation>
     </message>
     <message>
@@ -1852,8 +1852,8 @@
         <translation>&amp;செய்தி:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation>கோரிக்கையை திறக்கும் போது காட்டப்படும் இது பணம் கோரிக்கை இணைக்க ஒரு விருப்ப செய்தி. குறிப்பு: Bitcoin நெட்வொர்க்கில் பணம் செலுத்தியவுடன் செய்தி அனுப்பப்படாது.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the vBitcoin network.</source>
+        <translation>கோரிக்கையை திறக்கும் போது காட்டப்படும் இது பணம் கோரிக்கை இணைக்க ஒரு விருப்ப செய்தி. குறிப்பு: vBitcoin நெட்வொர்க்கில் பணம் செலுத்தியவுடன் செய்தி அனுப்பப்படாது.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>

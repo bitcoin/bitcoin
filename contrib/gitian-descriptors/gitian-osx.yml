@@ -29,8 +29,8 @@ packages:
 - "python3-setuptools"
 - "fonts-tuffy"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
-  "dir": "bitcoin"
+- "url": "https://github.com/VeriBlock/vbk-ri-btc.git"
+  "dir": "vbk-ri-btc"
 files:
 - "MacOSX10.11.sdk.tar.gz"
 script: |

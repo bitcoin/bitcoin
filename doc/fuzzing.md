@@ -1,11 +1,11 @@
-Fuzz-testing Bitcoin Core
+Fuzz-testing vBitcoin Core
 ==========================
 
 A special test harness in `src/test/fuzz/` is provided for each fuzz target to
 provide an easy entry point for fuzzers and the like. In this document we'll
 describe how to use it with AFL and libFuzzer.
 
-## Preparing fuzzing
+## Preparing fuzzing (Bitcoin Only)
 
 AFL needs an input directory with examples, and an output directory where it
 will place examples that it found. These can be anywhere in the file system,

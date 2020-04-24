@@ -66,12 +66,12 @@
         <translation>Adresa prijímaťeľa</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Toto je vaša Bitcoin adresa pre odosielanie platieb. Vždy si overte hodnotu a adresu prijímateľa pred odoslaním vaších mincí.</translation>
+        <source>These are your vBitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Toto je vaša vBitcoin adresa pre odosielanie platieb. Vždy si overte hodnotu a adresu prijímateľa pred odoslaním vaších mincí.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Toto je vaša Bitcoin adresa pre prijímanie platieb. Odporúčame Vám používať vždy novú adresu pre každú transakciu.</translation>
+        <source>These are your vBitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Toto je vaša vBitcoin adresa pre prijímanie platieb. Odporúčame Vám používať vždy novú adresu pre každú transakciu.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -354,8 +354,8 @@
         <translation>Proxy je &lt;b&gt;povolené&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Poslať mince do Bitcoin adresy</translation>
+        <source>Send coins to a vBitcoin address</source>
+        <translation>Poslať mince do vBitcoin adresy</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -406,12 +406,12 @@
         <translation>Zašifrovať súkromné kľúče patriace k vašej peňaženke</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Podpísať správu s vašou Bitcoin adresou pre dokázanie že ich vlastníte</translation>
+        <source>Sign messages with your vBitcoin addresses to prove you own them</source>
+        <translation>Podpísať správu s vašou vBitcoin adresou pre dokázanie že ich vlastníte</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Overiť správy pre zaručenie že boli podpísané špecifickými Bitcoin adresami</translation>
+        <source>Verify messages to ensure they were signed with specified vBitcoin addresses</source>
+        <translation>Overiť správy pre zaručenie že boli podpísané špecifickými vBitcoin adresami</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -450,8 +450,8 @@
         <translation>&amp;Možnosti príkazového riadku</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktívne pripojenia na Bitcoin sieti</numerusform><numerusform>%n aktívne pripojenia na Bitcoin sieti</numerusform><numerusform>%n aktívne pripojenia na Bitcoin sieti</numerusform><numerusform>%n aktívne pripojenia na Bitcoin sieti</numerusform></translation>
+        <source>%n active connection(s) to vBitcoin network</source>
+        <translation><numerusform>%n aktívne pripojenia na vBitcoin sieti</numerusform><numerusform>%n aktívne pripojenia na vBitcoin sieti</numerusform><numerusform>%n aktívne pripojenia na vBitcoin sieti</numerusform><numerusform>%n aktívne pripojenia na vBitcoin sieti</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -494,8 +494,8 @@
         <translation>Aktuálne</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Ukázať %1 pomocnú správu na dostanie zoznamu s možnými možnosťami v Bitcoin príkazovom riadku</translation>
+        <source>Show the %1 help message to get a list with possible vBitcoin command-line options</source>
+        <translation>Ukázať %1 pomocnú správu na dostanie zoznamu s možnými možnosťami v vBitcoin príkazovom riadku</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -570,8 +570,8 @@
         <translation>Peňaženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a aktuálne &lt;b&gt;zamknutá&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Nastala fatálna chyba. Bitcoin už nemôže pokračovať bezpečne a vypne sa.</translation>
+        <source>A fatal error occurred. vBitcoin can no longer continue safely and will quit.</source>
+        <translation>Nastala fatálna chyba. vBitcoin už nemôže pokračovať bezpečne a vypne sa.</translation>
     </message>
 </context>
 <context>
@@ -760,8 +760,8 @@
         <translation>Upraviť odosielaciu adresu</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Vložená adresa ''%1'' nie je platná Bitcoin adresa.</translation>
+        <source>The entered address "%1" is not a valid vBitcoin address.</source>
+        <translation>Vložená adresa ''%1'' nie je platná vBitcoin adresa.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -869,8 +869,8 @@
         <translation>V tomto adresári bude uložených približne %1 GB dát.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation>%1 stiahne a bude uchovávať kópiu Bitcoin blockchainu.</translation>
+        <source>%1 will download and store a copy of the vBitcoin block chain.</source>
+        <translation>%1 stiahne a bude uchovávať kópiu vBitcoin blockchainu.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -901,7 +901,7 @@
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>Nedávne transakcie ešte nemusia byť viditeľné takže zostatok vo vašej peňaženke môže byť nesprávny. Táto informácia sa opraví keď sa vaša peňaženka zosynchronizuje s Bitcoin sieťou ako je popísané nižšie.</translation>
+        <translation>Nedávne transakcie ešte nemusia byť viditeľné takže zostatok vo vašej peňaženke môže byť nesprávny. Táto informácia sa opraví keď sa vaša peňaženka zosynchronizuje s vBitcoin sieťou ako je popísané nižšie.</translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
@@ -1086,8 +1086,8 @@
         <translation>&amp;Míňať nepotvrdené mince</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automaticky otvoriť port Bitcoin klienta na routeri. Toto funguje len vtedy, keď Váš router podporuje a má zapnuté UPnP </translation>
+        <source>Automatically open the vBitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Automaticky otvoriť port vBitcoin klienta na routeri. Toto funguje len vtedy, keď Váš router podporuje a má zapnuté UPnP </translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1102,8 +1102,8 @@
         <translation>Povoliť prichá&amp;dzajúce spojenia</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>Pripojiť sa k Bitcoin sieti cez SOCKS5 proxy.</translation>
+        <source>Connect to the vBitcoin network through a SOCKS5 proxy.</source>
+        <translation>Pripojiť sa k vBitcoin sieti cez SOCKS5 proxy.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1138,8 +1138,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Pripojiť sa k Bitcoin sieti cez osobitné SOCKS5 proxy pre skryté služby Toru</translation>
+        <source>Connect to the vBitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Pripojiť sa k vBitcoin sieti cez osobitné SOCKS5 proxy pre skryté služby Toru</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1245,8 +1245,8 @@
         <translation>Forma</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Ukázaná informácia už môže byť zastaraná. Vaša peňaženka sa automaticky zosynchronizuje s Bitcoin sieťou po tom, čo bude pripojená k internetu , tento proces sa zatiaľ nedokončil.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the vBitcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Ukázaná informácia už môže byť zastaraná. Vaša peňaženka sa automaticky zosynchronizuje s vBitcoin sieťou po tom, čo bude pripojená k internetu , tento proces sa zatiaľ nedokončil.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1340,8 +1340,8 @@
         <translation>Neplatná platobná adresa %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>URI nemohla byť analyzovaná. Môže to byť spôsobené neplatnou Bitcoin adresou alebo chybnými parametrami URI.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid vBitcoin address or malformed URI parameters.</source>
+        <translation>URI nemohla byť analyzovaná. Môže to byť spôsobené neplatnou vBitcoin adresou alebo chybnými parametrami URI.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1442,7 +1442,7 @@
         <translation>Čiastka</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a vBitcoin address (e.g. %1)</source>
         <translation>Vložte bitcoin adresu (napr. %1)</translation>
     </message>
     <message>
@@ -1882,8 +1882,8 @@
         <translation>&amp;Správa:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation>Nepovinná správa ktorá bude pripojená k žiadosti o platbu. Správa bude zobrazená po otvorení žiadosti o platbu. Táto správa nebude odoslaná spolu s platbou na Bitcoin sieti.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the vBitcoin network.</source>
+        <translation>Nepovinná správa ktorá bude pripojená k žiadosti o platbu. Správa bude zobrazená po otvorení žiadosti o platbu. Táto správa nebude odoslaná spolu s platbou na vBitcoin sieti.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2315,8 +2315,8 @@ Zapamätajte si: Keďže cena poplatku je počítaná za bajt, tak poplatok o ho
         <translation><numerusform>Predpoklad na začanie potvrdenia do %n bloku.</numerusform><numerusform>Predpoklad na začanie potvrdenia do %n blokov.</numerusform><numerusform>Predpoklad na začanie potvrdenia do %n blokov.</numerusform><numerusform>Predpoklad na začanie potvrdenia do %n blokov.</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>Upozornenie: Nesprávna Bitcoin adresa</translation>
+        <source>Warning: Invalid vBitcoin address</source>
+        <translation>Upozornenie: Nesprávna vBitcoin adresa</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2358,7 +2358,7 @@ Zapamätajte si: Keďže cena poplatku je počítaná za bajt, tak poplatok o ho
         <translation>Toto je normálna platba</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
+        <source>The vBitcoin address to send the payment to</source>
         <translation>Bitcoin adresa do ktorej môžete poslať platbu</translation>
     </message>
     <message>
@@ -2406,8 +2406,8 @@ Zapamätajte si: Keďže cena poplatku je počítaná za bajt, tak poplatok o ho
         <translation>Zadajte štítok pre túto adresu aby ste ju pridali do zoznamu použitých adries.</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>Správa pripojená k Bitcoin URI ktorá bude uložená spolu s transakciou pre vašu referenciu. Poznámka: Táto správa nebude odoslaná cez Bitcoin sieť.</translation>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the vBitcoin network.</source>
+        <translation>Správa pripojená k vBitcoin URI ktorá bude uložená spolu s transakciou pre vašu referenciu. Poznámka: Táto správa nebude odoslaná cez vBitcoin sieť.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2451,11 +2451,11 @@ Zapamätajte si: Keďže cena poplatku je počítaná za bajt, tak poplatok o ho
         <translation>&amp;Podpísať Správu</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <source>You can sign messages/agreements with your addresses to prove you can receive vBitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation>Môžete podpísať správy / dohody s vašimi adresami, aby ste dokázali, že môžete obdržať Bitcoiny ktoré tam boli zaslané. Buďte opatrný a nikdy nepodpodpisujte nič náhodné alebo nejasné, kedže phishing útoky sa vás môžu pokúsiť naviesť na podpísanie vašej indentity. Podpisujte len podrobné vyhlásenia s ktorými súhlasíte.</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
+        <source>The vBitcoin address to sign the message with</source>
         <translation>Bitcoin adresa na podpísanie správy</translation>
     </message>
     <message>
@@ -2487,8 +2487,8 @@ Zapamätajte si: Keďže cena poplatku je počítaná za bajt, tak poplatok o ho
         <translation>Skopírovať aktuálny podpis do clipboardu systému</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Podpíšte túto správu na overenie vlastníctva tejto Bitcoin adresy</translation>
+        <source>Sign the message to prove you own this vBitcoin address</source>
+        <translation>Podpíšte túto správu na overenie vlastníctva tejto vBitcoin adresy</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2511,12 +2511,12 @@ Zapamätajte si: Keďže cena poplatku je počítaná za bajt, tak poplatok o ho
         <translation>Vložte adresu príjemcu a správu (uistite sa, že presne kopírujete ukončenia riadkov, medzery, odseky  atď.) a podpis pre potvrdenie správy. Buďte opatrní a nedomýšľajte si viac než je uvedené v samotnej podpísanej správe a môžete sa tak vyhnúť podvodu Man-in-the-middle útokom. Poznámka: Toto len potvrdzuje, že podpisujúca strana môže prijímať na tejto adrese, nepotvrdzuje to vlastníctvo žiadnej transakcie!</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
+        <source>The vBitcoin address the message was signed with</source>
         <translation>Bitcoin adresa s ktorou bola táto správa podpísaná</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Overte správu aby ste sa uistili že bola podpísaná so špecifickou Bitcoin adresou</translation>
+        <source>Verify the message to ensure it was signed with the specified vBitcoin address</source>
+        <translation>Overte správu aby ste sa uistili že bola podpísaná so špecifickou vBitcoin adresou</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

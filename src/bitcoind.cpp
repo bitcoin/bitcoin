@@ -74,7 +74,7 @@ static bool AppInit(int argc, char* argv[])
         }
         else
         {
-            strUsage += "\nUsage:  bitcoind [options]                     Start " PACKAGE_NAME "\n";
+            strUsage += "\nUsage:  vbitcoind [options]                     Start " PACKAGE_NAME "\n";
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
@@ -101,7 +101,7 @@ static bool AppInit(int argc, char* argv[])
         // Error out when loose non-argument tokens are encountered on command line
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
-                return InitError(strprintf("Command line contains unexpected token '%s', see bitcoind -h for a list of options.\n", argv[i]));
+                return InitError(strprintf("Command line contains unexpected token '%s', see vbitcoind -h for a list of options.\n", argv[i]));
             }
         }
 

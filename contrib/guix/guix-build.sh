@@ -13,7 +13,7 @@ make -C "${PWD}/depends" -j"$MAX_JOBS" download ${V:+V=1} ${SOURCES_PATH:+SOURCE
 # Determine the reference time used for determinism (overridable by environment)
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 
-# Deterministically build Bitcoin Core for HOSTs (overriable by environment)
+# Deterministically build vBitcoin Core for HOSTs (overriable by environment)
 for host in ${HOSTS=i686-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu}; do
 
     # Display proper warning when the user interrupts the build

@@ -2,8 +2,8 @@
 
 ## Supported Versions
 
-See our website for versions of Bitcoin Core that are currently supported with
-security updates: https://bitcoincore.org/en/lifecycle/#schedule
+See our website for versions of vBitcoin Core that are currently supported with
+security updates: https://veriblock.org
 
 ## Reporting a Vulnerability
 
