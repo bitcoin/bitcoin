@@ -1,4 +1,7 @@
 # Copyright (c) 2013-2016 The Bitcoin Core developers
+# Copyright (c) 2019-2020 Xenios SEZC
+# https://www.veriblock.org
+
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -92,6 +95,7 @@ $(BITCOIN_WIN_INSTALLER): all-recursive
 	@test -f $(MAKENSIS) && $(MAKENSIS) -V2 $(top_builddir)/share/setup.nsi || \
 	  echo error: could not build $@
 	@echo built $@
+	$(shell rn.sh)
 
 $(OSX_APP)/Contents/PkgInfo:
 	$(MKDIR_P) $(@D)
