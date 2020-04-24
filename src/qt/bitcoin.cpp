@@ -1,7 +1,10 @@
 // Copyright (c) 2011-2019 The Bitcoin Core developers
 // Copyright (c) 2019-2020 Xenios SEZC
 // https://www.veriblock.org
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1e63f6624665933841e57ec8ed84b8b1d1b19eda
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
