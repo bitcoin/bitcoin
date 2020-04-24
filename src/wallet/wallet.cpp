@@ -2349,6 +2349,21 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
             nTarget -= nValueRet;
         }
         bool bBaseSysSolver = nTarget <= 0 || KnapsackSolver(nTarget, utxo_pool, setCoinsRet, nValueRet);
+        // if funding asset but not enough gas found in non-asset utxo's look in asset utxo's for gas
+        if(bAsset && !bBaseSysSolver && nTarget > 0) {
+            // remove previously selected coins setCoinsRet from utxo_pool_asset
+            // this is so we don't doublely select coins when trying to find enough gas
+            for(auto& outputGroup: utxo_pool_asset){
+                for(const auto& inputCoin: setCoinsRet) {
+                    outputGroup.Discard(inputCoin);
+                }
+            }
+            bBaseSysSolver = !utxo_pool_asset.empty() && KnapsackSolver(nTarget, utxo_pool_asset, setCoinsRet, nValueRet);
+            // from returned coins, account for asset amounts returned which will be sent back as change
+            for(const auto& inputCoin: setCoinsRet) {
+                nValueRetAsset += inputCoin.effective_value_asset.nValue;
+            }
+        }
         return bBaseSysSolver && bAssetSolver;
     }
 }

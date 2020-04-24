@@ -2936,7 +2936,6 @@ UniValue listunspent(const JSONRPCRequest& request)
     int32_t nAsset = 0;
 
     if (!request.params[4].isNull()) {
-        LogPrintf("options\n");
         const UniValue& options = request.params[4].get_obj();
 
         if (options.exists("minimumAmount"))
@@ -2953,7 +2952,6 @@ UniValue listunspent(const JSONRPCRequest& request)
         // SYSCOIN
         if (options.exists("assetGuid")) {
             nAsset = options["assetGuid"].get_int();
-            LogPrintf("nAsset %d\n", nAsset);
         }
 
         if (options.exists("minimumAmountAsset"))
