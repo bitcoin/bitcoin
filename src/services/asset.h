@@ -54,8 +54,7 @@ public:
 
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.vchPubData,
-        obj.strSymbol, obj.nUpdateFlags, obj.nPrecision, obj.vchContract,
+        READWRITE(obj.nPrecision, obj.vchContract, obj.vchPubData, obj.strSymbol, obj.nUpdateFlags,
         Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
     }
 
