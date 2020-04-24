@@ -2451,7 +2451,7 @@ Zapamätajte si: Keďže cena poplatku je počítaná za bajt, tak poplatok o ho
         <translation>&amp;Podpísať Správu</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <source>You can sign messages/agreements with your addresses to prove you can receive vBitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation>Môžete podpísať správy / dohody s vašimi adresami, aby ste dokázali, že môžete obdržať Bitcoiny ktoré tam boli zaslané. Buďte opatrný a nikdy nepodpodpisujte nič náhodné alebo nejasné, kedže phishing útoky sa vás môžu pokúsiť naviesť na podpísanie vašej indentity. Podpisujte len podrobné vyhlásenia s ktorými súhlasíte.</translation>
     </message>
     <message>
