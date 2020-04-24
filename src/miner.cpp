@@ -520,4 +520,3 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
 
     pblock->hashMerkleRoot = VeriBlock::TopLevelMerkleRoot(pindexPrev, *pblock);
 }
->>>>>>> 1e63f6624665933841e57ec8ed84b8b1d1b19eda
