@@ -20,9 +20,9 @@ The macOS configuration assumes syscoind will be set up for the current user.
 Configuration
 ---------------------------------
 
-At a bare minimum, syscoind requires that the rpcpassword setting be set
-when running as a daemon.  If the configuration file does not exist or this
-setting is not set, syscoind will shut down promptly after startup.
+Running syscoind as a daemon does not require any manual configuration. You may
+set the `rpcauth` setting in the `syscoin.conf` configuration file to override
+the default behaviour of using a special cookie for authentication.
 
 This password does not have to be remembered or typed as it is mostly used
 as a fixed token that syscoind and client programs read from the configuration
