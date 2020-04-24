@@ -1,7 +1,7 @@
-Contributing to Bitcoin Core
+Contributing to vBitcoin Core
 ============================
 
-The Bitcoin Core project operates an open contributor model where anyone is
+The vBitcoin Core project operates an open contributor model where anyone is
 welcome to contribute towards development in the form of peer review, testing
 and patches. This document explains the practical process and guidelines for
 contributing.
@@ -15,26 +15,15 @@ merging pull requests as well as a "lead maintainer" who is responsible for the
 release cycle, overall merging, moderation and appointment of maintainers.
 
 If you're looking for somewhere to start contributing, check out the
-[good first issue](https://github.com/bitcoin/bitcoin/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-list or participate in a weekly [Bitcoin Core PR Review Club](https://bitcoincore.reviews/) meeting.
+[good first issue](https://github.com/VeriBlock/vbk-ri-btc/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+
 
 Communication Channels
 ----------------------
 
-Most communication about Bitcoin Core development happens on IRC, in the
-#bitcoin-core-dev channel on Freenode. The easiest way to participate on IRC is
-with the web client, [webchat.freenode.net](https://webchat.freenode.net/). Chat
-history logs can be found
-on [http://www.erisian.com.au/bitcoin-core-dev/](http://www.erisian.com.au/bitcoin-core-dev/)
-and [http://gnusha.org/bitcoin-core-dev/](http://gnusha.org/bitcoin-core-dev/).
-
+Most communication about vBitcoin Core development happens on Discord, in the
 Discussion about code base improvements happens in GitHub issues and on pull
 requests.
-
-The developer
-[mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
-should be used to discuss complicated or controversial changes before working on
-a patch set.
 
 
 Contributor Workflow
@@ -198,7 +187,7 @@ The following applies to code changes to the Bitcoin Core project (and related
 projects such as libsecp256k1), and is not to be confused with overall Bitcoin
 Network Protocol consensus changes.
 
-Whether a pull request is merged into Bitcoin Core rests with the project merge
+Whether a pull request is merged into vBitcoin Core rests with the project merge
 maintainers and ultimately the project lead.
 
 Maintainers will take into consideration if a patch is in line with the general
@@ -217,7 +206,7 @@ In general, all pull requests must:
     demonstrating the bug and also proving the fix. This helps prevent regression.
   - Change relevant comments and documentation when behaviour of code changes.
 
-Patches that change Bitcoin consensus rules are considerably more involved than
+Patches that change vBitcoin consensus rules are considerably more involved than
 normal because they affect the entire ecosystem and so must be preceded by
 extensive mailing list discussions and have a numbered BIP. While each case will
 be different, one should be prepared to expend more time and effort than for
@@ -312,7 +301,7 @@ about:
 Release Policy
 --------------
 
-The project leader is the release manager for each Bitcoin Core release.
+The project leader is the release manager for each vBitcoin Core release.
 
 Copyright
 ---------

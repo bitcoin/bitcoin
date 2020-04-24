@@ -34,7 +34,7 @@ BerkeleyDB is only necessary for the wallet functionality. To skip this, pass
 export BDB_PREFIX="$PWD/db4"
 ```
 
-## Building Bitcoin Core
+## Building vBitcoin Core
 
 **Important**: Use `gmake` (the non-GNU `make` will exit with an error):
 

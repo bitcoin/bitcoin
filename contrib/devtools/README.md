@@ -19,7 +19,7 @@ git diff -U0 HEAD~1.. | ./contrib/devtools/clang-format-diff.py -p1 -i -v
 copyright\_header.py
 ====================
 
-Provides utilities for managing copyright headers of `The Bitcoin Core
+Provides utilities for managing copyright headers of `The vBitcoin Core
 developers` in repository source files. It has three subcommands:
 
 ```

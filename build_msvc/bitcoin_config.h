@@ -20,13 +20,13 @@
 #define CLIENT_VERSION_REVISION 99
 
 /* Copyright holder(s) before %s replacement */
-#define COPYRIGHT_HOLDERS "The %s developers"
+#define COPYRIGHT_HOLDERS "%s"
 
 /* Copyright holder(s) */
-#define COPYRIGHT_HOLDERS_FINAL "The Bitcoin Core developers"
+#define COPYRIGHT_HOLDERS_FINAL "Xenios SEZC"
 
 /* Replacement for %s in copyright holders string */
-#define COPYRIGHT_HOLDERS_SUBSTITUTION "Bitcoin Core"
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "Xenios SEZC"
 
 /* Copyright year */
 #define COPYRIGHT_YEAR 2019
@@ -340,22 +340,22 @@
 #define LT_OBJDIR ".libs/"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/bitcoin/bitcoin/issues"
+#define PACKAGE_BUGREPORT "https://github.com/VeriBlock/vbk-ri-btc/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "Bitcoin Core"
+#define PACKAGE_NAME "VeriBlock Bitcoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Bitcoin Core 0.19.99"
+#define PACKAGE_STRING "VeriBlock Bitcoin Core 0.0.3"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "bitcoin"
+#define PACKAGE_TARNAME "vbitcoin"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "https://bitcoincore.org/"
+#define PACKAGE_URL "https://www.veriblock.org/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.19.99"
+#define PACKAGE_VERSION "0.0.3"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */

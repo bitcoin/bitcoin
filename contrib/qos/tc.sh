@@ -9,7 +9,7 @@ export LC_ALL=C
 IF="eth0"
 #limit of the network interface in question
 LINKCEIL="1gbit"
-#limit outbound Bitcoin protocol traffic to this rate
+#limit outbound vBitcoin protocol traffic to this rate
 LIMIT="160kbit"
 #defines the IPv4 address space for which you wish to disable rate limiting
 LOCALNET_V4="192.168.0.0/16"

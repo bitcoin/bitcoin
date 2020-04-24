@@ -13,7 +13,7 @@ uid                  Wladimir J. van der Laan (Bitcoin Core binary release signi
 
 #### Usage:
 
-This script attempts to download the signature file `SHA256SUMS.asc` from https://bitcoin.org.
+This script attempts to download the signature file `SHA256SUMS.asc` from https://veriblock.org
 
 It first checks if the signature passes, and then downloads the files specified in the file, and checks if the hashes of these files match those that are specified in the signature file.
 

@@ -1,4 +1,4 @@
-# Bitcoin Core file system
+# vBitcoin Core file system
 
 **Contents**
 
@@ -16,19 +16,19 @@
 
 ## Data directory location
 
-The data directory is the default location where the Bitcoin Core files are stored.
+The data directory is the default location where the vBitcoin Core files are stored.
 
 1. The default data directory paths for supported platforms are:
 
 Platform | Data directory path
 ---------|--------------------
-Linux    | `$HOME/.bitcoin/`
-macOS    | `$HOME/Library/Application Support/Bitcoin/`
-Windows  | `%APPDATA%\Bitcoin\` <sup>[\[1\]](#note1)</sup>
+Linux    | `$HOME/.vbitcoin/`
+macOS    | `$HOME/Library/Application Support/vBitcoin/`
+Windows  | `%APPDATA%\vBitcoin\` <sup>[\[1\]](#note1)</sup>
 
 2. The non-default data directory path can be specified by `-datadir` option.
 
-3. All content of the data directory, except for `bitcoin.conf` file, is chain-specific. This means the actual data directory paths for non-mainnet cases differ:
+3. All content of the data directory, except for `vbitcoin.conf` file, is chain-specific. This means the actual data directory paths for non-mainnet cases differ:
 
 Chain option        | Data directory path
 --------------------|--------------------
@@ -42,7 +42,7 @@ Subdirectory       | File(s)               | Description
 -------------------|-----------------------|------------
 `blocks/`          |                       | Blocks directory; can be specified by `-blocksdir` option (except for `blocks/index/`)
 `blocks/index/`    | LevelDB database      | Block index; `-blocksdir` option does not affect this path
-`blocks/`          | `blkNNNNN.dat`<sup>[\[2\]](#note2)</sup> | Actual Bitcoin blocks (in network format, dumped in raw on disk, 128 MiB per file)
+`blocks/`          | `blkNNNNN.dat`<sup>[\[2\]](#note2)</sup> | Actual vBitcoin blocks (in network format, dumped in raw on disk, 128 MiB per file)
 `blocks/`          | `revNNNNN.dat`<sup>[\[2\]](#note2)</sup> | Block undo data (custom format)
 `chainstate/`      | LevelDB database      | Blockchain state (a compact representation of all currently unspent transaction outputs and some metadata about the transactions they are from)
 `indexes/txindex/` | LevelDB database      | Transaction index; *optional*, used if `-txindex=1`
@@ -84,7 +84,7 @@ Subdirectory | File(s)           | Description
 
 ## Legacy subdirectories and files
 
-These subdirectories and files are no longer used by the Bitcoin Core:
+These subdirectories and files are no longer used by the vBitcoin Core:
 
 Path           | Description | Repository notes
 ---------------|-------------|-----------------

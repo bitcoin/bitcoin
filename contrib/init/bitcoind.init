@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-#  bitcoind The bitcoin core server.
+#  vbitcoind The vbitcoin core server.
 #
 #
 # chkconfig: 345 80 20
-# description: bitcoind
-# processname: bitcoind
+# description: vbitcoind
+# processname: vbitcoind
 #
 
 # Source function library.
@@ -18,19 +18,19 @@ fi
 
 RETVAL=0
 
-prog=bitcoind
-# you can override the lockfile via BITCOIND_LOCKFILE in /etc/sysconfig/bitcoind
+prog=vbitcoind
+# you can override the lockfile via BITCOIND_LOCKFILE in /etc/sysconfig/vbitcoind
 lockfile=${BITCOIND_LOCKFILE-/var/lock/subsys/bitcoind}
 
-# bitcoind defaults to /usr/bin/bitcoind, override with BITCOIND_BIN
-bitcoind=${BITCOIND_BIN-/usr/bin/bitcoind}
+# vbitcoind defaults to /usr/bin/vbitcoind, override with BITCOIND_BIN
+vbitcoind=${BITCOIND_BIN-/usr/bin/vbitcoind}
 
-# bitcoind opts default to -disablewallet, override with BITCOIND_OPTS
-bitcoind_opts=${BITCOIND_OPTS--disablewallet}
+# vbitcoind opts default to -disablewallet, override with BITCOIND_OPTS
+vbitcoind_opts=${BITCOIND_OPTS--disablewallet}
 
 start() {
     echo -n $"Starting $prog: "
-    daemon $DAEMONOPTS $bitcoind $bitcoind_opts
+    daemon $DAEMONOPTS $vbitcoind $vbitcoind_opts
     RETVAL=$?
     echo
     [ $RETVAL -eq 0 ] && touch $lockfile

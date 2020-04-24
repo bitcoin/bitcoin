@@ -1,31 +1,31 @@
-# /etc/conf.d/bitcoind: config file for /etc/init.d/bitcoind
+# /etc/conf.d/vbitcoind: config file for /etc/init.d/vbitcoind
 
 # Config file location
-#BITCOIND_CONFIGFILE="/etc/bitcoin/bitcoin.conf"
+#BITCOIND_CONFIGFILE="/etc/vbitcoin/vbitcoin.conf"
 
 # What directory to write pidfile to?  (created and owned by $BITCOIND_USER)
-#BITCOIND_PIDDIR="/var/run/bitcoind"
+#BITCOIND_PIDDIR="/var/run/vbitcoind"
 
 # What filename to give the pidfile
-#BITCOIND_PIDFILE="${BITCOIND_PIDDIR}/bitcoind.pid"
+#BITCOIND_PIDFILE="${BITCOIND_PIDDIR}/vbitcoind.pid"
 
-# Where to write bitcoind data (be mindful that the blockchain is large)
-#BITCOIND_DATADIR="/var/lib/bitcoind"
+# Where to write vbitcoind data (be mindful that the blockchain is large)
+#BITCOIND_DATADIR="/var/lib/vbitcoind"
 
-# User and group to own bitcoind process
-#BITCOIND_USER="bitcoin"
-#BITCOIND_GROUP="bitcoin"
+# User and group to own vbitcoind process
+#BITCOIND_USER="vbitcoin"
+#BITCOIND_GROUP="vbitcoin"
 
-# Path to bitcoind executable
-#BITCOIND_BIN="/usr/bin/bitcoind"
+# Path to vbitcoind executable
+#BITCOIND_BIN="/usr/bin/vbitcoind"
 
-# Nice value to run bitcoind under
+# Nice value to run vbitcoind under
 #BITCOIND_NICE=0
 
 # Additional options (avoid -conf and -datadir, use flags above)
 #BITCOIND_OPTS=""
 
-# The timeout in seconds OpenRC will wait for bitcoind to terminate
+# The timeout in seconds OpenRC will wait for vbitcoind to terminate
 # after a SIGTERM has been raised.
 # Note that this will be mapped as argument to start-stop-daemon's
 # '--retry' option, which means you can specify a retry schedule

@@ -62,11 +62,11 @@
         <translation>Empfangsadressen</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your vBitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Dies sind Ihre Bitcoin-Adressen zum Senden von Zahlungen. Überprüfen Sie immer die Menge und die Empfangsadresse, bevor Sie Bitcoins senden.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <source>These are your vBitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>Dies sind Ihre Bitcoin-Adressen für den Empfang von Zahlungen. Es wird empfohlen, für jede Transaktion eine neue Empfangsadresse zu verwenden.</translation>
     </message>
     <message>
@@ -330,7 +330,7 @@
         <translation>Reindexiere Blöcke auf dem Datenträger...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a vBitcoin address</source>
         <translation>Coins an eine Bitcoin-Adresse senden</translation>
     </message>
     <message>
@@ -382,11 +382,11 @@
         <translation>Verschlüssele die Private Keys, die zu deiner Brieftasche gehören</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your vBitcoin addresses to prove you own them</source>
         <translation>Nachrichten mit Ihrer Bitcoin-Adresse signieren, um zu beweisen, dass sie Ihnen gehören</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified vBitcoin addresses</source>
         <translation>Überprüfen Sie Nachrichten, um sicherzustellen, dass sie mit den angegebenen Bitcoin-Adressen signiert wurden</translation>
     </message>
     <message>
@@ -468,8 +468,8 @@
         <translation>Überweisung empfangen</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Ein schwerwiegender Fehler ist aufgetreten. Bitcoin kann nicht mehr sicher fortfahren und beendet sich.</translation>
+        <source>A fatal error occurred. vBitcoin can no longer continue safely and will quit.</source>
+        <translation>Ein schwerwiegender Fehler ist aufgetreten. vBitcoin kann nicht mehr sicher fortfahren und beendet sich.</translation>
     </message>
 </context>
 <context>
@@ -648,7 +648,7 @@
         <translation>Betrag</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a vBitcoin address (e.g. %1)</source>
         <translation>Bitcoin Adresse eingeben (z.B. %1)</translation>
     </message>
     <message>
