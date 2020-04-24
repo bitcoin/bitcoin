@@ -16,6 +16,12 @@ from test_framework.util import assert_equal, assert_raises_rpc_error
 class MempoolCoinbaseTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.extra_args = [
+            [
+                '-whitelist=noban@127.0.0.1',  # immediate tx relay
+            ],
+            []
+        ]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -38,8 +44,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # 3. Indirect (coinbase and child both in chain) : spend_103 and spend_103_1
         # Use invalidatblock to make all of the above coinbase spends invalid (immature coinbase),
         # and make sure the mempool code behaves correctly.
-        b = [ self.nodes[0].getblockhash(n) for n in range(101, 105) ]
-        coinbase_txids = [ self.nodes[0].getblock(h)['tx'][0] for h in b ]
+        b = [self.nodes[0].getblockhash(n) for n in range(101, 105)]
+        coinbase_txids = [self.nodes[0].getblock(h)['tx'][0] for h in b]
         spend_101_raw = create_raw_transaction(self.nodes[0], coinbase_txids[1], node1_address, amount=49.99)
         spend_102_raw = create_raw_transaction(self.nodes[0], coinbase_txids[2], node0_address, amount=49.99)
         spend_103_raw = create_raw_transaction(self.nodes[0], coinbase_txids[3], node0_address, amount=49.99)
@@ -67,6 +73,10 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # Broadcast and mine 103_1:
         spend_103_1_id = self.nodes[0].sendrawtransaction(spend_103_1_raw)
         last_block = self.nodes[0].generate(1)
+        # Sync blocks, so that peer 1 gets the block before timelock_tx
+        # Otherwise, peer 1 would put the timelock_tx in recentRejects
+        self.sync_all()
+
         # Time-locked transaction can now be spent
         timelock_tx_id = self.nodes[0].sendrawtransaction(timelock_tx)
 
