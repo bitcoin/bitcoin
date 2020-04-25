@@ -200,7 +200,6 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     
     const std::vector<unsigned char> &vchTxParentNodes = mintSyscoin.vchTxParentNodes;
     dev::RLP rlpTxParentNodes(&vchTxParentNodes);
-    dev::h256 hash;
     std::vector<unsigned char> vchTxValue;
     if(mintSyscoin.vchTxValue.size() == 2) {
         const uint16_t &posTx = (static_cast<uint16_t>(mintSyscoin.vchTxValue[1])) | (static_cast<uint16_t>(mintSyscoin.vchTxValue[0]) << 8);
