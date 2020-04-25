@@ -12,6 +12,7 @@ GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
 
 bench_bench_syscoin_SOURCES = \
   $(RAW_BENCH_FILES) \
+  bench/addrman.cpp \
   bench/bench_syscoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
