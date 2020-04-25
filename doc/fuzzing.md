@@ -133,3 +133,25 @@ $ afl/afl-fuzz -i inputs/ -o outputs/ -- src/test/fuzz/bech32
 ```
 
 Read the [`afl-fuzz` documentation](https://github.com/google/afl) for more information.
+
+# Fuzzing Bitcoin Core using Honggfuzz
+
+## Quickstart guide
+
+To quickly get started fuzzing Bitcoin Core using [Honggfuzz](https://github.com/google/honggfuzz):
+
+```sh
+$ git clone https://github.com/bitcoin/bitcoin
+$ cd bitcoin/
+$ ./autogen.sh
+$ git clone https://github.com/google/honggfuzz
+$ cd honggfuzz/
+$ make
+$ cd ..
+$ CC=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang CXX=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++ ./configure --enable-fuzz --with-sanitizers=address,undefined
+$ make
+$ mkdir -p inputs/
+$ honggfuzz/honggfuzz -i inputs/ -- src/test/fuzz/process_message
+```
+
+Read the [Honggfuzz documentation](https://github.com/google/honggfuzz/blob/master/docs/USAGE.md) for more information.
