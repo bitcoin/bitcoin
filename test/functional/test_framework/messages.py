@@ -603,16 +603,16 @@ class CBlock(CBlockHeader):
     __slots__ = ("vtx",)
 
     def __init__(self, header=None):
-        super(CBlock, self).__init__(header)
+        super().__init__(header)
         self.vtx = []
 
     def deserialize(self, f):
-        super(CBlock, self).deserialize(f)
+        super().deserialize(f)
         self.vtx = deser_vector(f, CTransaction)
 
     def serialize(self, with_witness=True):
         r = b""
-        r += super(CBlock, self).serialize()
+        r += super().serialize()
         if with_witness:
             r += ser_vector(self.vtx, "serialize_with_witness")
         else:
@@ -752,7 +752,7 @@ class P2PHeaderAndShortIDs:
 class P2PHeaderAndShortWitnessIDs(P2PHeaderAndShortIDs):
     __slots__ = ()
     def serialize(self):
-        return super(P2PHeaderAndShortWitnessIDs, self).serialize(with_witness=True)
+        return super().serialize(with_witness=True)
 
 # Calculate the BIP 152-compact blocks shortid for a given transaction hash
 def calculate_shortid(k0, k1, tx_hash):
