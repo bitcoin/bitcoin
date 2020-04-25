@@ -352,6 +352,9 @@ void CMutableTransaction::LoadAssets()
                 if(nOut > nVoutSize) {
                     throw std::ios_base::failure("asset vout out of range");
                 }
+                if(voutAsset.nValue < 0) {
+                    throw std::ios_base::failure("asset vout negative value");
+                }
                 // store in vout
                 CAssetCoinInfo& coinInfo = vout[nOut].assetInfo;
                 coinInfo.nAsset = nAsset;
@@ -383,6 +386,9 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<in
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outofrange");
             }
             const CAmount& nAmount = voutAsset.nValue;
+            if(nAmount < 0) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-value-negative");
+            }
             // make sure the vout assetinfo matches the asset commitment in OP_RETURN
             if(vout[nOut].assetInfo.nAsset != nAsset || vout[nOut].assetInfo.nValue != nAmount) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-assetinfo-mismatch");
