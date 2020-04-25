@@ -5,12 +5,13 @@
 """Run fuzz test targets.
 """
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import argparse
 import configparser
-import os
-import sys
-import subprocess
 import logging
+import os
+import subprocess
+import sys
 
 
 def main():
@@ -34,6 +35,12 @@ def main():
         '-x',
         '--exclude',
         help="A comma-separated list of targets to exclude",
+    )
+    parser.add_argument(
+        '--par',
+        type=int,
+        default=4,
+        help='How many targets to merge or execute in parallel.',
     )
     parser.add_argument(
         'seed_dir',
@@ -124,25 +131,29 @@ def main():
         logging.error("subprocess timed out: Currently only libFuzzer is supported")
         sys.exit(1)
 
-    if args.m_dir:
-        merge_inputs(
+    with ThreadPoolExecutor(max_workers=args.par) as fuzz_pool:
+        if args.m_dir:
+            merge_inputs(
+                fuzz_pool=fuzz_pool,
+                corpus=args.seed_dir,
+                test_list=test_list_selection,
+                build_dir=config["environment"]["BUILDDIR"],
+                merge_dir=args.m_dir,
+            )
+            return
+
+        run_once(
+            fuzz_pool=fuzz_pool,
             corpus=args.seed_dir,
             test_list=test_list_selection,
             build_dir=config["environment"]["BUILDDIR"],
-            merge_dir=args.m_dir,
+            use_valgrind=args.valgrind,
         )
-        return
-
-    run_once(
-        corpus=args.seed_dir,
-        test_list=test_list_selection,
-        build_dir=config["environment"]["BUILDDIR"],
-        use_valgrind=args.valgrind,
-    )
 
 
-def merge_inputs(*, corpus, test_list, build_dir, merge_dir):
+def merge_inputs(*, fuzz_pool, corpus, test_list, build_dir, merge_dir):
     logging.info("Merge the inputs in the passed dir into the seed_dir. Passed dir {}".format(merge_dir))
+    jobs = []
     for t in test_list:
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', t),
@@ -153,12 +164,20 @@ def merge_inputs(*, corpus, test_list, build_dir, merge_dir):
         ]
         os.makedirs(os.path.join(corpus, t), exist_ok=True)
         os.makedirs(os.path.join(merge_dir, t), exist_ok=True)
-        logging.debug('Run {} with args {}'.format(t, args))
-        output = subprocess.run(args, check=True, stderr=subprocess.PIPE, universal_newlines=True).stderr
-        logging.debug('Output: {}'.format(output))
+
+        def job(t, args):
+            output = 'Run {} with args {}\n'.format(t, " ".join(args))
+            output += subprocess.run(args, check=True, stderr=subprocess.PIPE, universal_newlines=True).stderr
+            logging.debug(output)
+
+        jobs.append(fuzz_pool.submit(job, t, args))
+
+    for future in as_completed(jobs):
+        future.result()
 
 
-def run_once(*, corpus, test_list, build_dir, use_valgrind):
+def run_once(*, fuzz_pool, corpus, test_list, build_dir, use_valgrind):
+    jobs = []
     for t in test_list:
         corpus_path = os.path.join(corpus, t)
         os.makedirs(corpus_path, exist_ok=True)
@@ -169,10 +188,18 @@ def run_once(*, corpus, test_list, build_dir, use_valgrind):
         ]
         if use_valgrind:
             args = ['valgrind', '--quiet', '--error-exitcode=1'] + args
-        logging.debug('Run {} with args {}'.format(t, args))
-        result = subprocess.run(args, stderr=subprocess.PIPE, universal_newlines=True)
-        output = result.stderr
-        logging.debug('Output: {}'.format(output))
+
+        def job(t, args):
+            output = 'Run {} with args {}'.format(t, args)
+            result = subprocess.run(args, stderr=subprocess.PIPE, universal_newlines=True)
+            output += result.stderr
+            return output, result
+
+        jobs.append(fuzz_pool.submit(job, t, args))
+
+    for future in as_completed(jobs):
+        output, result = future.result()
+        logging.debug(output)
         try:
             result.check_returncode()
         except subprocess.CalledProcessError as e:
@@ -180,7 +207,7 @@ def run_once(*, corpus, test_list, build_dir, use_valgrind):
                 logging.info(e.stdout)
             if e.stderr:
                 logging.info(e.stderr)
-            logging.info("Target \"{}\" failed with exit code {}: {}".format(t, e.returncode, " ".join(args)))
+            logging.info("Target \"{}\" failed with exit code {}".format(" ".join(result.args), e.returncode))
             sys.exit(1)
 
 
