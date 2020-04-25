@@ -16,6 +16,7 @@
 #include <rpc/server.h>
 #include <chainparams.h>
 #include <util/moneystr.h>
+#include <util/fees.h>
 #include <core_io.h>
 #include <services/asset.h>
 #include <node/transaction.h>
@@ -203,8 +204,6 @@ void TestTransaction(const CTransactionRef& tx) {
 UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
-    auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
     const UniValue &params = request.params;
     RPCHelpMan{"syscoinburntoassetallocation",
         "\nBurns Syscoin to the SYSX asset\n",
@@ -222,6 +221,15 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
             + HelpExampleRpc("syscoinburntoassetallocation", "\"asset_guid\", \"amount\"")
         }
     }.Check(request);
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+
+    EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();          	
 	CAssetAllocation theAssetAllocation;
 	CAsset theAsset;
@@ -289,8 +297,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 UniValue assetnew(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
-    auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
     const UniValue &params = request.params;
     RPCHelpMan{"assetnew",
     "\nCreate a new asset\n",
@@ -327,6 +333,14 @@ UniValue assetnew(const JSONRPCRequest& request) {
     }
     }.Check(request);
        
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+
+    EnsureWalletIsUnlocked(pwallet);
     CAmount nGas;
     std::string strSymbol = params[1].get_str();
     std::string strPubData = params[2].get_str();
@@ -542,8 +556,6 @@ UniValue CreateAssetUpdateTx(interfaces::Chain::Lock& locked_chain, const int32_
 UniValue assetupdate(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
-    auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
     const UniValue &params = request.params;
     RPCHelpMan{"assetupdate",
         "\nPerform an update on an asset you control.\n",
@@ -575,6 +587,14 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetupdate", "\"asset_guid\", \"description\", \"contract\", \"supply\", \"update_flags\", {}")
         }
         }.Check(request);
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);    
+    EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
     std::string strData = "";
     std::string strCategory = "";
@@ -635,8 +655,6 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 UniValue assettransfer(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
-    auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
     const UniValue &params = request.params;
     RPCHelpMan{"assettransfer",
         "\nPerform a transfer of ownership on an asset you control.\n",
@@ -654,6 +672,14 @@ UniValue assettransfer(const JSONRPCRequest& request) {
             + HelpExampleRpc("assettransfer", "\"asset_guid\", \"address\"")
         }
         }.Check(request);
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);    
+    EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
     std::string strAddress = params[1].get_str();
    
@@ -682,8 +708,6 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 UniValue assetsendmany(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
-    auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
     const UniValue &params = request.params;
     RPCHelpMan{"assetsendmany",
     "\nSend an asset you own to another address/addresses as an asset allocation. Maximum recipients is 250.\n",
@@ -713,6 +737,14 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         + HelpExampleRpc("assetsendmany", "\"asset_guid\",\"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\"")
     }
     }.Check(request);
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(pwallet);
     // gather & validate inputs
     const uint32_t &nAsset = params[0].get_uint();
     UniValue valueTo = params[1];
@@ -811,8 +843,6 @@ UniValue assetsend(const JSONRPCRequest& request) {
 UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
-    auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
 	const UniValue &params = request.params;
     RPCHelpMan{"assetallocationsendmany",
         "\nSend an asset allocation you own to another address. Maximum recipients is 250.\n",
@@ -830,6 +860,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                     "[assetallocationsend object]..."
             },
             {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125. ZDAG is only possible if RBF is disabled."},
+            {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment"},
+            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks)"},
+            {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
+            "       \"UNSET\"\n"
+            "       \"ECONOMICAL\"\n"
+            "       \"CONSERVATIVE\""},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -843,13 +879,36 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetallocationsendmany", "\"[{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\",\"true\"")
         }
     }.Check(request);
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(pwallet);
     CCoinControl coin_control;
 	// gather & validate inputs
 	UniValue valueTo = params[0];
 	if (!valueTo.isArray())
 		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
+
     if (!request.params[1].isNull()) {
         coin_control.m_signal_bip125_rbf = request.params[1].get_bool();
+    }
+
+    mapValue_t mapValue;
+    if (!request.params[2].isNull() && !request.params[3].get_str().empty())
+        mapValue["comment"] = request.params[3].get_str();
+
+    if (!request.params[3].isNull()) {
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[6], pwallet->chain().estimateMaxBlocks());
+    }
+
+    if (!request.params[4].isNull()) {
+        if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
+        }
     }
     CAssetAllocation theAssetAllocation;
     CMutableTransaction mtx;
@@ -878,6 +937,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             auto& voutAsset = theAssetAllocation.voutAssets[nAsset];
             const size_t len = voutAsset.size();
             voutAsset.push_back(CAssetOut(len, nAmount));
+
             CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
             auto it = mapAssetTotals.emplace(nAsset, nAmount);
@@ -906,7 +966,8 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         }
 	}
 
-    
+    EnsureWalletIsUnlocked(pwallet);
+
 	std::vector<unsigned char> data;
 	theAssetAllocation.SerializeData(data);   
 
@@ -939,7 +1000,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     TestTransaction(tx);
-    mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
@@ -949,8 +1009,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 UniValue assetallocationburn(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
-    auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
 	const UniValue &params = request.params;
     RPCHelpMan{"assetallocationburn",
         "\nBurn an asset allocation in order to use the bridge or move back to Syscoin\n",
@@ -970,6 +1028,13 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         }
     }.Check(request);
 
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
     	
 	CAsset theAsset;
@@ -1036,8 +1101,6 @@ std::vector<unsigned char> ushortToBytes(unsigned short paramShort) {
 UniValue assetallocationmint(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
-    auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
     const UniValue &params = request.params;
     RPCHelpMan{"assetallocationmint",
         "\nMint assetallocation to come back from the bridge\n",
@@ -1064,6 +1127,14 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetallocationmint", "\"asset_guid\", \"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\"")
         }
     }.Check(request);
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
     std::string strAddress = params[1].get_str();
 	CAsset theAsset;

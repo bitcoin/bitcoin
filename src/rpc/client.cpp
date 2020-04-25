@@ -182,6 +182,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "assetallocationsend", 3 , "replaceable" },
     { "assetallocationsendmany", 0, "amounts" },
     { "assetallocationsendmany", 1 , "replaceable" },
+    { "assetallocationsendmany", 3 , "conf_target" },
     { "listunspentasset", 0, "asset_guid" },
     { "listunspentasset", 1 , "minconf" },
     { "assetallocationburn", 0, "asset_guid" },
