@@ -62,4 +62,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     const size_t raw_memory_size = RecursiveDynamicUsage(block);
     const size_t raw_memory_size_as_shared_ptr = RecursiveDynamicUsage(std::make_shared<CBlock>(block));
     assert(raw_memory_size_as_shared_ptr > raw_memory_size);
+    CBlock block_copy = block;
+    block_copy.SetNull();
+    const bool is_null = block_copy.IsNull();
+    assert(is_null);
 }
