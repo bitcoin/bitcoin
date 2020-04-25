@@ -7,7 +7,7 @@
 from decimal import Decimal
 import time
 
-from test_framework.messages import msg_feefilter
+from test_framework.messages import MSG_TX, msg_feefilter
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 
@@ -31,7 +31,7 @@ class TestP2PConn(P2PInterface):
 
     def on_inv(self, message):
         for i in message.inv:
-            if (i.type == 1):
+            if (i.type == MSG_TX):
                 self.txinvs.append(hashToHex(i.hash))
 
     def clear_invs(self):

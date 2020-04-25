@@ -11,7 +11,7 @@ the node should pretend that it does not have it to avoid fingerprinting.
 import time
 
 from test_framework.blocktools import (create_block, create_coinbase)
-from test_framework.messages import CInv
+from test_framework.messages import CInv, MSG_BLOCK
 from test_framework.mininode import (
     P2PInterface,
     msg_headers,
@@ -48,7 +48,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
     # Send a getdata request for a given block hash
     def send_block_request(self, block_hash, node):
         msg = msg_getdata()
-        msg.inv.append(CInv(2, block_hash))  # 2 == "Block"
+        msg.inv.append(CInv(MSG_BLOCK, block_hash))
         node.send_message(msg)
 
     # Send a getheaders request for a given single block hash
