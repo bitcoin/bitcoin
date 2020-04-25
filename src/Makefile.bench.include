@@ -13,6 +13,7 @@ GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
 
 bench_bench_dash_SOURCES = \
   $(RAW_BENCH_FILES) \
+  bench/addrman.cpp \
   bench/bench_bitcoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
