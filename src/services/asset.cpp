@@ -114,15 +114,15 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx) {
     std::vector<unsigned char> data;
     if(IsSyscoinMintTx(tx->nVersion)) {
         CMintSyscoin mintSyscoin(*tx);
-        mintSyscoin.assetAllocation.voutAssets = tx->voutAssets;
+        mintSyscoin.voutAssets = tx->voutAssets;
         mintSyscoin.SerializeData(data);
     } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
         CBurnSyscoin burnSyscoin(*tx);
-        burnSyscoin.assetAllocation.voutAssets = tx->voutAssets;
+        burnSyscoin.voutAssets = tx->voutAssets;
         burnSyscoin.SerializeData(data);
     } else if(IsAssetTx(tx->nVersion)) {
         CAsset asset(*tx);
-        asset.assetAllocation.voutAssets = tx->voutAssets;
+        asset.voutAssets = tx->voutAssets;
         asset.SerializeData(data); 
     } else if(IsAssetAllocationTx(tx->nVersion)) {
         CAssetAllocation allocation(*tx);

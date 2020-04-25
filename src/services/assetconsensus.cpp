@@ -604,7 +604,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             // starting supply is the supplied balance upon init
             storedAssetRef.nTotalSupply = storedAssetRef.nBalance;
             // clear vouts as we don't need to store them once we have processed.
-            storedAssetRef.assetAllocation.voutAssets.clear();
+            storedAssetRef.voutAssets.clear();
         }
         break;
 

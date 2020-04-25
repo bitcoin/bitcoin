@@ -29,9 +29,8 @@ enum {
     ASSET_UPDATE_ALL=31
 };
 
-class CAsset {
+class CAsset: public CAssetAllocation {
 public:
-    CAssetAllocation assetAllocation;
     std::vector<unsigned char> vchContract;
     std::string strSymbol;
     std::vector<unsigned char> vchPubData;
@@ -47,42 +46,22 @@ public:
         SetNull();
         UnserializeFromTx(tx);
     }
-    inline void ClearAsset()
-    {
+    inline void ClearAsset() {
         vchPubData.clear();
         vchContract.clear();
-        assetAllocation.SetNull();
-
-    }
-    template<typename Stream>
-    inline void Serialize(Stream &s) const {	
-        s << assetAllocation;
-        s << vchPubData;
-        s << strSymbol;
-        s << nUpdateFlags;
-        s << nPrecision;
-        s << vchContract;
-        ::Serialize(s, Using<AmountCompression>(nBalance));
-        ::Serialize(s, Using<AmountCompression>(nTotalSupply));
-        ::Serialize(s, Using<AmountCompression>(nMaxSupply));
-    }
-    template<typename Stream>
-    inline void Unserialize(Stream &s) {	
-        s >> assetAllocation;
-        s >> vchPubData;
-        s >> strSymbol;
-        s >> nUpdateFlags;
-        s >> nPrecision;
-        s >> vchContract;
-        ::Unserialize(s, Using<AmountCompression>(nBalance));
-        ::Unserialize(s, Using<AmountCompression>(nTotalSupply));
-        ::Unserialize(s, Using<AmountCompression>(nMaxSupply));
+        voutAssets.clear();
     }
 
+    SERIALIZE_METHODS(CAsset, obj) {
+        READWRITEAS(CAssetAllocation, obj);
+        READWRITE(obj.vchPubData,
+        obj.strSymbol, obj.nUpdateFlags, obj.nPrecision, obj.vchContract,
+        Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
+    }
 
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
-        a.assetAllocation == b.assetAllocation
+        a.voutAssets == b.voutAssets
         );
     }
 

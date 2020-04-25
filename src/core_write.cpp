@@ -102,7 +102,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 	if(asset.IsNull())
 		return false;
     CAsset dbAsset;
-    const int32_t &nAsset = asset.assetAllocation.voutAssets.begin()->first;
+    const int32_t &nAsset = asset.voutAssets.begin()->first;
     GetAsset(nAsset, dbAsset);
     entry.__pushKV("txtype", stringFromSyscoinTx(tx.nVersion));
     entry.__pushKV("txid", tx.GetHash().GetHex());  

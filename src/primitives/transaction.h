@@ -439,17 +439,8 @@ public:
     uint32_t n;
     CAmount nValue;
 
-
-    template<typename Stream>
-    inline void Serialize(Stream &s) const {
-        s << VARINT(n);
-        ::Serialize(s, Using<AmountCompression>(nValue));	
-    }
-
-    template<typename Stream>
-    inline void Unserialize(Stream &s) {
-        s >> VARINT(n);
-        ::Unserialize(s, Using<AmountCompression>(nValue));	
+    SERIALIZE_METHODS(CAssetOut, obj) {
+        READWRITE(VARINT(obj.n), Using<AmountCompression>(obj.nValue));
     }
 
     CAssetOut(const uint32_t &nIn, const CAmount& nAmountIn): n(nIn), nValue(nAmountIn) {}
@@ -655,14 +646,8 @@ class CAssetAllocation {
 public:
     assetOutputType voutAssets;
     
-    template<typename Stream>
-    inline void Serialize(Stream &s) const {
-        s << voutAssets;
-    }
-
-    template<typename Stream>
-    inline void Unserialize(Stream &s)  {
-        s >> voutAssets;
+    SERIALIZE_METHODS(CAssetAllocation, obj) {
+        READWRITE(obj.voutAssets);
     }
 
 	CAssetAllocation() {
@@ -672,10 +657,12 @@ public:
 		SetNull();
 		UnserializeFromTx(tx);
 	}
+
 	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return (a.voutAssets == b.voutAssets
 			);
 	}
+
     CAssetAllocation(const CAssetAllocation&) = delete;
     CAssetAllocation(CAssetAllocation && other) = default;
     CAssetAllocation& operator=( CAssetAllocation& a ) = delete;
@@ -690,9 +677,9 @@ public:
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	void SerializeData(std::vector<unsigned char>& vchData);
 };
-class CMintSyscoin {
+
+class CMintSyscoin: public CAssetAllocation {
 public:
-    CAssetAllocation assetAllocation;
     std::vector<unsigned char> vchTxValue;
     std::vector<unsigned char> vchTxParentNodes;
     std::vector<unsigned char> vchTxRoot;
@@ -712,45 +699,22 @@ public:
         UnserializeFromTx(tx);
     }
 
-    template<typename Stream>
-    inline void Serialize(Stream &s) const {
-        s << assetAllocation;
-        s << VARINT(nBridgeTransferID);
-        s << VARINT(nBlockNumber);
-        s << vchTxValue;
-        s << vchTxParentNodes;
-        s << vchTxRoot;
-        s << vchTxPath;   
-        s << vchReceiptValue;
-        s << vchReceiptParentNodes;
-        s << vchReceiptRoot;
-        s << vchReceiptPath;
+    SERIALIZE_METHODS(CMintSyscoin, obj) {
+        READWRITEAS(CAssetAllocation, obj);
+        READWRITE(VARINT(obj.nBridgeTransferID), VARINT(obj.nBlockNumber), obj.vchTxValue,
+        obj.vchTxParentNodes, obj.vchTxRoot, obj.vchTxPath, obj.vchReceiptValue,
+        obj.vchReceiptParentNodes, obj.vchReceiptRoot, obj.vchReceiptPath);
     }
 
-    template<typename Stream>
-    inline void Unserialize(Stream &s) {
-        s >> assetAllocation;
-        s >> VARINT(nBridgeTransferID);
-        s >> VARINT(nBlockNumber);
-        s >> vchTxValue;
-        s >> vchTxParentNodes;
-        s >> vchTxRoot;
-        s >> vchTxPath;   
-        s >> vchReceiptValue;
-        s >> vchReceiptParentNodes;
-        s >> vchReceiptRoot;
-        s >> vchReceiptPath;
-    }
-
-    inline void SetNull() { assetAllocation.SetNull(); vchTxRoot.clear(); vchTxValue.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); vchReceiptRoot.clear(); vchReceiptValue.clear(); vchReceiptParentNodes.clear(); vchReceiptPath.clear(); nBridgeTransferID = 0; nBlockNumber = 0;  }
-    inline bool IsNull() const { return (vchTxValue.empty() && vchReceiptValue.empty()); }
+    inline void SetNull() { voutAssets.clear(); vchTxRoot.clear(); vchTxValue.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); vchReceiptRoot.clear(); vchReceiptValue.clear(); vchReceiptParentNodes.clear(); vchReceiptPath.clear(); nBridgeTransferID = 0; nBlockNumber = 0;  }
+    inline bool IsNull() const { return (voutAssets.empty() && vchTxValue.empty() && vchReceiptValue.empty()); }
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
-class CBurnSyscoin {
+
+class CBurnSyscoin: public CAssetAllocation {
 public:
-    CAssetAllocation assetAllocation;
     std::vector<unsigned char> vchEthAddress;
     CBurnSyscoin() {
         SetNull();
@@ -760,20 +724,13 @@ public:
         UnserializeFromTx(tx);
     }
 
-    template<typename Stream>
-    inline void Serialize(Stream &s) const {
-        s << assetAllocation;
-        s << vchEthAddress;
+    SERIALIZE_METHODS(CBurnSyscoin, obj) {
+        READWRITEAS(CAssetAllocation, obj);
+        READWRITE(obj.vchEthAddress);
     }
 
-    template<typename Stream>
-    inline void Unserialize(Stream &s) {
-        s >> assetAllocation;
-        s >> vchEthAddress;
-    }
-
-    inline void SetNull() { assetAllocation.SetNull(); vchEthAddress.clear();  }
-    inline bool IsNull() const { return (vchEthAddress.empty() && assetAllocation.IsNull()); }
+    inline void SetNull() { voutAssets.clear(); vchEthAddress.clear();  }
+    inline bool IsNull() const { return (vchEthAddress.empty() && voutAssets.empty()); }
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);
     void SerializeData(std::vector<unsigned char>& vchData);

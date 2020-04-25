@@ -376,7 +376,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
         publicData.pushKV("aux_fees", params[8]);
 
 
-    newAsset.assetAllocation.voutAssets[0].push_back(CAssetOut(0, 0));
+    newAsset.voutAssets[0].push_back(CAssetOut(0, 0));
     newAsset.strSymbol = strSymbol;
     newAsset.vchPubData = vchFromString(publicData.write());
     newAsset.vchContract = ParseHex(strContract);
@@ -430,8 +430,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
     data.clear();
     // generate deterministic guid based on input txid
     const int32_t &nAsset = GenerateSyscoinGuid(mtx.vin[0].prevout);
-    newAsset.assetAllocation.voutAssets.clear();
-    newAsset.assetAllocation.voutAssets[nAsset].push_back(CAssetOut(0, 0));
+    newAsset.voutAssets.clear();
+    newAsset.voutAssets[nAsset].push_back(CAssetOut(0, 0));
     newAsset.SerializeData(data);
     scriptData.clear();
     scriptData << OP_RETURN << data;
@@ -618,7 +618,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     else
         theAsset.vchContract.clear();
 
-    theAsset.assetAllocation.voutAssets[nAsset].push_back(CAssetOut(0, 0));
+    theAsset.voutAssets[nAsset].push_back(CAssetOut(0, 0));
     theAsset.nBalance = nBalance;
     theAsset.nUpdateFlags = nUpdateFlags;
 
@@ -667,7 +667,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
     theAsset.ClearAsset();
     theAsset.nBalance = 0;
-    theAsset.assetAllocation.voutAssets[nAsset].push_back(CAssetOut(0, 0));
+    theAsset.voutAssets[nAsset].push_back(CAssetOut(0, 0));
 
     std::vector<unsigned char> data;
     theAsset.SerializeData(data);
@@ -987,7 +987,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     int32_t nVersionIn = 0;
 
     CBurnSyscoin burnSyscoin;
-    burnSyscoin.assetAllocation.voutAssets[nAsset].push_back(CAssetOut(0, nAmount));
+    burnSyscoin.voutAssets[nAsset].push_back(CAssetOut(0, nAmount));
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''") {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
@@ -1104,7 +1104,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     std::vector<CRecipient> vecSend;
     
     CMintSyscoin mintSyscoin;
-    mintSyscoin.assetAllocation.voutAssets[nAsset].push_back(CAssetOut(0, nAmount));
+    mintSyscoin.voutAssets[nAsset].push_back(CAssetOut(0, nAmount));
     mintSyscoin.nBlockNumber = nBlockNumber;
     mintSyscoin.vchTxValue = ushortToBytes(posTxValue);
     mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
