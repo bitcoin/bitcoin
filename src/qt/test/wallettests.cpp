@@ -115,9 +115,7 @@ void TestGUI()
     for (int i = 0; i < 5; ++i) {
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
-    bitdb.MakeMock();
-    std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test.dat"));
-    CWallet wallet(std::move(dbw));
+    CWallet wallet("mock", CWalletDBWrapper::CreateMock());
     bool firstRun;
     wallet.LoadWallet(firstRun);
     {
@@ -212,9 +210,6 @@ void TestGUI()
     QPushButton* removeRequestButton = receiveCoinsDialog.findChild<QPushButton*>("removeRequestButton");
     removeRequestButton->click();
     QCOMPARE(requestTableModel->rowCount({}), currentRowCount-1);
-
-    bitdb.Flush(true);
-    bitdb.Reset();
 }
 
 }
