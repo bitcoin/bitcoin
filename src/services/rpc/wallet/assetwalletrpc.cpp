@@ -179,6 +179,9 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
 }
 
 void TestTransaction(const CTransactionRef& tx) {
+    if(!fAssetIndex) { 
+        throw JSONRPCError(RPC_WALLET_ERROR, "missing-asset-index");
+    }
     AssertLockHeld(cs_main);
     CTxMemPool& mempool = EnsureMemPool();
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
@@ -1264,6 +1267,9 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(output);
     paramsFund.push_back(replaceableObj);
+    paramsFund.push_back(UniValue::VNULL); // comment
+    paramsFund.push_back(UniValue::VNULL); // conf_target
+    paramsFund.push_back(UniValue::VNULL); // estimate_mode
     JSONRPCRequest requestMany;
     requestMany.params = paramsFund;
     requestMany.URI = request.URI;
