@@ -197,51 +197,16 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
     return false;
 }
 
-std::string ListLogCategories()
+std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
 {
-    std::string ret;
-    int outcount = 0;
+    std::vector<LogCategory> ret;
     for (const CLogCategoryDesc& category_desc : LogCategories) {
         // Omit the special cases.
         if (category_desc.flag != BCLog::NONE && category_desc.flag != BCLog::ALL && category_desc.flag != BCLog::DASH) {
-            if (outcount != 0) ret += ", ";
-            ret += category_desc.category;
-            outcount++;
-        }
-    }
-    return ret;
-}
-
-std::vector<CLogCategoryActive> ListActiveLogCategories()
-{
-    std::vector<CLogCategoryActive> ret;
-    for (const CLogCategoryDesc& category_desc : LogCategories) {
-        // Omit the special cases.
-        if (category_desc.flag != BCLog::NONE && category_desc.flag != BCLog::ALL && category_desc.flag != BCLog::DASH) {
-            CLogCategoryActive catActive;
+            LogCategory catActive;
             catActive.category = category_desc.category;
-            catActive.active = LogAcceptCategory(category_desc.flag);
+            catActive.active = WillLogCategory(category_desc.flag);
             ret.push_back(catActive);
-        }
-    }
-    return ret;
-}
-
-std::string ListActiveLogCategoriesString()
-{
-    if (LogInstance().GetCategoryMask() == BCLog::NONE)
-        return "0";
-    if (LogInstance().GetCategoryMask() == BCLog::ALL)
-        return "1";
-
-    std::string ret;
-    int outcount = 0;
-    for (const CLogCategoryDesc& category_desc : LogCategories) {
-        // Omit the special cases.
-        if (category_desc.flag != BCLog::NONE && category_desc.flag != BCLog::ALL && category_desc.flag != BCLog::DASH && LogAcceptCategory(category_desc.flag)) {
-            if (outcount != 0) ret += ", ";
-            ret += category_desc.category;
-            outcount++;
         }
     }
     return ret;

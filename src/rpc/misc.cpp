@@ -44,7 +44,7 @@ static UniValue debug(const JSONRPCRequest& request)
 {
     RPCHelpMan{"debug",
         "Change debug category on the fly. Specify single category or use '+' to specify many.\n"
-        "The valid debug categories are: " + ListLogCategories() + ".\n"
+        "The valid logging categories are: " + LogInstance().LogCategoriesString() + ".\n"
         "libevent logging is configured on startup and cannot be modified by this RPC during runtime.\n"
         "There are also a few meta-categories:\n"
         " - \"all\", \"1\" and \"\" activate all categories at once;\n"
@@ -72,7 +72,7 @@ static UniValue debug(const JSONRPCRequest& request)
         }
     }
 
-    return "Debug mode: " + ListActiveLogCategoriesString();
+    return "Debug mode: " + LogInstance().LogCategoriesString();
 }
 
 static UniValue mnsync(const JSONRPCRequest& request)
@@ -1228,7 +1228,7 @@ static UniValue logging(const JSONRPCRequest& request)
     "When called with arguments, adds or removes categories from debug logging and return the lists above.\n"
     "The arguments are evaluated in order \"include\", \"exclude\".\n"
     "If an item is both included and excluded, it will thus end up being excluded.\n"
-    "The valid logging categories are: " + ListLogCategories() + "\n"
+    "The valid logging categories are: " + LogInstance().LogCategoriesString() + "\n"
     "In addition, the following are available as category names with special meanings:\n"
     "  - \"all\",  \"1\" : represent all logging categories.\n"
     "  - \"dash\" activates all Dash-specific categories at once.\n"
@@ -1282,8 +1282,7 @@ static UniValue logging(const JSONRPCRequest& request)
     }
 
     UniValue result(UniValue::VOBJ);
-    std::vector<CLogCategoryActive> vLogCatActive = ListActiveLogCategories();
-    for (const auto& logCatActive : vLogCatActive) {
+    for (const auto& logCatActive : LogInstance().LogCategoriesList()) {
         result.pushKV(logCatActive.category, logCatActive.active);
     }
 
