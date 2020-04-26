@@ -69,8 +69,8 @@ FUZZ_TARGETS = \
   test/fuzz/partially_signed_transaction_deserialize \
   test/fuzz/pow \
   test/fuzz/prefilled_transaction_deserialize \
-  test/fuzz/primitives_transaction \
   test/fuzz/prevector \
+  test/fuzz/primitives_transaction \
   test/fuzz/process_message \
   test/fuzz/process_message_addr \
   test/fuzz/process_message_block \
