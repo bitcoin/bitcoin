@@ -51,10 +51,14 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         spend_103_raw = create_raw_transaction(self.nodes[0], coinbase_txids[3], node0_address, amount=49.99)
 
         # Create a transaction which is time-locked to two blocks in the future
-        timelock_tx = self.nodes[0].createrawtransaction([{"txid": coinbase_txids[0], "vout": 0}], {node0_address: 49.99})
-        # Set the time lock
-        timelock_tx = timelock_tx.replace("ffffffff", "11111191", 1)
-        timelock_tx = timelock_tx[:-8] + hex(self.nodes[0].getblockcount() + 2)[2:] + "000000"
+        timelock_tx = self.nodes[0].createrawtransaction(
+            inputs=[{
+                "txid": coinbase_txids[0],
+                "vout": 0,
+            }],
+            outputs={node0_address: 49.99},
+            locktime=self.nodes[0].getblockcount() + 2,
+        )
         timelock_tx = self.nodes[0].signrawtransactionwithwallet(timelock_tx)["hex"]
         # This will raise an exception because the timelock transaction is too immature to spend
         assert_raises_rpc_error(-26, "non-final", self.nodes[0].sendrawtransaction, timelock_tx)
