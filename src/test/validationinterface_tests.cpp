@@ -12,7 +12,6 @@
 
 BOOST_FIXTURE_TEST_SUITE(validationinterface_tests, TestingSetup)
 
-/**
 struct TestSubscriberNoop final : public CValidationInterface {
     void BlockChecked(const CBlock&, const BlockValidationState&) override {}
 };
@@ -34,9 +33,9 @@ BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
     std::thread sub{[&] {
         // keep going for about 1 sec, which is 250k iterations
         for (int i = 0; i < 250000; i++) {
-            TestSubscriberNoop sub{};
-            RegisterValidationInterface(&sub);
-            UnregisterValidationInterface(&sub);
+            auto sub = std::make_shared<TestSubscriberNoop>();
+            RegisterSharedValidationInterface(sub);
+            UnregisterSharedValidationInterface(sub);
         }
         // tell the other thread we are done
         generate = false;
@@ -46,7 +45,6 @@ BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
     sub.join();
     BOOST_CHECK(!generate);
 }
-*/
 
 class TestInterface : public CValidationInterface
 {
