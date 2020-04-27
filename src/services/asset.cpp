@@ -145,3 +145,23 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx) {
     }
     return true;
 }
+
+bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<int32_t, CAmount> &mapAssetIn, const std::unordered_map<int32_t, CAmount> &mapAssetOut) {
+    if(!IsSyscoinWithNoInputTx(tx.nVersion)) {
+        if(mapAssetIn != mapAssetOut) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assets-io-mismatch");
+        }
+    // for asset sends ensure that all inputs of a single asset, and all outputs match the asset guid
+    } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
+        if(mapAssetIn.size() != 1) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-wrong-number-inputs");
+        }
+        const int32_t &nAsset = mapAssetIn.begin()->first;
+        for(const auto& outAsset: mapAssetOut) {
+            if(outAsset.first != nAsset) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-io-mismatch");
+            }
+        }
+    }
+    return true;
+}
