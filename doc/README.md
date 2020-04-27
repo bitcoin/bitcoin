@@ -28,7 +28,7 @@ Drag vBitcoin Core to your applications folder, and then run vBitcoin Core.
 
 ### Need Help?
 
-* Join our discord channel @ VeriBlock.
+* Join our discord channel @ VeriBlock (https://discord.gg/wJZEjry).
 
 You can also seek general help related to Bitcoin itself below:
 * See the documentation at the [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page)
