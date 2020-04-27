@@ -54,6 +54,19 @@ static inline bool GetAvoidReuseFlag(const CWallet* const pwallet, const UniValu
     return avoid_reuse;
 }
 
+static const RPCResult RESULT_LAST_PROCESSED_BLOCK { RPCResult::Type::OBJ, "lastprocessedblock", "hash and height of the block this information was generated on",{
+    {RPCResult::Type::STR_HEX, "hash", "hash of the block this information was generated on"},
+    {RPCResult::Type::NUM, "height", "height of the block this information was generated on"}}
+};
+
+void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    UniValue lastprocessedblock{UniValue::VOBJ};
+    lastprocessedblock.pushKV("hash", wallet.GetLastBlockHash().GetHex());
+    lastprocessedblock.pushKV("height", wallet.GetLastBlockHeight());
+    entry.pushKV("lastprocessedblock", lastprocessedblock);
+}
 
 /** Used by RPC commands that have an include_watchonly parameter.
  *  We default to true for watchonly wallets if include_watchonly isn't
@@ -1674,6 +1687,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
                         {
                             {RPCResult::Type::ELISION, "", "Equivalent to the RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
                         }},
+                        RESULT_LAST_PROCESSED_BLOCK,
                     })
                 },
                 RPCExamples{
@@ -1730,6 +1744,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
         TxToUniv(*wtx.tx, uint256(), decoded, false);
         entry.pushKV("decoded", decoded);
     }
+    AppendLastProcessedBlock(entry, *pwallet);
 
     return entry;
 }
@@ -2354,6 +2369,7 @@ static UniValue getbalances(const JSONRPCRequest& request)
                     {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
                     {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
                 }},
+                RESULT_LAST_PROCESSED_BLOCK,
             }
             },
         RPCExamples{
@@ -2390,6 +2406,7 @@ static UniValue getbalances(const JSONRPCRequest& request)
         balances_watchonly.pushKV("immature", ValueFromAmount(bal.m_watchonly_immature));
         balances.pushKV("watchonly", balances_watchonly);
     }
+    AppendLastProcessedBlock(balances, wallet);
     return balances;
 }
 
@@ -2429,6 +2446,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
                             {RPCResult::Type::NUM, "progress", "scanning progress percentage [0.0, 1.0]"},
                         }},
                         {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for scriptPubKey management"},
+                        RESULT_LAST_PROCESSED_BLOCK,
                     }},
                 },
                 RPCExamples{
@@ -2485,6 +2503,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
         obj.pushKV("scanning", false);
     }
     obj.pushKV("descriptors", pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+    AppendLastProcessedBlock(obj, *pwallet);
     return obj;
 }
 
