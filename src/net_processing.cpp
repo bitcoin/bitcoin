@@ -1080,6 +1080,11 @@ void PeerManagerImpl::FinalizeNode(const CNode& node, bool& fUpdateConnectionTim
         assert(g_wtxid_relay_peers == 0);
         assert(m_txrequest.Size() == 0);
     }
+
+    // remove from reconciliation queue
+    LOCK(m_recon_queue_mutex);
+    m_recon_queue.erase(std::remove(m_recon_queue.begin(), m_recon_queue.end(), &node), m_recon_queue.end());
+
     LogPrint(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
 }
 
