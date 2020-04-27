@@ -9,9 +9,7 @@ assignees: ''
 
 <!-- This issue tracker is only for technical issues related to vBitcoin Core.
 
-General vbitcoin questions and/or support requests are best directed to the vBitcoin StackExchange at https://www.veriblock.org
-
-For reporting security issues, please read instructions at https://www.veriblock.org
+General vbitcoin questions and/or support requests are best directed to the VeriBlock team at https://discord.gg/wJZEjry
 
 If the node is "stuck" during sync or giving "block checksum mismatch" errors, please ensure your hardware is stable by running memtest and observe CPU temperature with a load-test tool such as linpack before creating an issue! -->
 

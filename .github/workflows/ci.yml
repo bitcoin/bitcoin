@@ -73,7 +73,7 @@ jobs:
         run: make -j2
       - name: make deploy
         if: success()
-        run: make linux-deploy
+        run: make deploy
       - name: create artifacts
         if: success()
         run: |

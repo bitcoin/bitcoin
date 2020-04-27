@@ -5,7 +5,6 @@ on:
     branches:
     - master
     - develop
-    - feature/alpine-docker
 
   pull_request:
     branches:
