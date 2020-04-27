@@ -133,9 +133,8 @@ script: |
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
     make ${MAKEOPTS} -C src check-symbols
-    make deploy
+    make deploy BITCOIN_WIN_INSTALLER="${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
     make install DESTDIR=${INSTALLPATH}
-    cp -f ./bitcoin-*-win64-setup-unsigned.exe ${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete

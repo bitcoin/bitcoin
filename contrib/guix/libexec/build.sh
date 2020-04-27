@@ -220,7 +220,7 @@ export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
     # Make the os-specific installers
     case "$HOST" in
         *mingw*)
-            make deploy ${V:+V=1}
+            make deploy ${V:+V=1} BITCOIN_WIN_INSTALLER="${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
             ;;
     esac
 
@@ -232,19 +232,6 @@ export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
     # Install built Bitcoin Core to $INSTALLPATH
     make install DESTDIR="${INSTALLPATH}" ${V:+V=1}
 
-    case "$HOST" in
-        *mingw*)
-            # This step not only moves the unsigned NSIS executable to
-            # "${OUTDIR}", but also renames it
-            #
-            # from:
-            #   bitcoin-@PACKAGE_VERSION@-win64-setup-unsigned.exe
-            # to:
-            #   ${DISTNAME}-win64-setup-unsigned.exe
-            #
-            cp -f ./bitcoin-*-win64-setup-unsigned.exe "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
-            ;;
-    esac
     (
         cd installed
 
