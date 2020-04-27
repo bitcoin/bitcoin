@@ -2775,12 +2775,24 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
     ReserveDestination reservedest(this, change_type);
     int nChangePosRequest = nChangePosInOut;
     unsigned int nSubtractFeeFromAmount = 0;
+    // SYSCOIN
+    CMutableTransaction txNew;
+    // SYSCOIN
+    if(tx) {
+        txNew.nVersion = tx->nVersion;
+    }
+    bool bFirstOutput = true;
     for (const auto& recipient : vecSend)
     {
         if (nValue < 0 || recipient.nAmount < 0)
         {
             strFailReason = _("Transaction amounts must not be negative").translated;
             return false;
+        }
+        // SYSCOIN if burning to sys from sysx, don't account for value for first input (it doens't get funded with SYS, but with asset SYSX)
+        if(bFirstOutput && txNew.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
+            bFirstOutput = false;
+            continue;
         }
         nValue += recipient.nAmount;
         if (recipient.fSubtractFeeFromAmount)
@@ -2792,11 +2804,6 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
         return false;
     }
 
-    CMutableTransaction txNew;
-    // SYSCOIN
-    if(tx) {
-        txNew.nVersion = tx->nVersion;
-    }
     FeeCalculation feeCalc;
     CAmount nFeeNeeded;
     int nBytes;
@@ -2932,7 +2939,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     // SYSCOIN
                     CAmount nValueToSelectPlusAssetChange = nValueToSelect;
                     if(coin_control.assetInfo) {
-                        nValueToSelectPlusAssetChange += MIN_CHANGE;
+                        nValueToSelectPlusAssetChange += GetDustThreshold(change_prototype_txout, discard_rate);
                     }
                     if (!SelectCoins(vAvailableCoins, nValueToSelectPlusAssetChange, nValueToSelectAsset, setCoins, nValueIn, nValueInAsset, coin_control, coin_selection_params, bnb_used))
                     {
