@@ -259,8 +259,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     CMutableTransaction mtx;
     UniValue amountObj = params[1];
 	CAmount nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
-    // assume change will goto v1 since we will only try to attach burn in v0 first time
-    // it will auto adjust index in ModifyAssetOutputsBasedOnChange anyway as needed
     theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(1, nAmount));
 
 
@@ -280,8 +278,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     int nChangePosRet = -1;
     std::string strError;
     CAmount nFeeRequired = 0;
-    coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
-    coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     if (!pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
@@ -899,17 +895,14 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     if (!request.params[1].isNull()) {
         coin_control.m_signal_bip125_rbf = request.params[1].get_bool();
     }
-
     mapValue_t mapValue;
-    if (!request.params[2].isNull() && !request.params[3].get_str().empty())
-        mapValue["comment"] = request.params[3].get_str();
-
+    if (!request.params[2].isNull() && !request.params[2].get_str().empty())
+        mapValue["comment"] = request.params[2].get_str();
     if (!request.params[3].isNull()) {
-        coin_control.m_confirm_target = ParseConfirmTarget(request.params[6], pwallet->chain().estimateMaxBlocks());
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[3], pwallet->chain().estimateMaxBlocks());
     }
-
     if (!request.params[4].isNull()) {
-        if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
+        if (!FeeModeFromString(request.params[4].get_str(), coin_control.m_fee_mode)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }
@@ -968,7 +961,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             }
         }
 	}
-
     EnsureWalletIsUnlocked(pwallet);
 
 	std::vector<unsigned char> data;
@@ -1055,7 +1047,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     int32_t nVersionIn = 0;
 
     CBurnSyscoin burnSyscoin;
-    burnSyscoin.voutAssets[nAsset].push_back(CAssetOut(0, nAmount));
+    burnSyscoin.voutAssets[nAsset].push_back(CAssetOut(1, nAmount)); // burn has to be in index 1, sys is output in index 0, any change in index 2
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''") {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
@@ -1064,6 +1056,18 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         burnSyscoin.vchEthAddress = ParseHex(ethAddress);
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
     }
+
+    std::string label = "";
+    CTxDestination dest;
+    std::string error;
+    if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, error)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
+    }
+
+    const CScript& scriptPubKey = GetScriptForDestination(dest);
+    CRecipient recp = {scriptPubKey, nAmount, false };
+
+
     std::vector<unsigned char> data;
     burnSyscoin.SerializeData(data);  
     scriptData << OP_RETURN << data;
@@ -1071,9 +1075,10 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
     CMutableTransaction mtx;
     std::vector<CRecipient> vecSend;
+    vecSend.push_back(recp);
     vecSend.push_back(fee);
     CAmount nFeeRequired = 0;
-    int nChangePosRet = -1;
+    int nChangePosRet = 2; // cannot have random change, because output 0 is reserved to output coins from sysx
     std::string strError;
     mtx.nVersion = nVersionIn;
     CCoinControl coin_control;
@@ -1257,7 +1262,13 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
         m_signal_bip125_rbf = request.params[3].get_bool();
     }  
     UniValue replaceableObj(UniValue::VBOOL);
+    UniValue commentObj(UniValue::VSTR);
+    UniValue confObj(UniValue::VNUM);
+    UniValue feeObj(UniValue::VSTR);
     replaceableObj.setBool(m_signal_bip125_rbf);
+    commentObj.setStr("");
+    confObj.setInt(DEFAULT_TX_CONFIRM_TARGET);
+    feeObj.setStr("UNSET");
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     outputObj.__pushKV("asset_guid", nAsset);
@@ -1267,9 +1278,9 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(output);
     paramsFund.push_back(replaceableObj);
-    paramsFund.push_back(UniValue::VNULL); // comment
-    paramsFund.push_back(UniValue::VNULL); // conf_target
-    paramsFund.push_back(UniValue::VNULL); // estimate_mode
+    paramsFund.push_back(commentObj); // comment
+    paramsFund.push_back(confObj); // conf_target
+    paramsFund.push_back(feeObj); // estimate_mode
     JSONRPCRequest requestMany;
     requestMany.params = paramsFund;
     requestMany.URI = request.URI;
