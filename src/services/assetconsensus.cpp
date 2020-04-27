@@ -395,9 +395,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             auto it = tx.voutAssets.begin();
             const int32_t &nAsset = it->first;
             const std::vector<CAssetOut> &vecVout = it->second;
-            if(vecVout.size() != 1) {
+            // must be 1 or 2 size (2 if change is created)
+            if(vecVout.size() < 1 || vecVout.size() > 2) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-burn-invalid-vout-size", bSanityCheck);
-            } 
+            }
+            // first index should have the burn, change must always come after
             if(vecVout[0].n != (unsigned int)nOut) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-wrong-burn-index", bSanityCheck);
             }
