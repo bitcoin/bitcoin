@@ -58,6 +58,19 @@ static inline bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& para
     return avoid_reuse;
 }
 
+static const RPCResult RESULT_LAST_PROCESSED_BLOCK { RPCResult::Type::OBJ, "lastprocessedblock", "hash and height of the block this information was generated on",{
+    {RPCResult::Type::STR_HEX, "hash", "hash of the block this information was generated on"},
+    {RPCResult::Type::NUM, "height", "height of the block this information was generated on"}}
+};
+
+void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    UniValue lastprocessedblock{UniValue::VOBJ};
+    lastprocessedblock.pushKV("hash", wallet.GetLastBlockHash().GetHex());
+    lastprocessedblock.pushKV("height", wallet.GetLastBlockHeight());
+    entry.pushKV("lastprocessedblock", lastprocessedblock);
+}
 
 /** Used by RPC commands that have an include_watchonly parameter.
  *  We default to true for watchonly wallets if include_watchonly isn't
@@ -1696,6 +1709,7 @@ static RPCHelpMan gettransaction()
                         {
                             {RPCResult::Type::ELISION, "", "Equivalent to the RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
                         }},
+                        RESULT_LAST_PROCESSED_BLOCK,
                     })
                 },
                 RPCExamples{
@@ -1755,6 +1769,7 @@ static RPCHelpMan gettransaction()
         TxToUniv(*wtx.tx, uint256(), pwallet->chain().rpcEnableDeprecated("addresses"), decoded, false);
         entry.pushKV("decoded", decoded);
     }
+    AppendLastProcessedBlock(entry, *pwallet);
 
     return entry;
 },
@@ -2363,6 +2378,7 @@ static RPCHelpMan getbalances()
                     {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
                     {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
                 }},
+                RESULT_LAST_PROCESSED_BLOCK,
             }
             },
         RPCExamples{
@@ -2403,6 +2419,7 @@ static RPCHelpMan getbalances()
         balances_watchonly.pushKV("immature", ValueFromAmount(bal.m_watchonly_immature));
         balances.pushKV("watchonly", balances_watchonly);
     }
+    AppendLastProcessedBlock(balances, wallet);
     return balances;
 },
     };
@@ -2439,6 +2456,7 @@ static RPCHelpMan getwalletinfo()
                         }},
                         {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for scriptPubKey management"},
                         {RPCResult::Type::BOOL, "external_signer", "whether this wallet uses an external signer such as a hardware wallet."},
+                        RESULT_LAST_PROCESSED_BLOCK,
                     }},
                 },
                 RPCExamples{
@@ -2500,6 +2518,7 @@ static RPCHelpMan getwalletinfo()
     }
     obj.pushKV("descriptors", pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
     obj.pushKV("external_signer", pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
+    AppendLastProcessedBlock(obj, *pwallet);
     return obj;
 },
     };
