@@ -89,22 +89,26 @@ public:
 
 static CMainSignals g_signals;
 
-void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler) {
+void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler)
+{
     assert(!m_internals);
     m_internals.reset(new MainSignalsInstance(&scheduler));
 }
 
-void CMainSignals::UnregisterBackgroundSignalScheduler() {
+void CMainSignals::UnregisterBackgroundSignalScheduler()
+{
     m_internals.reset(nullptr);
 }
 
-void CMainSignals::FlushBackgroundCallbacks() {
+void CMainSignals::FlushBackgroundCallbacks()
+{
     if (m_internals) {
         m_internals->m_schedulerClient.EmptyQueue();
     }
 }
 
-size_t CMainSignals::CallbacksPending() {
+size_t CMainSignals::CallbacksPending()
+{
     if (!m_internals) return 0;
     return m_internals->m_schedulerClient.CallbacksPending();
 }
@@ -114,10 +118,11 @@ CMainSignals& GetMainSignals()
     return g_signals;
 }
 
-void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> pwalletIn) {
-    // Each connection captures pwalletIn to ensure that each callback is
-    // executed before pwalletIn is destroyed. For more details see #18338.
-    g_signals.m_internals->Register(std::move(pwalletIn));
+void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks)
+{
+    // Each connection captures the shared_ptr to ensure that each callback is
+    // executed before the subscriber is destroyed. For more details see #18338.
+    g_signals.m_internals->Register(std::move(callbacks));
 }
 
 void RegisterValidationInterface(CValidationInterface* callbacks)
@@ -132,24 +137,28 @@ void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> c
     UnregisterValidationInterface(callbacks.get());
 }
 
-void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
+void UnregisterValidationInterface(CValidationInterface* callbacks)
+{
     if (g_signals.m_internals) {
-        g_signals.m_internals->Unregister(pwalletIn);
+        g_signals.m_internals->Unregister(callbacks);
     }
 }
 
-void UnregisterAllValidationInterfaces() {
+void UnregisterAllValidationInterfaces()
+{
     if (!g_signals.m_internals) {
         return;
     }
     g_signals.m_internals->Clear();
 }
 
-void CallFunctionInValidationInterfaceQueue(std::function<void ()> func) {
+void CallFunctionInValidationInterfaceQueue(std::function<void()> func)
+{
     g_signals.m_internals->m_schedulerClient.AddToProcessQueue(std::move(func));
 }
 
-void SyncWithValidationInterfaceQueue() {
+void SyncWithValidationInterfaceQueue()
+{
     AssertLockNotHeld(cs_main);
     // Block until the validation queue drains
     std::promise<void> promise;
