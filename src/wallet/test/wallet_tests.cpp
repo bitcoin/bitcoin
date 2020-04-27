@@ -637,4 +637,25 @@ BOOST_FIXTURE_TEST_CASE(dummy_input_size_test, TestChain100Setup)
     BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(true), DUMMY_NESTED_P2WPKH_INPUT_SIZE);
 }
 
+bool malformed_descriptor(std::ios_base::failure e)
+{
+    std::string s(e.what());
+    return s.find("Missing checksum") != std::string::npos;
+}
+
+BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
+{
+    std::vector<unsigned char> malformed_record;
+    CVectorWriter vw(0, 0, malformed_record, 0);
+    vw << std::string("notadescriptor");
+    vw << (uint64_t)0;
+    vw << (int32_t)0;
+    vw << (int32_t)0;
+    vw << (int32_t)1;
+
+    VectorReader vr(0, 0, malformed_record, 0);
+    WalletDescriptor w_desc;
+    BOOST_CHECK_EXCEPTION(vr >> w_desc, std::ios_base::failure, malformed_descriptor);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
