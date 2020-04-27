@@ -18,7 +18,7 @@ class CBlockIndex;
  * CValidationInterface and ensures blocks are indexed sequentially according
  * to their position in the active chain.
  */
-class BaseIndex : public CValidationInterface
+class BaseIndex : public CValidationInterface, public std::enable_shared_from_this<BaseIndex>
 {
 protected:
     class DB : public CDBWrapper

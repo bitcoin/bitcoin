@@ -120,21 +120,10 @@ void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> pwa
     g_signals.m_internals->Register(std::move(pwalletIn));
 }
 
-void RegisterValidationInterface(CValidationInterface* callbacks)
-{
-    // Create a shared_ptr with a no-op deleter - CValidationInterface lifecycle
-    // is managed by the caller.
-    RegisterSharedValidationInterface({callbacks, [](CValidationInterface*){}});
-}
-
 void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks)
 {
-    UnregisterValidationInterface(callbacks.get());
-}
-
-void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
     if (g_signals.m_internals) {
-        g_signals.m_internals->Unregister(pwalletIn);
+        g_signals.m_internals->Unregister(callbacks.get());
     }
 }
 

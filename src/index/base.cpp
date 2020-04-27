@@ -48,8 +48,6 @@ void BaseIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator
 
 BaseIndex::~BaseIndex()
 {
-    Interrupt();
-    Stop();
 }
 
 bool BaseIndex::Init()
@@ -302,7 +300,7 @@ void BaseIndex::Start()
 {
     // Need to register this ValidationInterface before running Init(), so that
     // callbacks are not missed if Init sets m_synced to true.
-    RegisterValidationInterface(this);
+    RegisterSharedValidationInterface(shared_from_this());
     if (!Init()) {
         FatalError("%s: %s failed to initialize", __func__, GetName());
         return;
@@ -314,7 +312,7 @@ void BaseIndex::Start()
 
 void BaseIndex::Stop()
 {
-    UnregisterValidationInterface(this);
+    UnregisterSharedValidationInterface(shared_from_this());
 
     if (m_thread_sync.joinable()) {
         m_thread_sync.join();

@@ -24,10 +24,6 @@ class CScheduler;
 
 // These functions dispatch to one or all registered wallets
 
-/** Register a wallet to receive updates from core */
-void RegisterValidationInterface(CValidationInterface* pwalletIn);
-/** Unregister a wallet from core */
-void UnregisterValidationInterface(CValidationInterface* pwalletIn);
 /** Unregister all wallets from core */
 void UnregisterAllValidationInterfaces();
 
@@ -180,7 +176,7 @@ private:
     std::unique_ptr<MainSignalsInstance> m_internals;
 
     friend void ::RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface>);
-    friend void ::UnregisterValidationInterface(CValidationInterface*);
+    friend void ::UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface>);
     friend void ::UnregisterAllValidationInterfaces();
     friend void ::CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
 

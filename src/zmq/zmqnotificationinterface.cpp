@@ -36,9 +36,9 @@ std::list<const CZMQAbstractNotifier*> CZMQNotificationInterface::GetActiveNotif
     return result;
 }
 
-CZMQNotificationInterface* CZMQNotificationInterface::Create()
+std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create()
 {
-    CZMQNotificationInterface* notificationInterface = nullptr;
+    std::unique_ptr<CZMQNotificationInterface> notificationInterface;
     std::map<std::string, CZMQNotifierFactory> factories;
     std::list<CZMQAbstractNotifier*> notifiers;
 
@@ -64,13 +64,11 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
 
     if (!notifiers.empty())
     {
-        notificationInterface = new CZMQNotificationInterface();
+        notificationInterface.reset(new CZMQNotificationInterface);
         notificationInterface->notifiers = notifiers;
 
-        if (!notificationInterface->Initialize())
-        {
-            delete notificationInterface;
-            notificationInterface = nullptr;
+        if (!notificationInterface->Initialize()) {
+            return nullptr;
         }
     }
 
@@ -193,4 +191,4 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
     }
 }
 
-CZMQNotificationInterface* g_zmq_notification_interface = nullptr;
+std::shared_ptr<CZMQNotificationInterface> g_zmq_notification_interface;
