@@ -163,7 +163,6 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent",
                          strprintf("%s: inputs missing/spent", __func__));
     }
-    const bool &isSyscoinWithNoInputTx = IsSyscoinWithNoInputTx(tx.nVersion);
     const bool &isAssetTx = IsAssetTx(tx.nVersion);
     CAmount nValueIn = 0;
     std::unordered_map<int32_t, CAmount> mapAssetIn;
@@ -200,7 +199,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         
     }
     const CAmount &value_out = tx.GetValueOut();
-    if (nValueIn < value_out){
+    if (nValueIn < value_out) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
     }
@@ -210,8 +209,8 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             return false; // state is filled by GetAssetValueOut
         }
         // if input was used, validate it against output (note, no fees for assets in == out)
-        if(!isSyscoinWithNoInputTx && mapAssetIn != mapAssetOut) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assets-io-mismatch");
+        if(!CheckTxInputsAssets(tx, state, mapAssetIn, mapAssetOut)) {
+            return false; // state filled by CheckTxInputsAssets
         }
     }
     

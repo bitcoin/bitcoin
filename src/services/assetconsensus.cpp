@@ -377,8 +377,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-amount", bSanityCheck);
             }
             const CAmount &nAmountAsset = vecVout[0].nValue;
-            // the burn amount in opreturn (sys) should match the first asset output (sysx)
-            if(nBurnAmount != nAmountAsset) {
+            // the burn amount in opreturn (SYS) should match the first asset output (SYSX)
+            if(nAmountAsset != nBurnAmount) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-mismatch-amount", bSanityCheck);
             }
             if(nAsset != Params().GetConsensus().nSYSXAsset) {
@@ -389,30 +389,29 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
         {
+            // there is no reason for allocation burns to have multiple assets or outputs
+            // going from SYSX to SYS its just assumed to be one asset (SYSX)
+            // going to ethereum its one asset as well
             if(tx.voutAssets.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-burn-invalid-vout-map-size", bSanityCheck);
             }
-            auto it = tx.voutAssets.begin();
-            const int32_t &nAsset = it->first;
-            const std::vector<CAssetOut> &vecVout = it->second;
-            // must be 1 or 2 size (2 if change is created)
-            if(vecVout.size() < 1 || vecVout.size() > 2) {
+            // could be size 2 because of asset change
+            // the value in == out is enforced in CheckTxInputsAssets() for this type of transaction but we just simply want
+            // to limit the size of outputs because it doesn't make any sense to have more
+            const size_t& voutSize = tx.voutAssets.begin()->second.size();
+            if(voutSize < 1 || voutSize > 2) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-burn-invalid-vout-size", bSanityCheck);
             }
-            // first index should have the burn, change must always come after
-            if(vecVout[0].n != (unsigned int)nOut) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-wrong-burn-index", bSanityCheck);
-            }
-            const CAmount &nBurnAmount = vecVout[0].nValue;
-            if(tx.vout[nOut].assetInfo.nAsset != nAsset || tx.vout[nOut].assetInfo.nValue != nBurnAmount) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-mismatch-burn-index", bSanityCheck);
+            const CAmount &nBurnAmount = tx.vout[nOut].assetInfo.nValue;
+            if(nBurnAmount <= 0) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
             }
             if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
                 // the burn of asset in opreturn should match the output value of index 0 (sys)
                 if(nBurnAmount != tx.vout[0].nValue) {
-                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
+                    return FormatSyscoinErrorMessage(state, "assetallocation-mismatch-burn-amount", bSanityCheck);
                 }  
-                if(nAsset != Params().GetConsensus().nSYSXAsset) {
+                if(tx.vout[nOut].assetInfo.nAsset != Params().GetConsensus().nSYSXAsset) {
                     return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bSanityCheck);
                 }  
             }            
@@ -575,6 +574,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if(vecVout.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-size", bSanityCheck);
             }
+            if(tx.vout[vecVout[0].n].assetInfo.nValue != 0) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
+            }
             if (tx.vout[nOut].nValue < 500*COIN) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
@@ -613,6 +615,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         {
             if(vecVout.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-size", bSanityCheck);
+            }
+            if(tx.vout[vecVout[0].n].assetInfo.nValue != 0) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
             }
             if (theAsset.nBalance < 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-balance", bSanityCheck);

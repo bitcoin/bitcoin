@@ -376,9 +376,6 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<in
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-negative-guid");
         }
         
-        // never allow more than 1 zero value output per asset
-        // this bool should be sufficient because later on uniqueness per asset is enforced with bad-txns-asset-not-unique check
-        bool bFoundZeroValOutput = false;
         const size_t &nVoutSize = vout.size();
         for(const auto& voutAsset: it.second) {
             const uint32_t& nOut = voutAsset.n;
@@ -399,13 +396,6 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<in
                 if(!isAssetTx) {
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-zero-out-non-asset");
                 }
-                // only 1 is allowed for change
-                if(bFoundZeroValOutput) {
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-zero-out-found");
-                } 
-                else {
-                    bFoundZeroValOutput = true;
-                }
             }
             else if(!AssetRange(nAmount) || !AssetRange(nTotal)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-outofrange");
@@ -414,10 +404,6 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<in
             if(!itSet.second) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-not-unique");
             }
-        }
-        // zero value output is required (even though it is sending 0, receiving 0) for asset tx
-        if(isAssetTx && !bFoundZeroValOutput) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-no-zero-out-found");
         }
         if(nTotal > 0 && !AssetRange(nTotal)) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-total-outofrange");
