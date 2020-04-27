@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>364</width>
-    <height>185</height>
+    <height>213</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>140</y>
+     <y>170</y>
      <width>341</width>
      <height>32</height>
     </rect>
@@ -104,6 +104,22 @@
    </property>
    <property name="text">
     <string>Make Blank Wallet</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="descriptor_checkbox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>140</y>
+     <width>171</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Use descriptors for scriptPubKey management</string>
+   </property>
+   <property name="text">
+    <string>Descriptor Wallet</string>
    </property>
   </widget>
  </widget>

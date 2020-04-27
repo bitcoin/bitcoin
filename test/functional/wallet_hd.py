@@ -27,17 +27,21 @@ class WalletHDTest(BitcoinTestFramework):
 
     def run_test(self):
         # Make sure we use hd, keep masterkeyid
-        masterkeyid = self.nodes[1].getwalletinfo()['hdseedid']
-        assert_equal(len(masterkeyid), 40)
+        hd_fingerprint = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['hdmasterfingerprint']
+        assert_equal(len(hd_fingerprint), 8)
 
         # create an internal key
         change_addr = self.nodes[1].getrawchangeaddress()
         change_addrV= self.nodes[1].getaddressinfo(change_addr)
-        assert_equal(change_addrV["hdkeypath"], "m/0'/1'/0'") #first internal child key
+        if self.options.descriptors:
+            assert_equal(change_addrV["hdkeypath"], "m/84'/1'/0'/1/0")
+        else:
+            assert_equal(change_addrV["hdkeypath"], "m/0'/1'/0'") #first internal child key
 
         # Import a non-HD private key in the HD wallet
-        non_hd_add = self.nodes[0].getnewaddress()
-        self.nodes[1].importprivkey(self.nodes[0].dumpprivkey(non_hd_add))
+        non_hd_add = 'bcrt1qmevj8zfx0wdvp05cqwkmr6mxkfx60yezwjksmt'
+        non_hd_key = 'cS9umN9w6cDMuRVYdbkfE4c7YUFLJRoXMfhQ569uY4odiQbVN8Rt'
+        self.nodes[1].importprivkey(non_hd_key)
 
         # This should be enough to keep the master key and the non-HD key
         self.nodes[1].backupwallet(os.path.join(self.nodes[1].datadir, "hd.bak"))
@@ -48,11 +52,14 @@ class WalletHDTest(BitcoinTestFramework):
         self.nodes[0].generate(101)
         hd_add = None
         NUM_HD_ADDS = 10
-        for i in range(NUM_HD_ADDS):
+        for i in range(1, NUM_HD_ADDS + 1):
             hd_add = self.nodes[1].getnewaddress()
             hd_info = self.nodes[1].getaddressinfo(hd_add)
-            assert_equal(hd_info["hdkeypath"], "m/0'/0'/"+str(i)+"'")
-            assert_equal(hd_info["hdseedid"], masterkeyid)
+            if self.options.descriptors:
+                assert_equal(hd_info["hdkeypath"], "m/84'/1'/0'/0/" + str(i))
+            else:
+                assert_equal(hd_info["hdkeypath"], "m/0'/0'/"+str(i)+"'")
+            assert_equal(hd_info["hdmasterfingerprint"], hd_fingerprint)
             self.nodes[0].sendtoaddress(hd_add, 1)
             self.nodes[0].generate(1)
         self.nodes[0].sendtoaddress(non_hd_add, 1)
@@ -61,7 +68,10 @@ class WalletHDTest(BitcoinTestFramework):
         # create an internal key (again)
         change_addr = self.nodes[1].getrawchangeaddress()
         change_addrV= self.nodes[1].getaddressinfo(change_addr)
-        assert_equal(change_addrV["hdkeypath"], "m/0'/1'/1'") #second internal child key
+        if self.options.descriptors:
+            assert_equal(change_addrV["hdkeypath"], "m/84'/1'/0'/1/1")
+        else:
+            assert_equal(change_addrV["hdkeypath"], "m/0'/1'/1'") #second internal child key
 
         self.sync_all()
         assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
@@ -72,16 +82,19 @@ class WalletHDTest(BitcoinTestFramework):
         # otherwise node1 would auto-recover all funds in flag the keypool keys as used
         shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "blocks"))
         shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "chainstate"))
-        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, self.chain, "wallets", "wallet.dat"))
+        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, self.chain, 'wallets', "wallet.dat"))
         self.start_node(1)
 
         # Assert that derivation is deterministic
         hd_add_2 = None
-        for i in range(NUM_HD_ADDS):
+        for i in range(1, NUM_HD_ADDS + 1):
             hd_add_2 = self.nodes[1].getnewaddress()
             hd_info_2 = self.nodes[1].getaddressinfo(hd_add_2)
-            assert_equal(hd_info_2["hdkeypath"], "m/0'/0'/"+str(i)+"'")
-            assert_equal(hd_info_2["hdseedid"], masterkeyid)
+            if self.options.descriptors:
+                assert_equal(hd_info_2["hdkeypath"], "m/84'/1'/0'/0/" + str(i))
+            else:
+                assert_equal(hd_info_2["hdkeypath"], "m/0'/0'/"+str(i)+"'")
+            assert_equal(hd_info_2["hdmasterfingerprint"], hd_fingerprint)
         assert_equal(hd_add, hd_add_2)
         connect_nodes(self.nodes[0], 1)
         self.sync_all()
@@ -117,41 +130,45 @@ class WalletHDTest(BitcoinTestFramework):
             if out['value'] != 1:
                 keypath = self.nodes[1].getaddressinfo(out['scriptPubKey']['addresses'][0])['hdkeypath']
 
-        assert_equal(keypath[0:7], "m/0'/1'")
+        if self.options.descriptors:
+            assert_equal(keypath[0:14], "m/84'/1'/0'/1/")
+        else:
+            assert_equal(keypath[0:7], "m/0'/1'")
 
-        # Generate a new HD seed on node 1 and make sure it is set
-        orig_masterkeyid = self.nodes[1].getwalletinfo()['hdseedid']
-        self.nodes[1].sethdseed()
-        new_masterkeyid = self.nodes[1].getwalletinfo()['hdseedid']
-        assert orig_masterkeyid != new_masterkeyid
-        addr = self.nodes[1].getnewaddress()
-        assert_equal(self.nodes[1].getaddressinfo(addr)['hdkeypath'], 'm/0\'/0\'/0\'') # Make sure the new address is the first from the keypool
-        self.nodes[1].keypoolrefill(1) # Fill keypool with 1 key
+        if not self.options.descriptors:
+            # Generate a new HD seed on node 1 and make sure it is set
+            orig_masterkeyid = self.nodes[1].getwalletinfo()['hdseedid']
+            self.nodes[1].sethdseed()
+            new_masterkeyid = self.nodes[1].getwalletinfo()['hdseedid']
+            assert orig_masterkeyid != new_masterkeyid
+            addr = self.nodes[1].getnewaddress()
+            assert_equal(self.nodes[1].getaddressinfo(addr)['hdkeypath'], 'm/0\'/0\'/0\'') # Make sure the new address is the first from the keypool
+            self.nodes[1].keypoolrefill(1) # Fill keypool with 1 key
 
-        # Set a new HD seed on node 1 without flushing the keypool
-        new_seed = self.nodes[0].dumpprivkey(self.nodes[0].getnewaddress())
-        orig_masterkeyid = new_masterkeyid
-        self.nodes[1].sethdseed(False, new_seed)
-        new_masterkeyid = self.nodes[1].getwalletinfo()['hdseedid']
-        assert orig_masterkeyid != new_masterkeyid
-        addr = self.nodes[1].getnewaddress()
-        assert_equal(orig_masterkeyid, self.nodes[1].getaddressinfo(addr)['hdseedid'])
-        assert_equal(self.nodes[1].getaddressinfo(addr)['hdkeypath'], 'm/0\'/0\'/1\'') # Make sure the new address continues previous keypool
+            # Set a new HD seed on node 1 without flushing the keypool
+            new_seed = self.nodes[0].dumpprivkey(self.nodes[0].getnewaddress())
+            orig_masterkeyid = new_masterkeyid
+            self.nodes[1].sethdseed(False, new_seed)
+            new_masterkeyid = self.nodes[1].getwalletinfo()['hdseedid']
+            assert orig_masterkeyid != new_masterkeyid
+            addr = self.nodes[1].getnewaddress()
+            assert_equal(orig_masterkeyid, self.nodes[1].getaddressinfo(addr)['hdseedid'])
+            assert_equal(self.nodes[1].getaddressinfo(addr)['hdkeypath'], 'm/0\'/0\'/1\'') # Make sure the new address continues previous keypool
 
-        # Check that the next address is from the new seed
-        self.nodes[1].keypoolrefill(1)
-        next_addr = self.nodes[1].getnewaddress()
-        assert_equal(new_masterkeyid, self.nodes[1].getaddressinfo(next_addr)['hdseedid'])
-        assert_equal(self.nodes[1].getaddressinfo(next_addr)['hdkeypath'], 'm/0\'/0\'/0\'') # Make sure the new address is not from previous keypool
-        assert next_addr != addr
+            # Check that the next address is from the new seed
+            self.nodes[1].keypoolrefill(1)
+            next_addr = self.nodes[1].getnewaddress()
+            assert_equal(new_masterkeyid, self.nodes[1].getaddressinfo(next_addr)['hdseedid'])
+            assert_equal(self.nodes[1].getaddressinfo(next_addr)['hdkeypath'], 'm/0\'/0\'/0\'') # Make sure the new address is not from previous keypool
+            assert next_addr != addr
 
-        # Sethdseed parameter validity
-        assert_raises_rpc_error(-1, 'sethdseed', self.nodes[0].sethdseed, False, new_seed, 0)
-        assert_raises_rpc_error(-5, "Invalid private key", self.nodes[1].sethdseed, False, "not_wif")
-        assert_raises_rpc_error(-1, "JSON value is not a boolean as expected", self.nodes[1].sethdseed, "Not_bool")
-        assert_raises_rpc_error(-1, "JSON value is not a string as expected", self.nodes[1].sethdseed, False, True)
-        assert_raises_rpc_error(-5, "Already have this key", self.nodes[1].sethdseed, False, new_seed)
-        assert_raises_rpc_error(-5, "Already have this key", self.nodes[1].sethdseed, False, self.nodes[1].dumpprivkey(self.nodes[1].getnewaddress()))
+            # Sethdseed parameter validity
+            assert_raises_rpc_error(-1, 'sethdseed', self.nodes[0].sethdseed, False, new_seed, 0)
+            assert_raises_rpc_error(-5, "Invalid private key", self.nodes[1].sethdseed, False, "not_wif")
+            assert_raises_rpc_error(-1, "JSON value is not a boolean as expected", self.nodes[1].sethdseed, "Not_bool")
+            assert_raises_rpc_error(-1, "JSON value is not a string as expected", self.nodes[1].sethdseed, False, True)
+            assert_raises_rpc_error(-5, "Already have this key", self.nodes[1].sethdseed, False, new_seed)
+            assert_raises_rpc_error(-5, "Already have this key", self.nodes[1].sethdseed, False, self.nodes[1].dumpprivkey(self.nodes[1].getnewaddress()))
 
 if __name__ == '__main__':
     WalletHDTest().main ()

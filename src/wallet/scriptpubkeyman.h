@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 
 #include <psbt.h>
+#include <script/descriptor.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <util/error.h>
@@ -204,7 +205,7 @@ public:
 
     virtual int64_t GetTimeFirstKey() const { return 0; }
 
-    virtual const CKeyMetadata* GetMetadata(const CTxDestination& dest) const { return nullptr; }
+    virtual std::unique_ptr<CKeyMetadata> GetMetadata(const CTxDestination& dest) const { return nullptr; }
 
     virtual std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const { return nullptr; }
 
@@ -221,6 +222,8 @@ public:
     virtual TransactionError FillPSBT(PartiallySignedTransaction& psbt, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false) const { return TransactionError::INVALID_PSBT; }
 
     virtual uint256 GetID() const { return uint256(); }
+
+    virtual void SetType(OutputType type, bool internal) {}
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
     template<typename... Params>
@@ -352,7 +355,7 @@ public:
 
     int64_t GetTimeFirstKey() const override;
 
-    const CKeyMetadata* GetMetadata(const CTxDestination& dest) const override;
+    std::unique_ptr<CKeyMetadata> GetMetadata(const CTxDestination& dest) const override;
 
     bool CanGetAddresses(bool internal = false) const override;
 
@@ -365,6 +368,8 @@ public:
     TransactionError FillPSBT(PartiallySignedTransaction& psbt, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false) const override;
 
     uint256 GetID() const override;
+
+    void SetType(OutputType type, bool internal) override;
 
     // Map from Key ID to key metadata.
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata GUARDED_BY(cs_KeyStore);
@@ -475,6 +480,113 @@ public:
     bool GetKey(const CKeyID &address, CKey& key) const override { return false; }
     bool HaveKey(const CKeyID &address) const override { return false; }
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override { return m_spk_man.GetKeyOrigin(keyid, info); }
+};
+
+class DescriptorScriptPubKeyMan : public ScriptPubKeyMan
+{
+private:
+    WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
+
+    using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
+    using PubKeyMap = std::map<CPubKey, int32_t>; // Map of pubkeys involved in scripts to descriptor range index
+    using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
+    using KeyMap = std::map<CKeyID, CKey>;
+
+    ScriptPubKeyMap m_map_script_pub_keys GUARDED_BY(cs_desc_man);
+    PubKeyMap m_map_pubkeys GUARDED_BY(cs_desc_man);
+    int32_t m_max_cached_index = -1;
+
+    OutputType m_address_type;
+    bool m_internal;
+
+    KeyMap m_map_keys GUARDED_BY(cs_desc_man);
+    CryptedKeyMap m_map_crypted_keys GUARDED_BY(cs_desc_man);
+
+    bool SetCrypted();
+
+    //! keeps track of whether Unlock has run a thorough check before
+    bool m_decryption_thoroughly_checked = false;
+
+    bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey);
+
+    KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+
+    // Fetch the SigningProvider for the given script and optionally include private keys
+    std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CScript& script, bool include_private = false) const;
+    // Fetch the SigningProvider for the given pubkey and always include private keys. This should only be called by signing code.
+    std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CPubKey& pubkey) const;
+    // Fetch the SigningProvider for a given index and optionally include private keys. Called by the above functions.
+    std::unique_ptr<FlatSigningProvider> GetSigningProvider(int32_t index, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+
+public:
+    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
+        :   ScriptPubKeyMan(storage),
+            m_wallet_descriptor(descriptor)
+        {}
+    DescriptorScriptPubKeyMan(WalletStorage& storage, OutputType address_type, bool internal)
+        :   ScriptPubKeyMan(storage),
+            m_address_type(address_type), m_internal(internal)
+        {}
+
+    mutable RecursiveMutex cs_desc_man;
+
+    bool GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error) override;
+    isminetype IsMine(const CScript& script) const override;
+
+    bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) override;
+    bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
+
+    bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) override;
+    void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) override;
+
+    // Tops up the descriptor cache and m_map_script_pub_keys. The cache is stored in the wallet file
+    // and is used to expand the descriptor in GetNewDestination. DescriptorScriptPubKeyMan relies
+    // more on ephemeral data than LegacyScriptPubKeyMan. For wallets using unhardened derivation
+    // (with or without private keys), the "keypool" is a single xpub.
+    bool TopUp(unsigned int size = 0) override;
+
+    void MarkUnusedAddresses(const CScript& script) override;
+
+    bool IsHDEnabled() const override;
+
+    //! Setup descriptors based on the given CExtkey
+    bool SetupDescriptorGeneration(const CExtKey& master_key);
+
+    bool HavePrivateKeys() const override;
+
+    int64_t GetOldestKeyPoolTime() const override;
+    size_t KeypoolCountExternalKeys() const override;
+    unsigned int GetKeyPoolSize() const override;
+
+    int64_t GetTimeFirstKey() const override;
+
+    std::unique_ptr<CKeyMetadata> GetMetadata(const CTxDestination& dest) const override;
+
+    bool CanGetAddresses(bool internal = false) const override;
+
+    std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const override;
+
+    bool CanProvide(const CScript& script, SignatureData& sigdata) override;
+
+    bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const override;
+    SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
+    TransactionError FillPSBT(PartiallySignedTransaction& psbt, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false) const override;
+
+    uint256 GetID() const override;
+
+    void SetType(OutputType type, bool internal) override;
+
+    void SetCache(const DescriptorCache& cache);
+
+    bool AddKey(const CKeyID& key_id, const CKey& key);
+    bool AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key);
+
+    bool HasWalletDescriptor(const WalletDescriptor& desc) const;
+    void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
+    void WriteDescriptor();
+
+    const WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    const std::vector<CScript> GetScriptPubKeys() const;
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H

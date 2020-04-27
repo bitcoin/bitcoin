@@ -22,16 +22,63 @@ class KeyPoolTest(BitcoinTestFramework):
         addr_before_encrypting = nodes[0].getnewaddress()
         addr_before_encrypting_data = nodes[0].getaddressinfo(addr_before_encrypting)
         wallet_info_old = nodes[0].getwalletinfo()
-        assert addr_before_encrypting_data['hdseedid'] == wallet_info_old['hdseedid']
+        if not self.options.descriptors:
+            assert addr_before_encrypting_data['hdseedid'] == wallet_info_old['hdseedid']
 
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
+        if self.options.descriptors:
+            # Import hardened derivation only descriptors
+            nodes[0].walletpassphrase('test', 10)
+            nodes[0].importdescriptors([
+                {
+                    "desc": "wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/*h)#y4dfsj7n",
+                    "timestamp": "now",
+                    "range": [0,0],
+                    "active": True
+                },
+                {
+                    "desc": "pkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1h/*h)#a0nyvl0k",
+                    "timestamp": "now",
+                    "range": [0,0],
+                    "active": True
+                },
+                {
+                    "desc": "sh(wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/2h/*h))#lmeu2axg",
+                    "timestamp": "now",
+                    "range": [0,0],
+                    "active": True
+                },
+                {
+                    "desc": "wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/3h/*h)#jkl636gm",
+                    "timestamp": "now",
+                    "range": [0,0],
+                    "active": True,
+                    "internal": True
+                },
+                {
+                    "desc": "pkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/4h/*h)#l3crwaus",
+                    "timestamp": "now",
+                    "range": [0,0],
+                    "active": True,
+                    "internal": True
+                },
+                {
+                    "desc": "sh(wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/5h/*h))#qg8wa75f",
+                    "timestamp": "now",
+                    "range": [0,0],
+                    "active": True,
+                    "internal": True
+                }
+            ])
+            nodes[0].walletlock()
         # Keep creating keys
         addr = nodes[0].getnewaddress()
         addr_data = nodes[0].getaddressinfo(addr)
         wallet_info = nodes[0].getwalletinfo()
-        assert addr_before_encrypting_data['hdseedid'] != wallet_info['hdseedid']
-        assert addr_data['hdseedid'] == wallet_info['hdseedid']
+        assert addr_before_encrypting_data['hdmasterfingerprint'] != addr_data['hdmasterfingerprint']
+        if not self.options.descriptors:
+            assert addr_data['hdseedid'] == wallet_info['hdseedid']
         assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
         # put six (plus 2) new keys in the keypool (100% external-, +100% internal-keys, 1 in min)
@@ -39,8 +86,12 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].keypoolrefill(6)
         nodes[0].walletlock()
         wi = nodes[0].getwalletinfo()
-        assert_equal(wi['keypoolsize_hd_internal'], 6)
-        assert_equal(wi['keypoolsize'], 6)
+        if self.options.descriptors:
+            assert_equal(wi['keypoolsize_hd_internal'], 18)
+            assert_equal(wi['keypoolsize'], 18)
+        else:
+            assert_equal(wi['keypoolsize_hd_internal'], 6)
+            assert_equal(wi['keypoolsize'], 6)
 
         # drain the internal keys
         nodes[0].getrawchangeaddress()
@@ -80,11 +131,15 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].walletpassphrase('test', 100)
         nodes[0].keypoolrefill(100)
         wi = nodes[0].getwalletinfo()
-        assert_equal(wi['keypoolsize_hd_internal'], 100)
-        assert_equal(wi['keypoolsize'], 100)
+        if self.options.descriptors:
+            assert_equal(wi['keypoolsize_hd_internal'], 300)
+            assert_equal(wi['keypoolsize'], 300)
+        else:
+            assert_equal(wi['keypoolsize_hd_internal'], 100)
+            assert_equal(wi['keypoolsize'], 100)
 
         # create a blank wallet
-        nodes[0].createwallet(wallet_name='w2', blank=True)
+        nodes[0].createwallet(wallet_name='w2', blank=True, disable_private_keys=True)
         w2 = nodes[0].get_wallet_rpc('w2')
 
         # refer to initial wallet as w1
@@ -92,8 +147,11 @@ class KeyPoolTest(BitcoinTestFramework):
 
         # import private key and fund it
         address = addr.pop()
-        privkey = w1.dumpprivkey(address)
-        res = w2.importmulti([{'scriptPubKey': {'address': address}, 'keys': [privkey], 'timestamp': 'now'}])
+        desc = w1.getaddressinfo(address)['desc']
+        if self.options.descriptors:
+            res = w2.importdescriptors([{'desc': desc, 'timestamp': 'now'}])
+        else:
+            res = w2.importmulti([{'desc': desc, 'timestamp': 'now'}])
         assert_equal(res[0]['success'], True)
         w1.walletpassphrase('test', 100)
 

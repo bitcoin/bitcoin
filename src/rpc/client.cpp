@@ -131,6 +131,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "importpubkey", 2, "rescan" },
     { "importmulti", 0, "requests" },
     { "importmulti", 1, "options" },
+    { "importdescriptors", 0, "requests" },
     { "verifychain", 0, "checklevel" },
     { "verifychain", 1, "nblocks" },
     { "getblockstats", 0, "hash_or_height" },
@@ -170,6 +171,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "createwallet", 1, "disable_private_keys"},
     { "createwallet", 2, "blank"},
     { "createwallet", 4, "avoid_reuse"},
+    { "createwallet", 5, "descriptors"},
     { "getnodeaddresses", 0, "count"},
     { "stop", 0, "wait" },
 };

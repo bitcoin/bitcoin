@@ -22,6 +22,7 @@ import shlex
 import sys
 
 from .authproxy import JSONRPCException
+from .descriptors import descsum_create
 from .util import (
     MAX_NODES,
     append_config,
@@ -61,7 +62,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, *, chain, rpchost, timewait, bitcoind, bitcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None):
+    def __init__(self, i, datadir, *, chain, rpchost, timewait, bitcoind, bitcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, descriptors=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -79,6 +80,7 @@ class TestNode():
         self.binary = bitcoind
         self.coverage_dir = coverage_dir
         self.cwd = cwd
+        self.descriptors = descriptors
         if extra_conf is not None:
             append_config(datadir, extra_conf)
         # Most callers will just need to add extra args to the standard list below.
@@ -170,10 +172,10 @@ class TestNode():
     def __getattr__(self, name):
         """Dispatches any unrecognised messages to the RPC connection or a CLI instance."""
         if self.use_cli:
-            return getattr(self.cli, name)
+            return getattr(RPCOverloadWrapper(self.cli, True, self.descriptors), name)
         else:
             assert self.rpc_connected and self.rpc is not None, self._node_msg("Error: no RPC connection")
-            return getattr(self.rpc, name)
+            return getattr(RPCOverloadWrapper(self.rpc, descriptors=self.descriptors), name)
 
     def start(self, extra_args=None, *, cwd=None, stdout=None, stderr=None, **kwargs):
         """Start the node."""
@@ -265,11 +267,11 @@ class TestNode():
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
-            return self.cli("-rpcwallet={}".format(wallet_name))
+            return RPCOverloadWrapper(self.cli("-rpcwallet={}".format(wallet_name)), True, self.descriptors)
         else:
             assert self.rpc_connected and self.rpc, self._node_msg("RPC not connected")
             wallet_path = "wallet/{}".format(urllib.parse.quote(wallet_name))
-            return self.rpc / wallet_path
+            return RPCOverloadWrapper(self.rpc / wallet_path, descriptors=self.descriptors)
 
     def stop_node(self, expected_stderr='', wait=0):
         """Stop the node."""
@@ -595,3 +597,118 @@ class TestNodeCLI():
             return json.loads(cli_stdout, parse_float=decimal.Decimal)
         except json.JSONDecodeError:
             return cli_stdout.rstrip("\n")
+
+class RPCOverloadWrapper():
+    def __init__(self, rpc, cli=False, descriptors=False):
+        self.rpc = rpc
+        self.is_cli = cli
+        self.descriptors = descriptors
+
+    def __getattr__(self, name):
+        return getattr(self.rpc, name)
+
+    def createwallet(self, wallet_name, disable_private_keys=None, blank=None, passphrase=None, avoid_reuse=None, descriptors=None):
+        if self.is_cli:
+            if disable_private_keys is None:
+                disable_private_keys = 'null'
+            if blank is None:
+                blank = 'null'
+            if passphrase is None:
+                passphrase = ''
+            if avoid_reuse is None:
+                avoid_reuse = 'null'
+        if descriptors is None:
+            descriptors = self.descriptors
+        return self.__getattr__('createwallet')(wallet_name, disable_private_keys, blank, passphrase, avoid_reuse, descriptors)
+
+    def importprivkey(self, privkey, label=None, rescan=None):
+        wallet_info = self.getwalletinfo()
+        if self.is_cli:
+            if label is None:
+                label = 'null'
+            if rescan is None:
+                rescan = 'null'
+        if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
+            return self.__getattr__('importprivkey')(privkey, label, rescan)
+        desc = descsum_create('combo(' + privkey + ')')
+        req = [{
+            'desc': desc,
+            'timestamp': 0 if rescan else 'now',
+            'label': label if label else ''
+        }]
+        import_res = self.importdescriptors(req)
+        if not import_res[0]['success']:
+            raise JSONRPCException(import_res[0]['error'])
+
+    def addmultisigaddress(self, nrequired, keys, label=None, address_type=None):
+        wallet_info = self.getwalletinfo()
+        if self.is_cli:
+            if label is None:
+                label = 'null'
+            if address_type is None:
+                address_type = 'null'
+        if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
+            return self.__getattr__('addmultisigaddress')(nrequired, keys, label, address_type)
+        cms = self.createmultisig(nrequired, keys, address_type)
+        req = [{
+            'desc': cms['descriptor'],
+            'timestamp': 0,
+            'label': label if label else ''
+        }]
+        import_res = self.importdescriptors(req)
+        if not import_res[0]['success']:
+            raise JSONRPCException(import_res[0]['error'])
+        return cms
+
+    def importpubkey(self, pubkey, label=None, rescan=None):
+        wallet_info = self.getwalletinfo()
+        if self.is_cli:
+            if label is None:
+                label = 'null'
+            if rescan is None:
+                rescan = 'null'
+        if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
+            return self.__getattr__('importpubkey')(pubkey, label, rescan)
+        desc = descsum_create('combo(' + pubkey + ')')
+        req = [{
+            'desc': desc,
+            'timestamp': 0 if rescan else 'now',
+            'label': label if label else ''
+        }]
+        import_res = self.importdescriptors(req)
+        if not import_res[0]['success']:
+            raise JSONRPCException(import_res[0]['error'])
+
+    def importaddress(self, address, label=None, rescan=None, p2sh=None):
+        wallet_info = self.getwalletinfo()
+        if self.is_cli:
+            if label is None:
+                label = 'null'
+            if rescan is None:
+                rescan = 'null'
+            if p2sh is None:
+                p2sh = 'null'
+        if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
+            return self.__getattr__('importaddress')(address, label, rescan, p2sh)
+        is_hex = False
+        try:
+            int(address ,16)
+            is_hex = True
+            desc = descsum_create('raw(' + address + ')')
+        except:
+            desc = descsum_create('addr(' + address + ')')
+        reqs = [{
+            'desc': desc,
+            'timestamp': 0 if rescan else 'now',
+            'label': label if label else ''
+        }]
+        if is_hex and p2sh:
+            reqs.append({
+                'desc': descsum_create('p2sh(raw(' + address + '))'),
+                'timestamp': 0 if rescan else 'now',
+                'label': label if label else ''
+            })
+        import_res = self.importdescriptors(reqs)
+        for res in import_res:
+            if not res['success']:
+                raise JSONRPCException(res['error'])

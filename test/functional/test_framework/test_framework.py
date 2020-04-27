@@ -165,6 +165,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="run nodes under the valgrind memory error detector: expect at least a ~10x slowdown, valgrind 3.14 or later required")
         parser.add_argument("--randomseed", type=int,
                             help="set a random seed for deterministically reproducing a previous test run")
+        parser.add_argument("--descriptors", default=False, action="store_true",
+                            help="Run test using a descriptor wallet")
         self.add_options(parser)
         self.options = parser.parse_args()
 
@@ -333,11 +335,23 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def setup_nodes(self):
         """Override this method to customize test node setup"""
-        extra_args = None
+        extra_args = [[]] * self.num_nodes
+        wallets = [[]] * self.num_nodes
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
+            wallets = [[x for x in eargs if x.startswith('-wallet=')] for eargs in extra_args]
+        extra_args = [x + ['-nowallet'] for x in extra_args]
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
+        for i, n in enumerate(self.nodes):
+            n.extra_args.pop()
+            if '-wallet=0' in n.extra_args or '-nowallet' in n.extra_args or '-disablewallet' in n.extra_args or not self.is_wallet_compiled():
+                continue
+            if '-wallet=' not in wallets[i] and not any([x.startswith('-wallet=') for x in wallets[i]]):
+                wallets[i].append('-wallet=')
+            for w in wallets[i]:
+                wallet_name = w.split('=', 1)[1]
+                n.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors)
         self.import_deterministic_coinbase_privkeys()
         if not self.setup_clean_chain:
             for n in self.nodes:
@@ -408,6 +422,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 use_cli=self.options.usecli,
                 start_perf=self.options.perf,
                 use_valgrind=self.options.valgrind,
+                descriptors=self.options.descriptors,
             ))
 
     def start_node(self, i, *args, **kwargs):
@@ -547,6 +562,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     bitcoin_cli=self.options.bitcoincli,
                     coverage_dir=None,
                     cwd=self.options.tmpdir,
+                    descriptors=self.options.descriptors,
                 ))
             self.start_node(CACHE_NODE_ID)
             cache_node = self.nodes[CACHE_NODE_ID]

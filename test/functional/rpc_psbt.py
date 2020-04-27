@@ -48,18 +48,23 @@ class PSBTTest(BitcoinTestFramework):
         disconnect_nodes(offline_node, 2)
         disconnect_nodes(mining_node, 0)
 
+        # Create watchonly on online_node
+        online_node.createwallet(wallet_name='wonline', disable_private_keys=True)
+        wonline = online_node.get_wallet_rpc('wonline')
+        w2 = online_node.get_wallet_rpc('')
+
         # Mine a transaction that credits the offline address
         offline_addr = offline_node.getnewaddress(address_type="p2sh-segwit")
-        online_addr = online_node.getnewaddress(address_type="p2sh-segwit")
-        online_node.importaddress(offline_addr, "", False)
+        online_addr = w2.getnewaddress(address_type="p2sh-segwit")
+        wonline.importaddress(offline_addr, "", False)
         mining_node.sendtoaddress(address=offline_addr, amount=1.0)
         mining_node.generate(nblocks=1)
         self.sync_blocks([mining_node, online_node])
 
         # Construct an unsigned PSBT on the online node (who doesn't know the output is Segwit, so will include a non-witness UTXO)
-        utxos = online_node.listunspent(addresses=[offline_addr])
-        raw = online_node.createrawtransaction([{"txid":utxos[0]["txid"], "vout":utxos[0]["vout"]}],[{online_addr:0.9999}])
-        psbt = online_node.walletprocesspsbt(online_node.converttopsbt(raw))["psbt"]
+        utxos = wonline.listunspent(addresses=[offline_addr])
+        raw = wonline.createrawtransaction([{"txid":utxos[0]["txid"], "vout":utxos[0]["vout"]}],[{online_addr:0.9999}])
+        psbt = wonline.walletprocesspsbt(online_node.converttopsbt(raw))["psbt"]
         assert "non_witness_utxo" in mining_node.decodepsbt(psbt)["inputs"][0]
 
         # Have the offline node sign the PSBT (which will update the UTXO to segwit)
@@ -71,6 +76,8 @@ class PSBTTest(BitcoinTestFramework):
         mining_node.generate(1)
         self.sync_blocks([mining_node, online_node])
         assert_equal(online_node.gettxout(txid,0)["confirmations"], 1)
+
+        wonline.unloadwallet()
 
         # Reconnect
         connect_nodes(self.nodes[0], 1)
@@ -89,13 +96,23 @@ class PSBTTest(BitcoinTestFramework):
         final_tx = self.nodes[0].finalizepsbt(signed_tx)['hex']
         self.nodes[0].sendrawtransaction(final_tx)
 
-        # Create p2sh, p2wpkh, and p2wsh addresses
+        # Get pubkeys
         pubkey0 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())['pubkey']
         pubkey1 = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['pubkey']
         pubkey2 = self.nodes[2].getaddressinfo(self.nodes[2].getnewaddress())['pubkey']
-        p2sh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "legacy")['address']
-        p2wsh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "bech32")['address']
-        p2sh_p2wsh = self.nodes[1].addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "p2sh-segwit")['address']
+
+        # Setup watchonly wallets
+        self.nodes[2].createwallet(wallet_name='wmulti', disable_private_keys=True)
+        wmulti = self.nodes[2].get_wallet_rpc('wmulti')
+
+        # Create all the addresses
+        p2sh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "legacy")['address']
+        p2wsh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "bech32")['address']
+        p2sh_p2wsh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "p2sh-segwit")['address']
+        if not self.options.descriptors:
+            wmulti.importaddress(p2sh)
+            wmulti.importaddress(p2wsh)
+            wmulti.importaddress(p2sh_p2wsh)
         p2wpkh = self.nodes[1].getnewaddress("", "bech32")
         p2pkh = self.nodes[1].getnewaddress("", "legacy")
         p2sh_p2wpkh = self.nodes[1].getnewaddress("", "p2sh-segwit")
@@ -146,10 +163,13 @@ class PSBTTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Fee exceeds maximum configured by -maxtxfee", self.nodes[1].walletcreatefundedpsbt, [{"txid":txid,"vout":p2wpkh_pos},{"txid":txid,"vout":p2sh_p2wpkh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99}, 0, {"feeRate": 10})
 
         # partially sign multisig things with node 1
-        psbtx = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2wsh_pos},{"txid":txid,"vout":p2sh_pos},{"txid":txid,"vout":p2sh_p2wsh_pos}], {self.nodes[1].getnewaddress():29.99})['psbt']
+        psbtx = wmulti.walletcreatefundedpsbt(inputs=[{"txid":txid,"vout":p2wsh_pos},{"txid":txid,"vout":p2sh_pos},{"txid":txid,"vout":p2sh_p2wsh_pos}], outputs={self.nodes[1].getnewaddress():29.99}, options={'changeAddress': self.nodes[1].getrawchangeaddress()})['psbt']
         walletprocesspsbt_out = self.nodes[1].walletprocesspsbt(psbtx)
         psbtx = walletprocesspsbt_out['psbt']
         assert_equal(walletprocesspsbt_out['complete'], False)
+
+        # Unload wmulti, we don't need it anymore
+        wmulti.unloadwallet()
 
         # partially sign with node 2. This should be complete and sendable
         walletprocesspsbt_out = self.nodes[2].walletprocesspsbt(psbtx)
@@ -297,7 +317,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Signer tests
         for i, signer in enumerate(signers):
-            self.nodes[2].createwallet("wallet{}".format(i))
+            self.nodes[2].createwallet(wallet_name="wallet{}".format(i))
             wrpc = self.nodes[2].get_wallet_rpc("wallet{}".format(i))
             for key in signer['privkeys']:
                 wrpc.importprivkey(key)

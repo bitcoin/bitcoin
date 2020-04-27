@@ -226,6 +226,9 @@ void CreateWalletActivity::createWallet()
     if (m_create_wallet_dialog->isMakeBlankWalletChecked()) {
         flags |= WALLET_FLAG_BLANK_WALLET;
     }
+    if (m_create_wallet_dialog->isDescriptorWalletChecked()) {
+        flags |= WALLET_FLAG_DESCRIPTORS;
+    }
 
     QTimer::singleShot(500, worker(), [this, name, flags] {
         WalletCreationStatus status;
