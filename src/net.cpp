@@ -1424,8 +1424,7 @@ void CConnman::SocketHandler()
         //
         // Send
         //
-        if (sendSet)
-        {
+        if (sendSet) {
             LOCK(pnode->cs_vSend);
             size_t nBytes = SocketSendData(pnode);
             if (nBytes) {
@@ -2744,7 +2743,6 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     pnode->m_serializer->prepareForTransport(msg, serializedHeader);
     size_t nTotalSize = nMessageSize + serializedHeader.size();
 
-    size_t nBytesSent = 0;
     {
         LOCK(pnode->cs_vSend);
         bool optimisticSend(pnode->vSendMsg.empty());
@@ -2760,11 +2758,11 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
             pnode->vSendMsg.push_back(std::move(msg.data));
 
         // If write queue empty, attempt "optimistic write"
-        if (optimisticSend == true)
-            nBytesSent = SocketSendData(pnode);
+        if (optimisticSend == true) {
+            const size_t bytes_sent{SocketSendData(pnode)};
+            if (bytes_sent) RecordBytesSent(bytes_sent);
+        }
     }
-    if (nBytesSent)
-        RecordBytesSent(nBytesSent);
 }
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
