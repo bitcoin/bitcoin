@@ -63,6 +63,8 @@
 #include <string>
 #include <tuple>
 
+#include <boost/algorithm/string.hpp> // boost::split
+
 using std::runtime_error;
 using namespace mastercore;
 
@@ -1901,8 +1903,9 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
 
     for (OfferMap::iterator it = my_offers.begin(); it != my_offers.end(); ++it) {
         const CMPOffer& selloffer = it->second;
-        const std::string& sellCombo = it->first;
-        std::string seller = sellCombo.substr(0, sellCombo.size() - 2);
+        std::vector<std::string> vstr;
+        boost::split(vstr, it->first, boost::is_any_of("-"), boost::token_compress_on);
+        std::string seller = vstr[0];
 
         // filtering
         if (!addressFilter.empty() && seller != addressFilter) continue;
