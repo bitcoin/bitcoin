@@ -308,7 +308,7 @@ def initialize_datadir(dirname, n, chain):
     else:
         chain_name_conf_arg = chain
         chain_name_conf_section = chain
-    with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
+    with open(os.path.join(datadir, "vbitcoin.conf"), 'w', encoding='utf8') as f:
         f.write("{}=1\n".format(chain_name_conf_arg))
         f.write("[{}]\n".format(chain_name_conf_section))
         f.write("port=" + str(p2p_port(n)) + "\n")
@@ -330,15 +330,15 @@ def get_datadir_path(dirname, n):
     return os.path.join(dirname, "node" + str(n))
 
 def append_config(datadir, options):
-    with open(os.path.join(datadir, "bitcoin.conf"), 'a', encoding='utf8') as f:
+    with open(os.path.join(datadir, "vbitcoin.conf"), 'a', encoding='utf8') as f:
         for option in options:
             f.write(option + "\n")
 
 def get_auth_cookie(datadir, chain):
     user = None
     password = None
-    if os.path.isfile(os.path.join(datadir, "bitcoin.conf")):
-        with open(os.path.join(datadir, "bitcoin.conf"), 'r', encoding='utf8') as f:
+    if os.path.isfile(os.path.join(datadir, "vbitcoin.conf")):
+        with open(os.path.join(datadir, "vbitcoin.conf"), 'r', encoding='utf8') as f:
             for line in f:
                 if line.startswith("rpcuser="):
                     assert user is None  # Ensure that there is only one rpcuser line

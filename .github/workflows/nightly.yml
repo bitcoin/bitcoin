@@ -113,11 +113,11 @@ jobs:
       PLATFORM: x64
     steps:
       - uses: actions/checkout@v1
-#      - name: Extract branch name & commit
-#        id: extract_branch
-#        run: |
-#          $env:git_hash = git.exe rev-parse --short=7 "$env:GITHUB_SHA"
-#          $env:branch = echo $env:GITHUB_REF#refs/heads/ | %{$_ -replace '\/','.'}
+      - name: Extract branch name & commit
+        id: extract_branch
+        run: |
+          $env:git_hash = git.exe rev-parse --short=7 "$env:GITHUB_SHA"
+          $env:branch = echo $env:GITHUB_REF#refs/heads/ | %{$_ -replace '\/','.'}
       - uses: actions/setup-python@v1
         with:
           python-version: '3.7'  # Needed for PEP 540
@@ -174,6 +174,20 @@ jobs:
         run: C:/vcpkg/vcpkg.exe integrate install
       - name: Build
         run: msbuild build_msvc\bitcoin.sln /m /v:n /p:Configuration=Release
+      - name: Run test_bitcoin
+        shell: cmd
+        run: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
+#      - name: bitcoin-util-test
+#        if: always()
+#        run: python test\util\bitcoin-util-test.py
+      - name: rpcauth-test
+        shell: cmd
+        run: python test\util\rpcauth-test.py
+#      - name: test_runner
+#        if: always()
+#        shell: cmd
+#        run: |
+#          python test\functional\test_runner.py --ansi --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
 
   x86_64-w64-mingw32:
     runs-on: ubuntu-latest

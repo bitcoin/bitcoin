@@ -1,11 +1,12 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <boost/test/unit_test.hpp>
 #include <cuckoocache.h>
+#include <deque>
+#include <random.h>
 #include <script/sigcache.h>
 #include <test/util/setup_common.h>
-#include <random.h>
 #include <thread>
 
 /** Test Suite for CuckooCache
@@ -29,16 +30,16 @@ BOOST_AUTO_TEST_SUITE(cuckoocache_tests);
  */
 BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
 {
-    SeedInsecureRand(SeedRand::ZEROS);
-    CuckooCache::cache<uint256, SignatureCacheHasher> cc{};
-    size_t megabytes = 4;
-    cc.setup_bytes(megabytes << 20);
-    for (int x = 0; x < 100000; ++x) {
-        cc.insert(InsecureRand256());
-    }
-    for (int x = 0; x < 100000; ++x) {
-        BOOST_CHECK(!cc.contains(InsecureRand256(), false));
-    }
+        SeedInsecureRand(SeedRand::ZEROS);
+CuckooCache::cache<uint256, SignatureCacheHasher> cc{};
+size_t megabytes = 4;
+cc.setup_bytes(megabytes << 20);
+for (int x = 0; x < 100000; ++x) {
+    cc.insert(InsecureRand256());
+}
+for (int x = 0; x < 100000; ++x) {
+    BOOST_CHECK(!cc.contains(InsecureRand256(), false));
+}
 };
 
 /** This helper returns the hit rate when megabytes*load worth of entries are
@@ -100,15 +101,15 @@ static double normalize_hit_rate(double hits, double load)
 /** Check the hit rate on loads ranging from 0.1 to 1.6 */
 BOOST_AUTO_TEST_CASE(cuckoocache_hit_rate_ok)
 {
-    /** Arbitrarily selected Hit Rate threshold that happens to work for this test
-     * as a lower bound on performance.
-     */
-    double HitRateThresh = 0.98;
-    size_t megabytes = 4;
-    for (double load = 0.1; load < 2; load *= 2) {
-        double hits = test_cache<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes, load);
-        BOOST_CHECK(normalize_hit_rate(hits, load) > HitRateThresh);
-    }
+        /** Arbitrarily selected Hit Rate threshold that happens to work for this test
+         * as a lower bound on performance.
+         */
+        double HitRateThresh = 0.98;
+size_t megabytes = 4;
+for (double load = 0.1; load < 2; load *= 2) {
+    double hits = test_cache<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes, load);
+    BOOST_CHECK(normalize_hit_rate(hits, load) > HitRateThresh);
+}
 }
 
 
@@ -173,8 +174,8 @@ static void test_cache_erase(size_t megabytes)
 
 BOOST_AUTO_TEST_CASE(cuckoocache_erase_ok)
 {
-    size_t megabytes = 4;
-    test_cache_erase<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes);
+        size_t megabytes = 4;
+test_cache_erase<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes);
 }
 
 template <typename Cache>
@@ -262,8 +263,8 @@ static void test_cache_erase_parallel(size_t megabytes)
 }
 BOOST_AUTO_TEST_CASE(cuckoocache_erase_parallel_ok)
 {
-    size_t megabytes = 4;
-    test_cache_erase_parallel<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes);
+        size_t megabytes = 4;
+test_cache_erase_parallel<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes);
 }
 
 
@@ -359,7 +360,7 @@ static void test_cache_generations()
 }
 BOOST_AUTO_TEST_CASE(cuckoocache_generations)
 {
-    test_cache_generations<CuckooCache::cache<uint256, SignatureCacheHasher>>();
+        test_cache_generations<CuckooCache::cache<uint256, SignatureCacheHasher>>();
 }
 
 BOOST_AUTO_TEST_SUITE_END();
