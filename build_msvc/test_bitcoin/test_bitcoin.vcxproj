@@ -3,7 +3,6 @@
   <Import Project="..\common.init.vcxproj" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A56B73DB-D46D-4882-8374-1FE3FFA08F07}</ProjectGuid>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -43,6 +42,9 @@
     </ProjectReference>
     <ProjectReference Include="..\libbitcoin_zmq\libbitcoin_zmq.vcxproj">
       <Project>{792d487f-f14c-49fc-a9de-3fc150f31c3f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libtest_util\libtest_util.vcxproj">
+      <Project>{1e065f03-3566-47d0-8fa9-daa72b084e7d}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libunivalue\libunivalue.vcxproj">
       <Project>{5724ba7d-a09a-4ba8-800b-c4c1561b3d69}</Project>
