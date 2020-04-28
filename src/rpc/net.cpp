@@ -920,6 +920,8 @@ static UniValue sendMessage(std::string msg, std::string rawArgs, bool printResu
 
         } else if(msg == "headers") {
           std::vector<CBlock> vHeaders;
+          uint256 hash1 = GetRandHash();
+          uint256 hash2 = GetRandHash();
           for(int i = 0; i < 2001; i++) {
                 uint64_t nonce = 0;
                 while (nonce == 0) {
@@ -928,8 +930,8 @@ static UniValue sendMessage(std::string msg, std::string rawArgs, bool printResu
 
               CBlockHeader block;
               block.nVersion       = 0x20400000;
-              block.hashPrevBlock  = GetRandHash();
-              block.hashMerkleRoot = GetRandHash();
+              block.hashPrevBlock  = hash1;
+              block.hashMerkleRoot = hash2;
               block.nTime          = GetAdjustedTime();
               block.nBits          = 0;
               block.nNonce         = nonce;
@@ -941,15 +943,17 @@ static UniValue sendMessage(std::string msg, std::string rawArgs, bool printResu
         } else if(msg == "block") {
           //std::shared_ptr<const CBlock> block;
 
-	      uint64_t nonce = 0;
-	      while (nonce == 0) {
-	          GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
-	      }
+  	      uint64_t nonce = 0xA1BFF0925A021684ULL;
+  	      //while (nonce == 0) {
+  	      //    GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
+  	      //}
+          uint256 hash1 = uint256S("0x00000000000000008a5f8ac4f9c22ebf4f494d856ea8d30c732ed8108eb94b1b"); //GetRandHash();
+          uint256 hash2 = uint256S("0xf2078aee30173fc73f88c4f5c24b15309ebf42a2b9d6c81081c586ef8d3e4d85"); //GetRandHash();
 
           CBlockHeader header;
           header.nVersion       = 0x20400000;
-          header.hashPrevBlock  = GetRandHash();
-          header.hashMerkleRoot = GetRandHash();
+          header.hashPrevBlock  = hash1;
+          header.hashMerkleRoot = hash2;
           header.nTime          = GetAdjustedTime();
           header.nBits          = 0;
           header.nNonce         = nonce;
