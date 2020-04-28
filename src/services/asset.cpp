@@ -102,6 +102,13 @@ bool GetAsset(const int32_t &nAsset,
     return true;
 }
 
+bool GetAssetUndo(const uint256 &txHash,
+        CAssetUndo& txPos) {
+    if (passetdb == nullptr || !passetdb->ReadAssetUndo(txHash, txPos))
+        return false;
+    return true;
+}
+
 bool ReserializeAssetCommitment(CMutableTransaction& mtx) {
     // load tx.voutAssets from tx.vout.assetInfo info
     // when change is added this function should be called and preceding this the vout.assetInfo
@@ -165,3 +172,5 @@ bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const
     }
     return true;
 }
+
+AssetUndoHasher::AssetUndoHasher() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}

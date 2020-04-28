@@ -16,7 +16,7 @@ std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
-bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string errorMessage, bool bErrorNotInvalid, bool bConsensus){
+bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string errorMessage, bool bErrorNotInvalid, bool bConsensus) {
         if(bErrorNotInvalid) {
             return state.Error(errorMessage);
         }
@@ -51,8 +51,7 @@ bool CWitnessAddress::IsValid() const {
     return true;
 }
 
-bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, EthereumMintTxMap &mapMintKeys)
-{
+bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanityCheck, const int& nHeight, const int64_t& nTime, const uint256& blockhash, EthereumMintTxMap &mapMintKeys) {
     if (!bSanityCheck)
         LogPrint(BCLog::SYS,"*** ASSET MINT %d %s %s bSanityCheck=%d\n", nHeight,
             txHash.ToString().c_str(),
@@ -287,15 +286,18 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }               
     return true;
 }
+
 bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const int &nHeight, const int64_t& nTime, EthereumMintTxMap &mapMintKeys) {
     if(Params().NetworkIDString() != CBaseChainParams::REGTEST && nHeight < Params().GetConsensus().nUTXOAssetsBlock)
         return true;
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
         return false;
     AssetMap mapAssets;
-    return CheckSyscoinInputs(false, tx, txHash, state, true, nHeight, nTime, uint256(), false, mapAssets, mapMintKeys);
+    AssetUndoMap mapAssetsUndo;
+    return CheckSyscoinInputs(false, tx, txHash, state, true, nHeight, nTime, uint256(), false, mapAssets, mapAssetsUndo, mapMintKeys);
 }
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys) {
+
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, AssetUndoMap &mapAssetsUndo, EthereumMintTxMap &mapMintKeys) {
     bool good = true;
     try{
         if(IsSyscoinMintTx(tx.nVersion)) {
@@ -305,13 +307,14 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
             good = CheckAssetAllocationInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, bSanityCheck);
         }
         else if (IsAssetTx(tx.nVersion)) {
-            good = CheckAssetInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck);
+            good = CheckAssetInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, mapAssetsUndo, bSanityCheck);
         } 
     } catch (...) {
         return FormatSyscoinErrorMessage(state, "checksyscoininputs-exception", bSanityCheck);
     }
     return good;
 }
+
 bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, EthereumMintTxMap &mapMintKeys){
     CMintSyscoin mintSyscoin(tx);
     if(mintSyscoin.IsNull()) {
@@ -321,8 +324,8 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, Ethereum
     mapMintKeys.emplace(mintSyscoin.nBridgeTransferID, txHash);
     return true;
 }
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys)
-{
+
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, CCoinsViewCache& view, AssetMap &mapAssets, AssetUndoMap &mapAssetsUndo, EthereumMintTxMap &mapMintKeys) {
     if(tx.IsCoinBase())
         return true;
  
@@ -336,7 +339,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
                 if(!DisconnectAssetSend(tx, txHash, mapAssets))
                     return false;
             } else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE) {  
-                if(!DisconnectAssetUpdate(tx, txHash, mapAssets))
+                if(!DisconnectAssetUpdate(tx, txHash, mapAssets, mapAssetsUndo))
                     return false;
             }
             else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
@@ -347,6 +350,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
     } 
     return true;       
 }
+
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
         const bool &fJustCheck, const int &nHeight, const uint256& blockhash, const bool &bSanityCheck) {
     if (!bSanityCheck)
@@ -432,6 +436,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
     }  
     return true;
 }
+
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     auto it = tx.voutAssets.begin();
     const int32_t &nAsset = it->first;
@@ -466,8 +471,11 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
     storedAssetRef.nBalance += nTotal;        
     return true;  
 }
-bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
+
+bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets, AssetUndoMap &mapAssetsUndo) {
     CAsset dbAsset;
+    CAssetUndo dbAssetUndo;
+    const uint256& txHash = tx.GetHash();
     CAsset theAsset(tx);
     if(theAsset.IsNull()) {
         LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not decode asset\n");
@@ -478,7 +486,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
     #else
-    auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
     #endif     
 
     auto mapAsset = result.first;
@@ -490,8 +498,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
         } 
         mapAsset->second = std::move(dbAsset);                    
     }
-    CAsset& storedAssetRef = mapAsset->second;   
-           
+    CAsset& storedAssetRef = mapAsset->second;    
     if(theAsset.nBalance > 0) {
         // reverse asset minting by the issuer
         storedAssetRef.nBalance -= theAsset.nBalance;
@@ -500,9 +507,30 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
             LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Asset cannot be negative: Balance %lld, Supply: %lld\n",storedAssetRef.nBalance, storedAssetRef.nTotalSupply);
             return false;
         }                                        
-    }         
+    }
+    // if there is undo information (fields have changed atleast once after activation)
+    if(GetAssetUndo(txHash, dbAssetUndo)) {
+        // undo data fields from last update
+        if(storedAssetRef.vchPubData != dbAssetUndo.vchPubData) {
+            storedAssetRef.vchPubData = dbAssetUndo.vchPubData;
+        }
+        if(storedAssetRef.vchContract != dbAssetUndo.vchContract) {
+            storedAssetRef.vchContract = dbAssetUndo.vchContract;
+        }
+        if(storedAssetRef.nUpdateFlags != dbAssetUndo.nUpdateFlags) {
+            storedAssetRef.nUpdateFlags = dbAssetUndo.nUpdateFlags;
+        }
+        // will remove on flush
+        dbAssetUndo.SetNull();
+        #if __cplusplus > 201402 
+        mapAssetsUndo.try_emplace(txHash,  std::move(dbAssetUndo));
+        #else
+        mapAssetsUndo.emplace(std::piecewise_construct,  std::forward_as_tuple(txHash),  std::forward_as_tuple(std::move(dbAssetUndo)));
+        #endif  
+    } 
     return true;  
 }
+
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     auto it = tx.voutAssets.begin();
     const int32_t &nAsset = it->first;
@@ -513,8 +541,9 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
     #endif 
     return true;  
 }
+
 bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
-        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap& mapAssets, const bool &bSanityCheck) {
+        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetUndoMap& mapAssetsUndo, const bool &bSanityCheck) {
     if (passetdb == nullptr)
         return false;
     if (!bSanityCheck)
@@ -646,25 +675,37 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
             }
+   
+            CAssetUndo dbAssetUndo; 
             if (!theAsset.vchPubData.empty()) {
                 if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_DATA)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
                 }
-                storedAssetRef.vchPubData = theAsset.vchPubData;
+                dbAssetUndo.vchPubData = std::move(storedAssetRef.vchPubData);
+                storedAssetRef.vchPubData = std::move(theAsset.vchPubData);
             }
                                         
             if (!theAsset.vchContract.empty()) {
                 if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
                 }
-                storedAssetRef.vchContract = theAsset.vchContract;
+                dbAssetUndo.vchContract = std::move(storedAssetRef.vchContract);
+                storedAssetRef.vchContract = std::move(theAsset.vchContract);
             }
             if (theAsset.nUpdateFlags != storedAssetRef.nUpdateFlags) {
                 if (theAsset.nUpdateFlags > 0 && !(storedAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN))) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
                 }
-                storedAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
-            }    
+                dbAssetUndo.nUpdateFlags = std::move(storedAssetRef.nUpdateFlags);
+                storedAssetRef.nUpdateFlags = std::move(theAsset.nUpdateFlags);
+            }
+            if(!dbAssetUndo.IsNull()) {
+                #if __cplusplus > 201402 
+                mapAssetsUndo.try_emplace(txHash, std::move(dbAssetUndo));
+                #else
+                mapAssetsUndo.emplace(std::piecewise_construct, std::forward_as_tuple(txHash),  std::forward_as_tuple(std::move(dbAssetUndo)));
+                #endif 
+            }        
         }         
         break;
             
@@ -696,6 +737,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     } 
     return true;
 }
+
 bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     LOCK(cs_setethstatus);
     uint32_t fNewGethCurrentHeight = fGethCurrentHeight;
@@ -735,9 +777,11 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     fGethCurrentHeight = fNewGethCurrentHeight;   
     return FlushErase(vecHeightKeys);
 }
+
 bool CEthereumTxRootsDB::Init() {
     return PruneTxRoots(0);
 }
+
 bool CEthereumTxRootsDB::Clear() {
     LOCK(cs_setethstatus);
     std::vector<uint32_t> vecHeightKeys;
@@ -849,6 +893,7 @@ bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys) 
     LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx roots, block range (%d-%d)\n", vecHeightKeys.size(), nFirst, nLast);
     return WriteBatch(batch);
 }
+
 bool CEthereumTxRootsDB::FlushWrite(const EthereumTxRootMap &mapTxRoots) {
     if(mapTxRoots.empty())
         return true;
@@ -862,6 +907,7 @@ bool CEthereumTxRootsDB::FlushWrite(const EthereumTxRootMap &mapTxRoots) {
     LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx roots, block range (%d-%d)\n", mapTxRoots.size(), nFirst, nLast);
     return WriteBatch(batch);
 }
+
 // called on connect
 bool CEthereumMintedTxDB::FlushWrite(const EthereumMintTxMap &mapMintKeys) {
     if(mapMintKeys.empty())
@@ -873,6 +919,7 @@ bool CEthereumMintedTxDB::FlushWrite(const EthereumMintTxMap &mapMintKeys) {
     LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx mints\n", mapMintKeys.size());
     return WriteBatch(batch);
 }
+
 // called on disconnect
 bool CEthereumMintedTxDB::FlushErase(const EthereumMintTxMap &mapMintKeys) {
     if(mapMintKeys.empty())
@@ -884,6 +931,7 @@ bool CEthereumMintedTxDB::FlushErase(const EthereumMintTxMap &mapMintKeys) {
     LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx mints\n", mapMintKeys.size());
     return WriteBatch(batch);
 }
+
 bool FlushSyscoinDBs() {
     bool ret = true;
      if (pethereumtxrootsdb != nullptr)
@@ -901,15 +949,13 @@ bool FlushSyscoinDBs() {
 	return ret;
 }
 
-bool CAssetDB::Flush(const AssetMap &mapAssets){
+bool CAssetDB::Flush(const AssetMap &mapAssets, const AssetUndoMap &mapAssetsUndo) {
     if(mapAssets.empty()) {
         return true;
 	}
 	int write = 0;
 	int erase = 0;
     CDBBatch batch(*this);
-    std::map<std::string, std::vector<int32_t> > mapGuids;
-    std::vector<int32_t> emptyVec;
     for (const auto &key : mapAssets) {
 		if (key.second.IsNull()) {
 			erase++;
@@ -917,6 +963,18 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
 		}
 		else {
 			write++;
+            // int32 (guid) -> CAsset
+			batch.Write(key.first, key.second);
+		}
+    }
+    for (const auto &key : mapAssetsUndo) {
+		if (key.second.IsNull()) {
+			erase++;
+			batch.Erase(key.first);
+		}
+		else {
+			write++;
+            // txid -> CAssetUndo
 			batch.Write(key.first, key.second);
 		}
     }
