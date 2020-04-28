@@ -1906,13 +1906,12 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
 {
     AssetMap mapAssets;
     EthereumMintTxMap mapMintKeys;
-    std::vector<uint256> vecTXIDs;
-    return DisconnectBlock(block, pindex, view, mapAssets, mapMintKeys, vecTXIDs);
+    return DisconnectBlock(block, pindex, view, mapAssets, mapMintKeys);
 }
     
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
-DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, std::vector<uint256> &vecTXIDs)
+DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys)
 {
     bool fClean = true;
 
@@ -1952,8 +1951,6 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 }
             }
         }
-		// SYSCOIN
-		vecTXIDs.emplace_back(hash);
         // restore inputs
         if (i > 0) { // not coinbases
             CTxUndo &txundo = blockUndo.vtxundo[i-1];
@@ -2145,15 +2142,14 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     AssetMap mapAssets;
     EthereumMintTxMap mapMintKeys;
-    std::vector<std::pair<uint256, uint256> > blockIndex;
-    return ConnectBlock(block, state, pindex, view, chainparams, fJustCheck, mapAssets, mapMintKeys, blockIndex);       
+    return ConnectBlock(block, state, pindex, view, chainparams, fJustCheck, mapAssets, mapMintKeys);       
 }
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                   CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck, 
-                  AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, std::vector<std::pair<uint256, uint256> > &blockIndex)
+                  AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2279,11 +2275,17 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         nInputs += tx.vin.size();
         // SYSCOIN
         const uint256& txHash = tx.GetHash(); 
-        if (!tx.IsCoinBase())
+        const bool &isCoinBase = tx.IsCoinBase();
+        const bool &hasAssets = tx.HasAssets();
+        if(isCoinBase && hasAssets) {
+            LogPrintf("ERROR: %s: coinbase contains asset transaction\n", __func__);
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-coinbase-asset");
+        }
+        if (!isCoinBase)
         {
             TxValidationState tx_state;
             // SYSCOIN
-            if(tx.HasAssets()){
+            if(hasAssets){
                 TxValidationState tx_state;
                 // just temp var not used in !fJustCheck mode
                 if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, mapAssets, mapMintKeys)){
@@ -2346,9 +2348,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             }
             control.Add(vChecks);
         }
-        if(!fJustCheck){
-            blockIndex.emplace_back(std::move(txHash), std::move(blockHash));
-        } 
         CTxUndo undoDummy;
         if (i > 0) {
             blockundo.vtxundo.push_back(CTxUndo());
@@ -2685,12 +2684,11 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     // SYSCOIN
     AssetMap mapAssets;
     EthereumMintTxMap mapMintKeys;
-    std::vector<uint256> vecTXIDs;
     int64_t nStart = GetTimeMicros();
     {
         CCoinsViewCache view(&CoinsTip());
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
-        if (DisconnectBlock(block, pindexDelete, view, mapAssets, mapMintKeys, vecTXIDs) != DISCONNECT_OK)
+        if (DisconnectBlock(block, pindexDelete, view, mapAssets, mapMintKeys) != DISCONNECT_OK)
             return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         bool flushed = view.Flush();
         assert(flushed);
@@ -2802,10 +2800,9 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     // SYSCOIN
     AssetMap mapAssets;
     EthereumMintTxMap mapMintKeys;
-    std::vector<std::pair<uint256, uint256> > blockIndex;
     {
         CCoinsViewCache view(&CoinsTip());
-        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, false, mapAssets, mapMintKeys, blockIndex);
+        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, false, mapAssets, mapMintKeys);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
