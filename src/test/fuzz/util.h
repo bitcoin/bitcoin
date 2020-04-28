@@ -8,6 +8,7 @@
 #include <amount.h>
 #include <arith_uint256.h>
 #include <attributes.h>
+#include <coins.h>
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -147,6 +148,17 @@ NODISCARD bool AdditionOverflow(const T i, const T j) noexcept
                (i < 0 && j < std::numeric_limits<T>::min() - i);
     }
     return std::numeric_limits<T>::max() - i < j;
+}
+
+NODISCARD inline bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept
+{
+    for (const CTxIn& tx_in : tx.vin) {
+        const Coin& coin = inputs.AccessCoin(tx_in.prevout);
+        if (coin.IsSpent()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_H
