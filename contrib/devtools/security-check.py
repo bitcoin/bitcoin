@@ -15,7 +15,6 @@ import os
 READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
 OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
 OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
-NONFATAL = {} # checks which are non-fatal for now but only generate a warning
 
 def check_ELF_PIE(executable):
     '''
@@ -279,18 +278,12 @@ if __name__ == '__main__':
                 continue
 
             failed = []
-            warning = []
             for (name, func) in CHECKS[etype]:
                 if not func(filename):
-                    if name in NONFATAL:
-                        warning.append(name)
-                    else:
-                        failed.append(name)
+                    failed.append(name)
             if failed:
                 print('%s: failed %s' % (filename, ' '.join(failed)))
                 retval = 1
-            if warning:
-                print('%s: warning %s' % (filename, ' '.join(warning)))
         except IOError:
             print('%s: cannot open' % filename)
             retval = 1
