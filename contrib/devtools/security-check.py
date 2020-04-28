@@ -158,6 +158,17 @@ def check_PE_HIGH_ENTROPY_VA(executable):
         reqbits = 0
     return (bits & reqbits) == reqbits
 
+def check_PE_RELOC_SECTION(executable) -> bool:
+    '''Check for a reloc section. This is required for functional ASLR.'''
+    p = subprocess.Popen([OBJDUMP_CMD, '-h',  executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+    for line in stdout.splitlines():
+        if '.reloc' in line:
+            return True
+    return False
+
 def check_PE_NX(executable):
     '''NX: DllCharacteristics bit 0x100 signifies nxcompat (DEP)'''
     (arch,bits) = get_PE_dll_characteristics(executable)
@@ -247,7 +258,8 @@ CHECKS = {
 'PE': [
     ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),
     ('HIGH_ENTROPY_VA', check_PE_HIGH_ENTROPY_VA),
-    ('NX', check_PE_NX)
+    ('NX', check_PE_NX),
+    ('RELOC_SECTION', check_PE_RELOC_SECTION)
 ],
 'MACHO': [
     ('PIE', check_MACHO_PIE),
