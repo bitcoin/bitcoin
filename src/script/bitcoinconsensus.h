@@ -72,6 +72,14 @@ EXPORT_SYMBOL int bitcoinconsensus_verify_script_with_amount(const unsigned char
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err);
 
+/// Returns 1 if the input nIn of the serialized transaction pointed to by
+/// txTo correctly spends the scriptPubKey pointed to by scriptPubKey under
+/// the current standardness constraints.
+/// If not nullptr, err will contain an error/success code for the operation
+EXPORT_SYMBOL int bitcoinconsensus_verify_script_standard_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
+                                    const unsigned char *txTo        , unsigned int txToLen,
+                                    unsigned int nIn, bitcoinconsensus_error* err);
+
 EXPORT_SYMBOL unsigned int bitcoinconsensus_version();
 
 #ifdef __cplusplus

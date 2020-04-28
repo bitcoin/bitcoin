@@ -5,6 +5,7 @@
 
 #include <script/bitcoinconsensus.h>
 
+#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
@@ -119,6 +120,15 @@ int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned i
     }
 
     CAmount am(0);
+    return ::verify_script(scriptPubKey, scriptPubKeyLen, am, txTo, txToLen, nIn, flags, err);
+}
+
+int bitcoinconsensus_verify_script_standard_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
+                                    const unsigned char *txTo        , unsigned int txToLen,
+                                    unsigned int nIn, bitcoinconsensus_error* err)
+{
+    CAmount am(amount);
+    constexpr unsigned int flags = STANDARD_SCRIPT_VERIFY_FLAGS;
     return ::verify_script(scriptPubKey, scriptPubKeyLen, am, txTo, txToLen, nIn, flags, err);
 }
 
