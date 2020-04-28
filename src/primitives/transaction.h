@@ -59,7 +59,8 @@ public:
     // SYSCOIN
     std::string ToStringShort() const;
 };
-
+// SYSCOIN
+static CScript emptyScript;
 /** An input of a transaction.  It contains the location of the previous
  * transaction's output that it claims and a signature that matches the
  * output's public key.
@@ -103,9 +104,9 @@ public:
     {
         nSequence = SEQUENCE_FINAL;
     }
-
-    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
-    CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
+    // SYSCOIN
+    explicit CTxIn(const COutPoint &prevoutIn, const CScript &scriptSigIn=emptyScript, uint32_t nSequenceIn=SEQUENCE_FINAL);
+    CTxIn(const uint256 &hashPrevTx, uint32_t nOut, const CScript &scriptSigIn=emptyScript, uint32_t nSequenceIn=SEQUENCE_FINAL);
 
     ADD_SERIALIZE_METHODS;
 
@@ -172,8 +173,8 @@ public:
     {
         SetNull();
     }
-
-    CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
+    // SYSCOIN
+    CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn);
 
     ADD_SERIALIZE_METHODS;
 

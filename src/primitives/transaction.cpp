@@ -24,14 +24,15 @@ std::string COutPoint::ToStringShort() const
 {
     return strprintf("%s-%u", hash.ToString().substr(0,64), n);
 }
-CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, uint32_t nSequenceIn)
+// SYSCOIN
+CTxIn::CTxIn(const COutPoint &prevoutIn, const CScript &scriptSigIn, uint32_t nSequenceIn)
 {
     prevout = prevoutIn;
     scriptSig = scriptSigIn;
     nSequence = nSequenceIn;
 }
 
-CTxIn::CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nSequenceIn)
+CTxIn::CTxIn(const uint256 &hashPrevTx, uint32_t nOut, const CScript &scriptSigIn, uint32_t nSequenceIn)
 {
     prevout = COutPoint(hashPrevTx, nOut);
     scriptSig = scriptSigIn;
@@ -52,8 +53,8 @@ std::string CTxIn::ToString() const
     str += ")";
     return str;
 }
-
-CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn)
+// SYSCOIN
+CTxOut::CTxOut(const CAmount& nValueIn,  const CScript &scriptPubKeyIn)
 {
     nValue = nValueIn;
     scriptPubKey = scriptPubKeyIn;
