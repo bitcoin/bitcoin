@@ -12,15 +12,17 @@ import subprocess
 import sys
 import os
 
+from typing import List, Optional
+
 READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
 OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
 OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
 
-def run_command(command):
+def run_command(command) -> str:
     p = subprocess.run(command, stdout=subprocess.PIPE, check=True, universal_newlines=True)
     return p.stdout
 
-def check_ELF_PIE(executable):
+def check_ELF_PIE(executable) -> bool:
     '''
     Check for position independent executable (PIE), allowing for address space randomization.
     '''
@@ -28,8 +30,8 @@ def check_ELF_PIE(executable):
 
     ok = False
     for line in stdout.splitlines():
-        line = line.split()
-        if len(line)>=2 and line[0] == 'Type:' and line[1] == 'DYN':
+        tokens = line.split()
+        if len(line)>=2 and tokens[0] == 'Type:' and tokens[1] == 'DYN':
             ok = True
     return ok
 
@@ -60,7 +62,7 @@ def get_ELF_program_headers(executable):
             count += 1
     return headers
 
-def check_ELF_NX(executable):
+def check_ELF_NX(executable) -> bool:
     '''
     Check that no sections are writable and executable (including the stack)
     '''
@@ -73,7 +75,7 @@ def check_ELF_NX(executable):
             have_wx = True
     return have_gnu_stack and not have_wx
 
-def check_ELF_RELRO(executable):
+def check_ELF_RELRO(executable) -> bool:
     '''
     Check for read-only relocations.
     GNU_RELRO program header must exist
@@ -99,7 +101,7 @@ def check_ELF_RELRO(executable):
             have_bindnow = True
     return have_gnu_relro and have_bindnow
 
-def check_ELF_Canary(executable):
+def check_ELF_Canary(executable) -> bool:
     '''
     Check for use of stack canary
     '''
@@ -126,14 +128,14 @@ IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA = 0x0020
 IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE    = 0x0040
 IMAGE_DLL_CHARACTERISTICS_NX_COMPAT       = 0x0100
 
-def check_PE_DYNAMIC_BASE(executable):
+def check_PE_DYNAMIC_BASE(executable) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
     bits = get_PE_dll_characteristics(executable)
     return (bits & IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE) == IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE
 
 # Must support high-entropy 64-bit address space layout randomization
 # in addition to DYNAMIC_BASE to have secure ASLR.
-def check_PE_HIGH_ENTROPY_VA(executable):
+def check_PE_HIGH_ENTROPY_VA(executable) -> bool:
     '''PIE: DllCharacteristics bit 0x20 signifies high-entropy ASLR'''
     bits = get_PE_dll_characteristics(executable)
     return (bits & IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA) == IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA
@@ -147,12 +149,12 @@ def check_PE_RELOC_SECTION(executable) -> bool:
             return True
     return False
 
-def check_PE_NX(executable):
+def check_PE_NX(executable) -> bool:
     '''NX: DllCharacteristics bit 0x100 signifies nxcompat (DEP)'''
     bits = get_PE_dll_characteristics(executable)
     return (bits & IMAGE_DLL_CHARACTERISTICS_NX_COMPAT) == IMAGE_DLL_CHARACTERISTICS_NX_COMPAT
 
-def get_MACHO_executable_flags(executable):
+def get_MACHO_executable_flags(executable) -> List[str]:
     stdout = run_command([OTOOL_CMD, '-vh', executable])
 
     flags = []
@@ -240,7 +242,7 @@ CHECKS = {
 ]
 }
 
-def identify_executable(executable):
+def identify_executable(executable) -> Optional[str]:
     with open(filename, 'rb') as f:
         magic = f.read(4)
     if magic.startswith(b'MZ'):
