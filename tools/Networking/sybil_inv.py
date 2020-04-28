@@ -112,6 +112,7 @@ def inv_packet():
 	msg.type = 1
 	tx = msg_tx(bitcoin_protocolversion)
 	tx.type = 1
+	tx.hash = bytearray(random.getrandbits(8) for _ in range(32))
 	msg.inv = [tx] * 50001
 	return msg
 
