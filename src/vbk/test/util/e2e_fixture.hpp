@@ -1,10 +1,10 @@
-// VeriBlock Blockchain Project
-// Copyright 2017-2018 VeriBlock, Inc
-// Copyright 2018-2019 Xenios SEZC
-// All rights reserved.
+// Copyright (c) 2019-2020 Xenios SEZC
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
-// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#ifndef BITCOIN_SRC_VBK_TEST_UTIL_E2E_FIXTURE_HPP
+#define BITCOIN_SRC_VBK_TEST_UTIL_E2E_FIXTURE_HPP
+
 #include <boost/test/unit_test.hpp>
 
 #include <bootstraps.h>
@@ -21,6 +21,7 @@ using altintegration::MockMiner;
 using altintegration::PublicationData;
 using altintegration::VbkBlock;
 using altintegration::VTB;
+using altintegration::ATV;
 
 struct E2eFixture : public TestChain100Setup {
     CScript cbKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
@@ -33,13 +34,7 @@ struct E2eFixture : public TestChain100Setup {
         pop = &VeriBlock::getService<VeriBlock::PopService>();
     }
 
-
-    CBlock endorseAltBlock(uint256 hash, size_t generateVtbs = 0)
-    {
-        return endorseAltBlock(hash, ChainActive().Tip()->GetBlockHash(), generateVtbs);
-    }
-
-    CBlock endorseAltBlock(uint256 hash, uint256 prevBlock, size_t generateVtbs = 0)
+    ATV endorseAltBlock(uint256 hash, uint256 prevBlock, const std::vector<VTB>& vtbs)
     {
         CBlockIndex* endorsed = nullptr;
         {
@@ -48,17 +43,26 @@ struct E2eFixture : public TestChain100Setup {
             BOOST_CHECK(endorsed != nullptr);
         }
 
+        auto publicationdata = createPublicationData(endorsed);
+        auto vbktx = popminer.endorseAltBlock(publicationdata);
+        auto atv = popminer.generateATV(vbktx, getLastKnownVBKblock(), state);
+        BOOST_CHECK(state.IsValid());
+        return atv;
+    }
+
+    CBlock endorseAltBlockAndMine(uint256 hash, size_t generateVtbs = 0)
+    {
+        return endorseAltBlockAndMine(hash, ChainActive().Tip()->GetBlockHash(), generateVtbs);
+    }
+
+    CBlock endorseAltBlockAndMine(uint256 hash, uint256 prevBlock, size_t generateVtbs = 0)
+    {
         std::vector<VTB> vtbs;
         vtbs.reserve(generateVtbs);
         std::generate_n(std::back_inserter(vtbs), generateVtbs, [&]() {
             return endorseVbkTip();
         });
-
-        auto publicationdata = createPublicationData(endorsed);
-        auto vbktx = popminer.endorseAltBlock(publicationdata);
-        auto atv = popminer.generateATV(vbktx, getLastKnownVBKblock(), state);
-        BOOST_CHECK(state.IsValid());
-
+        auto atv = endorseAltBlock(hash, prevBlock, vtbs);
         CScript sig;
         sig << atv.toVbkEncoding() << OP_CHECKATV;
         for (const auto& v : vtbs) {
@@ -141,41 +145,4 @@ struct E2eFixture : public TestChain100Setup {
     }
 };
 
-BOOST_AUTO_TEST_SUITE(e2e_poptx_tests)
-
-BOOST_FIXTURE_TEST_CASE(ValidBlockIsAccepted, E2eFixture)
-{
-    // altintegration and popminer configured to use BTC/VBK/ALT regtest.
-    auto tip = ChainActive().Tip();
-    BOOST_CHECK(tip != nullptr);
-
-    // endorse tip
-    CBlock block = endorseAltBlock(tip->GetBlockHash(), 10);
-    {
-        BOOST_CHECK(ChainActive().Tip()->GetBlockHash() == block.GetHash());
-        auto btc = pop->getLastKnownBTCBlocks(1)[0];
-        BOOST_CHECK(btc == popminer.btc().getBestChain().tip()->getHash());
-        auto vbk = pop->getLastKnownVBKBlocks(1)[0];
-        BOOST_CHECK(vbk == popminer.vbk().getBestChain().tip()->getHash());
-    }
-
-    // endorse another tip
-    block = endorseAltBlock(tip->GetBlockHash(), 1);
-    auto lastHash = ChainActive().Tip()->GetBlockHash();
-    {
-        BOOST_CHECK(lastHash == block.GetHash());
-        auto btc = pop->getLastKnownBTCBlocks(1)[0];
-        BOOST_CHECK(btc == popminer.btc().getBestChain().tip()->getHash());
-        auto vbk = pop->getLastKnownVBKBlocks(1)[0];
-        BOOST_CHECK(vbk == popminer.vbk().getBestChain().tip()->getHash());
-    }
-
-    // create block that is not on main chain
-    auto fork1tip = CreateAndProcessBlock({}, ChainActive().Tip()->pprev->pprev->GetBlockHash(), cbKey);
-
-    // endorse block that is not on main chain
-    block = endorseAltBlock(fork1tip.GetHash(), 1);
-    BOOST_CHECK(ChainActive().Tip()->GetBlockHash() == lastHash);
-}
-
-BOOST_AUTO_TEST_SUITE_END()
+#endif //BITCOIN_SRC_VBK_TEST_UTIL_E2E_FIXTURE_HPP

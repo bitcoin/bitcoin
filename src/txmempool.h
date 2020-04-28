@@ -680,6 +680,11 @@ public:
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
     int Expire(std::chrono::seconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    /** Expire POP transactions (and their dependencies) in the mempool when height is below endorsement settlement interval.
+      * Return the number of removed transactions.
+      */
+    int ExpirePop() EXCLUSIVE_LOCKS_REQUIRED(cs);
+
     /**
      * Calculate the ancestor and descendant count for the given transaction.
      * The counts include the transaction itself.

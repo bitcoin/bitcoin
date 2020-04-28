@@ -5,27 +5,93 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-//#include <boost/test/unit_test.hpp>
-//
-//#include <chainparams.h>
-//#include <consensus/consensus.h>
-//#include <consensus/tx_verify.h>
-//#include <consensus/validation.h>
-//#include <policy/policy.h>
-//#include <script/interpreter.h>
-//#include <script/sigcache.h>
-//#include <test/util/setup_common.h>
-//#include <validation.h>
-//
-//#include <vbk/init.hpp>
-//#include <vbk/pop_service.hpp>
-//#include <vbk/test/util/mock.hpp>
-//#include <vbk/test/util/tx.hpp>
-//#include <vbk/util.hpp>
-//
-//#include <merkleblock.h>
-//
-//BOOST_AUTO_TEST_SUITE(pop_tx_tests)
+#include <boost/test/unit_test.hpp>
+
+#include <vbk/test/util/e2e_fixture.hpp>
+#include <vbk/test/util/tx.hpp>
+#include <vbk/pop_service_impl.hpp>
+
+BOOST_AUTO_TEST_SUITE(pop_tx_tests)
+
+BOOST_FIXTURE_TEST_CASE(No_mempool_for_bad_payloads_pop_tx_test, E2eFixture)
+{
+    unsigned int initialPoolSize = mempool.size();
+    auto tip = ChainActive().Tip();
+    BOOST_CHECK(tip != nullptr);
+    auto atv = endorseAltBlock(tip->GetBlockHash(), tip->pprev->GetBlockHash(), {});
+    // erase signature to make ATV check fail
+    atv.transaction.signature = std::vector<unsigned char>(atv.transaction.signature.size(), 0);
+    CScript sig;
+    sig << atv.toVbkEncoding() << OP_CHECKATV;
+    sig << OP_CHECKPOP;
+    auto popTx = VeriBlock::MakePopTx(sig);
+
+    BOOST_CHECK(VeriBlock::isPopTx(CTransaction(popTx)));
+
+    TxValidationState state;
+    auto tx_ref = MakeTransactionRef<const CMutableTransaction&>(popTx);
+    {
+        LOCK(cs_main);
+        auto result = AcceptToMemoryPool(mempool, state, tx_ref,
+            nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */, false /* test accept */);
+        BOOST_CHECK(!result);
+    }
+    BOOST_CHECK_EQUAL(mempool.size(), initialPoolSize);
+}
+
+BOOST_FIXTURE_TEST_CASE(Payloads_expiration_pop_tx_test, E2eFixture)
+{
+    // Generate a 600-block chain:
+    coinbaseKey.MakeNewKey(true);
+    CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    for (int i = 0; i < 500; i++) {
+        std::vector<CMutableTransaction> noTxns;
+        CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
+        m_coinbase_txns.push_back(b.vtx[0]);
+    }
+
+    assert(ChainActive().Tip() != nullptr);
+    assert(ChainActive().Tip()->nHeight == 600);
+
+    unsigned int initialPoolSize = mempool.size();
+    auto tip = ChainActive().Tip();
+    BOOST_CHECK(tip != nullptr);
+    auto atv = endorseAltBlock(tip->GetAncestor(40)->GetBlockHash(), tip->GetAncestor(40)->pprev->GetBlockHash(), {});
+    CScript sig;
+    sig << atv.toVbkEncoding() << OP_CHECKATV;
+    sig << OP_CHECKPOP;
+    auto popTx = VeriBlock::MakePopTx(sig);
+
+    BOOST_CHECK(VeriBlock::isPopTx(CTransaction(popTx)));
+
+    TxValidationState state;
+    auto tx_ref = MakeTransactionRef<const CMutableTransaction&>(popTx);
+    {
+        LOCK(cs_main);
+        auto result = AcceptToMemoryPool(mempool, state, tx_ref,
+            nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */, false /* test accept */);
+        BOOST_CHECK(result);
+        BOOST_CHECK_EQUAL(mempool.size(), initialPoolSize + 1);
+    }
+
+    atv = endorseAltBlock(tip->GetBlockHash(), tip->pprev->GetBlockHash(), {});
+    sig.clear();
+    sig << atv.toVbkEncoding() << OP_CHECKATV;
+    sig << OP_CHECKPOP;
+    popTx = VeriBlock::MakePopTx(sig);
+
+    BOOST_CHECK(VeriBlock::isPopTx(CTransaction(popTx)));
+
+    tx_ref = MakeTransactionRef<const CMutableTransaction&>(popTx);
+    {
+        LOCK(cs_main);
+        auto result = AcceptToMemoryPool(mempool, state, tx_ref,
+            nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */, false /* test accept */);
+        BOOST_CHECK(result);
+        BOOST_CHECK_EQUAL(mempool.size(), initialPoolSize + 1);
+    }
+}
+
 //
 //BOOST_FIXTURE_TEST_CASE(DisconnectBlock_restore_iputs_ignore_pop_tx_test, TestChain100Setup)
 //{
@@ -204,5 +270,5 @@
 //    uint256 res = tree.ExtractMatches(vMatch, vnIndex);
 //    BOOST_CHECK(res == uint256S("0x0000000000000000000000000000000000000000000123123123123123123123"));
 //}
-//
-//BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

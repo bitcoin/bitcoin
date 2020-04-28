@@ -12,6 +12,7 @@
 #include <consensus/validation.h>
 #include <optional.h>
 #include <validation.h>
+#include <chainparams.h>
 #include <policy/policy.h>
 #include <policy/fees.h>
 #include <policy/settings.h>
@@ -21,6 +22,7 @@
 #include <util/time.h>
 #include <validationinterface.h>
 
+#include <vbk/pop_service_impl.hpp>
 #include <vbk/util.hpp>
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
@@ -938,6 +940,30 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     setEntries toremove;
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
         toremove.insert(mapTx.project<0>(it));
+        it++;
+    }
+    setEntries stage;
+    for (txiter removeit : toremove) {
+        CalculateDescendants(removeit, stage);
+    }
+    RemoveStaged(stage, false, MemPoolRemovalReason::EXPIRY);
+    return stage.size();
+}
+
+int CTxMemPool::ExpirePop()
+{
+    AssertLockHeld(cs);
+    indexed_transaction_set::index<entry_time>::type::iterator it = mapTx.get<entry_time>().begin();
+    setEntries toremove;
+    auto tipHeight = ChainActive().Tip()->nHeight;
+    auto& config = VeriBlock::getService<VeriBlock::Config>();
+    while (it != mapTx.get<entry_time>().end() && VeriBlock::isPopTx(it->GetTx())) {
+        TxValidationState state;
+        altintegration::AltPayloads payloads;
+        bool ret = VeriBlock::parseTxPopPayloadsImpl(it->GetTx(), Params().GetConsensus(), state, payloads);
+        if (ret && (payloads.endorsed.height + config.popconfig.alt->getEndorsementSettlementInterval() < tipHeight)) {
+            toremove.insert(mapTx.project<0>(it));
+        }
         it++;
     }
     setEntries stage;
