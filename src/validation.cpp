@@ -336,6 +336,10 @@ static void LimitMempoolSize(CTxMemPool& pool, size_t limit, std::chrono::second
     if (expired != 0) {
         LogPrint(BCLog::MEMPOOL, "Expired %i transactions from the memory pool\n", expired);
     }
+    int pop_expired = pool.ExpirePop();
+    if (pop_expired != 0) {
+        LogPrint(BCLog::MEMPOOL, "Expired %i POP transactions from the memory pool\n", pop_expired);
+    }
 
     std::vector<COutPoint> vNoSpendsRemaining;
     pool.TrimToSize(limit, &vNoSpendsRemaining);

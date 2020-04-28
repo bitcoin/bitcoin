@@ -17,7 +17,6 @@
 #include <vbk/test/util/mock.hpp>
 #include <vbk/test/util/tx.hpp>
 
-
 //static CBlock CreateTestBlock(TestChain100Setup& test, std::vector<CMutableTransaction> trxs = {})
 //{
 //    test.coinbaseKey.MakeNewKey(true);
@@ -45,12 +44,12 @@
 //    }
 //    ActivateBestChain(state, Params(), std::shared_ptr<const CBlock>());
 //}
-
-BOOST_AUTO_TEST_SUITE(forkresolution_tests)
-
-
-BOOST_FIXTURE_TEST_CASE(not_crossing_keystone_case_1_test, TestChain100Setup)
-{
+//
+//BOOST_AUTO_TEST_SUITE(forkresolution_tests)
+//
+//
+//BOOST_FIXTURE_TEST_CASE(not_crossing_keystone_case_1_test, TestChain100Setup)
+//{
 //    for (int i = 0; i < 2; i++) {
 //        CreateTestBlock(*this);
 //    }
@@ -67,8 +66,8 @@ BOOST_FIXTURE_TEST_CASE(not_crossing_keystone_case_1_test, TestChain100Setup)
 //    ReconsiderTestBlock(pblock);
 //
 //    BOOST_CHECK(pblock2 == ChainActive().Tip());
-}
-
+//}
+//
 //BOOST_FIXTURE_TEST_CASE(not_crossing_keystone_case_2_test, TestChain100Setup)
 //{
 //    CreateTestBlock(*this);
@@ -615,5 +614,5 @@ BOOST_FIXTURE_TEST_CASE(not_crossing_keystone_case_1_test, TestChain100Setup)
 //
 //    BOOST_CHECK(pblockwins != ChainActive().Tip());
 //}
-
-BOOST_AUTO_TEST_SUITE_END()
+//
+//BOOST_AUTO_TEST_SUITE_END()
