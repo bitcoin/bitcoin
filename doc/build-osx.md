@@ -61,6 +61,14 @@ from the root of the repository.
     ./configure
     make
     ```
+    
+    If you receive an error after running **make** about [clang](https://github.com/bitcoin/bitcoin/issues/18776#issuecomment-620081162), please run the following:
+    ```shell
+    make distclean
+    ./autogen.sh
+    ./configure
+    make
+    ```
 
 3.  It is recommended to build and run the unit tests:
     ```shell
