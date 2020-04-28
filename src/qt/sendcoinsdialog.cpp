@@ -333,6 +333,11 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
             a user can only create a PSBT. This string is displayed when private keys are disabled and an external
             signer is not available. */
         question_string.append(tr("Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.").arg(PACKAGE_NAME));
+    } else if (model->getOptionsModel()->getEnablePSBTControls()) {
+        /*: Text to inform a user attempting to create a transaction of their current options. At this stage,
+            a user can send their transaction or create a PSBT. This string is displayed when both private keys
+            and PSBT controls are enabled. */
+        question_string.append(tr("Please, review your transaction. You can create and send this transaction or create a Partially Signed Bitcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.").arg(PACKAGE_NAME));
     } else {
         /*: Text to prompt a user to review the details of the transaction they are attempting to send. */
         question_string.append(tr("Please, review your transaction."));
@@ -399,7 +404,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
     assert(m_current_transaction);
 
     const QString confirmation = tr("Confirm send coins");
-    auto confirmationDialog = new SendConfirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, !model->wallet().privateKeysDisabled(), true, this);
+    auto confirmationDialog = new SendConfirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, !model->wallet().privateKeysDisabled(), model->getOptionsModel()->getEnablePSBTControls(), this);
     confirmationDialog->setAttribute(Qt::WA_DeleteOnClose);
     // TODO: Replace QDialog::exec() with safer QDialog::show().
     const auto retval = static_cast<QMessageBox::StandardButton>(confirmationDialog->exec());

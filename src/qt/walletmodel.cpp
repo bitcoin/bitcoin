@@ -505,7 +505,7 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         questionString.append(tr("Warning: This may pay the additional fee by reducing change outputs or adding inputs, when necessary. It may add a new change output if one does not already exist. These changes may potentially leak privacy."));
     }
 
-    auto confirmationDialog = new SendConfirmationDialog(tr("Confirm fee bump"), questionString, "", "", SEND_CONFIRM_DELAY, !m_wallet->privateKeysDisabled(), true, nullptr);
+    auto confirmationDialog = new SendConfirmationDialog(tr("Confirm fee bump"), questionString, "", "", SEND_CONFIRM_DELAY, !m_wallet->privateKeysDisabled(), getOptionsModel()->getEnablePSBTControls(), nullptr);
     confirmationDialog->setAttribute(Qt::WA_DeleteOnClose);
     // TODO: Replace QDialog::exec() with safer QDialog::show().
     const auto retval = static_cast<QMessageBox::StandardButton>(confirmationDialog->exec());
