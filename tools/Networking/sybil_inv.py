@@ -109,7 +109,7 @@ def addr_pkt( str_addrs ):
 # Construct an inv packet using python-bitcoinlib
 def inv_packet():
 	msg = msg_inv(bitcoin_protocolversion)
-	msg.inv = [b'0'] * 50001
+	msg.inv = [msg_tx(bitcoin_protocolversion)] * 50001
 	return msg
 
 # Construct a version packet using python-bitcoinlib
