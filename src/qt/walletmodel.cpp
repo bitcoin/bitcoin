@@ -505,7 +505,10 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         questionString.append(tr("Warning: This may pay the additional fee by reducing change outputs or adding inputs, when necessary. It may add a new change output if one does not already exist. These changes may potentially leak privacy."));
     }
 
-    SendConfirmationDialog confirmationDialog(tr("Confirm fee bump"), questionString, "", "", SEND_CONFIRM_DELAY, tr("Send"), !m_wallet->privateKeysDisabled(), tr("Create Unsgiend"), nullptr);
+    // Show the "Create Unsigned" button if the option is set or private keys are disabled
+    bool show_unsigned_button = getOptionsModel()->getEnablePSBTControls() || m_wallet->privateKeysDisabled();
+
+    SendConfirmationDialog confirmationDialog(tr("Confirm fee bump"), questionString, "", "", SEND_CONFIRM_DELAY, tr("Send"), !m_wallet->privateKeysDisabled(), tr("Create Unsigned"), show_unsigned_button, nullptr);
     confirmationDialog.exec();
     QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
 

@@ -83,6 +83,11 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
 
+    if (!settings.contains("fEnablePSBTControls")) {
+        settings.setValue("fEnablePSBTControls", false);
+    }
+    fEnablePSBTControls = settings.value("fEnablePSBTControls", false).toBool();
+
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
     //
@@ -372,6 +377,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("fListen");
         case Server:
             return settings.value("server");
+        case EnablePSBTControls:
+            return settings.value("fEnablePSBTControls");
         default:
             return QVariant();
         }
@@ -542,6 +549,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 settings.setValue("server", value);
                 setRestartRequired(true);
             }
+            break;
+        case EnablePSBTControls:
+            fEnablePSBTControls = value.toBool();
+            settings.setValue("fEnablePSBTControls", fEnablePSBTControls);
             break;
         default:
             break;
