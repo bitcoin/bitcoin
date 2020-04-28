@@ -23,7 +23,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    connect_nodes,
     hex_str_to_bytes,
 )
 
@@ -36,6 +35,7 @@ ECONOMICAL   = 0.00050000
 NORMAL       = 0.00100000
 HIGH         = 0.00500000
 TOO_HIGH     = 1.00000000
+
 
 class BumpFeeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -54,9 +54,6 @@ class BumpFeeTest(BitcoinTestFramework):
         # Encrypt wallet for test_locked_wallet_fails test
         self.nodes[1].encryptwallet(WALLET_PASSPHRASE)
         self.nodes[1].walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
-
-        connect_nodes(self.nodes[0], 1)
-        self.sync_all()
 
         peer_node, rbf_node = self.nodes
         rbf_node_address = rbf_node.getnewaddress()
@@ -94,7 +91,6 @@ class BumpFeeTest(BitcoinTestFramework):
         # These tests wipe out a number of utxos that are expected in other tests
         test_small_output_with_feerate_succeeds(self, rbf_node, dest_address)
         test_no_more_inputs_fails(self, rbf_node, dest_address)
-        self.log.info("Success")
 
 
 def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
@@ -124,6 +120,7 @@ def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     assert_equal(oldwtx["replaced_by_txid"], bumped_tx["txid"])
     assert_equal(bumpedwtx["replaces_txid"], rbfid)
 
+
 def test_feerate_args(self, rbf_node, peer_node, dest_address):
     self.log.info('Test fee_rate args')
     rbfid = spend_one_input(rbf_node, dest_address)
@@ -137,7 +134,7 @@ def test_feerate_args(self, rbf_node, peer_node, dest_address):
     # Bumping to just above minrelay should fail to increase total fee enough, at least
     assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, rbfid, {"fee_rate": INSUFFICIENT})
 
-    assert_raises_rpc_error(-3, "Amount out of range", rbf_node.bumpfee, rbfid, {"fee_rate":-1})
+    assert_raises_rpc_error(-3, "Amount out of range", rbf_node.bumpfee, rbfid, {"fee_rate": -1})
 
     assert_raises_rpc_error(-4, "is too high (cannot be higher than", rbf_node.bumpfee, rbfid, {"fee_rate": TOO_HIGH})
 
@@ -209,6 +206,7 @@ def test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_ad
     rbf_node.sendrawtransaction(tx["hex"])
     assert_raises_rpc_error(-8, "Transaction has descendants in the wallet", rbf_node.bumpfee, parent_id)
 
+
 def test_small_output_with_feerate_succeeds(self, rbf_node, dest_address):
     self.log.info('Testing small output with feerate bump succeeds')
 
@@ -248,6 +246,7 @@ def test_small_output_with_feerate_succeeds(self, rbf_node, dest_address):
 
     rbf_node.generatetoaddress(1, rbf_node.getnewaddress())
     assert_equal(rbf_node.gettransaction(rbfid)["confirmations"], 1)
+
 
 def test_dust_to_fee(self, rbf_node, dest_address):
     self.log.info('Test that bumped output that is dust is dropped to fee')
@@ -305,6 +304,7 @@ def test_maxtxfee_fails(self, rbf_node, dest_address):
     self.restart_node(1, self.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 
+
 def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
     self.log.info('Test that PSBT is returned for bumpfee in watchonly wallets')
     priv_rec_desc = "wpkh([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0/*)#rweraev0"
@@ -339,12 +339,11 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
     result = watcher.importmulti([{
         "desc": pub_rec_desc,
         "timestamp": 0,
-        "range": [0,10],
+        "range": [0, 10],
         "internal": False,
         "keypool": True,
         "watchonly": True
-    },
-    {
+    }, {
         "desc": pub_change_desc,
         "timestamp": 0,
         "range": [0, 10],
@@ -361,7 +360,7 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
     self.sync_all()
 
     # Create single-input PSBT for transaction to be bumped
-    psbt = watcher.walletcreatefundedpsbt([], {dest_address:0.0005}, 0, {"feeRate": 0.00001}, True)['psbt']
+    psbt = watcher.walletcreatefundedpsbt([], {dest_address: 0.0005}, 0, {"feeRate": 0.00001}, True)['psbt']
     psbt_signed = signer.walletprocesspsbt(psbt=psbt, sign=True, sighashtype="ALL", bip32derivs=True)
     psbt_final = watcher.finalizepsbt(psbt_signed["psbt"])
     original_txid = watcher.sendrawtransaction(psbt_final["hex"])
@@ -386,6 +385,7 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
 
     rbf_node.unloadwallet("watcher")
     rbf_node.unloadwallet("signer")
+
 
 def test_rebumping(self, rbf_node, dest_address):
     self.log.info('Test that re-bumping the original tx fails, but bumping successor works')
@@ -461,6 +461,7 @@ def test_locked_wallet_fails(self, rbf_node, dest_address):
                             rbf_node.bumpfee, rbfid)
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 
+
 def test_change_script_match(self, rbf_node, dest_address):
     self.log.info('Test that the same change addresses is used for the replacement transaction when possible')
 
@@ -480,6 +481,7 @@ def test_change_script_match(self, rbf_node, dest_address):
     bumped_rate_tx = rbf_node.bumpfee(bumped_total_tx["txid"])
     assert_equal(change_addresses, get_change_address(bumped_rate_tx['txid']))
 
+
 def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
     tx_input = dict(
         sequence=BIP125_SEQUENCE_NUMBER, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
@@ -490,6 +492,7 @@ def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
     signedtx = node.signrawtransactionwithwallet(rawtx)
     txid = node.sendrawtransaction(signedtx["hex"])
     return txid
+
 
 def submit_block_with_tx(node, tx):
     ctx = CTransaction()
@@ -506,6 +509,7 @@ def submit_block_with_tx(node, tx):
     block.solve()
     node.submitblock(block.serialize().hex())
     return block
+
 
 def test_no_more_inputs_fails(self, rbf_node, dest_address):
     self.log.info('Test that bumpfee fails when there are no available confirmed outputs')
