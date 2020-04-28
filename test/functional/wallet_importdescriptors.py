@@ -306,6 +306,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 1000)
         txid = w0.sendtoaddress(addr, 10)
         self.nodes[0].generate(6)
+        self.sync_all()
         wmulti_priv.sendtoaddress(w0.getnewaddress(), 8)
         self.nodes[0].generate(6)
         self.sync_all()
