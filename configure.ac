@@ -757,7 +757,9 @@ if test x$use_hardening != xno; then
   esac
 fi
 
-dnl this flag screws up non-darwin gcc even when the check fails. special-case it.
+dnl These flags are specific to ld64, and may cause issues with other linkers.
+dnl For example: GNU ld will intepret -dead_strip as -de and then try and use
+dnl "ad_strip" as the symbol for the entry point.
 if test x$TARGET_OS = xdarwin; then
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"])
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip_dylibs]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip_dylibs"])
