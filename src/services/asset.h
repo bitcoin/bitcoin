@@ -74,8 +74,8 @@ public:
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
-
 static CAsset emptyAsset;
 bool GetAsset(const int32_t &nAsset,CAsset& txPos);
+bool GetAssetUndo(const uint256 &txHash,CAssetUndo& txPos);
 bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<int32_t, CAmount> &mapAssetIn, const std::unordered_map<int32_t, CAmount> &mapAssetOut);
 #endif // SYSCOIN_SERVICES_ASSET_H

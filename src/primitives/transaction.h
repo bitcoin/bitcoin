@@ -11,6 +11,8 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
+// SYSCOIN
+#include <crypto/siphash.h>
 class TxValidationState;
 class CAsset;
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
@@ -735,6 +737,54 @@ public:
     bool UnserializeFromTx(const CTransaction &tx);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
+
+class CAssetUndo {
+public:
+    std::vector<unsigned char> vchContract;
+    std::vector<unsigned char> vchPubData;
+    unsigned char nUpdateFlags;
+    CAssetUndo() {
+        SetNull();
+    }
+    
+    inline void ClearAssetUndo() {
+        vchPubData.clear();
+        vchContract.clear();
+        nUpdateFlags = 0;
+    }
+
+    SERIALIZE_METHODS(CAssetUndo, obj) {
+        READWRITE(obj.vchContract, obj.vchPubData, obj.nUpdateFlags);
+    }
+
+    inline friend bool operator==(const CAssetUndo &a, const CAssetUndo &b) {
+        return (
+        a.vchContract == b.vchContract && a.vchPubData == b.vchPubData && a.nUpdateFlags == b.nUpdateFlags
+        );
+    }
+
+    inline friend bool operator!=(const CAssetUndo &a, const CAssetUndo &b) {
+        return !(a == b);
+    }
+    
+    inline void SetNull() { ClearAssetUndo(); }
+    inline bool IsNull() const { return (vchPubData.empty() && vchContract.empty() && nUpdateFlags == 0); }
+};
+
+class AssetUndoHasher
+{
+private:
+    /** Salt */
+    const uint64_t k0, k1;
+
+public:
+    AssetUndoHasher();
+
+    size_t operator()(const uint256& txid) const {
+        return SipHashUint256(k0, k1, txid);
+    }
+};
+
 bool IsSyscoinTx(const int &nVersion);
 bool IsAssetAllocationTx(const int &nVersion);
 bool IsZdagTx(const int &nVersion);
@@ -746,4 +796,5 @@ bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData,
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
 typedef std::unordered_map<uint32_t, uint256> EthereumMintTxMap;
 typedef std::unordered_map<int32_t, CAsset > AssetMap;
+typedef std::unordered_map<uint256, CAssetUndo, AssetUndoHasher > AssetUndoMap;
 #endif // SYSCOIN_PRIMITIVES_TRANSACTION_H
