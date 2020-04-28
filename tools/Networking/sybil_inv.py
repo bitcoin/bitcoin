@@ -278,10 +278,12 @@ def cleanup_iptables():
 # Remove all ip aliases that were created by the script
 def cleanup_ipaliases():
 	for i in range(0, len(identity_address)):
-		ip = identity_address[i][0]
-		interface = identity_interface[i]
-		print(f'Cleaning up IP alias {ip} on {interface}')
-		terminal(f'sudo ifconfig {interface} {ip} down')
+		try:
+			ip = identity_address[i][0]
+			interface = identity_interface[i]
+			print(f'Cleaning up IP alias {ip} on {interface}')
+			terminal(f'sudo ifconfig {interface} {ip} down')
+		except: pass
 
 # This function is ran when the script is stopped
 def on_close():
