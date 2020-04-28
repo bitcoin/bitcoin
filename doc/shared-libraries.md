@@ -5,6 +5,12 @@ Shared Libraries
 
 The purpose of this library is to make the verification functionality that is critical to Bitcoin's consensus available to other applications, e.g. to language bindings.
 
+Policy standardness as enforced by latest software version is also made available. To dissociate between invalidity reasons, either consensus or standardness, an
+application needs to call first `verify_script_standard_with_amount` followed `verify_script`. A failure on first function but success on following means spent is non-standard
+but consensus valid. Policy checks may be used at testing to assert scripts standardness or in production to sanitize counterparty inputs in the case of cooperative witness
+construction. This check only reflects policy in the current release and it may vary between software versions. Therefore if an application rely on pre-signed transactions
+their standardness should be reasserted at every release.
+
 ### API
 
 The interface is defined in the C header `bitcoinconsensus.h` located in `src/script/bitcoinconsensus.h`.
@@ -47,3 +53,4 @@ The interface is defined in the C header `bitcoinconsensus.h` located in `src/sc
 - [node-libbitcoinconsensus](https://github.com/bitpay/node-libbitcoinconsensus) (Node.js Bindings)
 - [java-libbitcoinconsensus](https://github.com/dexX7/java-libbitcoinconsensus) (Java Bindings)
 - [bitcoinconsensus-php](https://github.com/Bit-Wasp/bitcoinconsensus-php) (PHP Bindings)
+- [rust-bitcoinconsensus](https://github.com/rust-bitcoin/rust-bitcoinconsensus) (Rust Bindings)
