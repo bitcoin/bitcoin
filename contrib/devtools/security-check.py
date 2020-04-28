@@ -16,14 +16,15 @@ READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
 OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
 OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
 
+def run_command(command):
+    p = subprocess.run(command, stdout=subprocess.PIPE, check=True, universal_newlines=True)
+    return p.stdout
+
 def check_ELF_PIE(executable):
     '''
     Check for position independent executable (PIE), allowing for address space randomization.
     '''
-    p = subprocess.Popen([READELF_CMD, '-h', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([READELF_CMD, '-h', '-W', executable])
 
     ok = False
     for line in stdout.splitlines():
@@ -34,10 +35,8 @@ def check_ELF_PIE(executable):
 
 def get_ELF_program_headers(executable):
     '''Return type and flags for ELF program headers'''
-    p = subprocess.Popen([READELF_CMD, '-l', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([READELF_CMD, '-l', '-W', executable])
+
     in_headers = False
     count = 0
     headers = []
@@ -83,7 +82,8 @@ def check_ELF_RELRO(executable):
     have_gnu_relro = False
     for (typ, flags) in get_ELF_program_headers(executable):
         # Note: not checking flags == 'R': here as linkers set the permission differently
-        # This does not affect security: the permission flags of the GNU_RELRO program header are ignored, the PT_LOAD header determines the effective permissions.
+        # This does not affect security: the permission flags of the GNU_RELRO program
+        # header are ignored, the PT_LOAD header determines the effective permissions.
         # However, the dynamic linker need to write to this area so these are RW.
         # Glibc itself takes care of mprotecting this area R after relocations are finished.
         # See also https://marc.info/?l=binutils&m=1498883354122353
@@ -91,10 +91,8 @@ def check_ELF_RELRO(executable):
             have_gnu_relro = True
 
     have_bindnow = False
-    p = subprocess.Popen([READELF_CMD, '-d', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([READELF_CMD, '-d', '-W', executable])
+
     for line in stdout.splitlines():
         tokens = line.split()
         if len(tokens)>1 and tokens[1] == '(BIND_NOW)' or (len(tokens)>2 and tokens[1] == '(FLAGS)' and 'BIND_NOW' in tokens[2:]):
@@ -105,10 +103,8 @@ def check_ELF_Canary(executable):
     '''
     Check for use of stack canary
     '''
-    p = subprocess.Popen([READELF_CMD, '--dyn-syms', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([READELF_CMD, '--dyn-syms', '-W', executable])
+
     ok = False
     for line in stdout.splitlines():
         if '__stack_chk_fail' in line:
@@ -117,10 +113,8 @@ def check_ELF_Canary(executable):
 
 def get_PE_dll_characteristics(executable) -> int:
     '''Get PE DllCharacteristics bits'''
-    p = subprocess.Popen([OBJDUMP_CMD, '-x',  executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([OBJDUMP_CMD, '-x',  executable])
+
     bits = 0
     for line in stdout.splitlines():
         tokens = line.split()
@@ -146,10 +140,8 @@ def check_PE_HIGH_ENTROPY_VA(executable):
 
 def check_PE_RELOC_SECTION(executable) -> bool:
     '''Check for a reloc section. This is required for functional ASLR.'''
-    p = subprocess.Popen([OBJDUMP_CMD, '-h',  executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([OBJDUMP_CMD, '-h',  executable])
+
     for line in stdout.splitlines():
         if '.reloc' in line:
             return True
@@ -161,10 +153,7 @@ def check_PE_NX(executable):
     return (bits & IMAGE_DLL_CHARACTERISTICS_NX_COMPAT) == IMAGE_DLL_CHARACTERISTICS_NX_COMPAT
 
 def get_MACHO_executable_flags(executable):
-    p = subprocess.Popen([OTOOL_CMD, '-vh', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([OTOOL_CMD, '-vh', executable])
 
     flags = []
     for line in stdout.splitlines():
@@ -208,10 +197,7 @@ def check_MACHO_LAZY_BINDINGS(executable) -> bool:
     Check for no lazy bindings.
     We don't use or check for MH_BINDATLOAD. See #18295.
     '''
-    p = subprocess.Popen([OTOOL_CMD, '-l', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([OTOOL_CMD, '-l', executable])
 
     for line in stdout.splitlines():
         tokens = line.split()
@@ -224,10 +210,8 @@ def check_MACHO_Canary(executable) -> bool:
     '''
     Check for use of stack canary
     '''
-    p = subprocess.Popen([OTOOL_CMD, '-Iv', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([OTOOL_CMD, '-Iv', executable])
+
     ok = False
     for line in stdout.splitlines():
         if '___stack_chk_fail' in line:
