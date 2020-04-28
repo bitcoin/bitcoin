@@ -76,13 +76,11 @@ script: |
   function create_per-host_compiler_wrapper {
   # -posix variant is required for c++11 threading.
   for i in $HOSTS; do
-    mkdir -p ${WRAP_DIR}/${i}
     for prog in gcc g++; do
         echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog}-posix | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
         echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
         echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
-        echo "export COMPILER_PATH=${WRAP_DIR}/${i}" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
     done
@@ -110,38 +108,28 @@ script: |
   create_per-host_compiler_wrapper "${REFERENCE_DATETIME}"
   export PATH=${WRAP_DIR}:${PATH}
 
-  # Create the release tarball using (arbitrarily) the first host
-  ./autogen.sh
-  CONFIG_SITE=${BASEPREFIX}/$(echo "${HOSTS}" | awk '{print $1;}')/share/config.site ./configure --prefix=/
-  make dist
-  SOURCEDIST=$(echo bitcoin-*.tar.gz)
-  DISTNAME=${SOURCEDIST/%.tar.gz}
-
-  # Workaround for tarball not building with the bare tag version (prep)
-  make -C src obj/build.h
+  # Create the git archive, and define DISTNAME and GIT_ARCHIVE variables.
+  # shellcheck source=contrib/gitian-descriptors/make_git_archive
+  source contrib/gitian-descriptors/make_git_archive
 
   ORIGPATH="$PATH"
-  # Extract the release tarball into a dir for each host and build
+  # Extract the git archive into a dir for each host and build
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     mkdir -p distsrc-${i}
     cd distsrc-${i}
     INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p ${INSTALLPATH}
-    tar --strip-components=1 -xf ../$SOURCEDIST
+    tar -xf $GIT_ARCHIVE
 
-    # Workaround for tarball not building with the bare tag version
-    echo '#!/bin/true' >share/genbuild.sh
-    mkdir src/obj
-    cp ../src/obj/build.h src/obj/
-
+    ./autogen.sh
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}"
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
     make ${MAKEOPTS} -C src check-symbols
     make deploy
     make install DESTDIR=${INSTALLPATH}
-    cp -f --target-directory="${OUTDIR}" ./bitcoin-*-setup-unsigned.exe
+    cp -f ./bitcoin-*-win64-setup-unsigned.exe ${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete
@@ -156,11 +144,8 @@ script: |
     rm -rf distsrc-${i}
   done
 
-  mkdir -p ${OUTDIR}/src
-  git archive --output=${OUTDIR}/src/${DISTNAME}.tar.gz HEAD
-
   cp -rf contrib/windeploy $BUILD_DIR
   cd $BUILD_DIR/windeploy
   mkdir unsigned
-  cp $OUTDIR/bitcoin-*setup-unsigned.exe unsigned/
+  cp ${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe unsigned/
   find . | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz

@@ -1,0 +1,20 @@
+# Copyright (c) 2020 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#
+# A helper script to be sourced into the gitian descriptors
+
+mkdir -p ${OUTDIR}/src
+RECENT_TAG=$(git describe --abbrev=0 HEAD)
+if [ $RECENT_TAG = $(git describe HEAD) ]; then
+  if [[ $RECENT_TAG == v* ]]; then
+    VERSION=${RECENT_TAG:1}
+  else
+    VERSION=$RECENT_TAG
+  fi
+else
+  VERSION=$(git rev-parse --short HEAD)
+fi
+DISTNAME=bitcoin-${VERSION}
+GIT_ARCHIVE="${OUTDIR}/src/${DISTNAME}.tar.gz"
+git archive --output=$GIT_ARCHIVE HEAD
