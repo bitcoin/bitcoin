@@ -4120,7 +4120,7 @@ const CAddressBookData* CWallet::FindAddressBookEntry(const CTxDestination& dest
 bool CWallet::UpgradeWallet(int version, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     int prev_version = GetVersion();
-    int nMaxVersion = version;
+    int& nMaxVersion = version;
     if (nMaxVersion == 0) // the -upgradewallet without argument case
     {
         WalletLogPrintf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
@@ -4146,7 +4146,7 @@ bool CWallet::UpgradeWallet(int version, bilingual_str& error, std::vector<bilin
     }
 
     for (auto spk_man : GetActiveScriptPubKeyMans()) {
-        if (!spk_man->Upgrade(prev_version, error)) {
+        if (!spk_man->Upgrade(prev_version, version, error)) {
             return false;
         }
     }
