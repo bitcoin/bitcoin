@@ -457,6 +457,13 @@ bool LegacyScriptPubKeyMan::Upgrade(int prev_version, int new_version, bilingual
         WalletLogPrintf("Upgrading wallet to use HD chain split\n");
         m_storage.SetMinVersion(FEATURE_PRE_SPLIT_KEYPOOL);
         split_upgrade = FEATURE_HD_SPLIT > prev_version;
+        // Upgrade the HDChain
+        if (m_hd_chain.nVersion < CHDChain::VERSION_HD_CHAIN_SPLIT) {
+            m_hd_chain.nVersion = CHDChain::VERSION_HD_CHAIN_SPLIT;
+            if (!WalletBatch(m_storage.GetDatabase()).WriteHDChain(m_hd_chain)) {
+                throw std::runtime_error(std::string(__func__) + ": writing chain failed");
+            }
+        }
     }
     // Mark all keys currently in the keypool as pre-split
     if (split_upgrade) {
