@@ -1,9 +1,8 @@
 # Copyright (c) 2012-2018 The Bitcoin Core developers
-# Copyright (c) 2018-2020 The vBitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
-vBitcoin base58 encoding and decoding.
+Bitcoin base58 encoding and decoding.
 
 Based on https://bitcointalk.org/index.php?topic=1026.0 (public domain)
 '''

@@ -173,7 +173,7 @@ jobs:
       - name: vcpkg integration
         run: C:/vcpkg/vcpkg.exe integrate install
       - name: Build
-        run: msbuild build_msvc\bitcoin.sln /m /v:n /p:Configuration=Release
+        run: msbuild build_msvc\vbitcoin.sln /m /v:n /p:Configuration=Release
       - name: Run test_bitcoin
         shell: cmd
         run: src\test_bitcoin.exe -k stdout -e stdout 2> NUL

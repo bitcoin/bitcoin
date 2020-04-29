@@ -113,7 +113,7 @@ private:
     PaymentServer* paymentServer{nullptr};
     WalletController* m_wallet_controller{nullptr};
 #endif
-    int returnValue = EXIT_SUCCESS;
+    int returnValue;
     const PlatformStyle *platformStyle;
     std::unique_ptr<QWidget> shutdownWindow;
 
