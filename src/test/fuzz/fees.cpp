@@ -8,6 +8,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/fees.h>
 
 #include <cstdint>
 #include <string>
@@ -23,4 +24,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         const CAmount rounded_fee = fee_filter_rounder.round(current_minimum_fee);
         assert(MoneyRange(rounded_fee));
     }
+    const FeeReason fee_reason = fuzzed_data_provider.PickValueInArray({FeeReason::NONE, FeeReason::HALF_ESTIMATE, FeeReason::FULL_ESTIMATE, FeeReason::DOUBLE_ESTIMATE, FeeReason::CONSERVATIVE, FeeReason::MEMPOOL_MIN, FeeReason::PAYTXFEE, FeeReason::FALLBACK, FeeReason::REQUIRED});
+    (void)StringForFeeReason(fee_reason);
 }

@@ -24,8 +24,8 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <time.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -35,6 +35,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <ctime>
 #include <limits>
 #include <set>
 #include <vector>
@@ -287,8 +288,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         try {
             const uint64_t deserialized_u64 = ReadCompactSize(stream);
             assert(u64 == deserialized_u64 && stream.empty());
+        } catch (const std::ios_base::failure&) {
         }
-        catch (const std::ios_base::failure&) {
-        }
+    }
+
+    try {
+        CHECK_NONFATAL(b);
+    } catch (const NonFatalCheckError&) {
     }
 }

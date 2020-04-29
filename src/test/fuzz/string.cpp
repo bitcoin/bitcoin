@@ -115,4 +115,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(data_stream.empty());
         assert(deserialized_string == random_string_1);
     }
+    {
+        int64_t amount_out;
+        (void)ParseFixedPoint(random_string_1, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 1024), &amount_out);
+    }
 }
