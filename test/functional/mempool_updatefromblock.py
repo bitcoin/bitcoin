@@ -10,11 +10,11 @@ when transactions have been re-added from a disconnected block to the mempool.
 import time
 
 from decimal import Decimal
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
 
 
-class MempoolUpdateFromBlockTest(BitcoinTestFramework):
+class MempoolUpdateFromBlockTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-limitdescendantsize=1000', '-limitancestorsize=1000']]
