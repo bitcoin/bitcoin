@@ -175,6 +175,7 @@ public:
     }
     // SYSCOIN
     CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn);
+    CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn, const CAssetCoinInfo &assetInfoIn) : nValue(nValueIn), scriptPubKey(scriptPubKeyIn), assetInfo(assetInfoIn) {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -217,7 +218,12 @@ public:
         SetNull();
     }
 
-    CTxOutCoin(const CTxOut& txOut): CTxOut(txOut.nValue, txOut.scriptPubKey) { assetInfo = txOut.assetInfo;}
+    CTxOutCoin(const CTxOut& txOut): CTxOut(txOut.nValue, txOut.scriptPubKey, txOut.assetInfo) { }
+    CTxOutCoin(CTxOut&& txOut)  {
+        nValue = std::move(txOut.nValue);
+        scriptPubKey = std::move(txOut.scriptPubKey);
+        assetInfo = std::move(txOut.assetInfo);
+    }
     friend bool operator==(const CTxOutCoin& a, const CTxOutCoin& b)
     {
         return (a.nValue       == b.nValue &&
@@ -225,6 +231,16 @@ public:
                 a.assetInfo == b.assetInfo);
     }
     friend bool operator!=(const CTxOutCoin& a, const CTxOutCoin& b)
+    {
+        return !(a == b);
+    }
+    friend bool operator==(const CTxOut& a, const CTxOutCoin& b)
+    {
+        return (a.nValue       == b.nValue &&
+                a.scriptPubKey == b.scriptPubKey &&
+                a.assetInfo == b.assetInfo);
+    }
+    friend bool operator!=(const CTxOut& a, const CTxOutCoin& b)
     {
         return !(a == b);
     }
