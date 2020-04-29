@@ -30,6 +30,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/ccoins_caching.cpp \
   bench/gcs_filter.cpp \
   bench/hashpadding.cpp \
+  bench/logging.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
   bench/mempool_stress.cpp \
