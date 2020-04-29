@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     auto print_view_mem_usage = [](CCoinsViewCache& view) {
         BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage());
     };
-
-    constexpr size_t MAX_COINS_CACHE_BYTES = 1024;
+    // SYSCOIN account for extra coin data for assets
+    constexpr size_t MAX_COINS_CACHE_BYTES = 1076;
 
     // Without any coins in the cache, we shouldn't need to flush.
     BOOST_CHECK_EQUAL(
