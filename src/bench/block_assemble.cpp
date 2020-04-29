@@ -16,7 +16,14 @@
 
 static void AssembleBlock(benchmark::State& state)
 {
-    RegTestingSetup test_setup;
+    TestingSetup test_setup{
+        CBaseChainParams::REGTEST,
+        /* extra_args */ {
+            "-nodebuglogfile",
+            "-nodebug",
+        },
+    };
+
     const std::vector<unsigned char> op_true{OP_TRUE};
     CScriptWitness witness;
     witness.stack.push_back(op_true);
