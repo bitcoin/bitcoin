@@ -184,7 +184,7 @@ BitcoinApplication::BitcoinApplication(interfaces::Node& node):
     clientModel(nullptr),
     window(nullptr),
     pollShutdownTimer(nullptr),
-    returnValue(0),
+    returnValue(EXIT_SUCCESS),
     platformStyle(nullptr)
 {
     setQuitOnLastWindowClosed(false);

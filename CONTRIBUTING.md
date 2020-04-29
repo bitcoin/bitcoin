@@ -21,6 +21,7 @@ If you're looking for somewhere to start contributing, check out the
 Communication Channels
 ----------------------
 
+
 Most communication about vBitcoin Core development happens on Discord (https://discord.gg/wJZEjry), in the
 Discussion about code base improvements happens in GitHub issues and on pull
 requests.
