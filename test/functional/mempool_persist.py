@@ -99,7 +99,8 @@ class MempoolPersistTest(SyscoinTestFramework):
         wait_until(lambda: self.nodes[0].getmempoolinfo()["loaded"], timeout=1)
         wait_until(lambda: self.nodes[2].getmempoolinfo()["loaded"], timeout=1)
         assert_equal(len(self.nodes[0].getrawmempool()), 6)
-        assert_equal(len(self.nodes[2].getrawmempool()), 5)
+        # SYSCOIN trickle is much faster so node 2 will get tx right away
+        assert_equal(len(self.nodes[2].getrawmempool()), 6)
         # The others have loaded their mempool. If node_1 loaded anything, we'd probably notice by now:
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
 
