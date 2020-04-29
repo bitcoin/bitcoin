@@ -36,7 +36,8 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         COutPoint outp{txid, 0};
         newcoin.nHeight = 1;
         newcoin.out.nValue = InsecureRand32();
-        newcoin.out.scriptPubKey.assign((uint32_t)56, 1);
+        // SYSCOIN account for extra coin data for assets
+        newcoin.out.scriptPubKey.assign((uint32_t)40, 1);
         coins_view.AddCoin(outp, std::move(newcoin), false);
 
         return outp;
@@ -46,13 +47,13 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     // (prevector<28, unsigned char>) when assigned 56 bytes of data per above.
     //
     // See also: Coin::DynamicMemoryUsage().
-    constexpr int COIN_SIZE = is_64_bit ? 80 : 64;
+    // SYSCOIN account for extra coin data for assets
+    constexpr int COIN_SIZE = is_64_bit ? 64 : 48;
 
     auto print_view_mem_usage = [](CCoinsViewCache& view) {
         BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage());
     };
-    // SYSCOIN account for extra coin data for assets
-    constexpr size_t MAX_COINS_CACHE_BYTES = 1076;
+    constexpr size_t MAX_COINS_CACHE_BYTES = 1048;
 
     // Without any coins in the cache, we shouldn't need to flush.
     BOOST_CHECK_EQUAL(
