@@ -79,9 +79,9 @@ static constexpr int32_t MAX_PEER_TX_IN_FLIGHT = 100;
 /** Maximum number of announced transactions from a peer */
 static constexpr int32_t MAX_PEER_TX_ANNOUNCEMENTS = 2 * MAX_INV_SZ;
 /** How many microseconds to delay requesting transactions from inbound peers */
-static constexpr std::chrono::microseconds INBOUND_PEER_TX_DELAY{std::chrono::microseconds{20}};
+static constexpr std::chrono::microseconds INBOUND_PEER_TX_DELAY{std::chrono::seconds{2}};
 /** How long to wait (in microseconds) before downloading a transaction from an additional peer */
-static constexpr std::chrono::microseconds GETDATA_TX_INTERVAL{std::chrono::seconds{0}};
+static constexpr std::chrono::microseconds GETDATA_TX_INTERVAL{std::chrono::seconds{1}};
 /** Maximum delay (in microseconds) for transaction requests to avoid biasing some peers over others. */
 static constexpr std::chrono::microseconds MAX_GETDATA_RANDOM_DELAY{std::chrono::microseconds{20}};
 /** How long to wait (in microseconds) before expiring an in-flight getdata request to a peer */
