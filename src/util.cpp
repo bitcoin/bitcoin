@@ -786,38 +786,70 @@ fs::path GetConfigFile(const std::string& confPath)
     return AbsPathForConfigVal(fs::path(confPath), false);
 }
 
+void ArgsManager::ReadConfigStream(std::istream& stream)
+{
+    LOCK(cs_args);
+
+    std::set<std::string> setOptions;
+    setOptions.insert("*");
+
+    for (boost::program_options::detail::config_file_iterator it(stream, setOptions), end; it != end; ++it)
+    {
+        // Don't overwrite existing settings so command line settings override bitcoin.conf
+        std::string strKey = std::string("-") + it->string_key;
+        std::string strValue = it->value[0];
+        InterpretNegatedOption(strKey, strValue);
+        if (mapArgs.count(strKey) == 0)
+            mapArgs[strKey] = strValue;
+        mapMultiArgs[strKey].push_back(strValue);
+    }
+}
+
 void ArgsManager::ReadConfigFile(const std::string& confPath)
 {
-    fs::ifstream streamConfig(GetConfigFile(confPath));
-    if (!streamConfig.good()){
-        // Create empty dash.conf if it does not excist
+    fs::ifstream stream(GetConfigFile(confPath));
+
+    if (stream.good()) {
+        ReadConfigStream(stream);
+    } else {
+        // Create an empty dash.conf if it does not excist
         FILE* configFile = fopen(GetConfigFile(confPath).string().c_str(), "a");
         if (configFile != nullptr)
             fclose(configFile);
         return; // Nothing to read, so just return
     }
 
-    {
-        LOCK(cs_args);
-        std::set<std::string> setOptions;
-        setOptions.insert("*");
-
-        for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
-        {
-            // Don't overwrite existing settings so command line settings override dash.conf
-            std::string strKey = std::string("-") + it->string_key;
-            std::string strValue = it->value[0];
-            InterpretNegatedOption(strKey, strValue);
-            if (mapArgs.count(strKey) == 0)
-                mapArgs[strKey] = strValue;
-            mapMultiArgs[strKey].push_back(strValue);
-        }
-    }
     // If datadir is changed in .conf file:
     ClearDatadirCache();
     if (!fs::is_directory(GetDataDir(false))) {
         throw std::runtime_error(strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", "").c_str()));
     }
+}
+
+std::string ArgsManager::GetChainName() const
+{
+    bool fRegTest = GetBoolArg("-regtest", false);
+    bool fDevNet = IsArgSet("-devnet");
+    bool fTestNet = GetBoolArg("-testnet", false);
+
+    int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
+    if (nameParamsCount > 1)
+        throw std::runtime_error("Only one of -regtest, -testnet or -devnet can be used.");
+
+    if (fDevNet)
+        return CBaseChainParams::DEVNET;
+    if (fRegTest)
+        return CBaseChainParams::REGTEST;
+    if (fTestNet)
+        return CBaseChainParams::TESTNET;
+    return CBaseChainParams::MAIN;
+}
+
+std::string ArgsManager::GetDevNetName() const
+{
+    assert(IsArgSet("-devnet"));
+    std::string devNetName = GetArg("-devnet", "");
+    return "devnet" + (devNetName.empty() ? "" : "-" + devNetName);
 }
 
 #ifndef WIN32

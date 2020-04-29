@@ -282,6 +282,8 @@ protected:
     std::map<std::string, std::vector<std::string>> mapMultiArgs;
     std::unordered_set<std::string> m_negated_args;
 
+    void ReadConfigStream(std::istream& stream);
+
 public:
     void ParseParameters(int argc, const char*const argv[]);
     void ReadConfigFile(const std::string& confPath);
@@ -361,6 +363,19 @@ public:
     void ForceSetArg(const std::string& strArg, const std::string& strValue);
     void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values);
     void ForceRemoveArg(const std::string& strArg);
+
+    /**
+     * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
+     * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
+     */
+    std::string GetChainName() const;
+
+    /**
+     * Looks for -devnet and returns either "devnet-<name>" or simply "devnet" if no name was specified.
+     * This function should never be called for non-devnets.
+     * @return either "devnet-<name>" or "devnet"; raises runtime error if no -devent was specified.
+     */
+    std::string GetDevNetName() const;
 
 private:
 

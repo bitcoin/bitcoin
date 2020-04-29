@@ -93,7 +93,7 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
     else if (chain == CBaseChainParams::TESTNET)
         return std::unique_ptr<CBaseChainParams>(new CBaseTestNetParams());
     else if (chain == CBaseChainParams::DEVNET) {
-        return std::unique_ptr<CBaseChainParams>(new CBaseDevNetParams(GetDevNetName()));
+        return std::unique_ptr<CBaseChainParams>(new CBaseDevNetParams(gArgs.GetDevNetName()));
     } else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CBaseChainParams>(new CBaseRegTestParams());
     else
@@ -103,31 +103,4 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
 void SelectBaseParams(const std::string& chain)
 {
     globalChainBaseParams = CreateBaseChainParams(chain);
-}
-
-std::string ChainNameFromCommandLine()
-{
-    bool fRegTest = gArgs.GetBoolArg("-regtest", false);
-    bool fDevNet = gArgs.IsArgSet("-devnet");
-    bool fTestNet = gArgs.GetBoolArg("-testnet", false);
-
-    int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
-    if (nameParamsCount > 1)
-        throw std::runtime_error("Only one of -regtest, -testnet or -devnet can be used.");
-
-    if (fDevNet)
-        return CBaseChainParams::DEVNET;
-    if (fRegTest)
-        return CBaseChainParams::REGTEST;
-    if (fTestNet)
-        return CBaseChainParams::TESTNET;
-    return CBaseChainParams::MAIN;
-}
-
-std::string GetDevNetName()
-{
-    // This function should never be called for non-devnets
-    assert(gArgs.IsArgSet("-devnet"));
-    std::string devNetName = gArgs.GetArg("-devnet", "");
-    return "devnet" + (devNetName.empty() ? "" : "-" + devNetName);
 }

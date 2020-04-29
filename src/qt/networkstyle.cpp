@@ -10,6 +10,7 @@
 
 #include <chainparams.h>
 #include <tinyformat.h>
+#include <util.h>
 
 #include <QApplication>
 
@@ -108,8 +109,8 @@ const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
             std::string titleAddText = network_styles[x].titleAddText;
 
             if (networkId == QString(CBaseChainParams::DEVNET.c_str())) {
-                appName = strprintf(appName, GetDevNetName());
-                titleAddText = strprintf(titleAddText, GetDevNetName());
+                appName = strprintf(appName, gArgs.GetDevNetName());
+                titleAddText = strprintf(titleAddText, gArgs.GetDevNetName());
             }
 
             return new NetworkStyle(
