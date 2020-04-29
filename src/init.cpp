@@ -564,7 +564,7 @@ void SetupServerArgs()
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/VeriBlock/vbk-ri-vbtc>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/VeriBlock/vbk-ri-btc>";
     const std::string URL_WEBSITE = "<https://veriblock.org>";
 
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i").translated, 2020, COPYRIGHT_YEAR) + " ") + "\n" +

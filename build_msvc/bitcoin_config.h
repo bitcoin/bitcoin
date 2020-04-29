@@ -343,10 +343,10 @@
 #define PACKAGE_BUGREPORT "https://github.com/VeriBlock/vbk-ri-btc/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "VeriBlock Bitcoin Core"
+#define PACKAGE_NAME "vBitcoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "VeriBlock Bitcoin Core 0.0.3"
+#define PACKAGE_STRING "vBitcoin Core 0.0.3"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "vbitcoin"
