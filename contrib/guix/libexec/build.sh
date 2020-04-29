@@ -196,6 +196,7 @@ GIT_ARCHIVE="${DIST_ARCHIVE_BASE}/${DISTNAME}.tar.gz"
 # Create the source tarball if not already there
 if [ ! -e "$GIT_ARCHIVE" ]; then
     mkdir -p "$(dirname "$GIT_ARCHIVE")"
+    REFERENCE_DATETIME="@${SOURCE_DATE_EPOCH}" \
     contrib/guix/libexec/make_release_tarball.sh "${GIT_ARCHIVE}" "${DISTNAME}"
 fi
 
