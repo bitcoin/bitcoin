@@ -464,8 +464,7 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
         if (txFrom) {
             assert(txFrom->GetHash() == txin.prevout.hash);
             assert(txFrom->vout.size() > txin.prevout.n);
-            // SYSCOIN
-            assert(txFrom->vout[txin.prevout.n] == ((CTxOut)coin.out));
+            assert(txFrom->vout[txin.prevout.n] == coin.out);
         } else {
             const Coin& coinFromDisk = ::ChainstateActive().CoinsTip().AccessCoin(txin.prevout);
             assert(!coinFromDisk.IsSpent());
@@ -1941,13 +1940,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 COutPoint out(hash, o);
                 Coin coin;
                 bool is_spent = view.SpendCoin(out, &coin);
-                // SYSCOIN
-                if(!coin.out.assetInfo.IsNull()) {
-                    CAssetCoinInfo& txCoinInfo = *const_cast<CAssetCoinInfo*>(&tx.vout[o].assetInfo);
-                    txCoinInfo.nAsset = coin.out.assetInfo.nAsset;
-                    txCoinInfo.nValue = coin.out.assetInfo.nValue;
-                }
-                if (!is_spent || tx.vout[o] != ((CTxOut)coin.out) || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
+                if (!is_spent || tx.vout[o] != coin.out || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
                     fClean = false; // transaction output mismatch
                 }
             }
