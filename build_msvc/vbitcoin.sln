@@ -6,7 +6,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoinconsensus", "libb
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testconsensus", "testconsensus\testconsensus.vcxproj", "{E78473E9-B850-456C-9120-276301E04C06}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoind", "bitcoind\bitcoind.vcxproj", "{D4513DDF-6013-44DC-ADCC-12EAF6D1F038}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vbitcoind", "vbitcoind\vbitcoind.vcxproj", "{D4513DDF-6013-44DC-ADCC-12EAF6D1F038}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_util", "libbitcoin_util\libbitcoin_util.vcxproj", "{B53A5535-EE9D-4C6F-9A26-F79EE3BC3754}"
 EndProject
@@ -22,13 +22,15 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_wallet", "libbit
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_zmq", "libbitcoin_zmq\libbitcoin_zmq.vcxproj", "{792D487F-F14C-49FC-A9DE-3FC150F31C3F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_bitcoin", "test_bitcoin\test_bitcoin.vcxproj", "{A56B73DB-D46D-4882-8374-1FE3FFA08F07}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_cli", "libbitcoin_cli\libbitcoin_cli.vcxproj", "{0667528C-D734-4009-ADF9-C0D6C4A5A5A6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoin-cli", "bitcoin-cli\bitcoin-cli.vcxproj", "{0B2D7431-F876-4A58-87BF-F748338CD3BF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vbitcoin-cli", "vbitcoin-cli\vbitcoin-cli.vcxproj", "{0B2D7431-F876-4A58-87BF-F748338CD3BF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoin-tx", "bitcoin-tx\bitcoin-tx.vcxproj", "{D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vbitcoin-tx", "vbitcoin-tx\vbitcoin-tx.vcxproj", "{D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoin-wallet", "bitcoin-wallet\bitcoin-wallet.vcxproj", "{84DE8790-EDE3-4483-81AC-C32F15E861F4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vbitcoin-wallet", "vbitcoin-wallet\vbitcoin-wallet.vcxproj", "{84DE8790-EDE3-4483-81AC-C32F15E861F4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_wallet_tool", "libbitcoin_wallet_tool\libbitcoin_wallet_tool.vcxproj", "{F91AC55E-6F5E-4C58-9AC5-B40DB7DEEF93}"
 EndProject
@@ -38,7 +40,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libleveldb", "libleveldb\li
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_qt", "libbitcoin_qt\libbitcoin_qt.vcxproj", "{2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoin-qt", "bitcoin-qt\bitcoin-qt.vcxproj", "{7E99172D-7FF2-4CB6-B736-AC9B76ED412A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vbitcoin-qt", "vbitcoin-qt\vbitcoin-qt.vcxproj", "{7E99172D-7FF2-4CB6-B736-AC9B76ED412A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtest_util", "libtest_util\libtest_util.vcxproj", "{868474FD-35F6-4400-8EED-30A33E7521D4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_bitcoin-qt", "test_bitcoin-qt\test_bitcoin-qt.vcxproj", "{51201D5E-D939-4854-AE9D-008F03FF518E}"
 EndProject
 Global
     GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -128,6 +134,14 @@ Global
         {792D487F-F14C-49FC-A9DE-3FC150F31C3F}.Release|x64.Build.0 = Release|x64
         {792D487F-F14C-49FC-A9DE-3FC150F31C3F}.Release|x86.ActiveCfg = Release|Win32
         {792D487F-F14C-49FC-A9DE-3FC150F31C3F}.Release|x86.Build.0 = Release|Win32
+        {A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Debug|x64.ActiveCfg = Debug|x64
+        {A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Debug|x64.Build.0 = Debug|x64
+        {A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Debug|x86.ActiveCfg = Debug|Win32
+        {A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Debug|x86.Build.0 = Debug|Win32
+        {A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Release|x64.ActiveCfg = Release|x64
+        {A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Release|x64.Build.0 = Release|x64
+        {A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Release|x86.ActiveCfg = Release|Win32
+        {A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Release|x86.Build.0 = Release|Win32
         {0667528C-D734-4009-ADF9-C0D6C4A5A5A6}.Debug|x64.ActiveCfg = Debug|x64
         {0667528C-D734-4009-ADF9-C0D6C4A5A5A6}.Debug|x64.Build.0 = Debug|x64
         {0667528C-D734-4009-ADF9-C0D6C4A5A5A6}.Debug|x86.ActiveCfg = Debug|Win32
@@ -200,6 +214,22 @@ Global
         {7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Release|x64.Build.0 = Release|x64
         {7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Release|x86.ActiveCfg = Release|Win32
         {7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Release|x86.Build.0 = Release|Win32
+        {868474FD-35F6-4400-8EED-30A33E7521D4}.Debug|x64.ActiveCfg = Debug|x64
+        {868474FD-35F6-4400-8EED-30A33E7521D4}.Debug|x64.Build.0 = Debug|x64
+        {868474FD-35F6-4400-8EED-30A33E7521D4}.Debug|x86.ActiveCfg = Debug|Win32
+        {868474FD-35F6-4400-8EED-30A33E7521D4}.Debug|x86.Build.0 = Debug|Win32
+        {868474FD-35F6-4400-8EED-30A33E7521D4}.Release|x64.ActiveCfg = Release|x64
+        {868474FD-35F6-4400-8EED-30A33E7521D4}.Release|x64.Build.0 = Release|x64
+        {868474FD-35F6-4400-8EED-30A33E7521D4}.Release|x86.ActiveCfg = Release|Win32
+        {868474FD-35F6-4400-8EED-30A33E7521D4}.Release|x86.Build.0 = Release|Win32
+        {51201D5E-D939-4854-AE9D-008F03FF518E}.Debug|x64.ActiveCfg = Debug|x64
+        {51201D5E-D939-4854-AE9D-008F03FF518E}.Debug|x64.Build.0 = Debug|x64
+        {51201D5E-D939-4854-AE9D-008F03FF518E}.Debug|x86.ActiveCfg = Debug|Win32
+        {51201D5E-D939-4854-AE9D-008F03FF518E}.Debug|x86.Build.0 = Debug|Win32
+        {51201D5E-D939-4854-AE9D-008F03FF518E}.Release|x64.ActiveCfg = Release|x64
+        {51201D5E-D939-4854-AE9D-008F03FF518E}.Release|x64.Build.0 = Release|x64
+        {51201D5E-D939-4854-AE9D-008F03FF518E}.Release|x86.ActiveCfg = Release|Win32
+        {51201D5E-D939-4854-AE9D-008F03FF518E}.Release|x86.Build.0 = Release|Win32
     EndGlobalSection
     GlobalSection(SolutionProperties) = preSolution
         HideSolutionNode = FALSE

@@ -163,10 +163,10 @@ The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
 Build output expected:
 
-  1. source tarball (`bitcoin-${VERSION}.tar.gz`)
-  2. linux 32-bit and 64-bit dist tarballs (`bitcoin-${VERSION}-linux[32|64].tar.gz`)
-  3. windows 32-bit and 64-bit unsigned installers and dist zips (`bitcoin-${VERSION}-win[32|64]-setup-unsigned.exe`, `bitcoin-${VERSION}-win[32|64].zip`)
-  4. macOS unsigned installer and dist tarball (`bitcoin-${VERSION}-osx-unsigned.dmg`, `bitcoin-${VERSION}-osx64.tar.gz`)
+  1. source tarball (`vbitcoin-${VERSION}.tar.gz`)
+  2. linux 32-bit and 64-bit dist tarballs (`vbitcoin-${VERSION}-linux[32|64].tar.gz`)
+  3. windows 32-bit and 64-bit unsigned installers and dist zips (`vbitcoin-${VERSION}-win[32|64]-setup-unsigned.exe`, `vbitcoin-${VERSION}-win[32|64].zip`)
+  4. macOS unsigned installer and dist tarball (`vbitcoin-${VERSION}-osx-unsigned.dmg`, `vbitcoin-${VERSION}-osx64.tar.gz`)
   5. Gitian signatures (in `gitian.sigs/${VERSION}-<linux|{win,osx}-unsigned>/(your Gitian key)/`)
 
 ### Verify other gitian builders signatures to your own. (Optional)

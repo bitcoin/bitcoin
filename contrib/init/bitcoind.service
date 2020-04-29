@@ -21,7 +21,7 @@ ExecStart=/usr/bin/vbitcoind -daemon \
 
 # Make sure the config directory is readable by the service user
 PermissionsStartOnly=true
-ExecStartPre=/bin/chgrp bitcoin /etc/vbitcoin
+ExecStartPre=/bin/chgrp vbitcoin /etc/vbitcoin
 
 # Process management
 ####################

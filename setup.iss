@@ -2,8 +2,8 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "VeriBlock vBTC"
-#define MyAppVersion "0.19"
-#define MyAppPublisher "VeriBlock Incorporated"
+#define MyAppVersion "0.0.3"
+#define MyAppPublisher "VeriBlock"
 #define MyAppURL "https://www.veriblock.org"
 #define MyAppExeName "vbitcoin-qt.exe"
 
@@ -21,7 +21,7 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DisableProgramGroupPage=yes
-OutputBaseFilename=setup-vbk-ri-btc-rc0.19.0
+OutputBaseFilename=setup-vbitcoin-0.0.3
 Compression=lzma
 SolidCompression=yes
 

@@ -13,7 +13,7 @@ can be found in the contrib/init folder.
 Service User
 ---------------------------------
 
-All three Linux startup configurations assume the existence of a "bitcoin" user
+All three Linux startup configurations assume the existence of a "vbitcoin" user
 and group.  They must be created before attempting to use these scripts.
 The macOS configuration assumes bitcoind will be set up for the current user.
 

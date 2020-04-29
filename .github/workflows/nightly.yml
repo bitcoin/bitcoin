@@ -69,7 +69,7 @@ jobs:
         run: make -j2
       - name: make deploy
         if: success()
-        run: make linux-deploy
+        run: make deploy
       - name: create artifacts
         if: success()
         run: |
@@ -113,11 +113,11 @@ jobs:
       PLATFORM: x64
     steps:
       - uses: actions/checkout@v1
-#      - name: Extract branch name & commit
-#        id: extract_branch
-#        run: |
-#          $env:git_hash = git.exe rev-parse --short=7 "$env:GITHUB_SHA"
-#          $env:branch = echo $env:GITHUB_REF#refs/heads/ | %{$_ -replace '\/','.'}
+      - name: Extract branch name & commit
+        id: extract_branch
+        run: |
+          $env:git_hash = git.exe rev-parse --short=7 "$env:GITHUB_SHA"
+          $env:branch = echo $env:GITHUB_REF#refs/heads/ | %{$_ -replace '\/','.'}
       - uses: actions/setup-python@v1
         with:
           python-version: '3.7'  # Needed for PEP 540
@@ -174,6 +174,20 @@ jobs:
         run: C:/vcpkg/vcpkg.exe integrate install
       - name: Build
         run: msbuild build_msvc\bitcoin.sln /m /v:n /p:Configuration=Release
+      - name: Run test_bitcoin
+        shell: cmd
+        run: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
+#      - name: bitcoin-util-test
+#        if: always()
+#        run: python test\util\bitcoin-util-test.py
+      - name: rpcauth-test
+        shell: cmd
+        run: python test\util\rpcauth-test.py
+#      - name: test_runner
+#        if: always()
+#        shell: cmd
+#        run: |
+#          python test\functional\test_runner.py --ansi --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
 
   x86_64-w64-mingw32:
     runs-on: ubuntu-latest
@@ -190,7 +204,7 @@ jobs:
           echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
           echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: install build requirements
-        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git g++-mingw-w64-x86-64
+        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git g++-mingw-w64-x86-64 nsis
       - name: set the default mingw32 g++ compiler option to posix
         run: sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
       - name: strip out problematic Windows %PATH% imported var
@@ -214,6 +228,7 @@ jobs:
       - name: create artifacts
         if: success()
         run: |
+          mv ./vbitcoin-0.19.99-win64-setup-unsigned.exe release/
           mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
           zip -r9 vBitcoin-nightly-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts

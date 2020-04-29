@@ -72,8 +72,8 @@
       <AdditionalIncludeDirectories>..\libbitcoin_qt\$(GeneratedFilesOutDir)\..\;$(QtIncludeDir)\QtTest;$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(QtReleaseLibaries);%(AdditionalDependencies)</AdditionalDependencies>
-      	  <AdditionalOptions>/ignore:4206</AdditionalOptions>
+      <AdditionalDependencies>$(QtLibraryDir)\Qt5Test.lib;$(QtReleaseLibraries);%(AdditionalDependencies)</AdditionalDependencies>
+	  <AdditionalOptions>/ignore:4206</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
 
@@ -83,10 +83,9 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(QtDebugLibraries);%(AdditionalDependencies)</AdditionalDependencies>
-      	  <AdditionalOptions>/ignore:4206</AdditionalOptions>
+	  <AdditionalOptions>/ignore:4206</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
-
   <ItemGroup>
     <MocTestFiles Include="..\..\src\qt\test\addressbooktests.h" />
     <MocTestFiles Include="..\..\src\qt\test\apptests.h" />
@@ -120,4 +119,4 @@
         $(CleanDependsOn);
     </CleanDependsOn>
   </PropertyGroup>
- </Project>
+</Project>

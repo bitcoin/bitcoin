@@ -196,4 +196,5 @@ static VeriBlock::PoPRewards getRewards()
 //        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, PoWReward + 7);
 //    }
 //}
+
 BOOST_AUTO_TEST_SUITE_END()

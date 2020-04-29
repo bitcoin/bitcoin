@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - master
+
   pull_request:
     branches:
       - develop
@@ -73,7 +74,7 @@ jobs:
         run: make -j2
       - name: make deploy
         if: success()
-        run: make linux-deploy
+        run: make deploy
       - name: create artifacts
         if: success()
         run: |
@@ -135,7 +136,7 @@ jobs:
           restore-keys: |
             mingw32-ccache-
       - name: install build requirements
-        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git g++-mingw-w64-x86-64 ccache
+        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git g++-mingw-w64-x86-64 ccache nsis
       - name: set the default mingw32 g++ compiler option to posix
         run: sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
       - name: strip out problematic Windows %PATH% imported var
@@ -160,6 +161,7 @@ jobs:
       - name: create artifacts
         if: success()
         run: |
+          mv ./vbitcoin-0.19.99-win64-setup-unsigned.exe release/
           mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
           zip -r9 vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts
