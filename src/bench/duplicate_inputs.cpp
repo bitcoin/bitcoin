@@ -15,7 +15,13 @@
 
 static void DuplicateInputs(benchmark::Bench& bench)
 {
-    RegTestingSetup test_setup;
+    TestingSetup test_setup{
+        CBaseChainParams::REGTEST,
+        /* extra_args */ {
+            "-nodebuglogfile",
+            "-nodebug",
+        },
+    };
 
     const CScript SCRIPT_PUB{CScript(OP_TRUE)};
 
