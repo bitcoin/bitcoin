@@ -227,6 +227,7 @@ GIT_ARCHIVE="${DIST_ARCHIVE_BASE}/${DISTNAME}.tar.gz"
 # Create the source tarball if not already there
 if [ ! -e "$GIT_ARCHIVE" ]; then
     mkdir -p "$(dirname "$GIT_ARCHIVE")"
+    CONFIG_SITE="${BASEPREFIX}/${HOST}/share/config.site" \
     contrib/gitian-descriptors/make_release_tarball "${GIT_ARCHIVE}"
 fi
 
@@ -282,8 +283,6 @@ mkdir -p "$DISTSRC"
 
     # Extract the source tarball
     tar --strip-components=1 -xf "${GIT_ARCHIVE}"
-
-    ./autogen.sh
 
     # Configure this DISTSRC for $HOST
     # shellcheck disable=SC2086

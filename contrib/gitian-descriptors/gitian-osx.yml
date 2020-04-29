@@ -109,8 +109,10 @@ script: |
 
   GIT_ARCHIVE="${OUTDIR}/src/${DISTNAME}.tar.gz"
 
-  # Create the source tarball
+  # Create the release tarball using (arbitrarily) the first host
   mkdir -p "$(dirname "$GIT_ARCHIVE")"
+  CONFIG_SITE="${BASEPREFIX}/${HOSTS/ */}/share/config.site" \
+  REFERENCE_DATETIME="${REFERENCE_DATETIME}" \
   contrib/gitian-descriptors/make_release_tarball "${GIT_ARCHIVE}"
 
   ORIGPATH="$PATH"
@@ -123,7 +125,6 @@ script: |
     mkdir -p ${INSTALLPATH}
     tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
-    ./autogen.sh
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
