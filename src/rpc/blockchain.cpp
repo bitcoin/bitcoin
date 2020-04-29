@@ -2242,8 +2242,7 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
 {
     RPCHelpMan{
         "dumptxoutset",
-        "\nWrite the serialized UTXO set to disk.\n"
-        "Incidentally flushes the latest coinsdb (leveldb) to disk.\n",
+        "\nWrite the serialized UTXO set to disk.\n",
         {
             {"path",
                 RPCArg::Type::STR,
