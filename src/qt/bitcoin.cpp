@@ -201,6 +201,7 @@ BitcoinApplication::BitcoinApplication(interfaces::Node& node):
     returnValue(0),
     platformStyle(nullptr)
 {
+    // Qt runs setlocale(LC_ALL, "") on initialization.
     RegisterMetaTypes();
     setQuitOnLastWindowClosed(false);
 }
