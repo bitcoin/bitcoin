@@ -28,3 +28,18 @@ fs::path GetWalletDir()
 
     return path;
 }
+
+bool IsFeatureSupported(int wallet_version, int feature_version)
+{
+    return wallet_version >= feature_version;
+}
+
+WalletFeature GetClosestWalletFeature(int version)
+{
+    if (version >= FEATURE_LATEST) return FEATURE_LATEST;
+    if (version >= FEATURE_HD) return FEATURE_HD;
+    if (version >= FEATURE_COMPRPUBKEY) return FEATURE_COMPRPUBKEY;
+    if (version >= FEATURE_WALLETCRYPT) return FEATURE_WALLETCRYPT;
+    if (version >= FEATURE_BASE) return FEATURE_BASE;
+    return static_cast<WalletFeature>(0);
+}

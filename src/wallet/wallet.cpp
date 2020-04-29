@@ -442,20 +442,12 @@ void CWallet::chainStateFlushed(const CBlockLocator& loc)
     batch.WriteBestBlock(loc);
 }
 
-void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in, bool fExplicit)
+void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in)
 {
     LOCK(cs_wallet);
     if (nWalletVersion >= nVersion)
         return;
-
-    // when doing an explicit upgrade, if we pass the max version permitted, upgrade all the way
-    if (fExplicit && nVersion > nWalletMaxVersion)
-            nVersion = FEATURE_LATEST;
-
     nWalletVersion = nVersion;
-
-    if (nVersion > nWalletMaxVersion)
-        nWalletMaxVersion = nVersion;
 
     {
         WalletBatch* batch = batch_in ? batch_in : new WalletBatch(GetDatabase());
@@ -464,18 +456,6 @@ void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in, 
         if (!batch_in)
             delete batch;
     }
-}
-
-bool CWallet::SetMaxVersion(int nVersion)
-{
-    LOCK(cs_wallet);
-    // cannot downgrade below current version
-    if (nWalletVersion > nVersion)
-        return false;
-
-    nWalletMaxVersion = nVersion;
-
-    return true;
 }
 
 std::set<uint256> CWallet::GetConflicts(const uint256& txid) const
@@ -665,7 +645,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
 
         // Encryption was introduced in version 0.4.0
-        SetMinVersion(FEATURE_WALLETCRYPT, encrypted_batch, true);
+        SetMinVersion(FEATURE_WALLETCRYPT, encrypted_batch);
 
         if (!encrypted_batch->TxnCommit()) {
             delete encrypted_batch;
@@ -4583,7 +4563,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
 
     if (fFirstRun)
     {
-        walletInstance->SetMaxVersion(FEATURE_LATEST);
+        walletInstance->SetMinVersion(FEATURE_LATEST);
 
         walletInstance->AddWalletFlags(wallet_creation_flags);
 
@@ -4918,7 +4898,7 @@ bool CWallet::UpgradeWallet(int version, bilingual_str& error)
         return false;
     }
 
-    SetMaxVersion(nMaxVersion);
+    SetMinVersion(GetClosestWalletFeature(version));
 
     return true;
 }
