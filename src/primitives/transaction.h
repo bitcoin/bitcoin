@@ -132,120 +132,6 @@ public:
     std::string ToString() const;
 };
 
-class CAssetCoinInfo {
-public:
-	int32_t nAsset;
-	CAmount nValue;
-	CAssetCoinInfo() {
-		SetNull();
-        nValue = 0;
-	}
-    CAssetCoinInfo(const int32_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) { }
- 
-    friend bool operator==(const CAssetCoinInfo& a, const CAssetCoinInfo& b)
-    {
-        return (a.nAsset   == b.nAsset &&
-                a.nValue == b.nValue);
-    }
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(nAsset);
-        if(nAsset > 0)
-            READWRITE(nValue);
-    }
-	inline void SetNull() { nAsset = 0; }
-    inline bool IsNull() const { return nAsset == 0;}
-};
-
-/** An output of a transaction.  It contains the public key that the next input
- * must be able to sign with to claim it.
- */
-class CTxOut
-{
-public:
-    CAmount nValue;
-    CScript scriptPubKey;
-    // SYSCOIN
-    CAssetCoinInfo assetInfo;
-    CTxOut()
-    {
-        SetNull();
-    }
-    // SYSCOIN
-    CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn);
-    CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn, const CAssetCoinInfo &assetInfoIn) : nValue(nValueIn), scriptPubKey(scriptPubKeyIn), assetInfo(assetInfoIn) {}
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(nValue);
-        READWRITE(scriptPubKey);
-    }
-
-    void SetNull()
-    {
-        assetInfo.SetNull();
-        nValue = -1;
-        scriptPubKey.clear();
-    }
-
-    bool IsNull() const
-    {
-        return (nValue == -1);
-    }
-
-    friend bool operator==(const CTxOut& a, const CTxOut& b)
-    {
-        return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey);
-    }
-
-    friend bool operator!=(const CTxOut& a, const CTxOut& b)
-    {
-        return !(a == b);
-    }
-    std::string ToString() const;
-};
-// SYSCOIN
-class CTxOutCoin: public CTxOut
-{
-public:
-    CTxOutCoin()
-    {
-        SetNull();
-    }
-
-    CTxOutCoin(const CTxOut& txOut): CTxOut(txOut.nValue, txOut.scriptPubKey, txOut.assetInfo) { }
-    CTxOutCoin(CTxOut&& txOut)  {
-        nValue = std::move(txOut.nValue);
-        scriptPubKey = std::move(txOut.scriptPubKey);
-        assetInfo = std::move(txOut.assetInfo);
-    }
-    friend bool operator==(const CTxOutCoin& a, const CTxOutCoin& b)
-    {
-        return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey &&
-                a.assetInfo == b.assetInfo);
-    }
-    friend bool operator!=(const CTxOutCoin& a, const CTxOutCoin& b)
-    {
-        return !(a == b);
-    }
-    friend bool operator==(const CTxOut& a, const CTxOutCoin& b)
-    {
-        return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey &&
-                a.assetInfo == b.assetInfo);
-    }
-    friend bool operator!=(const CTxOut& a, const CTxOutCoin& b)
-    {
-        return !(a == b);
-    }
-    std::string ToString() const;
-};
 struct CMutableTransaction;
 
 /**
@@ -442,6 +328,119 @@ struct AssetCoinInfoCompression
     }
 };
 
+class CAssetCoinInfo {
+public:
+	int32_t nAsset;
+	CAmount nValue;
+	CAssetCoinInfo() {
+		SetNull();
+        nValue = 0;
+	}
+    CAssetCoinInfo(const int32_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) { }
+ 
+    friend bool operator==(const CAssetCoinInfo& a, const CAssetCoinInfo& b)
+    {
+        return (a.nAsset   == b.nAsset &&
+                a.nValue == b.nValue);
+    }
+
+    SERIALIZE_METHODS(CAssetCoinInfo, obj) {
+        READWRITE(Using<AssetCoinInfoCompression>(obj));
+    }
+
+	inline void SetNull() { nAsset = 0; }
+    inline bool IsNull() const { return nAsset == 0;}
+};
+
+/** An output of a transaction.  It contains the public key that the next input
+ * must be able to sign with to claim it.
+ */
+class CTxOut
+{
+public:
+    CAmount nValue;
+    CScript scriptPubKey;
+    // SYSCOIN
+    CAssetCoinInfo assetInfo;
+    CTxOut()
+    {
+        SetNull();
+    }
+    // SYSCOIN
+    CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn);
+    CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn, const CAssetCoinInfo &assetInfoIn) : nValue(nValueIn), scriptPubKey(scriptPubKeyIn), assetInfo(assetInfoIn) {}
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(nValue);
+        READWRITE(scriptPubKey);
+    }
+
+    void SetNull()
+    {
+        assetInfo.SetNull();
+        nValue = -1;
+        scriptPubKey.clear();
+    }
+
+    bool IsNull() const
+    {
+        return (nValue == -1);
+    }
+
+    friend bool operator==(const CTxOut& a, const CTxOut& b)
+    {
+        return (a.nValue       == b.nValue &&
+                a.scriptPubKey == b.scriptPubKey);
+    }
+
+    friend bool operator!=(const CTxOut& a, const CTxOut& b)
+    {
+        return !(a == b);
+    }
+    std::string ToString() const;
+};
+// SYSCOIN
+class CTxOutCoin: public CTxOut
+{
+public:
+    CTxOutCoin()
+    {
+        SetNull();
+    }
+
+    CTxOutCoin(const CTxOut& txOut): CTxOut(txOut.nValue, txOut.scriptPubKey, txOut.assetInfo) { }
+    CTxOutCoin(CTxOut&& txOut)  {
+        nValue = std::move(txOut.nValue);
+        scriptPubKey = std::move(txOut.scriptPubKey);
+        assetInfo = std::move(txOut.assetInfo);
+    }
+    friend bool operator==(const CTxOutCoin& a, const CTxOutCoin& b)
+    {
+        return (a.nValue       == b.nValue &&
+                a.scriptPubKey == b.scriptPubKey &&
+                a.assetInfo == b.assetInfo);
+    }
+    friend bool operator!=(const CTxOutCoin& a, const CTxOutCoin& b)
+    {
+        return !(a == b);
+    }
+    friend bool operator==(const CTxOut& a, const CTxOutCoin& b)
+    {
+        return (a.nValue       == b.nValue &&
+                a.scriptPubKey == b.scriptPubKey &&
+                a.assetInfo == b.assetInfo);
+    }
+    friend bool operator!=(const CTxOut& a, const CTxOutCoin& b)
+    {
+        return !(a == b);
+    }
+    std::string ToString() const;
+};
+
+
 /** wrapper for CTxOut that provides a more compact serialization */
 struct TxOutCompression
 {
@@ -452,6 +451,7 @@ struct TxOutCoinCompression
 {
     FORMATTER_METHODS(CTxOutCoin, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
 };
+
 
 class CAssetOut {
 public:
