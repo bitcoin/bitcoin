@@ -12,7 +12,7 @@ contrib/devtools/previous_release.sh -b v0.15.2 v0.16.3
 import os
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import SyscoinTestFramework, SkipTest
 from test_framework.util import (
     adjust_bitcoin_conf_for_pre_17,
     assert_equal,
@@ -20,7 +20,7 @@ from test_framework.util import (
     assert_is_hex_string
 )
 
-class UpgradeWalletTest(BitcoinTestFramework):
+class UpgradeWalletTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
