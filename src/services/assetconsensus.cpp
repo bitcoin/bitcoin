@@ -508,7 +508,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
             return false;
         }                                        
     }
-    // if there is undo information (fields have changed atleast once after activation)
+    // if there is undo information (fields have changed at least once after activation)
     if(GetAssetUndo(txHash, dbAssetUndo)) {
         // undo data fields from last update
         if(storedAssetRef.vchPubData != dbAssetUndo.vchPubData) {

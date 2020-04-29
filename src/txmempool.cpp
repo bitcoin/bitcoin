@@ -587,8 +587,8 @@ bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx)
         auto itConflict = mapNextTx.find(txin.prevout);
         // ensure that we check for assetAllocationConflicts intersection of this input
         // the only time conflicts are allowed and would cause problems for zdag is when its double spent without RBF
-        // we allow one double spend input to be propogated and here we ensure we are only dealing with skipping transactions based on time
-        // if it is one of those transactions that propogated double spent input related to syscoin asset tx
+        // we allow one double spend input to be propagated and here we ensure we are only dealing with skipping transactions based on time
+        // if it is one of those transactions that propagated double spent input related to syscoin asset tx
         if (itConflict != mapNextTx.end() && assetAllocationConflicts.find(txin.prevout) != assetAllocationConflicts.end()) {
             const CTransaction &txConflict = *itConflict->second;
             if (txConflict != tx) {

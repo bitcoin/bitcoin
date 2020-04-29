@@ -2342,8 +2342,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
         const bool& bAsset = !nTargetValueAsset.IsNull();
         for (const OutputGroup& group : groups) {
             if (!group.EligibleForSpending(eligibility_filter)) continue;
-            // SYSCOIN fund two seperate groups of utxo's for asset/gas
-            // for asset only if assetindex is set (otherwise bAssetSolver shoud always be false and fail)
+            // SYSCOIN fund two separate groups of utxo's for asset/gas
+            // for asset only if assetindex is set (otherwise bAssetSolver should always be false and fail)
             // you shouldn't be spending asset without assetindex set because sys spends can use those utxo's inadvertently
             // exchanges/services that are not asset aware will be able to spend assets sent to them as regular sys utxos (un-colouring the asset portion of the utxo as a result)
             if(fAssetIndex && !group.effective_value_asset.IsNull()) utxo_pool_asset.push_back(group);
@@ -2789,7 +2789,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
             strFailReason = _("Transaction amounts must not be negative").translated;
             return false;
         }
-        // SYSCOIN if burning to sys from sysx, don't account for value for first input (it doens't get funded with SYS, but with asset SYSX)
+        // SYSCOIN if burning to sys from sysx, don't account for value for first input (it doesn't get funded with SYS, but with asset SYSX)
         if(bFirstOutput && txNew.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
             bFirstOutput = false;
             continue;
