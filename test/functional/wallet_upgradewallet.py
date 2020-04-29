@@ -14,7 +14,7 @@ import shutil
 
 from test_framework.test_framework import SyscoinTestFramework, SkipTest
 from test_framework.util import (
-    adjust_bitcoin_conf_for_pre_17,
+    adjust_syscoin_conf_for_pre_17,
     assert_equal,
     assert_greater_than,
     assert_is_hex_string
@@ -51,17 +51,17 @@ class UpgradeWalletTest(SyscoinTestFramework):
             160300,
             150200
         ], binary=[
-            self.options.bitcoind,
-            releases_path + "/v0.16.3/bin/bitcoind",
-            releases_path + "/v0.15.2/bin/bitcoind",
+            self.options.syscoind,
+            releases_path + "/v0.16.3/bin/syscoind",
+            releases_path + "/v0.15.2/bin/syscoind",
         ], binary_cli=[
-            self.options.bitcoincli,
-            releases_path + "/v0.16.3/bin/bitcoin-cli",
-            releases_path + "/v0.15.2/bin/bitcoin-cli",
+            self.options.syscoincli,
+            releases_path + "/v0.16.3/bin/syscoin-cli",
+            releases_path + "/v0.15.2/bin/syscoin-cli",
         ])
-        # adapt bitcoin.conf, because older bitcoind's don't recognize config sections
-        adjust_bitcoin_conf_for_pre_17(self.nodes[1].bitcoinconf)
-        adjust_bitcoin_conf_for_pre_17(self.nodes[2].bitcoinconf)
+        # adapt bitcoin.conf, because older syscoind's don't recognize config sections
+        adjust_syscoin_conf_for_pre_17(self.nodes[1].syscoinconf)
+        adjust_syscoin_conf_for_pre_17(self.nodes[2].syscoinconf)
         self.start_nodes()
 
     def dumb_sync_blocks(self):
