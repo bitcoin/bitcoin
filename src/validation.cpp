@@ -3874,7 +3874,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
                     // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
                     // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
                     else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? TESTNET_MIN_MINT_AGE: MAINNET_MIN_MINT_AGE)) {
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-insufficient-confirmations", "You must wait atleast 1 hour to mint");
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-insufficient-confirmations", "You must wait at least 1 hour to mint");
                     }
                 } 
             }
