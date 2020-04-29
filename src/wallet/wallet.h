@@ -801,7 +801,7 @@ public:
     bool IsTrusted(const CWalletTx& wtx, std::set<uint256>& trusted_parents) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! check whether we are allowed to upgrade (or already support) to the named feature
-    bool CanSupportFeature(enum WalletFeature wf) const override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
+    bool CanSupportFeature(enum WalletFeature wf) const override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return IsFeatureSupported(nWalletMaxVersion, wf); }
 
     /**
      * populate vCoins with vector of available COutputs.

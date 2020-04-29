@@ -70,3 +70,8 @@ std::vector<fs::path> ListWalletDir()
 
     return paths;
 }
+
+bool IsFeatureSupported(int wallet_version, int feature_version)
+{
+    return wallet_version >= feature_version;
+}
