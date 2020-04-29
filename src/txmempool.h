@@ -716,6 +716,12 @@ public:
         return m_unbroadcast_txids;
     }
 
+    // Returns if a txid is in the unbroadcast set
+    bool IsUnbroadcastTx(const uint256& txid) const {
+        LOCK(cs);
+        return (m_unbroadcast_txids.count(txid) != 0);
+    }
+
 private:
     /** UpdateForDescendants is used by UpdateTransactionsFromBlock to update
      *  the descendants for a single transaction that has been added to the
