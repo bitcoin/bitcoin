@@ -11,7 +11,7 @@ from test_framework.mininode import P2PTxInvStore, mininode_lock
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, wait_until
 
-class ResendWalletTransactionsTest(BitcoinTestFramework):
+class ResendWalletTransactionsTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
