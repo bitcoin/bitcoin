@@ -810,6 +810,19 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
         PushNodeVersion(pnode, connman, GetTime());
 }
 
+void PeerLogicValidation::ReattemptInitialBroadcast(CScheduler& scheduler) const
+{
+    std::set<uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
+
+    for (const uint256& txid : unbroadcast_txids) {
+        RelayTransaction(txid, *connman);
+    }
+
+    // schedule next run for 10-15 minutes in the future
+    const std::chrono::milliseconds delta = std::chrono::minutes{10} + GetRandMillis(std::chrono::minutes{5});
+    scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
+}
+
 void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
     fUpdateConnectionTime = false;
     LOCK(cs_main);
@@ -1159,6 +1172,10 @@ PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CS
     // timer.
     static_assert(EXTRA_PEER_CHECK_INTERVAL < STALE_CHECK_INTERVAL, "peer eviction timer should be less than stale tip check timer");
     scheduler.scheduleEvery([this, consensusParams] { this->CheckForStaleTipAndEvictPeers(consensusParams); }, std::chrono::seconds{EXTRA_PEER_CHECK_INTERVAL});
+
+    // schedule next run for 10-15 minutes in the future
+    const std::chrono::milliseconds delta = std::chrono::minutes{10} + GetRandMillis(std::chrono::minutes{5});
+    scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }
 
 /**
@@ -1587,7 +1604,7 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
     }
 }
 
-void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnman* connman, const CTxMemPool& mempool, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main)
+void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnman* connman, CTxMemPool& mempool, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main)
 {
     AssertLockNotHeld(cs_main);
 
@@ -1636,7 +1653,13 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                     push = true;
                 }
             }
-            if (!push) {
+
+            if (push) {
+                // We interpret fulfilling a GETDATA for a transaction as a
+                // successful initial broadcast and remove it from our
+                // unbroadcast set.
+                mempool.RemoveUnbroadcastTx(inv.hash);
+            } else {
                 vNotFound.push_back(inv);
             }
         }
