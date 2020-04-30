@@ -18,14 +18,15 @@ needs an older patch version.
 import os
 import shutil
 
-from test_framework.test_framework import SyscoinTestFramework, SkipTest
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.descriptors import descsum_create
 
 from test_framework.util import (
     assert_equal,
     sync_blocks,
-    sync_mempools
+    sync_mempools,
 )
+
 
 class BackwardsCompatibilityTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -42,35 +43,15 @@ class BackwardsCompatibilityTest(SyscoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_no_previous_releases()
 
     def setup_nodes(self):
-        if os.getenv("TEST_PREVIOUS_RELEASES") == "false":
-            raise SkipTest("backwards compatibility tests")
-
-        releases_path = os.getenv("PREVIOUS_RELEASES_DIR") or os.getcwd() + "/releases"
-        if not os.path.isdir(releases_path):
-            if os.getenv("TEST_PREVIOUS_RELEASES") == "true":
-                raise AssertionError("TEST_PREVIOUS_RELEASES=1 but releases missing: " + releases_path)
-            raise SkipTest("This test requires binaries for previous releases")
-
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
             None,
             None,
-            190000,
+            190001,
             180100,
-            170100
-        ], binary=[
-            self.options.syscoind,
-            self.options.syscoind,
-            releases_path + "/v0.19.0.1/bin/syscoind",
-            releases_path + "/v0.18.1/bin/syscoind",
-            releases_path + "/v0.17.1/bin/syscoind"
-        ], binary_cli=[
-            self.options.syscoincli,
-            self.options.syscoincli,
-            releases_path + "/v0.19.0.1/bin/syscoin-cli",
-            releases_path + "/v0.18.1/bin/syscoin-cli",
-            releases_path + "/v0.17.1/bin/syscoin-cli"
+            170100,
         ])
 
         self.start_nodes()
