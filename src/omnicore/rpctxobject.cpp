@@ -93,7 +93,12 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     // attempt to parse the transaction
     CMPTransaction mp_obj;
     int parseRC = ParseTransaction(tx, blockHeight, 0, mp_obj, blockTime);
-    if (parseRC < 0) return MP_TX_IS_NOT_OMNI_PROTOCOL;
+    if (parseRC == -101) {
+        return MP_RPC_DECODE_INPUTS_MISSING;
+    }
+    if (parseRC < 0) {
+        return MP_TX_IS_NOT_OMNI_PROTOCOL;
+    }
 
     const uint256& txid = tx.GetHash();
 
