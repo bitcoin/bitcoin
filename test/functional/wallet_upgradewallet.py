@@ -12,13 +12,14 @@ contrib/devtools/previous_release.sh -b v0.15.2 v0.16.3
 import os
 import shutil
 
-from test_framework.test_framework import SyscoinTestFramework, SkipTest
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     adjust_syscoin_conf_for_pre_17,
     assert_equal,
     assert_greater_than,
-    assert_is_hex_string
+    assert_is_hex_string,
 )
+
 
 class UpgradeWalletTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -32,32 +33,16 @@ class UpgradeWalletTest(SyscoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_no_previous_releases()
 
     def setup_network(self):
         self.setup_nodes()
 
     def setup_nodes(self):
-        if os.getenv("TEST_PREVIOUS_RELEASES") == "false":
-            raise SkipTest("upgradewallet RPC tests")
-
-        releases_path = os.getenv("PREVIOUS_RELEASES_DIR") or os.getcwd() + "/releases"
-        if not os.path.isdir(releases_path):
-            if os.getenv("TEST_PREVIOUS_RELEASES") == "true":
-                raise AssertionError("TEST_PREVIOUS_RELEASES=1 but releases missing: " + releases_path)
-            raise SkipTest("This test requires binaries for previous releases")
-
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
             None,
             160300,
-            150200
-        ], binary=[
-            self.options.syscoind,
-            releases_path + "/v0.16.3/bin/syscoind",
-            releases_path + "/v0.15.2/bin/syscoind",
-        ], binary_cli=[
-            self.options.syscoincli,
-            releases_path + "/v0.16.3/bin/syscoin-cli",
-            releases_path + "/v0.15.2/bin/syscoin-cli",
+            150200,
         ])
         # adapt bitcoin.conf, because older syscoind's don't recognize config sections
         adjust_syscoin_conf_for_pre_17(self.nodes[1].syscoinconf)
