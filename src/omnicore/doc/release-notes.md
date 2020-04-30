@@ -1,13 +1,9 @@
-Omni Core v0.8.01
+Omni Core v0.8.2
 ================
 
-v0.8.1 is a minor release and incooperates significant performance improvements for the initial synchronization and upgrading from older versions of Omni Core.
+v0.8.2 is a minor release and adds new RPCs to interact with the distributed exchange, which can be used to trade any tokens for bitcoins. It also incorporates significant performance improvements for the initial synchronization and upgrading from older versions of Omni Core.
 
-A consensus affecting issue in an earlier version of Omni Core has been identified, which may cause some transactions to be executed twice. This has been addressed and fixed in the previous major version 0.8.0.
-
-The first time you start this version from a version older than 0.8.0, the internal database for Omni Layer transactions is reconstructed, which may consume several hours or even more than a day. Please plan your downtime accordingly.
-
-Upgrading from 0.8.0 does not require a rescan and can be done very fast without interruption.
+Upgrading from 0.8.1 does not require a rescan and can be done very fast without interruption.
 
 Please report bugs using the issue tracker on GitHub:
 
@@ -17,15 +13,15 @@ Please report bugs using the issue tracker on GitHub:
 Table of contents
 =================
 
-- [Omni Core v0.8.1](#omni-core-v071)
+- [Omni Core v0.8.2](#omni-core-v082)
 - [Upgrading and downgrading](#upgrading-and-downgrading)
   - [How to upgrade](#how-to-upgrade)
   - [Downgrading](#downgrading)
   - [Compatibility with Bitcoin Core](#compatibility-with-bitcoin-core)
-- [Imported notes](#imported-notes)
-  - [Performance improvements](#performance-improvements)
-  - [Transaction replays](#transaction-replays)
-  - [Searching for affected transactions](#searching-for-affected-transactions)
+- [Improvements](#improvements)
+  - [New RPCs for the distributed exchange](#new-rpcs-for-the-distributed-exchange)
+  - [Other RPC improvements](#other-rpc-improvements)
+  - [Reporting vulnerabilities](#reporting-vulnerabilities)
 - [Change log](#change-log)
 - [Credits](#credits)
 
@@ -40,7 +36,7 @@ If you are running Bitcoin Core or an older version of Omni Core, shut it down. 
 
 When upgrading from an older version than 0.8.0, the database of Omni Core is reconstructed, which can easily consume several hours. During the first startup historical Omni Layer transactions are reprocessed and Omni Core will not be usable for several hours up to more than a day. The progress of the initial scan is reported on the console, the GUI and written to the `debug.log`. The scan may be interrupted and can be resumed.
 
-Upgrading from 0.8.0 does not require a rescan and can be done very fast without interruption.
+Upgrading from 0.8.1 does not require a rescan and can be done very fast without interruption.
 
 Downgrading
 -----------
@@ -55,71 +51,138 @@ Omni Core is based on Bitcoin Core 0.18.1 and can be used as replacement for Bit
 However, it is not advised to upgrade or downgrade to versions other than Bitcoin Core 0.18. When switching to Omni Core, it may be necessary to reprocess Omni Layer transactions.
 
 
-Imported notes
-==============
+Improvements
+============
 
-Performance improvements
-------------------------
+New RPCs for the distributed exchange
+-------------------------------------
 
-Due to persistence optimiziations the initial time to synchronize a new Omni Core node, upgrading from an older version than 0.8.0 or rebuilding Omni Core's database with the `-startclean` startup option is significantly improvemed.
+Three new RPCs were added to create, update and cancel orders on the distributed exchange:
 
-In our tests, the time to build the internal database of Omni Core was reduced by a factor up to 4x.
+### omni_sendnewdexorder
+
+Creates a new sell offer on the distributed token/BTC exchange.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale                                                |
+| `amountforsale`     | string  | required | the amount of tokens to list for sale                                                        |
+| `amountdesired`     | string  | required | the amount of bitcoins desired                                                               |
+| `paymentwindow`     | number  | required | a time limit in blocks a buyer has to pay following a successful accepting order             |
+| `minacceptfee`      | string  | required | a minimum mining fee a buyer has to pay to accept the offer                                  |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendnewdexorder" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "1.5" "0.75" 50 "0.0001"
+```
+
+---
+
+### omni_sendupdatedexorder
+
+Updates an existing sell offer on the distributed token/BTC exchange.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `propertyidforsale` | number  | required | the identifier of the tokens to update                                                       |
+| `amountforsale`     | string  | required | the new amount of tokens to list for sale                                                    |
+| `amountdesired`     | string  | required | the new amount of bitcoins desired                                                           |
+| `paymentwindow`     | number  | required | a new time limit in blocks a buyer has to pay following a successful accepting order         |
+| `minacceptfee`      | string  | required | a new minimum mining fee a buyer has to pay to accept the offer                              |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendupdatedexorder" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "1.0" "1.75" 50 "0.0001"
+```
+
+---
+
+### omni_sendcanceldexorder
+
+Cancels existing sell offer on the distributed token/BTC exchange.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `propertyidforsale` | number  | required | the identifier of the tokens to cancel                                                       |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendcanceldexorder" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1
+```
+
+---
+
+### omni_senddexpay
+
+Create and broadcast payment for an accept offer.
+
+Please note:
+Partial purchases are not possible and the whole accepted amount must be paid.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `toaddress`         | string  | required | the address of the seller                                                                    |
+| `propertyid`        | number  | required | the identifier of the token to purchase                                                      |
+| `amount`            | string  | required | the Bitcoin amount to send                                                                   |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_senddexpay" \
+    "35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "15.0"
+```
 
 
-Transaction replays
--------------------
+Other RPC improvements
+----------------------
 
-An issue has been discovered that affects all 0.6 and higher versions of Omni Core.
-
-The result of this issue is that some transactions may be executed twice. The effect is that tokens will be credited and debited more than once, leaving some token balances lower or higher than they should be. No new money can be created with this issue.
-
-This problem goes back to an update of Omni Core 0.6 in August 2019 and since then, while not necessarily exclusive, transactions of the following blocks may have been executed twice:
-
-  `619141`, `618465`, `614732`, `599587`, `591848`, `589999`, `578141`
-
-The first startup of the 0.8.0 release will trigger a full reparse of all blocks, after which balances will be restored to their correct state. This will remove additional tokens credited by this error and any transactions which include them. This step can take several hours or more than a day.
+- Active orders on the distributed exchange are now properly listed with the `omni_getactivedexsells` RPC.
+- Parsing of the `ecosystem` parameter of the `omni_sendissuancecrowdsale`, `omni_sendissuancefixed`, `omni_sendissuancemanaged`, `omni_createpayload_issuancefixed`, `omni_createpayload_issuancecrowdsale`, `omni_createpayload_issuancemanaged` RPCs was fixed.
+- Parsing of the `redeemkey` parameter of the `omni_createrawtx_multisig` RPC was fixed.
+- When the node is not synchronized, `omni_decodetransaction` needs to be provided with all inputs. If they are missing, a proper error message is now shown.
+- The fields `issuer`, `creationtxid`, `fixedissuance` and `managedissuance` are now included, when using `omni_listproperties`.
+- Spelling and language improvements.
 
 
-Searching for affected transactions
------------------------------------
+Reporting vulnerabilities
+-------------------------
 
-To exchanges, wallet operators, and any integrators who use another database on top of Omni Core to track transactions or balances, we can suggest the following options for checking the validity of your transaction history. Each of the following options have different time or technical requirements and produce varying levels of details.
-
-Neither option is required, if you solely use Omni Core to track balances and transaction histories, as after the first start of Omni Core 0.8.0, it's internal state is correct.
-
-### Option 1:
-
-* Time Commitment: Least
-* Technical Commitment: Least
-* Details: Least
-* Reliability: fair
-* Steps:
-  * Before shutting down your existing node:
-  * Pause all incoming/outgoing transactions for your hot/cold wallets
-  * Run `omnicore-cli omni_getallbalancesforaddress <hot/cold wallet address>`
-  * Record the balances for the addresses
-  * Stop your client, upgrade to 0.8 according to the upgrade instructions of this release, relaunch and let synchronize and reparse
-  * After synchronization and reparse is complete rerun the `omni_getallbalancesforaddress` command and compare the balances reported to the previously saved balances. (Optionally, during the parse you can also compare the saved balances to balances reported on omniexplorer.info)
-  * If balances match before and after you are most likely not affected (see footnote below)
-  * If you notice a discrepancy it is advised you proceed with verification via Option 2 below
-
-Footnote: If your hot wallet utilizes the send all transaction type for sweeping this method may produce a false favorable result. You should proceed with option 2 below for optimal verifications.
-
-### Option 2:
-
-* Time Commitment: Most
-* Technical Commitment: Moderate
-* Details: Full
-* Reliability: Most
-* Steps:
-  * Stop your client, upgrade to 0.8 according to the upgrade instructions of this release, relaunch and let synchronize and reparse
-  * After synchronization and reparse is complete:
-  * Compile a list of all deposit transaction hashes, amounts you have processed since before you upgraded to 0.6 or later (~roughly around Aug 2019).
-  * Using `omnicore-cli omni_gettransaction <txhash>` reprocess the list of transaction hashes checking:
-  * The transaction is still valid `response['valid']`
-  * The transaction amount matches the amount you recorded/processed in your database `response['amount']`
-  * Note: If your service supports deposits from 'send_all' transactions you will need to adjust the amount field to check for all `amounts` in the `response['subsends']` array of the transaction
-  * For any transaction that does not match the previous two conditions, flag it for manual followup and check the discrepancy between the updated client output and the details of what you processed in the database.
+A security policy was created. To see instructions on how to report a vulnerability for Omni Core the Omni Layer protocol, please see [SECURITY.md](https://github.com/OmniLayer/omnicore/blob/master/SECURITY.MD).
 
 
 Change log
@@ -128,16 +191,18 @@ Change log
 The following list includes relevant pull requests merged into this release:
 
 ```
-- #1077 Move mastercore_handler_block_begin and use chain height
-- #1079 Bump DB version to force reparse
-- #1080 Bump version to 0.8.0
-- #1082 Update release notes for Omni Core 0.8.0
-- #1084 Avoid MakeWallet() when compiled without wallet
-- #1086 Remove redundant function declaration in test
-- #1090 Only evaluate fee cache, when it's activated
-- #1091 Don't store state every block, when syncing or rescanning
-- #1095 Bump version to Omni Core 0.8.1
-- #1097 Update release notes for Omni Core 0.8.1
+- #1100 doc: set ecosystem as numeric
+- #1102 Fix parsing of redeemkey of omni_createrawtx_multisig
+- #1103 Fix typo: depreciated -> deprecated
+- #1114 Split string to maintain property ID
+- #1115 Add seperate RPCs for each DEx 1 action
+- #1116 Bump version to Omni Core 0.8.2
+- #1118 Add error text for omni_decodetransaction, when inputs are missing
+- #1119 Add more information when listing tokens
+- #1120 Add security policy
+- #1121 Corrections to display of DEx info
+- #1125 Pay exact amount for indivisible tokens
+- #1117 Update release notes for Omni Core 0.8.2
 ```
 
 
