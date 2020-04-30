@@ -340,4 +340,38 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         rpc_thread.join();
     }
 }
+
+BOOST_AUTO_TEST_CASE(witness_commitment_index)
+{
+    CScript pubKey;
+    pubKey << 1 << OP_TRUE;
+    auto ptemplate = BlockAssembler(*m_node.mempool, Params()).CreateNewBlock(pubKey);
+    CBlock pblock = ptemplate->block;
+
+    CTxOut witness;
+    witness.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
+    witness.scriptPubKey[0] = OP_RETURN;
+    witness.scriptPubKey[1] = 0x24;
+    witness.scriptPubKey[2] = 0xaa;
+    witness.scriptPubKey[3] = 0x21;
+    witness.scriptPubKey[4] = 0xa9;
+    witness.scriptPubKey[5] = 0xed;
+
+    // A witness larger than the minimum size is still valid
+    CTxOut min_plus_one = witness;
+    min_plus_one.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT + 1);
+
+    CTxOut invalid = witness;
+    invalid.scriptPubKey[0] = OP_VERIFY;
+
+    CMutableTransaction txCoinbase(*pblock.vtx[0]);
+    txCoinbase.vout.resize(4);
+    txCoinbase.vout[0] = witness;
+    txCoinbase.vout[1] = witness;
+    txCoinbase.vout[2] = min_plus_one;
+    txCoinbase.vout[3] = invalid;
+    pblock.vtx[0] = MakeTransactionRef(std::move(txCoinbase));
+
+    BOOST_CHECK_EQUAL(GetWitnessCommitmentIndex(pblock), 2);
+}
 BOOST_AUTO_TEST_SUITE_END()
