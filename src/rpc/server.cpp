@@ -209,6 +209,7 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
                             }},
                         }},
                         {RPCResult::Type::STR, "logpath", "The complete file path to the debug log"},
+                        {RPCResult::Type::STR, "user", "The authenticated user"},
                     }
                 },
                 RPCExamples{
@@ -231,6 +232,8 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
     const std::string path = LogInstance().m_file_path.string();
     UniValue log_path(UniValue::VSTR, path);
     result.pushKV("logpath", log_path);
+    UniValue user(UniValue::VSTR, request.authUser);
+    result.pushKV("user", user);
 
     return result;
 }
