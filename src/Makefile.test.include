@@ -67,6 +67,7 @@ FUZZ_TARGETS = \
   test/fuzz/parse_univalue \
   test/fuzz/partial_merkle_tree_deserialize \
   test/fuzz/partially_signed_transaction_deserialize \
+  test/fuzz/policy_estimator \
   test/fuzz/pow \
   test/fuzz/prefilled_transaction_deserialize \
   test/fuzz/prevector \
@@ -103,6 +104,7 @@ FUZZ_TARGETS = \
   test/fuzz/psbt_output_deserialize \
   test/fuzz/pub_key_deserialize \
   test/fuzz/random \
+  test/fuzz/rbf \
   test/fuzz/rolling_bloom_filter \
   test/fuzz/script \
   test/fuzz/script_deserialize \
@@ -683,6 +685,12 @@ test_fuzz_partially_signed_transaction_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMO
 test_fuzz_partially_signed_transaction_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_partially_signed_transaction_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
+test_fuzz_policy_estimator_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_policy_estimator_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_policy_estimator_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_policy_estimator_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_policy_estimator_SOURCES = test/fuzz/policy_estimator.cpp
+
 test_fuzz_pow_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_pow_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_pow_LDADD = $(FUZZ_SUITE_LD_COMMON)
@@ -892,6 +900,12 @@ test_fuzz_random_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_random_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_random_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_random_SOURCES = test/fuzz/random.cpp
+
+test_fuzz_rbf_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_rbf_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_rbf_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_rbf_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_rbf_SOURCES = test/fuzz/rbf.cpp
 
 test_fuzz_rolling_bloom_filter_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_rolling_bloom_filter_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
