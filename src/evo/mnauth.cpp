@@ -82,7 +82,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             return;
         }
 
-        if (mnauth.proRegTxHash.IsNull() || !mnauth.sig.IsValid()) {
+        if (!mnauth.sig.IsValid()) {
             LOCK(cs_main);
             Misbehaving(pnode->GetId(), 100, "invalid mnauth signature");
             return;
