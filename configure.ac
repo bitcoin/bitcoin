@@ -366,47 +366,52 @@ if test x$use_sanitizers != x; then
     ]],[[]])])
 fi
 
+dnl APPEND_FLAG_IF_AVAILABLE([APPEND_TO_THIS_VARIABLE], [-WallExtra], [INPUT])
+AC_DEFUN([APPEND_FLAG_IF_AVAILABLE], [
+  AX_CHECK_COMPILE_FLAG([$2], [$1="$$1 $2"],, [[$CXXFLAG_WERROR]], [$3])
+])
+
 ERROR_CXXFLAGS=
 if test "x$enable_werror" = "xyes"; then
   if test "x$CXXFLAG_WERROR" = "x"; then
     AC_MSG_ERROR("enable-werror set but -Werror is not usable")
   fi
-  AX_CHECK_COMPILE_FLAG([-Werror=gnu],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=gnu"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=vla],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=vla"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=shadow-field],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=shadow-field"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=switch],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=switch"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=thread-safety],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=thread-safety"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=unused-variable],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=unused-variable"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=date-time],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=date-time"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=return-type],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=return-type"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=conditional-uninitialized],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=conditional-uninitialized"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=sign-compare],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=sign-compare"],,[[$CXXFLAG_WERROR]])
+  APPEND_FLAG_IF_AVAILABLE([ERROR_CXXFLAGS], [-Werror=gnu])
+  APPEND_FLAG_IF_AVAILABLE([ERROR_CXXFLAGS], [-Werror=vla])
+  APPEND_FLAG_IF_AVAILABLE([ERROR_CXXFLAGS], [-Werror=shadow-field])
+  APPEND_FLAG_IF_AVAILABLE([ERROR_CXXFLAGS], [-Werror=switch])
+  APPEND_FLAG_IF_AVAILABLE([ERROR_CXXFLAGS], [-Werror=thread-safety])
+  APPEND_FLAG_IF_AVAILABLE([ERROR_CXXFLAGS], [-Werror=unused-variable])
+  APPEND_FLAG_IF_AVAILABLE([ERROR_CXXFLAGS], [-Werror=date-time])
+  APPEND_FLAG_IF_AVAILABLE([ERROR_CXXFLAGS], [-Werror=return-type])
+  APPEND_FLAG_IF_AVAILABLE([ERROR_CXXFLAGS], [-Werror=conditional-uninitialized])
+  APPEND_FLAG_IF_AVAILABLE([ERROR_CXXFLAGS], [-Werror=sign-compare])
   dnl -Wsuggest-override is broken with GCC before 9.2
   dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78010
-  AX_CHECK_COMPILE_FLAG([-Werror=suggest-override],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=suggest-override"],,[[$CXXFLAG_WERROR]],
-                        [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
-  AX_CHECK_COMPILE_FLAG([-Werror=unreachable-code-loop-increment],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=unreachable-code-loop-increment"],,[[$CXXFLAG_WERROR]])
+  APPEND_FLAG_IF_AVAILABLE([ERROR_CXXFLAGS], [-Werror=suggest-override],
+                           [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
+  APPEND_FLAG_IF_AVAILABLE([ERROR_CXXFLAGS], [-Werror=unreachable-code-loop-increment])
 fi
 
 if test "x$CXXFLAGS_overridden" = "xno"; then
-  AX_CHECK_COMPILE_FLAG([-Wall],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wall"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wextra],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wextra"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wgnu],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wgnu"],,[[$CXXFLAG_WERROR]])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wall])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wextra])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wgnu])
   dnl some compilers will ignore -Wformat-security without -Wformat, so just combine the two here.
-  AX_CHECK_COMPILE_FLAG([-Wformat -Wformat-security],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wformat -Wformat-security"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wvla],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wvla"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wshadow-field],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wshadow-field"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wswitch],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wswitch"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wthread-safety],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wthread-safety"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wrange-loop-analysis],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wrange-loop-analysis"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wredundant-decls],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wredundant-decls"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wunused-variable],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunused-variable"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wdate-time],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdate-time"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wconditional-uninitialized],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wconditional-uninitialized"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wsign-compare],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wsign-compare"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wsuggest-override],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wsuggest-override"],,[[$CXXFLAG_WERROR]],
-                        [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
-  AX_CHECK_COMPILE_FLAG([-Wunreachable-code-loop-increment],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunreachable-code-loop-increment"],,[[$CXXFLAG_WERROR]])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wformat -Wformat-security])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wvla])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wshadow-field])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wswitch])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wthread-safety])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wrange-loop-analysis])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wredundant-decls])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wunused-variable])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wdate-time])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wconditional-uninitialized])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wsign-compare])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wsuggest-override],
+                           [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
+  APPEND_FLAG_IF_AVAILABLE([WARN_CXXFLAGS], [-Wunreachable-code-loop-increment])
 
   dnl Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
   dnl unknown options if any other warning is produced. Test the -Wfoo case, and
