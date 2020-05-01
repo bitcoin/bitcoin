@@ -18,11 +18,12 @@ needs an older patch version.
 import os
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import BitcoinTestFramework
 
 from test_framework.util import (
     assert_equal,
 )
+
 
 class BackwardsCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -39,35 +40,15 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_no_previous_releases()
 
     def setup_nodes(self):
-        if os.getenv("TEST_PREVIOUS_RELEASES") == "false":
-            raise SkipTest("backwards compatibility tests")
-
-        releases_path = os.getenv("PREVIOUS_RELEASES_DIR") or os.getcwd() + "/releases"
-        if not os.path.isdir(releases_path):
-            if os.getenv("TEST_PREVIOUS_RELEASES") == "true":
-                raise AssertionError("TEST_PREVIOUS_RELEASES=1 but releases missing: " + releases_path)
-            raise SkipTest("This test requires binaries for previous releases")
-
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
             None,
             None,
             19030000,
             18020200,
             170003,
-        ], binary=[
-            self.options.bitcoind,
-            self.options.bitcoind,
-            releases_path + "/v0.19.0.1/bin/bitcoind",
-            releases_path + "/v0.18.1/bin/bitcoind",
-            releases_path + "/v0.17.1/bin/bitcoind"
-        ], binary_cli=[
-            self.options.bitcoincli,
-            self.options.bitcoincli,
-            releases_path + "/v0.19.0.1/bin/bitcoin-cli",
-            releases_path + "/v0.18.1/bin/bitcoin-cli",
-            releases_path + "/v0.17.1/bin/bitcoin-cli"
         ])
 
         self.start_nodes()

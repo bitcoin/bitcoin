@@ -14,6 +14,7 @@ import logging
 import os
 import pdb
 import random
+import re
 import shutil
 import subprocess
 import sys
@@ -460,6 +461,25 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         Should only be called once after the nodes have been specified in
         set_test_params()."""
+        def get_bin_from_version(version, bin_name, bin_default):
+            if not version:
+                return bin_default
+            return os.path.join(
+                self.options.previous_releases_path,
+                re.sub(
+                    r'\.0$' if version != 150000 else r'^$',
+                    '',  # remove trailing .0 for point releases
+                    'v{}.{}.{}.{}'.format(
+                        (version % 100000000) // 1000000,
+                        (version % 1000000) // 10000,
+                        (version % 10000) // 100,
+                        (version % 100) // 1,
+                    ),
+                ),
+                'bin',
+                bin_name,
+            )
+
         if self.bind_to_localhost_only:
             extra_confs = [["bind=127.0.0.1"]] * num_nodes
         else:
@@ -469,9 +489,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if versions is None:
             versions = [None] * num_nodes
         if binary is None:
-            binary = [self.options.bitcoind] * num_nodes
+            binary = [get_bin_from_version(v, 'dashd', self.options.bitcoind) for v in versions]
         if binary_cli is None:
-            binary_cli = [self.options.bitcoincli] * num_nodes
+            binary_cli = [get_bin_from_version(v, 'dash-cli', self.options.bitcoincli) for v in versions]
         assert_equal(len(extra_confs), num_nodes)
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(versions), num_nodes)
