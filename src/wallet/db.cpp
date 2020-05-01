@@ -177,25 +177,20 @@ bool BerkeleyEnvironment::Open(bool retry)
         return false;
     }
 
-    fs::path pathLogDir = pathIn / "database";
-    TryCreateDirectories(pathLogDir);
     fs::path pathErrorFile = pathIn / "db.log";
-    LogPrintf("BerkeleyEnvironment::Open: LogDir=%s ErrorFile=%s\n", pathLogDir.string(), pathErrorFile.string());
+    LogPrintf("BerkeleyEnvironment::Open: ErrorFile=%s\n", pathErrorFile.string());
 
     unsigned int nEnvFlags = 0;
     if (gArgs.GetBoolArg("-privdb", DEFAULT_WALLET_PRIVDB))
         nEnvFlags |= DB_PRIVATE;
 
-    dbenv->set_lg_dir(pathLogDir.string().c_str());
     dbenv->set_cachesize(0, 0x100000, 1); // 1 MiB should be enough for just the wallet
-    dbenv->set_lg_bsize(0x10000);
-    dbenv->set_lg_max(1048576);
     dbenv->set_lk_max_locks(40000);
     dbenv->set_lk_max_objects(40000);
     dbenv->set_errfile(fsbridge::fopen(pathErrorFile, "a")); /// debug
     dbenv->set_flags(DB_AUTO_COMMIT, 1);
     dbenv->set_flags(DB_TXN_WRITE_NOSYNC, 1);
-    dbenv->log_set_config(DB_LOG_AUTO_REMOVE, 1);
+    dbenv->log_set_config(DB_LOG_IN_MEMORY, 1);
     int ret = dbenv->open(strPath.c_str(),
                          DB_CREATE |
                              DB_INIT_LOCK |
@@ -214,8 +209,9 @@ bool BerkeleyEnvironment::Open(bool retry)
         }
         Reset();
         if (retry) {
-            // try moving the database env out of the way
+            // try moving the database env out of the way. Note we don't make this anymore, but old wallets might still have it
             fs::path pathDatabaseBak = pathIn / strprintf("database.%d.bak", GetTime());
+            fs::path pathLogDir = pathIn / "database";
             try {
                 fs::rename(pathLogDir, pathDatabaseBak);
                 LogPrintf("Moved old %s to %s. Retrying.\n", pathLogDir.string(), pathDatabaseBak.string());
@@ -359,6 +355,7 @@ bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, boo
     LogPrintf("Salvage(aggressive) found %u records\n", salvagedData.size());
 
     std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
+    pdbCopy->set_flags(DB_TXN_NOT_DURABLE);
     int ret = pdbCopy->open(nullptr,               // Txn pointer
                             filename.c_str(),   // Filename
                             "main",             // Logical db name
@@ -537,6 +534,7 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
         if (pdb == nullptr) {
             int ret;
             std::unique_ptr<Db> pdb_temp = MakeUnique<Db>(env->dbenv.get(), 0);
+            pdb_temp->set_flags(DB_TXN_NOT_DURABLE);
 
             bool fMockDb = env->IsMock();
             if (fMockDb) {
@@ -694,7 +692,7 @@ bool BerkeleyBatch::Rewrite(BerkeleyDatabase& database, const char* pszSkip)
                 { // surround usage of db with extra {}
                     BerkeleyBatch db(database, "r");
                     std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
-
+                    pdbCopy->set_flags(DB_TXN_NOT_DURABLE);
                     int ret = pdbCopy->open(nullptr,               // Txn pointer
                                             strFileRes.c_str(), // Filename
                                             "main",             // Logical db name
@@ -795,6 +793,7 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
                 dbenv->log_archive(&listp, DB_ARCH_REMOVE);
                 Close();
                 if (!fMockDb) {
+                    // Remove the previous log dir. We don't create this anymore, but it might still be around from previous versions
                     fs::remove_all(fs::path(strPath) / "database");
                 }
             }
