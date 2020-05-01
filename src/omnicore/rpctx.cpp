@@ -686,7 +686,7 @@ static UniValue omni_senddexpay(const JSONRPCRequest& request)
     std::string buyerAddress = ParseText(request.params[0]);
     std::string sellerAddress = ParseText(request.params[1]);
     uint32_t propertyId = ParsePropertyId(request.params[2]);
-    CAmount nAmount = ParseAmount(request.params[3], isPropertyDivisible(propertyId));
+    CAmount nAmount = ParseAmount(request.params[3], true);
 
     // Check parameters are valid
     if (nAmount <= 0)
@@ -702,7 +702,9 @@ static UniValue omni_senddexpay(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid seller address");
     }
 
-    RequirePrimaryToken(propertyId);
+    if (!IsFeatureActivated(FEATURE_FREEDEX, GetHeight())) {
+        RequirePrimaryToken(propertyId);
+    }
     RequireMatchingDExAccept(sellerAddress, propertyId, buyerAddress);
 
     // Get accept offer and make sure buyer is not trying to overpay
