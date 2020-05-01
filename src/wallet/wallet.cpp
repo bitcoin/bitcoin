@@ -791,6 +791,12 @@ bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
 
     wtx.mapValue["replaced_by_txid"] = newHash.ToString();
 
+    // Refresh mempool status without waiting for transactionRemovedFromMempool
+    // notification so the wallet is in an internally consistent state and
+    // immediately knows the old transaction should not be considered trusted
+    // and is eligible to be abandoned
+    wtx.fInMempool = chain().isInMempool(originalHash);
+
     WalletBatch batch(GetDatabase());
 
     bool success = true;
