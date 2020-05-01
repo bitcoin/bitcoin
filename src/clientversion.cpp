@@ -30,28 +30,22 @@ const std::string CLIENT_NAME("Satoshi");
 #define GIT_COMMIT_DATE "$Format:%cD$"
 #endif
 
-#define BUILD_DESC_WITH_SUFFIX(maj, min, rev, build, suffix) \
-    "v" DO_STRINGIZE(maj) "." DO_STRINGIZE(min) "." DO_STRINGIZE(rev) "." DO_STRINGIZE(build) "-" DO_STRINGIZE(suffix)
-
-#define BUILD_DESC_FROM_COMMIT(maj, min, rev, build, commit) \
-    "v" DO_STRINGIZE(maj) "." DO_STRINGIZE(min) "." DO_STRINGIZE(rev) "." DO_STRINGIZE(build) "-g" commit
-
-#define BUILD_DESC_FROM_UNKNOWN(maj, min, rev, build) \
-    "v" DO_STRINGIZE(maj) "." DO_STRINGIZE(min) "." DO_STRINGIZE(rev) "." DO_STRINGIZE(build) "-unk"
-
 #ifdef BUILD_GIT_TAG
-#define BUILD_DESC BUILD_GIT_TAG
+    #define BUILD_DESC BUILD_GIT_TAG
+    #define BUILD_SUFFIX ""
 #else
-#ifdef BUILD_GIT_COMMIT
-#define BUILD_DESC BUILD_DESC_WITH_SUFFIX(CLIENT_VERSION_MAJOR, CLIENT_VERSION_MINOR, CLIENT_VERSION_REVISION, CLIENT_VERSION_BUILD, BUILD_GIT_COMMIT)
-#elif defined(GIT_COMMIT_ID)
-#define BUILD_DESC BUILD_DESC_FROM_COMMIT(CLIENT_VERSION_MAJOR, CLIENT_VERSION_MINOR, CLIENT_VERSION_REVISION, CLIENT_VERSION_BUILD, GIT_COMMIT_ID)
-#else
-#define BUILD_DESC BUILD_DESC_FROM_UNKNOWN(CLIENT_VERSION_MAJOR, CLIENT_VERSION_MINOR, CLIENT_VERSION_REVISION, CLIENT_VERSION_BUILD)
-#endif
+    #define BUILD_DESC "v" STRINGIZE(CLIENT_VERSION_MAJOR) "." STRINGIZE(CLIENT_VERSION_MINOR) \
+                       "." STRINGIZE(CLIENT_VERSION_REVISION) "." STRINGIZE(CLIENT_VERSION_BUILD)
+    #ifdef BUILD_GIT_COMMIT
+        #define BUILD_SUFFIX "-" BUILD_GIT_COMMIT
+    #elif defined(GIT_COMMIT_ID)
+        #define BUILD_SUFFIX "-g" GIT_COMMIT_ID
+    #else
+        #define BUILD_SUFFIX "-unk"
+    #endif
 #endif
 
-const std::string CLIENT_BUILD(BUILD_DESC);
+const std::string CLIENT_BUILD(BUILD_DESC BUILD_SUFFIX);
 
 static std::string FormatVersion(int nVersion)
 {
