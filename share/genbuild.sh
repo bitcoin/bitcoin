@@ -36,9 +36,9 @@ if [ "${BITCOIN_GENBUILD_NO_GIT}" != "1" ] && [ -e "$(command -v git)" ] && [ "$
 fi
 
 if [ -n "$GIT_TAG" ]; then
-    NEWINFO="#define BUILD_DESC \"$GIT_TAG\""
+    NEWINFO="#define BUILD_GIT_TAG \"$GIT_TAG\""
 elif [ -n "$GIT_COMMIT" ]; then
-    NEWINFO="#define BUILD_SUFFIX $GIT_COMMIT"
+    NEWINFO="#define BUILD_GIT_COMMIT $GIT_COMMIT"
 else
     NEWINFO="// No build information available"
 fi
