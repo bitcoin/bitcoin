@@ -1144,7 +1144,7 @@ public:
 
     /**
      * Blocks until the wallet state is up-to-date to /at least/ the current
-     * chain at the time this function is entered
+     * chain and mempool at the time this function is entered
      * Obviously holding cs_main/cs_wallet when going into this call may cause
      * deadlock
      */
