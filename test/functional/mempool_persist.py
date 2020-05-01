@@ -84,7 +84,9 @@ class MempoolPersistTest(BitcoinTestFramework):
         assert_greater_than_or_equal(tx_creation_time_higher, tx_creation_time)
 
         # disconnect nodes & make a txn that remains in the unbroadcast set.
-        disconnect_nodes(self.nodes[0], 2)
+        disconnect_nodes(self.nodes[0], 1)
+        assert(len(self.nodes[0].getpeerinfo()) == 0)
+        assert(len(self.nodes[0].p2ps) == 0)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("12"))
         connect_nodes(self.nodes[0], 2)
 
@@ -157,8 +159,10 @@ class MempoolPersistTest(BitcoinTestFramework):
         # clear out mempool
         node0.generate(1)
 
-        # disconnect nodes to make a txn that remains in the unbroadcast set.
-        disconnect_nodes(node0, 1)
+        # ensure node0 doesn't have any connections
+        # make a transaction that will remain in the unbroadcast set
+        assert(len(node0.getpeerinfo()) == 0)
+        assert(len(node0.p2ps) == 0)
         node0.sendtoaddress(self.nodes[1].getnewaddress(), Decimal("12"))
 
         # shutdown, then startup with wallet disabled
