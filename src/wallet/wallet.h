@@ -499,8 +499,8 @@ public:
     bool IsEquivalentTo(const CWalletTx& tx) const;
 
     bool InMempool() const;
-    bool IsTrusted(interfaces::Chain::Lock& locked_chain) const;
-    bool IsTrusted(interfaces::Chain::Lock& locked_chain, std::set<uint256>& trusted_parents) const;
+    bool IsTrusted() const;
+    bool IsTrusted(std::set<uint256>& trusted_parents) const;
 
     int64_t GetTxTime() const;
 
@@ -775,8 +775,8 @@ public:
     bool IsLocked() const override;
     bool Lock();
 
-    /** Interface to assert chain access and if successful lock it */
-    std::unique_ptr<interfaces::Chain::Lock> LockChain() { return m_chain ? m_chain->lock() : nullptr; }
+    /** Interface to assert chain access */
+    bool HaveChain() const { return m_chain ? true : false; }
 
     std::map<uint256, CWalletTx> mapWallet GUARDED_BY(cs_wallet);
 
@@ -805,12 +805,12 @@ public:
     /**
      * populate vCoins with vector of available COutputs.
      */
-    void AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<COutput>& vCoins, bool fOnlySafe = true, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe = true, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Return list of available coins and locked coins grouped by non-change output address.
      */
-    std::map<CTxDestination, std::vector<COutput>> ListCoins(interfaces::Chain::Lock& locked_chain) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::map<CTxDestination, std::vector<COutput>> ListCoins() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Find non-change parent output.
@@ -875,7 +875,7 @@ public:
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
     bool EncryptWallet(const SecureString& strWalletPassphrase);
 
-    void GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<CKeyID, int64_t> &mapKeyBirth) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     unsigned int ComputeTimeSmart(const CWalletTx& wtx) const;
 
     /**
@@ -961,8 +961,7 @@ public:
      * selected by SelectCoins(); Also create the change output, when needed
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
-    bool CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut,
-                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true);
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign = true);
     /**
      * Submit the transaction to the node's mempool and then relay to peers.
      * Should be called after CreateTransaction unless you want to abort
@@ -1012,7 +1011,7 @@ public:
     int64_t GetOldestKeyPoolTime() const;
 
     std::set<std::set<CTxDestination>> GetAddressGroupings() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    std::map<CTxDestination, CAmount> GetAddressBalances(interfaces::Chain::Lock& locked_chain) const;
+    std::map<CTxDestination, CAmount> GetAddressBalances() const;
 
     std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
 
