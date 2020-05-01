@@ -819,7 +819,12 @@ void PeerLogicValidation::ReattemptInitialBroadcast(CScheduler& scheduler) const
     std::set<uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
 
     for (const uint256& txid : unbroadcast_txids) {
-        RelayTransaction(txid, *connman);
+        // Sanity check: all unbroadcast txns should exist in the mempool
+        if (m_mempool.exists(txid)) {
+            RelayTransaction(txid, *connman);
+        } else {
+            m_mempool.RemoveUnbroadcastTx(txid, true);
+        }
     }
 
     // schedule next run for 10-15 minutes in the future

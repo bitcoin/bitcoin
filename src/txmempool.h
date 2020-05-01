@@ -704,7 +704,10 @@ public:
     /** Adds a transaction to the unbroadcast set */
     void AddUnbroadcastTx(const uint256& txid) {
         LOCK(cs);
-        m_unbroadcast_txids.insert(txid);
+        /** Sanity Check: the transaction should also be in the mempool */
+        if (exists(txid)) {
+            m_unbroadcast_txids.insert(txid);
+        }
     }
 
     /** Removes a transaction from the unbroadcast set */
