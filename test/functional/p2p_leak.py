@@ -141,12 +141,11 @@ class P2PLeakTest(BitcoinTestFramework):
         assert no_verack_idlenode.unexpected_msg == False
 
         self.log.info('Check that the version message does not leak the local address of the node')
-        time_begin = int(time.time())
         p2p_version_store = self.nodes[0].add_p2p_connection(P2PVersionStore())
-        time_end = time.time()
         ver = p2p_version_store.version_received
-        assert_greater_than_or_equal(ver.nTime, time_begin)
-        assert_greater_than_or_equal(time_end, ver.nTime)
+        # Check that received time is within one hour of now
+        assert_greater_than_or_equal(ver.nTime, time.time() - 3600)
+        assert_greater_than_or_equal(time.time() + 3600, ver.nTime)
         assert_equal(ver.addrFrom.port, 0)
         assert_equal(ver.addrFrom.ip, '0.0.0.0')
         assert_equal(ver.nStartingHeight, 201)
