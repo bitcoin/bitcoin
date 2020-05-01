@@ -9,8 +9,8 @@ import configparser
 import copy
 from _decimal import Decimal
 from enum import Enum
-import logging
 import argparse
+import logging
 import os
 import pdb
 import random
@@ -243,10 +243,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         self.extra_args_from_options = self.options.dashd_extra_args
 
+        self.options.previous_releases_path = os.getenv("PREVIOUS_RELEASES_DIR") or os.getcwd() + "/releases"
+
         os.environ['PATH'] = os.pathsep.join([
             os.path.join(config['environment']['BUILDDIR'], 'src'),
-            os.path.join(config['environment']['BUILDDIR'], 'src', 'qt'),
-            os.environ['PATH']
+            os.path.join(config['environment']['BUILDDIR'], 'src', 'qt'), os.environ['PATH']
         ])
 
         # Set up temp directory and start logging
@@ -900,6 +901,25 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Skip the running test if dash-cli has not been compiled."""
         if not self.is_cli_compiled():
             raise SkipTest("dash-cli has not been compiled.")
+
+    def skip_if_no_previous_releases(self):
+        """Skip the running test if previous releases are not available."""
+        if not self.has_previous_releases():
+            raise SkipTest("previous releases not available or disabled")
+
+    def has_previous_releases(self):
+        """Checks whether previous releases are present and enabled."""
+        if os.getenv("TEST_PREVIOUS_RELEASES") == "false":
+            # disabled
+            return False
+
+        if not os.path.isdir(self.options.previous_releases_path):
+            if os.getenv("TEST_PREVIOUS_RELEASES") == "true":
+                raise AssertionError("TEST_PREVIOUS_RELEASES=true but releases missing: {}".format(
+                    self.options.previous_releases_path))
+            # missing
+            return False
+        return True
 
     def is_cli_compiled(self):
         """Checks whether dash-cli was compiled."""
