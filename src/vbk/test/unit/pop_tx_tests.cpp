@@ -6,7 +6,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <boost/test/unit_test.hpp>
-
 #include <vbk/test/util/e2e_fixture.hpp>
 #include <vbk/test/util/tx.hpp>
 #include <vbk/pop_service_impl.hpp>
@@ -18,7 +17,7 @@ BOOST_FIXTURE_TEST_CASE(No_mempool_for_bad_payloads_pop_tx_test, E2eFixture)
     unsigned int initialPoolSize = mempool.size();
     auto tip = ChainActive().Tip();
     BOOST_CHECK(tip != nullptr);
-    auto atv = endorseAltBlock(tip->GetBlockHash(), tip->pprev->GetBlockHash(), {});
+    auto atv = endorseAltBlock(tip->GetBlockHash(), {});
     // erase signature to make ATV check fail
     atv.transaction.signature = std::vector<unsigned char>(atv.transaction.signature.size(), 0);
     CScript sig;
@@ -56,7 +55,7 @@ BOOST_FIXTURE_TEST_CASE(Payloads_expiration_pop_tx_test, E2eFixture)
     unsigned int initialPoolSize = mempool.size();
     auto tip = ChainActive().Tip();
     BOOST_CHECK(tip != nullptr);
-    auto atv = endorseAltBlock(tip->GetAncestor(40)->GetBlockHash(), tip->GetAncestor(40)->pprev->GetBlockHash(), {});
+    auto atv = endorseAltBlock(tip->GetAncestor(40)->GetBlockHash(), {});
     CScript sig;
     sig << atv.toVbkEncoding() << OP_CHECKATV;
     sig << OP_CHECKPOP;
@@ -74,7 +73,7 @@ BOOST_FIXTURE_TEST_CASE(Payloads_expiration_pop_tx_test, E2eFixture)
         BOOST_CHECK_EQUAL(mempool.size(), initialPoolSize + 1);
     }
 
-    atv = endorseAltBlock(tip->GetBlockHash(), tip->pprev->GetBlockHash(), {});
+    atv = endorseAltBlock(tip->GetBlockHash(), {});
     sig.clear();
     sig << atv.toVbkEncoding() << OP_CHECKATV;
     sig << OP_CHECKPOP;

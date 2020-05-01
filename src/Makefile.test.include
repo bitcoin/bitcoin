@@ -117,7 +117,8 @@ FUZZ_SUITE_LD_COMMON = \
 # path is relative to src
 VBK_TESTS = \
 	vbk/test/unit/e2e_poptx_tests.cpp \
-        vbk/test/unit/pop_tx_tests.cpp
+        vbk/test/unit/pop_tx_tests.cpp \
+        vbk/test/unit/pop_reward_tests.cpp
 
 if USE_GMOCK
   VBK_TESTS += vbk/test/unit/gmock_tests.cpp
@@ -133,8 +134,6 @@ endif
 #  vbk/test/unit/pop_interpreter_tests.cpp \
 #  vbk/test/unit/block_validation_tests.cpp \
 #  vbk/test/unit/forkresolution_tests.cpp
-#  vbk/test/unit/pop_reward_tests.cpp
-
 
 ### VeriBlock section end
 

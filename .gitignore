@@ -151,3 +151,4 @@ compile_commands.json
 .settings
 configure.lineno
 *.pb.*
+vbitcoin*

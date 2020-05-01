@@ -28,13 +28,14 @@ struct E2eFixture : public TestChain100Setup {
     MockMiner popminer;
     altintegration::ValidationState state;
     VeriBlock::PopService* pop;
+    std::vector<uint8_t> defaultPayoutInfo = {1, 2, 3, 4, 5};
 
     E2eFixture()
     {
         pop = &VeriBlock::getService<VeriBlock::PopService>();
     }
 
-    ATV endorseAltBlock(uint256 hash, uint256 prevBlock, const std::vector<VTB>& vtbs)
+    ATV endorseAltBlock(uint256 hash, const std::vector<VTB>& vtbs, const std::vector<uint8_t>& payoutInfo)
     {
         CBlockIndex* endorsed = nullptr;
         {
@@ -43,11 +44,16 @@ struct E2eFixture : public TestChain100Setup {
             BOOST_CHECK(endorsed != nullptr);
         }
 
-        auto publicationdata = createPublicationData(endorsed);
+        auto publicationdata = createPublicationData(endorsed, payoutInfo);
         auto vbktx = popminer.endorseAltBlock(publicationdata);
         auto atv = popminer.generateATV(vbktx, getLastKnownVBKblock(), state);
         BOOST_CHECK(state.IsValid());
         return atv;
+    }
+
+    ATV endorseAltBlock(uint256 hash, const std::vector<VTB>& vtbs)
+    {
+        return endorseAltBlock(hash, vtbs, defaultPayoutInfo);
     }
 
     CBlock endorseAltBlockAndMine(uint256 hash, size_t generateVtbs = 0)
@@ -55,14 +61,14 @@ struct E2eFixture : public TestChain100Setup {
         return endorseAltBlockAndMine(hash, ChainActive().Tip()->GetBlockHash(), generateVtbs);
     }
 
-    CBlock endorseAltBlockAndMine(uint256 hash, uint256 prevBlock, size_t generateVtbs = 0)
+    CBlock endorseAltBlockAndMine(uint256 hash, uint256 prevBlock, const std::vector<uint8_t>& payoutInfo, size_t generateVtbs = 0)
     {
         std::vector<VTB> vtbs;
         vtbs.reserve(generateVtbs);
         std::generate_n(std::back_inserter(vtbs), generateVtbs, [&]() {
             return endorseVbkTip();
         });
-        auto atv = endorseAltBlock(hash, prevBlock, vtbs);
+        auto atv = endorseAltBlock(hash, vtbs, payoutInfo);
         CScript sig;
         sig << atv.toVbkEncoding() << OP_CHECKATV;
         for (const auto& v : vtbs) {
@@ -73,6 +79,11 @@ struct E2eFixture : public TestChain100Setup {
         auto tx = VeriBlock::MakePopTx(sig);
         bool isValid = false;
         return CreateAndProcessBlock({tx}, prevBlock, cbKey, &isValid);
+    }
+
+    CBlock endorseAltBlockAndMine(uint256 hash, uint256 prevBlock, size_t generateVtbs = 0)
+    {
+        return endorseAltBlockAndMine(hash, prevBlock, defaultPayoutInfo, generateVtbs);
     }
 
     VTB endorseVbkTip()
@@ -127,14 +138,13 @@ struct E2eFixture : public TestChain100Setup {
         return blocks[0];
     }
 
-    PublicationData createPublicationData(CBlockIndex* endorsed)
+    PublicationData createPublicationData(CBlockIndex* endorsed, const std::vector<uint8_t>& payoutInfo)
     {
         PublicationData p;
 
         auto& config = VeriBlock::getService<VeriBlock::Config>();
         p.identifier = config.popconfig.alt->getIdentifier();
-        // TODO: pass valid payout info
-        p.payoutInfo = std::vector<uint8_t>{1, 2, 3, 4, 5};
+        p.payoutInfo = payoutInfo;
 
         // serialize block header
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
@@ -142,6 +152,11 @@ struct E2eFixture : public TestChain100Setup {
         p.header = std::vector<uint8_t>{stream.begin(), stream.end()};
 
         return p;
+    }
+
+    PublicationData createPublicationData(CBlockIndex* endorsed)
+    {
+        return createPublicationData(endorsed, defaultPayoutInfo);
     }
 };
 
