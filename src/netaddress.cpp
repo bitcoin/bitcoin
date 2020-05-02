@@ -724,9 +724,9 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
 /**
  * @returns An identifier unique to this service's address and port number.
  */
-std::vector<unsigned char> CService::GetKey() const
+ServiceKey CService::GetKey() const
 {
-    std::vector<unsigned char> vKey;
+    ServiceKey vKey;
     vKey.resize(18);
     memcpy(vKey.data(), ip, 16);
     vKey[16] = port / 0x100; // most significant byte of our port
