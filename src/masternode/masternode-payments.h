@@ -33,7 +33,6 @@ class CMasternodePayments
 public:
     bool GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet) const;
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const;
-    bool IsScheduled(const CDeterministicMNCPtr& dmn, int nNotBlockHeight) const;
 
     bool GetMasternodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet) const;
 };

@@ -77,7 +77,8 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
             }
 
             int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-            if (nLastDsq != 0 && nLastDsq + mnList.GetValidMNsCount() / 5 > mmetaman.GetDsqCount()) {
+            int64_t nDsqThreshold = mmetaman.GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
+            if (nLastDsq != 0 && nDsqThreshold > mmetaman.GetDsqCount()) {
                 if (fLogIPs) {
                     LogPrint(BCLog::PRIVATESEND, "DSACCEPT -- last dsq too recent, must wait: peer=%d, addr=%s\n", pfrom->GetId(), pfrom->addr.ToString());
                 } else {
@@ -149,10 +150,10 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         if (!dsq.fReady) {
             int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-            int nThreshold = nLastDsq + mnList.GetValidMNsCount() / 5;
-            LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", nLastDsq, nThreshold, mmetaman.GetDsqCount());
+            int64_t nDsqThreshold = mmetaman.GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
+            LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq, nDsqThreshold, mmetaman.GetDsqCount());
             //don't allow a few nodes to dominate the queuing process
-            if (nLastDsq != 0 && nThreshold > mmetaman.GetDsqCount()) {
+            if (nLastDsq != 0 && nDsqThreshold > mmetaman.GetDsqCount()) {
                 LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->pdmnState->addr.ToString());
                 return;
             }

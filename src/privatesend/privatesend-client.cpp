@@ -94,10 +94,10 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
             }
         } else {
             int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-            int nThreshold = nLastDsq + mnList.GetValidMNsCount() / 5;
-            LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", nLastDsq, nThreshold, mmetaman.GetDsqCount());
+            int64_t nDsqThreshold = mmetaman.GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
+            LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq, nDsqThreshold, mmetaman.GetDsqCount());
             // don't allow a few nodes to dominate the queuing process
-            if (nLastDsq != 0 && nThreshold > mmetaman.GetDsqCount()) {
+            if (nLastDsq != 0 && nDsqThreshold > mmetaman.GetDsqCount()) {
                 LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->proTxHash.ToString());
                 return;
             }
@@ -1069,7 +1069,7 @@ bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymize
         }
 
         // skip next mn payments winners
-        if (mnpayments.IsScheduled(dmn, 0)) {
+        if (dmn->pdmnState->nLastPaidHeight + mnList.GetValidMNsCount() < mnList.GetHeight() + 8) {
             LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::JoinExistingQueue -- skipping winner, masternode=%s\n", dmn->proTxHash.ToString());
             continue;
         }
@@ -1117,7 +1117,8 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, C
     if (nBalanceNeedsAnonymized <= 0) return false;
 
     int nTries = 0;
-    int nMnCount = deterministicMNManager->GetListAtChainTip().GetValidMNsCount();
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    int nMnCount = mnList.GetValidMNsCount();
 
     // find available denominated amounts
     std::set<CAmount> setAmounts;
@@ -1141,18 +1142,19 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, C
         privateSendClient.AddUsedMasternode(dmn->collateralOutpoint);
 
         // skip next mn payments winners
-        if (mnpayments.IsScheduled(dmn, 0)) {
+        if (dmn->pdmnState->nLastPaidHeight + nMnCount < mnList.GetHeight() + 8) {
             LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- skipping winner, masternode=%s\n", dmn->proTxHash.ToString());
             nTries++;
             continue;
         }
 
         int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-        if (nLastDsq != 0 && nLastDsq + nMnCount / 5 > mmetaman.GetDsqCount()) {
+        int64_t nDsqThreshold = mmetaman.GetDsqThreshold(dmn->proTxHash, nMnCount);
+        if (nLastDsq != 0 && nDsqThreshold > mmetaman.GetDsqCount()) {
             LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- Too early to mix on this masternode!"
-                      " masternode=%s  addr=%s  nLastDsq=%d  CountEnabled/5=%d  nDsqCount=%d\n",
+                      " masternode=%s  addr=%s  nLastDsq=%d  nDsqThreshold=%d  nDsqCount=%d\n",
                 dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(), nLastDsq,
-                nMnCount / 5, mmetaman.GetDsqCount());
+                nDsqThreshold, mmetaman.GetDsqCount());
             nTries++;
             continue;
         }
@@ -1167,9 +1169,9 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, C
 
         // try to get a single random denom out of setAmounts
         while (nSessionDenom == 0) {
-            for (const auto& amount : setAmounts) {
+            for (auto it = setAmounts.rbegin(); it != setAmounts.rend(); ++it) {
                 if (setAmounts.size() > 1 && GetRandInt(2)) continue;
-                nSessionDenom = CPrivateSend::AmountToDenomination(amount);
+                nSessionDenom = CPrivateSend::AmountToDenomination(*it);
                 break;
             }
         }

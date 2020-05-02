@@ -56,6 +56,21 @@ CMasternodeMetaInfoPtr CMasternodeMetaMan::GetMetaInfo(const uint256& proTxHash,
     return it->second;
 }
 
+// We keep track of dsq (mixing queues) count to avoid using same masternodes for mixing too often.
+// This threshold is calculated as the last dsq count this specific masternode was used in a mixing
+// session plus a margin of 20% of masternode count. In other words we expect at least 20% of unique
+// masternodes before we ever see a masternode that we know already mixed someone's funds ealier.
+int64_t CMasternodeMetaMan::GetDsqThreshold(const uint256& proTxHash, int nMnCount)
+{
+    LOCK(cs);
+    auto metaInfo = GetMetaInfo(proTxHash);
+    if (metaInfo == nullptr) {
+        // return a threshold which is slightly above nDsqCount i.e. a no-go
+        return nDsqCount + 1;
+    }
+    return metaInfo->GetLastDsq() + nMnCount / 5;
+}
+
 void CMasternodeMetaMan::AllowMixing(const uint256& proTxHash)
 {
     LOCK(cs);

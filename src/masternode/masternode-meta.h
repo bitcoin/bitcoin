@@ -140,6 +140,7 @@ public:
     CMasternodeMetaInfoPtr GetMetaInfo(const uint256& proTxHash, bool fCreate = true);
 
     int64_t GetDsqCount() { LOCK(cs); return nDsqCount; }
+    int64_t GetDsqThreshold(const uint256& proTxHash, int nMnCount);
 
     void AllowMixing(const uint256& proTxHash);
     void DisallowMixing(const uint256& proTxHash);

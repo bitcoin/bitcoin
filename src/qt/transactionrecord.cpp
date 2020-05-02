@@ -149,22 +149,25 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     && CPrivateSend::IsCollateralAmount(-nNet))
                 {
                     sub.type = TransactionRecord::PrivateSendCollateralPayment;
-                } else if (wtx.tx->vout.size() == 2) {
-                    CAmount nMaxCollateralAmount = CPrivateSend::GetMaxCollateralAmount();
-                    CAmount nPreMaxCollateralAmount = nMaxCollateralAmount  - CPrivateSend::GetCollateralAmount();
-                    bool fMakeCollateral =
-                        wtx.tx->vout[0].nValue == nMaxCollateralAmount ||
-                        wtx.tx->vout[1].nValue == nMaxCollateralAmount ||
-                        (wtx.tx->vout[0].nValue == nPreMaxCollateralAmount && CPrivateSend::IsCollateralAmount(wtx.tx->vout[1].nValue)) ||
-                        (wtx.tx->vout[1].nValue == nPreMaxCollateralAmount && CPrivateSend::IsCollateralAmount(wtx.tx->vout[0].nValue));
+                } else {
+                    bool fMakeCollateral{false};
+                    if (wtx.tx->vout.size() == 2) {
+                        CAmount nMaxCollateralAmount = CPrivateSend::GetMaxCollateralAmount();
+                        CAmount nPreMaxCollateralAmount = nMaxCollateralAmount  - CPrivateSend::GetCollateralAmount();
+                        fMakeCollateral =
+                            wtx.tx->vout[0].nValue == nMaxCollateralAmount ||
+                            wtx.tx->vout[1].nValue == nMaxCollateralAmount ||
+                            (wtx.tx->vout[0].nValue == nPreMaxCollateralAmount && CPrivateSend::IsCollateralAmount(wtx.tx->vout[1].nValue)) ||
+                            (wtx.tx->vout[1].nValue == nPreMaxCollateralAmount && CPrivateSend::IsCollateralAmount(wtx.tx->vout[0].nValue));
+                    }
                     if (fMakeCollateral) {
                         sub.type = TransactionRecord::PrivateSendMakeCollaterals;
-                    }
-                } else {
-                    for (const auto& txout : wtx.tx->vout) {
-                        if (CPrivateSend::IsDenominatedAmount(txout.nValue)) {
-                            sub.type = TransactionRecord::PrivateSendCreateDenominations;
-                            break; // Done, it's definitely a tx creating mixing denoms, no need to look any further
+                    } else {
+                        for (const auto& txout : wtx.tx->vout) {
+                            if (CPrivateSend::IsDenominatedAmount(txout.nValue)) {
+                                sub.type = TransactionRecord::PrivateSendCreateDenominations;
+                                break; // Done, it's definitely a tx creating mixing denoms, no need to look any further
+                            }
                         }
                     }
                 }
