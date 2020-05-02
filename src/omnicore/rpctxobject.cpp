@@ -698,7 +698,7 @@ int populateRPCDExPurchases(const CTransaction& wtx, UniValue& purchases, std::s
         purchaseObj.pushKV("ismine", bIsMine);
         purchaseObj.pushKV("referenceaddress", seller);
         purchaseObj.pushKV("propertyid", propertyId);
-        purchaseObj.pushKV("amountbought", FormatDivisibleMP(nValue));
+        purchaseObj.pushKV("amountbought", FormatMP(propertyId, nValue));
         purchaseObj.pushKV("valid", true); //only valid purchases are stored, anything else is regular BTC tx
         purchases.push_back(purchaseObj);
     }
