@@ -398,6 +398,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.nMaxSupply = nMaxSupply;
     newAsset.nPrecision = precision;
     newAsset.nUpdateFlags = nUpdateFlags;
+    newAsset.nPrevUpdateFlags = nUpdateFlags;
     std::vector<unsigned char> data;
     newAsset.SerializeData(data);
     // use the script pub key to create the vecsend which sendmoney takes and puts it into vout
@@ -627,18 +628,19 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
         publicData.pushKV("aux_fees", params[5]);
     strPubData = publicData.write();
-    if(strPubData != oldData)
+    if(strPubData != oldData) {
+        theAsset.vchPrevPubData = vchFromString(oldData);
         theAsset.vchPubData = vchFromString(strPubData);
-    else
-        theAsset.vchPubData.clear();
-    
-    if(vchContract != oldContract)
+    }
+
+    if(vchContract != oldContract) {
+        theAsset.vchPrevPubData = oldContract;
         theAsset.vchContract = vchContract;
-    else
-        theAsset.vchContract.clear();
+    }
 
     theAsset.voutAssets[nAsset].push_back(CAssetOut(0, 0));
     theAsset.nBalance = nBalance;
+    // prev flags is set in clearasset()
     theAsset.nUpdateFlags = nUpdateFlags;
 
     std::vector<unsigned char> data;
