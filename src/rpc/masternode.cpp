@@ -350,8 +350,7 @@ UniValue masternode(const JSONRPCRequest& request)
         LOCK(pwallet->cs_wallet);
         // Find possible candidates
         std::vector<COutput> vPossibleCoins;
-        auto locked_chain = pwallet->chain().lock();
-        pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true, nullptr, 100000 * COIN, 100000 * COIN, MAX_MONEY, 1, MAX_ASSET, MAX_ASSET, 0, true);
+        pwallet->AvailableCoins(vPossibleCoins, true, nullptr, 100000 * COIN, 100000 * COIN, MAX_MONEY, 1, MAX_ASSET, MAX_ASSET, 0, true);
    
         UniValue obj(UniValue::VOBJ);
         for (const auto& out : vPossibleCoins) {

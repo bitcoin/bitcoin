@@ -229,7 +229,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
@@ -336,7 +335,6 @@ UniValue assetnew(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
@@ -473,7 +471,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     return res;
 }
 
-UniValue CreateAssetUpdateTx(interfaces::Chain::Lock& locked_chain, const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) {
+UniValue CreateAssetUpdateTx(const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) {
     AssertLockHeld(pwallet->cs_wallet);
     CCoinControl coin_control;
     CAmount nMinimumAmountAsset = 0;
@@ -481,7 +479,7 @@ UniValue CreateAssetUpdateTx(interfaces::Chain::Lock& locked_chain, const int32_
     CAmount nMinimumSumAmountAsset = 0;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
     std::vector<COutput> vecOutputs;
-    pwallet->AvailableCoins(locked_chain, vecOutputs, true, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset);
+    pwallet->AvailableCoins(vecOutputs, true, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset);
     int nNumOutputsFound = 0;
     int nFoundOutput = -1;
     for(unsigned int i = 0; i < vecOutputs.size(); i++) {
@@ -540,7 +538,7 @@ UniValue CreateAssetUpdateTx(interfaces::Chain::Lock& locked_chain, const int32_
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     mtx.nVersion = nVersionIn;
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    if (!pwallet->CreateTransaction(locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
+    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -592,7 +590,6 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);    
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
@@ -650,7 +647,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(*locked_chain, SYSCOIN_TX_VERSION_ASSET_UPDATE, nAsset, pwallet, vecSend, opreturnRecipient);
+    return CreateAssetUpdateTx(SYSCOIN_TX_VERSION_ASSET_UPDATE, nAsset, pwallet, vecSend, opreturnRecipient);
 }
 
 UniValue assettransfer(const JSONRPCRequest& request) {
@@ -678,7 +675,6 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);    
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
@@ -703,7 +699,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(*locked_chain, SYSCOIN_TX_VERSION_ASSET_UPDATE, nAsset, pwallet, vecSend, opreturnRecipient, &recp);
+    return CreateAssetUpdateTx(SYSCOIN_TX_VERSION_ASSET_UPDATE, nAsset, pwallet, vecSend, opreturnRecipient, &recp);
 }
 
 UniValue assetsendmany(const JSONRPCRequest& request) {
@@ -743,7 +739,6 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     // gather & validate inputs
@@ -796,7 +791,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     scriptData << OP_RETURN << data;
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
-    return CreateAssetUpdateTx(*locked_chain, SYSCOIN_TX_VERSION_ASSET_SEND, nAsset, pwallet, vecSend, opreturnRecipient);
+    return CreateAssetUpdateTx(SYSCOIN_TX_VERSION_ASSET_SEND, nAsset, pwallet, vecSend, opreturnRecipient);
 }
 
 UniValue assetsend(const JSONRPCRequest& request) {
@@ -885,7 +880,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     CCoinControl coin_control;
@@ -1029,7 +1023,6 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
@@ -1142,7 +1135,6 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     const uint32_t &nAsset = params[0].get_uint();
@@ -1358,7 +1350,6 @@ UniValue convertaddresswallet(const JSONRPCRequest& request) {
     }	
     if(!strLabel.empty())	
     {	
-        auto locked_chain = pwallet->chain().lock();	
         LOCK(pwallet->cs_wallet);   	
         CScript witprog = GetScriptForDestination(v4Dest);	
         LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();	

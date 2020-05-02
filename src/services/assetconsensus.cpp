@@ -473,7 +473,6 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
 
 bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     CAsset dbAsset;
-    const uint256& txHash = tx.GetHash();
     CAsset theAsset(tx);
     if(theAsset.IsNull()) {
         LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not decode asset\n");
@@ -514,6 +513,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     if(!theAsset.vchContract.empty()) {
         storedAssetRef.vchContract = theAsset.vchPrevContract;
     }
+    // enforced to be equal or represent prev value on actual change of field
     storedAssetRef.nUpdateFlags = theAsset.nPrevUpdateFlags;    
     return true;  
 }
@@ -698,20 +698,25 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
                 }
                 storedAssetRef.nUpdateFlags = std::move(theAsset.nUpdateFlags);
-            }      
+            } else if (theAsset.nPrevUpdateFlags != storedAssetRef.nUpdateFlags) {
+                return FormatSyscoinErrorMessage(state, "asset-mismatch-prevflags", bSanityCheck);
+            }     
         }         
         break;
             
         case SYSCOIN_TX_VERSION_ASSET_SEND:
         {
-            if (!storedAssetRef.vchPrevPubData.empty()) {
+            if (!theAsset.vchPrevPubData.empty()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prevdata", bSanityCheck);
             }
-            if (!storedAssetRef.vchPrevContract.empty()) {
+            if (!theAsset.vchPrevContract.empty()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
             }
-            if (theAsset.nPrevUpdateFlags != storedAssetRef.nUpdateFlags) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
+            if (!theAsset.vchPubData.empty()) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-data", bSanityCheck);
+            }
+            if (!theAsset.vchContract.empty()) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }
             CAmount nTotal = 0;
             for(const auto& voutAsset: vecVout){
