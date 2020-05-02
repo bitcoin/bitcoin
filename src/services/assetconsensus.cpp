@@ -293,11 +293,10 @@ bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidat
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY)
         return false;
     AssetMap mapAssets;
-    AssetUndoMap mapAssetsUndo;
-    return CheckSyscoinInputs(false, tx, txHash, state, true, nHeight, nTime, uint256(), false, mapAssets, mapAssetsUndo, mapMintKeys);
+    return CheckSyscoinInputs(false, tx, txHash, state, true, nHeight, nTime, uint256(), false, mapAssets, mapMintKeys);
 }
 
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, AssetUndoMap &mapAssetsUndo, EthereumMintTxMap &mapMintKeys) {
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanityCheck, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys) {
     bool good = true;
     try{
         if(IsSyscoinMintTx(tx.nVersion)) {
@@ -307,7 +306,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
             good = CheckAssetAllocationInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, bSanityCheck);
         }
         else if (IsAssetTx(tx.nVersion)) {
-            good = CheckAssetInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, mapAssetsUndo, bSanityCheck);
+            good = CheckAssetInputs(tx, txHash, state, fJustCheck, nHeight, blockHash, mapAssets, bSanityCheck);
         } 
     } catch (...) {
         return FormatSyscoinErrorMessage(state, "checksyscoininputs-exception", bSanityCheck);
@@ -325,7 +324,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, Ethereum
     return true;
 }
 
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, CCoinsViewCache& view, AssetMap &mapAssets, AssetUndoMap &mapAssetsUndo, EthereumMintTxMap &mapMintKeys) {
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, CCoinsViewCache& view, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys) {
     if(tx.IsCoinBase())
         return true;
  
@@ -339,7 +338,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
                 if(!DisconnectAssetSend(tx, txHash, mapAssets))
                     return false;
             } else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE) {  
-                if(!DisconnectAssetUpdate(tx, txHash, mapAssets, mapAssetsUndo))
+                if(!DisconnectAssetUpdate(tx, txHash, mapAssets))
                     return false;
             }
             else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
@@ -472,9 +471,8 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
     return true;  
 }
 
-bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets, AssetUndoMap &mapAssetsUndo) {
+bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     CAsset dbAsset;
-    CAssetUndo dbAssetUndo;
     const uint256& txHash = tx.GetHash();
     CAsset theAsset(tx);
     if(theAsset.IsNull()) {
@@ -508,26 +506,15 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
             return false;
         }                                        
     }
-    // if there is undo information (fields have changed at least once after activation)
-    if(GetAssetUndo(txHash, dbAssetUndo)) {
-        // undo data fields from last update
-        if(storedAssetRef.vchPubData != dbAssetUndo.vchPubData) {
-            storedAssetRef.vchPubData = dbAssetUndo.vchPubData;
-        }
-        if(storedAssetRef.vchContract != dbAssetUndo.vchContract) {
-            storedAssetRef.vchContract = dbAssetUndo.vchContract;
-        }
-        if(storedAssetRef.nUpdateFlags != dbAssetUndo.nUpdateFlags) {
-            storedAssetRef.nUpdateFlags = dbAssetUndo.nUpdateFlags;
-        }
-        // will remove on flush
-        dbAssetUndo.SetNull();
-        #if __cplusplus > 201402 
-        mapAssetsUndo.try_emplace(txHash,  std::move(dbAssetUndo));
-        #else
-        mapAssetsUndo.emplace(std::piecewise_construct,  std::forward_as_tuple(txHash),  std::forward_as_tuple(std::move(dbAssetUndo)));
-        #endif  
-    } 
+    // undo data fields from last update
+    // if fields changed then undo them using prev fields
+    if(!theAsset.vchPubData.empty()) {
+        storedAssetRef.vchPubData = theAsset.vchPrevPubData;
+    }
+    if(!theAsset.vchContract.empty()) {
+        storedAssetRef.vchContract = theAsset.vchPrevContract;
+    }
+    storedAssetRef.nUpdateFlags = theAsset.nPrevUpdateFlags;    
     return true;  
 }
 
@@ -543,7 +530,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
 }
 
 bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state,
-        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetUndoMap& mapAssetsUndo, const bool &bSanityCheck) {
+        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap& mapAssets, const bool &bSanityCheck) {
     if (passetdb == nullptr)
         return false;
     if (!bSanityCheck)
@@ -618,6 +605,12 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (storedAssetRef.nPrecision > 8) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             }
+            if (!storedAssetRef.vchPrevPubData.empty()) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-prevdata", bSanityCheck);
+            }
+            if (!storedAssetRef.vchPrevContract.empty()) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
+            }
             if (storedAssetRef.strSymbol.size() > 8 || storedAssetRef.strSymbol.size() < 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
@@ -676,12 +669,15 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
             }
    
-            CAssetUndo dbAssetUndo; 
             if (!theAsset.vchPubData.empty()) {
                 if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_DATA)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
                 }
-                dbAssetUndo.vchPubData = std::move(storedAssetRef.vchPubData);
+                // ensure prevdata is set to what db is now to be able to undo in disconnectblock
+                if(theAsset.vchPrevPubData != storedAssetRef.vchPubData) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-prevdata", bSanityCheck);
+                }
+                // replace db data with new data
                 storedAssetRef.vchPubData = std::move(theAsset.vchPubData);
             }
                                         
@@ -689,28 +685,34 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT)) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
                 }
-                dbAssetUndo.vchContract = std::move(storedAssetRef.vchContract);
+                if(theAsset.vchPrevContract != storedAssetRef.vchContract) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
+                }
                 storedAssetRef.vchContract = std::move(theAsset.vchContract);
             }
             if (theAsset.nUpdateFlags != storedAssetRef.nUpdateFlags) {
                 if (theAsset.nUpdateFlags > 0 && !(storedAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN))) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
                 }
-                dbAssetUndo.nUpdateFlags = std::move(storedAssetRef.nUpdateFlags);
+                if(theAsset.nPrevUpdateFlags != storedAssetRef.nUpdateFlags) {
+                    return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
+                }
                 storedAssetRef.nUpdateFlags = std::move(theAsset.nUpdateFlags);
-            }
-            if(!dbAssetUndo.IsNull()) {
-                #if __cplusplus > 201402 
-                mapAssetsUndo.try_emplace(txHash, std::move(dbAssetUndo));
-                #else
-                mapAssetsUndo.emplace(std::piecewise_construct, std::forward_as_tuple(txHash),  std::forward_as_tuple(std::move(dbAssetUndo)));
-                #endif 
-            }        
+            }      
         }         
         break;
             
         case SYSCOIN_TX_VERSION_ASSET_SEND:
         {
+            if (!storedAssetRef.vchPrevPubData.empty()) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-prevdata", bSanityCheck);
+            }
+            if (!storedAssetRef.vchPrevContract.empty()) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
+            }
+            if (theAsset.nPrevUpdateFlags != storedAssetRef.nUpdateFlags) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
+            }
             CAmount nTotal = 0;
             for(const auto& voutAsset: vecVout){
                 nTotal += voutAsset.nValue;
@@ -949,7 +951,7 @@ bool FlushSyscoinDBs() {
 	return ret;
 }
 
-bool CAssetDB::Flush(const AssetMap &mapAssets, const AssetUndoMap &mapAssetsUndo) {
+bool CAssetDB::Flush(const AssetMap &mapAssets) {
     if(mapAssets.empty()) {
         return true;
 	}
@@ -964,17 +966,6 @@ bool CAssetDB::Flush(const AssetMap &mapAssets, const AssetUndoMap &mapAssetsUnd
 		else {
 			write++;
             // int32 (guid) -> CAsset
-			batch.Write(key.first, key.second);
-		}
-    }
-    for (const auto &key : mapAssetsUndo) {
-		if (key.second.IsNull()) {
-			erase++;
-			batch.Erase(key.first);
-		}
-		else {
-			write++;
-            // txid -> CAssetUndo
 			batch.Write(key.first, key.second);
 		}
     }

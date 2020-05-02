@@ -32,13 +32,16 @@ enum {
 class CAsset: public CAssetAllocation {
 public:
     std::vector<unsigned char> vchContract;
+    std::vector<unsigned char> vchPrevContract;
     std::string strSymbol;
     std::vector<unsigned char> vchPubData;
+    std::vector<unsigned char> vchPrevPubData;
     CAmount nBalance;
     CAmount nTotalSupply;
     CAmount nMaxSupply;
     unsigned char nPrecision;
     unsigned char nUpdateFlags;
+    unsigned char nPrevUpdateFlags;
     CAsset() {
         SetNull();
     }
@@ -50,11 +53,15 @@ public:
         vchPubData.clear();
         vchContract.clear();
         voutAssets.clear();
+        vchPrevPubData.clear();
+        vchPrevContract.clear();
+        voutAssets.clear();
+        nPrevUpdateFlags = nUpdateFlags;
     }
 
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
-        READWRITE(obj.nPrecision, obj.vchContract, obj.vchPubData, obj.strSymbol, obj.nUpdateFlags,
+        READWRITE(obj.nPrecision, obj.vchContract, obj.vchPubData, obj.strSymbol, obj.nUpdateFlags, obj.vchPrevContract, obj.vchPrevPubData, obj.nPrevUpdateFlags,
         Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
     }
 
@@ -76,6 +83,5 @@ public:
 };
 static CAsset emptyAsset;
 bool GetAsset(const int32_t &nAsset,CAsset& txPos);
-bool GetAssetUndo(const uint256 &txHash,CAssetUndo& txPos);
 bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<int32_t, CAmount> &mapAssetIn, const std::unordered_map<int32_t, CAmount> &mapAssetOut);
 #endif // SYSCOIN_SERVICES_ASSET_H
