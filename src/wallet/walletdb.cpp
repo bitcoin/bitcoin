@@ -228,6 +228,7 @@ public:
     unsigned int nKeys;
     unsigned int nCKeys;
     unsigned int nWatchKeys;
+    unsigned int nHDPubKeys;
     unsigned int nKeyMeta;
     bool fIsEncrypted;
     bool fAnyUnordered;
@@ -235,7 +236,7 @@ public:
     std::vector<uint256> vWalletUpgrade;
 
     CWalletScanState() {
-        nKeys = nCKeys = nWatchKeys = nKeyMeta = 0;
+        nKeys = nCKeys = nWatchKeys = nHDPubKeys = nKeyMeta = 0;
         fIsEncrypted = false;
         fAnyUnordered = false;
         nFileVersion = 0;
@@ -518,6 +519,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "hdpubkey")
         {
+            wss.nHDPubKeys++;
             CPubKey vchPubKey;
             ssKey >> vchPubKey;
 
@@ -630,11 +632,12 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 
     LogPrintf("nFileVersion = %d\n", wss.nFileVersion);
 
-    LogPrintf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total\n",
-           wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys);
+    LogPrintf("Keys: %u plaintext, %u encrypted, %u total; Watch scripts: %u; HD PubKeys: %u; Metadata: %u\n",
+           wss.nKeys, wss.nCKeys, wss.nKeys + wss.nCKeys,
+           wss.nWatchKeys, wss.nHDPubKeys, wss.nKeyMeta);
 
     // nTimeFirstKey is only reliable if all keys have metadata
-    if ((wss.nKeys + wss.nCKeys + wss.nWatchKeys) != wss.nKeyMeta)
+    if ((wss.nKeys + wss.nCKeys + wss.nWatchKeys + wss.nHDPubKeys) != wss.nKeyMeta)
         pwallet->UpdateTimeFirstKey(1);
 
     for (uint256 hash : wss.vWalletUpgrade)
