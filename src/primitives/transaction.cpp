@@ -350,7 +350,7 @@ void CMutableTransaction::LoadAssets()
             }
             for(const auto& voutAsset: it.second) {
                 const uint32_t& nOut = voutAsset.n;
-                if(nOut > nVoutSize) {
+                if(nOut >= nVoutSize) {
                     throw std::ios_base::failure("asset vout out of range");
                 }
                 if(voutAsset.nValue < 0) {
@@ -380,7 +380,7 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<in
         const size_t &nVoutSize = vout.size();
         for(const auto& voutAsset: it.second) {
             const uint32_t& nOut = voutAsset.n;
-            if(nOut > nVoutSize) {
+            if(nOut >= nVoutSize) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outofrange");
             }
             const CAmount& nAmount = voutAsset.nValue;
