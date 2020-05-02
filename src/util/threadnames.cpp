@@ -7,6 +7,8 @@
 #endif
 
 #include <thread>
+#include <mutex>
+#include <unordered_map>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
@@ -36,31 +38,51 @@ static void SetThreadName(const char* name)
 #endif
 }
 
-// If we have thread_local, just keep thread ID and name in a thread_local
-// global.
-#if defined(HAVE_THREAD_LOCAL)
+/** A singleton to keep track of thread names. This is created at first use and
+ * leaks at shutdown to avoid initialization/destruction order problems.
+ */
+class ThreadNames {
+    std::mutex cs;
+    std::unordered_map<std::thread::id, std::string> names;
 
-static thread_local std::string g_thread_name;
-const std::string& util::ThreadGetInternalName() { return g_thread_name; }
-//! Set the in-memory internal name for this thread. Does not affect the process
-//! name.
-static void SetInternalName(std::string name) { g_thread_name = std::move(name); }
+public:
+    //! Static function to ensure creation at first use.
+    static ThreadNames *Instance()
+    {
+        static ThreadNames *self = new ThreadNames();
+        return self;
+    }
 
-// Without thread_local available, don't handle internal name at all.
-#else
+    std::string GetName()
+    {
+        const std::lock_guard<std::mutex> lock(cs);
+        auto i = names.find(std::this_thread::get_id());
+        if (i != names.end()) {
+            return i->second;
+        } else {
+            return "";
+        }
+    }
 
-static const std::string empty_string;
-const std::string& util::ThreadGetInternalName() { return empty_string; }
-static void SetInternalName(std::string name) { }
-#endif
+    void SetName(std::string name)
+    {
+        const std::lock_guard<std::mutex> lock(cs);
+        names[std::this_thread::get_id()] = std::move(name);
+    }
+};
+
+std::string util::ThreadGetInternalName()
+{
+    return ThreadNames::Instance()->GetName();
+}
 
 void util::ThreadRename(std::string&& name)
 {
     SetThreadName(("b-" + name).c_str());
-    SetInternalName(std::move(name));
+    ThreadNames::Instance()->SetName(name);
 }
 
 void util::ThreadSetInternalName(std::string&& name)
 {
-    SetInternalName(std::move(name));
+    ThreadNames::Instance()->SetName(name);
 }
