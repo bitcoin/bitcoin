@@ -6,14 +6,26 @@
 #ifndef BITCOIN_COMPRESSOR_H
 #define BITCOIN_COMPRESSOR_H
 
+#include <prevector.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <span.h>
 
-bool CompressScript(const CScript& script, std::vector<unsigned char> &out);
+/**
+ * This saves us from making many heap allocations when serializing
+ * and deserializing compressed scripts.
+ *
+ * This prevector size is determined by the largest .resize() in the
+ * CompressScript function. The largest compressed script format is a
+ * compressed public key, which is 33 bytes.
+ */
+using CompressedScript = prevector<33, unsigned char>;
+
+
+bool CompressScript(const CScript& script, CompressedScript& out);
 unsigned int GetSpecialScriptSize(unsigned int nSize);
-bool DecompressScript(CScript& script, unsigned int nSize, const std::vector<unsigned char> &out);
+bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScript& in);
 
 /**
  * Compress amount.
@@ -51,7 +63,7 @@ struct ScriptCompression
 
     template<typename Stream>
     void Ser(Stream &s, const CScript& script) {
-        std::vector<unsigned char> compr;
+        CompressedScript compr;
         if (CompressScript(script, compr)) {
             s << MakeSpan(compr);
             return;
@@ -66,7 +78,7 @@ struct ScriptCompression
         unsigned int nSize = 0;
         s >> VARINT(nSize);
         if (nSize < nSpecialScripts) {
-            std::vector<unsigned char> vch(GetSpecialScriptSize(nSize), 0x00);
+            CompressedScript vch(GetSpecialScriptSize(nSize), 0x00);
             s >> MakeSpan(vch);
             DecompressScript(script, nSize, vch);
             return;

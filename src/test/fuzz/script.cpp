@@ -36,7 +36,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     if (!script_opt) return;
     const CScript script{*script_opt};
 
-    std::vector<unsigned char> compressed;
+    CompressedScript compressed;
     if (CompressScript(script, compressed)) {
         const unsigned int size = compressed[0];
         compressed.erase(compressed.begin());
@@ -94,10 +94,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 
     {
         const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+        CompressedScript compressed_script;
+        compressed_script.assign(bytes.begin(), bytes.end());
         // DecompressScript(..., ..., bytes) is not guaranteed to be defined if the bytes vector is too short
-        if (bytes.size() >= 32) {
+        if (compressed_script.size() >= 32) {
             CScript decompressed_script;
-            DecompressScript(decompressed_script, fuzzed_data_provider.ConsumeIntegral<unsigned int>(), bytes);
+            DecompressScript(decompressed_script, fuzzed_data_provider.ConsumeIntegral<unsigned int>(), compressed_script);
         }
     }
 
