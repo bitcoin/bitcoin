@@ -798,7 +798,8 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
     CAmount nBalanceNeedsAnonymized;
 
     {
-        LOCK2(cs_main, GetWallets()[0]->cs_wallet);
+        LOCK2(cs_main, mempool.cs);
+        LOCK(GetWallets()[0]->cs_wallet);
 
         if (!fDryRun && GetWallets()[0]->IsLocked(true)) {
             strAutoDenomResult = _("Wallet is locked.");
@@ -1224,7 +1225,8 @@ void CPrivateSendClientManager::ProcessPendingDsaRequest(CConnman& connman)
 
 bool CPrivateSendClientSession::SubmitDenominate(CConnman& connman)
 {
-    LOCK2(cs_main, GetWallets()[0]->cs_wallet);
+    LOCK2(cs_main, mempool.cs);
+    LOCK(GetWallets()[0]->cs_wallet);
 
     std::string strError;
     std::vector<std::pair<CTxDSIn, CTxOut> > vecPSInOutPairs, vecPSInOutPairsTmp;
@@ -1362,7 +1364,8 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(CConnman& connman)
 {
     if (!privateSendClient.fEnablePrivateSend || !privateSendClient.fPrivateSendRunning) return false;
 
-    LOCK2(cs_main, GetWallets()[0]->cs_wallet);
+    LOCK2(cs_main, mempool.cs);
+    LOCK(GetWallets()[0]->cs_wallet);
 
     // NOTE: We do not allow txes larger than 100kB, so we have to limit number of inputs here.
     // We still want to consume a lot of inputs to avoid creating only smaller denoms though.
@@ -1400,6 +1403,7 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(CConnman& connman)
 bool CPrivateSendClientSession::MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated, CConnman& connman)
 {
     AssertLockHeld(cs_main);
+    AssertLockHeld(mempool.cs);
     AssertLockHeld(GetWallets()[0]->cs_wallet);
 
     if (!privateSendClient.fEnablePrivateSend || !privateSendClient.fPrivateSendRunning) return false;
@@ -1499,7 +1503,8 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
 {
     if (!privateSendClient.fEnablePrivateSend || !privateSendClient.fPrivateSendRunning) return false;
 
-    LOCK2(cs_main, GetWallets()[0]->cs_wallet);
+    LOCK2(cs_main, mempool.cs);
+    LOCK(GetWallets()[0]->cs_wallet);
 
     // NOTE: We do not allow txes larger than 100kB, so we have to limit number of inputs here.
     // We still want to consume a lot of inputs to avoid creating only smaller denoms though.
@@ -1530,6 +1535,10 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
 // Create denominations
 bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals, CConnman& connman)
 {
+    AssertLockHeld(cs_main);
+    AssertLockHeld(mempool.cs);
+    AssertLockHeld(GetWallets()[0]->cs_wallet);
+
     if (!privateSendClient.fEnablePrivateSend || !privateSendClient.fPrivateSendRunning) return false;
 
     std::vector<CRecipient> vecSend;

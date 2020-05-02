@@ -2121,7 +2121,8 @@ void CWallet::ReacceptWalletTransactions()
     // If transactions aren't being broadcasted, don't let them into local mempool either
     if (!fBroadcastTransactions)
         return;
-    LOCK2(cs_main, cs_wallet);
+    LOCK2(cs_main, mempool.cs);
+    LOCK(cs_wallet);
     std::map<int64_t, CWalletTx*> mapSorted;
 
     // Sort pending wallet transactions based on their initial wallet insertion order
@@ -2468,7 +2469,7 @@ std::vector<uint256> CWallet::ResendWalletTransactionsBefore(int64_t nTime, CCon
 {
     std::vector<uint256> result;
 
-    LOCK(cs_wallet);
+    LOCK2(mempool.cs, cs_wallet);
 
     // Sort them in chronological order
     std::multimap<unsigned int, CWalletTx*> mapSorted;
@@ -3269,7 +3270,8 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 
     // Acquire the locks to prevent races to the new locked unspents between the
     // CreateTransaction call and LockCoin calls (when lockUnspents is true).
-    LOCK2(cs_main, cs_wallet);
+    LOCK2(cs_main, mempool.cs);
+    LOCK(cs_wallet);
 
     int nExtraPayloadSize = 0;
     if (tx.nVersion == 3 && tx.nType != TRANSACTION_NORMAL)
@@ -3729,7 +3731,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
     {
         std::set<CInputCoin> setCoins;
         std::vector<CTxDSIn> vecTxDSInTmp;
-        LOCK2(cs_main, cs_wallet);
+        LOCK2(cs_main, mempool.cs);
+        LOCK(cs_wallet);
         {
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, true, &coin_control);
@@ -4075,7 +4078,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman,  CValidationState& state)
 {
     {
-        LOCK2(cs_main, cs_wallet);
+        LOCK2(cs_main, mempool.cs);
+        LOCK(cs_wallet);
         LogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString());
         {
             // Take key pair from key pool so it won't be used again
