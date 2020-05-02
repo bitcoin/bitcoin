@@ -14,6 +14,7 @@
 #endif
 
 #include <util/threadnames.h>
+#include <memory.h>
 
 #ifdef HAVE_SYS_PRCTL_H
 #include <sys/prctl.h> // For prctl, PR_SET_NAME, PR_GET_NAME
@@ -40,11 +41,15 @@ static void SetThreadName(const char* name)
 // global.
 #if defined(HAVE_THREAD_LOCAL)
 
-static thread_local std::string g_thread_name;
-const std::string& util::ThreadGetInternalName() { return g_thread_name; }
+#define THREADNAME_SIZE 64
+
+static thread_local char g_thread_name[THREADNAME_SIZE] = {0};
+const char *util::ThreadGetInternalName() { return g_thread_name; }
 //! Set the in-memory internal name for this thread. Does not affect the process
 //! name.
-static void SetInternalName(std::string name) { g_thread_name = std::move(name); }
+static void SetInternalName(const char *name) {
+    memcpy(g_thread_name, name, sizeof(g_thread_name));
+}
 
 // Without thread_local available, don't handle internal name at all.
 #else
@@ -54,13 +59,23 @@ const std::string& util::ThreadGetInternalName() { return empty_string; }
 static void SetInternalName(std::string name) { }
 #endif
 
-void util::ThreadRename(std::string&& name)
+void util::ThreadRename(const char* name)
 {
-    SetThreadName(("b-" + name).c_str());
-    SetInternalName(std::move(name));
+    util::ThreadRenameWithWorker(name, -1);
 }
 
-void util::ThreadSetInternalName(std::string&& name)
+void util::ThreadRenameWithWorker(const char *name, int worker)
 {
-    SetInternalName(std::move(name));
+    char buf[THREADNAME_SIZE];
+    snprintf(buf, sizeof(buf),
+             worker == -1 ? "b-%s" : "b-%s.%d",
+             name,
+             worker == -1 ? 0 : worker);
+    SetThreadName(buf);
+    SetInternalName(buf);
+}
+
+void util::ThreadSetInternalName(const char *name)
+{
+    SetInternalName(name);
 }

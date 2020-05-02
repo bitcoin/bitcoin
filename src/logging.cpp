@@ -250,7 +250,7 @@ void BCLog::Logger::LogPrintStr(const std::string& str)
     std::string str_prefixed = LogEscapeMessage(str);
 
     if (m_log_threadnames && m_started_new_line) {
-        str_prefixed.insert(0, "[" + util::ThreadGetInternalName() + "] ");
+        str_prefixed.insert(0, "[" + std::string(util::ThreadGetInternalName()) + "] ");
     }
 
     str_prefixed = LogTimestampStr(str_prefixed);

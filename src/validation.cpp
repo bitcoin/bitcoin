@@ -1803,7 +1803,7 @@ static bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationSt
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
 void ThreadScriptCheck(int worker_num) {
-    util::ThreadRename(strprintf("scriptch.%i", worker_num));
+    util::ThreadRenameWithWorker("scriptch", worker_num);
     scriptcheckqueue.Thread();
 }
 

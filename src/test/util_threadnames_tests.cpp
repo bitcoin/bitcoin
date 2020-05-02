@@ -19,7 +19,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(util_threadnames_tests, BasicTestingSetup)
 
-const std::string TEST_THREAD_NAME_BASE = "test_thread.";
+const std::string TEST_THREAD_NAME_BASE = "test_thread";
 
 /**
  * Run a bunch of threads to all call util::ThreadRename.
@@ -33,7 +33,7 @@ std::set<std::string> RenameEnMasse(int num_threads)
     std::mutex lock;
 
     auto RenameThisThread = [&](int i) {
-        util::ThreadRename(TEST_THREAD_NAME_BASE + ToString(i));
+        util::ThreadRenameWithWorker(TEST_THREAD_NAME_BASE.c_str(), i);
         std::lock_guard<std::mutex> guard(lock);
         names.insert(util::ThreadGetInternalName());
     };
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(util_threadnames_test_rename_threaded)
 
     // Names "test_thread.[n]" should exist for n = [0, 99]
     for (int i = 0; i < 100; ++i) {
-        BOOST_CHECK(names.find(TEST_THREAD_NAME_BASE + ToString(i)) != names.end());
+        BOOST_CHECK(names.find(TEST_THREAD_NAME_BASE + "." + ToString(i)) != names.end());
     }
 
 }
