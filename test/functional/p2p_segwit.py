@@ -1896,12 +1896,12 @@ class SegWitTest(BitcoinTestFramework):
     def test_upgrade_after_activation(self):
         """Test the behavior of starting up a segwit-aware node after the softfork has activated."""
 
-        # Restart with the new binary
         self.stop_node(2)
         self.start_node(2, extra_args=["-segwitheight={}".format(SEGWIT_HEIGHT)])
         connect_nodes(self.nodes[0], 2)
 
-        self.sync_blocks()
+        # We reconnect more than 100 blocks, give it plenty of time
+        self.sync_blocks(timeout=240)
 
         # Make sure that this peer thinks segwit has activated.
         assert softfork_active(self.nodes[2], 'segwit')
