@@ -585,7 +585,7 @@ endif
 # Libraries below may be listed more than once to resolve circular dependencies (see
 # https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
 vbitcoind_LDADD = \
-  $(ALTINTEGRATION_LIBS) \
+  $(VERIBLOCK_POP_CPP_LIBS) \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
@@ -599,7 +599,7 @@ vbitcoind_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-vbitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(ALTINTEGRATION_LIBS)
+vbitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(VERIBLOCK_POP_CPP_LIBS)
 
 # bitcoin-cli binary #
 vbitcoin_cli_SOURCES = bitcoin-cli.cpp
@@ -616,7 +616,7 @@ vbitcoin_cli_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
-  $(ALTINTEGRATION_LIBS)
+  $(VERIBLOCK_POP_CPP_LIBS)
 
 vbitcoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
 #
@@ -639,7 +639,7 @@ vbitcoin_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-vbitcoin_tx_LDADD += $(BOOST_LIBS) $(ALTINTEGRATION_LIBS)
+vbitcoin_tx_LDADD += $(BOOST_LIBS) $(VERIBLOCK_POP_CPP_LIBS)
 #
 
 # vbitcoin-wallet binary #
@@ -665,7 +665,7 @@ vbitcoin_wallet_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE) \
-  $(ALTINTEGRATION_LIBS)
+  $(VERIBLOCK_POP_CPP_LIBS)
 
 vbitcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
 #

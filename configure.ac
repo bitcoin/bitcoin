@@ -1252,7 +1252,7 @@ if test x$use_pkgconfig = xyes; then
       echo "pkg-config is used..."
       export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib64/pkgconfig
       export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/lib64/pkgconfig
-      PKG_CHECK_MODULES([ALTINTEGRATION], [altintegration],,[AC_MSG_ERROR(libaltintegration not found.)])
+      PKG_CHECK_MODULES([VERIBLOCK_POP_CPP], [veriblock-pop-cpp],,[AC_MSG_ERROR(libveriblock-pop-cpp not found.)])
       if test x$use_tests != xno; then
         if test x$use_gmock != xno; then
           PKG_CHECK_MODULES([GMOCK], [gmock],,[AC_MSG_ERROR(gmock not found.)])
@@ -1284,8 +1284,8 @@ if test x$use_pkgconfig = xyes; then
   )
 else
   # alt-integration
-  AC_CHECK_HEADER([veriblock/altintegration.hpp],,AC_MSG_ERROR(altintegration headers missing))
-  AC_CHECK_LIB([altintegration],[main],[ALTINTEGRATION_LIBS=" -laltintegration"],AC_MSG_ERROR(altintegration missing))
+  AC_CHECK_HEADER([veriblock/altintegration.hpp],,AC_MSG_ERROR(veriblock-pop-cpp headers missing))
+  AC_CHECK_LIB([veriblock-pop-cpp],[main],[VERIBLOCK_POP_CPP_LIBS=" -lveriblock-pop-cpp"],AC_MSG_ERROR(veriblock-pop-cpp missing))
 
   if test x$use_tests != xno; then
     if test x$use_gmock != xno; then
@@ -1295,7 +1295,7 @@ else
     fi
   fi
 
-  AC_ARG_VAR(ALTINTEGRATION_LIBS, "linker flags for ALTINTEGRATION")
+  AC_ARG_VAR(VERIBLOCK_POP_CPP_LIBS, "linker flags for VERIBLOCK_POP_CPP")
 
   if test x$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests != xnononono; then
     AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)

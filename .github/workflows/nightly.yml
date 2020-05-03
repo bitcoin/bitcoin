@@ -20,10 +20,10 @@ jobs:
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
           echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
           echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
-      - name: get version for alt-integration-cpp
-        run: echo "::set-env name=ALTINTEGRATION_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/altintegration.mk | head -n1)"
-      - name: alt-integration-cpp release version
-        run: echo Using alt-integration-cpp version $ALTINTEGRATION_VERSION
+      - name: get version for veriblock-pop-cpp
+        run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/VERIBLOCK_POP_CPP.mk | head -n1)"
+      - name: veriblock-pop-cpp release version
+        run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
       - name: add bitcoin ppa
         run: sudo add-apt-repository ppa:bitcoin/bitcoin
       - name: install build requirements
@@ -43,13 +43,13 @@ jobs:
           sudo ln -s -f /opt/sonar/scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner; \
           rm -rf /tmp/sonar*
           )
-      - name: install alt-integration-cpp
+      - name: install veriblock-pop-cpp
         run: |
           (
           cd /opt;
-          wget https://github.com/VeriBlock/alt-integration-cpp/archive/${ALTINTEGRATION_VERSION}.tar.gz;
-          tar -xf ${ALTINTEGRATION_VERSION}.tar.gz;
-          cd alt-integration-cpp-${ALTINTEGRATION_VERSION};
+          wget https://github.com/VeriBlock/alt-integration-cpp/archive/${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
+          tar -xf ${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
+          cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
           mkdir build;
           cd build;
           cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF;
@@ -268,21 +268,21 @@ jobs:
           key: macos-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
           restore-keys: |
             macos-ccache-
-      - name: get version for alt-integration-cpp
-        run: echo "::set-env name=ALTINTEGRATION_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/altintegration.mk | head -n1)"
-      - name: alt-integration-cpp release version
-        run: echo Using alt-integration-cpp version $ALTINTEGRATION_VERSION
+      - name: get version for veriblock-pop-cpp
+        run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/VERIBLOCK_POP_CPP.mk | head -n1)"
+      - name: veriblock-pop-cpp release version
+        run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
       - name: install homebrew
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
       - name: install dependencies
         run: brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python3 libevent librsvg ccache qrencode qt zeromq
-      - name: install alt-integration-cpp
+      - name: install veriblock-pop-cpp
         run: |
           (
           cd /tmp;
-          wget https://github.com/VeriBlock/alt-integration-cpp/archive/${ALTINTEGRATION_VERSION}.tar.gz;
-          tar -xf ${ALTINTEGRATION_VERSION}.tar.gz;
-          cd alt-integration-cpp-${ALTINTEGRATION_VERSION};
+          wget https://github.com/VeriBlock/alt-integration-cpp/archive/${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
+          tar -xf ${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
+          cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
           mkdir build;
           cd build;
           cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF;

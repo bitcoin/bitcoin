@@ -1,4 +1,4 @@
-packages:=boost libevent altintegration
+packages:=boost libevent veriblock-pop-cpp
 
 qt_packages = zlib
 
