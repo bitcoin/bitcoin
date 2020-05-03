@@ -208,9 +208,10 @@ def str_to_b64str(string):
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
-def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None):
+def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None, factor=1.0):
     if attempts == float('inf') and timeout == float('inf'):
         timeout = 60
+    timeout = timeout * factor
     attempt = 0
     time_end = time.time() + timeout
 
@@ -265,7 +266,7 @@ def get_rpc_proxy(url, node_number, *, timeout=None, coveragedir=None):
     """
     proxy_kwargs = {}
     if timeout is not None:
-        proxy_kwargs['timeout'] = timeout
+        proxy_kwargs['timeout'] = int(timeout)
 
     proxy = AuthServiceProxy(url, **proxy_kwargs)
     proxy.url = url  # store URL on proxy for info

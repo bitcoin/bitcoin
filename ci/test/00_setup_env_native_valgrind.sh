@@ -13,7 +13,7 @@ export NO_DEPENDS=1
 if [[ "${TRAVIS}" == "true" && "${TRAVIS_REPO_SLUG}" != "bitcoin/bitcoin" ]]; then
   export TEST_RUNNER_EXTRA="wallet_disable"  # Only run wallet_disable as a smoke test to not hit the 50 min travis time limit
 else
-  export TEST_RUNNER_EXTRA="--exclude rpc_bind"  # Excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547
+  export TEST_RUNNER_EXTRA="--exclude rpc_bind --factor=2"  # Excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547
 fi
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=no CC=clang CXX=clang++"  # TODO enable GUI
