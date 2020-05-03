@@ -123,6 +123,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.extra_args_from_options = []
         self.set_test_params()
         self.parse_args()
+        self.rpc_timeout = int(self.rpc_timeout * self.options.factor) # optionally, increase timeout by a factor
 
     def main(self):
         """Main function. This should not be overridden by the subclass test scripts."""
@@ -188,6 +189,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="run nodes under the valgrind memory error detector: expect at least a ~10x slowdown, valgrind 3.14 or later required")
         parser.add_argument("--randomseed", type=int,
                             help="set a random seed for deterministically reproducing a previous test run")
+        parser.add_argument('--factor', type=float, default=1.0, help='adjust test timeouts by a factor')
         self.add_options(parser)
         # Running TestShell in a Jupyter notebook causes an additional -f argument
         # To keep TestShell from failing with an "unrecognized argument" error, we add a dummy "-f" argument
@@ -440,6 +442,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 chain=self.chain,
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
+                factor=self.options.factor,
                 bitcoind=binary[i],
                 bitcoin_cli=self.options.bitcoincli,
                 mocktime=self.mocktime,
@@ -613,6 +616,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     extra_args_from_options=self.extra_args_from_options,
                     rpchost=None,
                     timewait=self.rpc_timeout,
+                    factor=self.options.factor,
                     bitcoind=self.options.bitcoind,
                     bitcoin_cli=self.options.bitcoincli,
                     mocktime=self.mocktime,
