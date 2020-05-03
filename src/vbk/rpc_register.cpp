@@ -91,7 +91,7 @@ UniValue getpopdata(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "getpopdata block_height\n"
-            "\nFetches the data relevant to POP-mining the given block.\n"
+            "\nFetches the data relevant to PoP-mining the given block.\n"
             "\nArguments:\n"
             "1. block_height         (numeric, required) The height index\n"
             "\nResult:\n"
@@ -169,7 +169,7 @@ UniValue submitpop(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
             "submitpop [vtbs] (atv)\n"
-            "\nCreates and submits a POP transaction constructed from the provided ATV and VTBs.\n"
+            "\nCreates and submits a PoP transaction constructed from the provided ATV and VTBs.\n"
             "\nArguments:\n"
             "1. atv       (string, required) Hex-encoded ATV record.\n"
             "2. vtbs      (array, required) Array of hex-encoded VTB records.\n"
@@ -189,12 +189,12 @@ UniValue submitpop(const JSONRPCRequest& request)
     CScript script;
 
     const UniValue& vtb_array = request.params[1].get_array();
-    LogPrint(BCLog::POP, "Submitpop called with ATV and VTBs=%d\n", vtb_array.size());
+    LogPrint(BCLog::POP, "VeriBlock-PoP: submitpop RPC called with 1 ATV and %d VTBs\n", vtb_array.size());
     for (uint32_t idx = 0u, size = vtb_array.size(); idx < size; ++idx) {
         auto& vtbhex = vtb_array[idx];
         auto vtb = ParseHexV(vtbhex, "vtb[" + std::to_string(idx) + "]");
         script << vtb << OP_CHECKVTB;
-        LogPrint(BCLog::POP, "VTB%d=\"%s\"\n", idx, vtbhex.get_str());
+        LogPrint(BCLog::POP, "VeriBlock-PoP: VTB%d=\"%s\"\n", idx, vtbhex.get_str());
     }
 
     auto& atvhex = request.params[0];
@@ -202,7 +202,7 @@ UniValue submitpop(const JSONRPCRequest& request)
     script << atv << OP_CHECKATV;
     script << OP_CHECKPOP;
 
-    LogPrint(BCLog::POP, "ATV=\"%s\"\n", atvhex.get_str());
+    LogPrint(BCLog::POP, "VeriBlock-PoP: ATV=\"%s\"\n", atvhex.get_str());
 
     return createPopTx(script);
 }
