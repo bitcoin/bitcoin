@@ -192,8 +192,3 @@
    ...
    fun:_ZN5BCLog6Logger12StartLoggingEv
 }
-{
-   Suppress rest_blockhash_by_height Conditional jump or move depends on uninitialised value(s)
-   Memcheck:Cond
-   fun:_ZL24rest_blockhash_by_heightP11HTTPRequestRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
-}
