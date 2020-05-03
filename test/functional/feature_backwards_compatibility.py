@@ -302,9 +302,9 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_v17.rpc.createwallet(wallet_name="u1_v17")
         wallet = node_v17.get_wallet_rpc("u1_v17")
         address = wallet.getnewaddress("bech32")
-        info = wallet.getaddressinfo(address)
-        hdkeypath = info["hdkeypath"]
-        pubkey = info["pubkey"]
+        v17_info = wallet.getaddressinfo(address)
+        hdkeypath = v17_info["hdkeypath"]
+        pubkey = v17_info["pubkey"]
 
         # Copy the 0.17 wallet to the last Bitcoin Core version and open it:
         node_v17.unloadwallet("u1_v17")
@@ -318,6 +318,18 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         descriptor = "wpkh([" + info["hdmasterfingerprint"] + hdkeypath[1:] + "]" + pubkey + ")"
         assert_equal(info["desc"], descsum_create(descriptor))
 
+        # Now copy that same wallet back to 0.17 to make sure no automatic upgrade breaks it
+        node_master.unloadwallet("u1_v17")
+        shutil.rmtree(os.path.join(node_v17_wallets_dir, "u1_v17"))
+        shutil.copytree(
+            os.path.join(node_master_wallets_dir, "u1_v17"),
+            os.path.join(node_v17_wallets_dir, "u1_v17")
+        )
+        node_v17.loadwallet("u1_v17")
+        wallet = node_v17.get_wallet_rpc("u1_v17")
+        info = wallet.getaddressinfo(address)
+        assert_equal(info, v17_info)
+
         # Copy the 0.19 wallet to the last Bitcoin Core version and open it:
         shutil.copytree(
             os.path.join(node_v19_wallets_dir, "w1_v19"),
@@ -325,6 +337,17 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         )
         node_master.loadwallet("w1_v19")
         wallet = node_master.get_wallet_rpc("w1_v19")
+        assert wallet.getaddressinfo(address_18075)["solvable"]
+
+        # Now copy that same wallet back to 0.19 to make sure no automatic upgrade breaks it
+        node_master.unloadwallet("w1_v19")
+        shutil.rmtree(os.path.join(node_v19_wallets_dir, "w1_v19"))
+        shutil.copytree(
+            os.path.join(node_master_wallets_dir, "w1_v19"),
+            os.path.join(node_v19_wallets_dir, "w1_v19")
+        )
+        node_v19.loadwallet("w1_v19")
+        wallet = node_v19.get_wallet_rpc("w1_v19")
         assert wallet.getaddressinfo(address_18075)["solvable"]
 
 if __name__ == '__main__':
