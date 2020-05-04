@@ -91,6 +91,10 @@ public:
     /// Destructor interrupts sync thread if running and blocks until it exits.
     virtual ~BaseIndex();
 
+    /// Returns whether index has completed the initial sync with the active chain.
+    /// After returning true once, this function will return true on all subsequent calls.
+    bool IsSynced() const { return m_synced; }
+
     /// Blocks the current thread until the index is caught up to the current
     /// state of the block chain. This only blocks if the index has gotten in
     /// sync once and only needs to process blocks in the ValidationInterface

@@ -1994,7 +1994,7 @@ static bool PrepareBlockFilterRequest(CNode* pfrom, const CChainParams& chain_pa
 {
     const bool supported_filter_type =
         (filter_type == BlockFilterType::BASIC &&
-         gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS));
+         (pfrom->GetLocalServices() & NODE_COMPACT_FILTERS));
     if (!supported_filter_type) {
         LogPrint(BCLog::NET, "peer %d requested unsupported block filter type: %d\n",
                  pfrom->GetId(), static_cast<uint8_t>(filter_type));

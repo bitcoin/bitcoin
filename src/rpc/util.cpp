@@ -851,6 +851,8 @@ UniValue GetServicesNames(ServiceFlags services)
         servicesNames.push_back("BLOOM");
     if (services & NODE_WITNESS)
         servicesNames.push_back("WITNESS");
+    if (services & NODE_COMPACT_FILTERS)
+        servicesNames.push_back("COMPACT_FILTERS");
     if (services & NODE_NETWORK_LIMITED)
         servicesNames.push_back("NETWORK_LIMITED");
 
