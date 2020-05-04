@@ -13,6 +13,7 @@ from test_framework.messages import (
     hash256,
     msg_getcfcheckpt,
     msg_getcfheaders,
+    msg_getcfilters,
     ser_uint256,
     uint256_from_str,
 )
@@ -24,6 +25,21 @@ from test_framework.util import (
     disconnect_nodes,
     wait_until,
 )
+
+class CFiltersClient(P2PInterface):
+    def __init__(self):
+        super().__init__()
+        # Store the cfilters received.
+        self.cfilters = []
+
+    def pop_cfilters(self):
+        cfilters = self.cfilters
+        self.cfilters = []
+        return cfilters
+
+    def on_cfilter(self, message):
+        """Store cfilters received in a list."""
+        self.cfilters.append(message)
 
 class CompactFiltersTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -37,8 +53,8 @@ class CompactFiltersTest(BitcoinTestFramework):
 
     def run_test(self):
         # Node 0 supports COMPACT_FILTERS, node 1 does not.
-        node0 = self.nodes[0].add_p2p_connection(P2PInterface())
-        node1 = self.nodes[1].add_p2p_connection(P2PInterface())
+        node0 = self.nodes[0].add_p2p_connection(CFiltersClient())
+        node1 = self.nodes[1].add_p2p_connection(CFiltersClient())
 
         # Nodes 0 & 1 share the same first 999 blocks in the chain.
         self.nodes[0].generate(999)
@@ -134,6 +150,44 @@ class CompactFiltersTest(BitcoinTestFramework):
             int(stale_cfcheckpt, 16)
         )
 
+        self.log.info("Check that peers can fetch cfilters.")
+        stop_hash = self.nodes[0].getblockhash(10)
+        request = msg_getcfilters(
+            filter_type=FILTER_TYPE_BASIC,
+            start_height=1,
+            stop_hash=int(stop_hash, 16)
+        )
+        node0.send_message(request)
+        node0.sync_with_ping()
+        response = node0.pop_cfilters()
+        assert_equal(len(response), 10)
+
+        self.log.info("Check that cfilter responses are correct.")
+        for cfilter, cfhash, height in zip(response, main_cfhashes, range(1, 11)):
+            block_hash = self.nodes[0].getblockhash(height)
+            assert_equal(cfilter.filter_type, FILTER_TYPE_BASIC)
+            assert_equal(cfilter.block_hash, int(block_hash, 16))
+            computed_cfhash = uint256_from_str(hash256(cfilter.filter_data))
+            assert_equal(computed_cfhash, cfhash)
+
+        self.log.info("Check that peers can fetch cfilters for stale blocks.")
+        stop_hash = self.nodes[0].getblockhash(10)
+        request = msg_getcfilters(
+            filter_type=FILTER_TYPE_BASIC,
+            start_height=1000,
+            stop_hash=int(stale_block_hash, 16)
+        )
+        node0.send_message(request)
+        node0.sync_with_ping()
+        response = node0.pop_cfilters()
+        assert_equal(len(response), 1)
+
+        cfilter = response[0]
+        assert_equal(cfilter.filter_type, FILTER_TYPE_BASIC)
+        assert_equal(cfilter.block_hash, int(stale_block_hash, 16))
+        computed_cfhash = uint256_from_str(hash256(cfilter.filter_data))
+        assert_equal(computed_cfhash, stale_cfhashes[999])
+
         self.log.info("Requests to node 1 without NODE_COMPACT_FILTERS results in disconnection.")
         requests = [
             msg_getcfcheckpt(
@@ -141,6 +195,11 @@ class CompactFiltersTest(BitcoinTestFramework):
                 stop_hash=int(main_block_hash, 16)
             ),
             msg_getcfheaders(
+                filter_type=FILTER_TYPE_BASIC,
+                start_height=1000,
+                stop_hash=int(main_block_hash, 16)
+            ),
+            msg_getcfilters(
                 filter_type=FILTER_TYPE_BASIC,
                 start_height=1000,
                 stop_hash=int(main_block_hash, 16)
@@ -153,6 +212,12 @@ class CompactFiltersTest(BitcoinTestFramework):
 
         self.log.info("Check that invalid requests result in disconnection.")
         requests = [
+            # Requesting too many filters results in disconnection.
+            msg_getcfilters(
+                filter_type=FILTER_TYPE_BASIC,
+                start_height=0,
+                stop_hash=int(main_block_hash, 16)
+            ),
             # Requesting too many filter headers results in disconnection.
             msg_getcfheaders(
                 filter_type=FILTER_TYPE_BASIC,
