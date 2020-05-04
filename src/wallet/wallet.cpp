@@ -2990,7 +2990,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                         // re-adjust asset commitment if its an asset transaction, outputs have changed order potentially
                         if(txNew.HasAssets()) {
                             if(!ReserializeAssetCommitment(txNew)) {
-                                strFailReason = _("Reserialize asset commitment failed after change output added").translated;
+                                error = _("Reserialize asset commitment failed after change output added");
                                 return false;     
                             }
                         }
@@ -4220,14 +4220,14 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAm
 
     CAmount nFeeRet = 0;
     int nChangePosRet = -1;
-    std::string strFail = "";
+    bilingual_str error;
     std::vector< CRecipient > vecSend;
     vecSend.push_back((CRecipient){scriptChange, amount, false});
 
     CCoinControl coinControl;
-    bool success = CreateTransaction(vecSend, tx, nFeeRet, nChangePosRet, strFail, coinControl, true);
+    bool success = CreateTransaction(vecSend, tx, nFeeRet, nChangePosRet, error, coinControl, true);
     if(!success){
-        LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
+        LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", error.original);
         return false;
     }
 

@@ -17,6 +17,7 @@
 #include <chainparams.h>
 #include <util/moneystr.h>
 #include <util/fees.h>
+#include <util/translation.h>
 #include <core_io.h>
 #include <services/asset.h>
 #include <node/transaction.h>
@@ -245,9 +246,9 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     // Parse the label first so we don't generate a key if there's an error
     std::string label = "";
     CTxDestination dest;
-    std::string error;
-    if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, error)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
+    std::string errorStr;
+    if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, errorStr)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
     }
 
     const CScript& scriptPubKey = GetScriptForDestination(dest);
@@ -275,14 +276,14 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     mtx.nVersion = SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
     CCoinControl coin_control;
     int nChangePosRet = -1;
-    std::string strError;
+    bilingual_str error;
     CAmount nFeeRequired = 0;
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
+    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
-            strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
+        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     TestTransaction(tx);
     mapValue_t mapValue;
@@ -408,9 +409,9 @@ UniValue assetnew(const JSONRPCRequest& request) {
     // Parse the label first so we don't generate a key if there's an error
     std::string label = "";
     CTxDestination dest;
-    std::string error;
-    if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, error)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
+    std::string errorStr;
+    if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, errorStr)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
     }
     CMutableTransaction mtx;
     std::set<int> setSubtractFeeFromOutputs;
@@ -431,13 +432,13 @@ UniValue assetnew(const JSONRPCRequest& request) {
     
     mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
     CAmount nFeeRequired = 0;
-    std::string strFailReason;
+    bilingual_str error;
     int nChangePosRet = -1;
     CCoinControl coin_control;
     bool lockUnspents = false;   
     mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
-    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
+    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     data.clear();
     // generate deterministic guid based on input txid
@@ -455,8 +456,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
     mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
     nFeeRequired = 0;
     nChangePosRet = -1;
-    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
+    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     if(!pwallet->SignTransaction(mtx)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
@@ -503,9 +504,9 @@ UniValue CreateAssetUpdateTx(const int32_t& nVersionIn, const uint32_t &nAsset, 
     // Parse the label first so we don't generate a key if there's an error
     std::string label = "";
     CTxDestination dest;
-    std::string error;
-    if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, error)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
+    std::string errorStr;
+    if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, errorStr)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
     }
     // subtract fee from this output (it should pay the gas which was funded by asset new)
     CRecipient recp;
@@ -531,17 +532,17 @@ UniValue CreateAssetUpdateTx(const int32_t& nVersionIn, const uint32_t &nAsset, 
         mtx.vout.push_back(txOut);
     }
     CAmount nFeeRequired = 0;
-    std::string strError;
+    bilingual_str error;
     int nChangePosRet = -1;
     coin_control.Select(inputCoin.outpoint);
     coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     mtx.nVersion = nVersionIn;
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
+    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
-            strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
+        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     TestTransaction(tx);
     mapValue_t mapValue;
@@ -969,7 +970,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
     mtx.vout.push_back(CTxOut(fee.nAmount, fee.scriptPubKey));
     CAmount nFeeRequired = 0;
-    std::string strFailReason;
+    bilingual_str error;
     int nChangePosRet = -1;
     bool lockUnspents = false;
     std::set<int> setSubtractFeeFromOutputs;
@@ -982,8 +983,8 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         nChangePosRet = -1;
         nFeeRequired = 0;
         coin_control.assetInfo = CAssetCoinInfo(it.first, it.second);
-        if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
+        if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, error.original);
         }
     }
     if(!pwallet->SignTransaction(mtx)) {
@@ -1054,9 +1055,9 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 
     std::string label = "";
     CTxDestination dest;
-    std::string error;
-    if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, error)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
+    std::string errorStr;
+    if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, errorStr)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
     }
 
     const CScript& scriptPubKey = GetScriptForDestination(dest);
@@ -1074,17 +1075,17 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     vecSend.push_back(fee);
     CAmount nFeeRequired = 0;
     int nChangePosRet = 2; // cannot have random change, because output 0 is reserved to output coins from sysx
-    std::string strError;
+    bilingual_str error;
     mtx.nVersion = nVersionIn;
     CCoinControl coin_control;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
     coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
+    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
-            strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
+        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     TestTransaction(tx);
     mapValue_t mapValue;
@@ -1203,17 +1204,17 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     vecSend.push_back(recp);
     vecSend.push_back(fee);
     CAmount nFeeRequired = 0;
-    std::string strError;
+    bilingual_str error;
     int nChangePosRet = -1;
     CCoinControl coin_control;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
     coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
+    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control)) {
         if (tx->GetValueOut() + nFeeRequired > curBalance)
-            strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
+        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     TestTransaction(tx);
     mapValue_t mapValue;
