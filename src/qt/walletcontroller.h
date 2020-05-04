@@ -8,6 +8,7 @@
 #include <qt/sendcoinsrecipient.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
+#include <util/translation.h>
 
 #include <map>
 #include <memory>
@@ -104,8 +105,8 @@ protected:
     QWidget* const m_parent_widget;
     QProgressDialog* m_progress_dialog{nullptr};
     WalletModel* m_wallet_model{nullptr};
-    std::string m_error_message;
-    std::vector<std::string> m_warning_message;
+    bilingual_str m_error_message;
+    std::vector<bilingual_str> m_warning_message;
 };
 
 

@@ -24,6 +24,7 @@
 #include <psbt.h>
 #include <ui_interface.h>
 #include <util/system.h> // for GetBoolArg
+#include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h> // for CRecipient
 
@@ -185,10 +186,10 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     {
         CAmount nFeeRequired = 0;
         int nChangePosRet = -1;
-        std::string strFailReason;
+        bilingual_str error;
 
         auto& newTx = transaction.getWtx();
-        newTx = m_wallet->createTransaction(vecSend, coinControl, !wallet().privateKeysDisabled() /* sign */, nChangePosRet, nFeeRequired, strFailReason);
+        newTx = m_wallet->createTransaction(vecSend, coinControl, !wallet().privateKeysDisabled() /* sign */, nChangePosRet, nFeeRequired, error);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && newTx)
             transaction.reassignAmounts(nChangePosRet);
@@ -199,8 +200,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             {
                 return SendCoinsReturn(AmountWithFeeExceedsBalance);
             }
-            Q_EMIT message(tr("Send Coins"), QString::fromStdString(strFailReason),
-                         CClientUIInterface::MSG_ERROR);
+            Q_EMIT message(tr("Send Coins"), QString::fromStdString(error.translated),
+                CClientUIInterface::MSG_ERROR);
             return TransactionCreationFailed;
         }
 
@@ -482,14 +483,14 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
 {
     CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = true;
-    std::vector<std::string> errors;
+    std::vector<bilingual_str> errors;
     CAmount old_fee;
     CAmount new_fee;
     CMutableTransaction mtx;
     if (!m_wallet->createBumpTransaction(hash, coin_control, errors, old_fee, new_fee, mtx)) {
         QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Increasing transaction fee failed") + "<br />(" +
-            (errors.size() ? QString::fromStdString(errors[0]) : "") +")");
-         return false;
+            (errors.size() ? QString::fromStdString(errors[0].translated) : "") +")");
+        return false;
     }
 
     const bool create_psbt = m_wallet->privateKeysDisabled();
@@ -551,8 +552,8 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     // commit the bumped transaction
     if(!m_wallet->commitBumpTransaction(hash, std::move(mtx), errors, new_hash)) {
         QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Could not commit transaction") + "<br />(" +
-            QString::fromStdString(errors[0])+")");
-         return false;
+            QString::fromStdString(errors[0].translated)+")");
+        return false;
     }
     return true;
 }

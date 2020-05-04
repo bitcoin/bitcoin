@@ -913,12 +913,12 @@ bool WalletBatch::RecoverKeysOnlyFilter(void *callbackData, CDataStream ssKey, C
     return true;
 }
 
-bool WalletBatch::VerifyEnvironment(const fs::path& wallet_path, std::string& errorStr)
+bool WalletBatch::VerifyEnvironment(const fs::path& wallet_path, bilingual_str& errorStr)
 {
     return BerkeleyBatch::VerifyEnvironment(wallet_path, errorStr);
 }
 
-bool WalletBatch::VerifyDatabaseFile(const fs::path& wallet_path, std::vector<std::string>& warnings, std::string& errorStr)
+bool WalletBatch::VerifyDatabaseFile(const fs::path& wallet_path, std::vector<bilingual_str>& warnings, bilingual_str& errorStr)
 {
     return BerkeleyBatch::VerifyDatabaseFile(wallet_path, warnings, errorStr, WalletBatch::Recover);
 }

@@ -27,6 +27,7 @@
 #include <util/fees.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
+#include <util/string.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
@@ -149,34 +150,34 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
     }
 }
 
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, std::string& error, std::vector<std::string>& warnings)
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     try {
         if (!CWallet::Verify(chain, location, false, error, warnings)) {
-            error = "Wallet file verification failed: " + error;
+            error = Untranslated("Wallet file verification failed.") + Untranslated(" ") + error;
             return nullptr;
         }
 
         std::shared_ptr<CWallet> wallet = CWallet::CreateWalletFromFile(chain, location, error, warnings);
         if (!wallet) {
-            error = "Wallet loading failed: " + error;
+            error = Untranslated("Wallet loading failed.") + Untranslated(" ") + error;
             return nullptr;
         }
         AddWallet(wallet);
         wallet->postInitProcess();
         return wallet;
     } catch (const std::runtime_error& e) {
-        error = e.what();
+        error = Untranslated(e.what());
         return nullptr;
     }
 }
 
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::vector<std::string>& warnings)
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     return LoadWallet(chain, WalletLocation(name), error, warnings);
 }
 
-WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::vector<std::string>& warnings, std::shared_ptr<CWallet>& result)
+WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings, std::shared_ptr<CWallet>& result)
 {
     // Indicate that the wallet is actually supposed to be blank and not just blank to make it encrypted
     bool create_blank = (wallet_creation_flags & WALLET_FLAG_BLANK_WALLET);
@@ -189,39 +190,39 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
     // Check the wallet file location
     WalletLocation location(name);
     if (location.Exists()) {
-        error = "Wallet " + location.GetName() + " already exists.";
+        error = strprintf(Untranslated("Wallet %s already exists."), location.GetName());
         return WalletCreationStatus::CREATION_FAILED;
     }
 
     // Wallet::Verify will check if we're trying to create a wallet with a duplicate name.
     if (!CWallet::Verify(chain, location, false, error, warnings)) {
-        error = "Wallet file verification failed: " + error;
+        error = Untranslated("Wallet file verification failed.") + Untranslated(" ") + error;
         return WalletCreationStatus::CREATION_FAILED;
     }
 
     // Do not allow a passphrase when private keys are disabled
     if (!passphrase.empty() && (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        error = "Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.";
+        error = Untranslated("Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.");
         return WalletCreationStatus::CREATION_FAILED;
     }
 
     // Make the wallet
     std::shared_ptr<CWallet> wallet = CWallet::CreateWalletFromFile(chain, location, error, warnings, wallet_creation_flags);
     if (!wallet) {
-        error = "Wallet creation failed: " + error;
+        error = Untranslated("Wallet creation failed.") + Untranslated(" ") + error;
         return WalletCreationStatus::CREATION_FAILED;
     }
 
     // Encrypt the wallet
     if (!passphrase.empty() && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         if (!wallet->EncryptWallet(passphrase)) {
-            error = "Error: Wallet created but failed to encrypt.";
+            error = Untranslated("Error: Wallet created but failed to encrypt.");
             return WalletCreationStatus::ENCRYPTION_FAILED;
         }
         if (!create_blank) {
             // Unlock the wallet
             if (!wallet->Unlock(passphrase)) {
-                error = "Error: Wallet was encrypted but could not be unlocked";
+                error = Untranslated("Error: Wallet was encrypted but could not be unlocked");
                 return WalletCreationStatus::ENCRYPTION_FAILED;
             }
 
@@ -233,7 +234,7 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
                 } else {
                     for (auto spk_man : wallet->GetActiveScriptPubKeyMans()) {
                         if (!spk_man->SetupGeneration()) {
-                            error = "Unable to generate initial keys";
+                            error = Untranslated("Unable to generate initial keys");
                             return WalletCreationStatus::CREATION_FAILED;
                         }
                     }
@@ -2520,7 +2521,7 @@ SigningResult CWallet::SignMessage(const std::string& message, const PKHash& pkh
     return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
 }
 
-bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
+bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
 {
     std::vector<CRecipient> vecSend;
 
@@ -2542,7 +2543,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     LOCK(cs_wallet);
 
     CTransactionRef tx_new;
-    if (!CreateTransaction(vecSend, tx_new, nFeeRet, nChangePosInOut, strFailReason, coinControl, false)) {
+    if (!CreateTransaction(vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, false)) {
         return false;
     }
 
@@ -2658,7 +2659,7 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
     return m_default_address_type;
 }
 
-bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign)
+bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, bool sign)
 {
     CAmount nValue = 0;
     const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
@@ -2669,7 +2670,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     {
         if (nValue < 0 || recipient.nAmount < 0)
         {
-            strFailReason = _("Transaction amounts must not be negative").translated;
+            error = _("Transaction amounts must not be negative");
             return false;
         }
         nValue += recipient.nAmount;
@@ -2679,7 +2680,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     }
     if (vecSend.empty())
     {
-        strFailReason = _("Transaction must have at least one recipient").translated;
+        error = _("Transaction must have at least one recipient");
         return false;
     }
 
@@ -2716,7 +2717,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 // destination in case we don't need change.
                 CTxDestination dest;
                 if (!reservedest.GetReservedDestination(dest, true)) {
-                    strFailReason = _("Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.").translated;
+                    error = _("Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.");
                 }
                 scriptChange = GetScriptForDestination(dest);
                 assert(!dest.empty() || scriptChange.empty());
@@ -2778,12 +2779,12 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                         if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
                         {
                             if (txout.nValue < 0)
-                                strFailReason = _("The transaction amount is too small to pay the fee").translated;
+                                error = _("The transaction amount is too small to pay the fee");
                             else
-                                strFailReason = _("The transaction amount is too small to send after the fee has been deducted").translated;
+                                error = _("The transaction amount is too small to send after the fee has been deducted");
                         }
                         else
-                            strFailReason = _("Transaction amount too small").translated;
+                            error = _("Transaction amount too small");
                         return false;
                     }
                     txNew.vout.push_back(txout);
@@ -2811,7 +2812,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                             continue;
                         }
                         else {
-                            strFailReason = _("Insufficient funds").translated;
+                            error = _("Insufficient funds");
                             return false;
                         }
                     }
@@ -2842,7 +2843,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                         }
                         else if ((unsigned int)nChangePosInOut > txNew.vout.size())
                         {
-                            strFailReason = _("Change index out of range").translated;
+                            error = _("Change index out of range");
                             return false;
                         }
 
@@ -2861,14 +2862,14 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
 
                 nBytes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
                 if (nBytes < 0) {
-                    strFailReason = _("Signing transaction failed").translated;
+                    error = _("Signing transaction failed");
                     return false;
                 }
 
                 nFeeNeeded = GetMinimumFee(*this, nBytes, coin_control, &feeCalc);
                 if (feeCalc.reason == FeeReason::FALLBACK && !m_allow_fallback_fee) {
                     // eventually allow a fallback fee
-                    strFailReason = _("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.").translated;
+                    error = _("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
                     return false;
                 }
 
@@ -2908,7 +2909,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                     // fee to pay for the new output and still meet nFeeNeeded
                     // Or we should have just subtracted fee from recipients and
                     // nFeeNeeded should not have changed
-                    strFailReason = _("Transaction fee and change calculation failed").translated;
+                    error = _("Transaction fee and change calculation failed");
                     return false;
                 }
 
@@ -2961,7 +2962,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
         }
 
         if (sign && !SignTransaction(txNew)) {
-            strFailReason = _("Signing transaction failed").translated;
+            error = _("Signing transaction failed");
             return false;
         }
 
@@ -2971,20 +2972,20 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
         // Limit size
         if (GetTransactionWeight(*tx) > MAX_STANDARD_TX_WEIGHT)
         {
-            strFailReason = _("Transaction too large").translated;
+            error = _("Transaction too large");
             return false;
         }
     }
 
     if (nFeeRet > m_default_max_tx_fee) {
-        strFailReason = TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED);
+        error = Untranslated(TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED));
         return false;
     }
 
     if (gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS)) {
         // Lastly, ensure this tx will pass the mempool's chain limits
         if (!chain().checkChainLimits(tx)) {
-            strFailReason = _("Transaction has too long of a mempool chain").translated;
+            error = _("Transaction has too long of a mempool chain");
             return false;
         }
     }
@@ -3656,7 +3657,7 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
     return values;
 }
 
-bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, bool salvage_wallet, std::string& error_string, std::vector<std::string>& warnings)
+bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, bool salvage_wallet, bilingual_str& error_string, std::vector<bilingual_str>& warnings)
 {
     // Do some checking on wallet path. It should be either a:
     //
@@ -3670,17 +3671,17 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
     if (!(path_type == fs::file_not_found || path_type == fs::directory_file ||
           (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
           (path_type == fs::regular_file && fs::path(location.GetName()).filename() == location.GetName()))) {
-        error_string = strprintf(
+        error_string = Untranslated(strprintf(
               "Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
               "database/log.?????????? files can be stored, a location where such a directory could be created, "
               "or (for backwards compatibility) the name of an existing data file in -walletdir (%s)",
-              location.GetName(), GetWalletDir());
+              location.GetName(), GetWalletDir()));
         return false;
     }
 
     // Make sure that the wallet path doesn't clash with an existing wallet path
     if (IsWalletLoaded(wallet_path)) {
-        error_string = strprintf("Error loading wallet %s. Duplicate -wallet filename specified.", location.GetName());
+        error_string = Untranslated(strprintf("Error loading wallet %s. Duplicate -wallet filename specified.", location.GetName()));
         return false;
     }
 
@@ -3692,7 +3693,7 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
             return false;
         }
     } catch (const fs::filesystem_error& e) {
-        error_string = strprintf("Error loading wallet %s. %s", location.GetName(), fsbridge::get_filesystem_error_message(e));
+        error_string = Untranslated(strprintf("Error loading wallet %s. %s", location.GetName(), fsbridge::get_filesystem_error_message(e)));
         return false;
     }
 
@@ -3708,7 +3709,7 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
     return WalletBatch::VerifyDatabaseFile(wallet_path, warnings, error_string);
 }
 
-std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, std::string& error, std::vector<std::string>& warnings, uint64_t wallet_creation_flags)
+std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings, uint64_t wallet_creation_flags)
 {
     const std::string walletFile = WalletDataFilePath(location.GetPath()).string();
 
@@ -3721,7 +3722,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(&chain, location, WalletDatabase::Create(location.GetPath()));
         DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx);
         if (nZapWalletRet != DBErrors::LOAD_OK) {
-            error = strprintf(_("Error loading %s: Wallet corrupted").translated, walletFile);
+            error = strprintf(_("Error loading %s: Wallet corrupted"), walletFile);
             return nullptr;
         }
     }
@@ -3736,26 +3737,26 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DBErrors::LOAD_OK) {
         if (nLoadWalletRet == DBErrors::CORRUPT) {
-            error = strprintf(_("Error loading %s: Wallet corrupted").translated, walletFile);
+            error = strprintf(_("Error loading %s: Wallet corrupted"), walletFile);
             return nullptr;
         }
         else if (nLoadWalletRet == DBErrors::NONCRITICAL_ERROR)
         {
             warnings.push_back(strprintf(_("Error reading %s! All keys read correctly, but transaction data"
-                                          " or address book entries might be missing or incorrect.").translated,
+                                           " or address book entries might be missing or incorrect."),
                 walletFile));
         }
         else if (nLoadWalletRet == DBErrors::TOO_NEW) {
-            error = strprintf(_("Error loading %s: Wallet requires newer version of %s").translated, walletFile, PACKAGE_NAME);
+            error = strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, PACKAGE_NAME);
             return nullptr;
         }
         else if (nLoadWalletRet == DBErrors::NEED_REWRITE)
         {
-            error = strprintf(_("Wallet needed to be rewritten: restart %s to complete").translated, PACKAGE_NAME);
+            error = strprintf(_("Wallet needed to be rewritten: restart %s to complete"), PACKAGE_NAME);
             return nullptr;
         }
         else {
-            error = strprintf(_("Error loading %s").translated, walletFile);
+            error = strprintf(_("Error loading %s"), walletFile);
             return nullptr;
         }
     }
@@ -3781,7 +3782,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
                 // Legacy wallets need SetupGeneration here.
                 for (auto spk_man : walletInstance->GetActiveScriptPubKeyMans()) {
                     if (!spk_man->SetupGeneration()) {
-                        error = _("Unable to generate initial keys").translated;
+                        error = _("Unable to generate initial keys");
                         return nullptr;
                     }
                 }
@@ -3791,36 +3792,36 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         walletInstance->chainStateFlushed(chain.getTipLocator());
     } else if (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS) {
         // Make it impossible to disable private keys after creation
-        error = strprintf(_("Error loading %s: Private keys can only be disabled during creation").translated, walletFile);
+        error = strprintf(_("Error loading %s: Private keys can only be disabled during creation"), walletFile);
         return NULL;
     } else if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         for (auto spk_man : walletInstance->GetActiveScriptPubKeyMans()) {
             if (spk_man->HavePrivateKeys()) {
-                warnings.push_back(strprintf(_("Warning: Private keys detected in wallet {%s} with disabled private keys").translated, walletFile));
+                warnings.push_back(strprintf(_("Warning: Private keys detected in wallet {%s} with disabled private keys"), walletFile));
                 break;
             }
         }
     }
 
     if (!gArgs.GetArg("-addresstype", "").empty() && !ParseOutputType(gArgs.GetArg("-addresstype", ""), walletInstance->m_default_address_type)) {
-        error = strprintf(_("Unknown address type '%s'").translated, gArgs.GetArg("-addresstype", ""));
+        error = strprintf(_("Unknown address type '%s'"), gArgs.GetArg("-addresstype", ""));
         return nullptr;
     }
 
     if (!gArgs.GetArg("-changetype", "").empty() && !ParseOutputType(gArgs.GetArg("-changetype", ""), walletInstance->m_default_change_type)) {
-        error = strprintf(_("Unknown change type '%s'").translated, gArgs.GetArg("-changetype", ""));
+        error = strprintf(_("Unknown change type '%s'"), gArgs.GetArg("-changetype", ""));
         return nullptr;
     }
 
     if (gArgs.IsArgSet("-mintxfee")) {
         CAmount n = 0;
         if (!ParseMoney(gArgs.GetArg("-mintxfee", ""), n) || 0 == n) {
-            error = AmountErrMsg("mintxfee", gArgs.GetArg("-mintxfee", "")).translated;
+            error = AmountErrMsg("mintxfee", gArgs.GetArg("-mintxfee", ""));
             return nullptr;
         }
         if (n > HIGH_TX_FEE_PER_KB) {
-            warnings.push_back(AmountHighWarn("-mintxfee").translated + " " +
-                              _("This is the minimum transaction fee you pay on every transaction.").translated);
+            warnings.push_back(AmountHighWarn("-mintxfee") + Untranslated(" ") +
+                               _("This is the minimum transaction fee you pay on every transaction."));
         }
         walletInstance->m_min_fee = CFeeRate(n);
     }
@@ -3828,12 +3829,12 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     if (gArgs.IsArgSet("-fallbackfee")) {
         CAmount nFeePerK = 0;
         if (!ParseMoney(gArgs.GetArg("-fallbackfee", ""), nFeePerK)) {
-            error = strprintf(_("Invalid amount for -fallbackfee=<amount>: '%s'").translated, gArgs.GetArg("-fallbackfee", ""));
+            error = strprintf(_("Invalid amount for -fallbackfee=<amount>: '%s'"), gArgs.GetArg("-fallbackfee", ""));
             return nullptr;
         }
         if (nFeePerK > HIGH_TX_FEE_PER_KB) {
-            warnings.push_back(AmountHighWarn("-fallbackfee").translated + " " +
-                              _("This is the transaction fee you may pay when fee estimates are not available.").translated);
+            warnings.push_back(AmountHighWarn("-fallbackfee") + Untranslated(" ") +
+                               _("This is the transaction fee you may pay when fee estimates are not available."));
         }
         walletInstance->m_fallback_fee = CFeeRate(nFeePerK);
     }
@@ -3843,28 +3844,28 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     if (gArgs.IsArgSet("-discardfee")) {
         CAmount nFeePerK = 0;
         if (!ParseMoney(gArgs.GetArg("-discardfee", ""), nFeePerK)) {
-            error = strprintf(_("Invalid amount for -discardfee=<amount>: '%s'").translated, gArgs.GetArg("-discardfee", ""));
+            error = strprintf(_("Invalid amount for -discardfee=<amount>: '%s'"), gArgs.GetArg("-discardfee", ""));
             return nullptr;
         }
         if (nFeePerK > HIGH_TX_FEE_PER_KB) {
-            warnings.push_back(AmountHighWarn("-discardfee").translated + " " +
-                              _("This is the transaction fee you may discard if change is smaller than dust at this level").translated);
+            warnings.push_back(AmountHighWarn("-discardfee") + Untranslated(" ") +
+                               _("This is the transaction fee you may discard if change is smaller than dust at this level"));
         }
         walletInstance->m_discard_rate = CFeeRate(nFeePerK);
     }
     if (gArgs.IsArgSet("-paytxfee")) {
         CAmount nFeePerK = 0;
         if (!ParseMoney(gArgs.GetArg("-paytxfee", ""), nFeePerK)) {
-            error = AmountErrMsg("paytxfee", gArgs.GetArg("-paytxfee", "")).translated;
+            error = AmountErrMsg("paytxfee", gArgs.GetArg("-paytxfee", ""));
             return nullptr;
         }
         if (nFeePerK > HIGH_TX_FEE_PER_KB) {
-            warnings.push_back(AmountHighWarn("-paytxfee").translated + " " +
-                              _("This is the transaction fee you will pay if you send a transaction.").translated);
+            warnings.push_back(AmountHighWarn("-paytxfee") + Untranslated(" ") +
+                               _("This is the transaction fee you will pay if you send a transaction."));
         }
         walletInstance->m_pay_tx_fee = CFeeRate(nFeePerK, 1000);
         if (walletInstance->m_pay_tx_fee < chain.relayMinFee()) {
-            error = strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)").translated,
+            error = strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
                 gArgs.GetArg("-paytxfee", ""), chain.relayMinFee().ToString());
             return nullptr;
         }
@@ -3873,23 +3874,23 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     if (gArgs.IsArgSet("-maxtxfee")) {
         CAmount nMaxFee = 0;
         if (!ParseMoney(gArgs.GetArg("-maxtxfee", ""), nMaxFee)) {
-            error = AmountErrMsg("maxtxfee", gArgs.GetArg("-maxtxfee", "")).translated;
+            error = AmountErrMsg("maxtxfee", gArgs.GetArg("-maxtxfee", ""));
             return nullptr;
         }
         if (nMaxFee > HIGH_MAX_TX_FEE) {
-            warnings.push_back(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction.").translated);
+            warnings.push_back(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction."));
         }
         if (CFeeRate(nMaxFee, 1000) < chain.relayMinFee()) {
-            error = strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)").translated,
-                                       gArgs.GetArg("-maxtxfee", ""), chain.relayMinFee().ToString());
+            error = strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
+                gArgs.GetArg("-maxtxfee", ""), chain.relayMinFee().ToString());
             return nullptr;
         }
         walletInstance->m_default_max_tx_fee = nMaxFee;
     }
 
     if (chain.relayMinFee().GetFeePerK() > HIGH_TX_FEE_PER_KB) {
-        warnings.push_back(AmountHighWarn("-minrelaytxfee").translated + " " +
-                    _("The wallet will avoid paying less than the minimum relay fee.").translated);
+        warnings.push_back(AmountHighWarn("-minrelaytxfee") + Untranslated(" ") +
+                           _("The wallet will avoid paying less than the minimum relay fee."));
     }
 
     walletInstance->m_confirm_target = gArgs.GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
@@ -3949,7 +3950,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
             }
 
             if (rescan_height != block_height) {
-                error = _("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)").translated;
+                error = _("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)");
                 return nullptr;
             }
         }
@@ -3974,7 +3975,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         {
             WalletRescanReserver reserver(*walletInstance);
             if (!reserver.reserve() || (ScanResult::SUCCESS != walletInstance->ScanForWalletTransactions(chain.getBlockHash(rescan_height), rescan_height, {} /* max height */, reserver, true /* update */).status)) {
-                error = _("Failed to rescan the wallet during initialization").translated;
+                error = _("Failed to rescan the wallet during initialization");
                 return nullptr;
             }
         }
@@ -4034,7 +4035,7 @@ const CAddressBookData* CWallet::FindAddressBookEntry(const CTxDestination& dest
     return &address_book_it->second;
 }
 
-bool CWallet::UpgradeWallet(int version, std::string& error, std::vector<std::string>& warnings)
+bool CWallet::UpgradeWallet(int version, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     int prev_version = GetVersion();
     int nMaxVersion = version;
@@ -4043,12 +4044,12 @@ bool CWallet::UpgradeWallet(int version, std::string& error, std::vector<std::st
         WalletLogPrintf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
         nMaxVersion = FEATURE_LATEST;
         SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
-    }
-    else
+    } else {
         WalletLogPrintf("Allowing wallet upgrade up to %i\n", nMaxVersion);
+    }
     if (nMaxVersion < GetVersion())
     {
-        error = _("Cannot downgrade wallet").translated;
+        error = _("Cannot downgrade wallet");
         return false;
     }
     SetMaxVersion(nMaxVersion);
@@ -4058,7 +4059,7 @@ bool CWallet::UpgradeWallet(int version, std::string& error, std::vector<std::st
     // Do not upgrade versions to any version between HD_SPLIT and FEATURE_PRE_SPLIT_KEYPOOL unless already supporting HD_SPLIT
     int max_version = GetVersion();
     if (!CanSupportFeature(FEATURE_HD_SPLIT) && max_version >= FEATURE_HD_SPLIT && max_version < FEATURE_PRE_SPLIT_KEYPOOL) {
-        error = _("Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.").translated;
+        error = _("Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.");
         return false;
     }
 
