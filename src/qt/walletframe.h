@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_WALLETFRAME_H
 #define BITCOIN_QT_WALLETFRAME_H
 
-#include <QFrame>
+#include <QStackedWidget>
 #include <QMap>
 
 class BitcoinGUI;
@@ -15,10 +15,6 @@ class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
 
-QT_BEGIN_NAMESPACE
-class QStackedWidget;
-QT_END_NAMESPACE
-
 /**
  * A container for embedding all wallet-related
  * controls into BitcoinGUI. The purpose of this class is to allow future
@@ -26,7 +22,7 @@ QT_END_NAMESPACE
  * modifications to BitcoinGUI, thus greatly simplifying merges while
  * reducing the risk of breaking top-level stuff.
  */
-class WalletFrame : public QFrame
+class WalletFrame : public QStackedWidget
 {
     Q_OBJECT
 
@@ -50,7 +46,6 @@ Q_SIGNALS:
     void requestedSyncWarningInfo();
 
 private:
-    QStackedWidget *walletStack;
     BitcoinGUI *gui;
     ClientModel *clientModel;
     QMap<WalletModel*, WalletView*> mapWalletViews;

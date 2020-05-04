@@ -14,20 +14,14 @@
 #include <QLabel>
 
 WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, BitcoinGUI *_gui) :
-    QFrame(_gui),
+    QStackedWidget(_gui),
     gui(_gui),
     platformStyle(_platformStyle)
 {
-    // Leave HBox hook for adding a list view later
-    QHBoxLayout *walletFrameLayout = new QHBoxLayout(this);
     setContentsMargins(0,0,0,0);
-    walletStack = new QStackedWidget(this);
-    walletFrameLayout->setContentsMargins(0,0,0,0);
-    walletFrameLayout->addWidget(walletStack);
-
     QLabel *noWallet = new QLabel(tr("No wallet has been loaded."));
     noWallet->setAlignment(Qt::AlignCenter);
-    walletStack->addWidget(noWallet);
+    addWidget(noWallet);
 }
 
 WalletFrame::~WalletFrame()
@@ -61,7 +55,7 @@ bool WalletFrame::addWallet(WalletModel *walletModel)
         walletView->gotoOverviewPage();
     }
 
-    walletStack->addWidget(walletView);
+    addWidget(walletView);
     mapWalletViews[walletModel] = walletView;
 
     connect(walletView, &WalletView::outOfSyncWarningClicked, this, &WalletFrame::outOfSyncWarningClicked);
@@ -82,7 +76,7 @@ void WalletFrame::setCurrentWallet(WalletModel* wallet_model)
     if (mapWalletViews.count(wallet_model) == 0) return;
 
     WalletView *walletView = mapWalletViews.value(wallet_model);
-    walletStack->setCurrentWidget(walletView);
+    setCurrentWidget(walletView);
     assert(walletView);
     walletView->updateEncryptionStatus();
 }
@@ -92,7 +86,7 @@ void WalletFrame::removeWallet(WalletModel* wallet_model)
     if (mapWalletViews.count(wallet_model) == 0) return;
 
     WalletView *walletView = mapWalletViews.take(wallet_model);
-    walletStack->removeWidget(walletView);
+    removeWidget(walletView);
     delete walletView;
 }
 
@@ -100,7 +94,7 @@ void WalletFrame::removeAllWallets()
 {
     QMap<WalletModel*, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        walletStack->removeWidget(i.value());
+        removeWidget(i.value());
     mapWalletViews.clear();
 }
 
@@ -215,7 +209,7 @@ void WalletFrame::usedReceivingAddresses()
 
 WalletView* WalletFrame::currentWalletView() const
 {
-    return qobject_cast<WalletView*>(walletStack->currentWidget());
+    return qobject_cast<WalletView*>(currentWidget());
 }
 
 WalletModel* WalletFrame::currentWalletModel() const
