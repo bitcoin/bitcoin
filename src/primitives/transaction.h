@@ -239,8 +239,6 @@ public:
 
     // Return sum of txouts.
     CAmount GetValueOut() const;
-    // GetValueIn() is a method on CCoinsViewCache, because
-    // inputs must be known to compute value in.
 
     /**
      * Get the total transaction size in bytes, including witness data.
