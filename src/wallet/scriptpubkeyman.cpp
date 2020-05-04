@@ -377,10 +377,9 @@ bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal) const
     return keypool_has_keys;
 }
 
-bool LegacyScriptPubKeyMan::Upgrade(int prev_version, std::string& error)
+bool LegacyScriptPubKeyMan::Upgrade(int prev_version, bilingual_str& error)
 {
     LOCK(cs_KeyStore);
-    error = "";
     bool hd_upgrade = false;
     bool split_upgrade = false;
     if (m_storage.CanSupportFeature(FEATURE_HD) && !IsHDEnabled()) {
@@ -405,7 +404,7 @@ bool LegacyScriptPubKeyMan::Upgrade(int prev_version, std::string& error)
     // Regenerate the keypool if upgraded to HD
     if (hd_upgrade) {
         if (!TopUp()) {
-            error = _("Unable to generate keys").translated;
+            error = _("Unable to generate keys");
             return false;
         }
     }
