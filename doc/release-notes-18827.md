@@ -1,0 +1,1 @@
+- New rpc: `getrpcwhitelist` that returns a list of allowed RPCs for the calling user.

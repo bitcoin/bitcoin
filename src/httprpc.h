@@ -4,7 +4,8 @@
 
 #ifndef BITCOIN_HTTPRPC_H
 #define BITCOIN_HTTPRPC_H
-
+#include <string>
+#include <set>
 
 /** Start HTTP RPC subsystem.
  * Precondition; HTTP and RPC has been started.
@@ -29,5 +30,8 @@ void InterruptREST();
  * Precondition; HTTP and RPC has been stopped.
  */
 void StopREST();
+/** Returns a collection of whitelisted RPCs for the given user
+ */
+const std::set<std::string>& GetWhitelistedRpcs(const std::string& user_name);
 
 #endif
