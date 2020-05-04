@@ -304,10 +304,10 @@ static UniValue omni_senddexsell(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 7)
         throw runtime_error(
             RPCHelpMan{"omni_senddexsell",
-               "\nPlace, update or cancel a sell offer on the traditional distributed OMNI/BTC exchange.\n",
+               "\nPlace, update or cancel a sell offer on the distributed token/BTC exchange.\n",
                {
                    {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
-                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to list for sale (must be 1 for OMN or 2 for TOMN)\n"},
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to list for sale\n"},
                    {"amountforsale", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to list for sale\n"},
                    {"amountdesired", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of bitcoins desired\n"},
                    {"paymentwindow", RPCArg::Type::NUM, RPCArg::Optional::NO, "a time limit in blocks a buyer has to pay following a successful accepting order\n"},
@@ -318,8 +318,8 @@ static UniValue omni_senddexsell(const JSONRPCRequest& request)
                    "\"hash\"                  (string) the hex-encoded transaction hash\n"
                },
                RPCExamples{
-                   HelpExampleCli("omni_senddexsell", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"1.5\" \"0.75\" 25 \"0.0005\" 1")
-                   + HelpExampleRpc("omni_senddexsell", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"1.5\", \"0.75\", 25, \"0.0005\", 1")
+                   HelpExampleCli("omni_senddexsell", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"1.5\" \"0.75\" 25 \"0.0001\" 1")
+                   + HelpExampleRpc("omni_senddexsell", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"1.5\", \"0.75\", 25, \"0.0001\", 1")
                }
             }.ToString());
 
@@ -420,7 +420,9 @@ static UniValue omni_senddexaccept(const JSONRPCRequest& request)
     bool override = (request.params.size() > 4) ? request.params[4].get_bool(): false;
 
     // perform checks
-    RequirePrimaryToken(propertyId);
+    if (!IsFeatureActivated(FEATURE_FREEDEX, GetHeight())) {
+        RequirePrimaryToken(propertyId);
+    }
     RequireMatchingDExOffer(toAddress, propertyId);
 
     if (!override) { // reject unsafe accepts - note client maximum tx fee will always be respected regardless of override here
@@ -457,6 +459,205 @@ static UniValue omni_senddexaccept(const JSONRPCRequest& request)
     }
 }
 
+static UniValue omni_sendnewdexorder(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
+
+    if (request.fHelp || request.params.size() != 6)
+        throw runtime_error(
+            RPCHelpMan{"omni_sendnewdexorder",
+               "\nCreates a new sell offer on the distributed token/BTC exchange.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to list for sale\n"},
+                   {"amountforsale", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to list for sale\n"},
+                   {"amountdesired", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of bitcoins desired\n"},
+                   {"paymentwindow", RPCArg::Type::NUM, RPCArg::Optional::NO, "a time limit in blocks a buyer has to pay following a successful accepting order\n"},
+                   {"minacceptfee", RPCArg::Type::STR, RPCArg::Optional::NO, "a minimum mining fee a buyer has to pay to accept the offer\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendnewdexorder", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"1.5\" \"0.75\" 50 \"0.0001\"")
+                   + HelpExampleRpc("omni_sendnewdexorder", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"1.5\", \"0.75\", 50, \"0.0001\"")
+               }
+            }.ToString());
+
+    // parse parameters
+    std::string fromAddress = ParseAddress(request.params[0]);
+    uint32_t propertyIdForSale = ParsePropertyId(request.params[1]);
+    int64_t amountForSale = ParseAmount(request.params[2], isPropertyDivisible(propertyIdForSale));
+    int64_t amountDesired = ParseAmount(request.params[3], true); // BTC is divisible
+    uint8_t paymentWindow = ParseDExPaymentWindow(request.params[4]);
+    int64_t minAcceptFee = ParseDExFee(request.params[5]);
+    uint8_t action = CMPTransaction::NEW;
+
+    // perform checks
+    if (!IsFeatureActivated(FEATURE_FREEDEX, GetHeight())) {
+        RequirePrimaryToken(propertyIdForSale);
+    }
+    RequireBalance(fromAddress, propertyIdForSale, amountForSale);
+    RequireNoOtherDExOffer(fromAddress);
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_DExSell(
+        propertyIdForSale,
+        amountForSale,
+        amountDesired,
+        paymentWindow,
+        minAcceptFee,
+        action);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid;
+    std::string rawHex;
+    int result = WalletTxBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit, pwallet.get());
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    }
+    if (!autoCommit) {
+        return rawHex;
+    }
+
+    PendingAdd(txid, fromAddress, MSC_TYPE_TRADE_OFFER, propertyIdForSale, amountForSale, true);
+    return txid.GetHex();
+}
+
+static UniValue omni_sendupdatedexorder(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
+
+    if (request.fHelp || request.params.size() != 6)
+        throw runtime_error(
+            RPCHelpMan{"omni_sendupdatedexorder",
+               "\nUpdates an existing sell offer on the distributed token/BTC exchange.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to update\n"},
+                   {"amountforsale", RPCArg::Type::STR, RPCArg::Optional::NO, "the new amount of tokens to list for sale\n"},
+                   {"amountdesired", RPCArg::Type::STR, RPCArg::Optional::NO, "the new amount of bitcoins desired\n"},
+                   {"paymentwindow", RPCArg::Type::NUM, RPCArg::Optional::NO, "a new time limit in blocks a buyer has to pay following a successful accepting order\n"},
+                   {"minacceptfee", RPCArg::Type::STR, RPCArg::Optional::NO, "a new minimum mining fee a buyer has to pay to accept the offer\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendupdatedexorder", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"1.0\" \"1.75\" 50 \"0.0001\"")
+                   + HelpExampleRpc("omni_sendupdatedexorder", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"1.0\", \"1.75\", 50, \"0.0001\"")
+               }
+            }.ToString());
+
+    // parse parameters
+    std::string fromAddress = ParseAddress(request.params[0]);
+    uint32_t propertyIdForSale = ParsePropertyId(request.params[1]);
+    int64_t amountForSale = ParseAmount(request.params[2], isPropertyDivisible(propertyIdForSale));
+    int64_t amountDesired = ParseAmount(request.params[3], true); // BTC is divisible
+    uint8_t paymentWindow = ParseDExPaymentWindow(request.params[4]);
+    int64_t minAcceptFee = ParseDExFee(request.params[5]);
+    uint8_t action = CMPTransaction::UPDATE;
+
+    // perform checks
+    if (!IsFeatureActivated(FEATURE_FREEDEX, GetHeight())) {
+        RequirePrimaryToken(propertyIdForSale);
+    }
+    RequireBalance(fromAddress, propertyIdForSale, amountForSale);
+    RequireMatchingDExOffer(fromAddress, propertyIdForSale);
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_DExSell(
+        propertyIdForSale,
+        amountForSale,
+        amountDesired,
+        paymentWindow,
+        minAcceptFee,
+        action);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid;
+    std::string rawHex;
+    int result = WalletTxBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit, pwallet.get());
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    }
+    if (!autoCommit) {
+        return rawHex;
+    }
+
+    PendingAdd(txid, fromAddress, MSC_TYPE_TRADE_OFFER, propertyIdForSale, amountForSale, true);
+    return txid.GetHex();
+}
+
+static UniValue omni_sendcanceldexorder(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
+
+    if (request.fHelp || request.params.size() != 2)
+        throw runtime_error(
+            RPCHelpMan{"omni_sendcanceldexorder",
+               "\nCancels existing sell offer on the distributed token/BTC exchange.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to cancel\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendcanceldexorder", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1")
+                   + HelpExampleRpc("omni_sendcanceldexorder", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1")
+               }
+            }.ToString());
+
+    // parse parameters
+    std::string fromAddress = ParseAddress(request.params[0]);
+    uint32_t propertyIdForSale = ParsePropertyId(request.params[1]);
+    int64_t amountForSale = 0;
+    int64_t amountDesired = 0;
+    uint8_t paymentWindow = 0;
+    int64_t minAcceptFee = 0;
+    uint8_t action = CMPTransaction::CANCEL;
+
+    // perform checks
+    if (!IsFeatureActivated(FEATURE_FREEDEX, GetHeight())) {
+        RequirePrimaryToken(propertyIdForSale);
+    }
+    RequireMatchingDExOffer(fromAddress, propertyIdForSale);
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_DExSell(
+        propertyIdForSale,
+        amountForSale,
+        amountDesired,
+        paymentWindow,
+        minAcceptFee,
+        action);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid;
+    std::string rawHex;
+    int result = WalletTxBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit, pwallet.get());
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    }
+    if (!autoCommit) {
+        return rawHex;
+    }
+
+    PendingAdd(txid, fromAddress, MSC_TYPE_TRADE_OFFER, propertyIdForSale, amountForSale, false);
+    return txid.GetHex();
+}
+
 static UniValue omni_senddexpay(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -485,7 +686,7 @@ static UniValue omni_senddexpay(const JSONRPCRequest& request)
     std::string buyerAddress = ParseText(request.params[0]);
     std::string sellerAddress = ParseText(request.params[1]);
     uint32_t propertyId = ParsePropertyId(request.params[2]);
-    CAmount nAmount = ParseAmount(request.params[3], isPropertyDivisible(propertyId));
+    CAmount nAmount = ParseAmount(request.params[3], true);
 
     // Check parameters are valid
     if (nAmount <= 0)
@@ -501,7 +702,9 @@ static UniValue omni_senddexpay(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid seller address");
     }
 
-    RequirePrimaryToken(propertyId);
+    if (!IsFeatureActivated(FEATURE_FREEDEX, GetHeight())) {
+        RequirePrimaryToken(propertyId);
+    }
     RequireMatchingDExAccept(sellerAddress, propertyId, buyerAddress);
 
     // Get accept offer and make sure buyer is not trying to overpay
@@ -1688,6 +1891,9 @@ static const CRPCCommand commands[] =
     { "omni layer (transaction creation)", "omni_sendrawtx",               &omni_sendrawtx,               {"fromaddress", "rawtransaction", "referenceaddress", "redeemaddress", "referenceamount"} },
     { "omni layer (transaction creation)", "omni_send",                    &omni_send,                    {"fromaddress", "toaddress", "propertyid", "amount", "redeemaddress", "referenceamount"} },
     { "omni layer (transaction creation)", "omni_senddexsell",             &omni_senddexsell,             {"fromaddress", "propertyidforsale", "amountforsale", "amountdesired", "paymentwindow", "minacceptfee", "action"} },
+    { "omni layer (transaction creation)", "omni_sendnewdexorder",         &omni_sendnewdexorder,         {"fromaddress", "propertyidforsale", "amountforsale", "amountdesired", "paymentwindow", "minacceptfee"} },
+    { "omni layer (transaction creation)", "omni_sendupdatedexorder",      &omni_sendupdatedexorder,      {"fromaddress", "propertyidforsale", "amountforsale", "amountdesired", "paymentwindow", "minacceptfee"} },
+    { "omni layer (transaction creation)", "omni_sendcanceldexorder",      &omni_sendcanceldexorder,      {"fromaddress", "propertyidforsale"} },
     { "omni layer (transaction creation)", "omni_senddexaccept",           &omni_senddexaccept,           {"fromaddress", "toaddress", "propertyid", "amount", "override"} },
     { "omni layer (transaction creation)", "omni_senddexpay",              &omni_senddexpay,              {"fromaddress", "toaddress", "propertyid", "amount"} },
     { "omni layer (transaction creation)", "omni_sendissuancecrowdsale",   &omni_sendissuancecrowdsale,   {"fromaddress", "ecosystem", "type", "previousid", "category", "subcategory", "name", "url", "data", "propertyiddesired", "tokensperunit", "deadline", "earlybonus", "issuerpercentage"} },

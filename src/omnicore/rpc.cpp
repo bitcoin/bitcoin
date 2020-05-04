@@ -1934,6 +1934,9 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
         double unitPriceFloat = 0.0;
         if ((sellOfferAmount > 0) && (sellBitcoinDesired > 0)) {
             unitPriceFloat = (double) sellBitcoinDesired / (double) sellOfferAmount; // divide by zero protection
+            if (!isPropertyDivisible(propertyId)) {
+                unitPriceFloat /= 100000000.0;
+            }
         }
         int64_t unitPrice = rounduint64(unitPriceFloat * COIN);
         int64_t bitcoinDesired = calculateDesiredBTC(sellOfferAmount, sellBitcoinDesired, amountAvailable);
@@ -1942,14 +1945,14 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
         responseObj.pushKV("txid", txid);
         responseObj.pushKV("propertyid", (uint64_t) propertyId);
         responseObj.pushKV("seller", seller);
-        responseObj.pushKV("amountavailable", FormatDivisibleMP(amountAvailable));
+        responseObj.pushKV("amountavailable", FormatMP(propertyId, amountAvailable));
         responseObj.pushKV("bitcoindesired", FormatDivisibleMP(bitcoinDesired));
         responseObj.pushKV("unitprice", FormatDivisibleMP(unitPrice));
         responseObj.pushKV("timelimit", timeLimit);
         responseObj.pushKV("minimumfee", FormatDivisibleMP(minFee));
 
         // display info about accepts related to sell
-        responseObj.pushKV("amountaccepted", FormatDivisibleMP(amountAccepted));
+        responseObj.pushKV("amountaccepted", FormatMP(propertyId, amountAccepted));
         UniValue acceptsMatched(UniValue::VARR);
         for (AcceptMap::const_iterator ait = my_accepts.begin(); ait != my_accepts.end(); ++ait) {
             UniValue matchedAccept(UniValue::VOBJ);
@@ -1968,7 +1971,7 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
                 matchedAccept.pushKV("buyer", buyer);
                 matchedAccept.pushKV("block", blockOfAccept);
                 matchedAccept.pushKV("blocksleft", blocksLeftToPay);
-                matchedAccept.pushKV("amount", FormatDivisibleMP(amountAccepted));
+                matchedAccept.pushKV("amount", FormatMP(propertyId, amountAccepted));
                 matchedAccept.pushKV("amounttopay", FormatDivisibleMP(amountToPayInBTC));
                 acceptsMatched.push_back(matchedAccept);
             }
