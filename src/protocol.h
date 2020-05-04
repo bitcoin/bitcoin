@@ -235,6 +235,17 @@ extern const char *GETBLOCKTXN;
  */
 extern const char *BLOCKTXN;
 /**
+ * getcfheaders requests compact filter headers for a range of blocks.
+ * Only available with service bit NODE_COMPACT_FILTERS as described by
+ * BIP 157 & 158.
+ */
+extern const char *GETCFHEADERS;
+/**
+ * cfheaders is a response to a getcfheaders request containing a vector of
+ * filter headers for each block in the requested range.
+ */
+extern const char *CFHEADERS;
+/**
  * getcfcheckpt requests evenly spaced compact filter headers, enabling
  * parallelized download and validation of the headers between them.
  * Only available with service bit NODE_COMPACT_FILTERS as described by
