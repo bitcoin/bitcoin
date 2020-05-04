@@ -257,8 +257,10 @@ void *PosixLockedPageAllocator::AllocateLocked(size_t len, bool *lockingSuccess)
     }
     if (addr) {
         *lockingSuccess = mlock(addr, len) == 0;
-#ifdef MADV_DONTDUMP
+#if defined(MADV_DONTDUMP) // Linux
         madvise(addr, len, MADV_DONTDUMP);
+#elif defined(MADV_NOCORE) // FreeBSD
+        madvise(addr, len, MADV_NOCORE);
 #endif
     }
     return addr;
