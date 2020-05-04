@@ -21,7 +21,7 @@ jobs:
           echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
           echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: get version for veriblock-pop-cpp
-        run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/VERIBLOCK_POP_CPP.mk | head -n1)"
+        run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
       - name: veriblock-pop-cpp release version
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
       - name: add bitcoin ppa
@@ -269,7 +269,7 @@ jobs:
           restore-keys: |
             macos-ccache-
       - name: get version for veriblock-pop-cpp
-        run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/VERIBLOCK_POP_CPP.mk | head -n1)"
+        run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
       - name: veriblock-pop-cpp release version
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
       - name: install homebrew
