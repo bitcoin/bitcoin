@@ -134,6 +134,8 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
         ui->radioTreeMode->click();
     if (settings.contains("nCoinControlSortColumn") && settings.contains("nCoinControlSortOrder"))
         sortView(settings.value("nCoinControlSortColumn").toInt(), (static_cast<Qt::SortOrder>(settings.value("nCoinControlSortOrder").toInt())));
+
+    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 CoinControlDialog::~CoinControlDialog()

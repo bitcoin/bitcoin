@@ -54,6 +54,7 @@
 #include <QSettings>
 #include <QSize>
 #include <QString>
+#include <QShortcut>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
 #include <QUrlQuery>
@@ -376,6 +377,11 @@ void bringToFront(QWidget* w)
         w->activateWindow();
         w->raise();
     }
+}
+
+void handleCloseWindowShortcut(QWidget* w)
+{
+    QObject::connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), w), &QShortcut::activated, w, &QWidget::close);
 }
 
 void openDebugLogfile()
