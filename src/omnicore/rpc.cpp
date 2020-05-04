@@ -104,6 +104,10 @@ void PropertyToJSON(const CMPSPInfo::Entry& sProperty, UniValue& property_obj)
     property_obj.pushKV("data", sProperty.data);
     property_obj.pushKV("url", sProperty.url);
     property_obj.pushKV("divisible", sProperty.isDivisible());
+    property_obj.pushKV("issuer", sProperty.issuer);
+    property_obj.pushKV("creationtxid", sProperty.txid.GetHex());
+    property_obj.pushKV("fixedissuance", sProperty.fixed);
+    property_obj.pushKV("managedissuance", sProperty.manual);
 }
 
 void MetaDexObjectToJSON(const CMPMetaDEx& obj, UniValue& metadex_obj)
@@ -1210,6 +1214,7 @@ static UniValue omni_getproperty(const JSONRPCRequest& request)
                    "  \"creationtxid\" : \"hash\",         (string) the hex-encoded creation transaction hash\n"
                    "  \"fixedissuance\" : true|false,    (boolean) whether the token supply is fixed\n"
                    "  \"managedissuance\" : true|false,    (boolean) whether the token supply is managed\n"
+                   "  \"freezingenabled\" : true|false,    (boolean) whether freezing is enabled for the property (managed properties only)\n"
                    "  \"totaltokens\" : \"n.nnnnnnnn\"     (string) the total number of tokens in existence\n"
                    "}\n"
                },
@@ -1231,16 +1236,12 @@ static UniValue omni_getproperty(const JSONRPCRequest& request)
         }
     }
     int64_t nTotalTokens = getTotalTokens(propertyId);
-    std::string strCreationHash = sp.txid.GetHex();
     std::string strTotalTokens = FormatMP(propertyId, nTotalTokens);
 
     UniValue response(UniValue::VOBJ);
     response.pushKV("propertyid", (uint64_t) propertyId);
-    PropertyToJSON(sp, response); // name, category, subcategory, data, url, divisible
-    response.pushKV("issuer", sp.issuer);
-    response.pushKV("creationtxid", strCreationHash);
-    response.pushKV("fixedissuance", sp.fixed);
-    response.pushKV("managedissuance", sp.manual);
+    PropertyToJSON(sp, response); // name, category, subcategory, ...
+
     if (sp.manual) {
         int currentBlock = GetHeight();
         LOCK(cs_tally);
@@ -1256,7 +1257,7 @@ static UniValue omni_listproperties(const JSONRPCRequest& request)
     if (request.fHelp)
         throw runtime_error(
             RPCHelpMan{"omni_listproperties",
-               "\nLists all tokens or smart properties.\n",
+               "\nLists all tokens or smart properties. To get the total number of tokens, please use omni_getproperty.\n",
                {},
                RPCResult{
                    "[                                (array of JSON objects)\n"
@@ -1268,6 +1269,10 @@ static UniValue omni_listproperties(const JSONRPCRequest& request)
                    "    \"data\" : \"information\",          (string) additional information or a description\n"
                    "    \"url\" : \"uri\",                   (string) an URI, for example pointing to a website\n"
                    "    \"divisible\" : true|false         (boolean) whether the tokens are divisible\n"
+                   "    \"issuer\" : \"address\",            (string) the Bitcoin address of the issuer on record\n"
+                   "    \"creationtxid\" : \"hash\",         (string) the hex-encoded creation transaction hash\n"
+                   "    \"fixedissuance\" : true|false,    (boolean) whether the token supply is fixed\n"
+                   "    \"managedissuance\" : true|false,    (boolean) whether the token supply is managed\n"
                    "  },\n"
                    "  ...\n"
                    "]\n"
@@ -1288,7 +1293,7 @@ static UniValue omni_listproperties(const JSONRPCRequest& request)
         if (pDbSpInfo->getSP(propertyId, sp)) {
             UniValue propertyObj(UniValue::VOBJ);
             propertyObj.pushKV("propertyid", (uint64_t) propertyId);
-            PropertyToJSON(sp, propertyObj); // name, category, subcategory, data, url, divisible
+            PropertyToJSON(sp, propertyObj); // name, category, subcategory, ...
 
             response.push_back(propertyObj);
         }
@@ -1300,7 +1305,7 @@ static UniValue omni_listproperties(const JSONRPCRequest& request)
         if (pDbSpInfo->getSP(propertyId, sp)) {
             UniValue propertyObj(UniValue::VOBJ);
             propertyObj.pushKV("propertyid", (uint64_t) propertyId);
-            PropertyToJSON(sp, propertyObj); // name, category, subcategory, data, url, divisible
+            PropertyToJSON(sp, propertyObj); // name, category, subcategory, ...
 
             response.push_back(propertyObj);
         }
