@@ -160,6 +160,8 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
         updateLabelLocked();
         CoinControlDialog::updateLabels(m_coin_control, _model, this);
     }
+
+    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 CoinControlDialog::~CoinControlDialog()

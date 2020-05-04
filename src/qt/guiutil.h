@@ -193,6 +193,9 @@ namespace GUIUtil
     // Activate, show and raise the widget
     void bringToFront(QWidget* w);
 
+    // Set shortcut to close window
+    void handleCloseWindowShortcut(QWidget* w);
+
     // Open debug.log
     void openDebugLogfile();
 

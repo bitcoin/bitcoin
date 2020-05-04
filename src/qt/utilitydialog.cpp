@@ -146,6 +146,8 @@ For more information, see the <a style=\"%2\" href=\"%3\">%1 documentation</a>."
         ui->aboutMessage->setWordWrap(true);
         ui->helpMessage->setVisible(false);
     }
+
+    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 HelpMessageDialog::~HelpMessageDialog()
@@ -189,6 +191,8 @@ ShutdownWindow::ShutdownWindow(interfaces::Node& node, QWidget *parent, Qt::Wind
     setLayout(layout);
 
     GUIUtil::updateFonts();
+
+    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 QWidget* ShutdownWindow::showShutdownWindow(interfaces::Node& node, QMainWindow* window)

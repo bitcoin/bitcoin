@@ -60,6 +60,8 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
     GUIUtil::updateFonts();
 
     GUIUtil::disableMacFocusRect(this);
+
+    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 SignVerifyMessageDialog::~SignVerifyMessageDialog()

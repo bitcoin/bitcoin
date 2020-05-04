@@ -528,6 +528,8 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     showPage(ToUnderlying(TabTypes::INFO));
 
     reloadThemedWidgets();
+
+    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 RPCConsole::~RPCConsole()
