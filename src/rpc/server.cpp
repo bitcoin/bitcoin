@@ -5,6 +5,7 @@
 
 #include <rpc/server.h>
 
+#include <httprpc.h>
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
@@ -248,12 +249,46 @@ static RPCHelpMan getrpcinfo()
     };
 }
 
+static RPCHelpMan getrpcwhitelist()
+{
+    return RPCHelpMan{"getrpcwhitelist",
+                "\nReturns whitelisted RPCs for the current user.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::ARR, "methods", "List of RPCs that the user is allowed to call",
+                        {
+                            {RPCResult::Type::STR, "rpc", "rpc command"},
+                        }},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("getrpcwhitelist", "")
+                + HelpExampleRpc("getrpcwhitelist", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    UniValue whitelisted_rpcs(UniValue::VARR);
+    const std::set<std::string>& whitelist = GetWhitelistedRpcs(request.authUser);
+    for (const auto& rpc : whitelist) {
+        whitelisted_rpcs.push_back(rpc);
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("methods", whitelisted_rpcs);
+
+    return result;
+}
+    };
+}
+
 // clang-format off
 static const CRPCCommand vRPCCommands[] =
 { //  category               actor (function)
   //  ---------------------  -----------------------
     /* Overall control/query calls */
     { "control",             &getrpcinfo,             },
+    { "control",             &getrpcwhitelist,        },
     { "control",             &help,                   },
     { "control",             &stop,                   },
     { "control",             &uptime,                 },
