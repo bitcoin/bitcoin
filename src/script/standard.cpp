@@ -202,38 +202,32 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
 
 namespace
 {
-class CScriptVisitor : public boost::static_visitor<bool>
+class CScriptVisitor : public boost::static_visitor<CScript>
 {
-private:
-    CScript *script;
 public:
-    explicit CScriptVisitor(CScript *scriptin) { script = scriptin; }
-
-    bool operator()(const CNoDestination &dest) const {
-        script->clear();
-        return false;
+    CScript operator()(const CNoDestination& dest) const
+    {
+        return CScript();
     }
 
-    bool operator()(const CKeyID &keyID) const {
-        script->clear();
-        *script << OP_DUP << OP_HASH160 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
-        return true;
+    CScript operator()(const CKeyID& keyID) const
+    {
+        return CScript() << OP_DUP << OP_HASH160 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
     }
 
-    bool operator()(const CScriptID &scriptID) const {
-        script->clear();
-        *script << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
-        return true;
+    CScript operator()(const CScriptID& scriptID) const
+    {
+        return CScript() << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
     }
 };
+
+const CScriptVisitor g_script_visitor;
+
 } // namespace
 
 CScript GetScriptForDestination(const CTxDestination& dest)
 {
-    CScript script;
-
-    boost::apply_visitor(CScriptVisitor(&script), dest);
-    return script;
+    return boost::apply_visitor(::g_script_visitor, dest);
 }
 
 CScript GetScriptForRawPubKey(const CPubKey& pubKey)
