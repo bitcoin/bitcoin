@@ -319,3 +319,8 @@ void StopHTTPRPC()
         httpRPCTimerInterface.reset();
     }
 }
+
+const std::set<std::string>& GetWhitelistedRpcs(const std::string& user_name)
+{
+    return g_rpc_whitelist.at(user_name);
+}

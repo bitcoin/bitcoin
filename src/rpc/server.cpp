@@ -5,6 +5,7 @@
 
 #include <rpc/server.h>
 
+#include <httprpc.h>
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
@@ -240,12 +241,44 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
     return result;
 }
 
+static UniValue getrpcwhitelist(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"getrpcwhitelist",
+                "\nReturns whitelisted RPCs for the current user.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::ARR, "methods", "List of RPCs that the user is allowed to call",
+                        {
+                            {RPCResult::Type::STR, "rpc", "rpc command"},
+                        }},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("getrpcwhitelist", "")
+                + HelpExampleRpc("getrpcwhitelist", "")},
+            }.Check(request);
+
+    UniValue whitelisted_rpcs(UniValue::VARR);
+    const std::set<std::string>& whitelist = GetWhitelistedRpcs(request.authUser);
+    for (const auto& rpc : whitelist) {
+        whitelisted_rpcs.push_back(rpc);
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("methods", whitelisted_rpcs);
+
+    return result;
+}
+
 // clang-format off
 static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
     /* Overall control/query calls */
     { "control",            "getrpcinfo",             &getrpcinfo,             {}  },
+    { "control",            "getrpcwhitelist",        &getrpcwhitelist,        {}  },
     { "control",            "help",                   &help,                   {"command"}  },
     { "control",            "stop",                   &stop,                   {"wait"}  },
     { "control",            "uptime",                 &uptime,                 {}  },
