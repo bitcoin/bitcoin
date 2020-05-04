@@ -393,7 +393,7 @@ bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, boo
     return fSuccess;
 }
 
-bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, std::string& errorStr)
+bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, bilingual_str& errorStr)
 {
     std::string walletFile;
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, walletFile);
@@ -403,14 +403,14 @@ bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, std::string& er
     LogPrintf("Using wallet %s\n", file_path.string());
 
     if (!env->Open(true /* retry */)) {
-        errorStr = strprintf(_("Error initializing wallet database environment %s!").translated, walletDir);
+        errorStr = strprintf(_("Error initializing wallet database environment %s!"), walletDir);
         return false;
     }
 
     return true;
 }
 
-bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, std::vector<std::string>& warnings, std::string& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc)
+bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, std::vector<bilingual_str>& warnings, bilingual_str& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc)
 {
     std::string walletFile;
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, walletFile);
@@ -425,12 +425,12 @@ bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, std::vector<st
             warnings.push_back(strprintf(_("Warning: Wallet file corrupt, data salvaged!"
                                      " Original %s saved as %s in %s; if"
                                      " your balance or transactions are incorrect you should"
-                                     " restore from a backup.").translated,
+                                     " restore from a backup."),
                 walletFile, backup_filename, walletDir));
         }
         if (r == BerkeleyEnvironment::VerifyResult::RECOVER_FAIL)
         {
-            errorStr = strprintf(_("%s corrupt, salvage failed").translated, walletFile);
+            errorStr = strprintf(_("%s corrupt, salvage failed"), walletFile);
             return false;
         }
     }

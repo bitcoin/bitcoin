@@ -300,7 +300,7 @@ def test_maxtxfee_fails(self, rbf_node, dest_address):
     self.restart_node(1, ['-maxtxfee=0.000025'] + self.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     rbfid = spend_one_input(rbf_node, dest_address)
-    assert_raises_rpc_error(-4, "Unable to create transaction: Fee exceeds maximum configured by -maxtxfee", rbf_node.bumpfee, rbfid)
+    assert_raises_rpc_error(-4, "Unable to create transaction. Fee exceeds maximum configured by -maxtxfee", rbf_node.bumpfee, rbfid)
     self.restart_node(1, self.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 
@@ -517,7 +517,7 @@ def test_no_more_inputs_fails(self, rbf_node, dest_address):
     rbf_node.generatetoaddress(1, dest_address)
     # spend all funds, no change output
     rbfid = rbf_node.sendtoaddress(rbf_node.getnewaddress(), rbf_node.getbalance(), "", "", True)
-    assert_raises_rpc_error(-4, "Unable to create transaction: Insufficient funds", rbf_node.bumpfee, rbfid)
+    assert_raises_rpc_error(-4, "Unable to create transaction. Insufficient funds", rbf_node.bumpfee, rbfid)
 
 
 if __name__ == "__main__":
