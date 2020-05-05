@@ -308,6 +308,6 @@ void OpenWalletActivity::open(const std::string& path)
 
         if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet));
 
-        QTimer::singleShot(0, this, &OpenWalletActivity::finish);
+        QMetaObject::invokeMethod(this, "finish", Qt::QueuedConnection);
     });
 }

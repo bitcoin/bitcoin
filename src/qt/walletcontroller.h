@@ -145,7 +145,7 @@ public:
 Q_SIGNALS:
     void opened(WalletModel* wallet_model);
 
-private:
+public Q_SLOTS:
     void finish();
 };
 
