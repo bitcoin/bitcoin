@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #
 # Copyright (C) 2011  Patrick "p2k" Schneider <me@p2k-network.org>
+# Copyright (C) 2020  Xenios SEZC
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -154,7 +155,7 @@ class FrameworkInfo(object):
 class ApplicationBundleInfo(object):
     def __init__(self, path: str):
         self.path = path
-        appName = "Bitcoin-Qt"
+        appName = "vBitcoin-Qt"
         self.binaryPath = os.path.join(path, "Contents", "MacOS", appName)
         if not os.path.exists(self.binaryPath):
             raise RuntimeError("Could not find bundle binary for " + path)
@@ -586,7 +587,8 @@ if len(config.fancy) == 1:
         sys.exit(1)
     
     try:
-        fancy = plistlib.readPlist(p)
+        with open(p, 'rb') as f:
+            fancy = plistlib.load(f)
     except:
         if verbose >= 1:
             sys.stderr.write("Error: Could not parse fancy disk image plist at \"{}\"\n".format(p))
@@ -638,7 +640,7 @@ else:
 
 # ------------------------------------------------
 
-target = os.path.join("dist", "Bitcoin-Qt.app")
+target = os.path.join("dist", "vBitcoin-Qt.app")
 
 if verbose >= 2:
     print("+ Copying source bundle +")

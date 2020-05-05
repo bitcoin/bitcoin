@@ -12,7 +12,7 @@ on:
       - master
 
 jobs:
-  linux:
+  linux-native:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -175,7 +175,83 @@ jobs:
           source: vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
           target: ${{ secrets.ARTIFACT_PATH }}
 
-  macos:
+  x86_64-apple-darwin16:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+        with:
+          path: main
+      - name: Extract branch name & commit
+        id: extract_branch
+        run: |
+          echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
+          echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
+          echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
+          echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
+      - name: Prepare ccache timestamp
+        id: cache_timestamp
+        run: |
+          current_date=`date --utc +%Y%m%d_%H%M%SZ`
+          echo "::set-output name=timestamp::${current_date}"
+      - name: depends cache files
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        uses: actions/cache@v1.1.0
+        with:
+          path: ~/.depends_cache
+          key: darwin-depends-${{ steps.cache_timestamp.outputs.timestamp }}
+          restore-keys: |
+            darwin-depends-
+      - name: ccache cache files
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        uses: actions/cache@v1.1.0
+        with:
+          path: ~/.ccache
+          key: darwin-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
+          restore-keys: |
+            darwin-ccache-
+      - name: install build requirements
+        run: sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools ccache
+      - name: download and extract macos sdk
+        run: |
+          wget -P depends/sdk-sources https://github.com/phracker/MacOSX-SDKs/releases/download/10.15/MacOSX10.14.sdk.tar.xz
+          mkdir -p depends/SDKs
+          tar -xf depends/sdk-sources/MacOSX10.14.sdk.tar.xz -C depends/SDKs
+      - name: set variables and build dependencies for x86_64-apple-darwin16
+        env:
+          HOST: x86_64-apple-darwin16
+          BASE_CACHE: ~/.depends_cache
+        run: cd depends && make -j2
+      - name: autogen
+        run: ./autogen.sh
+      - name: configure
+        run: ./configure --prefix=${PWD}/depends/x86_64-apple-darwin16
+          --disable-shared
+          --enable-werror
+          --disable-bench
+          --disable-gmock
+          --without-qtdbus
+      - name: make
+        run: make -j2 deploy
+      - name: create artifacts
+        if: success()
+        run: |
+          mv ./vBitcoin-Qt.app release/
+          mv ./vBitcoin-Core.dmg release/
+          mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
+      - name: upload artifacts
+        if: success()
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.ARTIFACT_HOST }}
+          username: ${{ secrets.ARTIFACT_USER }}
+          key: ${{ secrets.ARTIFACT_KEY }}
+          passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
+          source: vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
+          target: ${{ secrets.ARTIFACT_PATH }}
+
+  macos-native:
     runs-on: macos-latest
     steps:
       - name: checkout
