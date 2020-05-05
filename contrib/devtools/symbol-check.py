@@ -110,7 +110,7 @@ PE_ALLOWED_LIBRARIES = {
 'SHELL32.dll', # shell API
 'USER32.dll', # user interface
 'WS2_32.dll', # sockets
-# bitcoin-qt only
+# syscoin-qt only
 'dwmapi.dll', # desktop window manager
 'GDI32.dll', # graphics device interface
 'IMM32.dll', # input method editor

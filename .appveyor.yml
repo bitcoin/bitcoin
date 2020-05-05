@@ -72,7 +72,7 @@ before_build:
 build_script:
 - cmd: msbuild /p:TrackFileAccess=false build_msvc\syscoin.sln /m /v:q /nologo
 after_build:
-#- 7z a bitcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
+#- 7z a syscoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
 test_script:
 - cmd: src\test_syscoin.exe -l test_suite
 - cmd: src\bench_syscoin.exe -evals=1 -scaling=0 > NUL
