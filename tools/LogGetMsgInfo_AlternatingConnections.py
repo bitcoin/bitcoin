@@ -38,7 +38,7 @@ def bitcoinVictim(cmd):
 	return os.popen('curl --data-binary \'{"jsonrpc":"1.0","id":"curltext","method":"' + cmd + '","params":[]}\' -H \'content-type:text/plain;\' http://cybersec:kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame@' + victim_ip + ':8332').read()
 
 def startBitcoin():
-	subprocess.Popen(['gnome-terminal -t "Custom Bitcoin Core Instance" -- .././run.sh'], shell=True)
+	subprocess.Popen(['gnome-terminal -t "Custom Bitcoin Core Instance" -- bash .././run.sh'], shell=True)
 
 def bitcoinUp():
 	return winexists('Custom Bitcoin Core Instance')
