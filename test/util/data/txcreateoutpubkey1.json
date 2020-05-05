@@ -16,7 +16,12 @@
                 "asm": "02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397 OP_CHECKSIG",
                 "hex": "2102a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397ac",
                 "type": "pubkey"
-            }
+            },
+            "reqSigs": 1,
+            "type": "pubkey",
+               "addresses": [
+                   "Sc6G3suEydE5gcDc83LzG81tcsM15KikjZ"
+               ]
         }
     ],
     "hex": "0100000000010000000000000000232102a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397ac00000000"
