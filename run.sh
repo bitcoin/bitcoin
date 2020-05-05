@@ -24,7 +24,7 @@ if [ ! -f "$dir/bitcoin.conf" ]; then
 	echo "rpcuser=cybersec" >> "$dir/bitcoin.conf"
 	echo "rpcpassword=kZIdeN4HjZ3fp9Lge4iezt0eJrbjSi8kuSuOHeUkEUbQVdf09JZXAAGwF3R5R2qQkPgoLloW91yTFuufo7CYxM2VPT7A5lYeTrodcLWWzMMwIrOKu7ZNiwkrKOQ95KGW8kIuL1slRVFXoFpGsXXTIA55V3iUYLckn8rj8MZHBpmdGQjLxakotkj83ZlSRx1aOJ4BFxdvDNz0WHk1i2OPgXL4nsd56Ph991eKNbXVJHtzqCXUbtDELVf4shFJXame" >> "$dir/bitcoin.conf"
 	echo "rpcport=8332" >> "$dir/bitcoin.conf"
-	echo "rpcallowip=10.0.2.*/0" >> "$dir/bitcoin.conf"
+	echo "rpcallowip=0.0.0.0/0" >> "$dir/bitcoin.conf"
 	echo "upnp=1" >> "$dir/bitcoin.conf"
 	echo "listen=1" >> "$dir/bitcoin.conf"
 fi
