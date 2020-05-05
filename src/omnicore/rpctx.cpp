@@ -718,7 +718,11 @@ static UniValue omni_senddexpay(const JSONRPCRequest& request)
         const CAmount amountToPayInBTC = calculateDesiredBTC(acceptOffer->getOfferAmountOriginal(), acceptOffer->getBTCDesiredOriginal(), amountAccepted);
 
         if (nAmount > amountToPayInBTC) {
-            throw JSONRPCError(RPC_MISC_ERROR, strprintf("Paying more than required: %lld BTC to pay for %lld tokens", FormatMoney(amountToPayInBTC), FormatMoney(amountAccepted)));
+            throw JSONRPCError(RPC_MISC_ERROR, strprintf("Paying more than required: %lld BTC to pay for %lld tokens", FormatMoney(amountToPayInBTC), FormatMP(propertyId, amountAccepted)));
+        }
+
+        if (!isPropertyDivisible(propertyId) && nAmount < amountToPayInBTC) {
+            throw JSONRPCError(RPC_MISC_ERROR, strprintf("Paying less than required: %lld BTC to pay for %lld tokens", FormatMoney(amountToPayInBTC), FormatMP(propertyId, amountAccepted)));
         }
     }
 
