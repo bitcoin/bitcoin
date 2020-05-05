@@ -498,7 +498,7 @@ private:
     int32_t m_max_cached_index = -1;
 
     OutputType m_address_type;
-    bool m_internal;
+    bool m_internal = false;
 
     KeyMap m_map_keys GUARDED_BY(cs_desc_man);
     CryptedKeyMap m_map_crypted_keys GUARDED_BY(cs_desc_man);
