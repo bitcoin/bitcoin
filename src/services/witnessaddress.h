@@ -1,4 +1,8 @@
-﻿#ifndef SYSCOIN_SERVICES_WITNESSADDRESS_H
+﻿// Copyright (c) 2017-2020 The Syscoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#ifndef SYSCOIN_SERVICES_WITNESSADDRESS_H
 #define SYSCOIN_SERVICES_WITNESSADDRESS_H
 #include <serialize.h>
 class CWitnessAddress{
