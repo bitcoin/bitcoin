@@ -14,6 +14,7 @@
 #include <policy/policy.h>
 #include <index/txindex.h>
 #include <core_io.h>
+#include <boost/thread.hpp>
 extern std::string exePath;
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
