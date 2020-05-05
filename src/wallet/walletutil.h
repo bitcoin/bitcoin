@@ -62,10 +62,10 @@ class WalletDescriptor
 {
 public:
     std::shared_ptr<Descriptor> descriptor;
-    uint64_t creation_time;
-    int32_t range_start; // First item in range; start of range, inclusive, i.e. [range_start, range_end). This never changes.
-    int32_t range_end; // Item after the last; end of range, exclusive, i.e. [range_start, range_end). This will increment with each TopUp()
-    int32_t next_index; // Position of the next item to generate
+    uint64_t creation_time = 0;
+    int32_t range_start = 0; // First item in range; start of range, inclusive, i.e. [range_start, range_end). This never changes.
+    int32_t range_end = 0; // Item after the last; end of range, exclusive, i.e. [range_start, range_end). This will increment with each TopUp()
+    int32_t next_index = 0; // Position of the next item to generate
     DescriptorCache cache;
 
     void DeserializeDescriptor(const std::string& str)
