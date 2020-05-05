@@ -78,21 +78,16 @@ typedef std::map<std::pair<void*, void*>, LockStack> LockOrders;
 typedef std::set<std::pair<void*, void*> > InvLockOrders;
 
 struct LockData {
-    // Very ugly hack: as the global constructs and destructors run single
-    // threaded, we use this boolean to know whether LockData still exists,
-    // as DeleteLock can get called by global RecursiveMutex destructors
-    // after LockData disappears.
-    bool available;
-    LockData() : available(true) {}
-    ~LockData() { available = false; }
-
     LockOrders lockorders;
     InvLockOrders invlockorders;
     std::mutex dd_mutex;
 };
+
 LockData& GetLockData() {
-    static LockData lockdata;
-    return lockdata;
+    // This approach guarantees that the object is not destroyed until after its last use.
+    // The operating system automatically reclaims all the memory in a program's heap when that program exits.
+    static LockData& lock_data = *new LockData();
+    return lock_data;
 }
 
 static thread_local LockStack g_lockstack;
@@ -207,10 +202,6 @@ void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLi
 void DeleteLock(void* cs)
 {
     LockData& lockdata = GetLockData();
-    if (!lockdata.available) {
-        // We're already shutting down.
-        return;
-    }
     std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
     std::pair<void*, void*> item = std::make_pair(cs, nullptr);
     LockOrders::iterator it = lockdata.lockorders.lower_bound(item);
