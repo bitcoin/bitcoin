@@ -13,6 +13,8 @@ startupDelay = 0			# Number of seconds to wait after each node start up
 numSecondsPerSample = 1
 rowsPerNodeReset = 3000		# Number of rows for cach numconnections file
 
+waitForConnectionNum = True
+
 os.system('clear')
 
 datadir = os.path.expanduser('~/.bitcoin') # Virtual machine shared folder
@@ -561,7 +563,7 @@ def fetch(now):
 	try:
 		peerinfo = json.loads(bitcoin('getpeerinfo'))
 		numPeers = len(peerinfo)
-		if numPeers != maxConnections:
+		if waitForConnectionNum and numPeers != maxConnections:
 			numSkippedSamples += 1
 			print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
 			return ''
