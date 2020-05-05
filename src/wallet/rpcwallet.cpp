@@ -1628,7 +1628,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
     UniValue transactions(UniValue::VARR);
 
     for (const std::pair<const uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
-        CWalletTx tx = pairWtx.second;
+        const CWalletTx& tx = pairWtx.second;
 
         if (depth == -1 || abs(tx.GetDepthInMainChain()) < depth) {
             ListTransactions(pwallet, tx, 0, true, transactions, filter, nullptr /* filter_label */);
