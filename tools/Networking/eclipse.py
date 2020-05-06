@@ -229,10 +229,10 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		create_task('Mirror identity ' + src_ip, mirror_sniff, mirror_socket, s, src_ip, src_port, dst_ip, dst_port, interface)
 
 # Reconnect a peer
-def reconnect(socket, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
-	socket.close()
-	if socket in identity_socket: identity_socket.remove(socket)
-	del socket
+def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
+	the_socket.close()
+	if the_socket in identity_socket: identity_socket.remove(the_socket)
+	del the_socket
 
 	print(f'Reconnecting to ({dst_ip} : {dst_port})')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -248,18 +248,16 @@ def reconnect(socket, other_socket, src_ip, src_port, dst_ip, dst_port, interfac
 
 	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
 
-	socket.connect((dst_ip, dst_port))
+	s.connect((dst_ip, dst_port))
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
-	socket.sendall(version.to_bytes())
-	verack = socket.recv(1924)
+	s.sendall(version.to_bytes())
+	verack = s.recv(1924)
 	verack = msg_verack(bitcoin_protocolversion)
-	socket.sendall(verack.to_bytes())
+	s.sendall(verack.to_bytes())
 	verack = s.recv(1024)
-	identity_socket.append(socket)
-	create_task('Reconnected ' + src_ip, sniff_func, socket, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func)
-	print(f'Successfully reconnected ({src_ip} : {src_port})')
-	return socket
-
+	identity_socket.append(s)
+	create_task('Reconnected ' + src_ip, sniff_func, s, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func)
+	print(f'Successfully reconnected ({dst_ip} : {dst_port})')
 
 
 # Creates a fake connection to the victim
