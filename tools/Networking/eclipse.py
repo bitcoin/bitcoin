@@ -45,7 +45,7 @@ seconds_delay = { # -1 to drop the packet
 	'getaddr': 0,
 	'mempool': 0,
 	'ping': 0,
-	'pong': 5,
+	'pong': 0,
 	'notfound': 0,
 	'filterload': 0,
 	'filteradd': 0,
@@ -333,11 +333,11 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, from_i
 
 	if mirror_socket == None: return # If the mirror's socket isn't running, don't bother trying to relay
 	try:
-		#if msg_type == 'ping':
-		#	pong = msg_pong(bitcoin_protocolversion)
-		#	pong.nonce = msg.nonce
-		#	socket.send(pong.to_bytes())
-		if msg_type == 'version': pass # Ignore version
+		if msg_type == 'ping':
+			pong = msg_pong(bitcoin_protocolversion)
+			pong.nonce = msg.nonce
+			socket.send(pong.to_bytes())
+		elif msg_type == 'version': pass # Ignore version
 		elif msg_type == 'verack': pass # Ignore version
 		else:
 			mirror_socket.send(packet) # Relay to the mirror
