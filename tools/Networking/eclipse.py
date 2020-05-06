@@ -24,10 +24,11 @@ victim_ip = '10.0.2.5'
 victim_port = 8333
 
 # How many identities should run simultaneously
-num_identities = 8
-
-# Percentage (0 to 1) of packets to drop, else: relayed to victim
-eclipse_packet_drop_rate = 0
+num_identities = -1
+while num_identities < 0:
+	try:
+		num_identities = input('How many identities would you like? ')
+	except: pass
 
 seconds_delay = { # -1 to drop the packet
 	'version': -1,
