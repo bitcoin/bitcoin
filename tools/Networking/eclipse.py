@@ -248,7 +248,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 			print(f'Error: unable to start thread to sniff interface {interface}')"""
 
 # Reconnect a peer
-def reconnect(socket, src_ip, dst_ip, src_port, dst_port):
+def reconnect(socket, src_ip, src_port, dst_ip, dst_port):
 	print(f'Reconnecting to ({dst_ip} : {dst_port})')
 	socket.connect((dst_ip, dst_port))
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
