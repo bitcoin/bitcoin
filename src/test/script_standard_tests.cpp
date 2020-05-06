@@ -12,6 +12,12 @@
 
 BOOST_FIXTURE_TEST_SUITE(script_standard_tests, BasicTestingSetup)
 
+BOOST_AUTO_TEST_CASE(dest_default_is_no_dest)
+{
+    CTxDestination dest;
+    BOOST_CHECK(!IsValidDestination(dest));
+}
+
 BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
 {
     CKey keys[3];
