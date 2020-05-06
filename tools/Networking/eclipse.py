@@ -325,8 +325,6 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, from_i
 	if not payload_valid: return
 	if not payload_length_valid: return
 
-	# Parse the message payload
-	#msg = MsgSerializable.from_bytes(packet)
 
 	# Relay Bitcoin packets that aren't from the victim
 	print(f'*** Victim message received ** {from_ip} --> {to_ip} ** {msg_type}')
@@ -334,6 +332,9 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, from_i
 	if mirror_socket == None: return # If the mirror's socket isn't running, don't bother trying to relay
 	try:
 		if msg_type == 'ping':
+			# Parse the message payload
+			msg = MsgSerializable.from_bytes(packet)
+
 			pong = msg_pong(bitcoin_protocolversion)
 			pong.nonce = msg.nonce
 			socket.send(pong.to_bytes())
