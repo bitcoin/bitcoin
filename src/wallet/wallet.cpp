@@ -2713,7 +2713,10 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                     error = _("Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.");
                 }
                 scriptChange = GetScriptForDestination(dest);
-                assert(!dest.empty() || scriptChange.empty());
+                // A valid destination implies a change script (and
+                // vice-versa). An empty change script will abort later, if the
+                // change keypool ran out, but change is required.
+                CHECK_NONFATAL(IsValidDestination(dest) != scriptChange.empty());
             }
             CTxOut change_prototype_txout(0, scriptChange);
             coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
@@ -2930,7 +2933,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 continue;
             }
 
-            // Give up if change keypool ran out and we failed to find a solution without change:
+            // Give up if change keypool ran out and change is required
             if (scriptChange.empty() && nChangePosInOut != -1) {
                 return false;
             }
