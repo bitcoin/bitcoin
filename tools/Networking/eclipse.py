@@ -313,7 +313,7 @@ def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, int
 		try:
 			packet = socket.recv(65565)
 			create_task('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
-		except: break
+		except: time.sleep(1)
 	close_connection(socket, mirror_socket, dst_ip, dst_port, interface)
 	#close_connection(mirror_socket, socket, src_ip, src_port, interface)
 
@@ -322,7 +322,7 @@ def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port
 		try:
 			packet = socket.recv(65565)
 			create_task('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
-		except: break
+		except: time.sleep(1)
 	close_connection(socket, orig_socket, src_ip, src_port, interface)
 	#close_connection(orig_socket, socket, dst_ip, dst_port, interface)
 
