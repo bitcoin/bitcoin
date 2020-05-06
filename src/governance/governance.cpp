@@ -105,7 +105,6 @@ void CGovernanceManager::ProcessMessage(CNode& peer, std::string_view msg_type, 
         vRecv >> nProp;
 
         vRecv >> filter;
-        filter.UpdateEmptyFull();
 
         if (nProp == uint256()) {
             SyncObjects(peer, connman);

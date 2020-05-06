@@ -47,8 +47,6 @@ class CBloomFilter
 {
 private:
     std::vector<unsigned char> vData;
-    bool isFull;
-    bool isEmpty;
     unsigned int nHashFuncs;
     unsigned int nTweak;
     unsigned char nFlags;
@@ -70,7 +68,7 @@ public:
      * nFlags should be one of the BLOOM_UPDATE_* enums (not _MASK)
      */
     CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak, unsigned char nFlagsIn);
-    CBloomFilter() : isFull(true), isEmpty(false), nHashFuncs(0), nTweak(0), nFlags(0) {}
+    CBloomFilter() : nHashFuncs(0), nTweak(0), nFlags(0) {}
 
     SERIALIZE_METHODS(CBloomFilter, obj) { READWRITE(obj.vData, obj.nHashFuncs, obj.nTweak, obj.nFlags); }
 
@@ -89,9 +87,6 @@ public:
 
     //! Also adds any outputs which match the filter to the filter (to match their spending txes)
     bool IsRelevantAndUpdate(const CTransaction& tx);
-
-    //! Checks for empty and full filters to avoid wasting cpu
-    void UpdateEmptyFull();
 };
 
 /**
