@@ -1,11 +1,12 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_ADDRMAN_H
 #define BITCOIN_ADDRMAN_H
 
+#include <clientversion.h>
 #include <netaddress.h>
 #include <protocol.h>
 #include <random.h>
@@ -13,9 +14,13 @@
 #include <timedata.h>
 #include <util/system.h>
 
+#include <fs.h>
+#include <hash.h>
+#include <iostream>
 #include <map>
 #include <set>
 #include <stdint.h>
+#include <streams.h>
 #include <vector>
 
 /**
@@ -53,14 +58,10 @@ private:
 
 public:
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITEAS(CAddress, *this);
-        READWRITE(source);
-        READWRITE(nLastSuccess);
-        READWRITE(nAttempts);
+    SERIALIZE_METHODS(CAddrInfo, obj)
+    {
+        READWRITEAS(CAddress, obj);
+        READWRITE(obj.source, obj.nLastSuccess, obj.nAttempts);
     }
 
     CAddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource)
@@ -72,15 +73,15 @@ public:
     }
 
     //! Calculate in which "tried" bucket this entry belongs
-    int GetTriedBucket(const uint256 &nKey) const;
+    int GetTriedBucket(const uint256 &nKey, const std::vector<bool> &asmap) const;
 
     //! Calculate in which "new" bucket this entry belongs, given a certain source
-    int GetNewBucket(const uint256 &nKey, const CNetAddr& src) const;
+    int GetNewBucket(const uint256 &nKey, const CNetAddr& src, const std::vector<bool> &asmap) const;
 
     //! Calculate in which "new" bucket this entry belongs, using its default source
-    int GetNewBucket(const uint256 &nKey) const
+    int GetNewBucket(const uint256 &nKey, const std::vector<bool> &asmap) const
     {
-        return GetNewBucket(nKey, source);
+        return GetNewBucket(nKey, source, asmap);
     }
 
     //! Calculate in which position of a bucket to store this entry.
@@ -174,9 +175,10 @@ static const int64_t ADDRMAN_TEST_WINDOW = 40*60; // 40 minutes
  */
 class CAddrMan
 {
+friend class CAddrManTest;
 protected:
     //! critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
 
 private:
     //! last used nId
@@ -268,9 +270,29 @@ protected:
     void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
+    // Compressed IP->ASN mapping, loaded from a file when a node starts.
+    // Should be always empty if no file was provided.
+    // This mapping is then used for bucketing nodes in Addrman.
+    //
+    // If asmap is provided, nodes will be bucketed by
+    // AS they belong to, in order to make impossible for a node
+    // to connect to several nodes hosted in a single AS.
+    // This is done in response to Erebus attack, but also to generally
+    // diversify the connections every node creates,
+    // especially useful when a large fraction of nodes
+    // operate under a couple of cloud providers.
+    //
+    // If a new asmap was provided, the existing records
+    // would be re-bucketed accordingly.
+    std::vector<bool> m_asmap;
+
+    // Read asmap from provided binary file
+    static std::vector<bool> DecodeAsmap(fs::path path);
+
+
     /**
      * serialized format:
-     * * version byte (currently 1)
+     * * version byte (1 for pre-asmap files, 2 for files including asmap version)
      * * 0x20 + nKey (serialized as if it were a vector, for backward compatibility)
      * * nNew
      * * nTried
@@ -294,7 +316,7 @@ public:
      * This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
      * changes to the ADDRMAN_ parameters without breaking the on-disk structure.
      *
-     * We don't use ADD_SERIALIZE_METHODS since the serialization and deserialization code has
+     * We don't use SERIALIZE_METHODS since the serialization and deserialization code has
      * very little in common.
      */
     template<typename Stream>
@@ -302,7 +324,7 @@ public:
     {
         LOCK(cs);
 
-        unsigned char nVersion = 1;
+        unsigned char nVersion = 2;
         s << nVersion;
         s << ((unsigned char)32);
         s << nKey;
@@ -345,6 +367,13 @@ public:
                 }
             }
         }
+        // Store asmap version after bucket entries so that it
+        // can be ignored by older clients for backward compatibility.
+        uint256 asmap_version;
+        if (m_asmap.size() != 0) {
+            asmap_version = SerializeHash(m_asmap);
+        }
+        s << asmap_version;
     }
 
     template<typename Stream>
@@ -353,7 +382,6 @@ public:
         LOCK(cs);
 
         Clear();
-
         unsigned char nVersion;
         s >> nVersion;
         unsigned char nKeySize;
@@ -383,16 +411,6 @@ public:
             mapAddr[info] = n;
             info.nRandomPos = vRandom.size();
             vRandom.push_back(n);
-            if (nVersion != 1 || nUBuckets != ADDRMAN_NEW_BUCKET_COUNT) {
-                // In case the new table data cannot be used (nVersion unknown, or bucket count wrong),
-                // immediately try to give them a reference based on their primary source address.
-                int nUBucket = info.GetNewBucket(nKey);
-                int nUBucketPos = info.GetBucketPosition(nKey, true, nUBucket);
-                if (vvNew[nUBucket][nUBucketPos] == -1) {
-                    vvNew[nUBucket][nUBucketPos] = n;
-                    info.nRefCount++;
-                }
-            }
         }
         nIdCount = nNew;
 
@@ -401,7 +419,7 @@ public:
         for (int n = 0; n < nTried; n++) {
             CAddrInfo info;
             s >> info;
-            int nKBucket = info.GetTriedBucket(nKey);
+            int nKBucket = info.GetTriedBucket(nKey, m_asmap);
             int nKBucketPos = info.GetBucketPosition(nKey, false, nKBucket);
             if (vvTried[nKBucket][nKBucketPos] == -1) {
                 info.nRandomPos = vRandom.size();
@@ -417,7 +435,9 @@ public:
         }
         nTried -= nLost;
 
-        // Deserialize positions in the new table (if possible).
+        // Store positions in the new table buckets to apply later (if possible).
+        std::map<int, int> entryToBucket; // Represents which entry belonged to which bucket when serializing
+
         for (int bucket = 0; bucket < nUBuckets; bucket++) {
             int nSize = 0;
             s >> nSize;
@@ -425,12 +445,38 @@ public:
                 int nIndex = 0;
                 s >> nIndex;
                 if (nIndex >= 0 && nIndex < nNew) {
-                    CAddrInfo &info = mapInfo[nIndex];
-                    int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
-                    if (nVersion == 1 && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 && info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS) {
-                        info.nRefCount++;
-                        vvNew[bucket][nUBucketPos] = nIndex;
-                    }
+                    entryToBucket[nIndex] = bucket;
+                }
+            }
+        }
+
+        uint256 supplied_asmap_version;
+        if (m_asmap.size() != 0) {
+            supplied_asmap_version = SerializeHash(m_asmap);
+        }
+        uint256 serialized_asmap_version;
+        if (nVersion > 1) {
+            s >> serialized_asmap_version;
+        }
+
+        for (int n = 0; n < nNew; n++) {
+            CAddrInfo &info = mapInfo[n];
+            int bucket = entryToBucket[n];
+            int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
+            if (nVersion == 2 && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 &&
+                info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS && serialized_asmap_version == supplied_asmap_version) {
+                // Bucketing has not changed, using existing bucket positions for the new table
+                vvNew[bucket][nUBucketPos] = n;
+                info.nRefCount++;
+            } else {
+                // In case the new table data cannot be used (nVersion unknown, bucket count wrong or new asmap),
+                // try to give them a reference based on their primary source address.
+                LogPrint(BCLog::ADDRMAN, "Bucketing method was updated, re-bucketing addrman entries from disk\n");
+                bucket = info.GetNewBucket(nKey, m_asmap);
+                nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
+                if (vvNew[bucket][nUBucketPos] == -1) {
+                    vvNew[bucket][nUBucketPos] = n;
+                    info.nRefCount++;
                 }
             }
         }

@@ -17,7 +17,7 @@ __log_out() {
   echo "$1" 1>&2
 }
 
-# Paramters: max_tries min_sleep max_sleep constant_sleep fail_script EXECUTION_COMMAND
+# Parameters: max_tries min_sleep max_sleep constant_sleep fail_script EXECUTION_COMMAND
 retry()
 {
   local max_tries="$1"; shift
@@ -83,8 +83,8 @@ Usage: $retry [options] -- execute command
     -v, --verbose                    Verbose output
     -t, --tries=#                    Set max retries: Default 10
     -s, --sleep=secs                 Constant sleep amount (seconds)
-    -m, --min=secs                   Exponenetial Backoff: minimum sleep amount (seconds): Default 0.3
-    -x, --max=secs                   Exponenetial Backoff: maximum sleep amount (seconds): Default 60
+    -m, --min=secs                   Exponential Backoff: minimum sleep amount (seconds): Default 0.3
+    -x, --max=secs                   Exponential Backoff: maximum sleep amount (seconds): Default 60
     -f, --fail="script +cmds"        Fail Script: run in case of final failure
 EOF
   }

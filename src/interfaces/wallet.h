@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +10,7 @@
 #include <script/standard.h>           // For CTxDestination
 #include <support/allocators/secure.h> // For SecureString
 #include <ui_interface.h>              // For ChangeType
+#include <util/message.h>
 
 #include <functional>
 #include <map>
@@ -24,12 +25,14 @@ class CCoinControl;
 class CFeeRate;
 class CKey;
 class CWallet;
-enum isminetype : unsigned int;
 enum class FeeReason;
-typedef uint8_t isminefilter;
-
 enum class OutputType;
+enum class TransactionError;
+enum isminetype : unsigned int;
 struct CRecipient;
+struct PartiallySignedTransaction;
+struct bilingual_str;
+typedef uint8_t isminefilter;
 
 namespace interfaces {
 
@@ -81,10 +84,10 @@ public:
     virtual bool getNewDestination(const OutputType type, const std::string label, CTxDestination& dest) = 0;
 
     //! Get public key.
-    virtual bool getPubKey(const CKeyID& address, CPubKey& pub_key) = 0;
+    virtual bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) = 0;
 
-    //! Get private key.
-    virtual bool getPrivKey(const CKeyID& address, CKey& key) = 0;
+    //! Sign message
+    virtual SigningResult signMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) = 0;
 
     //! Return whether wallet has private key.
     virtual bool isSpendable(const CTxDestination& dest) = 0;
@@ -106,10 +109,6 @@ public:
 
     //! Get wallet address list.
     virtual std::vector<WalletAddress> getAddresses() = 0;
-
-    //! Add scripts to key store so old so software versions opening the wallet
-    //! database can detect payments to newer address types.
-    virtual void learnRelatedScripts(const CPubKey& key, OutputType type) = 0;
 
     //! Add dest data.
     virtual bool addDestData(const CTxDestination& dest, const std::string& key, const std::string& value) = 0;
@@ -138,13 +137,12 @@ public:
         bool sign,
         int& change_pos,
         CAmount& fee,
-        std::string& fail_reason) = 0;
+        bilingual_str& fail_reason) = 0;
 
     //! Commit transaction.
-    virtual bool commitTransaction(CTransactionRef tx,
+    virtual void commitTransaction(CTransactionRef tx,
         WalletValueMap value_map,
-        WalletOrderForm order_form,
-        std::string& reject_reason) = 0;
+        WalletOrderForm order_form) = 0;
 
     //! Return whether transaction can be abandoned.
     virtual bool transactionCanBeAbandoned(const uint256& txid) = 0;
@@ -158,8 +156,7 @@ public:
     //! Create bump transaction.
     virtual bool createBumpTransaction(const uint256& txid,
         const CCoinControl& coin_control,
-        CAmount total_fee,
-        std::vector<std::string>& errors,
+        std::vector<bilingual_str>& errors,
         CAmount& old_fee,
         CAmount& new_fee,
         CMutableTransaction& mtx) = 0;
@@ -170,7 +167,7 @@ public:
     //! Commit bump transaction.
     virtual bool commitBumpTransaction(const uint256& txid,
         CMutableTransaction&& mtx,
-        std::vector<std::string>& errors,
+        std::vector<bilingual_str>& errors,
         uint256& bumped_txid) = 0;
 
     //! Get a transaction.
@@ -195,11 +192,21 @@ public:
         bool& in_mempool,
         int& num_blocks) = 0;
 
+    //! Fill PSBT.
+    virtual TransactionError fillPSBT(int sighash_type,
+        bool sign,
+        bool bip32derivs,
+        PartiallySignedTransaction& psbtx,
+        bool& complete) = 0;
+
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
 
-    //! Get balances if possible without blocking.
-    virtual bool tryGetBalances(WalletBalances& balances, int& num_blocks) = 0;
+    //! Get balances if possible without waiting for chain and wallet locks.
+    virtual bool tryGetBalances(WalletBalances& balances,
+        int& num_blocks,
+        bool force,
+        int cached_num_blocks) = 0;
 
     //! Get balance.
     virtual CAmount getBalance() = 0;
@@ -245,8 +252,8 @@ public:
     // Return whether the wallet is blank.
     virtual bool canGetAddresses() = 0;
 
-    // check if a certain wallet flag is set.
-    virtual bool IsWalletFlagSet(uint64_t flag) = 0;
+    // Return whether private keys enabled.
+    virtual bool privateKeysDisabled() = 0;
 
     // Get default address type.
     virtual OutputType getDefaultAddressType() = 0;
@@ -259,6 +266,9 @@ public:
 
     // Remove wallet.
     virtual void remove() = 0;
+
+    //! Return whether is a legacy wallet
+    virtual bool isLegacy() = 0;
 
     //! Register handler for unload message.
     using UnloadFn = std::function<void()>;
@@ -291,6 +301,9 @@ public:
     //! Register handler for keypool changed messages.
     using CanGetAddressesChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) = 0;
+
+    //! Return pointer to internal wallet class, useful for testing.
+    virtual CWallet* wallet() { return nullptr; }
 };
 
 //! Information about one wallet address.

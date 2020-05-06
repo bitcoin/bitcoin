@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The Bitcoin Core developers
+# Copyright (c) 2015-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -21,10 +21,33 @@ Invalid tx cases not covered here can be found by running:
 """
 import abc
 
-from test_framework.messages import CTransaction, CTxIn, CTxOut, COutPoint
+from test_framework.messages import (
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    MAX_MONEY,
+)
 from test_framework import script as sc
 from test_framework.blocktools import create_tx_with_script, MAX_BLOCK_SIGOPS
-
+from test_framework.script import (
+    CScript,
+    OP_CAT,
+    OP_SUBSTR,
+    OP_LEFT,
+    OP_RIGHT,
+    OP_INVERT,
+    OP_AND,
+    OP_OR,
+    OP_XOR,
+    OP_2MUL,
+    OP_2DIV,
+    OP_MUL,
+    OP_DIV,
+    OP_MOD,
+    OP_LSHIFT,
+    OP_RSHIFT
+)
 basic_p2sh = sc.CScript([sc.OP_HASH160, sc.hash160(sc.CScript([sc.OP_0])), sc.OP_EQUAL])
 
 
@@ -82,6 +105,8 @@ class InputMissing(BadTxTemplate):
         return tx
 
 
+# The following check prevents exploit of lack of merkle
+# tree depth commitment (CVE-2017-12842)
 class SizeTooSmall(BadTxTemplate):
     reject_reason = "tx-size-small"
     expect_disconnect = False
@@ -147,12 +172,31 @@ class SpendTooMuch(BadTxTemplate):
             self.spend_tx, 0, script_pub_key=basic_p2sh, amount=(self.spend_avail + 1))
 
 
-class SpendNegative(BadTxTemplate):
+class CreateNegative(BadTxTemplate):
     reject_reason = 'bad-txns-vout-negative'
     expect_disconnect = True
 
     def get_tx(self):
         return create_tx_with_script(self.spend_tx, 0, amount=-1)
+
+
+class CreateTooLarge(BadTxTemplate):
+    reject_reason = 'bad-txns-vout-toolarge'
+    expect_disconnect = True
+
+    def get_tx(self):
+        return create_tx_with_script(self.spend_tx, 0, amount=MAX_MONEY + 1)
+
+
+class CreateSumTooLarge(BadTxTemplate):
+    reject_reason = 'bad-txns-txouttotal-toolarge'
+    expect_disconnect = True
+
+    def get_tx(self):
+        tx = create_tx_with_script(self.spend_tx, 0, amount=MAX_MONEY)
+        tx.vout = [tx.vout[0]] * 2
+        tx.calc_sha256()
+        return tx
 
 
 class InvalidOPIFConstruction(BadTxTemplate):
@@ -177,6 +221,42 @@ class TooManySigops(BadTxTemplate):
             self.spend_tx, 0,
             script_pub_key=lotsa_checksigs,
             amount=1)
+
+def getDisabledOpcodeTemplate(opcode):
+    """ Creates disabled opcode tx template class"""
+    def get_tx(self):
+        tx = CTransaction()
+        vin = self.valid_txin
+        vin.scriptSig = CScript([opcode])
+        tx.vin.append(vin)
+        tx.vout.append(CTxOut(1, basic_p2sh))
+        tx.calc_sha256()
+        return tx
+
+    return type('DisabledOpcode_' + str(opcode), (BadTxTemplate,), {
+        'reject_reason': "disabled opcode",
+        'expect_disconnect': True,
+        'get_tx': get_tx,
+        'valid_in_block' : True
+        })
+
+# Disabled opcode tx templates (CVE-2010-5137)
+DisabledOpcodeTemplates = [getDisabledOpcodeTemplate(opcode) for opcode in [
+    OP_CAT,
+    OP_SUBSTR,
+    OP_LEFT,
+    OP_RIGHT,
+    OP_INVERT,
+    OP_AND,
+    OP_OR,
+    OP_XOR,
+    OP_2MUL,
+    OP_2DIV,
+    OP_MUL,
+    OP_DIV,
+    OP_MOD,
+    OP_LSHIFT,
+    OP_RSHIFT]]
 
 
 def iter_all_templates():

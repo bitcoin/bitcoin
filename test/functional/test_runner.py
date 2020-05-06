@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Run regression test suite.
@@ -19,12 +19,12 @@ import datetime
 import os
 import time
 import shutil
-import signal
-import sys
 import subprocess
+import sys
 import tempfile
 import re
 import logging
+import unittest
 
 # Formatting. Default colors to empty strings.
 BOLD, GREEN, RED, GREY = ("", ""), ("", ""), ("", ""), ("", "")
@@ -66,6 +66,10 @@ if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
 
+TEST_FRAMEWORK_MODULES = [
+    "script",
+]
+
 EXTENDED_SCRIPTS = [
     # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
@@ -77,6 +81,7 @@ BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     'wallet_hd.py',
+    'wallet_hd.py --descriptors',
     'wallet_backup.py',
     # vv Tests less than 5m vv
     'mining_getblocktemplate_longpoll.py',
@@ -87,10 +92,13 @@ BASE_SCRIPTS = [
     'feature_segwit.py',
     # vv Tests less than 2m vv
     'wallet_basic.py',
+    'wallet_basic.py --descriptors',
     'wallet_labels.py',
+    'wallet_labels.py --descriptors',
     'p2p_segwit.py',
     'p2p_timeouts.py',
     'p2p_tx_download.py',
+    'mempool_updatefromblock.py',
     'wallet_dump.py',
     'wallet_listtransactions.py',
     # vv Tests less than 60s vv
@@ -110,6 +118,7 @@ BASE_SCRIPTS = [
     'feature_abortnode.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',
+    'wallet_keypool_topup.py --descriptors',
     'feature_fee_estimation.py',
     'interface_zmq.py',
     'interface_bitcoin_cli.py',
@@ -123,6 +132,7 @@ BASE_SCRIPTS = [
     'interface_rest.py',
     'mempool_spend_coinbase.py',
     'wallet_avoidreuse.py',
+    'wallet_avoidreuse.py --descriptors',
     'mempool_reorg.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
@@ -131,10 +141,13 @@ BASE_SCRIPTS = [
     'wallet_createwallet.py --usecli',
     'wallet_watchonly.py',
     'wallet_watchonly.py --usecli',
+    'wallet_reorgsrestore.py',
     'interface_http.py',
     'interface_rpc.py',
     'rpc_psbt.py',
+    'rpc_psbt.py --descriptors',
     'rpc_users.py',
+    'rpc_whitelist.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
     'wallet_groups.py',
@@ -143,9 +156,13 @@ BASE_SCRIPTS = [
     'rpc_blockchain.py',
     'rpc_deprecated.py',
     'wallet_disable.py',
+    'p2p_addr_relay.py',
     'rpc_net.py',
     'wallet_keypool.py',
+    'wallet_keypool.py --descriptors',
+    'wallet_descriptor.py',
     'p2p_mempool.py',
+    'p2p_filter.py',
     'rpc_setban.py',
     'p2p_blocksonly.py',
     'mining_prioritisetransaction.py',
@@ -156,6 +173,7 @@ BASE_SCRIPTS = [
     'feature_assumevalid.py',
     'example_test.py',
     'wallet_txn_doublespend.py',
+    'feature_backwards_compatibility.py',
     'wallet_txn_clone.py --mineblock',
     'feature_notifications.py',
     'rpc_getblockfilter.py',
@@ -164,40 +182,52 @@ BASE_SCRIPTS = [
     'mempool_packages.py',
     'mempool_package_onemore.py',
     'rpc_createmultisig.py',
+    'rpc_createmultisig.py --descriptors',
     'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
     'p2p_leak_tx.py',
     'rpc_signmessage.py',
+    'rpc_generateblock.py',
     'wallet_balance.py',
     'feature_nulldummy.py',
     'mempool_accept.py',
+    'mempool_expiry.py',
     'wallet_import_rescan.py',
     'wallet_import_with_label.py',
+    'wallet_importdescriptors.py',
+    'wallet_upgradewallet.py',
     'rpc_bind.py --ipv4',
     'rpc_bind.py --ipv6',
     'rpc_bind.py --nonloopback',
     'mining_basic.py',
     'wallet_bumpfee.py',
-    'wallet_bumpfee_totalfee_deprecation.py',
+    'wallet_implicitsegwit.py',
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
     'p2p_leak.py',
     'wallet_encryption.py',
+    'wallet_encryption.py --descriptors',
     'feature_dersig.py',
     'feature_cltv.py',
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'wallet_fallbackfee.py',
+    'rpc_dumptxoutset.py',
     'feature_minchainwork.py',
+    'rpc_estimatefee.py',
     'rpc_getblockstats.py',
     'wallet_create_tx.py',
     'p2p_fingerprint.py',
     'feature_uacomment.py',
     'wallet_coinbase_category.py',
     'feature_filelock.py',
+    'feature_loadblock.py',
+    'p2p_dos_header_tree.py',
     'p2p_unrequested_blocks.py',
     'feature_includeconf.py',
+    'feature_asmap.py',
+    'mempool_unbroadcast.py',
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
     'rpc_scantxoutset.py',
@@ -206,6 +236,9 @@ BASE_SCRIPTS = [
     'p2p_permissions.py',
     'feature_blocksdir.py',
     'feature_config_args.py',
+    'rpc_getaddressinfo_labels_purpose_deprecation.py',
+    'rpc_getaddressinfo_label_deprecation.py',
+    'rpc_getdescriptorinfo.py',
     'rpc_help.py',
     'feature_help.py',
     'feature_shutdown.py',
@@ -352,16 +385,16 @@ def main():
         args=passon_args,
         combined_logs_len=args.combinedlogslen,
         failfast=args.failfast,
-        runs_ci=args.ci,
         use_term_control=args.ansi,
     )
 
-def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, runs_ci, use_term_control):
+def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control):
     args = args or []
 
-    # Warn if bitcoind is already running (unix only)
+    # Warn if bitcoind is already running
+    # pidof might fail or return an empty string if bitcoind is not running
     try:
-        if subprocess.check_output(["pidof", "bitcoind"]) is not None:
+        if subprocess.check_output(["pidof", "bitcoind"]) not in [b'']:
             print("%sWARNING!%s There is already a bitcoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
     except (OSError, subprocess.SubprocessError):
         pass
@@ -370,6 +403,16 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     cache_dir = "%s/test/cache" % build_dir
     if os.path.isdir(cache_dir):
         print("%sWARNING!%s There is a cache directory here: %s. If tests fail unexpectedly, try deleting the cache directory." % (BOLD[1], BOLD[0], cache_dir))
+
+    # Test Framework Tests
+    print("Running Unit Tests for Test Framework Modules")
+    test_framework_tests = unittest.TestSuite()
+    for module in TEST_FRAMEWORK_MODULES:
+        test_framework_tests.addTest(unittest.TestLoader().loadTestsFromName("test_framework.{}".format(module)))
+    result = unittest.TextTestRunner(verbosity=1, failfast=True).run(test_framework_tests)
+    if not result.wasSuccessful():
+        logging.debug("Early exiting after failure in TestFramework unit tests")
+        sys.exit(False)
 
     tests_dir = src_dir + '/test/functional/'
 
@@ -397,7 +440,6 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
         tmpdir=tmpdir,
         test_list=test_list,
         flags=flags,
-        timeout_duration=40 * 60 if runs_ci else float('inf'),  # in seconds
         use_term_control=use_term_control,
     )
     start_time = time.time()
@@ -482,12 +524,11 @@ class TestHandler:
     Trigger the test scripts passed in via the list.
     """
 
-    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, timeout_duration, use_term_control):
+    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, use_term_control):
         assert num_tests_parallel >= 1
         self.num_jobs = num_tests_parallel
         self.tests_dir = tests_dir
         self.tmpdir = tmpdir
-        self.timeout_duration = timeout_duration
         self.test_list = test_list
         self.flags = flags
         self.num_running = 0
@@ -528,10 +569,6 @@ class TestHandler:
             time.sleep(.5)
             for job in self.jobs:
                 (name, start_time, proc, testdir, log_out, log_err) = job
-                if int(time.time() - start_time) > self.timeout_duration:
-                    # Timeout individual tests if timeout is specified (to stop
-                    # tests hanging and not providing useful output).
-                    proc.send_signal(signal.SIGINT)
                 if proc.poll() is not None:
                     log_out.seek(0), log_err.seek(0)
                     [stdout, stderr] = [log_file.read().decode('utf-8') for log_file in (log_out, log_err)]
@@ -600,7 +637,7 @@ class TestResult():
 def check_script_prefixes():
     """Check that test scripts start with one of the allowed name prefixes."""
 
-    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool)_")
+    good_prefixes_re = re.compile("^(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool)_")
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
     if bad_script_names:

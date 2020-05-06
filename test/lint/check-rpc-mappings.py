@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Check RPC argument consistency."""
@@ -48,13 +48,13 @@ def process_commands(fname):
         for line in f:
             line = line.rstrip()
             if not in_rpcs:
-                if re.match("static const CRPCCommand .*\[\] =", line):
+                if re.match(r"static const CRPCCommand .*\[\] =", line):
                     in_rpcs = True
             else:
                 if line.startswith('};'):
                     in_rpcs = False
                 elif '{' in line and '"' in line:
-                    m = re.search('{ *("[^"]*"), *("[^"]*"), *&([^,]*), *{([^}]*)} *},', line)
+                    m = re.search(r'{ *("[^"]*"), *("[^"]*"), *&([^,]*), *{([^}]*)} *},', line)
                     assert m, 'No match to table expression: %s' % line
                     name = parse_string(m.group(2))
                     args_str = m.group(4).strip()
@@ -80,7 +80,7 @@ def process_mapping(fname):
                 if line.startswith('};'):
                     in_rpcs = False
                 elif '{' in line and '"' in line:
-                    m = re.search('{ *("[^"]*"), *([0-9]+) *, *("[^"]*") *},', line)
+                    m = re.search(r'{ *("[^"]*"), *([0-9]+) *, *("[^"]*") *},', line)
                     assert m, 'No match to table expression: %s' % line
                     name = parse_string(m.group(1))
                     idx = int(m.group(2))

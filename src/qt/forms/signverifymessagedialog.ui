@@ -99,6 +99,9 @@
          <property name="toolTip">
           <string>Enter the message you want to sign here</string>
          </property>
+         <property name="placeholderText">
+          <string>Enter the message you want to sign here</string>
+         </property>
         </widget>
        </item>
        <item>
@@ -118,6 +121,9 @@
          </property>
          <item>
           <widget class="QLineEdit" name="signatureOut_SM">
+           <property name="placeholderText">
+            <string>Click "Sign Message" to generate signature</string>
+           </property>
            <property name="font">
             <font>
              <italic>true</italic>
@@ -285,10 +291,24 @@
         </layout>
        </item>
        <item>
-        <widget class="QPlainTextEdit" name="messageIn_VM"/>
+        <widget class="QPlainTextEdit" name="messageIn_VM">
+          <property name="toolTip">
+            <string>The signed message to verify</string>
+          </property>
+          <property name="placeholderText">
+            <string>The signed message to verify</string>
+          </property>
+        </widget>
        </item>
        <item>
-        <widget class="QValidatedLineEdit" name="signatureIn_VM"/>
+        <widget class="QValidatedLineEdit" name="signatureIn_VM">
+          <property name="toolTip">
+            <string>The signature given when the message was signed</string>
+          </property>
+          <property name="placeholderText">
+            <string>The signature given when the message was signed</string>
+          </property>
+        </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2_VM">

@@ -11,6 +11,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+from test_framework.wallet_util import test_address
 
 
 class ReceivedByTest(BitcoinTestFramework):
@@ -19,6 +20,7 @@ class ReceivedByTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_no_cli()
 
     def run_test(self):
         # Generate block to get out of IBD
@@ -126,7 +128,7 @@ class ReceivedByTest(BitcoinTestFramework):
         # set pre-state
         label = ''
         address = self.nodes[1].getnewaddress()
-        assert_equal(self.nodes[1].getaddressinfo(address)['label'], label)
+        test_address(self.nodes[1], address, labels=[label])
         received_by_label_json = [r for r in self.nodes[1].listreceivedbylabel() if r["label"] == label][0]
         balance_by_label = self.nodes[1].getreceivedbylabel(label)
 

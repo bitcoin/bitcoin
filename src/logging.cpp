@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -67,6 +67,9 @@ bool BCLog::Logger::StartLogging()
 
         if (m_print_to_file) FileWriteStr(s, m_fileout);
         if (m_print_to_console) fwrite(s.data(), 1, s.size(), stdout);
+        for (const auto& cb : m_print_callbacks) {
+            cb(s);
+        }
 
         m_msgs_before_open.pop_front();
     }
@@ -81,6 +84,7 @@ void BCLog::Logger::DisconnectTestLogger()
     m_buffering = true;
     if (m_fileout != nullptr) fclose(m_fileout);
     m_fileout = nullptr;
+    m_print_callbacks.clear();
 }
 
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
@@ -91,7 +95,15 @@ void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 bool BCLog::Logger::EnableCategory(const std::string& str)
 {
     BCLog::LogFlags flag;
-    if (!GetLogCategory(flag, str)) return false;
+    if (!GetLogCategory(flag, str)) {
+        if (str == "db") {
+            // DEPRECATION: Added in 0.20, should start returning an error in 0.21
+            LogPrintf("Warning: logging category 'db' is deprecated, use 'walletdb' instead\n");
+            EnableCategory(BCLog::WALLETDB);
+            return true;
+        }
+        return false;
+    }
     EnableCategory(flag);
     return true;
 }
@@ -135,7 +147,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::HTTP, "http"},
     {BCLog::BENCH, "bench"},
     {BCLog::ZMQ, "zmq"},
-    {BCLog::DB, "db"},
+    {BCLog::WALLETDB, "walletdb"},
     {BCLog::RPC, "rpc"},
     {BCLog::ESTIMATEFEE, "estimatefee"},
     {BCLog::ADDRMAN, "addrman"},
@@ -150,6 +162,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::COINDB, "coindb"},
     {BCLog::QT, "qt"},
     {BCLog::LEVELDB, "leveldb"},
+    {BCLog::VALIDATION, "validation"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };
@@ -169,30 +182,15 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
     return false;
 }
 
-std::string ListLogCategories()
+std::vector<LogCategory> BCLog::Logger::LogCategoriesList()
 {
-    std::string ret;
-    int outcount = 0;
+    std::vector<LogCategory> ret;
     for (const CLogCategoryDesc& category_desc : LogCategories) {
         // Omit the special cases.
         if (category_desc.flag != BCLog::NONE && category_desc.flag != BCLog::ALL) {
-            if (outcount != 0) ret += ", ";
-            ret += category_desc.category;
-            outcount++;
-        }
-    }
-    return ret;
-}
-
-std::vector<CLogCategoryActive> ListActiveLogCategories()
-{
-    std::vector<CLogCategoryActive> ret;
-    for (const CLogCategoryDesc& category_desc : LogCategories) {
-        // Omit the special cases.
-        if (category_desc.flag != BCLog::NONE && category_desc.flag != BCLog::ALL) {
-            CLogCategoryActive catActive;
+            LogCategory catActive;
             catActive.category = category_desc.category;
-            catActive.active = LogAcceptCategory(category_desc.flag);
+            catActive.active = WillLogCategory(category_desc.flag);
             ret.push_back(catActive);
         }
     }
@@ -224,10 +222,32 @@ std::string BCLog::Logger::LogTimestampStr(const std::string& str)
     return strStamped;
 }
 
+namespace BCLog {
+    /** Belts and suspenders: make sure outgoing log messages don't contain
+     * potentially suspicious characters, such as terminal control codes.
+     *
+     * This escapes control characters except newline ('\n') in C syntax.
+     * It escapes instead of removes them to still allow for troubleshooting
+     * issues where they accidentally end up in strings.
+     */
+    std::string LogEscapeMessage(const std::string& str) {
+        std::string ret;
+        for (char ch_in : str) {
+            uint8_t ch = (uint8_t)ch_in;
+            if ((ch >= 32 || ch == '\n') && ch != '\x7f') {
+                ret += ch_in;
+            } else {
+                ret += strprintf("\\x%02x", ch);
+            }
+        }
+        return ret;
+    }
+}
+
 void BCLog::Logger::LogPrintStr(const std::string& str)
 {
     std::lock_guard<std::mutex> scoped_lock(m_cs);
-    std::string str_prefixed = str;
+    std::string str_prefixed = LogEscapeMessage(str);
 
     if (m_log_threadnames && m_started_new_line) {
         str_prefixed.insert(0, "[" + util::ThreadGetInternalName() + "] ");
@@ -247,6 +267,9 @@ void BCLog::Logger::LogPrintStr(const std::string& str)
         // print to console
         fwrite(str_prefixed.data(), 1, str_prefixed.size(), stdout);
         fflush(stdout);
+    }
+    for (const auto& cb : m_print_callbacks) {
+        cb(str_prefixed);
     }
     if (m_print_to_file) {
         assert(m_fileout != nullptr);

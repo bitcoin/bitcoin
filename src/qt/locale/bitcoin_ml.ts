@@ -67,10 +67,6 @@
         <translation>പേയ്മെന്റുകൾ അയയ്ക്കുന്നതിനുള്ള നിങ്ങളുടെ ബിറ്റ്കോയിൻ വിലാസങ്ങളാണ് ഇവ. നാണയങ്ങൾ അയയ്ക്കുന്നതിനുമുമ്പ് എല്ലായ്പ്പോഴും തുകയും സ്വീകരിക്കുന്ന വിലാസവും പരിശോധിക്കുക.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>പേയ്മെന്റ് സ്വീകരിക്കുന്നതിന് നിങ്ങളുടെ ബിറ്റ്കോയിൻ വിലാസങ്ങളാണ് ഇവ. ഓരോ ഇടപാടിനും പുതിയ സ്വീകരിക്കുന്ന വിലാസം ഉപയോഗിക്കുന്നതാണ് ഉചിതം.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;വിലാസം പകർത്തുക</translation>
     </message>
@@ -94,7 +90,11 @@
         <source>Exporting Failed</source>
         <translation>കയറ്റുമതി പരാജയപ്പെട്ടു</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>%1 ലേക്ക് വിലാസ ലിസ്റ്റ് സംരക്ഷിക്കാൻ ശ്രമിക്കുന്നതിൽ ഒരു പിശകുണ്ടായിരുന്നു. വീണ്ടും ശ്രമിക്കുക.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -129,10 +129,6 @@
         <translation>പുതിയ രഹസ്യപദപ്രയോഗം ആവർത്തിക്കുക</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>വാലറ്റിൽ പുതിയ രഹസ്യപദപ്രയോഗം നൽകുക. &lt;br/&gt; &lt;b&gt; പത്തോ അതിലധികമോ റാൻഡം പ്രതീകങ്ങൾ &lt;/ b&gt; അല്ലെങ്കിൽ &lt;b&gt; എട്ട് അല്ലെങ്കിൽ അതിൽ കൂടുതൽ വാക്കുകൾ &lt;/ b&gt; ഒരു രഹസ്യപദപ്രയോഗം ഉപയോഗിക്കുക.</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>വാലറ്റ് എൻക്രിപ്റ്റ് ചെയ്യുക</translation>
     </message>
@@ -157,10 +153,6 @@
         <translation>പാസ്ഫ്രെയ്സ് മാറ്റുക</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>പഴയ രഹസ്യപദപ്രയോഗം പുതിയ രഹസ്യപദപ്രയോഗം വാലറ്റിൽ നൽകുക.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>വാലറ്റ് എൻക്രിപ്ഷൻ സ്ഥിരീകരിക്കുക</translation>
     </message>
@@ -183,6 +175,12 @@
     </message>
     </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     </context>
 <context>
@@ -201,6 +199,9 @@
     <name>OpenURIDialog</name>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    </context>
+<context>
     <name>OptionsDialog</name>
     </context>
 <context>
@@ -214,9 +215,6 @@
     </context>
 <context>
     <name>QObject</name>
-    </context>
-<context>
-    <name>QObject::QObject</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -260,16 +258,10 @@
     <name>SendCoinsEntry</name>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
-    </context>
-<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
-    </context>
-<context>
-    <name>SplashScreen</name>
     </context>
 <context>
     <name>TrafficGraphWidget</name>
@@ -312,6 +304,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

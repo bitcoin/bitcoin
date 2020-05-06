@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <interfaces/chain.h>
 #include <scheduler.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <wallet/wallet.h>
@@ -52,12 +53,14 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
             return false;
         }
 
-        std::string error_string;
-        std::string warning_string;
-        bool verify_success = CWallet::Verify(chain, location, salvage_wallet, error_string, warning_string);
-        if (!error_string.empty()) chain.initError(error_string);
-        if (!warning_string.empty()) chain.initWarning(warning_string);
-        if (!verify_success) return false;
+        bilingual_str error_string;
+        std::vector<bilingual_str> warnings;
+        bool verify_success = CWallet::Verify(chain, location, salvage_wallet, error_string, warnings);
+        if (!warnings.empty()) chain.initWarning(Join(warnings, "\n", OpTranslated));
+        if (!verify_success) {
+            chain.initError(error_string.translated);
+            return false;
+        }
     }
 
     return true;
@@ -65,15 +68,23 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
 
 bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
 {
-    for (const std::string& walletFile : wallet_files) {
-        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile));
-        if (!pwallet) {
-            return false;
+    try {
+        for (const std::string& walletFile : wallet_files) {
+            bilingual_str error;
+            std::vector<bilingual_str> warnings;
+            std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile), error, warnings);
+            if (!warnings.empty()) chain.initWarning(Join(warnings, "\n", OpTranslated));
+            if (!pwallet) {
+                chain.initError(error.translated);
+                return false;
+            }
+            AddWallet(pwallet);
         }
-        AddWallet(pwallet);
+        return true;
+    } catch (const std::runtime_error& e) {
+        chain.initError(e.what());
+        return false;
     }
-
-    return true;
 }
 
 void StartWallets(CScheduler& scheduler)
@@ -83,8 +94,8 @@ void StartWallets(CScheduler& scheduler)
     }
 
     // Schedule periodic wallet flushes and tx rebroadcasts
-    scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
-    scheduler.scheduleEvery(MaybeResendWalletTxs, 1000);
+    scheduler.scheduleEvery(MaybeCompactWalletDB, std::chrono::milliseconds{500});
+    scheduler.scheduleEvery(MaybeResendWalletTxs, std::chrono::milliseconds{1000});
 }
 
 void FlushWallets()

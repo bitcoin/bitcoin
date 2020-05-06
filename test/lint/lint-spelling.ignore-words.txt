@@ -1,9 +1,7 @@
-cas
 hights
 mor
 mut
 objext
-unselect
 useable
 wit
 unparseable
@@ -13,3 +11,6 @@ errorstring
 keyserver
 homogenous
 setban
+hist
+ser
+unselect

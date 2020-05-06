@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Helpful routines for regression testing."""
@@ -7,13 +7,13 @@
 from base64 import b64encode
 from binascii import unhexlify
 from decimal import Decimal, ROUND_DOWN
+from subprocess import CalledProcessError
 import inspect
 import json
 import logging
 import os
 import random
 import re
-from subprocess import CalledProcessError
 import time
 
 from . import coverage
@@ -24,6 +24,13 @@ logger = logging.getLogger("TestFramework.utils")
 
 # Assert functions
 ##################
+
+def assert_approx(v, vexp, vspan=0.00001):
+    """Assert that `v` is within `vspan` of `vexp`"""
+    if v < vexp - vspan:
+        raise AssertionError("%s < [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
+    if v > vexp + vspan:
+        raise AssertionError("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
 
 def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
@@ -56,7 +63,9 @@ def assert_raises_message(exc, message, fun, *args, **kwds):
         raise AssertionError("Use assert_raises_rpc_error() to test RPC failures")
     except exc as e:
         if message is not None and message not in e.error['message']:
-            raise AssertionError("Expected substring not found:" + e.error['message'])
+            raise AssertionError(
+                "Expected substring not found in error message:\nsubstring: '{}'\nerror message: '{}'.".format(
+                    message, e.error['message']))
     except Exception as e:
         raise AssertionError("Unexpected exception raised: " + type(e).__name__)
     else:
@@ -116,7 +125,9 @@ def try_rpc(code, message, fun, *args, **kwds):
         if (code is not None) and (code != e.error["code"]):
             raise AssertionError("Unexpected JSONRPC error code %i" % e.error["code"])
         if (message is not None) and (message not in e.error['message']):
-            raise AssertionError("Expected substring not found:" + e.error['message'])
+            raise AssertionError(
+                "Expected substring not found in error message:\nsubstring: '{}'\nerror message: '{}'.".format(
+                    message, e.error['message']))
         return True
     except Exception as e:
         raise AssertionError("Unexpected exception raised: " + type(e).__name__)
@@ -179,6 +190,11 @@ def check_json_precision():
     if satoshis != 2000000000000003:
         raise RuntimeError("JSON encode/decode loses precision")
 
+def EncodeDecimal(o):
+    if isinstance(o, Decimal):
+        return str(o)
+    raise TypeError(repr(o) + " is not JSON serializable")
+
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
@@ -192,9 +208,10 @@ def str_to_b64str(string):
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
-def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None):
+def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None, factor=1.0):
     if attempts == float('inf') and timeout == float('inf'):
         timeout = 60
+    timeout = timeout * factor
     attempt = 0
     time_end = time.time() + timeout
 
@@ -224,15 +241,16 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=N
 # The maximum number of nodes a single test can spawn
 MAX_NODES = 12
 # Don't assign rpc or p2p ports lower than this
-PORT_MIN = 11000
+PORT_MIN = int(os.getenv('TEST_RUNNER_PORT_MIN', default=11000))
 # The number of ports to "reserve" for p2p and rpc, each
 PORT_RANGE = 5000
+
 
 class PortSeed:
     # Must be initialized with a unique integer for each process
     n = None
 
-def get_rpc_proxy(url, node_number, timeout=None, coveragedir=None):
+def get_rpc_proxy(url, node_number, *, timeout=None, coveragedir=None):
     """
     Args:
         url (str): URL of the RPC server to call
@@ -240,6 +258,7 @@ def get_rpc_proxy(url, node_number, timeout=None, coveragedir=None):
 
     Kwargs:
         timeout (int): HTTP timeout in seconds
+        coveragedir (str): Directory
 
     Returns:
         AuthServiceProxy. convenience object for making RPC calls.
@@ -247,7 +266,7 @@ def get_rpc_proxy(url, node_number, timeout=None, coveragedir=None):
     """
     proxy_kwargs = {}
     if timeout is not None:
-        proxy_kwargs['timeout'] = timeout
+        proxy_kwargs['timeout'] = int(timeout)
 
     proxy = AuthServiceProxy(url, **proxy_kwargs)
     proxy.url = url  # store URL on proxy for info
@@ -283,20 +302,37 @@ def initialize_datadir(dirname, n, chain):
     datadir = get_datadir_path(dirname, n)
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
+    # Translate chain name to config name
+    if chain == 'testnet3':
+        chain_name_conf_arg = 'testnet'
+        chain_name_conf_section = 'test'
+    else:
+        chain_name_conf_arg = chain
+        chain_name_conf_section = chain
     with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
-        f.write("{}=1\n".format(chain))
-        f.write("[{}]\n".format(chain))
+        f.write("{}=1\n".format(chain_name_conf_arg))
+        f.write("[{}]\n".format(chain_name_conf_section))
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
+        f.write("fallbackfee=0.0002\n")
         f.write("server=1\n")
         f.write("keypool=1\n")
         f.write("discover=0\n")
+        f.write("dnsseed=0\n")
         f.write("listenonion=0\n")
         f.write("printtoconsole=0\n")
         f.write("upnp=0\n")
+        f.write("shrinkdebugfile=0\n")
         os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
         os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     return datadir
+
+def adjust_bitcoin_conf_for_pre_17(conf_file):
+    with open(conf_file,'r', encoding='utf8') as conf:
+        conf_data = conf.read()
+    with open(conf_file, 'w', encoding='utf8') as conf:
+        conf_data_changed = conf_data.replace('[regtest]', '')
+        conf.write(conf_data_changed)
 
 def get_datadir_path(dirname, n):
     return os.path.join(dirname, "node" + str(n))
@@ -365,9 +401,6 @@ def connect_nodes(from_connection, node_num):
     # with transaction relaying
     wait_until(lambda:  all(peer['version'] != 0 for peer in from_connection.getpeerinfo()))
 
-def connect_nodes_bi(nodes, a, b):
-    connect_nodes(nodes[a], b)
-    connect_nodes(nodes[b], a)
 
 def sync_blocks(rpc_connections, *, wait=1, timeout=60):
     """
@@ -382,8 +415,14 @@ def sync_blocks(rpc_connections, *, wait=1, timeout=60):
         best_hash = [x.getbestblockhash() for x in rpc_connections]
         if best_hash.count(best_hash[0]) == len(rpc_connections):
             return
+        # Check that each peer has at least one connection
+        assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
         time.sleep(wait)
-    raise AssertionError("Block sync timed out:{}".format("".join("\n  {!r}".format(b) for b in best_hash)))
+    raise AssertionError("Block sync timed out after {}s:{}".format(
+        timeout,
+        "".join("\n  {!r}".format(b) for b in best_hash),
+    ))
+
 
 def sync_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):
     """
@@ -398,11 +437,18 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):
                 for r in rpc_connections:
                     r.syncwithvalidationinterfacequeue()
             return
+        # Check that each peer has at least one connection
+        assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
         time.sleep(wait)
-    raise AssertionError("Mempool sync timed out:{}".format("".join("\n  {!r}".format(m) for m in pool)))
+    raise AssertionError("Mempool sync timed out after {}s:{}".format(
+        timeout,
+        "".join("\n  {!r}".format(m) for m in pool),
+    ))
+
 
 # Transaction/Block functions
 #############################
+
 
 def find_output(node, txid, amount, *, blockhash=None):
     """

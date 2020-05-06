@@ -12,7 +12,7 @@ diff --git a/src/thread.cpp b/src/thread.cpp
 index a1086b0c..9943f354 100644
 --- a/src/thread.cpp
 +++ b/src/thread.cpp
-@@ -307,7 +307,7 @@ void zmq::thread_t::setThreadName (const char *name_)
+@@ -308,7 +308,7 @@ void zmq::thread_t::setThreadName (const char *name_)
   */
      if (!name_)
          return;
@@ -21,9 +21,9 @@ index a1086b0c..9943f354 100644
  #if defined(ZMQ_HAVE_PTHREAD_SETNAME_1)
      int rc = pthread_setname_np (name_);
      if (rc)
-@@ -323,6 +323,8 @@ void zmq::thread_t::setThreadName (const char *name_)
+@@ -324,6 +324,8 @@ void zmq::thread_t::setThreadName (const char *name_)
  #elif defined(ZMQ_HAVE_PTHREAD_SET_NAME)
-     pthread_set_name_np (descriptor, name_);
+     pthread_set_name_np (_descriptor, name_);
  #endif
 +#endif
 +    return;

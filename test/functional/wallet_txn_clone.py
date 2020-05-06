@@ -16,6 +16,7 @@ from test_framework.messages import CTransaction, COIN
 class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -28,7 +29,7 @@ class TxnMallTest(BitcoinTestFramework):
 
     def setup_network(self):
         # Start with split network:
-        super(TxnMallTest, self).setup_network()
+        super().setup_network()
         disconnect_nodes(self.nodes[1], 2)
         disconnect_nodes(self.nodes[2], 1)
 

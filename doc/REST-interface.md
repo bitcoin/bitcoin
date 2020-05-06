@@ -30,7 +30,7 @@ To query for a confirmed transaction, enable the transaction index via "txindex=
 Given a block hash: returns a block, in binary, hex-encoded binary or JSON formats.
 Responds with 404 if the block doesn't exist.
 
-The HTTP request and response are both handled entirely in-memory, thus making maximum memory usage at least 2.66MB (1 MB max block, plus hex encoding) per request.
+The HTTP request and response are both handled entirely in-memory.
 
 With the /notxdetails/ option JSON response will only contain the transaction hash instead of the complete transaction details. The option only affects the JSON response.
 
@@ -50,7 +50,7 @@ Given a height: returns hash of block in best-block-chain at height provided.
 
 Returns various state info regarding block chain processing.
 Only supports JSON as output format.
-* chain : (string) current network name as defined in BIP70 (main, test, regtest)
+* chain : (string) current network name (main, test, regtest)
 * blocks : (numeric) the current number of blocks processed in the server
 * headers : (numeric) the current number of headers we have validated
 * bestblockhash : (string) the hash of the currently best block
@@ -81,7 +81,7 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
       {
          "txvers" : 1
          "height" : 2147483647,
-         "value" : 8.8687,		 
+         "value" : 8.8687,
          "scriptPubKey" : {
             "asm" : "OP_DUP OP_HASH160 1c7cebb529b86a04c683dfa87be49de35bcf589e OP_EQUALVERIFY OP_CHECKSIG",
             "hex" : "76a9141c7cebb529b86a04c683dfa87be49de35bcf589e88ac",

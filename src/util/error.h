@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2018 The Bitcoin Core developers
+// Copyright (c) 2010-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,8 @@
 
 #include <string>
 
+struct bilingual_str;
+
 enum class TransactionError {
     OK, //!< No error
     MISSING_INPUTS,
@@ -34,8 +36,8 @@ std::string TransactionErrorString(const TransactionError error);
 
 std::string ResolveErrMsg(const std::string& optname, const std::string& strBind);
 
-std::string AmountHighWarn(const std::string& optname);
+bilingual_str AmountHighWarn(const std::string& optname);
 
-std::string AmountErrMsg(const std::string& optname, const std::string& strValue);
+bilingual_str AmountErrMsg(const std::string& optname, const std::string& strValue);
 
 #endif // BITCOIN_UTIL_ERROR_H

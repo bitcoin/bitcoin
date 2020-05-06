@@ -15,7 +15,6 @@
 #include <uint256.h>
 #include <version.h>
 
-#include <atomic>
 #include <stdint.h>
 #include <string>
 
@@ -38,6 +37,10 @@ public:
     typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
     explicit CMessageHeader(const MessageStartChars& pchMessageStartIn);
+
+    /** Construct a P2P message header from message-start characters, a command and the size of the message.
+     * @note Passing in a `pszCommand` longer than COMMAND_SIZE will result in a run-time assertion error.
+     */
     CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn);
 
     std::string GetCommand() const;
@@ -193,13 +196,6 @@ extern const char *FILTERADD;
  */
 extern const char *FILTERCLEAR;
 /**
- * The reject message informs the receiving node that one of its previous
- * messages has been rejected.
- * @since protocol version 70002 as described by BIP61.
- * @see https://bitcoin.org/en/developer-reference#reject
- */
-extern const char *REJECT;
-/**
  * Indicates that a node prefers to receive new block announcements via a
  * "headers" message rather than an "inv".
  * @since protocol version 70012 as described by BIP130.
@@ -245,6 +241,7 @@ const std::vector<std::string> &getAllNetMessageTypes();
 
 /** nServices flags */
 enum ServiceFlags : uint64_t {
+    // NOTE: When adding here, be sure to update qt/guiutil.cpp's formatServicesStr too
     // Nothing
     NODE_NONE = 0,
     // NODE_NETWORK means that the node is capable of serving the complete block chain. It is currently

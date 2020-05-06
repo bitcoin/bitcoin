@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet."""
 from decimal import Decimal
-import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -12,9 +11,10 @@ from test_framework.util import (
     assert_equal,
     assert_fee_amount,
     assert_raises_rpc_error,
-    connect_nodes_bi,
+    connect_nodes,
     wait_until,
 )
+from test_framework.wallet_util import test_address
 
 
 class WalletTest(BitcoinTestFramework):
@@ -24,6 +24,7 @@ class WalletTest(BitcoinTestFramework):
             "-acceptnonstdtxn=1",
         ]] * self.num_nodes
         self.setup_clean_chain = True
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -32,9 +33,9 @@ class WalletTest(BitcoinTestFramework):
         self.setup_nodes()
         # Only need nodes 0-2 running at start of test
         self.stop_node(3)
-        connect_nodes_bi(self.nodes, 0, 1)
-        connect_nodes_bi(self.nodes, 1, 2)
-        connect_nodes_bi(self.nodes, 0, 2)
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[1], 2)
+        connect_nodes(self.nodes[0], 2)
         self.sync_all(self.nodes[0:3])
 
     def check_fee_amount(self, curr_balance, balance_with_fee, fee_per_byte, tx_size):
@@ -47,6 +48,7 @@ class WalletTest(BitcoinTestFramework):
         return self.nodes[0].decoderawtransaction(txn)['vsize']
 
     def run_test(self):
+
         # Check that there's no UTXO on none of the nodes
         assert_equal(len(self.nodes[0].listunspent()), 0)
         assert_equal(len(self.nodes[1].listunspent()), 0)
@@ -169,8 +171,8 @@ class WalletTest(BitcoinTestFramework):
             txns_to_send.append(self.nodes[0].signrawtransactionwithwallet(raw_tx))
 
         # Have node 1 (miner) send the transactions
-        self.nodes[1].sendrawtransaction(txns_to_send[0]["hex"], 0)
-        self.nodes[1].sendrawtransaction(txns_to_send[1]["hex"], 0)
+        self.nodes[1].sendrawtransaction(hexstring=txns_to_send[0]["hex"], maxfeerate=0)
+        self.nodes[1].sendrawtransaction(hexstring=txns_to_send[1]["hex"], maxfeerate=0)
 
         # Have node1 mine a block to confirm transactions:
         self.nodes[1].generate(1)
@@ -217,8 +219,8 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), node_0_bal + Decimal('10'), fee_per_byte, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
 
-        self.start_node(3)
-        connect_nodes_bi(self.nodes, 0, 3)
+        self.start_node(3, self.nodes[3].extra_args)
+        connect_nodes(self.nodes[0], 3)
         self.sync_all()
 
         # check if we can list zero value tx as available coins
@@ -253,9 +255,9 @@ class WalletTest(BitcoinTestFramework):
         self.start_node(0, ["-walletbroadcast=0"])
         self.start_node(1, ["-walletbroadcast=0"])
         self.start_node(2, ["-walletbroadcast=0"])
-        connect_nodes_bi(self.nodes, 0, 1)
-        connect_nodes_bi(self.nodes, 1, 2)
-        connect_nodes_bi(self.nodes, 0, 2)
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[1], 2)
+        connect_nodes(self.nodes[0], 2)
         self.sync_all(self.nodes[0:3])
 
         txid_not_broadcast = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 2)
@@ -280,9 +282,9 @@ class WalletTest(BitcoinTestFramework):
         self.start_node(0)
         self.start_node(1)
         self.start_node(2)
-        connect_nodes_bi(self.nodes, 0, 1)
-        connect_nodes_bi(self.nodes, 1, 2)
-        connect_nodes_bi(self.nodes, 0, 2)
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[1], 2)
+        connect_nodes(self.nodes[0], 2)
         self.sync_blocks(self.nodes[0:3])
 
         self.nodes[0].generate(1)
@@ -313,57 +315,59 @@ class WalletTest(BitcoinTestFramework):
         # This will raise an exception since generate does not accept a string
         assert_raises_rpc_error(-1, "not an integer", self.nodes[0].generate, "2")
 
-        # This will raise an exception for the invalid private key format
-        assert_raises_rpc_error(-5, "Invalid private key encoding", self.nodes[0].importprivkey, "invalid")
+        if not self.options.descriptors:
 
-        # This will raise an exception for importing an address with the PS2H flag
-        temp_address = self.nodes[1].getnewaddress()
-        assert_raises_rpc_error(-5, "Cannot use the p2sh flag with an address - use a script instead", self.nodes[0].importaddress, temp_address, "label", False, True)
+            # This will raise an exception for the invalid private key format
+            assert_raises_rpc_error(-5, "Invalid private key encoding", self.nodes[0].importprivkey, "invalid")
 
-        # This will raise an exception for attempting to dump the private key of an address you do not own
-        assert_raises_rpc_error(-3, "Address does not refer to a key", self.nodes[0].dumpprivkey, temp_address)
+            # This will raise an exception for importing an address with the PS2H flag
+            temp_address = self.nodes[1].getnewaddress("", "p2sh-segwit")
+            assert_raises_rpc_error(-5, "Cannot use the p2sh flag with an address - use a script instead", self.nodes[0].importaddress, temp_address, "label", False, True)
 
-        # This will raise an exception for attempting to get the private key of an invalid Bitcoin address
-        assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[0].dumpprivkey, "invalid")
+            # This will raise an exception for attempting to dump the private key of an address you do not own
+            assert_raises_rpc_error(-3, "Address does not refer to a key", self.nodes[0].dumpprivkey, temp_address)
 
-        # This will raise an exception for attempting to set a label for an invalid Bitcoin address
-        assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[0].setlabel, "invalid address", "label")
+            # This will raise an exception for attempting to get the private key of an invalid Bitcoin address
+            assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[0].dumpprivkey, "invalid")
 
-        # This will raise an exception for importing an invalid address
-        assert_raises_rpc_error(-5, "Invalid Bitcoin address or script", self.nodes[0].importaddress, "invalid")
+            # This will raise an exception for attempting to set a label for an invalid Bitcoin address
+            assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[0].setlabel, "invalid address", "label")
 
-        # This will raise an exception for attempting to import a pubkey that isn't in hex
-        assert_raises_rpc_error(-5, "Pubkey must be a hex string", self.nodes[0].importpubkey, "not hex")
+            # This will raise an exception for importing an invalid address
+            assert_raises_rpc_error(-5, "Invalid Bitcoin address or script", self.nodes[0].importaddress, "invalid")
 
-        # This will raise an exception for importing an invalid pubkey
-        assert_raises_rpc_error(-5, "Pubkey is not a valid public key", self.nodes[0].importpubkey, "5361746f736869204e616b616d6f746f")
+            # This will raise an exception for attempting to import a pubkey that isn't in hex
+            assert_raises_rpc_error(-5, "Pubkey must be a hex string", self.nodes[0].importpubkey, "not hex")
 
-        # Import address and private key to check correct behavior of spendable unspents
-        # 1. Send some coins to generate new UTXO
-        address_to_import = self.nodes[2].getnewaddress()
-        txid = self.nodes[0].sendtoaddress(address_to_import, 1)
-        self.nodes[0].generate(1)
-        self.sync_all(self.nodes[0:3])
+            # This will raise an exception for importing an invalid pubkey
+            assert_raises_rpc_error(-5, "Pubkey is not a valid public key", self.nodes[0].importpubkey, "5361746f736869204e616b616d6f746f")
 
-        # 2. Import address from node2 to node1
-        self.nodes[1].importaddress(address_to_import)
+            # Import address and private key to check correct behavior of spendable unspents
+            # 1. Send some coins to generate new UTXO
+            address_to_import = self.nodes[2].getnewaddress()
+            txid = self.nodes[0].sendtoaddress(address_to_import, 1)
+            self.nodes[0].generate(1)
+            self.sync_all(self.nodes[0:3])
 
-        # 3. Validate that the imported address is watch-only on node1
-        assert self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"]
+            # 2. Import address from node2 to node1
+            self.nodes[1].importaddress(address_to_import)
 
-        # 4. Check that the unspents after import are not spendable
-        assert_array_result(self.nodes[1].listunspent(),
-                            {"address": address_to_import},
-                            {"spendable": False})
+            # 3. Validate that the imported address is watch-only on node1
+            assert self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"]
 
-        # 5. Import private key of the previously imported address on node1
-        priv_key = self.nodes[2].dumpprivkey(address_to_import)
-        self.nodes[1].importprivkey(priv_key)
+            # 4. Check that the unspents after import are not spendable
+            assert_array_result(self.nodes[1].listunspent(),
+                                {"address": address_to_import},
+                                {"spendable": False})
 
-        # 6. Check that the unspents are now spendable on node1
-        assert_array_result(self.nodes[1].listunspent(),
-                            {"address": address_to_import},
-                            {"spendable": True})
+            # 5. Import private key of the previously imported address on node1
+            priv_key = self.nodes[2].dumpprivkey(address_to_import)
+            self.nodes[1].importprivkey(priv_key)
+
+            # 6. Check that the unspents are now spendable on node1
+            assert_array_result(self.nodes[1].listunspent(),
+                                {"address": address_to_import},
+                                {"spendable": True})
 
         # Mine a block from node0 to an address from node1
         coinbase_addr = self.nodes[1].getnewaddress()
@@ -390,7 +394,7 @@ class WalletTest(BitcoinTestFramework):
             for label in [u'рыба', u'𝅘𝅥𝅯']:
                 addr = self.nodes[0].getnewaddress()
                 self.nodes[0].setlabel(addr, label)
-                assert_equal(self.nodes[0].getaddressinfo(addr)['label'], label)
+                test_address(self.nodes[0], addr, labels=[label])
                 assert label in self.nodes[0].listlabels()
         self.nodes[0].rpc.ensure_ascii = True  # restore to default
 
@@ -433,7 +437,7 @@ class WalletTest(BitcoinTestFramework):
         # Split into two chains
         rawtx = self.nodes[0].createrawtransaction([{"txid": singletxid, "vout": 0}], {chain_addrs[0]: node0_balance / 2 - Decimal('0.01'), chain_addrs[1]: node0_balance / 2 - Decimal('0.01')})
         signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
-        singletxid = self.nodes[0].sendrawtransaction(signedtx["hex"])
+        singletxid = self.nodes[0].sendrawtransaction(hexstring=signedtx["hex"], maxfeerate=0)
         self.nodes[0].generate(1)
 
         # Make a long chain of unconfirmed payments without hitting mempool limit
@@ -458,14 +462,11 @@ class WalletTest(BitcoinTestFramework):
         # Try with walletrejectlongchains
         # Double chain limit but require combining inputs, so we pass SelectCoinsMinConf
         self.stop_node(0)
-        self.start_node(0, extra_args=["-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)])
+        extra_args = ["-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)]
+        self.start_node(0, extra_args=extra_args)
 
-        # wait for loadmempool
-        timeout = 10
-        while (timeout > 0 and len(self.nodes[0].getrawmempool()) < chainlimit * 2):
-            time.sleep(0.5)
-            timeout -= 0.5
-        assert_equal(len(self.nodes[0].getrawmempool()), chainlimit * 2)
+        # wait until the wallet has submitted all transactions to the mempool
+        wait_until(lambda: len(self.nodes[0].getrawmempool()) == chainlimit * 2)
 
         node0_balance = self.nodes[0].getbalance()
         # With walletrejectlongchains we will not create the tx and store it in our wallet.
@@ -498,6 +499,36 @@ class WalletTest(BitcoinTestFramework):
                 change = address
         self.nodes[0].setlabel(change, 'foobar')
         assert_equal(self.nodes[0].getaddressinfo(change)['ischange'], False)
+
+        # Test gettransaction response with different arguments.
+        self.log.info("Testing gettransaction response with different arguments...")
+        self.nodes[0].setlabel(change, 'baz')
+        baz = self.nodes[0].listtransactions(label="baz", count=1)[0]
+        expected_receive_vout = {"label":    "baz",
+                                 "address":  baz["address"],
+                                 "amount":   baz["amount"],
+                                 "category": baz["category"],
+                                 "vout":     baz["vout"]}
+        expected_fields = frozenset({'amount', 'bip125-replaceable', 'confirmations', 'details', 'fee',
+                                     'hex', 'time', 'timereceived', 'trusted', 'txid', 'walletconflicts'})
+        verbose_field = "decoded"
+        expected_verbose_fields = expected_fields | {verbose_field}
+
+        self.log.debug("Testing gettransaction response without verbose")
+        tx = self.nodes[0].gettransaction(txid=txid)
+        assert_equal(set([*tx]), expected_fields)
+        assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
+
+        self.log.debug("Testing gettransaction response with verbose set to False")
+        tx = self.nodes[0].gettransaction(txid=txid, verbose=False)
+        assert_equal(set([*tx]), expected_fields)
+        assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
+
+        self.log.debug("Testing gettransaction response with verbose set to True")
+        tx = self.nodes[0].gettransaction(txid=txid, verbose=True)
+        assert_equal(set([*tx]), expected_verbose_fields)
+        assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
+        assert_equal(tx[verbose_field], self.nodes[0].decoderawtransaction(tx["hex"]))
 
 
 if __name__ == '__main__':

@@ -1,14 +1,15 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <test/util/setup_common.h>
+#include <util/string.h>
 #include <util/threadnames.h>
-#include <test/setup_common.h>
 
+#include <mutex>
+#include <set>
 #include <thread>
 #include <vector>
-#include <set>
-#include <mutex>
 
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>
@@ -32,7 +33,7 @@ std::set<std::string> RenameEnMasse(int num_threads)
     std::mutex lock;
 
     auto RenameThisThread = [&](int i) {
-        util::ThreadRename(TEST_THREAD_NAME_BASE + std::to_string(i));
+        util::ThreadRename(TEST_THREAD_NAME_BASE + ToString(i));
         std::lock_guard<std::mutex> guard(lock);
         names.insert(util::ThreadGetInternalName());
     };
@@ -65,7 +66,7 @@ BOOST_AUTO_TEST_CASE(util_threadnames_test_rename_threaded)
 
     // Names "test_thread.[n]" should exist for n = [0, 99]
     for (int i = 0; i < 100; ++i) {
-        BOOST_CHECK(names.find(TEST_THREAD_NAME_BASE + std::to_string(i)) != names.end());
+        BOOST_CHECK(names.find(TEST_THREAD_NAME_BASE + ToString(i)) != names.end());
     }
 
 }

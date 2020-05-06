@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -65,8 +65,7 @@ class TxDownloadTest(BitcoinTestFramework):
         self.log.info("Announce the txid from each incoming peer to node 0")
         msg = msg_inv([CInv(t=1, h=txid)])
         for p in self.nodes[0].p2ps:
-            p.send_message(msg)
-            p.sync_with_ping()
+            p.send_and_ping(msg)
 
         outstanding_peer_index = [i for i in range(len(self.nodes[0].p2ps))]
 
@@ -107,8 +106,7 @@ class TxDownloadTest(BitcoinTestFramework):
             "Announce the transaction to all nodes from all {} incoming peers, but never send it".format(NUM_INBOUND))
         msg = msg_inv([CInv(t=1, h=txid)])
         for p in self.peers:
-            p.send_message(msg)
-            p.sync_with_ping()
+            p.send_and_ping(msg)
 
         self.log.info("Put the tx in node 0's mempool")
         self.nodes[0].sendrawtransaction(tx)
@@ -121,6 +119,7 @@ class TxDownloadTest(BitcoinTestFramework):
         #   peer, plus
         # * the first time it is re-requested from the outbound peer, plus
         # * 2 seconds to avoid races
+        assert self.nodes[1].getpeerinfo()[0]['inbound'] == False
         timeout = 2 + (MAX_GETDATA_RANDOM_DELAY + INBOUND_PEER_TX_DELAY) + (
             GETDATA_TX_INTERVAL + MAX_GETDATA_RANDOM_DELAY)
         self.log.info("Tx should be received at node 1 after {} seconds".format(timeout))
@@ -153,6 +152,10 @@ class TxDownloadTest(BitcoinTestFramework):
         wait_until(lambda: p.tx_getdata_count == MAX_GETDATA_IN_FLIGHT + 2)
         self.nodes[0].setmocktime(0)
 
+    def test_spurious_notfound(self):
+        self.log.info('Check that spurious notfound is ignored')
+        self.nodes[0].p2ps[0].send_message(msg_notfound(vec=[CInv(1, 1)]))
+
     def run_test(self):
         # Setup the p2p connections
         self.peers = []
@@ -161,6 +164,8 @@ class TxDownloadTest(BitcoinTestFramework):
                 self.peers.append(node.add_p2p_connection(TestP2PConn()))
 
         self.log.info("Nodes are setup with {} incoming connections each".format(NUM_INBOUND))
+
+        self.test_spurious_notfound()
 
         # Test the in-flight max first, because we want no transactions in
         # flight ahead of this test.

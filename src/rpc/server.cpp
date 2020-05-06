@@ -1,12 +1,10 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/server.h>
 
-#include <fs.h>
-#include <key_io.h>
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
@@ -20,7 +18,7 @@
 #include <memory> // for unique_ptr
 #include <unordered_map>
 
-static CCriticalSection cs_rpcWarmup;
+static RecursiveMutex cs_rpcWarmup;
 static std::atomic<bool> g_rpc_running{false};
 static bool fRPCInWarmup GUARDED_BY(cs_rpcWarmup) = true;
 static std::string rpcWarmupStatus GUARDED_BY(cs_rpcWarmup) = "RPC server started";
@@ -139,7 +137,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
                     {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"},
                 },
                 RPCResult{
-            "\"text\"     (string) The help text\n"
+                    RPCResult::Type::STR, "", "The help text"
                 },
                 RPCExamples{""},
             }.ToString()
@@ -155,6 +153,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
 
 UniValue stop(const JSONRPCRequest& jsonRequest)
 {
+    static const std::string RESULT{PACKAGE_NAME " stopping"};
     // Accept the deprecated and ignored 'detach' boolean argument
     // Also accept the hidden 'wait' integer argument (milliseconds)
     // For instance, 'stop 1000' makes the call wait 1 second before returning
@@ -162,18 +161,18 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw std::runtime_error(
             RPCHelpMan{"stop",
-                "\nStop Bitcoin server.",
+                "\nRequest a graceful shutdown of " PACKAGE_NAME ".",
                 {},
-                RPCResults{},
+                RPCResult{RPCResult::Type::STR, "", "A string with the content '" + RESULT + "'"},
                 RPCExamples{""},
             }.ToString());
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
     if (jsonRequest.params[0].isNum()) {
-        MilliSleep(jsonRequest.params[0].get_int());
+        UninterruptibleSleep(std::chrono::milliseconds{jsonRequest.params[0].get_int()});
     }
-    return "Bitcoin server stopping";
+    return RESULT;
 }
 
 static UniValue uptime(const JSONRPCRequest& jsonRequest)
@@ -182,7 +181,7 @@ static UniValue uptime(const JSONRPCRequest& jsonRequest)
                 "\nReturns the total uptime of the server.\n",
                             {},
                             RPCResult{
-                        "ttt        (numeric) The number of seconds that the server has been running\n"
+                                RPCResult::Type::NUM, "", "The number of seconds that the server has been running"
                             },
                 RPCExamples{
                     HelpExampleCli("uptime", "")
@@ -199,16 +198,18 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
                 "\nReturns details of the RPC server.\n",
                 {},
                 RPCResult{
-            "{\n"
-            " \"active_commands\" (array) All active commands\n"
-            "  [\n"
-            "   {               (object) Information about an active command\n"
-            "    \"method\"       (string)  The name of the RPC command \n"
-            "    \"duration\"     (numeric)  The running time in microseconds\n"
-            "   },...\n"
-            "  ],\n"
-            " \"logpath\": \"xxx\" (string) The complete file path to the debug log\n"
-            "}\n"
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::ARR, "active_commands", "All active commands",
+                        {
+                            {RPCResult::Type::OBJ, "", "Information about an active command",
+                            {
+                                 {RPCResult::Type::STR, "method", "The name of the RPC command"},
+                                 {RPCResult::Type::NUM, "duration", "The running time in microseconds"},
+                            }},
+                        }},
+                        {RPCResult::Type::STR, "logpath", "The complete file path to the debug log"},
+                    }
                 },
                 RPCExamples{
                     HelpExampleCli("getrpcinfo", "")

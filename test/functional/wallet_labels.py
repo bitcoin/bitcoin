@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2018 The Bitcoin Core developers
+# Copyright (c) 2016-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test label RPCs.
@@ -13,6 +13,8 @@ from collections import defaultdict
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.wallet_util import test_address
+
 
 class WalletLabelsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -113,15 +115,16 @@ class WalletLabelsTest(BitcoinTestFramework):
             assert_raises_rpc_error(-11, "No addresses with label", node.getaddressesbylabel, "")
 
         # Check that addmultisigaddress can assign labels.
-        for label in labels:
-            addresses = []
-            for x in range(10):
-                addresses.append(node.getnewaddress())
-            multisig_address = node.addmultisigaddress(5, addresses, label.name)['address']
-            label.add_address(multisig_address)
-            label.purpose[multisig_address] = "send"
-            label.verify(node)
-        node.generate(101)
+        if not self.options.descriptors:
+            for label in labels:
+                addresses = []
+                for x in range(10):
+                    addresses.append(node.getnewaddress())
+                multisig_address = node.addmultisigaddress(5, addresses, label.name)['address']
+                label.add_address(multisig_address)
+                label.purpose[multisig_address] = "send"
+                label.verify(node)
+            node.generate(101)
 
         # Check that setlabel can change the label of an address from a
         # different label.
@@ -152,14 +155,9 @@ class Label:
     def verify(self, node):
         if self.receive_address is not None:
             assert self.receive_address in self.addresses
-
         for address in self.addresses:
-            assert_equal(
-                node.getaddressinfo(address)['labels'][0],
-                {"name": self.name,
-                 "purpose": self.purpose[address]})
-            assert_equal(node.getaddressinfo(address)['label'], self.name)
-
+            test_address(node, address, labels=[self.name])
+        assert self.name in node.listlabels()
         assert_equal(
             node.getaddressesbylabel(self.name),
             {address: {"purpose": self.purpose[address]} for address in self.addresses})

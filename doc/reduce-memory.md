@@ -24,8 +24,9 @@ The size of some in-memory caches can be reduced. As caches trade off memory usa
 
 ## Number of peers
 
-- `-maxconnections=<n>` - the maximum number of connections, this defaults to `125`. Each active connection takes up some memory. Only significant if incoming
-   connections are enabled, otherwise the number of connections will never be more than `8`.
+- `-maxconnections=<n>` - the maximum number of connections, this defaults to 125. Each active connection takes up some
+  memory. This option applies only if incoming connections are enabled, otherwise the number of connections will never
+  be more than 10. Of the 10 outbound peers, there can be 8 full-relay connections and 2 block-relay-only ones.
 
 ## Thread configuration
 
@@ -41,7 +42,7 @@ threads take up 8MiB for the thread stack on a 64-bit system, and 4MiB in a
 By default, since glibc `2.10`, the C library will create up to two heap arenas per core. This is known to cause excessive memory usage in some scenarios. To avoid this make a script that sets `MALLOC_ARENA_MAX` before starting bitcoind:
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 export MALLOC_ARENA_MAX=1
 bitcoind
 ```

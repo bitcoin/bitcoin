@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,9 +10,9 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <compat.h>
-#include <fs.h>
 #include <init.h>
 #include <interfaces/chain.h>
+#include <node/context.h>
 #include <noui.h>
 #include <shutdown.h>
 #include <ui_interface.h>
@@ -20,36 +20,20 @@
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
+#include <util/url.h>
 
 #include <functional>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+UrlDecodeFn* const URL_DECODE = urlDecode;
 
-/* Introduction text for doxygen: */
-
-/*! \mainpage Developer documentation
- *
- * \section intro_sec Introduction
- *
- * This is the developer documentation of the reference client for an experimental new digital currency called Bitcoin,
- * which enables instant payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
- * with no central authority: managing transactions and issuing money are carried out collectively by the network.
- *
- * The software is a community-driven open source project, released under the MIT license.
- *
- * See https://github.com/bitcoin/bitcoin and https://bitcoincore.org/ for further information about the project.
- *
- * \section Navigation
- * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
- */
-
-static void WaitForShutdown()
+static void WaitForShutdown(NodeContext& node)
 {
     while (!ShutdownRequested())
     {
-        MilliSleep(200);
+        UninterruptibleSleep(std::chrono::milliseconds{200});
     }
-    Interrupt();
+    Interrupt(node);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -58,18 +42,18 @@ static void WaitForShutdown()
 //
 static bool AppInit(int argc, char* argv[])
 {
-    InitInterfaces interfaces;
-    interfaces.chain = interfaces::MakeChain();
+    NodeContext node;
+    node.chain = interfaces::MakeChain(node);
 
     bool fRet = false;
 
-    util::ThreadRename("init");
+    util::ThreadSetInternalName("init");
 
     //
     // Parameters
     //
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
-    SetupServerArgs();
+    SetupServerArgs(node);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
         return InitError(strprintf("Error parsing command line arguments: %s\n", error));
@@ -77,7 +61,7 @@ static bool AppInit(int argc, char* argv[])
 
     // Process help and version before taking care about datadir
     if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
-        std::string strUsage = PACKAGE_NAME " Daemon version " + FormatFullVersion() + "\n";
+        std::string strUsage = PACKAGE_NAME " version " + FormatFullVersion() + "\n";
 
         if (gArgs.IsArgSet("-version"))
         {
@@ -85,11 +69,11 @@ static bool AppInit(int argc, char* argv[])
         }
         else
         {
-            strUsage += "\nUsage:  bitcoind [options]                     Start " PACKAGE_NAME " Daemon\n";
+            strUsage += "\nUsage:  bitcoind [options]                     Start " PACKAGE_NAME "\n";
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
-        tfm::format(std::cout, "%s", strUsage.c_str());
+        tfm::format(std::cout, "%s", strUsage);
         return true;
     }
 
@@ -101,7 +85,7 @@ static bool AppInit(int argc, char* argv[])
         if (!gArgs.ReadConfigFiles(error, true)) {
             return InitError(strprintf("Error reading configuration file: %s\n", error));
         }
-        // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+        // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
             SelectParams(gArgs.GetChainName());
         } catch (const std::exception& e) {
@@ -142,7 +126,7 @@ static bool AppInit(int argc, char* argv[])
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
-            tfm::format(std::cout, PACKAGE_NAME " daemon starting\n");
+            tfm::format(std::cout, PACKAGE_NAME " starting\n");
 
             // Daemonize
             if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)
@@ -161,7 +145,7 @@ static bool AppInit(int argc, char* argv[])
             // If locking the data directory failed, exit immediately
             return false;
         }
-        fRet = AppInitMain(interfaces);
+        fRet = AppInitMain(node);
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");
@@ -171,11 +155,11 @@ static bool AppInit(int argc, char* argv[])
 
     if (!fRet)
     {
-        Interrupt();
+        Interrupt(node);
     } else {
-        WaitForShutdown();
+        WaitForShutdown(node);
     }
-    Shutdown(interfaces);
+    Shutdown(node);
 
     return fRet;
 }

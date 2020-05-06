@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,9 +27,6 @@ enum isminetype : unsigned int
 };
 /** used for bitflags of isminetype */
 typedef uint8_t isminefilter;
-
-isminetype IsMine(const CWallet& wallet, const CScript& scriptPubKey);
-isminetype IsMine(const CWallet& wallet, const CTxDestination& dest);
 
 /**
  * Cachable amount subdivided into watchonly and spendable parts.

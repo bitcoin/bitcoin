@@ -36,7 +36,7 @@ public:
 
     void setClientModel(ClientModel *clientModel);
 
-    void addWallet(WalletModel *walletModel);
+    bool addWallet(WalletModel *walletModel);
     void setCurrentWallet(WalletModel* wallet_model);
     void removeWallet(WalletModel* wallet_model);
     void removeAllWallets();
@@ -77,6 +77,9 @@ public Q_SLOTS:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
+
+    /** Load Partially Signed Bitcoin Transaction */
+    void gotoLoadPSBT();
 
     /** Encrypt the wallet */
     void encryptWallet(bool status);

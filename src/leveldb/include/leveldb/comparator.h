@@ -7,6 +7,8 @@
 
 #include <string>
 
+#include "leveldb/export.h"
+
 namespace leveldb {
 
 class Slice;
@@ -15,7 +17,7 @@ class Slice;
 // used as keys in an sstable or a database.  A Comparator implementation
 // must be thread-safe since leveldb may invoke its methods concurrently
 // from multiple threads.
-class Comparator {
+class LEVELDB_EXPORT Comparator {
  public:
   virtual ~Comparator();
 
@@ -43,9 +45,8 @@ class Comparator {
   // If *start < limit, changes *start to a short string in [start,limit).
   // Simple comparator implementations may return with *start unchanged,
   // i.e., an implementation of this method that does nothing is correct.
-  virtual void FindShortestSeparator(
-      std::string* start,
-      const Slice& limit) const = 0;
+  virtual void FindShortestSeparator(std::string* start,
+                                     const Slice& limit) const = 0;
 
   // Changes *key to a short string >= *key.
   // Simple comparator implementations may return with *key unchanged,
@@ -56,7 +57,7 @@ class Comparator {
 // Return a builtin comparator that uses lexicographic byte-wise
 // ordering.  The result remains the property of this module and
 // must not be deleted.
-extern const Comparator* BytewiseComparator();
+LEVELDB_EXPORT const Comparator* BytewiseComparator();
 
 }  // namespace leveldb
 

@@ -33,7 +33,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 45
+#serial 48
 
 # example boost program (need to pass version)
 m4_define([_AX_BOOST_BASE_PROGRAM],
@@ -113,6 +113,7 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
     dnl are found, e.g. when only header-only libraries are installed!
     AS_CASE([${host_cpu}],
       [x86_64],[libsubdirs="lib64 libx32 lib lib64"],
+      [mips*64*],[libsubdirs="lib64 lib32 lib lib64"],
       [ppc64|powerpc64|s390x|sparc64|aarch64|ppc64le|powerpc64le|riscv64],[libsubdirs="lib64 lib lib64"],
       [libsubdirs="lib"]
     )
@@ -122,6 +123,7 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
     dnl are almost assuredly the ones desired.
     AS_CASE([${host_cpu}],
       [i?86],[multiarch_libsubdir="lib/i386-${host_os}"],
+      [armv7l],[multiarch_libsubdir="lib/arm-${host_os}"],
       [multiarch_libsubdir="lib/${host_cpu}-${host_os}"]
     )
 

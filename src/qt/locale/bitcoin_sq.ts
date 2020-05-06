@@ -58,10 +58,6 @@
         <translation>Këto janë Bitcoin adresat e juaja për të dërguar pagesa. Gjithmon kontrolloni shumën dhe adresën pranuese para se të dërgoni monedha.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Këto janë Bitcoin adresat e juaja për të pranuar pagesa. Rekomandohet që gjithmon të përdorni një adresë të re për çdo transaksion.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopjo adresen</translation>
     </message>
@@ -120,10 +116,6 @@
         <translation>Përsërisni fjalëkalimin e ri</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>Trego fjalëkalimin</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>Kripto portofolin</translation>
     </message>
@@ -146,10 +138,6 @@
     <message>
         <source>Change passphrase</source>
         <translation>Ndrysho fjalëkalimin</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Fusni fjalëkalimin e vjetër dhe fjalëkalimin e ri që të hapni portofolin.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -222,20 +210,8 @@
         <translation>&amp;Opsione</translation>
     </message>
     <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Duke marr adresen</translation>
-    </message>
-    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Ndrysho frazkalimin e përdorur per enkriptimin e portofolit</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portofol</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -338,6 +314,12 @@
     </message>
     </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -412,6 +394,9 @@
     <name>OpenURIDialog</name>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    </context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
@@ -454,9 +439,6 @@
         <translation>i/e panjohur</translation>
     </message>
 </context>
-<context>
-    <name>QObject::QObject</name>
-    </context>
 <context>
     <name>QRImageWidget</name>
     </context>
@@ -516,7 +498,7 @@
         <source>Wallet</source>
         <translation>Portofol</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -601,13 +583,6 @@
         <source>Pay To:</source>
         <translation>Paguaj drejt:</translation>
     </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Krijoni një etiketë për këtë adresë që t'ja shtoni librit të adresave</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -627,13 +602,6 @@
         <translation>Alt+P</translation>
     </message>
     </context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testo rrjetin]</translation>
-    </message>
-</context>
 <context>
     <name>TrafficGraphWidget</name>
     </context>
@@ -773,6 +741,9 @@
     <name>UnitDisplayStatusBarControl</name>
     </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
     </context>
 <context>
@@ -792,14 +763,6 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Berthama Bitcoin</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informacion</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Fonde te pamjaftueshme</translation>
     </message>
@@ -807,9 +770,5 @@
         <source>Rescanning...</source>
         <translation>Rikerkim</translation>
     </message>
-    <message>
-        <source>Error</source>
-        <translation>Problem</translation>
-    </message>
-</context>
+    </context>
 </TS>

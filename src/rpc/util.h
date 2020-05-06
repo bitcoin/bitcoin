@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <node/transaction.h>
 #include <outputtype.h>
+#include <protocol.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
@@ -14,21 +15,29 @@
 #include <script/sign.h>
 #include <script/standard.h>
 #include <univalue.h>
+#include <util/check.h>
 
 #include <string>
 #include <vector>
 
 #include <boost/variant.hpp>
 
+/**
+ * String used to describe UNIX epoch time in documentation, factored out to a
+ * constant for consistency.
+ */
+extern const std::string UNIX_EPOCH_TIME;
+
+/**
+ * Example bech32 addresses for the RPCExamples help documentation. They are intentionally
+ * invalid to prevent accidental transactions by users.
+ */
+extern const std::string EXAMPLE_ADDRESS[2];
+
 class FillableSigningProvider;
 class CPubKey;
 class CScript;
-struct InitInterfaces;
-
-//! Pointers to interfaces that need to be accessible from RPC methods. Due to
-//! limitations of the RPC framework, there's currently no direct way to pass in
-//! state to RPC method implementations.
-extern InitInterfaces* g_rpc_interfaces;
+struct Sections;
 
 /** Wrapper for UniValue::VType, which includes typeAny:
  * Used to denote don't care type. */
@@ -73,7 +82,7 @@ extern std::string HelpExampleCli(const std::string& methodname, const std::stri
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
 
 CPubKey HexToPubKey(const std::string& hex_in);
-CPubKey AddrToPubKey(FillableSigningProvider* const keystore, const std::string& addr_in);
+CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string& addr_in);
 CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, FillableSigningProvider& keystore, CScript& script_out);
 
 UniValue DescribeAddress(const CTxDestination& dest);
@@ -89,6 +98,19 @@ std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 
 /** Evaluate a descriptor given as a string, or as a {"desc":...,"range":...} object, with default range of 1000. */
 std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider);
+
+/** Returns, given services flags, a list of humanly readable (known) network services */
+UniValue GetServicesNames(ServiceFlags services);
+
+/**
+ * Serializing JSON objects depends on the outer type. Only arrays and
+ * dictionaries can be nested in json. The top-level outer type is "NONE".
+ */
+enum class OuterType {
+    ARR,
+    OBJ,
+    NONE, // Only set on first recursion
+};
 
 struct RPCArg {
     enum class Type {
@@ -120,7 +142,7 @@ struct RPCArg {
         OMITTED,
     };
     using Fallback = boost::variant<Optional, /* default value for optional args */ std::string>;
-    const std::string m_name; //!< The name of the arg (can be empty for inner args)
+    const std::string m_names; //!< The name of the arg (can be empty for inner args, can contain multiple aliases separated by | for named request arguments)
     const Type m_type;
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
     const Fallback m_fallback;
@@ -129,42 +151,48 @@ struct RPCArg {
     const std::vector<std::string> m_type_str; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_type_str.at(0) will override the type of the value in a key-value pair, m_type_str.at(1) will override the type in the argument description.
 
     RPCArg(
-        const std::string& name,
-        const Type& type,
-        const Fallback& fallback,
-        const std::string& description,
-        const std::string& oneline_description = "",
-        const std::vector<std::string>& type_str = {})
-        : m_name{name},
-          m_type{type},
-          m_fallback{fallback},
-          m_description{description},
-          m_oneline_description{oneline_description},
-          m_type_str{type_str}
+        const std::string name,
+        const Type type,
+        const Fallback fallback,
+        const std::string description,
+        const std::string oneline_description = "",
+        const std::vector<std::string> type_str = {})
+        : m_names{std::move(name)},
+          m_type{std::move(type)},
+          m_fallback{std::move(fallback)},
+          m_description{std::move(description)},
+          m_oneline_description{std::move(oneline_description)},
+          m_type_str{std::move(type_str)}
     {
-        assert(type != Type::ARR && type != Type::OBJ);
+        CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ);
     }
 
     RPCArg(
-        const std::string& name,
-        const Type& type,
-        const Fallback& fallback,
-        const std::string& description,
-        const std::vector<RPCArg>& inner,
-        const std::string& oneline_description = "",
-        const std::vector<std::string>& type_str = {})
-        : m_name{name},
-          m_type{type},
-          m_inner{inner},
-          m_fallback{fallback},
-          m_description{description},
-          m_oneline_description{oneline_description},
-          m_type_str{type_str}
+        const std::string name,
+        const Type type,
+        const Fallback fallback,
+        const std::string description,
+        const std::vector<RPCArg> inner,
+        const std::string oneline_description = "",
+        const std::vector<std::string> type_str = {})
+        : m_names{std::move(name)},
+          m_type{std::move(type)},
+          m_inner{std::move(inner)},
+          m_fallback{std::move(fallback)},
+          m_description{std::move(description)},
+          m_oneline_description{std::move(oneline_description)},
+          m_type_str{std::move(type_str)}
     {
-        assert(type == Type::ARR || type == Type::OBJ);
+        CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ);
     }
 
     bool IsOptional() const;
+
+    /** Return the first of all aliases */
+    std::string GetFirstName() const;
+
+    /** Return the name, throws when there are aliases */
+    std::string GetName() const;
 
     /**
      * Return the type string of the argument.
@@ -184,30 +212,89 @@ struct RPCArg {
 };
 
 struct RPCResult {
+    enum class Type {
+        OBJ,
+        ARR,
+        STR,
+        NUM,
+        BOOL,
+        NONE,
+        STR_AMOUNT, //!< Special string to represent a floating point amount
+        STR_HEX,    //!< Special string with only hex chars
+        OBJ_DYN,    //!< Special dictionary with keys that are not literals
+        ARR_FIXED,  //!< Special array that has a fixed number of entries
+        NUM_TIME,   //!< Special numeric to denote unix epoch time
+        ELISION,    //!< Special type to denote elision (...)
+    };
+
+    const Type m_type;
+    const std::string m_key_name;         //!< Only used for dicts
+    const std::vector<RPCResult> m_inner; //!< Only used for arrays or dicts
+    const bool m_optional;
+    const std::string m_description;
     const std::string m_cond;
-    const std::string m_result;
 
-    explicit RPCResult(std::string result)
-        : m_cond{}, m_result{std::move(result)}
+    RPCResult(
+        const std::string cond,
+        const Type type,
+        const std::string m_key_name,
+        const bool optional,
+        const std::string description,
+        const std::vector<RPCResult> inner = {})
+        : m_type{std::move(type)},
+          m_key_name{std::move(m_key_name)},
+          m_inner{std::move(inner)},
+          m_optional{optional},
+          m_description{std::move(description)},
+          m_cond{std::move(cond)}
     {
-        assert(!m_result.empty());
+        CHECK_NONFATAL(!m_cond.empty());
+        const bool inner_needed{type == Type::ARR || type == Type::ARR_FIXED || type == Type::OBJ || type == Type::OBJ_DYN};
+        CHECK_NONFATAL(inner_needed != inner.empty());
     }
 
-    RPCResult(std::string cond, std::string result)
-        : m_cond{std::move(cond)}, m_result{std::move(result)}
+    RPCResult(
+        const std::string cond,
+        const Type type,
+        const std::string m_key_name,
+        const std::string description,
+        const std::vector<RPCResult> inner = {})
+        : RPCResult{cond, type, m_key_name, false, description, inner} {}
+
+    RPCResult(
+        const Type type,
+        const std::string m_key_name,
+        const bool optional,
+        const std::string description,
+        const std::vector<RPCResult> inner = {})
+        : m_type{std::move(type)},
+          m_key_name{std::move(m_key_name)},
+          m_inner{std::move(inner)},
+          m_optional{optional},
+          m_description{std::move(description)},
+          m_cond{}
     {
-        assert(!m_cond.empty());
-        assert(!m_result.empty());
+        const bool inner_needed{type == Type::ARR || type == Type::ARR_FIXED || type == Type::OBJ || type == Type::OBJ_DYN};
+        CHECK_NONFATAL(inner_needed != inner.empty());
     }
+
+    RPCResult(
+        const Type type,
+        const std::string m_key_name,
+        const std::string description,
+        const std::vector<RPCResult> inner = {})
+        : RPCResult{type, m_key_name, false, description, inner} {}
+
+    /** Append the sections of the result. */
+    void ToSections(Sections& sections, OuterType outer_type = OuterType::NONE, const int current_indent = 0) const;
+    /** Return the type string of the result when it is in an object (dict). */
+    std::string ToStringObj() const;
+    /** Return the description string, including the result type. */
+    std::string ToDescriptionString() const;
 };
 
 struct RPCResults {
     const std::vector<RPCResult> m_results;
-
-    RPCResults()
-        : m_results{}
-    {
-    }
 
     RPCResults(RPCResult result)
         : m_results{{result}}

@@ -89,31 +89,29 @@ example:
 BUILDDIR=$PWD/build contrib/devtools/gen-manpages.sh
 ```
 
-optimize-pngs.py
-================
-
-A script to optimize png files in the bitcoin
-repository (requires pngcrush).
-
 security-check.py and test-security-check.py
 ============================================
 
-Perform basic ELF security checks on a series of executables.
+Perform basic security checks on a series of executables.
 
 symbol-check.py
 ===============
 
-A script to check that the (Linux) executables produced by gitian only contain
-allowed gcc, glibc and libstdc++ version symbols. This makes sure they are
-still compatible with the minimum supported Linux distribution versions.
+A script to check that the executables produced by gitian only contain
+certain symbols and are only linked against allowed libraries.
+
+For Linux this means checking for allowed gcc, glibc and libstdc++ version symbols.
+This makes sure they are still compatible with the minimum supported distribution versions.
+
+For macOS and Windows we check that the executables are only linked against libraries we allow.
 
 Example usage after a gitian build:
 
     find ../gitian-builder/build -type f -executable | xargs python3 contrib/devtools/symbol-check.py
 
-If only supported symbols are used the return value will be 0 and the output will be empty.
+If no errors occur the return value will be 0 and the output will be empty.
 
-If there are 'unsupported' symbols, the return value will be 1 a list like this will be printed:
+If there are any errors the return value will be 1 and output like this will be printed:
 
     .../64/test_bitcoin: symbol memcpy from unsupported version GLIBC_2.14
     .../64/test_bitcoin: symbol __fdelt_chk from unsupported version GLIBC_2.15

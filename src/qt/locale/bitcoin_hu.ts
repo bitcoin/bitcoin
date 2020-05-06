@@ -70,8 +70,8 @@
         <translation>Ezek a Bitcoin címeid kifizetések küldéséhez. Mindíg ellenőrizd az összeget és a fogadó címet mielőtt coinokat küldenél.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Ezek a Bitcoin címeid kifizetések fogadásához. Ajánlott új címet használni minden új fogadáshoz.</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Ezek a fizetések fogadására szolgáló Bitcoin-címeid. Használd az "Új fogadócím létrehozása" gombot a fogadás fülön új cím létrehozásához.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -97,7 +97,11 @@
         <source>Exporting Failed</source>
         <translation>Hiba az exportálás során</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Hiba történt a címlista %1 mentésekor.  Kérem próbálja újra.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -121,7 +125,7 @@
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Add meg a jelszót</translation>
+        <translation>Írja be a jelszót</translation>
     </message>
     <message>
         <source>New passphrase</source>
@@ -129,16 +133,11 @@
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Új jelszó újra</translation>
+        <translation>Ismét az új jelszó</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>Jelszó megjelenítése</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Gépelje be az új kulcsmondatot a pénztárcához.&lt;br/&gt;
-Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű karaktert &lt;/b&gt;, vagy &lt;b&gt; nyolc vagy több szót &lt;/b&gt;.</translation>
+        <source>Show passphrase</source>
+        <translation>Jelszó mutatása</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -146,7 +145,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Ehhez a művelethez szükség van a tárcához tartozó kulcsmondathoz, hogy kinyithassa azt.</translation>
+        <translation>Ehhez a művelethez szükség van a tárcanyitó jelszóra.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -154,19 +153,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Ehhez a művelethez szükség van a tárcához tartozó kulcsmondathoz, hogy a titkosítás megszűnjön.</translation>
+        <translation>Ehhez a művelethez szükség van a tárcatitkosítást feloldó jelszóra.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Tárca dekódolása</translation>
+        <translation>Tárcatitkosítás feloldása</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Kulcsmondat megváltoztatása</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Gépelje be a tárcához tartozó régi, és új kulcsmondatot</translation>
+        <translation>Jelszó megváltoztatása</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -185,8 +180,28 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Tárca titkosítva</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>A %1 most bezár, hogy befejezze a titkosítást. Ne feledje, hogy a tárca titkosítása nem nyújt teljes védelmet azzal szemben, hogy kártékony programok megfertőzzék a számítógépét és ellopják a bitcoinjait.</translation>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Írja be a tárca új jelszavát. &lt;br/&gt;A jelszó összetétele a következő: &lt;b&gt;tíz vagy annál több véletlenszerű karakter&lt;/b&gt;, vagy &lt;b&gt;nyolc vagy annál több szó&lt;/b&gt;. </translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Írja be a tárca régi és új jelszavát.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Ne feledd, hogy a tárca titkosítása nem nyújt teljes védelmet az adathalász programok fertőzésével szemben.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>A titkositandó tárca</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Tárcatitkosítás megkezdése.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Tárcáját titkosítottuk.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -194,31 +209,31 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation>A tárca titkosítása sikertelen.</translation>
+        <translation>Nem sikerült a tárca titkosítása</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Tárca titkosítása belső hiba miatt sikertelen. A tárcád nem lett titkosítva.</translation>
+        <translation>A tárca titkosítása belső hiba miatt nem sikerült. A tárcád nem lett titkosítva.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation>A megadott jelszavak nem egyeznek.</translation>
+        <translation>A megadott jelszók nem egyeznek.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation>Tárca megnyitása sikertelen</translation>
+        <translation>A tárca felnyitása nem sikerült</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>A tárca titkosításának feloldásához megadott jelszó helytelen.</translation>
+        <translation>A tárcatitkosítás feloldásához megadott jelszó helytelen.</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
-        <translation>Tárca titkosításának feloldása sikertelen</translation>
+        <translation>A tárca titkosításának feloldása nem sikerült</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Tárca jelszava sikeresen megváltoztatva.</translation>
+        <translation>A tárca jelszavát sikeresen megváltoztatta.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -251,12 +266,8 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>&amp;Áttekintés</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Csomópont</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
-        <translation>Tárca általános áttekintése</translation>
+        <translation>A tárca általános áttekintése</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -304,23 +315,27 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Bisztonsági másolat készítése a Tárcáról</translation>
+        <translation>&amp;Biztonsági tárcamásolat készítése...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
         <translation>Jelszó &amp;megváltoztatása...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Küldési címek...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Fogadó címek...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>&amp;URI azonosító megnyitása...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Tárca készítése...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Új tárca készítése</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Tárca:</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -343,6 +358,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Lemezen lévő blokkok újraindexelése...</translation>
     </message>
     <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Proxy  &lt;b&gt;aktív&lt;/b&gt;: %1</translation>
+    </message>
+    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Bitcoin küldése megadott címre</translation>
     </message>
@@ -352,27 +371,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Tárca-titkosító jelszó megváltoztatása</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Debug ablak</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Hibakereső és diagnosztikai konzol megnyitása</translation>
+        <translation>Tárcatitkosító jelszó megváltoztatása</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>Üzenet &amp;valódiságának ellenőrzése</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Tárca</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -431,10 +434,6 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>A használt fogadó címek és címkék megtekintése</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>"bitcoin:" URI azonosító vagy fizetési kérelem megnyitása</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>Paran&amp;cssor kapcsolók</translation>
     </message>
@@ -464,7 +463,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Ez utáni tranzakciók még nem lesznek láthatóak. </translation>
+        <translation>Ez utáni tranzakciók még nem lesznek láthatóak.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -483,8 +482,56 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Naprakész</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Küldő címek</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Fogadó címek</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Tárca megnyitása</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Tárca megnyitása</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Tárca bezárása...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Tárca bezárása</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>A %1 súgó megjelenítése a Bitcoin lehetséges parancssori kapcsolóinak listájával</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>Alapértelmezett tárca</translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>Nincs elérhető tárca</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Ablak</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Rejtés</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Nagyítás</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Főablak</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -499,6 +546,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Frissítés...</translation>
     </message>
     <message>
+        <source>Error: %1</source>
+        <translation>Hiba: %1</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>Dátum:  %1
@@ -509,6 +560,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
 </source>
         <translation>Összeg: %1
 </translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>Tárca: %1</translation>
     </message>
     <message>
         <source>Type: %1
@@ -545,12 +601,16 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>HD kulcs generálás &lt;b&gt;tiltva&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>Privát kulcs &lt;b&gt;inaktív&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>A tárca &lt;b&gt;titkosítva&lt;/b&gt; és jelenleg &lt;b&gt;nyitva&lt;/b&gt;.</translation>
+        <translation>A tárca &lt;b&gt;titkosítva&lt;/b&gt; és jelenleg &lt;b&gt;megnyitva&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Tárca &lt;b&gt;kódolva&lt;/b&gt; és jelenleg &lt;b&gt;zárva&lt;/b&gt;.</translation>
+        <translation>A tárca &lt;b&gt;titkosítva&lt;/b&gt; és jelenleg &lt;b&gt;bezárva&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
@@ -665,7 +725,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Byte-ok másolása </translation>
+        <translation>Byte-ok másolása</translation>
     </message>
     <message>
         <source>Copy dust</source>
@@ -709,6 +769,52 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>&lt;b&gt;%1&lt;/b&gt; tárca készítése folyamatban...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>A tárcakészítés nem sikerült</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Tárcakészítési figyelmeztetés</translation>
+    </message>
+</context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Tárca készítése</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Tárca neve</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>A tárca titkosítása. A tárcát egy Ön által megadott jelszó titkosítja.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Tárca titkosítása</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>A tárcához tartozó privát kulcsok letiltása. Azok a tárcák, melyeknél a privát kulcsok le vannak tiltva, nem tartalmaznak privát kulcsokat és nem tartalmazhatnak HD magot vagy importált privát kulcsokat. Ez azoknál a tárcáknál ideális, melyeket csak megfigyelésre használnak.</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Üres tárca készítése. Az üres tárcák kezdetben nem tartalmaznak privát kulcsokat vagy szkripteket. Később lehetséges a privát kulcsok vagy címek importálása avagy egy HD mag beállítása.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Üres tárca készítése</translation>
+    </message>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -720,7 +826,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>Ehhez a listaelemhez rendelt címke </translation>
+        <translation>Ehhez a listaelemhez rendelt címke</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
@@ -748,7 +854,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation>Tárca feloldása sikertelen</translation>
+        <translation>Nem sikerült a tárca megnyitása</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
@@ -766,6 +872,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Név</translation>
     </message>
     <message>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation>A könyvtár már létezik. %1 hozzáadása, ha új könyvtárat kíván létrehozni.</translation>
+    </message>
+    <message>
         <source>Path already exists, and is not a directory.</source>
         <translation>Az elérési út létezik, de nem egy könyvtáré.</translation>
     </message>
@@ -779,10 +889,6 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>version</source>
         <translation>verzió</translation>
-    </message>
-    <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
     </message>
     <message>
         <source>About %1</source>
@@ -812,6 +918,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Ha az OK-ra kattint, %1 megkezdi a teljes %4 blokk lánc letöltését és feldolgozását (%2GB) a legkorábbi tranzakciókkal kezdve %3 -ben, amikor a %4 bevezetésre került.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>A beállítás visszaállításához le kell tölteni a teljes blokkláncot. A teljes lánc letöltése és későbbi nyesése ennél gyorsabb. Bizonyos haladó funkciókat letilt.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>Az első szinkronizáció nagyon erőforrás-igényes és felszínre hozhat a számítógépében eddig rejtve maradt hardver problémákat. Minden %1 indításnál a program onnan folytatja a letöltést, ahol legutóbb abbahagyta.</translation>
     </message>
@@ -832,6 +942,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Bitcoin</translation>
     </message>
     <message>
+        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
+        <translation>Blokkok elhgyása ellenőrzés után, kivéve a legújabb %1 GB-ot (nyesés)</translation>
+    </message>
+    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation>Legalább %1 GB adatot fogunk ebben a könyvtárban tárolni és idővel ez egyre több lesz.</translation>
     </message>
@@ -845,11 +959,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
-        <translation>Ebben a könyvtárban lesz a pénztárca is.</translation>
+        <translation>A tárcát is ebben a könyvtárban tároljuk.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation>Hiba: A megadott "%1" adatkönyvtár nem hozható létre. </translation>
+        <translation>Hiba: A megadott "%1" adatkönyvtár nem hozható létre.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -868,7 +982,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>A legutóbbi tranzakciók még lehet, hogy nem látszanak, ezért előfordulhat, hogy a pénztárca egyenlege nem a valós állapotot mutatja. Ha a pénztárca befejezte a szinkronizációt a bitcoin hálózattal, utána már az aktuális egyenleget fogja mutatni, amint alant részletesen látszik.</translation>
+        <translation>A legutóbbi tranzakciók még lehet, hogy nem láthatók, és így előfordulhat, hogy a tárca egyenlege helytelen. A tárca azon nyomban az aktuális egyenleget fogja mutatni, amint befejezte a bitcoin hálózattal történő szinkronizációt, amely alább van részletezve.</translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
@@ -906,32 +1020,31 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <source>Hide</source>
         <translation>Elrejtés</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Ismeretlen. Fejlécek szinkronizálása (%1)...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
-    <message>
-        <source>Open URI</source>
-        <translation>URI megnyitása</translation>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Fizetési kérelem megnyitása URI azonosítóból vagy fájlból</translation>
-    </message>
     <message>
         <source>URI:</source>
         <translation>URI:</translation>
     </message>
+</context>
+<context>
+    <name>OpenWalletActivity</name>
     <message>
-        <source>Select payment request file</source>
-        <translation>Fizetési kérelmi fájl kiválasztása</translation>
+        <source>Open wallet failed</source>
+        <translation>Nem sikerült a tárca megnyitása</translation>
     </message>
     <message>
-        <source>Select payment request file to open</source>
-        <translation>Válassza ki a megnyitni kívánt fizetési kérelem fájlt</translation>
+        <source>Open wallet warning</source>
+        <translation>Tárca-megnyitási figyelmeztetés</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>Alapértelmezett tárca</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>&lt;b&gt;%1&lt;/b&gt; tárca megnyitása...</translation>
     </message>
 </context>
 <context>
@@ -957,10 +1070,6 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>A&amp;datbázis gyorsítótár mérete</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>A szkript &amp;igazolási szálak száma</translation>
     </message>
@@ -973,8 +1082,16 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Megmutatja, hogy az alapértelmezett SOCKS5 proxy van-e használatban, hogy elérje a párokat ennél a hálózati típusnál.</translation>
     </message>
     <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Za dostop do soležnikov preko skritih storitev Tor uporabi drug posredniški strežnik SOCKS&amp;5:</translation>
+    </message>
+    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Ikon elrejtése a tálcáról.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;Tálcaikon elrejtése</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -983,10 +1100,6 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Harmadik féltől származó URL-ek (pl. egy blokk felfedező) amelyek a tranzakciós fülön jelennek meg mint a környezetérzékeny menü tételei. %s az URL-ben helyettesítve a tranzakciós hash-el. Több URL esetén, függőleges vonal választja el őket.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktív parancssori beállítások, melyek felülírják a fenti beállításokat:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1007,6 +1120,26 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Hálózat</translation>
+    </message>
+    <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>Bizonyos haladó funkciókat letilt, de minden blokkot teljes mértékben érvényesít. A beállítás visszaállításához le kell tölteni a teljes blokkláncot. A tényleges lemezhasználat valamennyire megnövekedhet.</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Nyesi a &amp;block tárolását ide:</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>A beállítás visszaállításához le kell tölteni a teljes blokkláncot.</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MB</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1193,7 +1326,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>A kijelzett információ lehet, hogy elavult. A pénztárcája automatikusan szinkronizálja magát a Bitcoin hálózattal miután a kapcsolat létrejön, de ez e folyamat még nem fejeződött be.</translation>
+        <translation>A kijelzett információ lehet, hogy elavult. A kapcsolat létrehozatalát követően tárcája automatikusan szinkronba kerül a Bitcoin hálózattal, de ez a folyamat még nem fejeződött be.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1275,6 +1408,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>URI kezelés</translation>
     </message>
     <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>A BIP70 széleskörű biztonsági hiányosságai következtében határozottan ajánljuk, hogy hagyjon figyelmen kívül bármiféle kereskedelmi utasítást, amely a tárca váltására készteti.</translation>
+    </message>
+    <message>
         <source>Invalid payment address %1</source>
         <translation>Érvénytelen fizetési cím %1</translation>
     </message>
@@ -1285,62 +1422,6 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Payment request file handling</source>
         <translation>Fizetés kérelmi fájl kezelése</translation>
-    </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Nem sikerült beolvasni a fizetési kérelmi fájlt! Ezt érvénytelen fizetési kérelmi fájl okozhatja.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>A fizetési kérelem visszautasítva</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>A fizetési kérelmi hálózat nem egyezik a kliens hálózatával.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>A fizetési kérelem lejárt.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>A fizetési kérelem nem inicializálódott</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Érvénytelen fizetési kérelem</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>A %1 fizetésre kért összege túl kevés (porszemnek minősül).</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Visszatérítés a %1 -tól</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>A fizetési kérelem %1 túl nagy (%2 byte, csak %3 byte engedélyezett).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Hiba a kommuniáció során %1 -el: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>Nem sikerült elemezni a fizetési kérelmet!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Rossz válasz a kiszolgálótól %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Hálózati kérelem hiba</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Fizetés elfogadva</translation>
     </message>
 </context>
 <context>
@@ -1453,23 +1534,24 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>%1 GB</translation>
     </message>
     <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>Hiba: A megadott "%1" adatkönyvtár nem létezik.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation>Napaka: Ne morem razčleniti konfiguracijske datoteke: %1.</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Hiba: %1</translation>
+    </message>
+    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 még nem lépett ki biztonságosan...</translation>
     </message>
     <message>
         <source>unknown</source>
         <translation>ismeretlen</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Hiba: A megadott "%1" adatkönyvtár nem létezik. </translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation>Hiba: %1</translation>
     </message>
 </context>
 <context>
@@ -1481,6 +1563,14 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>&amp;Copy Image</source>
         <translation>&amp;Kép Másolása</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>A keletkezett URI túl hosszú, próbálja meg csökkenteni a cimke / üzenet szövegének méretét.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Hiba lépett fel az URI QR kóddá alakításakor.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1504,10 +1594,6 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Információ</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>Debug ablak</translation>
     </message>
     <message>
         <source>General</source>
@@ -1556,6 +1642,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Memory usage</source>
         <translation>Memóriahasználat</translation>
+    </message>
+    <message>
+        <source>Wallet: </source>
+        <translation>Tárca:</translation>
     </message>
     <message>
         <source>&amp;Reset</source>
@@ -1624,6 +1714,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Services</source>
         <translation>Szolgáltatások</translation>
+    </message>
+    <message>
+        <source>Ban Score</source>
+        <translation>Kazenske točke</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1730,6 +1824,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Használja a fel és le nyilakat az előzményekben való navigáláshoz, és %1 -et a képernyő törlésére.</translation>
     </message>
     <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Írja be a %1 parancsot az elérhető utasítások áttekintéséhez.</translation>
+    </message>
+    <message>
         <source>For more information on using this console type %1.</source>
         <translation>Több információért használja a konzolban a %1 parancsot.</translation>
     </message>
@@ -1740,6 +1838,14 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Network activity disabled</source>
         <translation>Hálózati tevékenység letiltva.</translation>
+    </message>
+    <message>
+        <source>Executing command without any wallet</source>
+        <translation>Parancs végrehajtása tárca nélkül</translation>
+    </message>
+    <message>
+        <source>Executing command using "%1" wallet</source>
+        <translation>Parancs végrehajtása a "%1" tárca használatával</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -1798,11 +1904,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation>Használja ezt az űrlapot fizetési kérelmekhez. Minden mező &lt;b&gt;opcionális&lt;/b&gt; </translation>
+        <translation>Használja ezt az űrlapot fizetési kérelmekhez. Minden mező &lt;b&gt;opcionális&lt;/b&gt;</translation>
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Egy opcionálisan kérhető összeg. Hagyja üresen, vagy írjon be nullát, ha nem kívánja használni.</translation>
+    </message>
+    <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Új fogadócím létrehozása</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -1823,10 +1933,6 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Requested payments history</source>
         <translation>A kért kifizetések története</translation>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Fizetés kérése</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -1910,14 +2016,6 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Wallet</source>
         <translation>Tárca</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>A keletkezett URI túl hosszú, próbálja meg csökkenteni a cimke / üzenet szövegének méretét.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Hiba lépett fel az URI QR kóddá alakításakor.</translation>
     </message>
 </context>
 <context>
@@ -2022,10 +2120,6 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Figyelem: A hozzávetőleges díjszámítás jelenleg nem lehetséges.</translation>
     </message>
     <message>
-        <source>collapse fee-settings</source>
-        <translation>díj beállítások bezárása</translation>
-    </message>
-    <message>
         <source>per kilobyte</source>
         <translation>kilobájtonként</translation>
     </message>
@@ -2034,20 +2128,16 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Elrejtés</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Alacsony díj is megfelelő, ha nincs több tranzakció mint amennyi hely a blokkokban. Figyelem! Ha a hálózat túlterhelt, lehetséges, hogy a tranzakció nem lesz megerősítve.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(olvasd el a gyorstippet)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Ajánlott:</translation>
     </message>
     <message>
         <source>Custom:</source>
         <translation>Egyéni:</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation>(Samodejni obračun provizije še ni pripravljen. Po navadi izračun traja nekaj blokov ...)</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2107,7 +2197,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Byte-ok másolása </translation>
+        <translation>Byte-ok másolása</translation>
     </message>
     <message>
         <source>Copy dust</source>
@@ -2116,6 +2206,18 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Copy change</source>
         <translation>Visszajáró másolása</translation>
+    </message>
+    <message>
+        <source>%1 (%2 blocks)</source>
+        <translation>%1 (%2 blokov)</translation>
+    </message>
+    <message>
+        <source> from wallet '%1'</source>
+        <translation>A "%1" tárcától</translation>
+    </message>
+    <message>
+        <source>%1 to %2</source>
+        <translation>%1 do %2</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -2162,20 +2264,12 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Tranzakció létrehozása sikertelen!</translation>
     </message>
     <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>Tranzakció visszautasítva a következő indokkal: %1</translation>
-    </message>
-    <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>Magasabb díj mint %1 abszurd magas díjnak számít.</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
         <translation>A fizetési kérelem lejárt.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Csak a szükséges %1 díj fizetése</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2191,7 +2285,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation>A cím, amelyet a visszajárónak megadott, nincs ebben a tárcában. Bármennyi vagy minden összeg elküldhető a tárcájából erre a címre. Biztos benne?</translation>
+        <translation>A visszajárónak megadott cím nem szerepel ebben a tárcában. Bármilyen - vagy az egész - összeg elküldhető a tárcájából erre a címre. Biztos benne?</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2217,10 +2311,6 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Válassz egy korábban már használt címet</translation>
     </message>
     <message>
-        <source>This is a normal payment.</source>
-        <translation>Ez normál fizetés.</translation>
-    </message>
-    <message>
         <source>The Bitcoin address to send the payment to</source>
         <translation>Erre a Bitcoin címre küldje az összeget</translation>
     </message>
@@ -2239,6 +2329,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Remove this entry</source>
         <translation>Ez a bejegyzés eltávolítása</translation>
+    </message>
+    <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>Znesek plačila bo zmanjšan za znesek provizije. Prejemnik bo prejel manjše število kovancev, kot je bil vnešeni znesek. Če je prejemnikov več, bo provizija med njih enakomerno porazdeljena.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2265,23 +2359,16 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Adjon egy címkét ehhez a címhez, hogy bekerüljön a használt címek közé</translation>
     </message>
     <message>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation>Sporočilo, ki ste ga pripeli na URI tipa bitcoin:. Shranjeno bo skupaj s podatki o transakciji. Opomba: Sporočilo ne bo poslano preko omrežja Bitcoin.</translation>
+    </message>
+    <message>
         <source>Pay To:</source>
         <translation>Címzett:</translation>
     </message>
     <message>
         <source>Memo:</source>
         <translation>Jegyzet:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Adjon egy címkét ehhez a címhez, hogy bekerüljön a címtárába</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>Igen</translation>
     </message>
 </context>
 <context>
@@ -2304,6 +2391,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>&amp;Sign Message</source>
         <translation>Üzenet aláírása...</translation>
+    </message>
+    <message>
+        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>S svojimi naslovi lahko podpisujete sporočila ali pogodbe in s tem dokazujete, da na teh naslovih lahko prejemate kovance. Bodite previdni in ne podpisujte ničesar nejasnega ali naključnega, ker vas zlikovci preko ribarjenja (phishing) lahko prelisičijo, da na njih prepišete svojo identiteto. Podpisujte samo podrobno opisane izjave, s katerimi se strinjate.</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -2339,11 +2430,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Üzenet </translation>
+        <translation>Üzenet</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
         <translation>Üzenet &amp;aláírása</translation>
+    </message>
+    <message>
+        <source>Reset all sign message fields</source>
+        <translation>Počisti vsa polja za vnos v oknu za podpisovanje</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2352,6 +2447,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>&amp;Verify Message</source>
         <translation>Üzenet ellenőrzése</translation>
+    </message>
+    <message>
+        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
+        <translation>Da preverite verodostojnost sporočila, spodaj vnesite: prejemnikov naslov, prejeto sporočilo (pazljivo skopirajte vse prelome vrstic, presledke, tabulatorje ipd.,) in prejeti podpis. Da se izognete napadom tipa man-in-the-middle, vedite, da iz veljavnega podpisa ne sledi nič drugega, kot tisto, kar je navedeno v sporočilu. Podpis samo potrjuje dejstvo, da ima podpisnik v lasti prejemni naslov, ne more pa dokazati vira nobene transakcije!</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -2366,6 +2465,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Üzenet ellenőrzése</translation>
     </message>
     <message>
+        <source>Reset all verify message fields</source>
+        <translation>Počisti vsa polja za vnos v oknu za preverjanje</translation>
+    </message>
+    <message>
         <source>Click "Sign Message" to generate signature</source>
         <translation>Klikkeljen az "Üzenet Aláírása" -ra, hogy aláírást generáljon</translation>
     </message>
@@ -2376,6 +2479,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Please check the address and try again.</source>
         <translation>Kérem ellenőrizze a címet és próbálja meg újra.</translation>
+    </message>
+    <message>
+        <source>The entered address does not refer to a key.</source>
+        <translation>Vnešeni naslov se ne nanaša na ključ.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -2402,19 +2509,16 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Kérem ellenőrizze az aláírást és próbálja újra.</translation>
     </message>
     <message>
+        <source>The signature did not match the message digest.</source>
+        <translation>Podpis ne ustreza rezultatu (digest) preverjanja.</translation>
+    </message>
+    <message>
         <source>Message verification failed.</source>
         <translation>Az üzenet ellenőrzése sikertelen.</translation>
     </message>
     <message>
         <source>Message verified.</source>
         <translation>Üzenet ellenőrizve.</translation>
-    </message>
-</context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[teszthálózat]</translation>
     </message>
 </context>
 <context>
@@ -2429,6 +2533,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Open until %1</source>
         <translation>%1 -ig megnyitva</translation>
+    </message>
+    <message>
+        <source>conflicted with a transaction with %1 confirmations</source>
+        <translation>v sporu s transakcijo z %1 potrditvami</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
@@ -2472,7 +2580,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>From</source>
-        <translation>Küldő: </translation>
+        <translation>Küldő:</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -2511,6 +2619,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Teljes terhelés</translation>
     </message>
     <message>
+        <source>Total credit</source>
+        <translation>Skupni kredit</translation>
+    </message>
+    <message>
         <source>Transaction fee</source>
         <translation>Tranzakciós díj</translation>
     </message>
@@ -2535,8 +2647,16 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Tranzakció teljes mérete</translation>
     </message>
     <message>
+        <source>Output index</source>
+        <translation>Indeks izhoda</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Kereskedő</translation>
+    </message>
+    <message>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>Ustvarjeni kovanci morajo zoreti %1 blokov, preden jih lahko porabite. Ko ste ta blok ustvarili, je bil posredovan v omrežje, da bo dodan v verigo blokov. Če se bloku ni uspelo uvrstiti v verigo, se bo njegovo stanje spremenilo v "ni bilo sprejeto" in kovancev ne bo mogoče porabiti. To se včasih zgodi, če kak drug rudar v roku nekaj sekund hkrati z vami odkrije drug blok.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2569,7 +2689,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Ez a mező a tranzakció részleteit mutatja</translation>
     </message>
-    </context>
+    <message>
+        <source>Details for %1</source>
+        <translation>%1 részletei</translation>
+    </message>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -2664,7 +2788,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <source>Whether or not a watch-only address is involved in this transaction.</source>
         <translation>Egy csak megfigyelt cím érintett vagy nem ebben a tranzakcióban.</translation>
     </message>
-    </context>
+    <message>
+        <source>User-defined intent/purpose of the transaction.</source>
+        <translation>Uporabniško določen namen transakcije.</translation>
+    </message>
+    <message>
+        <source>Amount removed from or added to balance.</source>
+        <translation>Znesek spremembe stanja sredstev.</translation>
+    </message>
+</context>
 <context>
     <name>TransactionView</name>
     <message>
@@ -2714,6 +2846,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Other</source>
         <translation>Más</translation>
+    </message>
+    <message>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>Vnesi naslov, ID transakcije, ali oznako za iskanje</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -2801,20 +2937,47 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>Hiba történt a tranzakciós előzmények %1 helyre való mentésekor. </translation>
+        <translation>Hiba történt a tranzakciós előzmények %1 helyre való mentésekor.</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
         <translation>Sikeres Exportálás</translation>
     </message>
     <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>Zgodovina poteklih transakcij je bila uspešno shranjena v datoteko %1.</translation>
+    </message>
+    <message>
         <source>Range:</source>
         <translation>Tartomány:</translation>
     </message>
-    </context>
+    <message>
+        <source>to</source>
+        <translation>za</translation>
+    </message>
+</context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
-    </context>
+    <message>
+        <source>Unit to show amounts in. Click to select another unit.</source>
+        <translation>Merska enota za prikaz zneskov. Kliknite za izbiro druge enote.</translation>
+    </message>
+</context>
+<context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Tárca bezárása</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Biztos, hogy bezárja a "%1" tárcát?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>A tárca hosszantartó bezárása nyesési üzemmódban azt eredményezheti, hogy a teljes láncot újra kell szinkronizálnia.</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -2856,6 +3019,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <source>Could not commit transaction</source>
         <translation>A tranzakciót nem lehet elküldeni</translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation>Alapértelmezett tárca</translation>
+    </message>
 </context>
 <context>
     <name>WalletView</name>
@@ -2880,6 +3047,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Biztonsági másolat készítése sikertelen</translation>
     </message>
     <message>
+        <source>There was an error trying to save the wallet data to %1.</source>
+        <translation>Hiba történt a pénztárca adatainak %1 mentésekor.</translation>
+    </message>
+    <message>
         <source>Backup Successful</source>
         <translation>Sikeres biztonsági mentés</translation>
     </message>
@@ -2895,32 +3066,76 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>MIT szoftver licenc alapján terjesztve, tekintse meg a hozzátartozó fájlt %s or %s</translation>
     </message>
     <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation>Nyesés megkísérlése a minimális %d MiB alatt. Kérjük, használjon egy magasabb értéket.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>Nyesés: az utolsó tárcaszinkronizálás meghaladja a nyesett adatokat. Szükséges a -reindex használata (nyesett csomópont esetében a teljes blokklánc ismételt letöltése).</translation>
+    </message>
+    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Hiba: Fatális belső hiba történt, nézze meg a debug.log -ot a részletekért</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>Obrezujem ...</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation>HTTP szerver indítása sikertelen. A részleteket lásd: debug log.</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
         <source>The %s developers</source>
         <translation>A %s fejlesztők</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>Az %s adatkönyvtár nem zárható.  A %s valószínűleg fut már.</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Opozorilo: Preverite, če sta datum in ura na vašem računalniku točna! %s ne bo deloval pravilno, če je nastavljeni čas nepravilen.</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Ez egy kiadás előtt álló, teszt verzió - csak saját felelősségre - ne használja bányászatra vagy kereskedéshez.</translation>
     </message>
     <message>
+        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
+        <translation>Ne morem ponoviti blokov. Podatkovno bazo bo potrebno ponovno zgraditi z uporabo ukaza -reindex-chainstate.</translation>
+    </message>
+    <message>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>Az adatbázis visszatekerése az elágazás előtti állapotba nem sikerült. Ismételten le kell töltenie a blokkláncot.</translation>
+    </message>
+    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Figyelem: A hálózat úgy tűnik nem teljesen egyezik! Néhány bányász problémákat tapasztalhat.</translation>
     </message>
     <message>
+        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation>Opozorilo: Trenutno se s soležniki ne strinjamo v popolnosti! Mogoče bi morali vi ali drugi udeleženci posodobiti odjemalce.</translation>
+    </message>
+    <message>
+        <source>%d of last 100 blocks have unexpected version</source>
+        <translation>%d od zadnjih 100 blokov imajo nepričakovano verzijo</translation>
+    </message>
+    <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s poškodovana, obnova neuspešna</translation>
+    </message>
+    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool legalább %d MB kell legyen.</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation>Naslova -%s ni mogoče razrešiti: '%s'</translation>
+    </message>
+    <message>
+        <source>Change index out of range</source>
+        <translation>Indeks drobiža izven dovoljenega območja</translation>
     </message>
     <message>
         <source>Copyright (C) %i-%i</source>
@@ -2963,16 +3178,12 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Hiba a blokk adatbázis megnyitása közben.</translation>
     </message>
     <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Hiba: kevés a hely a lemezen!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Egyik hálózati porton sem sikerül hallgatni. Használja a -listen=0 kapcsolót, ha ezt szeretné.</translation>
     </message>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
-        <translation>A tárca átvizsgálása közben hiba történt.</translation>
+        <translation>Inicializálás közben nem sikerült feltérképezni a tárcát</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -2981,6 +3192,18 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation>Helytelen vagy nemlétező genézis blokk. Helytelen hálózati adatkönyvtár?</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation>Neveljavna količina za -%s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
+        <translation>Neveljavna količina za -discardfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
+        <translation>Neveljavna količina za -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>
@@ -2992,7 +3215,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation>Nincs elég fájlleíró. </translation>
+        <translation>Nincs elég fájlleíró.</translation>
+    </message>
+    <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation>Nyesett üzemmódot nem lehet negatív értékkel kialakítani.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation>A -txindex nem használható nyesett üzemmódban.</translation>
     </message>
     <message>
         <source>Replaying blocks...</source>
@@ -3011,6 +3242,10 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>A tranzakciós díj és a visszajáró kiszámítása nem sikerült</translation>
     </message>
     <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation>Na tem računalniku ni bilo mogoče vezati naslova %s. %s je verjetno že zagnan.</translation>
+    </message>
+    <message>
         <source>Upgrading UTXO database</source>
         <translation>Blokk adatbázis frissítése</translation>
     </message>
@@ -3023,6 +3258,14 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>A Tárca újraírása szükséges: Indítsa újra a %s-t.</translation>
     </message>
     <message>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
+        <translation>Napaka: Ni mogoče sprejemati dohodnih povezav (vrnjena napaka: %s)</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
+        <translation>Újra kell építeni az adatbázist a -reindex használatával, ami a nyesett üzemmódot megszünteti. Ez a teljes blokklánc ismételt letöltésével jár.</translation>
+    </message>
+    <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Hiba az adatbázis olvasásakor, leállítás</translation>
     </message>
@@ -3031,12 +3274,32 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Hiba a blokk adatbázis betöltése közben</translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>Információ</translation>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation>Pri opciji -whitebind morate navesti vrata: %s</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>A -blockfilterindex nem használható nyesés üzemmódban.</translation>
+    </message>
+    <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation>Zmanjšujem maksimalno število povezav (-maxconnections) iz %d na %d, zaradi sistemskih omejitev.</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Tranzakció aláírása sikertelen</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>A megadott "%s" -walletdir nem létezik</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>A megadott "%s" -walletdir relatív elérési út</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>A megadott "%s" -walletdir nem könyvtár</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3051,24 +3314,44 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Túl nagy tranzakció</translation>
     </message>
     <message>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation>Na tem računalniku ni bilo mogoče vezati naslova %s (vrnjena napaka: %s)</translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation>Ne zmorem ustvariti začetnih ključev</translation>
+    </message>
+    <message>
         <source>Verifying wallet(s)...</source>
         <translation>Tárcák ellenőrzése...</translation>
     </message>
     <message>
-        <source>Warning</source>
-        <translation>Figyelem</translation>
+        <source>Warning: unknown new rules activated (versionbit %i)</source>
+        <translation>Opozorilo: neznana nova pravila aktivirana (verzija %i)</translation>
     </message>
     <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Figyelem: Ismeretlen blokkokat bányásznak! Lehetséges, hogy ismeretlen szabályok érvényesek.</translation>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>A tárca összes trancakciójának törlése...</translation>
+    </message>
+    <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Figyelem: A tárca-fájl megsérült, de az adatokat sikerült megmenteni! Az eredeti %s fájlt mentettük %s név alatt a %s könyvtárban. Amennyiben az egyenleg vagy a trancakciók helytelenek, állítsa vissza tárcáját a biztonsági mentés használatával.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
         <translation>%s étéke nagyon magas!</translation>
     </message>
     <message>
+        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
+        <translation>Hiba történt a %s tárca betöltésekor, mert duplikált tárca-fájlnevet adott meg.</translation>
+    </message>
+    <message>
         <source>Starting network threads...</source>
         <translation>Hálózati szálak indítása...</translation>
+    </message>
+    <message>
+        <source>The wallet will avoid paying less than the minimum relay fee.</source>
+        <translation>A tárca nem fog a minimális továbbítási díjnál kevesebbet fizetni. </translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
@@ -3092,7 +3375,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation>Nincs elég bitcoinod.</translation>
+        <translation>Fedezethiány</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
+        <translation>A nem HD-s megosztott tárcát nem lehet bővíteni anélkül, hogy először a megosztás előtti kulcskészlet támogatására bővít. Használja az -upgradewallet=169900 parancsot vagy az -upgradewallet parancsot verzió megadása nélkül.</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>Figyelem: Privát kulcsokat észleltünk a {%s} tárcában, melynél a privát kulcsok le vannak tiltva.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -3108,15 +3399,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Rescanning...</source>
-        <translation>Újraszkennelés...</translation>
+        <translation>Feltérképezés megismétlése...</translation>
     </message>
     <message>
         <source>Done loading</source>
         <translation>Betöltés befejezve.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Hiba</translation>
     </message>
 </context>
 </TS>

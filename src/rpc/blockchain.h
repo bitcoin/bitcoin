@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,7 @@ class CBlock;
 class CBlockIndex;
 class CTxMemPool;
 class UniValue;
+struct NodeContext;
 
 static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
 
@@ -45,5 +46,12 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
 
 /** Used by getblockstats to get feerates at different percentiles by weight  */
 void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], std::vector<std::pair<CAmount, int64_t>>& scores, int64_t total_weight);
+
+//! Pointer to node state that needs to be declared as a global to be accessible
+//! RPC methods. Due to limitations of the RPC framework, there's currently no
+//! direct way to pass in state to RPC methods without globals.
+extern NodeContext* g_rpc_node;
+
+CTxMemPool& EnsureMemPool();
 
 #endif

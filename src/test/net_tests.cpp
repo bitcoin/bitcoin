@@ -1,22 +1,24 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addrdb.h>
 #include <addrman.h>
+#include <chainparams.h>
 #include <clientversion.h>
-#include <test/setup_common.h>
-#include <string>
-#include <boost/test/unit_test.hpp>
-#include <serialize.h>
-#include <streams.h>
 #include <net.h>
 #include <netbase.h>
-#include <chainparams.h>
+#include <serialize.h>
+#include <streams.h>
+#include <test/util/setup_common.h>
 #include <util/memory.h>
+#include <util/string.h>
 #include <util/system.h>
 
+#include <boost/test/unit_test.hpp>
+
 #include <memory>
+#include <string>
 
 class CAddrManSerializationMock : public CAddrMan
 {
@@ -85,7 +87,7 @@ BOOST_AUTO_TEST_CASE(cnode_listen_port)
     BOOST_CHECK(port == Params().GetDefaultPort());
     // test set port
     unsigned short altPort = 12345;
-    BOOST_CHECK(gArgs.SoftSetArg("-port", std::to_string(altPort)));
+    BOOST_CHECK(gArgs.SoftSetArg("-port", ToString(altPort)));
     port = GetListenPort();
     BOOST_CHECK(port == altPort);
 }
@@ -99,6 +101,8 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
     BOOST_CHECK(Lookup("250.7.2.2", addr2, 9999, false));
     BOOST_CHECK(Lookup("250.7.3.3", addr3, 9999, false));
+    BOOST_CHECK(Lookup(std::string("250.7.3.3", 9), addr3, 9999, false));
+    BOOST_CHECK(!Lookup(std::string("250.7.3.3\0example.com", 21), addr3, 9999, false));
 
     // Add three addresses to new table.
     CService source;
@@ -128,9 +132,8 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     CDataStream ssPeers2 = AddrmanToStream(addrmanUncorrupted);
 
     CAddrMan addrman2;
-    CAddrDB adb;
     BOOST_CHECK(addrman2.size() == 0);
-    BOOST_CHECK(adb.Read(addrman2, ssPeers2));
+    BOOST_CHECK(CAddrDB::Read(addrman2, ssPeers2));
     BOOST_CHECK(addrman2.size() == 3);
 }
 
@@ -160,9 +163,8 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     CDataStream ssPeers2 = AddrmanToStream(addrmanCorrupted);
 
     CAddrMan addrman2;
-    CAddrDB adb;
     BOOST_CHECK(addrman2.size() == 0);
-    BOOST_CHECK(!adb.Read(addrman2, ssPeers2));
+    BOOST_CHECK(!CAddrDB::Read(addrman2, ssPeers2));
     BOOST_CHECK(addrman2.size() == 0);
 }
 
@@ -303,5 +305,19 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
     BOOST_CHECK_EQUAL(IsLocal(addr), false);
 }
 
+BOOST_AUTO_TEST_CASE(PoissonNextSend)
+{
+    g_mock_deterministic_tests = true;
+
+    int64_t now = 5000;
+    int average_interval_seconds = 600;
+
+    auto poisson = ::PoissonNextSend(now, average_interval_seconds);
+    std::chrono::microseconds poisson_chrono = ::PoissonNextSend(std::chrono::microseconds{now}, std::chrono::seconds{average_interval_seconds});
+
+    BOOST_CHECK_EQUAL(poisson, poisson_chrono.count());
+
+    g_mock_deterministic_tests = false;
+}
 
 BOOST_AUTO_TEST_SUITE_END()

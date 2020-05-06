@@ -9,15 +9,17 @@ Developer Notes
     - [Coding Style (C++)](#coding-style-c)
     - [Coding Style (Python)](#coding-style-python)
     - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
+      - [Generating Documentation](#generating-documentation)
     - [Development tips and tricks](#development-tips-and-tricks)
         - [Compiling for debugging](#compiling-for-debugging)
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
-        - [debug.log](#debuglog)
+        - [`debug.log`](#debuglog)
         - [Testnet and Regtest modes](#testnet-and-regtest-modes)
         - [DEBUG_LOCKORDER](#debug_lockorder)
         - [Valgrind suppressions file](#valgrind-suppressions-file)
         - [Compiling for test coverage](#compiling-for-test-coverage)
         - [Performance profiling with perf](#performance-profiling-with-perf)
+        - [Sanitizers](#sanitizers)
     - [Locking/mutex usage notes](#lockingmutex-usage-notes)
     - [Threads](#threads)
     - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
@@ -27,16 +29,21 @@ Developer Notes
     - [General C++](#general-c)
     - [C++ data structures](#c-data-structures)
     - [Strings and formatting](#strings-and-formatting)
-    - [Variable names](#variable-names)
+    - [Shadowing](#shadowing)
     - [Threads and synchronization](#threads-and-synchronization)
     - [Scripts](#scripts)
         - [Shebang](#shebang)
     - [Source code organization](#source-code-organization)
     - [GUI](#gui)
     - [Subtrees](#subtrees)
+    - [Upgrading LevelDB](#upgrading-leveldb)
+      - [File Descriptor Counts](#file-descriptor-counts)
+      - [Consensus Compatibility](#consensus-compatibility)
     - [Scripted diffs](#scripted-diffs)
+        - [Suggestions and examples](#suggestions-and-examples)
     - [Release notes](#release-notes)
     - [RPC interface guidelines](#rpc-interface-guidelines)
+    - [Internal interface guidelines](#internal-interface-guidelines)
 
 <!-- markdown-toc end -->
 
@@ -62,7 +69,7 @@ tool to clean up patches automatically before submission.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
   - No indentation for `public`/`protected`/`private` or for `namespace`.
-  - No extra spaces inside parenthesis; don't do ( this ).
+  - No extra spaces inside parenthesis; don't do `( this )`.
   - No space after function names; one space after `if`, `for` and `while`.
   - If an `if` only has a single-statement `then`-clause, it can appear
     on the same line as the `if`, without braces. In every other case,
@@ -76,7 +83,7 @@ code.
     separate words (snake_case).
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
-  - Constant names are all uppercase, and use `_` to separate words.
+  - Compile-time constant names are all uppercase, and use `_` to separate words.
   - Class names, function names, and method names are UpperCamelCase
     (PascalCase). Do not prefix class names with `C`.
   - Test suite naming convention: The Boost test suite in file
@@ -87,7 +94,6 @@ code.
   - `++i` is preferred over `i++`.
   - `nullptr` is preferred over `NULL` or `(void*)0`.
   - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
-  - `enum class` is preferred over `enum` where possible. Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to int, and name clashes due to enumerators being exported to the surrounding scope.
 
 Block style example:
 ```c++
@@ -137,12 +143,17 @@ For example, to describe a function use:
 
 ```c++
 /**
- * ... text ...
- * @param[in] arg1    A description
- * @param[in] arg2    Another argument description
- * @pre Precondition for function...
+ * ... Description ...
+ *
+ * @param[in]  arg1 input description...
+ * @param[in]  arg2 input description...
+ * @param[out] arg3 output description...
+ * @return Return cases...
+ * @throws Error type and cases...
+ * @pre  Pre-condition for function...
+ * @post Post-condition for function...
  */
-bool function(int arg1, const char *arg2)
+bool function(int arg1, const char *arg2, std::string& arg3)
 ```
 
 A complete list of `@xxx` commands can be found at http://www.doxygen.nl/manual/commands.html.
@@ -157,44 +168,73 @@ To describe a class, use the same construct above the class definition:
  * @see GetWarnings()
  */
 class CAlert
-{
 ```
 
 To describe a member or variable use:
-```c++
-int var; //!< Detailed description after the member
-```
-
-or
 ```c++
 //! Description before the member
 int var;
 ```
 
+or
+```c++
+int var; //!< Description after the member
+```
+
 Also OK:
 ```c++
 ///
-/// ... text ...
+/// ... Description ...
 ///
 bool function2(int arg1, const char *arg2)
 ```
 
-Not OK (used plenty in the current source, but not picked up):
+Not picked up by Doxygen:
 ```c++
 //
-// ... text ...
+// ... Description ...
 //
+```
+
+Also not picked up by Doxygen:
+```c++
+/*
+ * ... Description ...
+ */
 ```
 
 A full list of comment syntaxes picked up by Doxygen can be found at http://www.doxygen.nl/manual/docblocks.html,
 but the above styles are favored.
 
-Documentation can be generated with `make docs` and cleaned up with `make clean-docs`. The resulting files are located in `doc/doxygen/html`; open `index.html` to view the homepage.
+Recommendations:
 
-Before running `make docs`, you will need to install dependencies `doxygen` and `dot`. For example, on macOS via Homebrew:
-```
-brew install doxygen --with-graphviz
-```
+- Avoiding duplicating type and input/output information in function
+  descriptions.
+
+- Use backticks (&#96;&#96;) to refer to `argument` names in function and
+  parameter descriptions.
+
+- Backticks aren't required when referring to functions Doxygen already knows
+  about; it will build hyperlinks for these automatically. See
+  http://www.doxygen.nl/manual/autolink.html for complete info.
+
+- Avoid linking to external documentation; links can break.
+
+- Javadoc and all valid Doxygen comments are stripped from Doxygen source code
+  previews (`STRIP_CODE_COMMENTS = YES` in [Doxyfile.in](doc/Doxyfile.in)). If
+  you want a comment to be preserved, it must instead use `//` or `/* */`.
+
+### Generating Documentation
+
+The documentation can be generated with `make docs` and cleaned up with `make
+clean-docs`. The resulting files are located in `doc/doxygen/html`; open
+`index.html` in that directory to view the homepage.
+
+Before running `make docs`, you'll need to install these dependencies:
+
+Linux: `sudo apt install doxygen graphviz`
+
+MacOS: `brew install doxygen graphviz`
 
 Development tips and tricks
 ---------------------------
@@ -208,15 +248,15 @@ produce better debugging builds.
 
 Run configure with the `--enable-gprof` option, then make.
 
-### debug.log
+### `debug.log`
 
-If the code is behaving strangely, take a look in the debug.log file in the data directory;
+If the code is behaving strangely, take a look in the `debug.log` file in the data directory;
 error and debugging messages are written there.
 
 The `-debug=...` command-line option controls debugging; running with just `-debug` or `-debug=1` will turn
-on all categories (and give you a very large debug.log file).
+on all categories (and give you a very large `debug.log` file).
 
-The Qt code routes `qDebug()` output to debug.log under category "qt": run with `-debug=qt`
+The Qt code routes `qDebug()` output to `debug.log` under category "qt": run with `-debug=qt`
 to see it.
 
 ### Testnet and Regtest modes
@@ -234,7 +274,7 @@ Bitcoin Core is a multi-threaded application, and deadlocks or other
 multi-threading bugs can be very difficult to track down. The `--enable-debug`
 configure option adds `-DDEBUG_LOCKORDER` to the compiler flags. This inserts
 run-time checks to keep track of which locks are held and adds warnings to the
-debug.log file if inconsistencies are detected.
+`debug.log` file if inconsistencies are detected.
 
 ### Valgrind suppressions file
 
@@ -249,6 +289,7 @@ $ valgrind --suppressions=contrib/valgrind.supp src/test/test_bitcoin
 $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
       --show-leak-kinds=all src/test/test_bitcoin --log_level=test_suite
 $ valgrind -v --leak-check=full src/bitcoind -printtoconsole
+$ ./test/functional/test_runner.py --valgrind
 ```
 
 ### Compiling for test coverage
@@ -276,8 +317,7 @@ the functional test framework. Perf can observe a running process and sample
 (at some frequency) where its execution is.
 
 Perf installation is contingent on which kernel version you're running; see
-[this StackExchange
-thread](https://askubuntu.com/questions/50145/how-to-install-perf-monitoring-tool)
+[this thread](https://askubuntu.com/questions/50145/how-to-install-perf-monitoring-tool)
 for specific instructions.
 
 Certain kernel parameters may need to be set for perf to be able to inspect the
@@ -312,7 +352,7 @@ or using a graphical tool like [Hotspot](https://github.com/KDAB/hotspot).
 See the functional test documentation for how to invoke perf within tests.
 
 
-**Sanitizers**
+### Sanitizers
 
 Bitcoin Core can be compiled with various "sanitizers" enabled, which add
 instrumentation for issues regarding things like memory safety, thread race
@@ -373,7 +413,7 @@ Deadlocks due to inconsistent lock ordering (thread 1 locks `cs_main` and then
 `cs_wallet`, while thread 2 locks them in the opposite order: result, deadlock
 as each waits for the other to release its lock) are a problem. Compile with
 `-DDEBUG_LOCKORDER` (or use `--enable-debug`) to get lock order inconsistencies
-reported in the debug.log file.
+reported in the `debug.log` file.
 
 Re-architecting the core code so there are better-defined interfaces
 between the various components is a goal, with any necessary locking
@@ -383,29 +423,52 @@ and its `cs_KeyStore` lock for example).
 Threads
 -------
 
-- ThreadScriptCheck : Verifies block scripts.
+- [Main thread (`bitcoind`)](https://doxygen.bitcoincore.org/bitcoind_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97)
+  : Started from `main()` in `bitcoind.cpp`. Responsible for starting up and
+  shutting down the application.
 
-- ThreadImport : Loads blocks from blk*.dat files or bootstrap.dat.
+- [ThreadImport (`b-loadblk`)](https://doxygen.bitcoincore.org/init_8cpp.html#ae9e290a0e829ec0198518de2eda579d1)
+  : Loads blocks from `blk*.dat` files or `-loadblock=<file>` on startup.
 
-- StartNode : Starts other threads.
+- [ThreadScriptCheck (`b-scriptch.x`)](https://doxygen.bitcoincore.org/validation_8cpp.html#a925a33e7952a157922b0bbb8dab29a20)
+  : Parallel script validation threads for transactions in blocks.
 
-- ThreadDNSAddressSeed : Loads addresses of peers from the DNS.
+- [ThreadHTTP (`b-http`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#abb9f6ea8819672bd9a62d3695070709c)
+  : Libevent thread to listen for RPC and REST connections.
 
-- ThreadMapPort : Universal plug-and-play startup/shutdown.
+- [HTTP worker threads(`b-httpworker.x`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#aa6a7bc27265043bc0193220c5ae3a55f)
+  : Threads to service RPC and REST requests.
 
-- ThreadSocketHandler : Sends/Receives data from peers on port 8333.
+- [Indexer threads (`b-txindex`, etc)](https://doxygen.bitcoincore.org/class_base_index.html#a96a7407421fbf877509248bbe64f8d87)
+  : One thread per indexer.
 
-- ThreadOpenAddedConnections : Opens network connections to added nodes.
+- [SchedulerThread (`b-scheduler`)](https://doxygen.bitcoincore.org/class_c_scheduler.html#a14d2800815da93577858ea078aed1fba)
+  : Does asynchronous background tasks like dumping wallet contents, dumping
+  addrman and running asynchronous validationinterface callbacks.
 
-- ThreadOpenConnections : Initiates new connections to peers.
+- [TorControlThread (`b-torcontrol`)](https://doxygen.bitcoincore.org/torcontrol_8cpp.html#a4faed3692d57a0d7bdbecf3b37f72de0)
+  : Libevent thread for tor connections.
 
-- ThreadMessageHandler : Higher-level message handling (sending and receiving).
+- Net threads:
 
-- DumpAddresses : Dumps IP addresses of nodes to peers.dat.
+  - [ThreadMessageHandler (`b-msghand`)](https://doxygen.bitcoincore.org/class_c_connman.html#aacdbb7148575a31bb33bc345e2bf22a9)
+    : Application level message handling (sending and receiving). Almost
+    all net_processing and validation logic runs on this thread.
 
-- ThreadRPCServer : Remote procedure call handler, listens on port 8332 for connections and services them.
+  - [ThreadDNSAddressSeed (`b-dnsseed`)](https://doxygen.bitcoincore.org/class_c_connman.html#aa7c6970ed98a4a7bafbc071d24897d13)
+    : Loads addresses of peers from the DNS.
 
-- Shutdown : Does an orderly shutdown of everything.
+  - [ThreadMapPort (`b-upnp`)](https://doxygen.bitcoincore.org/net_8cpp.html#a63f82a71c4169290c2db1651a9bbe249)
+    : Universal plug-and-play startup/shutdown.
+
+  - [ThreadSocketHandler (`b-net`)](https://doxygen.bitcoincore.org/class_c_connman.html#a765597cbfe99c083d8fa3d61bb464e34)
+    : Sends/Receives data from peers on port 8333.
+
+  - [ThreadOpenAddedConnections (`b-addcon`)](https://doxygen.bitcoincore.org/class_c_connman.html#a0b787caf95e52a346a2b31a580d60a62)
+    : Opens network connections to added nodes.
+
+  - [ThreadOpenConnections (`b-opencon`)](https://doxygen.bitcoincore.org/class_c_connman.html#a55e9feafc3bab78e5c9d408c207faa45)
+    : Initiates new connections to peers.
 
 Ignoring IDE/editor files
 --------------------------
@@ -466,11 +529,6 @@ Wallet
 -------
 
 - Make sure that no crashes happen with run-time option `-disablewallet`.
-
-  - *Rationale*: In RPC code that conditionally uses the wallet (such as
-    `validateaddress`), it is easy to forget that global pointer `pwalletMain`
-    can be nullptr. See `test/functional/disablewallet.py` for functional tests
-    exercising the API with `-disablewallet`.
 
 - Include `db_cxx.h` (BerkeleyDB header) only when `ENABLE_WALLET` is set.
 
@@ -546,11 +604,10 @@ class A
 }
 ```
 
-- By default, declare single-argument constructors `explicit`.
+- By default, declare constructors `explicit`.
 
-  - *Rationale*: This is a precaution to avoid unintended conversions that might
-    arise when single-argument constructors are used as implicit conversion
-    functions.
+  - *Rationale*: This is a precaution to avoid unintended
+    [conversions](https://en.cppreference.com/w/cpp/language/converting_constructor).
 
 - Use explicitly signed or unsigned `char`s, or even better `uint8_t` and
   `int8_t`. Do not use bare `char` unless it is to pass to a third-party API.
@@ -562,6 +619,34 @@ class A
 
   - *Rationale*: Easier to understand what is happening, thus easier to spot mistakes, even for those
   that are not language lawyers.
+
+- Prefer `enum class` (scoped enumerations) over `enum` (traditional enumerations) where possible.
+
+  - *Rationale*: Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to `int`, and name clashes due to enumerators being exported to the surrounding scope.
+
+- `switch` statement on an enumeration example:
+
+```cpp
+enum class Tabs {
+    INFO,
+    CONSOLE,
+    GRAPH,
+    PEERS
+};
+
+int GetInt(Tabs tab)
+{
+    switch (tab) {
+    case Tabs::INFO: return 0;
+    case Tabs::CONSOLE: return 1;
+    case Tabs::GRAPH: return 2;
+    case Tabs::PEERS: return 3;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+```
+
+*Rationale*: The comment documents skipping `default:` label, and it complies with `clang-format` rules. The assertion prevents firing of `-Wreturn-type` warning on some compilers.
 
 Strings and formatting
 ------------------------
@@ -613,26 +698,34 @@ Strings and formatting
 
   - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion.
 
-Variable names
+- Use `.c_str()` sparingly. Its only valid use is to pass C++ strings to C functions that take NULL-terminated
+  strings.
+
+  - Do not use it when passing a sized array (so along with `.size()`). Use `.data()` instead to get a pointer
+    to the raw data.
+
+    - *Rationale*: Although this is guaranteed to be safe starting with C++11, `.data()` communicates the intent better.
+
+  - Do not use it when passing strings to `tfm::format`, `strprintf`, `LogPrint[f]`.
+
+    - *Rationale*: This is redundant. Tinyformat handles strings.
+
+  - Do not use it to convert to `QString`. Use `QString::fromStdString()`.
+
+    - *Rationale*: Qt has built-in functionality for converting their string
+      type from/to C++. No need to roll your own.
+
+  - In cases where do you call `.c_str()`, you might want to additionally check that the string does not contain embedded '\0' characters, because
+    it will (necessarily) truncate the string. This might be used to hide parts of the string from logging or to circumvent
+    checks. If a use of strings is sensitive to this, take care to check the string for embedded NULL characters first
+    and reject it if there are any (see `ParsePrechecks` in `strencodings.cpp` for an example).
+
+Shadowing
 --------------
 
 Although the shadowing warning (`-Wshadow`) is not enabled by default (it prevents issues arising
 from using a different variable with the same name),
 please name variables so that their names do not shadow variables defined in the source code.
-
-E.g. in member initializers, prepend `_` to the argument name shadowing the
-member name:
-
-```c++
-class AddressBookPage
-{
-    Mode m_mode;
-}
-
-AddressBookPage::AddressBookPage(Mode _mode)
-    : m_mode(_mode)
-...
-```
 
 When using nested cycles, do not name the inner cycle variable the same as in
 the upper cycle, etc.
@@ -792,7 +885,11 @@ Current subtrees include:
   - **Note**: Follow the instructions in [Upgrading LevelDB](#upgrading-leveldb) when
     merging upstream changes to the LevelDB subtree.
 
-- src/libsecp256k1
+- src/crc32c
+  - Used by leveldb for hardware acceleration of CRC32C checksums for data integrity.
+  - Upstream at https://github.com/google/crc32c ; Maintained by Google.
+
+- src/secp256k1
   - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintained by Core contributors.
 
 - src/crypto/ctaes
@@ -854,7 +951,7 @@ Scripted diffs
 For reformatting and refactoring commits where the changes can be easily automated using a bash script, we use
 scripted-diff commits. The bash script is included in the commit message and our Travis CI job checks that
 the result of the script is identical to the commit. This aids reviewers since they can verify that the script
-does exactly what it's supposed to do. It is also helpful for rebasing (since the same script can just be re-run
+does exactly what it is supposed to do. It is also helpful for rebasing (since the same script can just be re-run
 on the new master commit).
 
 To create a scripted-diff:
@@ -875,7 +972,35 @@ For development, it might be more convenient to verify all scripted-diffs in a r
 test/lint/commit-script-check.sh origin/master..HEAD
 ```
 
-Commit [`bb81e173`](https://github.com/bitcoin/bitcoin/commit/bb81e173) is an example of a scripted-diff.
+### Suggestions and examples
+
+If you need to replace in multiple files, prefer `git ls-files` to `find` or globbing, and `git grep` to `grep`, to
+avoid changing files that are not under version control.
+
+For efficient replacement scripts, reduce the selection to the files that potentially need to be modified, so for
+example, instead of a blanket `git ls-files src | xargs sed -i s/apple/orange/`, use
+`git grep -l apple src | xargs sed -i s/apple/orange/`.
+
+Also, it is good to keep the selection of files as specific as possible — for example, replace only in directories where
+you expect replacements — because it reduces the risk that a rebase of your commit by re-running the script will
+introduce accidental changes.
+
+Some good examples of scripted-diff:
+
+- [scripted-diff: Rename InitInterfaces to NodeContext](https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d)
+uses an elegant script to replace occurrences of multiple terms in all source files.
+
+- [scripted-diff: Remove g_connman, g_banman globals](https://github.com/bitcoin/bitcoin/commit/8922d7f6b751a3e6b3b9f6fb7961c442877fb65a)
+replaces specific terms in a list of specific source files.
+
+- [scripted-diff: Replace fprintf with tfm::format](https://github.com/bitcoin/bitcoin/commit/fac03ec43a15ad547161e37e53ea82482cc508f9)
+does a global replacement but excludes certain directories.
+
+To find all previous uses of scripted diffs in the repository, do:
+
+```
+git log --grep="-BEGIN VERIFY SCRIPT-"
+```
 
 Release notes
 -------------
@@ -958,7 +1083,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 - A RPC method must either be a wallet method or a non-wallet method. Do not
   introduce new methods that differ in behavior based on the presence of a wallet.
 
-  - *Rationale*: as well as complicating the implementation and interfering
+  - *Rationale*: As well as complicating the implementation and interfering
     with the introduction of multi-wallet, wallet and non-wallet code should be
     separated to avoid introducing circular dependencies between code units.
 
@@ -985,8 +1110,140 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 
   - *Rationale*: RPC methods registered with the same function pointer will be
     considered aliases and only the first method name will show up in the
-    `help` rpc command list.
+    `help` RPC command list.
 
   - *Exception*: Using RPC method aliases may be appropriate in cases where a
     new RPC is replacing a deprecated RPC, to avoid both RPCs confusingly
     showing up in the command list.
+
+- Use *invalid* bech32 addresses (e.g. in the constant array `EXAMPLE_ADDRESS`) for
+  `RPCExamples` help documentation.
+
+  - *Rationale*: Prevent accidental transactions by users and encourage the use
+    of bech32 addresses by default.
+
+- Use the `UNIX_EPOCH_TIME` constant when describing UNIX epoch time or
+  timestamps in the documentation.
+
+  - *Rationale*: User-facing consistency.
+
+Internal interface guidelines
+-----------------------------
+
+Internal interfaces between parts of the codebase that are meant to be
+independent (node, wallet, GUI), are defined in
+[`src/interfaces/`](../src/interfaces/). The main interface classes defined
+there are [`interfaces::Chain`](../src/interfaces/chain.h), used by wallet to
+access the node's latest chain state,
+[`interfaces::Node`](../src/interfaces/node.h), used by the GUI to control the
+node, and [`interfaces::Wallet`](../src/interfaces/wallet.h), used by the GUI
+to control an individual wallet. There are also more specialized interface
+types like [`interfaces::Handler`](../src/interfaces/handler.h)
+[`interfaces::ChainClient`](../src/interfaces/chain.h) passed to and from
+various interface methods.
+
+Interface classes are written in a particular style so node, wallet, and GUI
+code doesn't need to run in the same process, and so the class declarations
+work more easily with tools and libraries supporting interprocess
+communication:
+
+- Interface classes should be abstract and have methods that are [pure
+  virtual](https://en.cppreference.com/w/cpp/language/abstract_class). This
+  allows multiple implementations to inherit from the same interface class,
+  particularly so one implementation can execute functionality in the local
+  process, and other implementations can forward calls to remote processes.
+
+- Interface method definitions should wrap existing functionality instead of
+  implementing new functionality. Any substantial new node or wallet
+  functionality should be implemented in [`src/node/`](../src/node/) or
+  [`src/wallet/`](../src/wallet/) and just exposed in
+  [`src/interfaces/`](../src/interfaces/) instead of being implemented there,
+  so it can be more modular and accessible to unit tests.
+
+- Interface method parameter and return types should either be serializable or
+  be other interface classes. Interface methods shouldn't pass references to
+  objects that can't be serialized or accessed from another process.
+
+  Examples:
+
+  ```c++
+  // Good: takes string argument and returns interface class pointer
+  virtual unique_ptr<interfaces::Wallet> loadWallet(std::string filename) = 0;
+
+  // Bad: returns CWallet reference that can't be used from another process
+  virtual CWallet& loadWallet(std::string filename) = 0;
+  ```
+
+  ```c++
+  // Good: accepts and returns primitive types
+  virtual bool findBlock(const uint256& hash, int& out_height, int64_t& out_time) = 0;
+
+  // Bad: returns pointer to internal node in a linked list inaccessible to
+  // other processes
+  virtual const CBlockIndex* findBlock(const uint256& hash) = 0;
+  ```
+
+  ```c++
+  // Good: takes plain callback type and returns interface pointer
+  using TipChangedFn = std::function<void(int block_height, int64_t block_time)>;
+  virtual std::unique_ptr<interfaces::Handler> handleTipChanged(TipChangedFn fn) = 0;
+
+  // Bad: returns boost connection specific to local process
+  using TipChangedFn = std::function<void(int block_height, int64_t block_time)>;
+  virtual boost::signals2::scoped_connection connectTipChanged(TipChangedFn fn) = 0;
+  ```
+
+- For consistency and friendliness to code generation tools, interface method
+  input and inout parameters should be ordered first and output parameters
+  should come last.
+
+  Example:
+
+  ```c++
+  // Good: error output param is last
+  virtual bool broadcastTransaction(const CTransactionRef& tx, CAmount max_fee, std::string& error) = 0;
+
+  // Bad: error output param is between input params
+  virtual bool broadcastTransaction(const CTransactionRef& tx, std::string& error, CAmount max_fee) = 0;
+  ```
+
+- For friendliness to code generation tools, interface methods should not be
+  overloaded:
+
+  Example:
+
+  ```c++
+  // Good: method names are unique
+  virtual bool disconnectByAddress(const CNetAddr& net_addr) = 0;
+  virtual bool disconnectById(NodeId id) = 0;
+
+  // Bad: methods are overloaded by type
+  virtual bool disconnect(const CNetAddr& net_addr) = 0;
+  virtual bool disconnect(NodeId id) = 0;
+  ```
+
+- For consistency and friendliness to code generation tools, interface method
+  names should be `lowerCamelCase` and standalone function names should be
+  `UpperCamelCase`.
+
+  Examples:
+
+  ```c++
+  // Good: lowerCamelCase method name
+  virtual void blockConnected(const CBlock& block, int height) = 0;
+
+  // Bad: uppercase class method
+  virtual void BlockConnected(const CBlock& block, int height) = 0;
+  ```
+
+  ```c++
+  // Good: UpperCamelCase standalone function name
+  std::unique_ptr<Node> MakeNode(LocalInit& init);
+
+  // Bad: lowercase standalone function
+  std::unique_ptr<Node> makeNode(LocalInit& init);
+  ```
+
+  Note: This last convention isn't generally followed outside of
+  [`src/interfaces/`](../src/interfaces/), though it did come up for discussion
+  before in [#14635](https://github.com/bitcoin/bitcoin/pull/14635).

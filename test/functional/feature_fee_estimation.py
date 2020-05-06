@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee estimation code."""
@@ -99,8 +99,20 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
     txouts.append({"txid": txid, "vout": 0, "amount": half_change})
     txouts.append({"txid": txid, "vout": 1, "amount": rem_change})
 
+def check_raw_estimates(node, fees_seen):
+    """Call estimaterawfee and verify that the estimates meet certain invariants."""
 
-def check_estimates(node, fees_seen):
+    delta = 1.0e-6  # account for rounding error
+    for i in range(1, 26):
+        for _, e in node.estimaterawfee(i).items():
+            feerate = float(e["feerate"])
+            assert_greater_than(feerate, 0)
+
+            if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
+                raise AssertionError("Estimated fee (%f) out of range (%f,%f)"
+                                     % (feerate, min(fees_seen), max(fees_seen)))
+
+def check_smart_estimates(node, fees_seen):
     """Call estimatesmartfee and verify that the estimates meet certain invariants."""
 
     delta = 1.0e-6  # account for rounding error
@@ -123,16 +135,19 @@ def check_estimates(node, fees_seen):
         else:
             assert_greater_than_or_equal(i + 1, e["blocks"])
 
+def check_estimates(node, fees_seen):
+    check_raw_estimates(node, fees_seen)
+    check_smart_estimates(node, fees_seen)
 
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         # mine non-standard txs (e.g. txs with "dust" outputs)
-        # Force fSendTrickle to true (via whitelist)
+        # Force fSendTrickle to true (via whitelist.noban)
         self.extra_args = [
-            ["-acceptnonstdtxn", "-whitelist=127.0.0.1"],
-            ["-acceptnonstdtxn", "-whitelist=127.0.0.1", "-blockmaxweight=68000"],
-            ["-acceptnonstdtxn", "-whitelist=127.0.0.1", "-blockmaxweight=32000"],
+            ["-acceptnonstdtxn", "-whitelist=noban@127.0.0.1"],
+            ["-acceptnonstdtxn", "-whitelist=noban@127.0.0.1", "-blockmaxweight=68000"],
+            ["-acceptnonstdtxn", "-whitelist=noban@127.0.0.1", "-blockmaxweight=32000"],
         ]
 
     def skip_test_if_missing_module(self):

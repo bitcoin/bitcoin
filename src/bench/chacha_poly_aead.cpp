@@ -1,16 +1,15 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <iostream>
 
 #include <bench/bench.h>
 #include <crypto/chacha_poly_aead.h>
 #include <crypto/poly1305.h> // for the POLY1305_TAGLEN constant
 #include <hash.h>
 
-#include <limits>
 #include <assert.h>
+#include <limits>
 
 /* Number of bytes to process per iteration */
 static constexpr uint64_t BUFFER_SIZE_TINY = 64;

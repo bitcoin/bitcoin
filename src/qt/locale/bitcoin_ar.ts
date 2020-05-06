@@ -3,87 +3,87 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>انقر بالزر الايمن لتعديل العنوان</translation>
+        <translation>أنقر بزر الماوس الأيمن لتحرير العنوان أو التصنيف</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>انشاء عنوان جديد</translation>
+        <translation>إنشاء عنوان جديد</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;جديد</translation>
+        <translation>جديد</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>قم بنسخ العنوان المختار لحافظة النظام</translation>
+        <translation>نسخ العنوان المحدد حاليًا إلى حافظة النظام</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;نسخ</translation>
+        <translation>نسخ</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>ا&amp;غلاق</translation>
+        <translation>غلق</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>حذف العنوان المحدد من القائمة</translation>
+        <translation>احذف العنوان المحدد حاليًا من القائمة</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>ادخل عنوان أووصف للبحث</translation>
+        <translation>أدخل العنوان أو التصنيف للبحث</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
+        <translation>استخراج البيانات في علامة التبويب الحالية إلى ملف</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;تصدير</translation>
+        <translation>استخراج</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;أمسح</translation>
+        <translation>حذف</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>اختر العنوان الذي سترسل له العملات</translation>
+        <translation>إختر العنوان الرقمي اللذي تريد الإرسال له</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>اختر العنوان الذي تستقبل عليه العملات</translation>
+        <translation>إختر العنوان الرقمي اللذي سيحصل على العملات</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>&amp;اختر</translation>
+        <translation>اختر</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>عناوين الإرسال</translation>
+        <translation>العنوان الرقمي المُرسِل</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>عناوين الاستقبال</translation>
+        <translation>العنوان الرقمي المُرسَل إليه</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>هذه هي عناوين Bitcoin التابعة لك من أجل إرسال الدفعات. تحقق دائما من المبلغ و عنوان المرسل المستقبل قبل إرسال العملات</translation>
+        <translation>هذه هي عناوين البيتكوين لإرسال المدفوعات. دائما تحقق من المبلغ وعنوان المستلم قبل الإرسال.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>هذه هي عناوين Bitcoin التابعة لك من أجل إستقبال الدفعات. ينصح استخدام عنوان جديد من أجل كل صفقة</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>هذه هي عناوين البيتكوين الخاصة بك لإستلام المدفوعات. استخدم زر "إنشاء عنوان استلام جديد" في علامة التبويب "إستلام" لإنشاء عناوين جديدة.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>انسخ العنوان</translation>
+        <translation>نسخ العنوان</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>نسخ &amp;الوصف</translation>
+        <translation>نسخ&amp;تسمية</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>تعديل</translation>
+        <translation>تحرير</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -91,22 +91,18 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>ملف مفصول بفواصل (*.csv)</translation>
+        <translation>ملف مفصول بفاصلة (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>فشل التصدير</translation>
+        <translation>لقد فشل التصدير</translation>
     </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>لقد حدث خطأ أثناء  حفظ قائمة العناوين إلى %1. يرجى المحاولة مرة أخرى.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>وصف</translation>
+        <translation>وسم</translation>
     </message>
     <message>
         <source>Address</source>
@@ -114,14 +110,14 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(لا وصف)</translation>
+        <translation>(بدون وسم)</translation>
     </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>حوار جملة السر</translation>
+        <translation>مربع كلمة المرور</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
@@ -129,19 +125,15 @@
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>كلمة مرور جديدة</translation>
+        <translation>كلمة مرور جديد</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>اعد كتابة كلمة السر</translation>
+        <translation>إعادة إدخال كلمة المرور</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>إعرض كلمة السر</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>أدخل عبارة مرور جديدة إلى المحفظة. الرجاء استخدام عبارة مرور تتكون من10 حروف عشوائية على الاقل, أو ثمانية كلمات على الاقل.</translation>
+        <source>Show passphrase</source>
+        <translation>إظهار كلمة المرور</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -149,15 +141,15 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>هذه العملية تحتاج كلمة مرور محفظتك لفتحها</translation>
+        <translation>العملية تحتاج كملة المرور المحفظة لتستطيع فتحها.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>إفتح المحفظة</translation>
+        <translation>فتح المحفظة</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>هذه العملية تحتاج كلمة مرور محفظتك لفك تشفيرها </translation>
+        <translation>العملية تحتاج كملة المرور المحفظة لتستطيع فتحها.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -168,28 +160,40 @@
         <translation>تغيير كلمة المرور</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>أدخل كلمة المرور القديمة والجديدة للمحفظة.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>تأكيد تشفير المحفظة</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>تحذير: إذا قمت بتشفير محفظتك وفقدت كلمة المرور الخاص بك, ستفقد كل عملات BITCOINS الخاصة بك.</translation>
+        <translation>إذا شفرت محفظتك وفقدت كلمة المرور، ستفقد كل ما تملك من البيتكوين.</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>هل أنت متأكد من رغبتك في تشفير محفظتك ؟</translation>
+        <translation>هل انت متأكد بأنك تريد تشفير محفظتك؟</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation>محفظة مشفرة</translation>
+        <translation>تم تشفير المحفظة</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>سيتم إغلاق %1 الآن لإنهاء عملية التشفير. تذكر أن تشفير محفظتك لا يمكن أن يحمي البتكوين الخاص بك بالكامل من السرقة عبر البرامج الضارة التي بامكانها أن تصيب جهاز الكمبيوتر الخاص بك.</translation>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>أدخل كلمة المرور الجديدة للمحفظة. &lt;br/&gt; الرجاء استخدام  كلمة مرور تتكون من &lt;b&gt; عشرة أحرف عشوائية أو أكثر &lt;/b&gt; ، أو &lt;b&gt; ثماني كلمات أو أكثر&lt;/b&gt; .</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>ادخل كملة المرور القديمة وكلمة المرور الجديدة للمحفظة.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>سوف يتم تشفير محفظتك</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>سوف يتم تشفير محفظتك.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>تم تشفير محفظتك.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -197,7 +201,7 @@
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation>فشل تشفير المحفظة</translation>
+        <translation>خطأ في تشفير المحفظة</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
@@ -254,10 +258,6 @@
         <translation>&amp;نظرة عامة</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>جهاز</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>إظهار نظرة عامة على المحفظة</translation>
     </message>
@@ -267,7 +267,7 @@
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>تصفح سجل المعاملات</translation>
+        <translation>تصفح تاريخ العمليات</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -275,7 +275,7 @@
     </message>
     <message>
         <source>Quit application</source>
-        <translation>الخروج من التطبيق</translation>
+        <translation>إغلاق التطبيق</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -314,16 +314,20 @@
         <translation>&amp;تغيير كلمة المرور</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;عناوين الإرسال...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;عناوين الاستقبال...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>افتح &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>إنشاء محفظة...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>إنشاء محفظة جديدة</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>المحفظة:</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -346,6 +350,10 @@
         <translation>إعادة فهرسة الكتل على القرص ...</translation>
     </message>
     <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>%1 اتصال نشط بشبكة البيتكوين</translation>
+    </message>
+    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>ارسل عملات الى عنوان بيتكوين</translation>
     </message>
@@ -358,24 +366,8 @@
         <translation>تغيير كلمة المرور المستخدمة لتشفير المحفظة</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;نافذة المعالجة</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>إفتح وحدة التصحيح و التشخيص</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;التحقق من الرسالة...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>بتكوين</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>محفظة</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -434,10 +426,6 @@
         <translation>عرض قائمة عناوين الإستقبال المستخدمة والملصقات</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>فتح URI : Bitcoin أو طلب دفع</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;خيارات سطر الأوامر</translation>
     </message>
@@ -471,15 +459,63 @@
     </message>
     <message>
         <source>Information</source>
-        <translation>معلومات</translation>
+        <translation>المعلومات</translation>
     </message>
     <message>
         <source>Up to date</source>
         <translation>محدث</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;عناوين الإرسال</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;عناوين الإستقبال</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>افتح المحفظة</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>افتح المحفظة</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>اغلق المحفظة...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>اغلق المحفظة</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>بين اشارة المساعدة %1 للحصول على قائمة من خيارات اوامر البت كوين المحتملة </translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>المحفظة الإفتراضية</translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>المحفظة الرقمية غير متوفرة</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>نافذه</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>تصغير</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>تكبير</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>النافذة الرئيسية</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -494,6 +530,10 @@
         <translation>اللحاق بالركب ...</translation>
     </message>
     <message>
+        <source>Error: %1</source>
+        <translation>خطأ: %1</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>التاريخ %1
@@ -506,6 +546,11 @@
 </source>
         <translation>الكمية %1
 </translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>المحفظة:  %1</translation>
     </message>
     <message>
         <source>Type: %1
@@ -527,7 +572,7 @@
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>المعاملات  المرسلة</translation>
+        <translation>إرسال المعاملة</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
@@ -540,6 +585,10 @@
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
         <translation>توليد المفاتيح الهرمية الحتمية HD &lt;b&gt;معطل&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>المفتاح السري &lt;b&gt;معطل&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -562,7 +611,7 @@
     </message>
     <message>
         <source>Quantity:</source>
-        <translation>الكمية :</translation>
+        <translation>الكمية:</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -574,7 +623,7 @@
     </message>
     <message>
         <source>Fee:</source>
-        <translation>رسوم :</translation>
+        <translation>الرسوم:</translation>
     </message>
     <message>
         <source>Dust:</source>
@@ -614,11 +663,11 @@
     </message>
     <message>
         <source>Date</source>
-        <translation>تاريخ</translation>
+        <translation>التاريخ</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation>تأكيدات</translation>
+        <translation>التأكيدات</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -626,7 +675,7 @@
     </message>
     <message>
         <source>Copy address</source>
-        <translation>  انسخ عنوان</translation>
+        <translation>نسخ العنوان</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -673,6 +722,10 @@
         <translation>نسخ التعديل</translation>
     </message>
     <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 تم قفله)</translation>
+    </message>
+    <message>
         <source>yes</source>
         <translation>نعم</translation>
     </message>
@@ -690,7 +743,11 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(لا وصف)</translation>
+        <translation>(بدون وسم)</translation>
+    </message>
+    <message>
+        <source>change from %1 (%2)</source>
+        <translation>تغير من %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
@@ -698,10 +755,20 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Create</source>
+        <translation>إنشاء</translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>عدل العنوان</translation>
+        <translation>تعديل العنوان</translation>
     </message>
     <message>
         <source>&amp;Label</source>
@@ -752,7 +819,7 @@
     </message>
     <message>
         <source>name</source>
-        <translation>الاسم</translation>
+        <translation>الإسم</translation>
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
@@ -772,10 +839,6 @@
     <message>
         <source>version</source>
         <translation>النسخة</translation>
-    </message>
-    <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-بت)</translation>
     </message>
     <message>
         <source>About %1</source>
@@ -895,32 +958,23 @@
         <source>Hide</source>
         <translation>إخفاء</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>غير معروف. مزامنة الرؤوس (%1) ...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
-    <message>
-        <source>Open URI</source>
-        <translation>افتح URL</translation>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation>حدد طلب الدفع من ملف او URI</translation>
-    </message>
     <message>
         <source>URI:</source>
         <translation>العنوان:</translation>
     </message>
+</context>
+<context>
+    <name>OpenWalletActivity</name>
     <message>
-        <source>Select payment request file</source>
-        <translation>حدد ملف طلب الدفع</translation>
+        <source>default wallet</source>
+        <translation>محفظة إفتراضية</translation>
     </message>
     <message>
-        <source>Select payment request file to open</source>
-        <translation>حدد ملف طلب الدفع لفتحه</translation>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>يتم فتح المحفظة&lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -944,10 +998,6 @@
     <message>
         <source>Size of &amp;database cache</source>
         <translation>حجم ذاكرة التخزين المؤقت لقاعدة البيانات</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>م ب</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -974,10 +1024,6 @@
         <translation>التصغير بدلاً من الخروج من التطبيق عند إغلاق النافذة. عند تفعيل هذا الخيار، سيتم إغلاق التطبيق فقط بعد اختيار الخروج من القائمة.</translation>
     </message>
     <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>خيارات سطر الأوامر النشطة التي تتجاوز الخيارات أعلاه:</translation>
-    </message>
-    <message>
         <source>Open the %1 configuration file from the working directory.</source>
         <translation>فتح ملف الإعدادات %1 من الدليل العامل.</translation>
     </message>
@@ -996,6 +1042,14 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;الشبكة</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>جب</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>ميجا بايت</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
@@ -1255,66 +1309,6 @@
         <source>Payment request file handling</source>
         <translation>التعامل مع ملف طلب الدفع</translation>
     </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>لا يمكن قراءة ملف طلب الدفع! يمكن أن يحدث هذا بسبب ملف لطلب الدفع غير صالح.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>تم رفض طلب الدفع</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>لا تتطابق شبكة طلب الدفع مع شبكة العميل.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>انتهاء صلاحية طلب الدفع.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>لم يتم تهيئة طلب الدفع.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>طلبات الدفع غير المؤكدة إلى نصوص الدفع المخصصة غير مدعومة.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>طلب دفع غير صالح.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>المبلغ المطلوب للدفع %1 صغير جداً (يعتبر غبار).</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>إعادة مال من %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>طلب الدفع %1 كبير جداً (%2 بايت، المسموح به %3 بايت).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>حدث خطأ في الاتصال بـ %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>لا يمكن تحليل طلب الدفع!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>استجابة سيئة من الملقم %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>خطأ في طلب الشبكة</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>اعتراف بالدفع</translation>
-    </message>
 </context>
 <context>
     <name>PeerTableModel</name>
@@ -1402,23 +1396,20 @@
         <translation>%1 قيقا بايت</translation>
     </message>
     <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 لم يخرج بعد بأمان...</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>غير معروف</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>خطأ: دليل البيانات المحدد "%1" غير موجود.</translation>
     </message>
     <message>
         <source>Error: %1</source>
         <translation>خطأ: %1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely...</source>
+        <translation>%1 لم يخرج بعد بأمان...</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>غير معروف</translation>
     </message>
 </context>
 <context>
@@ -1430,6 +1421,14 @@
     <message>
         <source>&amp;Copy Image</source>
         <translation>&amp;نسخ الصورة</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>العنوان المستخدم طويل جدًا، حاول أن تقوم بتقليل نص التسمية / الرسالة.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>خطأ في ترميز العنوان إلى الرمز المربع.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1453,10 +1452,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>المعلومات</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>نافذة المعالجة</translation>
     </message>
     <message>
         <source>General</source>
@@ -1770,10 +1765,6 @@
         <translation>سجل طلبات الدفع</translation>
     </message>
     <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;طلب دفعة</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>إظهار الطلب المحدد (يقوم بنفس نتيجة النقر المزدوج على أي إدخال)</translation>
     </message>
@@ -1846,7 +1837,7 @@
     </message>
     <message>
         <source>Label</source>
-        <translation>وصف</translation>
+        <translation>وسم</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1856,24 +1847,16 @@
         <source>Wallet</source>
         <translation>محفظة</translation>
     </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>العنوان المستخدم طويل جدًا، حاول أن تقوم بتقليل نص التسمية / الرسالة.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>خطأ في ترميز العنوان إلى الرمز المربع.</translation>
-    </message>
 </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation>تاريخ</translation>
+        <translation>التاريخ</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>وصف</translation>
+        <translation>وسم</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1881,7 +1864,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(لا وصف)</translation>
+        <translation>(بدون وسم)</translation>
     </message>
     <message>
         <source>(no message)</source>
@@ -1900,7 +1883,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>إرسال Coins</translation>
+        <translation>إرسال العملات</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -1920,7 +1903,7 @@
     </message>
     <message>
         <source>Quantity:</source>
-        <translation>الكمية :</translation>
+        <translation>الكمية:</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -1932,7 +1915,7 @@
     </message>
     <message>
         <source>Fee:</source>
-        <translation>رسوم :</translation>
+        <translation>الرسوم:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -1963,24 +1946,12 @@
         <translation>تحذير: تقدير الرسوم غير ممكن في الوقت الحالي.</translation>
     </message>
     <message>
-        <source>collapse fee-settings</source>
-        <translation>خفض اعدادات الرسوم</translation>
-    </message>
-    <message>
         <source>per kilobyte</source>
         <translation>لكل كيلوبايت</translation>
     </message>
     <message>
         <source>Hide</source>
         <translation>إخفاء</translation>
-    </message>
-    <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>إن دفع الحد الأدنى فقط من الرسوم يجوز طالما أن حجم المعاملات أقل من المساحة الموجودة في الكتل. ولكن كن على علم بأن هذا يمكن أن ينتهي في معاملة غير مؤكدة أبداً عندما يكون هناك طلب أكبر على معاملات البتكوين مما تستطيع الشبكة معالجته.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(اقرأ تلميح الأدوات)</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -2123,20 +2094,12 @@
         <translation>فشل في إنشاء المعاملة!</translation>
     </message>
     <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>تم رفض المعاملة للسبب التالي: %1</translation>
-    </message>
-    <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>تعتبر الرسوم الأعلى من %1 رسوماً باهظة.</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
         <translation>انتهاء صلاحية طلب الدفع.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>دفع فقط الرسوم المطلوبة ل %1</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2152,7 +2115,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(لا وصف)</translation>
+        <translation>(بدون وسم)</translation>
     </message>
 </context>
 <context>
@@ -2172,10 +2135,6 @@
     <message>
         <source>Choose previously used address</source>
         <translation>اختر عنوانا مستخدم سابقا</translation>
-    </message>
-    <message>
-        <source>This is a normal payment.</source>
-        <translation>هذا دفع اعتيادي</translation>
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
@@ -2236,17 +2195,6 @@
     <message>
         <source>Memo:</source>
         <translation>مذكرة:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>إدخال تسمية لهذا العنوان لإضافته إلى دفتر العناوين الخاص بك</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>نعم</translation>
     </message>
 </context>
 <context>
@@ -2392,13 +2340,6 @@
     </message>
 </context>
 <context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-</context>
-<context>
     <name>TrafficGraphWidget</name>
     <message>
         <source>KB/s</source>
@@ -2441,7 +2382,7 @@
     </message>
     <message>
         <source>Date</source>
-        <translation>تاريخ</translation>
+        <translation>التاريخ</translation>
     </message>
     <message>
         <source>Source</source>
@@ -2567,7 +2508,7 @@
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation>تاريخ</translation>
+        <translation>التاريخ</translation>
     </message>
     <message>
         <source>Type</source>
@@ -2575,7 +2516,7 @@
     </message>
     <message>
         <source>Label</source>
-        <translation>وصف</translation>
+        <translation>وسم</translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2592,6 +2533,10 @@
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation>قيد التأكيد (%1 من %2 تأكيد موصى به)</translation>
+    </message>
+    <message>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>مؤكد (%1 تأكيدات)</translation>
     </message>
     <message>
         <source>Conflicted</source>
@@ -2635,7 +2580,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(لا وصف)</translation>
+        <translation>(بدون وسم)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -2706,7 +2651,7 @@
     </message>
     <message>
         <source>Other</source>
-        <translation>اخرى</translation>
+        <translation>أخرى</translation>
     </message>
     <message>
         <source>Enter address, transaction id, or label to search</source>
@@ -2726,7 +2671,7 @@
     </message>
     <message>
         <source>Copy address</source>
-        <translation>  انسخ عنوان</translation>
+        <translation>نسخ العنوان</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -2762,7 +2707,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>ملف مفصول بفواصل (*.csv)</translation>
+        <translation>ملف مفصول بفاصلة (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -2774,7 +2719,7 @@
     </message>
     <message>
         <source>Date</source>
-        <translation>تاريخ</translation>
+        <translation>التاريخ</translation>
     </message>
     <message>
         <source>Type</source>
@@ -2782,7 +2727,7 @@
     </message>
     <message>
         <source>Label</source>
-        <translation>وصف</translation>
+        <translation>وسم</translation>
     </message>
     <message>
         <source>Address</source>
@@ -2794,7 +2739,7 @@
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>فشل التصدير</translation>
+        <translation>لقد فشل التصدير</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
@@ -2814,7 +2759,7 @@
     </message>
     <message>
         <source>to</source>
-        <translation>الى</translation>
+        <translation>إلى</translation>
     </message>
 </context>
 <context>
@@ -2824,6 +2769,13 @@
         <translation>الوحدة لإظهار المبالغ فيها. انقر لتحديد وحدة أخرى.</translation>
     </message>
 </context>
+<context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>اغلق المحفظة</translation>
+    </message>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -2835,7 +2787,7 @@
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>إرسال Coins</translation>
+        <translation>إرسال العملات</translation>
     </message>
     <message>
         <source>Fee bump error</source>
@@ -2873,16 +2825,20 @@
         <source>Could not commit transaction</source>
         <translation>لا يمكن تنفيذ المعاملة</translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation>المحفظة إفتراضية</translation>
+    </message>
 </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;تصدير</translation>
+        <translation>استخراج</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
+        <translation>استخراج البيانات في علامة التبويب الحالية إلى ملف</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -2904,7 +2860,11 @@
         <source>The wallet data was successfully saved to %1.</source>
         <translation>تم حفظ بيانات المحفظة بنجاح إلى %1.</translation>
     </message>
-    </context>
+    <message>
+        <source>Cancel</source>
+        <translation>إلغاء</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -2920,8 +2880,8 @@
         <translation>غير قادر على بدء خادم ال HTTP. راجع سجل تصحيح الأخطاء للحصول على التفاصيل.</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>جوهر بيتكوين</translation>
+        <source>The %s developers</source>
+        <translation>%s المبرمجون</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -2941,6 +2901,10 @@
 %s تالف, فشل الانقاذ.</translation>
     </message>
     <message>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation>-الحد الأقصى للذاكرة على الأقل %d ميغابايت</translation>
+    </message>
+    <message>
         <source>Change index out of range</source>
         <translation>فهرس الفكة خارج النطاق</translation>
     </message>
@@ -2955,10 +2919,6 @@
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>هل تريد إعادة بناء قاعدة بيانات الكتل الآن؟</translation>
-    </message>
-    <message>
-        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
-        <translation>خطأ في إنشاء %s: لا يمكنك إنشاء محافظ بلا خاصية الهرمية الحتمية non-HD باستخدام هذا الإصدار.</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -2985,10 +2945,6 @@
         <translation>خطأ في فتح قاعدة بيانات الكتل</translation>
     </message>
     <message>
-        <source>Error: Disk space is low!</source>
-        <translation>تحذير: مساحة القرص منخفضة</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>فشل في الاستماع على أي منفذ. استخدام الاستماع = 0 إذا كنت تريد هذا.</translation>
     </message>
@@ -2998,7 +2954,7 @@
     </message>
     <message>
         <source>Importing...</source>
-        <translation>استيراد...</translation>
+        <translation>إستيراد...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -3045,10 +3001,6 @@
         <translation> غير قادر على توليد مفاتيح.</translation>
     </message>
     <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>تم العثور على وسيطة غير مدعومة -tor ، استخدم -onion.</translation>
-    </message>
-    <message>
         <source>Upgrading UTXO database</source>
         <translation>ترقية قاعدة بيانات UTXO</translation>
     </message>
@@ -3069,20 +3021,12 @@
         <translation>تحتاج إلى إعادة إنشاء قاعدة البيانات باستخدام -reindex للعودة إلى الوضعية الغير مجردة. هذا سوف يعيد تحميل سلسلة الكتل بأكملها</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>خطأ أثناء تحميل %s: لا يمكنك تعطيل خاصية الهرمية الحتمية HD في محفظة مفعلة بخاصية الهرمية الحتمية HD مسبقاً</translation>
-    </message>
-    <message>
         <source>Error reading from database, shutting down.</source>
         <translation>خطأ في القراءة من قاعدة البيانات ، والتوقف.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
         <translation>خطأ في ترقية قاعدة بيانات chainstate</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>معلومات</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -3101,10 +3045,6 @@
         <translation>قيمة العملية صغيره جدا</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>قيمة المعاملة كبيرة جدا لسياسة الأجر</translation>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>المعاملة كبيرة جدا</translation>
     </message>
@@ -3121,16 +3061,8 @@
         <translation>التحقق من المحفظة (المحافظ)...</translation>
     </message>
     <message>
-        <source>Warning</source>
-        <translation>تحذير</translation>
-    </message>
-    <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>إزالة جميع المعاملات من المحفظة...</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>خطأ أثناء تحميل %s: لا يمكنك تفعيل خاصية الهرمية الحتمية HD في محفظة لا تملك خاصية الهرمية الحتمية non-HD مسبقاً</translation>
     </message>
     <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
@@ -3149,6 +3081,10 @@
         <translation>سوف تتجنب المحفظة دفع أقل من الحد الأدنى لرسوم التتابع.</translation>
     </message>
     <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation>هذه هي اقل قيمة من العمولة التي تدفعها عند كل عملية تحويل للأموال.</translation>
+    </message>
+    <message>
         <source>Transaction amounts must not be negative</source>
         <translation>يجب ألا تكون قيمة المعاملة سلبية</translation>
     </message>
@@ -3162,7 +3098,7 @@
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation>اموال غير كافية</translation>
+        <translation>الرصيد غير كافي</translation>
     </message>
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
@@ -3174,23 +3110,19 @@
     </message>
     <message>
         <source>Loading wallet...</source>
-        <translation>تحميل المحفظه</translation>
+        <translation>تحميل المحفظة...</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
-        <translation>لا يمكن تخفيض قيمة المحفظة</translation>
+        <translation>لايمكن تنزيل نسخة محفظة أقل</translation>
     </message>
     <message>
         <source>Rescanning...</source>
-        <translation>إعادة مسح</translation>
+        <translation>إعادة المسح...</translation>
     </message>
     <message>
         <source>Done loading</source>
-        <translation>انتهاء التحميل</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>خطأ</translation>
+        <translation>إنتهاء التحميل</translation>
     </message>
 </context>
 </TS>
