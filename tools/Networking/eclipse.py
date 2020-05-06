@@ -362,7 +362,6 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 		except Exception as e:
 			print(f'Lost connection to ({victim_ip} : {victim_port})')
 			reconnect(socket, mirror_socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
-			parent_thread.stop()
 	elif msg_type == 'version': pass # Ignore version
 	elif msg_type == 'verack': pass # Ignore verack
 	else:
@@ -436,7 +435,6 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 		except Exception as e:
 			print(f'Lost connection to ({victim_ip} : {victim_port})')
 			reconnect(socket, orig_socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
-			parent_thread.stop()
 	else:
 		try:
 			orig_socket.sendall(packet) # Relay to the victim
