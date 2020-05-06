@@ -251,7 +251,7 @@ def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, inte
 	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
 
 	while True:
-		print('Attempting connection')
+		print('Attempting connection...')
 		try:
 			s.connect((dst_ip, dst_port))
 			version = version_packet(src_ip, dst_ip, src_port, dst_port)
@@ -310,15 +310,19 @@ def mirror_make_fake_connection(interface, src_ip, verbose=True):
 
 def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
-		packet = socket.recv(65565)
-		create_task('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
+		try:
+			packet = socket.recv(65565)
+			create_task('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
+		except: break
 	close_connection(socket, mirror_socket, dst_ip, dst_port, interface)
 	#close_connection(mirror_socket, socket, src_ip, src_port, interface)
 
 def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
-		packet = socket.recv(65565)
-		create_task('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
+		try:
+			packet = socket.recv(65565)
+			create_task('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
+		except: break
 	close_connection(socket, orig_socket, src_ip, src_port, interface)
 	#close_connection(orig_socket, socket, dst_ip, dst_port, interface)
 
