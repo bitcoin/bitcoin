@@ -18,6 +18,7 @@
              (gnu packages python)
              (gnu packages shells)
              (gnu packages bison)
+             (gnu packages version-control)
              (guix build-system gnu)
              (guix build-system trivial)
              (guix gexp)
@@ -183,6 +184,8 @@ chain for " target " development."))
         ;; Scripting
         perl
         python-3.7
+        ;; Git
+        git
         ;; Native gcc 9 toolchain targeting glibc 2.27
         (make-gcc-toolchain gcc-9 glibc-2.27))
   (let ((target (getenv "HOST")))
