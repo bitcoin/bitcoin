@@ -258,7 +258,7 @@ def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, inte
 	s.sendall(verack.to_bytes())
 	verack = s.recv(1024)
 	identity_socket.append(s)
-	create_task('Reconnected ' + src_ip, sniff_func, s, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func)
+	create_task('Reconnected ' + src_ip, sniff_func, s, other_socket, src_ip, src_port, dst_ip, dst_port, interface)
 	print(f'Successfully reconnected ({dst_ip} : {dst_port})')
 
 
