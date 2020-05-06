@@ -138,21 +138,26 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 
 # Close a connection
 def close_connection(socket, mirror_socket, ip, port, interface):
-	socket.close()
-	if mirror_socket != None:
-		mirror_socket.close()
-	terminal(f'sudo ifconfig {interface} {ip} down')
+	try:
+		socket.close()
+		if mirror_socket != None:
+			mirror_socket.close()
+	except: pass
+	try:
+		terminal(f'sudo ifconfig {interface} {ip} down')
+	except: pass
+	try:
+		if socket in identity_socket: identity_socket.remove(socket)
+		else: del socket
 
-	if socket in identity_socket: identity_socket.remove(socket)
-	else: del socket
+		if mirror_socket != None:
+			if mirror_socket in identity_mirror_socket: identity_mirror_socket.remove(mirror_socket)
+			else: del mirror_socket
 
-	if mirror_socket != None:
-		if mirror_socket in identity_mirror_socket: identity_mirror_socket.remove(mirror_socket)
-		else: del mirror_socket
-
-	if interface in identity_interface: identity_interface.remove(interface)
-	if (ip, port) in identity_address: identity_address.remove((ip, port))
-	print(f'Successfully closed connection to ({ip} : {port})')
+		if interface in identity_interface: identity_interface.remove(interface)
+		if (ip, port) in identity_address: identity_address.remove((ip, port))
+		print(f'Successfully closed connection to ({ip} : {port})')
+	except: pass
 
 # Creates a fake connection to the victim
 def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
@@ -307,11 +312,13 @@ def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, int
 	while not thread.stopped():
 		packet = socket.recv(65565)
 		create_task('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
+	close_connection(socket, mirror_socket, dst_ip, dst_port, interface)
 
 def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
 		packet = socket.recv(65565)
 		create_task('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface)
+	close_connection(socket, orig_socket, src_ip, src_port, interface)
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
