@@ -39,9 +39,10 @@ if ! command -v gawk > /dev/null; then
     exit $EXIT_CODE
 fi
 
+SHELLCHECK_CMD=(shellcheck --external-sources --check-sourced)
 EXCLUDE="--exclude=$(IFS=','; echo "${disabled[*]}")"
 SOURCED_FILES=$(git ls-files | xargs gawk '/^# shellcheck shell=/ {print FILENAME} {nextfile}')  # Check shellcheck directive used for sourced files
-if ! shellcheck "$EXCLUDE" $SOURCED_FILES $(git ls-files -- '*.sh' | grep -vE 'src/(leveldb|secp256k1|univalue)/'); then
+if ! "${SHELLCHECK_CMD[@]}" "$EXCLUDE" $SOURCED_FILES $(git ls-files -- '*.sh' | grep -vE 'src/(leveldb|secp256k1|univalue)/'); then
     EXIT_CODE=1
 fi
 
@@ -56,14 +57,13 @@ if ! command -v jq > /dev/null; then
 fi
 
 EXCLUDE_GITIAN=${EXCLUDE}",$(IFS=','; echo "${disabled_gitian[*]}")"
-SHELLCHECK_CMD="shellcheck --external-sources --check-sourced $EXCLUDE_GITIAN"
 for descriptor in $(git ls-files -- 'contrib/gitian-descriptors/*.yml')
 do
     script=$(basename "$descriptor")
     # Use #!/bin/bash as gitian-builder/bin/gbuild does to complete a script.
     echo "#!/bin/bash" > $script
     yq -r .script "$descriptor" >> $script
-    if ! $SHELLCHECK_CMD $script; then
+    if ! "${SHELLCHECK_CMD[@]}" "$EXCLUDE_GITIAN" $script; then
         EXIT_CODE=1
     fi
     rm $script
