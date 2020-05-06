@@ -250,12 +250,12 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 # Reconnect a peer
 def reconnect(socket, src_ip, dst_ip, src_port, dst_port):
 	print(f'Reconnecting to ({dst_ip} : {dst_port})')
-	s.connect((dst_ip, dst_port))
+	socket.connect((dst_ip, dst_port))
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
-	s.sendall(version.to_bytes())
-	verack = s.recv(1924)
+	socket.sendall(version.to_bytes())
+	verack = socket.recv(1924)
 	verack = msg_verack(bitcoin_protocolversion)
-	s.sendall(verack.to_bytes())
+	socket.sendall(verack.to_bytes())
 	verack = s.recv(1024)
 	print(f'Successfully reconnected ({src_ip} : {src_port})')
 
