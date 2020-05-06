@@ -158,7 +158,7 @@ GIT_ARCHIVE="${OUTDIR}/src/${DISTNAME}.tar.gz"
 # Create the source tarball if not already there
 if [ ! -e "$GIT_ARCHIVE" ]; then
     mkdir -p "$(dirname "$GIT_ARCHIVE")"
-    git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
+    contrib/gitian-descriptors/make_release_tarball "${GIT_ARCHIVE}"
 fi
 
 ###########################
