@@ -128,7 +128,7 @@ script: |
 
   # Create the source tarball
   mkdir -p "$(dirname "$GIT_ARCHIVE")"
-  git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
+  contrib/gitian-descriptors/make_release_tarball "${GIT_ARCHIVE}"
 
   ORIGPATH="$PATH"
   # Extract the git archive into a dir for each host and build
