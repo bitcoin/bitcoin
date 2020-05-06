@@ -283,7 +283,29 @@ AC_ARG_ENABLE([werror],
     [enable_werror=no])
 
 AC_LANG_PUSH([C++])
+
+dnl Check for a flag to turn compiler warnings into errors. This is helpful for checks which may
+dnl appear to succeed because by default they merely emit warnings when they fail.
+dnl
+dnl Note that this is not necessarily a check to see if -Werror is supported, but rather to see if
+dnl a compile with -Werror can succeed. This is important because the compiler may already be
+dnl warning about something unrelated, for example about some path issue. If that is the case,
+dnl -Werror cannot be used because all of those warnings would be turned into errors.
 AX_CHECK_COMPILE_FLAG([-Werror],[CXXFLAG_WERROR="-Werror"],[CXXFLAG_WERROR=""])
+
+dnl Check for a flag to turn linker warnings into errors. When flags are passed to linkers via the
+dnl compiler driver using a -Wl,-foo flag, linker warnings may be swallowed rather than bubbling up.
+dnl See note above, the same applies here as well.
+dnl
+dnl LDFLAG_WERROR Should only be used when testing -Wl,*
+case $host in
+ *darwin*)
+    AX_CHECK_LINK_FLAG([-Wl,-fatal_warnings],[LDFLAG_WERROR="-Wl,-fatal_warnings"],[LDFLAG_WERROR=""])
+    ;;
+  *)
+    AX_CHECK_LINK_FLAG([-Wl,--fatal-warnings],[LDFLAG_WERROR="-Wl,--fatal-warnings"],[LDFLAG_WERROR=""])
+    ;;
+esac
 
 if test "x$enable_debug" = xyes; then
   dnl Clear default -g -O2 flags
@@ -613,7 +635,7 @@ case $host in
        esac
      fi
 
-     AX_CHECK_LINK_FLAG([[-Wl,-headerpad_max_install_names]], [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"])
+     AX_CHECK_LINK_FLAG([[-Wl,-headerpad_max_install_names]], [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"],, [[$LDFLAG_WERROR]])
      CPPFLAGS="$CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
      OBJCXXFLAGS="$CXXFLAGS"
      ;;
@@ -709,8 +731,8 @@ if test x$use_glibc_compat != xno; then
     [ fdelt_type="long int"])
   AC_MSG_RESULT($fdelt_type)
   AC_DEFINE_UNQUOTED(FDELT_TYPE, $fdelt_type,[parameter and return value type for __fdelt_chk])
-  AX_CHECK_LINK_FLAG([[-Wl,--wrap=__divmoddi4]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=__divmoddi4"])
-  AX_CHECK_LINK_FLAG([[-Wl,--wrap=log2f]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=log2f"])
+  AX_CHECK_LINK_FLAG([[-Wl,--wrap=__divmoddi4]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=__divmoddi4"],, [[$LDFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([[-Wl,--wrap=log2f]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=log2f"],, [[$LDFLAG_WERROR]])
 else
   AC_SEARCH_LIBS([clock_gettime],[rt])
 fi
@@ -758,11 +780,11 @@ if test x$use_hardening != xno; then
     ])
   fi
 
-  AX_CHECK_LINK_FLAG([[-Wl,--dynamicbase]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--dynamicbase"])
-  AX_CHECK_LINK_FLAG([[-Wl,--nxcompat]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--nxcompat"])
-  AX_CHECK_LINK_FLAG([[-Wl,--high-entropy-va]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--high-entropy-va"])
-  AX_CHECK_LINK_FLAG([[-Wl,-z,relro]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,relro"])
-  AX_CHECK_LINK_FLAG([[-Wl,-z,now]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,now"])
+  AX_CHECK_LINK_FLAG([[-Wl,--dynamicbase]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--dynamicbase"],, [[$LDFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([[-Wl,--nxcompat]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--nxcompat"],, [[$LDFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([[-Wl,--high-entropy-va]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--high-entropy-va"],, [[$LDFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([[-Wl,-z,relro]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,relro"],, [[$LDFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([[-Wl,-z,now]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,now"],, [[$LDFLAG_WERROR]])
   AX_CHECK_LINK_FLAG([[-fPIE -pie]], [PIE_FLAGS="-fPIE"; HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"],, [[$CXXFLAG_WERROR]])
 
   case $host in
@@ -776,14 +798,14 @@ dnl These flags are specific to ld64, and may cause issues with other linkers.
 dnl For example: GNU ld will intepret -dead_strip as -de and then try and use
 dnl "ad_strip" as the symbol for the entry point.
 if test x$TARGET_OS = xdarwin; then
-  AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"])
-  AX_CHECK_LINK_FLAG([[-Wl,-dead_strip_dylibs]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip_dylibs"])
-  AX_CHECK_LINK_FLAG([[-Wl,-bind_at_load]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-bind_at_load"])
+  AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"],, [[$LDFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([[-Wl,-dead_strip_dylibs]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip_dylibs"],, [[$LDFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([[-Wl,-bind_at_load]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-bind_at_load"],, [[$LDFLAG_WERROR]])
 fi
 
 if test x$enable_determinism = xyes; then
   if test x$TARGET_OS = xwindows; then
-    AX_CHECK_LINK_FLAG([[-Wl,--no-insert-timestamp]], [LDFLAGS="$LDFLAGS -Wl,--no-insert-timestamp"])
+    AX_CHECK_LINK_FLAG([[-Wl,--no-insert-timestamp]], [LDFLAGS="$LDFLAGS -Wl,--no-insert-timestamp"],, [[$LDFLAG_WERROR]])
   fi
 fi
 
@@ -1215,7 +1237,7 @@ fi
 
 if test x$use_reduce_exports = xyes; then
     CXXFLAGS="$CXXFLAGS $RE_CXXFLAGS"
-    AX_CHECK_LINK_FLAG([[-Wl,--exclude-libs,ALL]], [RELDFLAGS="-Wl,--exclude-libs,ALL"])
+    AX_CHECK_LINK_FLAG([[-Wl,--exclude-libs,ALL]], [RELDFLAGS="-Wl,--exclude-libs,ALL"],, [[$LDFLAG_WERROR]])
 fi
 
 if test x$use_tests = xyes; then
