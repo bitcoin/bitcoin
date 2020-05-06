@@ -644,5 +644,9 @@ std::vector<bool> CAddrMan::DecodeAsmap(fs::path path)
             bits.push_back((cur_byte >> bit) & 1);
         }
     }
+    if (!SanityCheckASMap(bits)) {
+        LogPrintf("Sanity check of asmap file %s failed\n", path);
+        return {};
+    }
     return bits;
 }
