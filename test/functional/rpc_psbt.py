@@ -77,7 +77,7 @@ class PSBTTest(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 2)
 
     def run_test(self):
-        # Create and fund a raw tx for sending 10 vBTC
+        # Create and fund a raw tx for sending 10 BTC
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
 
         # Node 1 should not be able to add anything to it but still return the psbtx same as before
@@ -136,12 +136,12 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(walletprocesspsbt_out['complete'], True)
         self.nodes[1].sendrawtransaction(self.nodes[1].finalizepsbt(walletprocesspsbt_out['psbt'])['hex'])
 
-        # feeRate of 0.1 vBTC / KB produces a total fee slightly below -maxtxfee (~0.05280000):
+        # feeRate of 0.1 BTC / KB produces a total fee slightly below -maxtxfee (~0.05280000):
         res = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2wpkh_pos},{"txid":txid,"vout":p2sh_p2wpkh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99}, 0, {"feeRate": 0.1})
         assert_greater_than(res["fee"], 0.05)
         assert_greater_than(0.06, res["fee"])
 
-        # feeRate of 10 vBTC / KB produces a total fee well above -maxtxfee
+        # feeRate of 10 BTC / KB produces a total fee well above -maxtxfee
         # previously this was silently capped at -maxtxfee
         assert_raises_rpc_error(-4, "Fee exceeds maximum configured by -maxtxfee", self.nodes[1].walletcreatefundedpsbt, [{"txid":txid,"vout":p2wpkh_pos},{"txid":txid,"vout":p2sh_p2wpkh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99}, 0, {"feeRate": 10})
 

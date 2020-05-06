@@ -2,6 +2,7 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_SRC_VBK_TEST_UTIL_TX_HPP
 #define BITCOIN_SRC_VBK_TEST_UTIL_TX_HPP
 

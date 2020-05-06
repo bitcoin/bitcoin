@@ -1,10 +1,8 @@
-// VeriBlock Blockchain Project
-// Copyright 2017-2018 VeriBlock, Inc
-// Copyright 2018-2019 Xenios SEZC
-// All rights reserved.
+// Copyright (c) 2019-2020 Xenios SEZC
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
-// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include <boost/test/unit_test.hpp>
 #include <chainparams.h>
 #include <consensus/validation.h>
