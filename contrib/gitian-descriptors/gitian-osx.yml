@@ -103,9 +103,15 @@ script: |
   create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
   export PATH=${WRAP_DIR}:${PATH}
 
-  # Create the git archive, and define DISTNAME and GIT_ARCHIVE variables.
-  # shellcheck source=contrib/gitian-descriptors/make_git_archive
-  source contrib/gitian-descriptors/make_git_archive
+  # Define DISTNAME variable.
+  # shellcheck source=contrib/gitian-descriptors/assign_DISTNAME
+  source contrib/gitian-descriptors/assign_DISTNAME
+
+  GIT_ARCHIVE="${OUTDIR}/src/${DISTNAME}.tar.gz"
+
+  # Create the source tarball
+  mkdir -p "$(dirname "$GIT_ARCHIVE")"
+  git archive --output="$GIT_ARCHIVE" HEAD
 
   ORIGPATH="$PATH"
   # Extract the git archive into a dir for each host and build

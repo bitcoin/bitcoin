@@ -13,7 +13,6 @@ We achieve bootstrappability by using Guix as a functional package manager.
 
 Conservatively, a x86_64 machine with:
 
-- 2 or more logical cores
 - 4GB of free disk space on the partition that /gnu/store will reside in
 - 24GB of free disk space on the partition that the Bitcoin Core git repository
   resides in

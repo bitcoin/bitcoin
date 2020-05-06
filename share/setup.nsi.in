@@ -51,7 +51,6 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile @abs_top_srcdir@/@PACKAGE_TARNAME@-@PACKAGE_VERSION@-win64-setup-unsigned.exe
 InstallDir $PROGRAMFILES64\Bitcoin
 CRCCheck on
 XPStyle on

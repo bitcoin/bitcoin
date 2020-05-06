@@ -105,6 +105,7 @@ for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv
                                  --pure \
                                  --no-cwd \
                                  --share="$PWD"=/bitcoin \
+                                 --expose="$(git rev-parse --git-common-dir)" \
                                  ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
                                  ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
                                  -- env HOST="$host" \
