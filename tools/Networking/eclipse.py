@@ -541,6 +541,7 @@ class Task(threading.Thread):
 		return f'Task({self.name})'
 
 	def run(self):
+		print(f'Running {self.args}')
 		self.function(self, *self.args)
 		self._stop_event.set()
 
