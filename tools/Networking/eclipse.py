@@ -325,6 +325,7 @@ def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port
 # Called when a packet is sniffed from the network
 # Return true to end the thread
 def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
+	if parent_thread.stopped(): return
 	from_ip = dst_ip
 	from_port = dst_port
 	to_ip = src_ip
@@ -375,9 +376,9 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 		try: # src --> attacker
 			mirror_socket.sendall(packet) # Relay to the mirror
 		except Exception as e:
+			parent_thread.stop()
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
 			reconnect(mirror_socket, socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
-			parent_thread.stop()
 
 
 		#close_connection(socket, mirror_socket, from_ip, from_port, interface)
@@ -447,9 +448,9 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 		try:
 			orig_socket.sendall(packet) # Relay to the victim
 		except Exception as e:
+			parent_thread.stop()
 			print(f'Lost connection to ({victim_ip} : {victim_port})')
 			reconnect(orig_socket, socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
-			parent_thread.stop()
 
 		# print("Closing socket because of error: " + str(e))
 		# parent_thread.stop()
