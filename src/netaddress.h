@@ -136,6 +136,12 @@ class CSubNet
         friend bool operator!=(const CSubNet& a, const CSubNet& b) { return !(a == b); }
         friend bool operator<(const CSubNet& a, const CSubNet& b);
 
+        /** Return the (prefix as CNetAddr, mask length) for a CIDR-compatible mask.
+         * This treats IPv4 as embedded in IPv6 (so subtract 96 from length for IPv4).
+         * The length will be negative for non-CIDR masks.
+         */
+        std::pair<CNetAddr, int> GetCIDR() const;
+
         ADD_SERIALIZE_METHODS;
 
         template <typename Stream, typename Operation>
@@ -179,5 +185,11 @@ class CService : public CNetAddr
             READWRITE(WrapBigEndian(port));
         }
 };
+
+bool SanityCheckASMap(const std::vector<bool>& asmap);
+
+std::vector<std::pair<CSubNet, uint32_t>> DecodeASMap(const std::vector<bool>& asmap);
+
+std::vector<bool> EncodeASMap(const std::vector<std::pair<CSubNet, uint32_t>>& mappings);
 
 #endif // BITCOIN_NETADDRESS_H

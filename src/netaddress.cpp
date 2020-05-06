@@ -842,30 +842,34 @@ static inline int NetmaskBits(uint8_t x)
     }
 }
 
-std::string CSubNet::ToString() const
+std::pair<CNetAddr, int> CSubNet::GetCIDR() const
 {
     /* Parse binary 1{n}0{N-n} to see if mask can be represented as /n */
     int cidr = 0;
-    bool valid_cidr = true;
-    int n = network.IsIPv4() ? 12 : 0;
-    for (; n < 16 && netmask[n] == 0xff; ++n)
-        cidr += 8;
+    int n = 0;
+    for (; n < 16 && netmask[n] == 0xff; ++n) cidr += 8;
     if (n < 16) {
         int bits = NetmaskBits(netmask[n]);
-        if (bits < 0)
-            valid_cidr = false;
-        else
-            cidr += bits;
+        if (bits < 0) return {network, -1};
+        cidr += bits;
         ++n;
     }
-    for (; n < 16 && valid_cidr; ++n)
-        if (netmask[n] != 0x00)
-            valid_cidr = false;
+    for (; n < 16; ++n) {
+        if (netmask[n] != 0x00) return {network, -1};
+    }
+    return {network, cidr};
+}
+
+std::string CSubNet::ToString() const
+{
+    auto cidr = GetCIDR();
+    cidr.second -= 96 * network.IsIPv4();
+    bool valid_cidr = cidr.second >= 0;
 
     /* Format output */
     std::string strNetmask;
     if (valid_cidr) {
-        strNetmask = strprintf("%u", cidr);
+        strNetmask = strprintf("%u", cidr.second);
     } else {
         if (network.IsIPv4())
             strNetmask = strprintf("%u.%u.%u.%u", netmask[12], netmask[13], netmask[14], netmask[15]);
@@ -893,4 +897,49 @@ bool operator==(const CSubNet& a, const CSubNet& b)
 bool operator<(const CSubNet& a, const CSubNet& b)
 {
     return (a.network < b.network || (a.network == b.network && memcmp(a.netmask, b.netmask, 16) < 0));
+}
+
+bool SanityCheckASMap(const std::vector<bool>& asmap)
+{
+    return SanityCheckASMap(asmap, 128); // For IP address lookups, the input is 128 bits
+}
+
+std::vector<std::pair<CSubNet, uint32_t>> DecodeASMap(const std::vector<bool>& asmap)
+{
+    std::vector<std::pair<CSubNet, uint32_t>> ret;
+
+    for (const auto& item : DecodeASMap(asmap, 128)) {
+        unsigned char ip[16] = {0};
+        for (size_t pos = 0; pos < item.first.size(); ++pos) {
+            ip[pos >> 3] |= (int(item.first[pos]) << ((127 - pos) & 7));
+        }
+        CNetAddr addr;
+        addr.SetRaw(NET_IPV6, ip);
+        if (addr.IsIPv4()) {
+            if (item.first.size() >= 96) {
+                ret.emplace_back(CSubNet(addr, item.first.size() - 96), item.second);
+            }
+        } else {
+            ret.emplace_back(CSubNet(addr, item.first.size()), item.second);
+        }
+    }
+
+    return ret;
+}
+
+std::vector<bool> EncodeASMap(const std::vector<std::pair<CSubNet, uint32_t>>& mappings)
+{
+    std::vector<std::pair<std::vector<bool>, uint32_t>> bitmap;
+
+    std::vector<bool> bits(128);
+    for (const auto& item : mappings) {
+        auto cidr = item.first.GetCIDR();
+        if (cidr.second < 0) return {};
+        for (int bit = 0; bit < cidr.second; ++bit) {
+            bits[bit] = (cidr.first.GetByte((127 - bit) >> 3) >> ((127 - bit) & 7)) & 1;
+        }
+        bitmap.emplace_back(std::vector<bool>(bits.begin(), bits.begin() + cidr.second), item.second);
+    }
+
+    return EncodeASMap(std::move(bitmap), true);
 }
