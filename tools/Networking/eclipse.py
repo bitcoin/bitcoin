@@ -230,12 +230,13 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 
 # Reconnect a peer
 def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
-	time.sleep(1)
-	verbose = True
-
 	the_socket.close()
 	if the_socket in identity_socket: identity_socket.remove(the_socket)
 	del the_socket
+
+	time.sleep(1)
+
+	verbose = True
 
 	print(f'Reconnecting to ({dst_ip} : {dst_port})')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -541,7 +542,6 @@ class Task(threading.Thread):
 		return f'Task({self.name})'
 
 	def run(self):
-		print(f'Running {self.args}')
 		self.function(self, *self.args)
 		self._stop_event.set()
 
