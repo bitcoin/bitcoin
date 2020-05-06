@@ -27,7 +27,7 @@ victim_port = 8333
 num_identities = -1
 while num_identities < 0:
 	try:
-		num_identities = input('How many identities would you like? ')
+		num_identities = int(input('How many identities would you like? '))
 	except: pass
 
 seconds_delay = { # -1 to drop the packet
