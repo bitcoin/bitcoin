@@ -672,7 +672,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def has_previous_releases(self):
         """Checks whether previous releases are present and enabled."""
-        if os.getenv("TEST_PREVIOUS_RELEASES") == "false":
+        if os.getenv("TEST_PREVIOUS_RELEASES") == "false" or os.getenv("TEST_PREVIOUS_RELEASES") is None:
             # disabled
             return False
 
