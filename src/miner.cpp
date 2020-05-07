@@ -330,6 +330,12 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
         (void)ret;
     }
 
+    auto refreshDummy = [&](){
+        auto* index = altTree.getBlockIndex(dummyContainingBlock.hash);
+        assert(index);
+        index->status = BLOCK_VALID_TREE;
+    };
+
     CTxMemPool::setEntries failedPopTx;
 
     auto finalized = altintegration::Finalizer([&]() {
@@ -462,12 +468,14 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
                     LogPrint(BCLog::POP, "VeriBlock-PoP: %s: tx %s is statelessly invalid: %s\n", __func__, iter->GetTx().GetHash().ToString(), txstate.GetRejectReason());
                     failedTx.insert(iter);
                     failedPopTx.insert(iter);
+                    refreshDummy();
                     continue;
                 }
                 if (!altTree.addPayloads(dummyContainingBlock, {p}, _state) || !altTree.setState(dummyContainingBlock.hash, _state)) {
                     LogPrint(BCLog::POP, "VeriBlock-PoP: %s: tx %s is statefully invalid: %s\n", __func__, iter->GetTx().GetHash().ToString(), _state.toString());
                     failedTx.insert(iter);
                     failedPopTx.insert(iter);
+                    refreshDummy();
                     continue;
                 }
             }
