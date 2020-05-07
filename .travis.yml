@@ -88,26 +88,6 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
         QEMU_USER_CMD=""
 
-    - stage: test
-      name: 's390x native BE [GOAL: install] [bionic] [no depends, no GUI]'
-      arch: s390x
-      dist: bionic
-      addons:
-        apt:
-          packages:
-            - bsdmainutils
-            - libboost-filesystem-dev
-            - libboost-system-dev
-            - libboost-test-dev
-            - libboost-thread-dev
-            - libdb++-dev
-            - libdb-dev
-            - libevent-dev
-      env: >-
-        DANGER_RUN_CI_ON_HOST=true
-        CI_USE_APT_INSTALL=no
-        FILE_ENV="./ci/test/00_setup_env_s390x_host.sh"
-
 # s390 build was disabled temporarily because of disk space issues on the Travis VM
 #
 #    - stage: test
