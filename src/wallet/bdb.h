@@ -69,7 +69,7 @@ public:
 
     bool Verify(const std::string& strFile);
 
-    bool Open(bool retry);
+    bool Open(bilingual_str& error);
     void Close();
     void Flush(bool fShutdown);
     void CheckpointLSN(const std::string& strFile);
