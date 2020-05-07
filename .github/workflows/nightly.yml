@@ -423,12 +423,12 @@ jobs:
         run: |
           mv ./vbitcoin-0.19.99-win64-setup-unsigned.exe release/
           mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vBitcoin-nightly-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: create artifacts
         if: matrix.host != 'x86_64-w64-mingw32'
         run: |
           mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vBitcoin-nightly-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-${{ matrix.host }}-qt.zip vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
       - name: upload artifacts
         if: matrix.host == 'x86_64-w64-mingw32'
         uses: appleboy/scp-action@master
