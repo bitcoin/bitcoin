@@ -45,7 +45,9 @@ if [ -n "$GIT_TAG" ]; then
 elif [ -n "$GIT_COMMIT" ]; then
     NEWINFO="#define BUILD_GIT_COMMIT \"$GIT_COMMIT\""
 else
-    NEWINFO="// No build information available"
+    # NOTE: The NEWINFO line below this comment gets replaced by a string-match in contrib/guix/libexec/make_release_tarball.sh
+    # If changing it, update the script too!
+    NEWINFO='// No build information available'
 fi
 
 # only update build.h if necessary
