@@ -9,10 +9,10 @@ define $(package)_preprocess_cmds
   mkdir -p build
 endef
 
-ifeq ($(HOST), x86_64-w64-mingw32)
+ifeq ($(strip $(HOST)),)
   define $(package)_config_cmds
-    cmake -DCMAKE_C_COMPILER=$(HOST)-gcc -DCMAKE_CXX_COMPILER=$(HOST)-g++ \
-    -DCMAKE_INSTALL_PREFIX=$(host_prefix) -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF ..
+    cmake -DCMAKE_INSTALL_PREFIX=$(host_prefix) -DCMAKE_BUILD_TYPE=Release \
+    -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF ..
   endef
 else ifeq ($(HOST), x86_64-apple-darwin16)
   define $(package)_config_cmds
@@ -23,10 +23,15 @@ else ifeq ($(HOST), x86_64-apple-darwin16)
     -DCMAKE_OSX_SYSROOT=$(OSX_SDK) -DTESTING=OFF -DWITH_ROCKSDB=OFF \
     -DSHARED=OFF ..
   endef
-else
+else ifeq ($(HOST), x86_64-pc-linux-gnu)
   define $(package)_config_cmds
     cmake -DCMAKE_INSTALL_PREFIX=$(host_prefix) -DCMAKE_BUILD_TYPE=Release \
     -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF ..
+  endef
+else
+  define $(package)_config_cmds
+    cmake -DCMAKE_C_COMPILER=$(HOST)-gcc -DCMAKE_CXX_COMPILER=$(HOST)-g++ \
+    -DCMAKE_INSTALL_PREFIX=$(host_prefix) -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF ..
   endef
 endif
 

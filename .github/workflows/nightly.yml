@@ -189,8 +189,8 @@ jobs:
 #        run: |
 #          python test\functional\test_runner.py --ansi --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
 
-  x86_64-w64-mingw32:
-    runs-on: ubuntu-latest
+  macos:
+    runs-on: macos-latest
     steps:
       - name: checkout
         uses: actions/checkout@v1
@@ -203,44 +203,50 @@ jobs:
           echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
           echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
           echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
-      - name: install build requirements
-        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git g++-mingw-w64-x86-64 nsis
-      - name: set the default mingw32 g++ compiler option to posix
-        run: sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
-      - name: strip out problematic Windows %PATH% imported var
-        run: PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g')
-      - name: set variables and build dependencies for x86_64-w64
-        env:
-          HOST: x86_64-w64-mingw32
-        run: cd depends && make -j2
+      - name: Prepare ccache timestamp
+        id: cache_timestamp
+        run: |
+          current_date=`date +%Y%m%d_%H%M%SZ`
+          echo "::set-output name=timestamp::${current_date}"
+      - name: ccache cache files
+        uses: actions/cache@v1.1.0
+        with:
+          path: ~/.ccache
+          key: macos-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
+          restore-keys: |
+            macos-ccache-
+      - name: get version for veriblock-pop-cpp
+        run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
+      - name: veriblock-pop-cpp release version
+        run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
+      - name: install homebrew
+        run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+      - name: install dependencies
+        run: brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python3 libevent librsvg ccache qrencode qt zeromq
+      - name: install veriblock-pop-cpp
+        run: |
+          (
+          cd /tmp;
+          wget https://github.com/VeriBlock/alt-integration-cpp/archive/${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
+          tar -xf ${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
+          cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
+          mkdir build;
+          cd build;
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF;
+          make -j2;
+          sudo make install
+          )
       - name: autogen
         run: ./autogen.sh
       - name: configure
-        run: CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+        run: ./configure
           --enable-werror
           --disable-bench
           --disable-gmock
       - name: make
         run: make -j2
-      - name: make deploy
-        if: success()
-        run: make deploy
-      - name: create artifacts
-        if: success()
-        run: |
-          mv ./vbitcoin-0.19.99-win64-setup-unsigned.exe release/
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
-          zip -r9 vBitcoin-nightly-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
-      - name: upload artifacts
-        if: success()
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.ARTIFACT_HOST }}
-          username: ${{ secrets.ARTIFACT_USER }}
-          key: ${{ secrets.ARTIFACT_KEY }}
-          passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
-          source: vBitcoin-nightly-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
-          target: ${{ secrets.ARTIFACT_PATH }}
+      - name: make check
+        run: make check
 
   x86_64-apple-darwin16:
     runs-on: ubuntu-latest
@@ -318,8 +324,12 @@ jobs:
           source: vBitcoin-nightly-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
           target: ${{ secrets.ARTIFACT_PATH }}
 
-  macos:
-    runs-on: macos-latest
+  cc:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        host: [x86_64-pc-linux-gnu, arm-linux-gnueabihf, aarch64-linux-gnu, powerpc64-linux-gnu, powerpc64le-linux-gnu, riscv64-linux-gnu, s390x-linux-gnu, x86_64-w64-mingw32]
+      fail-fast: false
     steps:
       - name: checkout
         uses: actions/checkout@v1
@@ -335,44 +345,97 @@ jobs:
       - name: Prepare ccache timestamp
         id: cache_timestamp
         run: |
-          current_date=`date +%Y%m%d_%H%M%SZ`
+          current_date=`date --utc +%Y%m%d_%H%M%SZ`
           echo "::set-output name=timestamp::${current_date}"
+      - name: depends cache files
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        uses: actions/cache@v1.1.0
+        with:
+          path: ~/.depends_cache
+          key: ${{ matrix.host }}-depends-${{ steps.cache_timestamp.outputs.timestamp }}
+          restore-keys: |
+            ${{ matrix.host }}-depends-
       - name: ccache cache files
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
         uses: actions/cache@v1.1.0
         with:
           path: ~/.ccache
-          key: macos-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
+          key: ${{ matrix.host }}-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
           restore-keys: |
-            macos-ccache-
-      - name: get version for veriblock-pop-cpp
-        run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
-      - name: veriblock-pop-cpp release version
-        run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
-      - name: install homebrew
-        run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-      - name: install dependencies
-        run: brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python3 libevent librsvg ccache qrencode qt zeromq
-      - name: install veriblock-pop-cpp
-        run: |
-          (
-          cd /tmp;
-          wget https://github.com/VeriBlock/alt-integration-cpp/archive/${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
-          tar -xf ${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
-          cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
-          mkdir build;
-          cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF;
-          make -j2;
-          sudo make install
-          )
+            ${{ matrix.host }}-ccache-
+      - name: run apt-get update
+        run: sudo apt-get update
+      - name: install build requirements
+        run: sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch ccache
+      - name: install additional dependencies
+        if: matrix.host == 'x86_64-w64-mingw32'
+        run: sudo apt-get install g++-mingw-w64-x86-64 nsis
+      - name: set the default mingw32 g++ compiler option to posix
+        if: matrix.host == 'x86_64-w64-mingw32'
+        run: sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+      - name: strip out problematic Windows %PATH% imported var
+        if: matrix.host == 'x86_64-w64-mingw32'
+        run: PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g')
+      - name: install additional dependencies
+        if: matrix.host == 'arm-linux-gnueabihf'
+        run: sudo apt-get install g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
+      - name: install additional dependencies
+        if: matrix.host == 'aarch64-linux-gnu'
+        run: sudo apt-get install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
+      - name: install additional dependencies
+        if: matrix.host == 'powerpc64-linux-gnu'
+        run: sudo apt-get install g++-powerpc64-linux-gnu binutils-powerpc64-linux-gnu
+      - name: install additional dependencies
+        if: matrix.host == 'powerpc64le-linux-gnu'
+        run: sudo apt-get install g++-powerpc64le-linux-gnu binutils-powerpc64le-linux-gnu
+      - name: install additional dependencies
+        if: matrix.host == 'riscv64-linux-gnu'
+        run: sudo apt-get install g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
+      - name: install additional dependencies
+        if: matrix.host == 's390x-linux-gnu'
+        run: sudo apt-get install g++-s390x-linux-gnu binutils-s390x-linux-gnu
+      - name: set variables and build dependencies for ${{ matrix.host }}
+        env:
+          HOST: ${{ matrix.host }}
+          BASE_CACHE: ~/.depends_cache
+        run: cd depends && make -j2
       - name: autogen
         run: ./autogen.sh
       - name: configure
-        run: ./configure
+        if: matrix.host == 'x86_64-w64-mingw32'
+        run: CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+          --enable-werror
+          --disable-bench
+          --disable-gmock
+      - name: configure
+        if: matrix.host != 'x86_64-w64-mingw32'
+        run: ./configure --prefix=$PWD/depends/${{ matrix.host }}
           --enable-werror
           --disable-bench
           --disable-gmock
       - name: make
         run: make -j2
-      - name: make check
-        run: make check
+      - name: make deploy
+        if: success()
+        run: make deploy
+      - name: create artifacts
+        if: matrix.host == 'x86_64-w64-mingw32'
+        run: |
+          mv ./vbitcoin-0.19.99-win64-setup-unsigned.exe release/
+          mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
+      - name: create artifacts
+        if: matrix.host != 'x86_64-w64-mingw32'
+        run: |
+          mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
+          zip -r9 vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
+      - name: upload artifacts
+        if: matrix.host == 'x86_64-w64-mingw32'
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.ARTIFACT_HOST }}
+          username: ${{ secrets.ARTIFACT_USER }}
+          key: ${{ secrets.ARTIFACT_KEY }}
+          passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
+          source: vBitcoin-nightly-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
+          target: ${{ secrets.ARTIFACT_PATH }}
