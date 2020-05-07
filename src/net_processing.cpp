@@ -1608,6 +1608,26 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
     }
 }
 
+//! Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed).
+CTransactionRef static FindTxForGetData(const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds longlived_mempool_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    // Look up transaction in relay pool
+    auto mi = mapRelay.find(txid);
+    if (mi != mapRelay.end()) return mi->second;
+
+    auto txinfo = mempool.info(txid);
+    if (txinfo.tx) {
+        // To protect privacy, do not answer getdata using the mempool when
+        // that TX couldn't have been INVed in reply to a MEMPOOL request,
+        // or when it's too recent to have expired from mapRelay.
+        if ((mempool_req.count() && txinfo.m_time <= mempool_req) || txinfo.m_time <= longlived_mempool_time) {
+            return txinfo.tx;
+        }
+    }
+
+    return {};
+}
+
 void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnman* connman, CTxMemPool& mempool, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main)
 {
     AssertLockNotHeld(cs_main);
@@ -1643,31 +1663,10 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                 continue;
             }
 
-            // Send stream from relay memory
-            bool push = false;
-            auto mi = mapRelay.find(inv.hash);
-            int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
-            if (mi != mapRelay.end()) {
-                connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *mi->second));
-                push = true;
-            } else {
-                auto txinfo = mempool.info(inv.hash);
-                // To protect privacy, do not answer getdata using the mempool when
-                // that TX couldn't have been INVed in reply to a MEMPOOL request,
-                // or when it's too recent to have expired from mapRelay.
-                if (txinfo.tx && (
-                     (mempool_req.count() && txinfo.m_time <= mempool_req)
-                      || (txinfo.m_time <= longlived_mempool_time)))
-                {
-                    connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *txinfo.tx));
-                    push = true;
-                }
-            }
-
-            if (push) {
-                // We interpret fulfilling a GETDATA for a transaction as a
-                // successful initial broadcast and remove it from our
-                // unbroadcast set.
+            CTransactionRef tx = FindTxForGetData(inv.hash, mempool_req, longlived_mempool_time);
+            if (tx) {
+                int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
+                connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
                 mempool.RemoveUnbroadcastTx(inv.hash);
             } else {
                 vNotFound.push_back(inv);
