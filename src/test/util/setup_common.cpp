@@ -180,6 +180,7 @@ TestChain100Setup::TestChain100Setup(): RegTestingSetup()
 
     assert(ChainActive().Tip() != nullptr);
     assert(ChainActive().Tip()->nHeight == 100);
+    assert(BlockIndex().size() == 101);
 }
 
 CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, uint256 prevBlock,

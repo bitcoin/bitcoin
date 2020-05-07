@@ -192,15 +192,12 @@ UniValue submitpop(const JSONRPCRequest& request)
         auto& vtbhex = vtb_array[idx];
         auto vtb = ParseHexV(vtbhex, "vtb[" + std::to_string(idx) + "]");
         script << vtb << OP_CHECKVTB;
-        LogPrint(BCLog::POP, "VeriBlock-PoP: VTB%d=\"%s\"\n", idx, vtbhex.get_str());
     }
 
     auto& atvhex = request.params[0];
     auto atv = ParseHexV(atvhex, "atv");
     script << atv << OP_CHECKATV;
     script << OP_CHECKPOP;
-
-    LogPrint(BCLog::POP, "VeriBlock-PoP: ATV=\"%s\"\n", atvhex.get_str());
 
     return createPopTx(script);
 }

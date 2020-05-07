@@ -70,10 +70,11 @@
 
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
 {
-    // VeriBlock forkresolution comparing
-    int compare_result = VeriBlock::getService<VeriBlock::PopService>().compareForks(*pa, *pb);
-    if (compare_result > 0) return false;
-    if (compare_result < 0) return true;
+//    std::cout << "Comparing " << pa->nHeight << " and " << pb->nHeight << "\n";
+//    // VeriBlock forkresolution comparing
+//    int compare_result = VeriBlock::getService<VeriBlock::PopService>().compareForks(*pa, *pb);
+//    if (compare_result > 0) return false;
+//    if (compare_result < 0) return true;
 
     // First sort by most total work, ...
     if (pa->nChainWork > pb->nChainWork) return false;
@@ -1727,7 +1728,8 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     }
 
     auto prevHash = pindex->pprev->GetBlockHash();
-    if (!VeriBlock::getService<VeriBlock::PopService>().setState(prevHash)) {
+    altintegration::ValidationState _state;
+    if (!VeriBlock::getService<VeriBlock::PopService>().setState(prevHash, _state)) {
         error("DisconnectBlock(): setState failed");
         return DISCONNECT_FAILED;
     }
@@ -2159,15 +2161,19 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
 
-    if (!VeriBlock::getService<VeriBlock::PopService>().addAllBlockPayloads(*pindex, block, state)) {
-        return error("%s : AddAllBlockPayloads %s failed, %s", __func__, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+    if (!pop.addAllBlockPayloads(*pindex, block, state)) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-payloads", strprintf("Can not add POP payloads to block %s: %s", pindex->GetBlockHash().ToString(), FormatStateMessage(state)));
+    }
+    altintegration::ValidationState _state;
+    if (!pop.setState(pindex->GetBlockHash(), _state)) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop", strprintf("Block %s is POP invalid: %s", pindex->GetBlockHash().ToString(), _state.toString()));
     }
 
     int64_t nTime3 = GetTimeMicros();
     nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
-    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
     CAmount PoPrewards = 0;
     for (const auto& it : pop.getPopRewards(*pindex->pprev, chainparams.GetConsensus())) {
         PoPrewards += it.second;
@@ -2401,6 +2407,10 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
         g_best_block = pindexNew->GetBlockHash();
         g_best_block_cv.notify_all();
     }
+
+    altintegration::ValidationState state;
+    bool ret = VeriBlock::getService<VeriBlock::PopService>().setState(pindexNew->GetBlockHash(), state);
+    assert(ret && "block has been checked previously and should be valid");
 
     std::string warningMessages;
     if (!::ChainstateActive().IsInitialBlockDownload()) {
@@ -3109,6 +3119,7 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, const CChainParam
 
 bool InvalidateBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex)
 {
+    VeriBlock::getService<VeriBlock::PopService>().invalidateBlockByHash(pindex->GetBlockHash());
     return ::ChainstateActive().InvalidateBlock(state, chainparams, pindex);
 }
 
@@ -3749,7 +3760,6 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     // process an unrequested block if it's new and has enough work to
     // advance our tip, and isn't too many blocks ahead.
     bool fAlreadyHave = pindex->nStatus & BLOCK_HAVE_DATA;
-    bool fHasMoreOrSameWork = (m_chain.Tip() ? pindex->nChainWork >= m_chain.Tip()->nChainWork : true);
     // Blocks that are too out-of-order needlessly limit the effectiveness of
     // pruning, because pruning will not delete block files that contain any
     // blocks which are too close in height to the tip.  Apply this test
@@ -3767,7 +3777,6 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     if (fAlreadyHave) return true;
     if (!fRequested) {                        // If we didn't ask for it:
         if (pindex->nTx != 0) return true;    // This is a previously-processed block that was pruned
-        if (!fHasMoreOrSameWork) return true; // Don't process less-work chains
         if (fTooFarAhead) return true;        // Block height is too high
 
         // Protect against DoS attacks from low-work chains.
@@ -3784,6 +3793,11 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
             setDirtyBlockIndex.insert(pindex);
         }
         return error("%s: %s", __func__, FormatStateMessage(state));
+    }
+
+    int popComparison = 0;
+    if(m_chain.Tip()) {
+        popComparison = VeriBlock::getService<VeriBlock::PopService>().compareForks(*m_chain.Tip(), *pindex);
     }
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
@@ -3864,6 +3878,23 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev, fCheckMerkleRoot))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.GetRejectReason());
+
+    // VeriBlock: Block that have been passed to TestBlockValidity may not exist in alt tree, because technically it was not created ("mined").
+    // in this case, add it and then remove
+    auto& tree = VeriBlock::getService<VeriBlock::PopService>().getAltTree();
+    auto _hash = block.GetHash().asVector();
+    auto* _index = tree.getBlockIndex(_hash);
+    bool shouldRemove = false;
+    if (!_index) {
+        shouldRemove = true;
+    }
+
+    auto _f = altintegration::Finalizer([shouldRemove, _hash, &tree]() {
+      if (shouldRemove) {
+          tree.removeSubtree(_hash);
+      }
+    });
+
     if (!::ChainstateActive().ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
         return false;
     assert(state.IsValid());

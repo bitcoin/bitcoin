@@ -46,7 +46,7 @@ struct E2eFixture : public TestChain100Setup {
         }
 
         auto publicationdata = createPublicationData(endorsed, payoutInfo);
-        auto vbktx = popminer.endorseAltBlock(publicationdata);
+        auto vbktx = popminer.createVbkTxEndorsingAltBlock(publicationdata);
         auto atv = popminer.generateATV(vbktx, getLastKnownVBKblock(), state);
         BOOST_CHECK(state.IsValid());
         return atv;

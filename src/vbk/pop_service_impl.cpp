@@ -173,11 +173,11 @@ bool PopServiceImpl::validatePopTx(const CTransaction& tx, TxValidationState& st
         }
     }
 
-    // check size
-    auto& config = getService<Config>();
-    if (::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > config.max_pop_tx_weight) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-txns-oversize");
-    }
+//    // check size
+//    auto& config = getService<Config>();
+//    if (::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > config.max_pop_tx_weight) {
+//        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-txns-oversize");
+//    }
 
     return true;
 }
@@ -224,17 +224,10 @@ bool PopServiceImpl::acceptBlock(const CBlockIndex& indexNew, BlockValidationSta
     return true;
 }
 
-bool PopServiceImpl::checkPopPayloads(const CBlockIndex& indexPrev, const CBlock& fullBlock, BlockValidationState& state)
-{
-    // does not modify internal state, so no locking required
-    altintegration::AltTree copy = *altTree;
-    return addAllPayloadsToBlockImpl(copy, indexPrev, fullBlock, state, true, true);
-}
-
 bool PopServiceImpl::addAllBlockPayloads(const CBlockIndex& indexPrev, const CBlock& connecting, BlockValidationState& state)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    return addAllPayloadsToBlockImpl(*altTree, indexPrev, connecting, state, true, false);
+    return addAllPayloadsToBlockImpl(*altTree, indexPrev, connecting, state);
 }
 
 bool PopServiceImpl::evalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks)
@@ -264,16 +257,9 @@ int PopServiceImpl::compareForks(const CBlockIndex& leftForkTip, const CBlockInd
     std::lock_guard<std::mutex> lock(mutex);
 
     auto left = blockToAltBlock(leftForkTip);
-    auto right = blockToAltBlock(leftForkTip);
+    auto right = blockToAltBlock(rightForkTip);
     auto state = altintegration::ValidationState();
-    if (!altTree->acceptBlock(left, state)) {
-        throw std::logic_error("compareForks: left fork tip can not be connected to altTree");
-    }
-    if (!altTree->acceptBlock(right, state)) {
-        throw std::logic_error("compareForks: right fork tip can not be connected to altTree");
-    }
-
-    return altTree->compareTwoBranches(left.hash, right.hash);
+    return altTree->comparePopScore(left.hash, right.hash);
 }
 
 // Pop rewards
@@ -293,13 +279,12 @@ void PopServiceImpl::invalidateBlockByHash(const uint256& block)
 {
     std::lock_guard<std::mutex> lock(mutex);
     auto v = block.asVector();
-    altTree->invalidateBlockByHash(v);
+    altTree->removeSubtree(v);
 }
 
-bool PopServiceImpl::setState(const uint256& block)
+bool PopServiceImpl::setState(const uint256& block, altintegration::ValidationState& state)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    altintegration::ValidationState state;
     return altTree->setState(block.asVector(), state);
 }
 
@@ -317,10 +302,6 @@ bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char
     auto& btcp = *config.popconfig.btc.params;
     altintegration::AltPayloads publication;
 
-    if (script.size() > config.max_pop_script_size) {
-        return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
-    }
-
     try {
         while (pc < pend) {
             if (!script.GetOp(pc, opcode, vchPushValue)) {
@@ -335,7 +316,7 @@ bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char
             switch (opcode) {
             case OP_CHECKATV: {
                 // tx has zero or one ATV
-                if (publication.altPopTx.hasAtv) {
+                if (publication.popData.hasAtv) {
                     return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
                 }
 
@@ -347,9 +328,9 @@ bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char
 
                 // validate ATV content
                 try {
-                    publication.altPopTx.atv = altintegration::ATV::fromVbkEncoding(el);
-                    publication.altPopTx.hasAtv = true;
-                    if (with_checks && !altintegration::checkATV(publication.altPopTx.atv, state, altp, vbkp)) {
+                    publication.popData.atv = altintegration::ATV::fromVbkEncoding(el);
+                    publication.popData.hasAtv = true;
+                    if (with_checks && !altintegration::checkATV(publication.popData.atv, state, altp, vbkp)) {
                         return set_error(serror, SCRIPT_ERR_VBK_ATVFAIL);
                     }
                 } catch (...) {
@@ -371,7 +352,7 @@ bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char
                     if (with_checks && !altintegration::checkVTB(vtb, state, vbkp, btcp)) {
                         return set_error(serror, SCRIPT_ERR_VBK_VTBFAIL);
                     }
-                    publication.altPopTx.vtbs.push_back(std::move(vtb));
+                    publication.popData.vtbs.push_back(std::move(vtb));
                 } catch (...) {
                     return set_error(serror, SCRIPT_ERR_VBK_VTBFAIL);
                 }
@@ -434,6 +415,31 @@ bool parseBlockPopPayloadsImpl(const CBlock& block, const CBlockIndex& pindexPre
         }
         p.containingBlock = blockToAltBlock(pindexPrev.nHeight + 1, block.GetBlockHeader());
 
+        // HACK: fill vbk_context here. Remove when mempool is added.
+        {
+            // extract VBK context
+            auto cmp = [](const altintegration::VbkBlock& a, const altintegration::VbkBlock& b) {
+                return a.height < b.height;
+            };
+            auto& v = p.popData.vbk_context;
+            for (auto& vtb : p.popData.vtbs) {
+                for (auto& ctx : vtb.context) {
+                    v.push_back(ctx);
+                }
+                v.push_back(vtb.containingBlock);
+                vtb.context.clear();
+            }
+            if (p.popData.hasAtv) {
+                for (auto& ctx : p.popData.atv.context) {
+                    v.push_back(ctx);
+                }
+                v.push_back(p.popData.atv.containingBlock);
+                p.popData.atv.context.clear();
+            }
+            std::sort(v.begin(), v.end(), cmp);
+            v.erase(std::unique(v.begin(), v.end()), v.end());
+        }
+
         if (payloads) {
             payloads->push_back(std::move(p));
         }
@@ -458,7 +464,7 @@ bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& par
             "[" + txhash.ToString() + "] scriptSig of POP tx is invalid: " + ScriptErrorString(serror) + ", " + instate.GetPath() + ", " + instate.GetDebugMessage());
     }
 
-    const altintegration::PublicationData& publicationData = payloads.altPopTx.atv.transaction.publicationData;
+    const altintegration::PublicationData& publicationData = payloads.popData.atv.transaction.publicationData;
 
     CBlockHeader endorsedHeader;
 
@@ -485,7 +491,7 @@ bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& par
     return true;
 }
 
-bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex& indexPrev, const CBlock& block, BlockValidationState& state, bool atomic, bool cleanupAfter) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex& indexPrev, const CBlock& block, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     auto containing = VeriBlock::blockToAltBlock(indexPrev.nHeight + 1, block.GetBlockHeader());
 
@@ -499,12 +505,8 @@ bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex&
         return error("[%s] block %s is not accepted by altTree: %s", __func__, block.GetHash().ToString(), instate.toString());
     }
 
-    if (!payloads.empty() && !tree.addPayloads(containing, payloads, instate, atomic)) {
+    if (!payloads.empty() && !tree.addPayloads(containing, payloads, instate)) {
         return error("[%s] block %s failed stateful pop validation: %s", __func__, block.GetHash().ToString(), instate.toString());
-    }
-
-    if (cleanupAfter) {
-        tree.removePayloads(containing, payloads);
     }
 
     return true;

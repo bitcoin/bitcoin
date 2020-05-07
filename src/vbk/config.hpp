@@ -26,7 +26,6 @@ struct Config {
 
     uint32_t btc_header_size = 80;
     uint32_t vbk_header_size = 64;
-    uint32_t max_pop_script_size = 150000; // TODO: figure out number
     uint32_t max_vtb_size = 100000;        // TODO: figure out number
     uint32_t min_vtb_size = 1;             // TODO: figure out number
     uint32_t max_atv_size = 100000;        // TODO: figure out numer
@@ -35,7 +34,7 @@ struct Config {
     uint32_t max_future_block_time = 10 * 60; // 10 minutes
 
     /// The maximum allowed weight for the PoP transaction
-    uint32_t max_pop_tx_weight = 150000;
+//    uint32_t max_pop_tx_weight = 150000;
 
     /// The maximum allowed number of PoP transaction in a block
     uint32_t max_pop_tx_amount = 50;

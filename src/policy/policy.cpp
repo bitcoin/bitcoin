@@ -108,10 +108,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
 
         if (VeriBlock::isPopTx(tx))
         {
-            if (txin.scriptSig.size() > VeriBlock::getService<VeriBlock::Config>().max_pop_script_size) {
-                reason = "scriptsig-size";
-                return false;
-            }
+            return true; // accept pop txes with any size
         }
         else
         {
