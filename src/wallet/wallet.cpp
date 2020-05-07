@@ -2150,17 +2150,21 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             if (wtx.tx->vout[i].nValue < nMinimumAmount || wtx.tx->vout[i].nValue > nMaximumAmount)
                 continue;
-            // SYSCOIN
-            if (!wtx.tx->vout[i].assetInfo.IsNull() && (wtx.tx->vout[i].assetInfo.nValue < nMinimumAmountAsset || wtx.tx->vout[i].assetInfo.nValue > nMaximumAmountAsset))
-                continue;
 
+            // SYSCOIN apply min max threshold only if coin control not used (for asset updates we want to select 0 value asset input)
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(entry.first, i)))
+                continue;
+            const bool &coinControlAssetRequested = coinControl && coinControl->assetInfo && coinControl->assetInfo->nAsset > 0;
+            const bool &isAssetUpdate = coinControlAssetRequested && coinControl->assetInfo->nValue == 0;
+            const bool &isAssetCoin = !wtx.tx->vout[i].assetInfo.IsNull();
+            // for updates only select 0 value coins, otherwise enforce min amount rules
+            if (isAssetCoin && (((isAssetUpdate && wtx.tx->vout[i].assetInfo.nValue != 0) || (!isAssetUpdate && wtx.tx->vout[i].assetInfo.nValue < nMinimumAmountAsset)) || wtx.tx->vout[i].assetInfo.nValue > nMaximumAmountAsset))
                 continue;
             // SYSCOIN
             if (!bIncludeLocked && IsLockedCoin(entry.first, i))
                 continue;
             // if coin control requested an asset to be funded
-            if (coinControl && coinControl->assetInfo && coinControl->assetInfo->nAsset > 0) {
+            if (coinControlAssetRequested) {
                 // only allowed if asset matches the output or fAllowOtherInputs and output is non-asset
                 const bool& bMatchAssetOrSysOutput = (coinControl->assetInfo->nAsset == wtx.tx->vout[i].assetInfo.nAsset) || (coinControl->fAllowOtherInputs && wtx.tx->vout[i].assetInfo.IsNull());
                 if(!bMatchAssetOrSysOutput)
@@ -2193,7 +2197,7 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
                 }
             }
             // SYSCOIN
-            if (nMinimumSumAmountAsset != MAX_ASSET && !wtx.tx->vout[i].assetInfo.IsNull()) {
+            if (nMinimumSumAmountAsset != MAX_ASSET && isAssetCoin) {
                 nTotalAsset += wtx.tx->vout[i].assetInfo.nValue;
                 if (nTotalAsset >= nMinimumSumAmountAsset) {
                     return;
@@ -2398,7 +2402,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         for (const COutput& out : vCoins)
         {
             if (!out.fSpendable)
-                 continue;
+                continue;
             nValueRet += out.tx->tx->vout[out.i].nValue;
             // SYSCOIN
             nValueRetAsset += out.tx->tx->vout[out.i].assetInfo.nValue;
