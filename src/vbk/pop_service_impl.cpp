@@ -415,31 +415,6 @@ bool parseBlockPopPayloadsImpl(const CBlock& block, const CBlockIndex& pindexPre
         }
         p.containingBlock = blockToAltBlock(pindexPrev.nHeight + 1, block.GetBlockHeader());
 
-        // HACK: fill vbk_context here. Remove when mempool is added.
-        {
-            // extract VBK context
-            auto cmp = [](const altintegration::VbkBlock& a, const altintegration::VbkBlock& b) {
-                return a.height < b.height;
-            };
-            auto& v = p.popData.vbk_context;
-            for (auto& vtb : p.popData.vtbs) {
-                for (auto& ctx : vtb.context) {
-                    v.push_back(ctx);
-                }
-                v.push_back(vtb.containingBlock);
-                vtb.context.clear();
-            }
-            if (p.popData.hasAtv) {
-                for (auto& ctx : p.popData.atv.context) {
-                    v.push_back(ctx);
-                }
-                v.push_back(p.popData.atv.containingBlock);
-                p.popData.atv.context.clear();
-            }
-            std::sort(v.begin(), v.end(), cmp);
-            v.erase(std::unique(v.begin(), v.end()), v.end());
-        }
-
         if (payloads) {
             payloads->push_back(std::move(p));
         }
@@ -487,6 +462,32 @@ bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& par
 
     payloads.containingTx = altintegration::uint256(txhash.asVector());
     payloads.endorsed = blockToAltBlock(*endorsedIndex);
+
+    // HACK: fill vbk_context here. Remove when mempool is added.
+    {
+        auto& p = payloads;
+        // extract VBK context
+        auto cmp = [](const altintegration::VbkBlock& a, const altintegration::VbkBlock& b) {
+          return a.height < b.height;
+        };
+        auto& v = p.popData.vbk_context;
+        for (auto& vtb : p.popData.vtbs) {
+            for (auto& ctx : vtb.context) {
+                v.push_back(ctx);
+            }
+            v.push_back(vtb.containingBlock);
+            vtb.context.clear();
+        }
+        if (p.popData.hasAtv) {
+            for (auto& ctx : p.popData.atv.context) {
+                v.push_back(ctx);
+            }
+            v.push_back(p.popData.atv.containingBlock);
+            p.popData.atv.context.clear();
+        }
+        std::sort(v.begin(), v.end(), cmp);
+        v.erase(std::unique(v.begin(), v.end()), v.end());
+    }
 
     return true;
 }

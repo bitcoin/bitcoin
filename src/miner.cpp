@@ -463,6 +463,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
 
             if (nPopTx < config.max_pop_tx_amount) {
                 altintegration::AltPayloads p;
+                p.containingBlock = dummyContainingBlock;
                 altintegration::ValidationState _state;
                 // do a stateless validation of pop payloads
                 if (!VeriBlock::parseTxPopPayloadsImpl(iter->GetTx(), chainparams.GetConsensus(), txstate, p)) {
