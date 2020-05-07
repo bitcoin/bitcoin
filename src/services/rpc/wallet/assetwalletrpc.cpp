@@ -514,28 +514,22 @@ UniValue CreateAssetUpdateTx(const int32_t& nVersionIn, const uint32_t &nAsset, 
         recp = *recpIn;
     }
     else {
-        recp = { GetScriptForDestination(dest), nGas, true };  
+        recp = { GetScriptForDestination(dest), nGas, false };  
+    }
+    // if enough for change + max fee, we try to take fee from this output
+    if(nGas > (MIN_CHANGE + pwallet->m_default_max_tx_fee)) {
+        recp.fSubtractFeeFromAmount = true;
     }
     // order matters here as vecSend is in sync with asset commitment, it may change later when
     // change is added but it will resync the commitment there
     vecSend.push_back(recp);
     vecSend.push_back(opreturnRecipient);
-    std::set<int> setSubtractFeeFromOutputs;
     CMutableTransaction mtx;
-    for(unsigned i =0;i<vecSend.size();i++) {
-        CTxOut txOut(vecSend[i].nAmount, vecSend[i].scriptPubKey);
-        if(txOut.nValue < COIN) {
-            txOut.nValue = GetDustThreshold(txOut, GetDiscardRate(*pwallet));
-        }
-        else if(vecSend[i].fSubtractFeeFromAmount)
-            setSubtractFeeFromOutputs.insert(i);
-        mtx.vout.push_back(txOut);
-    }
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
     coin_control.Select(inputCoin.outpoint);
-    coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
+    coin_control.fAllowOtherInputs = !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     mtx.nVersion = nVersionIn;
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
