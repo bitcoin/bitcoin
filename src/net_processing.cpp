@@ -1609,8 +1609,16 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
 }
 
 //! Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed).
-CTransactionRef static FindTxForGetData(const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds longlived_mempool_time) LOCKS_EXCLUDED(cs_main)
+CTransactionRef static FindTxForGetData(CNode* peer, const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds longlived_mempool_time) LOCKS_EXCLUDED(cs_main)
 {
+    // Check if the requested transaction is so recent that we're just
+    // about to announce it to the peer; if so, they certainly shouldn't
+    // know we already have it.
+    {
+        LOCK(peer->m_tx_relay->cs_tx_inventory);
+        if (peer->m_tx_relay->setInventoryTxToSend.count(txid)) return {};
+    }
+
     {
         LOCK(cs_main);
         // Look up transaction in relay pool
@@ -1661,7 +1669,7 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             continue;
         }
 
-        CTransactionRef tx = FindTxForGetData(inv.hash, mempool_req, longlived_mempool_time);
+        CTransactionRef tx = FindTxForGetData(pfrom, inv.hash, mempool_req, longlived_mempool_time);
         if (tx) {
             int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
             connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
