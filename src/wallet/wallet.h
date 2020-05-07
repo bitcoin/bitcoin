@@ -897,8 +897,6 @@ public:
     DBErrors ReorderTransactions();
 
     void MarkDirty();
-    // SYSCOIN
-    void transactionAddedToMempool(const CTransactionRef& tx, bool fBlock) override;
     //! Callback for updating transaction metadata in mapWallet.
     //!
     //! @param wtx - reference to mapWallet transaction to update
@@ -909,7 +907,8 @@ public:
 
     CWalletTx* AddToWallet(CTransactionRef tx, const CWalletTx::Confirmation& confirm, const UpdateWalletTxFn& update_wtx=nullptr, bool fFlushOnClose=true);
     bool LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void transactionAddedToMempool(const CTransactionRef& tx) override;
+    // SYSCOIN
+    void transactionAddedToMempool(const CTransactionRef& tx, bool fBlock) override;
     void blockConnected(const CBlock& block, int height) override;
     void blockDisconnected(const CBlock& block, int height) override;
     void updatedBlockTip() override;

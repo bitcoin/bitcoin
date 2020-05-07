@@ -2922,7 +2922,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                     coin_selection_params.effective_fee = nFeeRateNeeded;
                     // SYSCOIN
                     CAmount nValueToSelectPlusAssetChange = nValueToSelect;
-                    if(coin_control.assetInfo) {
+                    if(!coin_selection_params.m_subtract_fee_outputs && coin_control.assetInfo) {
                         nValueToSelectPlusAssetChange += GetDustThreshold(change_prototype_txout, discard_rate);
                     }
                     if (!SelectCoins(vAvailableCoins, nValueToSelectPlusAssetChange, nValueToSelectAsset, setCoins, nValueIn, nValueInAsset, coin_control, coin_selection_params, bnb_used))
