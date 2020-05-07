@@ -1058,22 +1058,12 @@ void MaybeCompactWalletDB(WalletContext& context)
         return;
     }
 
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
-        WalletDatabase& dbh = pwallet->GetDatabase();
+    auto nStart = GetTimeMillis();
 
-        unsigned int nUpdateCounter = dbh.nUpdateCounter;
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context))
+        pwallet->GetDatabase().PeriodicFlush();
 
-        if (dbh.nLastSeen != nUpdateCounter) {
-            dbh.nLastSeen = nUpdateCounter;
-            dbh.nLastWalletUpdate = GetTime();
-        }
-
-        if (dbh.nLastFlushed != nUpdateCounter && GetTime() - dbh.nLastWalletUpdate >= 2) {
-            if (dbh.PeriodicFlush()) {
-                dbh.nLastFlushed = nUpdateCounter;
-            }
-        }
-    }
+    LogPrint(BCLog::WALLETDB, "Flushed db(s) in %dms\n", GetTimeMillis() - nStart);
 
     fOneThread = false;
 }

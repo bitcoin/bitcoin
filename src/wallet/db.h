@@ -106,8 +106,8 @@ class WalletDatabase
 {
 public:
     /** Create dummy DB handle */
-    WalletDatabase() : nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0) {}
-    virtual ~WalletDatabase() {};
+    WalletDatabase() {}
+    virtual ~WalletDatabase() {}
 
     /** Open the database if it is not already opened. */
     virtual void Open() = 0;
@@ -147,10 +147,8 @@ public:
 
     virtual std::string Format() = 0;
 
-    std::atomic<unsigned int> nUpdateCounter;
-    unsigned int nLastSeen;
-    unsigned int nLastFlushed;
-    int64_t nLastWalletUpdate;
+    std::atomic<unsigned int> nUpdateCounter{0};
+
 
     /** Make a DatabaseBatch connected to this database */
     virtual std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) = 0;

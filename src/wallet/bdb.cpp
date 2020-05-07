@@ -589,16 +589,10 @@ bool BerkeleyDatabase::PeriodicFlush()
     // Don't flush if there haven't been any batch writes for this database.
     if (m_refcount < 0) return false;
 
-    const std::string strFile = fs::PathToString(m_filename);
-    LogPrint(BCLog::WALLETDB, "Flushing %s\n", strFile);
-    const auto start{SteadyClock::now()};
-
-    // Flush wallet file so it's self contained
-    env->CloseDb(m_filename);
-    env->CheckpointLSN(strFile);
-    m_refcount = -1;
-
-    LogPrint(BCLog::WALLETDB, "Flushed %s %dms\n", strFile, Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
+    // we don't need to move tdb from one environment to another
+    // but instead to flush the underlying memory pool,
+    // write a checkpoint record to the log and to flush it
+    env->dbenv->txn_checkpoint(0, 0, 0);
 
     return true;
 }
