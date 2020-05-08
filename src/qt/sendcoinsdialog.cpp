@@ -370,7 +370,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     return true;
 }
 
-void SendCoinsDialog::on_sendButton_clicked()
+void SendCoinsDialog::sendButtonClickedHelper()
 {
     if(!model || !model->getOptionsModel())
         return;
@@ -459,6 +459,11 @@ void SendCoinsDialog::on_sendButton_clicked()
     }
     fNewRecipientAllowed = true;
     m_current_transaction.reset();
+}
+
+void SendCoinsDialog::on_sendButton_clicked()
+{
+    GUIUtil::shieldException([&] { sendButtonClickedHelper(); });
 }
 
 void SendCoinsDialog::clear()
