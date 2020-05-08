@@ -17,6 +17,6 @@ sudo apt-get install libdb-dev libdb++-dev
 sudo apt-get install libminiupnpc-dev
 
 ./autogen.sh
-./configure --with-miniupnpc --enable-upnp-default # --prefix=`pwd`/depends/x86_64-linux-gnu
+./configure --with-miniupnpc --enable-upnp-default --with-incompatible-bdb # --prefix=`pwd`/depends/x86_64-linux-gnu
 make -j8
 ./run.sh
