@@ -1,0 +1,1 @@
+POW_PAYOUT = 30

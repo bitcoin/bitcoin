@@ -1728,11 +1728,8 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     }
 
     auto prevHash = pindex->pprev->GetBlockHash();
-    altintegration::ValidationState _state;
-    if (!VeriBlock::getService<VeriBlock::PopService>().setState(prevHash, _state)) {
-        error("DisconnectBlock(): setState failed");
-        return DISCONNECT_FAILED;
-    }
+    altintegration::ValidationState state;
+    VeriBlock::getService<VeriBlock::PopService>().setState(prevHash, state);
 
     // move best block pointer to prevout block
     view.SetBestBlock(prevHash);
@@ -4161,6 +4158,11 @@ bool BlockManager::LoadBlockIndex(
             pindex->BuildSkip();
         if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == nullptr || CBlockIndexWorkComparator()(pindexBestHeader, pindex)))
             pindexBestHeader = pindex;
+
+        BlockValidationState state;
+        if(!VeriBlock::getService<VeriBlock::PopService>().acceptBlock(*pindex, state)){
+            return false;
+        }
     }
 
     return true;

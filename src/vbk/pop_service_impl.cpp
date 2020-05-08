@@ -460,7 +460,6 @@ bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& par
             "[ " + txhash.ToString() + "]: endorsed block " + endorsedHeader.GetHash().ToString() + " is missing");
     }
 
-    payloads.containingTx = altintegration::uint256(txhash.asVector());
     payloads.endorsed = blockToAltBlock(*endorsedIndex);
 
     // HACK: fill vbk_context here. Remove when mempool is added.
