@@ -102,7 +102,7 @@ bool WalletInit::ParameterInteraction() const
 
         return true;
     } else if (gArgs.IsArgSet("-masternodeblsprivkey")) {
-        return InitError(_("You can not start a masternode with wallet enabled.").translated);
+        return InitError(_("You can not start a masternode with wallet enabled."));
     }
 
     const bool is_multiwallet = gArgs.GetArgs("-wallet").size() > 1;
@@ -120,7 +120,7 @@ bool WalletInit::ParameterInteraction() const
     // -zapwallettxes implies a rescan
     if (zapwallettxes) {
         if (is_multiwallet) {
-            return InitError(strprintf("%s is only allowed with a single wallet file", "-zapwallettxes"));
+            return InitError(strprintf(Untranslated("%s is only allowed with a single wallet file"), "-zapwallettxes"));
         }
         if (gArgs.SoftSetBoolArg("-rescan", true)) {
             LogPrintf("%s: parameter interaction: -zapwallettxes enabled -> setting -rescan=1\n", __func__);
@@ -136,14 +136,14 @@ bool WalletInit::ParameterInteraction() const
 
     if (is_multiwallet) {
         if (gArgs.GetBoolArg("-upgradewallet", false)) {
-            return InitError(strprintf("%s is only allowed with a single wallet file", "-upgradewallet"));
+            return InitError(strprintf(_("%s is only allowed with a single wallet file"), "-upgradewallet"));
         }
     }
 
     if (gArgs.GetBoolArg("-sysperms", false))
-        return InitError("-sysperms is not allowed in combination with enabled wallet functionality");
+        return InitError(Untranslated("-sysperms is not allowed in combination with enabled wallet functionality"));
     if (gArgs.GetArg("-prune", 0) && gArgs.GetBoolArg("-rescan", false))
-        return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.").translated);
+        return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
 
     if (gArgs.IsArgSet("-walletbackupsdir")) {
         if (!fs::is_directory(gArgs.GetArg("-walletbackupsdir", ""))) {
@@ -226,7 +226,7 @@ bool WalletInit::ParameterInteraction() const
     // end PrivateSend -> CoinJoin migration
 
     if (gArgs.GetArg("-coinjoindenomshardcap", DEFAULT_COINJOIN_DENOMS_HARDCAP) < gArgs.GetArg("-coinjoindenomsgoal", DEFAULT_COINJOIN_DENOMS_GOAL)) {
-        return InitError(strprintf(_("%s can't be lower than %s").translated, "-coinjoindenomshardcap", "-coinjoindenomsgoal"));
+        return InitError(strprintf(_("%s can't be lower than %s"), "-coinjoindenomshardcap", "-coinjoindenomsgoal"));
     }
 
     return true;

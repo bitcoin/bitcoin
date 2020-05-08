@@ -23,6 +23,7 @@ class CFeeRate;
 class CBlockIndex;
 class Coin;
 class uint256;
+struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
 enum class MemPoolRemovalReason;
@@ -216,7 +217,7 @@ public:
     virtual void initWarning(const std::string& message) = 0;
 
     //! Send init error.
-    virtual void initError(const std::string& message) = 0;
+    virtual void initError(const bilingual_str& message) = 0;
 
     //! Send wallet load notification to the GUI.
     virtual void loadWallet(std::unique_ptr<Wallet> wallet) = 0;
