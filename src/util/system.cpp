@@ -285,6 +285,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
     m_settings.command_line_options.clear();
 
     for (int i = 1; i < argc; i++) {
+        assert(argv[i]); // system.cpp fuzzer throws UB errors, see PR #18908
         std::string key(argv[i]);
 
 #ifdef MAC_OSX
