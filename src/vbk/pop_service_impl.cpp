@@ -173,11 +173,11 @@ bool PopServiceImpl::validatePopTx(const CTransaction& tx, TxValidationState& st
         }
     }
 
-//    // check size
-//    auto& config = getService<Config>();
-//    if (::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > config.max_pop_tx_weight) {
-//        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-txns-oversize");
-//    }
+    //    // check size
+    //    auto& config = getService<Config>();
+    //    if (::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > config.max_pop_tx_weight) {
+    //        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-txns-oversize");
+    //    }
 
     return true;
 }
@@ -300,7 +300,7 @@ bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char
     auto& altp = *config.popconfig.alt;
     auto& vbkp = *config.popconfig.vbk.params;
     auto& btcp = *config.popconfig.btc.params;
-    altintegration::AltPayloads publication;
+    altintegration::PopData popdata;
 
     try {
         while (pc < pend) {
@@ -316,7 +316,7 @@ bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char
             switch (opcode) {
             case OP_CHECKATV: {
                 // tx has zero or one ATV
-                if (publication.popData.hasAtv) {
+                if (popdata.hasAtv) {
                     return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
                 }
 
@@ -328,9 +328,9 @@ bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char
 
                 // validate ATV content
                 try {
-                    publication.popData.atv = altintegration::ATV::fromVbkEncoding(el);
-                    publication.popData.hasAtv = true;
-                    if (with_checks && !altintegration::checkATV(publication.popData.atv, state, altp, vbkp)) {
+                    popdata.atv = altintegration::ATV::fromVbkEncoding(el);
+                    popdata.hasAtv = true;
+                    if (with_checks && !altintegration::checkATV(popdata.atv, state, altp, vbkp)) {
                         return set_error(serror, SCRIPT_ERR_VBK_ATVFAIL);
                     }
                 } catch (...) {
@@ -352,7 +352,7 @@ bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char
                     if (with_checks && !altintegration::checkVTB(vtb, state, vbkp, btcp)) {
                         return set_error(serror, SCRIPT_ERR_VBK_VTBFAIL);
                     }
-                    publication.popData.vtbs.push_back(std::move(vtb));
+                    popdata.vtbs.push_back(std::move(vtb));
                 } catch (...) {
                     return set_error(serror, SCRIPT_ERR_VBK_VTBFAIL);
                 }
@@ -387,7 +387,7 @@ bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char
 
     // set return value of publications
     if (pub != nullptr) {
-        *pub = publication;
+        pub->popData = popdata;
     }
 
     return true;
@@ -468,7 +468,7 @@ bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& par
         auto& p = payloads;
         // extract VBK context
         auto cmp = [](const altintegration::VbkBlock& a, const altintegration::VbkBlock& b) {
-          return a.height < b.height;
+            return a.height < b.height;
         };
         auto& v = p.popData.vbk_context;
         for (auto& vtb : p.popData.vtbs) {

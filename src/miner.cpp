@@ -463,7 +463,6 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
 
             if (nPopTx < config.max_pop_tx_amount) {
                 altintegration::AltPayloads p;
-                p.containingBlock = dummyContainingBlock;
                 altintegration::ValidationState _state;
                 // do a stateless validation of pop payloads
                 if (!VeriBlock::parseTxPopPayloadsImpl(iter->GetTx(), chainparams.GetConsensus(), txstate, p)) {
@@ -473,6 +472,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
                     refreshDummy({p});
                     continue;
                 }
+                p.containingBlock = dummyContainingBlock;
                 if (!altTree.addPayloads(dummyContainingBlock, {p}, _state) || !altTree.setState(dummyContainingBlock.hash, _state)) {
                     LogPrint(BCLog::POP, "VeriBlock-PoP: %s: tx %s is statefully invalid: %s\n", __func__, iter->GetTx().GetHash().ToString(), _state.toString());
                     failedTx.insert(iter);
