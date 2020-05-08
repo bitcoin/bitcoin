@@ -7,16 +7,22 @@
 
 #include <amount.h>
 #include <fs.h>
+#include <util/check.h>
+#include <util/system.h>
 
+#include <QApplication>
 #include <QEvent>
 #include <QHeaderView>
 #include <QItemDelegate>
 #include <QMessageBox>
+#include <QMetaObject>
 #include <QObject>
 #include <QProgressBar>
 #include <QString>
 #include <QTableView>
 #include <QLabel>
+
+#include <cassert>
 
 class QValidatedLineEdit;
 class SendCoinsRecipient;
@@ -273,6 +279,30 @@ namespace GUIUtil
      * Writes to debug.log short info about the used Qt and the host system.
      */
     void LogQtInfo();
+
+    /**
+     * Throwing an exception from a slot invoked by Qt's signal-slot connection
+     * mechanism is considered undefined behavior, unless it is handled within
+     * the slot. The shieldException() function should be used for exception
+     * handling within slots.
+     */
+    template <typename FunctionType> void shieldException(FunctionType&& f) {
+        bool ok = true;
+        try {
+            f();
+        } catch (const NonFatalCheckError& e) {
+            PrintExceptionContinue(&e, "Internal error");
+            ok = QMetaObject::invokeMethod(qApp, "handleNonFatalException", blockingGUIThreadConnection(), Q_ARG(QString, QString::fromStdString(e.what())));
+        } catch (const std::exception& e) {
+            PrintExceptionContinue(&e, "Runaway exception");
+            ok = QMetaObject::invokeMethod(qApp, "handleRunawayException", blockingGUIThreadConnection(), Q_ARG(QString, QString::fromStdString(e.what())));
+        } catch (...) {
+            PrintExceptionContinue(nullptr, "Runaway exception");
+            ok = QMetaObject::invokeMethod(qApp, "handleRunawayException", blockingGUIThreadConnection(), Q_ARG(QString, QString("Unknown failure occurred.")));
+        }
+        assert(ok);
+    }
+
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

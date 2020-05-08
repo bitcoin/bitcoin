@@ -95,6 +95,7 @@ public Q_SLOTS:
     void shutdownResult();
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
     void handleRunawayException(const QString &message);
+    void handleNonFatalException(const QString& exception_message);
 
 Q_SIGNALS:
     void requestedInitialize();

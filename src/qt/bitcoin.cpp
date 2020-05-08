@@ -385,6 +385,12 @@ void BitcoinApplication::handleRunawayException(const QString &message)
     ::exit(EXIT_FAILURE);
 }
 
+void BitcoinApplication::handleNonFatalException(const QString& exception_message)
+{
+    assert(QThread::currentThread() == qApp->thread());
+    QMessageBox::warning(nullptr, "Internal error", exception_message);
+}
+
 WId BitcoinApplication::getMainWinId() const
 {
     if (!window)
