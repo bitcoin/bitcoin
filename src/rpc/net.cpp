@@ -1248,7 +1248,7 @@ static UniValue forcerealfake(const JSONRPCRequest& request)
         CNodeStateStats statestats;
         bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
         if (fStateStats) {
-            result.pushKV(stats.addr, statestats.nMisbehavior);
+            result.pushKV(stats.addrName, statestats.nMisbehavior);
         }
     }
 
