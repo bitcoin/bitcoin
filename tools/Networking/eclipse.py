@@ -538,10 +538,13 @@ def cleanup_iptables():
 # Remove all ip aliases that were created by the script
 def cleanup_ipaliases():
 	for i in range(0, len(identity_address)):
-		ip = identity_address[i][0]
-		interface = identity_interface[i]
-		print(f'Cleaning up IP alias {ip} on {interface}')
-		terminal(f'sudo ifconfig {interface} {ip} down')
+		try: ip = identity_address[i][0]
+		except: ip = None
+		try: interface = identity_interface[i]
+		except: interface = None
+		if interface is not None and ip is not None:
+			print(f'Cleaning up IP alias {ip} on {interface}')
+			terminal(f'sudo ifconfig {interface} {ip} down')
 
 # Run a fuction in parallel to other code
 class Task(threading.Thread):
@@ -562,7 +565,7 @@ class Task(threading.Thread):
 	def run(self):
 		if self.send_thread: self.function(self, *self.args)
 		else: self.function(*self.args)
-		
+
 		self._stop_event.set()
 
 	def stop(self):
