@@ -562,6 +562,7 @@
        </item>
       </layout>
      </widget>
+	 
      <widget class="QWidget" name="tabWindow">
       <attribute name="title">
        <string>&amp;Window</string>
@@ -612,7 +613,8 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tabDisplay">
+	 
+	 <widget class="QWidget" name="tabDisplay">
       <attribute name="title">
        <string>&amp;Display</string>
       </attribute>
@@ -707,6 +709,55 @@
        </item>
       </layout>
      </widget>
+	 
+	 <widget class="QWidget" name="tabBFI">
+      <attribute name="title">
+       <string>&amp;BFI Setup</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_BFI">
+       
+	    <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_BFI">
+         <item>
+          <widget class="QLabel" name="bfiInfoLabel">
+           <property name="toolTip">
+            <string>........ This is the data tool tip </string>
+           </property>
+           <property name="text">
+            <string>&amp;this is the explanation</string>
+           </property>
+           
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="bfiDataSourceUrls">
+           <property name="toolTip">
+            <string>... tool tip </string>
+           </property>
+           <property name="placeholderText">
+            <string notr="true">https://example.com/tx/%s</string>
+           </property>
+          </widget>
+         </item>
+		 
+       <item>
+        <spacer name="verticalSpacer_BFI">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+	  </item>
+	  </layout>
+     </widget>
+     
     </widget>
    </item>
    <item>
