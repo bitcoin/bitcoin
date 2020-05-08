@@ -8,6 +8,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/csvmodelwriter.h>
 #include <qt/editaddressdialog.h>
+#include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/transactiondescdialog.h>
@@ -420,7 +421,7 @@ void TransactionView::abandonTx()
     model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
 }
 
-void TransactionView::bumpFee()
+void TransactionView::bumpFeeHelper()
 {
     if(!transactionView || !transactionView->selectionModel())
         return;
@@ -441,6 +442,11 @@ void TransactionView::bumpFee()
         qApp->processEvents();
         Q_EMIT bumpedFee(newHash);
     }
+}
+
+void TransactionView::bumpFee()
+{
+    GUIUtil::shieldException([&] { bumpFeeHelper(); });
 }
 
 void TransactionView::copyAddress()

@@ -85,6 +85,7 @@ private:
     virtual void resizeEvent(QResizeEvent* event) override;
 
     bool eventFilter(QObject *obj, QEvent *event) override;
+    void bumpFeeHelper();
 
 private Q_SLOTS:
     void contextualMenu(const QPoint &);
