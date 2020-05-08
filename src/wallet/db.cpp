@@ -268,21 +268,14 @@ BerkeleyEnvironment::BerkeleyEnvironment()
     fMockDb = true;
 }
 
-BerkeleyEnvironment::VerifyResult BerkeleyEnvironment::Verify(const std::string& strFile, recoverFunc_type recoverFunc, std::string& out_backup_filename)
+bool BerkeleyEnvironment::Verify(const std::string& strFile)
 {
     LOCK(cs_db);
     assert(mapFileUseCount.count(strFile) == 0);
 
     Db db(dbenv.get(), 0);
     int result = db.verify(strFile.c_str(), nullptr, nullptr, 0);
-    if (result == 0)
-        return VerifyResult::VERIFY_OK;
-    else if (recoverFunc == nullptr)
-        return VerifyResult::RECOVER_FAIL;
-
-    // Try to recover:
-    bool fRecovered = (*recoverFunc)(fs::path(strPath) / strFile, out_backup_filename);
-    return (fRecovered ? VerifyResult::RECOVER_OK : VerifyResult::RECOVER_FAIL);
+    return result == 0;
 }
 
 BerkeleyBatch::SafeDbt::SafeDbt()
@@ -410,7 +403,7 @@ bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, bilingual_str& 
     return true;
 }
 
-bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, std::vector<bilingual_str>& warnings, bilingual_str& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc)
+bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, bilingual_str& errorStr)
 {
     std::string walletFile;
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, walletFile);
@@ -418,19 +411,8 @@ bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, std::vector<bi
 
     if (fs::exists(walletDir / walletFile))
     {
-        std::string backup_filename;
-        BerkeleyEnvironment::VerifyResult r = env->Verify(walletFile, recoverFunc, backup_filename);
-        if (r == BerkeleyEnvironment::VerifyResult::RECOVER_OK)
-        {
-            warnings.push_back(strprintf(_("Warning: Wallet file corrupt, data salvaged!"
-                                     " Original %s saved as %s in %s; if"
-                                     " your balance or transactions are incorrect you should"
-                                     " restore from a backup."),
-                walletFile, backup_filename, walletDir));
-        }
-        if (r == BerkeleyEnvironment::VerifyResult::RECOVER_FAIL)
-        {
-            errorStr = strprintf(_("%s corrupt, salvage failed"), walletFile);
+        if (!env->Verify(walletFile)) {
+            errorStr = strprintf(_("%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup."), walletFile);
             return false;
         }
     }

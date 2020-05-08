@@ -922,9 +922,9 @@ bool WalletBatch::VerifyEnvironment(const fs::path& wallet_path, bilingual_str& 
     return BerkeleyBatch::VerifyEnvironment(wallet_path, errorStr);
 }
 
-bool WalletBatch::VerifyDatabaseFile(const fs::path& wallet_path, std::vector<bilingual_str>& warnings, bilingual_str& errorStr)
+bool WalletBatch::VerifyDatabaseFile(const fs::path& wallet_path, bilingual_str& errorStr)
 {
-    return BerkeleyBatch::VerifyDatabaseFile(wallet_path, warnings, errorStr, WalletBatch::Recover);
+    return BerkeleyBatch::VerifyDatabaseFile(wallet_path, errorStr);
 }
 
 bool WalletBatch::WriteDestData(const std::string &address, const std::string &key, const std::string &value)
