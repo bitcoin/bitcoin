@@ -3795,10 +3795,10 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
         return error("%s: %s", __func__, FormatStateMessage(state));
     }
 
-    int popComparison = 0;
-    if(m_chain.Tip()) {
-        popComparison = VeriBlock::getService<VeriBlock::PopService>().compareForks(*m_chain.Tip(), *pindex);
-    }
+//    int popComparison = 0;
+//    if(m_chain.Tip()) {
+//        popComparison = VeriBlock::getService<VeriBlock::PopService>().compareForks(*m_chain.Tip(), *pindex);
+//    }
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
