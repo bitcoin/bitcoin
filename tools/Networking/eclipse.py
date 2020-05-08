@@ -199,16 +199,21 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		make_fake_connection(random_ip(), dst_ip, False, attempt_number - 1)
 		return
 
-	# Send version packet
-	version = version_packet(src_ip, dst_ip, src_port, dst_port)
-	s.sendall(version.to_bytes())
-	# Get verack packet
-	verack = s.recv(1924)
-	# Send verack packet
-	verack = msg_verack(bitcoin_protocolversion)
-	s.sendall(verack.to_bytes())
-	# Get verack packet
-	verack = s.recv(1024)
+	try:
+		# Send version packet
+		version = version_packet(src_ip, dst_ip, src_port, dst_port)
+		s.sendall(version.to_bytes())
+		# Get verack packet
+		verack = s.recv(1924)
+		# Send verack packet
+		verack = msg_verack(bitcoin_protocolversion)
+		s.sendall(verack.to_bytes())
+		# Get verack packet
+		verack = s.recv(1024)
+	except:
+		print('Failed to connect')
+		close_connection(s, None, src_ip, src_port, interface)
+		make_fake_connection(random_ip(), dst_ip, False, attempt_number - 1)
 
 	if verbose: print('Connection successful!')
 
@@ -320,7 +325,7 @@ def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, int
 			packet = socket.recv(65565)
 			create_task('Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
 		except: time.sleep(1)
-	close_connection(socket, mirror_socket, dst_ip, dst_port, interface)
+	close_connection(socket, None, dst_ip, dst_port, interface)
 	#close_connection(mirror_socket, socket, src_ip, src_port, interface)
 
 def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
@@ -329,7 +334,7 @@ def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port
 			packet = socket.recv(65565)
 			create_task('Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
 		except: time.sleep(1)
-	close_connection(socket, orig_socket, src_ip, src_port, interface)
+	close_connection(socket, None, src_ip, src_port, interface)
 	#close_connection(orig_socket, socket, dst_ip, dst_port, interface)
 
 # Called when a packet is sniffed from the network
