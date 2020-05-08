@@ -249,7 +249,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
 
 	close_connection(the_socket, other_socket, src_ip, src_port, interface)
-	make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 3):
+	make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 3)
 	"""
 	src_port = random.randint(1024, 65535)
 	dst_port = victim_port
