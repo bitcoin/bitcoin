@@ -1201,7 +1201,69 @@ static UniValue list(const JSONRPCRequest& request)
     return result;
 }
 
+// Cybersecurity Lab
+static UniValue forcerealfake(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 2)
+        throw std::runtime_error(
+            RPCHelpMan{"forcerealfake",
+                "\nOnly allow X real connections, and Y fake connections. Disconnects if there are too many.\n",
+                {
+                  {"real", RPCArg::Type::STR, RPCArg::Optional::NO, "Number of real IPs to have"},
+                  {"fake", RPCArg::Type::STR, RPCArg::Optional::NO, "Number of IP that start with \"10.0\" to have"},
+                },
+                RPCResults{},
+                RPCExamples{
+                    HelpExampleCli("forcerealfake", "")
+            + HelpExampleRpc("forcerealfake", "")
+                },
+            }.ToString());
 
+    if(!g_rpc_node->connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    UniValue result(UniValue::VOBJ);
+
+    std::string realStr = request.params[0].get_str();
+    std::string fakeStr = request.params[1].get_str();
+
+    int real = 0,fake  = 0;
+    try {
+      real = std::stoi(realStr);
+    } catch(...) {
+      result.pushKV("Invalid real number", realStr);
+      return result;
+    }
+    try {
+      fake = std::stoi(fakeStr);
+    } catch(...) {
+      result.pushKV("Invalid fake number", realStr);
+      return result;
+    }
+
+    std::vector<CNodeStats> vstats;
+    g_rpc_node->connman->GetNodeStats(vstats);
+
+    for (const CNodeStats& stats : vstats) {
+        CNodeStateStats statestats;
+        bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
+        if (fStateStats) {
+            result.pushKV(stats.addr, statestats.nMisbehavior);
+        }
+    }
+
+    return result;
+}
+
+
+/*bool success = g_rpc_node->connman->DisconnectNode(ipAddress + ":" + std::to_string(port));
+
+if(!success) {
+  result.pushKV(ipAddress + ":" + std::to_string(port), "Failed");
+  return result;
+} else {
+  result.pushKV(ipAddress + ":" + std::to_string(port), "Successful");
+}*/
 
 // Cybersecurity Lab
 static UniValue toggleLog(const JSONRPCRequest& request)
