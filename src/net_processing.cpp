@@ -746,13 +746,18 @@ std::chrono::microseconds CalculateTxGetDataTime(const uint256& txid, std::chron
 {
     std::chrono::microseconds process_time;
     const auto last_request_time = GetTxRequestTime(txid);
-    // First time requesting this tx
     if (last_request_time.count() == 0) {
+        // This peer has just announced the tx. Consider requesting now.
         process_time = current_time;
     } else {
-        // Randomize the delay to avoid biasing some peers over others (such as due to
-        // fixed ordering of peer processing in ThreadMessageHandler)
-        process_time = last_request_time + GETDATA_TX_INTERVAL + GetRandMicros(MAX_GETDATA_RANDOM_DELAY);
+        // We're requeuing when we'll consider requesting from this peer.
+        // Randomize the delay to avoid biasing some peers over others (such as
+        // due to fixed ordering of peer processing in ThreadMessageHandler)
+        std::chrono::microseconds next_process_time = GetPoissonRand(current_time, std::chrono::seconds(20));
+        // The time we reconsider requesting should be no more than 2 seconds
+        // after the previous request timeout. Again, add some randomness to
+        // spread out requests and randomize order.
+        process_time = std::min(last_request_time + GETDATA_TX_INTERVAL + GetRandMicros(MAX_GETDATA_RANDOM_DELAY), next_process_time);
     }
 
     // We delay processing announcements from inbound peers
@@ -4109,10 +4114,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     UpdateTxRequestTime(inv.hash, current_time);
                     state.m_tx_download.m_tx_in_flight.emplace(inv.hash, current_time);
                 } else {
-                    // This transaction is in flight from someone else; queue
-                    // up processing to happen after the download times out
-                    // (with a slight delay for inbound peers, to prefer
-                    // requests to outbound peers).
+                    // This transaction is in flight from someone else; Set a
+                    // new time to reconsider downloading from this peer.
                     const auto next_process_time = CalculateTxGetDataTime(txid, current_time, !state.fPreferredDownload);
                     tx_process_time.emplace(next_process_time, txid);
                 }
