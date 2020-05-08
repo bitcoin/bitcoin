@@ -345,7 +345,7 @@ public:
     int64_t getAdjustedTime() override { return GetAdjustedTime(); }
     void initMessage(const std::string& message) override { ::uiInterface.InitMessage(message); }
     void initWarning(const std::string& message) override { InitWarning(message); }
-    void initError(const std::string& message) override { InitError(message); }
+    void initError(const bilingual_str& message) override { InitError(message); }
     void showProgress(const std::string& title, int progress, bool resume_possible) override
     {
         ::uiInterface.ShowProgress(title, progress, resume_possible);

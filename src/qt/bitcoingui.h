@@ -216,13 +216,14 @@ public Q_SLOTS:
     void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
 
     /** Notify the user of an event from the core network or transaction handling code.
-       @param[in] title     the message box / notification title
-       @param[in] message   the displayed text
-       @param[in] style     modality and style definitions (icon and used buttons - buttons only for message boxes)
-                            @see CClientUIInterface::MessageBoxFlags
-       @param[in] ret       pointer to a bool that will be modified to whether Ok was clicked (modal only)
+       @param[in] title             the message box / notification title
+       @param[in] message           the displayed text
+       @param[in] style             modality and style definitions (icon and used buttons - buttons only for message boxes)
+                                    @see CClientUIInterface::MessageBoxFlags
+       @param[in] ret               pointer to a bool that will be modified to whether Ok was clicked (modal only)
+       @param[in] detailed_message  the text to be displayed in the details area
     */
-    void message(const QString& title, QString message, unsigned int style, bool* ret = nullptr);
+    void message(const QString& title, QString message, unsigned int style, bool* ret = nullptr, const QString& detailed_message = QString());
 
 #ifdef ENABLE_WALLET
     void setCurrentWallet(WalletModel* wallet_model);

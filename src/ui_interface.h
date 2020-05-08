@@ -11,6 +11,8 @@
 #include <string>
 
 class CBlockIndex;
+struct bilingual_str;
+
 namespace boost {
 namespace signals2 {
 class connection;
@@ -82,10 +84,10 @@ public:
     boost::signals2::connection signal_name##_connect(std::function<signal_name##Sig> fn);
 
     /** Show message box. */
-    ADD_SIGNALS_DECL_WRAPPER(ThreadSafeMessageBox, bool, const std::string& message, const std::string& caption, unsigned int style);
+    ADD_SIGNALS_DECL_WRAPPER(ThreadSafeMessageBox, bool, const bilingual_str& message, const std::string& caption, unsigned int style);
 
     /** If possible, ask the user a question. If not, falls back to ThreadSafeMessageBox(noninteractive_message, caption, style) and returns false. */
-    ADD_SIGNALS_DECL_WRAPPER(ThreadSafeQuestion, bool, const std::string& message, const std::string& noninteractive_message, const std::string& caption, unsigned int style);
+    ADD_SIGNALS_DECL_WRAPPER(ThreadSafeQuestion, bool, const bilingual_str& message, const std::string& noninteractive_message, const std::string& caption, unsigned int style);
 
     /** Progress message during initialization. */
     ADD_SIGNALS_DECL_WRAPPER(InitMessage, void, const std::string& message);
@@ -118,10 +120,11 @@ public:
 };
 
 /** Show warning message **/
+// TODO: InitWarning() should take a bilingual_str parameter.
 void InitWarning(const std::string& str);
 
 /** Show error message **/
-bool InitError(const std::string& str);
+bool InitError(const bilingual_str& str);
 
 extern CClientUIInterface uiInterface;
 
