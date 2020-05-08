@@ -559,7 +559,7 @@ class Task(threading.Thread):
 		return f'Task({self.name})'
 
 	def run(self):
-		self.function(self, *self.args)
+		self.function(*self.args)
 		self._stop_event.set()
 
 	def stop(self):
