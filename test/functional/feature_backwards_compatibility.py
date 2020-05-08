@@ -6,7 +6,11 @@
 
 Test various backwards compatibility scenarios. Download the previous node binaries:
 
-contrib/devtools/previous_release.sh -b v0.19.0.1 v0.18.1 v0.17.1
+contrib/devtools/previous_release.sh -b v0.19.1 v0.18.1 v0.17.1 v0.16.3 v0.15.2
+
+v0.15.2 is not required by this test, but it is used in wallet_upgradewallet.py.
+Due to a hardfork in regtest, it can't be used to sync nodes.
+
 
 Due to RPC changes introduced in various versions the below tests
 won't work for older versions without some patches or workarounds.
@@ -22,6 +26,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
 
 from test_framework.util import (
+    adjust_bitcoin_conf_for_pre_17,
     assert_equal,
     sync_blocks,
     sync_mempools,
@@ -31,14 +36,15 @@ from test_framework.util import (
 class BackwardsCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 5
+        self.num_nodes = 6
         # Add new version after each release:
         self.extra_args = [
             ["-addresstype=bech32"], # Pre-release: use to mine blocks
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # Pre-release: use to receive coins, swap wallets, etc
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.19.0.1
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.19.1
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.18.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"] # v0.17.1
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.17.1
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.16.3
         ]
 
     def skip_test_if_missing_module(self):
@@ -49,10 +55,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
             None,
             None,
-            190001,
+            190100,
             180100,
             170100,
+            160300,
         ])
+        # adapt bitcoin.conf, because older bitcoind's don't recognize config sections
+        adjust_bitcoin_conf_for_pre_17(self.nodes[5].bitcoinconf)
 
         self.start_nodes()
 
@@ -65,10 +74,11 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         res = self.nodes[self.num_nodes - 1].getblockchaininfo()
         assert_equal(res['blocks'], 101)
 
-        node_master = self.nodes[self.num_nodes - 4]
-        node_v19 = self.nodes[self.num_nodes - 3]
-        node_v18 = self.nodes[self.num_nodes - 2]
-        node_v17 = self.nodes[self.num_nodes - 1]
+        node_master = self.nodes[self.num_nodes - 5]
+        node_v19 = self.nodes[self.num_nodes - 4]
+        node_v18 = self.nodes[self.num_nodes - 3]
+        node_v17 = self.nodes[self.num_nodes - 2]
+        node_v16 = self.nodes[self.num_nodes - 1]
 
         self.log.info("Test wallet backwards compatibility...")
         # Create a number of wallets and open them in older versions:
@@ -167,12 +177,20 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_v19_wallets_dir = os.path.join(node_v19.datadir, "regtest/wallets")
         node_v18_wallets_dir = os.path.join(node_v18.datadir, "regtest/wallets")
         node_v17_wallets_dir = os.path.join(node_v17.datadir, "regtest/wallets")
+        node_v16_wallets_dir = os.path.join(node_v16.datadir, "regtest")
         node_master.unloadwallet("w1")
         node_master.unloadwallet("w2")
         node_v19.unloadwallet("w1_v19")
         node_v19.unloadwallet("w2_v19")
         node_v18.unloadwallet("w1_v18")
         node_v18.unloadwallet("w2_v18")
+
+        # Copy wallets to v0.16
+        for wallet in os.listdir(node_master_wallets_dir):
+            shutil.copytree(
+                os.path.join(node_master_wallets_dir, wallet),
+                os.path.join(node_v16_wallets_dir, wallet)
+            )
 
         # Copy wallets to v0.17
         for wallet in os.listdir(node_master_wallets_dir):
@@ -292,10 +310,17 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # assert_raises_rpc_error(-4, "Wallet loading failed.", node_v17.loadwallet, 'w3_v18')
 
         # Instead, we stop node and try to launch it with the wallet:
-        self.stop_node(self.num_nodes - 1)
+        self.stop_node(4)
         node_v17.assert_start_raises_init_error(["-wallet=w3_v18"], "Error: Error loading w3_v18: Wallet requires newer version of Bitcoin Core")
         node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Bitcoin Core")
-        self.start_node(self.num_nodes - 1)
+        self.start_node(4)
+
+        # Open most recent wallet in v0.16 (no loadwallet RPC)
+        self.stop_node(5)
+        self.start_node(5, extra_args=["-wallet=w2"])
+        wallet = node_v16.get_wallet_rpc("w2")
+        info = wallet.getwalletinfo()
+        assert info['keypoolsize'] == 1
 
         self.log.info("Test wallet upgrade path...")
         # u1: regular wallet, created with v0.17
