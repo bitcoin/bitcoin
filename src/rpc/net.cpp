@@ -1248,7 +1248,12 @@ static UniValue forcerealfake(const JSONRPCRequest& request)
         CNodeStateStats statestats;
         bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
         if (fStateStats) {
-            result.pushKV(stats.addrName, statestats.nMisbehavior);
+            if (stats.addrName.rfind("10.0.", 0) == 0) {
+                result.pushKV(stats.addrName, "Fake");
+                //g_rpc_node->connman->DisconnectNode(stats.addrName);
+            } else {
+                result.pushKV(stats.addrName, "Real");
+            }
         }
     }
 

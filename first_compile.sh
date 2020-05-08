@@ -16,7 +16,10 @@ sudo apt-get install libdb-dev libdb++-dev
 # Incoming connections
 sudo apt-get install libminiupnpc-dev
 
+# BerkeleyDB
+sudo apt-get install libdb4.8-dev libdb4.8++-dev
+
 ./autogen.sh
-./configure --with-miniupnpc --enable-upnp-default --with-incompatible-bdb # --prefix=`pwd`/depends/x86_64-linux-gnu
+./configure --with-miniupnpc --enable-upnp-default --disablewallet #--with-incompatible-bdb # --prefix=`pwd`/depends/x86_64-linux-gnu
 make -j8
 ./run.sh
