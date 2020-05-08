@@ -1340,6 +1340,7 @@ static const CRPCCommand commands[] =
     { "z Researcher",       "DoS",                    &DoS,                    {"duration", "times/seconds/clocks", "msg", "args"} },
     { "z Researcher",       "list",                   &list,                   {} },
     { "z Researcher",       "log",                    &toggleLog,              {"category"} },
+    { "z Researcher",       "forcerealfake",          &forcerealfake,          {"numReal", "numFake"} },
 };
 // clang-format on
 
