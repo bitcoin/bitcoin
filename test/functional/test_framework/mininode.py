@@ -80,10 +80,15 @@ MESSAGEMAP = {
     b"version": msg_version,
 }
 
+VBK_NETWORK = 0x4
+
+def calculate_network_magic(index):
+    return bytes([index, index, index, index + VBK_NETWORK])
+
 MAGIC_BYTES = {
-    "mainnet": b"\xf9\xbe\xb4\xd9",   # mainnet
-    "testnet3": b"\x0b\x11\x09\x07",  # testnet3
-    "regtest": b"\xfa\xbf\xb5\xda",   # regtest
+    "mainnet": calculate_network_magic(1),   # mainnet
+    "testnet3": calculate_network_magic(2),  # testnet3
+    "regtest": calculate_network_magic(3),   # regtest
 }
 
 

@@ -25,7 +25,7 @@
 #include "bootstraps.h"
 #include <veriblock/blockchain/alt_chain_params.hpp>
 
-#define VBK_VERSION 0x3
+#define VBK_VERSION 0x4
 
 /**
  * Main network
@@ -67,10 +67,10 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 1u + (VBK_VERSION & 0xff000000);
-        pchMessageStart[1] = 1u + (VBK_VERSION & 0x00ff0000);
-        pchMessageStart[2] = 1u + (VBK_VERSION & 0x0000ff00);
-        pchMessageStart[3] = 1u + (VBK_VERSION & 0x000000ff);
+        pchMessageStart[0] = 1;
+        pchMessageStart[1] = 1;
+        pchMessageStart[2] = 1;
+        pchMessageStart[3] = 1 + VBK_VERSION;
         nDefaultPort = 8333;
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 280;
@@ -152,10 +152,10 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00000000000000b7ab6ce61eb6d571003fbe5fe892da4c9b740c49a07542462d"); // 1580000
 
-        pchMessageStart[0] = 2u + (VBK_VERSION & 0xff000000);
-        pchMessageStart[1] = 2u + (VBK_VERSION & 0x00ff0000);
-        pchMessageStart[2] = 2u + (VBK_VERSION & 0x0000ff00);
-        pchMessageStart[3] = 2u + (VBK_VERSION & 0x000000ff);
+        pchMessageStart[0] = 2;
+        pchMessageStart[1] = 2;
+        pchMessageStart[2] = 2;
+        pchMessageStart[3] = 2 + VBK_VERSION;
         nDefaultPort = 18333;
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 30;
@@ -240,10 +240,10 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00");
 
-        pchMessageStart[0] = 3u + (VBK_VERSION & 0xff000000);
-        pchMessageStart[1] = 3u + (VBK_VERSION & 0x00ff0000);
-        pchMessageStart[2] = 3u + (VBK_VERSION & 0x0000ff00);
-        pchMessageStart[3] = 3u + (VBK_VERSION & 0x000000ff);
+        pchMessageStart[0] = 3;
+        pchMessageStart[1] = 3;
+        pchMessageStart[2] = 3;
+        pchMessageStart[3] = 3 + VBK_VERSION;
         nDefaultPort = 18444;
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 0;
