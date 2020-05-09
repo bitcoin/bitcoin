@@ -7,6 +7,7 @@
 
 #include <optional.h>               // For Optional and nullopt
 #include <primitives/transaction.h> // For CTransactionRef
+#include <rpc/interfaces.h>         // For CRPCCommand
 
 #include <memory>
 #include <stddef.h>
@@ -16,7 +17,6 @@
 
 class CBlock;
 class CFeeRate;
-class CRPCCommand;
 class CScheduler;
 class Coin;
 class uint256;

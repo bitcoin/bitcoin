@@ -20,8 +20,8 @@
 #include <psbt.h>
 #include <random.h>
 #include <rpc/blockchain.h>
+#include <rpc/interfaces.h>
 #include <rpc/rawtransaction_util.h>
-#include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/script.h>
 #include <script/sign.h>

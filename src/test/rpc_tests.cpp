@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/client.h>
-#include <rpc/server.h>
+#include <rpc/interfaces.h>
 #include <rpc/util.h>
 
 #include <core_io.h>
@@ -18,6 +18,8 @@
 #include <univalue.h>
 
 #include <rpc/blockchain.h>
+
+extern CRPCTable tableRPC;
 
 UniValue CallRPC(std::string args)
 {

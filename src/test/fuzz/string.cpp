@@ -9,7 +9,7 @@
 #include <outputtype.h>
 #include <rpc/client.h>
 #include <rpc/request.h>
-#include <rpc/server.h>
+#include <rpc/interfaces.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <serialize.h>

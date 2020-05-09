@@ -5,7 +5,7 @@
 #ifndef BITCOIN_ZMQ_ZMQRPC_H
 #define BITCOIN_ZMQ_ZMQRPC_H
 
-class CRPCTable;
+#include <rpc/interfaces.h>  // For CRPCTable
 
 void RegisterZMQRPCCommands(CRPCTable& t);
 

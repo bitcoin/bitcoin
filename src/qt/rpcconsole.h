@@ -9,6 +9,7 @@
 #include <qt/peertablemodel.h>
 
 #include <net.h>
+#include <rpc/interfaces.h>
 
 #include <QWidget>
 #include <QCompleter>
@@ -16,7 +17,6 @@
 
 class ClientModel;
 class PlatformStyle;
-class RPCTimerInterface;
 class WalletModel;
 
 namespace interfaces {

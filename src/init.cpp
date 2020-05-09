@@ -35,8 +35,9 @@
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <rpc/blockchain.h>
-#include <rpc/register.h>
+#include <rpc/interfaces.h>
 #include <rpc/server.h>
+#include <rpc/register.h>
 #include <rpc/util.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
@@ -95,6 +96,9 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 #else
 #define MIN_CORE_FILEDESCRIPTORS 150
 #endif
+
+extern CRPCTable tableRPC;
+extern const unsigned int DEFAULT_RPC_SERIALIZE_VERSION;
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 

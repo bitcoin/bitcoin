@@ -9,7 +9,6 @@
 #include <node/context.h>
 #include <outputtype.h>
 #include <rpc/blockchain.h>
-#include <rpc/server.h>
 #include <rpc/util.h>
 #include <scheduler.h>
 #include <script/descriptor.h>

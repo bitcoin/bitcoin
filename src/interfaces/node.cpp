@@ -21,7 +21,7 @@
 #include <policy/fees.h>
 #include <policy/settings.h>
 #include <primitives/block.h>
-#include <rpc/server.h>
+#include <rpc/interfaces.h>
 #include <shutdown.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
@@ -39,6 +39,8 @@
 #include <univalue.h>
 
 #include <boost/signals2/signal.hpp>
+
+extern CRPCTable tableRPC;
 
 class CWallet;
 fs::path GetWalletDir();
@@ -229,9 +231,9 @@ public:
         req.params = params;
         req.strMethod = command;
         req.URI = uri;
-        return ::tableRPC.execute(req);
+        return tableRPC.execute(req);
     }
-    std::vector<std::string> listRpcCommands() override { return ::tableRPC.listCommands(); }
+    std::vector<std::string> listRpcCommands() override { return tableRPC.listCommands(); }
     void rpcSetTimerInterfaceIfUnset(RPCTimerInterface* iface) override { RPCSetTimerInterfaceIfUnset(iface); }
     void rpcUnsetTimerInterface(RPCTimerInterface* iface) override { RPCUnsetTimerInterface(iface); }
     bool getUnspentOutput(const COutPoint& output, Coin& coin) override

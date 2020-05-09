@@ -21,7 +21,7 @@
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <primitives/transaction.h>
-#include <rpc/server.h>
+#include <rpc/interfaces.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <streams.h>

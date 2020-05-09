@@ -19,8 +19,8 @@
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <rpc/interfaces.h>
 #include <rpc/protocol.h>
-#include <rpc/server.h>
 #include <shutdown.h>
 #include <sync.h>
 #include <timedata.h>
@@ -34,6 +34,8 @@
 
 #include <memory>
 #include <utility>
+
+extern CRPCTable tableRPC;
 
 namespace interfaces {
 namespace {
@@ -124,14 +126,14 @@ public:
                 throw;
             }
         };
-        ::tableRPC.appendCommand(m_command.name, &m_command);
+        tableRPC.appendCommand(m_command.name, &m_command);
     }
 
     void disconnect() override final
     {
         if (m_wrapped_command) {
             m_wrapped_command = nullptr;
-            ::tableRPC.removeCommand(m_command.name, &m_command);
+            tableRPC.removeCommand(m_command.name, &m_command);
         }
     }
 

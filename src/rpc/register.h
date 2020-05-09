@@ -5,9 +5,7 @@
 #ifndef BITCOIN_RPC_REGISTER_H
 #define BITCOIN_RPC_REGISTER_H
 
-/** These are in one header file to avoid creating tons of single-function
- * headers for everything under src/rpc/ */
-class CRPCTable;
+#include <rpc/interfaces.h>  // For CRPCTable
 
 /** Register block chain RPC commands */
 void RegisterBlockchainRPCCommands(CRPCTable &tableRPC);

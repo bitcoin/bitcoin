@@ -4,11 +4,12 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <rpc/interfaces.h>
 #include <streams.h>
-#include <zmq/zmqpublishnotifier.h>
-#include <validation.h>
 #include <util/system.h>
-#include <rpc/server.h>
+#include <validation.h>
+#include <zmq/zmqpublishnotifier.h>
+
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 

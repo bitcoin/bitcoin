@@ -9,6 +9,7 @@
 #include <net.h>        // For CConnman::NumConnections
 #include <net_types.h>  // For banmap_t
 #include <netaddress.h> // For Network
+#include <rpc/interfaces.h> // For RPCTimerInterface
 #include <support/allocators/secure.h> // For SecureString
 
 #include <functional>
@@ -24,7 +25,6 @@ class CCoinControl;
 class CFeeRate;
 class CNodeStats;
 class Coin;
-class RPCTimerInterface;
 class UniValue;
 class proxyType;
 enum class WalletCreationStatus;

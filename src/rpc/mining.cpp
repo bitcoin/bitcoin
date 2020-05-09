@@ -17,7 +17,7 @@
 #include <policy/fees.h>
 #include <pow.h>
 #include <rpc/blockchain.h>
-#include <rpc/server.h>
+#include <rpc/interfaces.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/script.h>

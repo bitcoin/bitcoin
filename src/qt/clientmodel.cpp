@@ -14,6 +14,7 @@
 #include <interfaces/node.h>
 #include <net.h>
 #include <netbase.h>
+#include <rpc/interfaces.h>
 #include <util/system.h>
 
 #include <stdint.h>

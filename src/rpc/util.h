@@ -5,7 +5,6 @@
 #ifndef BITCOIN_RPC_UTIL_H
 #define BITCOIN_RPC_UTIL_H
 
-#include <node/transaction.h>
 #include <outputtype.h>
 #include <protocol.h>
 #include <pubkey.h>
@@ -16,6 +15,7 @@
 #include <script/standard.h>
 #include <univalue.h>
 #include <util/check.h>
+#include <util/error.h>
 
 #include <string>
 #include <vector>

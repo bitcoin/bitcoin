@@ -29,9 +29,10 @@
 #include <primitives/transaction.h>
 #include <random.h>
 #include <reverse_iterator.h>
+#include <rpc/interfaces.h>
+#include <shutdown.h>
 #include <script/script.h>
 #include <script/sigcache.h>
-#include <shutdown.h>
 #include <timedata.h>
 #include <tinyformat.h>
 #include <txdb.h>

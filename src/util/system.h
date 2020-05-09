@@ -37,9 +37,6 @@
 
 #include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 
-// Application startup time (used for uptime calculation)
-int64_t GetStartupTime();
-
 extern const char * const BITCOIN_CONF_FILENAME;
 
 void SetupEnvironment();

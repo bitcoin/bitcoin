@@ -9,7 +9,6 @@
 #include <string>
 #include <vector>
 
-class CRPCTable;
 class CWallet;
 class JSONRPCRequest;
 class LegacyScriptPubKeyMan;

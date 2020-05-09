@@ -12,8 +12,8 @@
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/rbf.h>
+#include <rpc/interfaces.h>
 #include <rpc/rawtransaction_util.h>
-#include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/sign.h>

@@ -5,7 +5,7 @@
 #include <qt/test/rpcnestedtests.h>
 
 #include <interfaces/node.h>
-#include <rpc/server.h>
+#include <rpc/interfaces.h>
 #include <qt/rpcconsole.h>
 #include <test/util/setup_common.h>
 #include <univalue.h>
@@ -13,6 +13,8 @@
 
 #include <QDir>
 #include <QtGlobal>
+
+extern CRPCTable tableRPC;
 
 static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
 {

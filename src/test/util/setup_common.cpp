@@ -17,8 +17,8 @@
 #include <noui.h>
 #include <pow.h>
 #include <rpc/blockchain.h>
+#include <rpc/interfaces.h>
 #include <rpc/register.h>
-#include <rpc/server.h>
 #include <script/sigcache.h>
 #include <streams.h>
 #include <txdb.h>
@@ -33,6 +33,8 @@
 #include <validationinterface.h>
 
 #include <functional>
+
+extern CRPCTable tableRPC;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
