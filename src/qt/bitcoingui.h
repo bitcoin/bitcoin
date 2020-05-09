@@ -210,6 +210,7 @@ private:
 
 Q_SIGNALS:
     void quitClicked();
+    void rpcExecutorThreadFinished();
     /** Signal raised when a URI was entered or dragged to the GUI */
     void receivedURI(const QString &uri);
     /** Signal raised when RPC console shown */

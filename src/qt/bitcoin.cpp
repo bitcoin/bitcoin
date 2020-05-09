@@ -253,6 +253,7 @@ void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
     window = new BitcoinGUI(m_node, platformStyle, networkStyle, nullptr);
     connect(window, &BitcoinGUI::quitClicked, this, &BitcoinApplication::requestShutdown);
+    connect(window, &BitcoinGUI::rpcExecutorThreadFinished, this, &BitcoinApplication::requestNodeShutdown);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, &QTimer::timeout, window, &BitcoinGUI::detectShutdown);
@@ -338,8 +339,6 @@ void BitcoinApplication::requestShutdown()
 
     delete clientModel;
     clientModel = nullptr;
-
-    requestNodeShutdown();
 }
 
 void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info)
@@ -389,7 +388,7 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
         pollShutdownTimer->start(200);
     } else {
         Q_EMIT splashFinished(); // Make sure splash screen doesn't stick around during shutdown
-        requestShutdown();
+        requestNodeShutdown();
     }
 }
 
