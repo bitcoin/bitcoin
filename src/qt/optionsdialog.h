@@ -68,6 +68,7 @@ private Q_SLOTS:
 
 Q_SIGNALS:
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);
+    void quitOnReset();
 
 private:
     Ui::OptionsDialog *ui;
