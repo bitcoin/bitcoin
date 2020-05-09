@@ -16,13 +16,19 @@
 struct bilingual_str {
     std::string original;
     std::string translated;
+
+    bilingual_str& operator+=(const bilingual_str& rhs)
+    {
+        original += rhs.original;
+        translated += rhs.translated;
+        return *this;
+    }
 };
 
-inline bilingual_str operator+(const bilingual_str& lhs, const bilingual_str& rhs)
+inline bilingual_str operator+(bilingual_str lhs, const bilingual_str& rhs)
 {
-    return bilingual_str{
-        lhs.original + rhs.original,
-        lhs.translated + rhs.translated};
+    lhs += rhs;
+    return lhs;
 }
 
 /** Mark a bilingual_str as untranslated */
