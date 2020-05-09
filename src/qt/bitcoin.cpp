@@ -324,8 +324,6 @@ void BitcoinApplication::requestShutdown()
     // for example the RPC console may still be executing a command.
     shutdownWindow.reset(ShutdownWindow::showShutdownWindow(window));
 
-    qDebug() << __func__ << ": Requesting shutdown";
-    startThread();
     window->clearGUI();
     // Must disconnect node signals otherwise current thread can deadlock since
     // no event loop is running.
@@ -341,8 +339,7 @@ void BitcoinApplication::requestShutdown()
     delete clientModel;
     clientModel = nullptr;
 
-    // Request shutdown from core thread
-    Q_EMIT requestedShutdown();
+    requestNodeShutdown();
 }
 
 void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info)
@@ -394,6 +391,14 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
         Q_EMIT splashFinished(); // Make sure splash screen doesn't stick around during shutdown
         requestShutdown();
     }
+}
+
+void BitcoinApplication::requestNodeShutdown()
+{
+    qDebug() << __func__ << ": Requesting shutdown";
+    startThread();
+    // Request shutdown from core thread
+    Q_EMIT requestedShutdown();
 }
 
 void BitcoinApplication::shutdownResult()
