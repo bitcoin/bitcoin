@@ -1947,31 +1947,40 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
     return ret;
 }
 
-void CConnman::ThreadOpenAddedConnections()
+void CConnman::OpenAddedConnections(CScheduler& scheduler)
 {
-    while (true)
-    {
-        CSemaphoreGrant grant(*semAddnode);
-        std::vector<AddedNodeInfo> vInfo = GetAddedNodeInfo();
-        bool tried = false;
-        for (const AddedNodeInfo& info : vInfo) {
-            if (!info.fConnected) {
-                if (!grant.TryAcquire()) {
-                    // If we've used up our semaphore and need a new one, let's not wait here since while we are waiting
-                    // the addednodeinfo state might change.
-                    break;
-                }
-                tried = true;
-                CAddress addr(CService(), NODE_NONE);
-                OpenNetworkConnection(addr, false, &grant, info.strAddedNode.c_str(), false, false, true);
-                if (!interruptNet.sleep_for(std::chrono::milliseconds(500)))
-                    return;
-            }
+    if (added_connection_queue.empty()) {
+        // New round of connecting to added nodes.
+        added_connection_queue = GetAddedNodeInfo();
+
+        // Add delay between rounds.
+        std::chrono::milliseconds long_delay;
+        if (connection_was_attempted) {
+            // If during last round there was an attempt to connect to an added
+            // node, wait 60 seconds before next round.
+            connection_was_attempted = false;
+            long_delay = std::chrono::seconds{60};
+        } else {
+            // If there was no attempt, wait 2 seconds.
+            long_delay = std::chrono::seconds{2};
         }
-        // Retry every 60 seconds if a connection was attempted, otherwise two seconds
-        if (!interruptNet.sleep_for(std::chrono::seconds(tried ? 60 : 2)))
-            return;
+        scheduler.scheduleFromNow([&] { OpenAddedConnections(scheduler); }, long_delay);
     }
+
+    CSemaphoreGrant grant(*semAddnode);
+    const AddedNodeInfo& info = added_connection_queue.back();
+    added_connection_queue.pop_back();
+    if (!info.fConnected && !grant.TryAcquire()) {
+        // If we've used up our semaphore and need a new one, let's not wait here since while we are waiting
+        // the addednodeinfo state might change.
+        connection_was_attempted = true;
+        CAddress addr(CService(), NODE_NONE);
+        OpenNetworkConnection(addr, false, &grant, info.strAddedNode.c_str(), false, false, true);
+    }
+
+    // Wait before attempting to connect to the next node.
+    const std::chrono::milliseconds short_delay = std::chrono::milliseconds{500};
+    scheduler.scheduleFromNow([&] { OpenAddedConnections(scheduler); }, short_delay);
 }
 
 // if successful, this moves the passed grant to the constructed node
@@ -2324,9 +2333,6 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     else
         threadDNSAddressSeed = std::thread(&TraceThread<std::function<void()> >, "dnsseed", std::function<void()>(std::bind(&CConnman::ThreadDNSAddressSeed, this)));
 
-    // Initiate outbound connections from -addnode
-    threadOpenAddedConnections = std::thread(&TraceThread<std::function<void()> >, "addcon", std::function<void()>(std::bind(&CConnman::ThreadOpenAddedConnections, this)));
-
     if (connOptions.m_use_addrman_outgoing && !connOptions.m_specified_outgoing.empty()) {
         if (clientInterface) {
             clientInterface->ThreadSafeMessageBox(
@@ -2392,8 +2398,6 @@ void CConnman::StopThreads()
         threadMessageHandler.join();
     if (threadOpenConnections.joinable())
         threadOpenConnections.join();
-    if (threadOpenAddedConnections.joinable())
-        threadOpenAddedConnections.join();
     if (threadDNSAddressSeed.joinable())
         threadDNSAddressSeed.join();
     if (threadSocketHandler.joinable())
