@@ -212,14 +212,13 @@ void Shutdown(NodeContext& node)
         node.connman->StopNodes();
     }
 
-    StopTorControl();
-
     // After everything has been shut down, but before things get flushed, stop the
     // CScheduler/checkqueue threadGroup
     if (node.scheduler) node.scheduler->stop();
     threadGroup.interrupt_all();
     threadGroup.join_all();
 
+    StopTorControl();
     // After the threads that potentially access these pointers have been stopped,
     // destruct and reset all to nullptr.
     node.peer_logic.reset();
@@ -1864,8 +1863,10 @@ bool AppInitMain(NodeContext& node)
     }
     LogPrintf("nBestHeight = %d\n", chain_active_height);
 
-    if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
-        StartTorControl();
+    if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
+        std::chrono::system_clock::time_point no_time = std::chrono::system_clock::time_point::min();
+        node.scheduler->schedule([&] { StartTorControl(); }, no_time);
+    }
 
     Discover();
 

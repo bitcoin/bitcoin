@@ -727,16 +727,8 @@ void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
     self->Reconnect();
 }
 
-/****** Thread ********/
+
 static struct event_base *gBase;
-static std::thread torControlThread;
-
-static void TorControlThread()
-{
-    TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
-
-    event_base_dispatch(gBase);
-}
 
 void StartTorControl()
 {
@@ -752,13 +744,14 @@ void StartTorControl()
         return;
     }
 
-    torControlThread = std::thread(std::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
+    TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
+    event_base_dispatch(gBase);
 }
 
 void InterruptTorControl()
 {
     if (gBase) {
-        LogPrintf("tor: Thread interrupt\n");
+        LogPrintf("tor: interrupt\n");
         event_base_once(gBase, -1, EV_TIMEOUT, [](evutil_socket_t, short, void*) {
             event_base_loopbreak(gBase);
         }, nullptr, nullptr);
@@ -768,7 +761,6 @@ void InterruptTorControl()
 void StopTorControl()
 {
     if (gBase) {
-        torControlThread.join();
         event_base_free(gBase);
         gBase = nullptr;
     }
