@@ -15,4 +15,4 @@ export RUN_UNIT_TESTS=false
 export RUN_INTEGRATION_TESTS=false
 export RUN_FUZZ_TESTS=true
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=clang CXX=clang++"
+export BITCOIN_CONFIG="--enable-zmq --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined --enable-c++17 CC=clang CXX=clang++"
