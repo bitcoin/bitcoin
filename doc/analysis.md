@@ -2,6 +2,18 @@
 
 ## Static analysis
 
+### Analyzing Bitcoin Core using Clang Static Analyzer
+
+#### Quickstart guide
+
+```
+$ git clone https://github.com/bitcoin/bitcoin
+$ cd bitcoin/
+$ ./autogen.sh
+$ CC=clang CXX=clang++ ./configure --with-incompatible-bdb --disable-ccache
+$ scan-build --use-cc=clang --use-c++=clang++ make
+```
+
 ### Analyzing Bitcoin Core using `clang-tidy`
 
 #### Quickstart guide
