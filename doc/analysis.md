@@ -21,3 +21,23 @@ $ bear/bear/bear -l $(pwd)/bear/libear/libear.so make
 # Analyze source code files ...
 $ clang-tidy src/test/crypto_tests.cpp
 ```
+
+### Analyzing Bitcoin Core using `cppcheck`
+
+#### Quickstart guide
+
+```
+$ git clone https://github.com/bitcoin/bitcoin
+$ cd bitcoin/
+$ git clone https://github.com/danmar/cppcheck
+$ cd cppcheck/
+$ cmake -DFILESDIR=$(pwd)/ .
+$ make
+$ cd ..
+# Analyze source code files ...
+$ cppcheck/bin/cppcheck --language=c++ -D__cplusplus -DCLIENT_VERSION_BUILD \
+    -DCLIENT_VERSION_IS_RELEASE -DCLIENT_VERSION_MAJOR -DCLIENT_VERSION_MINOR \
+    -DCLIENT_VERSION_REVISION -DCOPYRIGHT_YEAR -DDEBUG
+    -DBOOST_FIXTURE_TEST_SUITE -I src/ -q \
+    src/net_processing.cpp
+```
