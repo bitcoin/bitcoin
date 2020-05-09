@@ -1307,9 +1307,10 @@ bool AppInitMain(NodeContext& node)
     assert(!node.scheduler);
     node.scheduler = MakeUnique<CScheduler>();
 
-    // Start the lightweight task scheduler thread
+    // Start two lightweight task scheduler threads
     CScheduler::Function serviceLoop = [&node]{ node.scheduler->serviceQueue(); };
-    threadGroup.create_thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
+    threadGroup.create_thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler1", serviceLoop));
+    threadGroup.create_thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler2", serviceLoop));
 
     // Gather some entropy once per minute.
     node.scheduler->scheduleEvery([]{
