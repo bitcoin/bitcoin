@@ -15,7 +15,6 @@
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
-#include <optional.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
@@ -30,6 +29,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -71,7 +71,7 @@ template <typename T>
 }
 
 template <typename T>
-[[ nodiscard ]] inline Optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+[[ nodiscard ]] inline std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
 {
     const std::vector<uint8_t> buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
     CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
@@ -79,7 +79,7 @@ template <typename T>
     try {
         ds >> obj;
     } catch (const std::ios_base::failure&) {
-        return nullopt;
+        return std::nullopt;
     }
     return obj;
 }
