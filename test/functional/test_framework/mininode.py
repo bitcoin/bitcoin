@@ -645,6 +645,7 @@ class P2PTxInvStore(P2PInterface):
         self.tx_invs_received = defaultdict(int)
 
     def on_inv(self, message):
+        super().on_inv(message) # Send getdata in response.
         # Store how many times invs have been received for each tx.
         for i in message.inv:
             if i.type == MSG_TX:
@@ -654,3 +655,12 @@ class P2PTxInvStore(P2PInterface):
     def get_invs(self):
         with mininode_lock:
             return list(self.tx_invs_received.keys())
+
+    def wait_for_broadcast(self, txns, timeout=60):
+        """Waits for the txns (list of txids) to complete initial broadcast.
+        The mempool should mark unbroadcast=False for these transactions.
+        """
+        # Wait until invs have been received (and getdatas sent) for each txid.
+        self.wait_until(lambda: set(self.get_invs()) == set([int(tx, 16) for tx in txns]), timeout)
+        # Flush messages and wait for the getdatas to be processed
+        self.sync_with_ping()
