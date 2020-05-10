@@ -4,7 +4,6 @@
 
 #include <chainparams.h>
 #include <key_io.h>
-#include <optional.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>

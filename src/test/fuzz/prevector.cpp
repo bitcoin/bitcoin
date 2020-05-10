@@ -14,8 +14,9 @@
 
 namespace {
 
-template<unsigned int N, typename T>
-class prevector_tester {
+template <unsigned int N, typename T>
+class prevector_tester
+{
     typedef std::vector<T> realtype;
     realtype real_vector;
     realtype real_vector_alt;
@@ -27,35 +28,36 @@ class prevector_tester {
     typedef typename pretype::size_type Size;
 
 public:
-    void test() const {
+    void test() const
+    {
         const pretype& const_pre_vector = pre_vector;
         assert(real_vector.size() == pre_vector.size());
         assert(real_vector.empty() == pre_vector.empty());
         for (Size s = 0; s < real_vector.size(); s++) {
-             assert(real_vector[s] == pre_vector[s]);
-             assert(&(pre_vector[s]) == &(pre_vector.begin()[s]));
-             assert(&(pre_vector[s]) == &*(pre_vector.begin() + s));
-             assert(&(pre_vector[s]) == &*((pre_vector.end() + s) - real_vector.size()));
+            assert(real_vector[s] == pre_vector[s]);
+            assert(&(pre_vector[s]) == &(pre_vector.begin()[s]));
+            assert(&(pre_vector[s]) == &*(pre_vector.begin() + s));
+            assert(&(pre_vector[s]) == &*((pre_vector.end() + s) - real_vector.size()));
         }
         // assert(realtype(pre_vector) == real_vector);
         assert(pretype(real_vector.begin(), real_vector.end()) == pre_vector);
         assert(pretype(pre_vector.begin(), pre_vector.end()) == pre_vector);
         size_t pos = 0;
         for (const T& v : pre_vector) {
-             assert(v == real_vector[pos]);
-             ++pos;
+            assert(v == real_vector[pos]);
+            ++pos;
         }
         for (const T& v : reverse_iterate(pre_vector)) {
-             --pos;
-             assert(v == real_vector[pos]);
+            --pos;
+            assert(v == real_vector[pos]);
         }
         for (const T& v : const_pre_vector) {
-             assert(v == real_vector[pos]);
-             ++pos;
+            assert(v == real_vector[pos]);
+            ++pos;
         }
         for (const T& v : reverse_iterate(const_pre_vector)) {
-             --pos;
-             assert(v == real_vector[pos]);
+            --pos;
+            assert(v == real_vector[pos]);
         }
         CDataStream ss1(SER_DISK, 0);
         CDataStream ss2(SER_DISK, 0);
@@ -67,101 +69,120 @@ public:
         }
     }
 
-    void resize(Size s) {
+    void resize(Size s)
+    {
         real_vector.resize(s);
         assert(real_vector.size() == s);
         pre_vector.resize(s);
         assert(pre_vector.size() == s);
     }
 
-    void reserve(Size s) {
+    void reserve(Size s)
+    {
         real_vector.reserve(s);
         assert(real_vector.capacity() >= s);
         pre_vector.reserve(s);
         assert(pre_vector.capacity() >= s);
     }
 
-    void insert(Size position, const T& value) {
+    void insert(Size position, const T& value)
+    {
         real_vector.insert(real_vector.begin() + position, value);
         pre_vector.insert(pre_vector.begin() + position, value);
     }
 
-    void insert(Size position, Size count, const T& value) {
+    void insert(Size position, Size count, const T& value)
+    {
         real_vector.insert(real_vector.begin() + position, count, value);
         pre_vector.insert(pre_vector.begin() + position, count, value);
     }
 
-    template<typename I>
-    void insert_range(Size position, I first, I last) {
+    template <typename I>
+    void insert_range(Size position, I first, I last)
+    {
         real_vector.insert(real_vector.begin() + position, first, last);
         pre_vector.insert(pre_vector.begin() + position, first, last);
     }
 
-    void erase(Size position) {
+    void erase(Size position)
+    {
         real_vector.erase(real_vector.begin() + position);
         pre_vector.erase(pre_vector.begin() + position);
     }
 
-    void erase(Size first, Size last) {
+    void erase(Size first, Size last)
+    {
         real_vector.erase(real_vector.begin() + first, real_vector.begin() + last);
         pre_vector.erase(pre_vector.begin() + first, pre_vector.begin() + last);
     }
 
-    void update(Size pos, const T& value) {
+    void update(Size pos, const T& value)
+    {
         real_vector[pos] = value;
         pre_vector[pos] = value;
     }
 
-    void push_back(const T& value) {
+    void push_back(const T& value)
+    {
         real_vector.push_back(value);
         pre_vector.push_back(value);
     }
 
-    void pop_back() {
+    void pop_back()
+    {
         real_vector.pop_back();
         pre_vector.pop_back();
     }
 
-    void clear() {
+    void clear()
+    {
         real_vector.clear();
         pre_vector.clear();
     }
 
-    void assign(Size n, const T& value) {
+    void assign(Size n, const T& value)
+    {
         real_vector.assign(n, value);
         pre_vector.assign(n, value);
     }
 
-    Size size() const {
+    Size size() const
+    {
         return real_vector.size();
     }
 
-    Size capacity() const {
+    Size capacity() const
+    {
         return pre_vector.capacity();
     }
 
-    void shrink_to_fit() {
+    void shrink_to_fit()
+    {
         pre_vector.shrink_to_fit();
     }
 
-    void swap() {
+    void swap()
+    {
         real_vector.swap(real_vector_alt);
         pre_vector.swap(pre_vector_alt);
     }
 
-    void move() {
+    void move()
+    {
         real_vector = std::move(real_vector_alt);
         real_vector_alt.clear();
         pre_vector = std::move(pre_vector_alt);
         pre_vector_alt.clear();
     }
 
-    void copy() {
+    void copy()
+    {
         real_vector = real_vector_alt;
         pre_vector = pre_vector_alt;
     }
 
-    void resize_uninitialized(realtype values) {
+    void resize_uninitialized(realtype values)
+    {
         size_t r = values.size();
         size_t s = real_vector.size() / 2;
         if (real_vector.capacity() < s + r) {
@@ -181,7 +202,7 @@ public:
     }
 };
 
-}
+} // namespace
 
 void test_one_input(const std::vector<uint8_t>& buffer)
 {

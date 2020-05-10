@@ -21,6 +21,11 @@
 #include <univalue.h>
 #include <util/memory.h>
 
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <vector>
+
 void initialize()
 {
     // Fuzzers using pubkey must hold an ECCVerifyHandle.
@@ -32,7 +37,7 @@ void initialize()
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const Optional<CScript> script_opt = ConsumeDeserializable<CScript>(fuzzed_data_provider);
+    const std::optional<CScript> script_opt = ConsumeDeserializable<CScript>(fuzzed_data_provider);
     if (!script_opt) return;
     const CScript script{*script_opt};
 
@@ -101,7 +106,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         }
     }
 
-    const Optional<CScript> other_script = ConsumeDeserializable<CScript>(fuzzed_data_provider);
+    const std::optional<CScript> other_script = ConsumeDeserializable<CScript>(fuzzed_data_provider);
     if (other_script) {
         {
             CScript script_mut{script};
