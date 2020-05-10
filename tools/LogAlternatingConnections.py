@@ -686,6 +686,7 @@ def fetch(now):
 	return line
 
 def newFile(file):
+	global fileSampleNumber
 	fileSampleNumber += 1
 	try:
 		file.close()
@@ -711,7 +712,6 @@ def fixBitcoinConf():
 
 
 def resetNode():
-	global fileSampleNumber
 	success = False
 	while not success or bitcoinUp():
 		try:
