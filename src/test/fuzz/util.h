@@ -9,7 +9,6 @@
 #include <arith_uint256.h>
 #include <attributes.h>
 #include <consensus/consensus.h>
-#include <optional.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
@@ -21,6 +20,7 @@
 #include <version.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -52,7 +52,7 @@ NODISCARD inline std::vector<T> ConsumeRandomLengthIntegralVector(FuzzedDataProv
 }
 
 template <typename T>
-NODISCARD inline Optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+NODISCARD inline std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
 {
     const std::vector<uint8_t> buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
     CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
@@ -60,7 +60,7 @@ NODISCARD inline Optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_da
     try {
         ds >> obj;
     } catch (const std::ios_base::failure&) {
-        return nullopt;
+        return std::nullopt;
     }
     return obj;
 }
