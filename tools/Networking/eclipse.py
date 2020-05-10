@@ -164,6 +164,12 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 	if verbose: print('Resulting ifconfig interface:')
 	if verbose: print(terminal(f'ifconfig {interface}').rstrip() + '\n')
 
+	#if verbose: print('Setting up iptables configurations')
+	#terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL RST,ACK -j DROP')
+	#terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL FIN,ACK -j DROP')
+	#terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL FIN -j DROP')
+	#terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL RST -j DROP')
+
 	if verbose: print('Creating network socket...')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 

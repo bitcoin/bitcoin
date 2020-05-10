@@ -700,12 +700,12 @@ def newFile(file):
 	return file
 
 def fixBitcoinConf():
-	global datadir, numConnections
+	global datadir, maxConnections
 	try:
 		with open(datadir + '/bitcoin.conf', 'r') as configFile:
 			configData = configFile.read()
 		configData = re.sub(r'\s*maxconnections\s*=\s*[0-9]+', '', configData)
-		configData += '\n' + 'maxconnections=' + str(numConnections)
+		configData += '\n' + 'maxconnections=' + str(maxConnections)
 		with open(datadir + '/bitcoin.conf', 'w') as configFile:
 			configFile.write(configData)
 	except:
@@ -786,9 +786,9 @@ def getFileName():
 	if eclipsing:
 		return f'Sample {fileSampleNumber}, genuine = {eclipse_real_numpeers}, fake = {eclipse_fake_numpeers}, drop = {eclipse_drop_rate}, minutes = {minutes}.csv'
 	elif waitForConnectionNum:
-		return f'Sample {fileSampleNumber}, numConnections = {numConnections}, minutes = {minutes}.csv'
+		return f'Sample {fileSampleNumber}, numConnections = {maxConnections}, minutes = {minutes}.csv'
 	else:
-		return f'Sample {fileSampleNumber}, maxConnections = {numConnections}, minutes = {minutes}.csv'
+		return f'Sample {fileSampleNumber}, maxConnections = {maxConnections}, minutes = {minutes}.csv'
 
 def init():
 	global fileSampleNumber, maxConnections
