@@ -31,8 +31,6 @@ from .util import (
     disconnect_nodes,
     get_datadir_path,
     initialize_datadir,
-    sync_blocks,
-    sync_mempools,
 )
 
 
@@ -519,11 +517,49 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         connect_nodes(self.nodes[1], 2)
         self.sync_all()
 
-    def sync_blocks(self, nodes=None, **kwargs):
-        sync_blocks(nodes or self.nodes, **kwargs)
+    def sync_blocks(self, nodes=None, *,  wait=1, timeout=60):
+        rpc_connections = nodes or self.nodes
+        """
+        Wait until everybody has the same tip.
 
-    def sync_mempools(self, nodes=None, **kwargs):
-        sync_mempools(nodes or self.nodes, **kwargs)
+        sync_blocks needs to be called with an rpc_connections set that has least
+        one node already synced to the latest, stable tip, otherwise there's a
+        chance it might return before all nodes are stably synced.
+        """
+        stop_time = time.time() + (timeout * self.options.factor)
+        while time.time() <= stop_time:
+            best_hash = [x.getbestblockhash() for x in rpc_connections]
+            if best_hash.count(best_hash[0]) == len(rpc_connections):
+                return
+            # Check that each peer has at least one connection
+            assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
+            time.sleep(wait)
+        raise AssertionError("Block sync timed out after {}s:{}".format(
+            timeout,
+            "".join("\n  {!r}".format(b) for b in best_hash),
+        ))
+
+    def sync_mempools(self, nodes=None, *,  wait=1, timeout=60, flush_scheduler=True):
+        """
+        Wait until everybody has the same transactions in their memory
+        pools
+        """
+        rpc_connections = nodes or self.nodes
+        stop_time = time.time() + (timeout * self.options.factor)
+        while time.time() <= stop_time:
+            pool = [set(r.getrawmempool()) for r in rpc_connections]
+            if pool.count(pool[0]) == len(rpc_connections):
+                if flush_scheduler:
+                    for r in rpc_connections:
+                        r.syncwithvalidationinterfacequeue()
+                return
+            # Check that each peer has at least one connection
+            assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
+            time.sleep(wait)
+        raise AssertionError("Mempool sync timed out after {}s:{}".format(
+            timeout,
+            "".join("\n  {!r}".format(m) for m in pool),
+        ))
 
     def sync_all(self, nodes=None, **kwargs):
         self.sync_blocks(nodes, **kwargs)
