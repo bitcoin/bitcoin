@@ -5054,6 +5054,11 @@ bool CWallet::Verify(std::string wallet_file, bool salvage_wallet, std::string& 
         return false;
     }
 
+    std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(wallet_file, WalletDatabase::Create(wallet_path));
+    if (!tempWallet->AutoBackupWallet(wallet_path, warning_string, error_string) && !error_string.empty()) {
+        return false;
+    }
+
     if (salvage_wallet) {
         // Recover readable keypairs:
         CWallet dummyWallet("dummy", WalletDatabase::CreateDummy());
