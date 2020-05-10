@@ -804,18 +804,18 @@ def init():
 	print(f'Starting at file "Sample {fileSampleNumber + 1} ..."')
 	print()
 	print()
-	eclipsing = input('Is this an eclipse attack? (y/n)').lower() in ['y', 'yes']
+	eclipsing = input('Is this an eclipse attack? (y/n) ').lower() in ['y', 'yes']
 	if eclipsing:
 		eclipse_real_numpeers = int(input(f'How many REAL connections would you like? '))
 		eclipse_fake_numpeers = int(input(f'How many FAKE connections would you like? '))
 		eclipse_drop_rate = float(input(f'What is the packet drop rate (0 to 1)? (for the file name) '))
 		maxConnections = eclipse_real_numpeers + eclipse_fake_numpeers
-		print(f'Total number of connections: ' + maxConnections)
+		print(f'Total number of connections: {maxConnections}')
 	else:
 		maxConnections = int(input(f'How many connections should be initially made? (From 1 to 10)\nPreferably start with 1 connection: '))
 
 
-	waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {maxConnections}? (y/n)').lower() in ['y', 'yes']
+	waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {maxConnections}? (y/n) ').lower() in ['y', 'yes']
 
 	print()
 	print()
@@ -827,7 +827,7 @@ def init():
 	print(f'Maximum connections: {maxConnections}')
 	print(f'Pause if connections don\'t equal {maxConnections}: {waitForConnectionNum}')
 	print()
-	confirm = input(f'Does all of this look correct? (y/n)').lower() in ['y', 'yes']
+	confirm = input(f'Does all of this look correct? (y/n) ').lower() in ['y', 'yes']
 	if confirm:
 		path = os.path.expanduser('~/Desktop/Logs_AlternatingConnections')
 		if not os.path.exists(path):
