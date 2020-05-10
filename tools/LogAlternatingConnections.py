@@ -700,6 +700,7 @@ def newFile(file):
 	return file
 
 def fixBitcoinConf():
+	global datadir, numConnections
 	try:
 		with open(datadir + '/bitcoin.conf', 'r') as configFile:
 			configData = configFile.read()
@@ -811,11 +812,10 @@ def init():
 		eclipse_drop_rate = float(input(f'What is the packet drop rate (0 to 1)? (for the file name) '))
 		maxConnections = eclipse_real_numpeers + eclipse_fake_numpeers
 		print(f'Total number of connections: {maxConnections}')
+		waitForConnectionNum = True
 	else:
 		maxConnections = int(input(f'How many connections should be initially made? (From 1 to 10)\nPreferably start with 1 connection: '))
-
-
-	waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {maxConnections}? (y/n) ').lower() in ['y', 'yes']
+		waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {maxConnections}? (y/n) ').lower() in ['y', 'yes']
 
 	print()
 	print()
