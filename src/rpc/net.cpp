@@ -1244,7 +1244,10 @@ static UniValue forcerealfake(const JSONRPCRequest& request)
     std::vector<CNodeStats> vstats;
     g_rpc_node->connman->GetNodeStats(vstats);
 
-    for (const CNodeStats& stats : vstats) {
+    for (vector<CNodeStats>::reverse_iterator i = vstats.rbegin();
+    i != vstats.rend(); ++i ) {
+        CNodeStats& stats = vstats[i];
+    //for (const CNodeStats& stats : vstats) {
         CNodeStateStats statestats;
         bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
         if (fStateStats) {

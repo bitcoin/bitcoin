@@ -255,7 +255,7 @@ def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, inte
 		make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = True, attempt_number = 3)
 	except ConnectionRefusedError:
 		print('Connection was refused. The victim\'s node must not be running.')
-		
+
 	"""
 	src_port = random.randint(1024, 65535)
 	dst_port = victim_port
@@ -360,7 +360,7 @@ def mirror_make_fake_connection(interface, src_ip, verbose=True):
 def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
 		try:
-			packet = socket.recv(65565)
+			packet, address = socket.recvfrom(65565)
 			create_task(True, 'Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
 		except: time.sleep(1)
 	close_connection(socket, None, dst_ip, dst_port, interface)
@@ -369,7 +369,7 @@ def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, int
 def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
 		try:
-			packet = socket.recv(65565)
+			packet, address = socket.recvfrom(65565)
 			create_task(True, 'Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
 		except: time.sleep(1)
 	close_connection(socket, None, src_ip, src_port, interface)
