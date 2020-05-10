@@ -561,13 +561,23 @@ def fetch(now):
 	try:
 		peerinfo = json.loads(bitcoin('getpeerinfo'))
 		numPeers = len(peerinfo)
-		peerNumInvalid = False
 
+		# If eclipse attack, verify that the read-to-fake ratio is correct
 		if eclipsing:
-			bitcoin(f'forcerealfake {eclipse_real_numpeers} {eclipse_fake_numpeers}')
-		elif waitForConnectionNum and numPeers != maxConnections: peerNumInvalid = True
+			success = True
+			# Disconnect if there's any extra peers, then verify that the connection count is correct
+			realfakestatus = json.loads(bitcoin(f'forcerealfake {eclipse_real_numpeers} {eclipse_fake_numpeers}'))
+			if 'At correct peer count' in realfakestatus:
+				success = realfakestatus['At correct peer count']
+			else:
+				success = False
+			if not success:
+				numSkippedSamples += 1
+				print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
+				return ''
 
-		if peerNumInvalid:
+
+		if waitForConnectionNum and numPeers != maxConnections:
 			numSkippedSamples += 1
 			print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
 			return ''
