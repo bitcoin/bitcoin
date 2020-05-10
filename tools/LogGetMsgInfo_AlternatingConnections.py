@@ -1,1 +1,0 @@
-def bitcoin(cmd):
