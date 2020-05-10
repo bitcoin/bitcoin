@@ -25,6 +25,11 @@ from test_framework.mininode import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_not_equal,
+    assert_greater_than,
+    assert_greater_than_or_equal,
+    assert_less_than,
+    assert_less_than_or_equal,
     connect_nodes,
     wait_until,
 )
@@ -133,6 +138,30 @@ class ExampleTest(BitcoinTestFramework):
 
         self.log.info("Running custom_method")
 
+    def test_asserts(self):
+        """Test assert methods
+
+        This method should be used to try out various assert_* methods."""
+
+        besthash = self.nodes[0].getbestblockhash()
+        besthash_copy = besthash
+
+        assert_equal(besthash, besthash_copy)
+
+        block1 = self.nodes[0].getblock(self.nodes[0].getbestblockhash())
+        self.nodes[0].generate(nblocks=1)
+        block2 = self.nodes[0].getblock(self.nodes[0].getbestblockhash())
+
+        assert_not_equal(block1, block2)
+
+        height1 = block1['height']
+        height2 = block2['height']
+
+        assert_greater_than(height2, height1)
+        assert_greater_than_or_equal(height2, height1)
+        assert_less_than(height1, height2)
+        assert_less_than_or_equal(height1, height2)
+
     def run_test(self):
         """Main test logic"""
 
@@ -153,6 +182,9 @@ class ExampleTest(BitcoinTestFramework):
         # Logs are nice. Do plenty of them. They can be used in place of comments for
         # breaking the test into sub-sections.
         self.log.info("Starting test!")
+
+        self.log.info("Testing assert methods")
+        self.test_asserts()
 
         self.log.info("Calling a custom function")
         custom_function()
