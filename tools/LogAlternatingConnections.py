@@ -807,8 +807,8 @@ def init():
 	print()
 	eclipsing = input('Is this an eclipse attack? (y/n) ').lower() in ['y', 'yes']
 	if eclipsing:
-		eclipse_real_numpeers = int(input(f'How many REAL connections would you like? '))
 		eclipse_fake_numpeers = int(input(f'How many FAKE connections would you like? '))
+		eclipse_real_numpeers = int(input(f'How many REAL connections would you like? '))
 		eclipse_drop_rate = float(input(f'What is the packet drop rate (0 to 1)? (for the file name) '))
 		maxConnections = eclipse_real_numpeers + eclipse_fake_numpeers
 		print(f'Total number of connections: {maxConnections}')
