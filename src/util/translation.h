@@ -33,10 +33,6 @@ inline bilingual_str operator+(bilingual_str lhs, const bilingual_str& rhs)
 
 /** Mark a bilingual_str as untranslated */
 inline bilingual_str Untranslated(std::string original) { return {original, original}; }
-/** Unary operator to return the original */
-inline std::string OpOriginal(const bilingual_str& b) { return b.original; }
-/** Unary operator to return the translation */
-inline std::string OpTranslated(const bilingual_str& b) { return b.translated; }
 
 namespace tinyformat {
 template <typename... Args>
