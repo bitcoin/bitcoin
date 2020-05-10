@@ -273,6 +273,18 @@ PopServiceImpl::PopServiceImpl(const altintegration::Config& config)
 {
     config.validate();
     altTree = altintegration::Altintegration::create(config);
+
+    altTree->connectOnInvalidateBlock([&](const altintegration::BlockIndex<altintegration::AltBlock>& invalidated) {
+        LOCK(cs_main);
+        auto index = LookupBlockIndex(uint256(invalidated.getHash()));
+        assert(index); // if alt tree knows this index, then we also should know
+        if (invalidated.status & altintegration::BLOCK_FAILED_CHILD) {
+            index->nStatus |= BLOCK_FAILED_CHILD;
+        }
+        if (invalidated.status & altintegration::BLOCK_FAILED_POP) {
+            index->nStatus |= BLOCK_FAILED_VALID;
+        }
+    });
 }
 
 void PopServiceImpl::invalidateBlockByHash(const uint256& block)

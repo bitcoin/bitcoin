@@ -59,6 +59,8 @@ struct PopService {
 
     virtual bool evalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks) = 0;
     virtual int compareForks(const CBlockIndex& left, const CBlockIndex& right) = 0;
+
+    virtual std::string toPrettyString() const = 0;
 };
 } // namespace VeriBlock
 

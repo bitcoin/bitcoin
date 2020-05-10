@@ -130,7 +130,6 @@ enum BlockStatus: uint32_t {
 
     BLOCK_OPT_WITNESS       =   128, //!< block data in blk*.data was received with a witness-enforcing client
 
-    BLOCK_FAILED_POP        =   256, //!< block failed pop validation
 };
 
 /** The block chain is a tree shaped structure starting with the
