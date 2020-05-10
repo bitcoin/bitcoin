@@ -685,7 +685,32 @@ def fetch(now):
 	numSkippedSamples = 0
 	return line
 
-def resetNode(file):
+def newFile(file):
+	fileSampleNumber += 1
+	try:
+		file.close()
+	except:
+		pass
+	try:
+		file = open(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/{getFileName()}'), 'w+')
+		file.write(fetchHeader() + '\n')
+	except:
+		print('ERROR: Failed to create new file.')
+	return file
+
+def fixBitcoinConf():
+	try:
+		with open(datadir + '/bitcoin.conf', 'r') as configFile:
+			configData = configFile.read()
+		configData = re.sub(r'\s*maxconnections\s*=\s*[0-9]+', '', configData)
+		configData += '\n' + 'maxconnections=' + str(numConnections)
+		with open(datadir + '/bitcoin.conf', 'w') as configFile:
+			configFile.write(configData)
+	except:
+		print('ERROR: Failed to update bitcoin.conf')
+
+
+def resetNode():
 	global fileSampleNumber
 	success = False
 	while not success or bitcoinUp():
@@ -697,25 +722,7 @@ def resetNode(file):
 			pass
 		time.sleep(3)
 
-	fileSampleNumber += 1
-	try:
-		file.close()
-	except:
-		pass
-	try:
-		file = open(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/{getFileName()}'), 'w+')
-		file.write(fetchHeader() + '\n')
-	except:
-		print('ERROR: Failed to create new file.')
-	try:
-		with open(datadir + '/bitcoin.conf', 'r') as configFile:
-			configData = configFile.read()
-		configData = re.sub(r'\s*maxconnections\s*=\s*[0-9]+', '', configData)
-		configData += '\n' + 'maxconnections=' + str(numConnections)
-		with open(datadir + '/bitcoin.conf', 'w') as configFile:
-			configFile.write(configData)
-	except:
-		print('ERROR: Failed to update bitcoin.conf')
+	fixBitcoinConf()
 
 	success = False
 	while not success:
@@ -732,8 +739,6 @@ def resetNode(file):
 		time.sleep(startupDelay)
 		print('Startup delay complete.')
 
-	return file
-
 def log(file, targetDateTime, count):
 	global maxConnections, fileSampleNumber
 	try:
@@ -747,9 +752,11 @@ def log(file, targetDateTime, count):
 			#	file.close()
 			#	return
 			if(count % rowsPerNodeReset == 0):
-				maxConnections = 1 + maxConnections % 10 # Bound the max connections to 10 peers
+				if not eclipsing: # If eclipse attack, max connections does not increase
+					maxConnections = 1 + maxConnections % 10 # Bound the max connections to 10 peers
 				try:
-					file = resetNode(file)
+					file = newFile(file)
+					resetNode()
 				except Exception as e:
 					print('ERROR: ' + e)
 
@@ -760,14 +767,7 @@ def log(file, targetDateTime, count):
 		print('\nLOGGER PAUSED. Hold on...')
 		print(e)
 		if not bitcoinUp():
-			success = False
-			while not success:
-				try:
-					print('Starting Bitcoin...')
-					startBitcoin()
-					success = True
-				except:
-					pass
+			resetNode()
 		#print(traceback.format_exc())
 
 
@@ -834,7 +834,8 @@ def init():
 			print('Creating "Logs_AlternatingConnections" folder on desktop...')
 			os.makedirs(path)
 
-		file = resetNode(None)#open(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/sample0.csv'), 'w+')
+		file = newFile(file)
+		resetNode() #open(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/sample0.csv'), 'w+')
 		targetDateTime = datetime.datetime.now()
 		log(file, targetDateTime, 1)
 	else:
