@@ -119,4 +119,10 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         int64_t amount_out;
         (void)ParseFixedPoint(random_string_1, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 1024), &amount_out);
     }
+    {
+        (void)Untranslated(random_string_1);
+        const bilingual_str bs1{random_string_1, random_string_2};
+        const bilingual_str bs2{random_string_2, random_string_1};
+        (void)(bs1 + bs2);
+    }
 }
