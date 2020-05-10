@@ -13,8 +13,6 @@ startupDelay = 0			# Number of seconds to wait after each node start up
 numSecondsPerSample = 1
 rowsPerNodeReset = 3000		# Number of rows for cach numconnections file
 
-waitForConnectionNum = True
-
 os.system('clear')
 
 datadir = os.path.expanduser('~/.bitcoin') # Virtual machine shared folder
@@ -677,7 +675,7 @@ def fetch(now):
 	numSkippedSamples = 0
 	return line
 
-def resetNode(file, numConnections):
+def resetNode(file):
 	global fileSampleNumber
 	success = False
 	while not success or bitcoinUp():
@@ -695,7 +693,7 @@ def resetNode(file, numConnections):
 	except:
 		pass
 	try:
-		file = open(os.path.expanduser(f'~/Desktop/Logs_GetMsgInfo_AlternatingConnections/Sample {fileSampleNumber} numConnections {numConnections}.csv'), 'w+')
+		file = open(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/{getFileName()}'), 'w+')
 		file.write(fetchHeader() + '\n')
 	except:
 		print('ERROR: Failed to create new file.')
@@ -741,7 +739,7 @@ def log(file, targetDateTime, count):
 			if(count % rowsPerNodeReset == 0):
 				maxConnections = 1 + maxConnections % 10 # Bound the max connections to 10 peers
 				try:
-					file = resetNode(file, maxConnections)
+					file = resetNode(file)
 				except Exception as e:
 					print('ERROR: ' + e)
 
@@ -751,6 +749,15 @@ def log(file, targetDateTime, count):
 	except Exception as e:
 		print('\nLOGGER PAUSED. Hold on...')
 		print(e)
+		if not bitcoinUp():
+			success = False
+			while not success:
+				try:
+					print('Starting Bitcoin...')
+					startBitcoin()
+					success = True
+				except:
+					pass
 		#print(traceback.format_exc())
 
 
@@ -761,26 +768,68 @@ def log(file, targetDateTime, count):
 def getDelay(time):
 	return (time - datetime.datetime.now()).total_seconds()
 
+# Returns the file name of the current file, given the global configuration variables
+def getFileName():
+	global rowsPerNodeReset, numSecondsPerSample, eclipsing, fileSampleNumber, eclipse_real_numpeers, eclipse_fake_numpeers, eclipse_drop_rate, waitForConnectionNum
+	minutes = rowsPerNodeReset / numSecondsPerSample / 60
+	if eclipsing:
+		return f'Sample {fileSampleNumber}, genuine = {eclipse_real_numpeers}, fake = {eclipse_fake_numpeers}, drop = {eclipse_drop_rate}, minutes = {minutes}.csv'
+	elif waitForConnectionNum:
+		return f'Sample {fileSampleNumber}, numConnections = {numConnections}, minutes = {minutes}.csv'
+	else:
+		return f'Sample {fileSampleNumber}, maxConnections = {numConnections}, minutes = {minutes}.csv'
+
 def init():
-	global fileSampleNumber
-	global maxConnections
+	global fileSampleNumber, maxConnections
+	global waitForConnectionNum, eclipsing, eclipse_real_numpeers, eclipse_fake_numpeers, eclipse_drop_rate
+
 	fileSampleNumber = 0		# File number to start at
-	while len(glob.glob(os.path.expanduser(f'~/Desktop/Logs_GetMsgInfo_AlternatingConnections/Sample {fileSampleNumber + 1} *'))) > 0:
+	while len(glob.glob(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/Sample {fileSampleNumber + 1}*'))) > 0:
 		fileSampleNumber += 1
 
-	filesList = '\n'.join(glob.glob(os.path.expanduser('~/Desktop/Logs_GetMsgInfo_AlternatingConnections/Sample *')))
-	filesList = filesList.replace(os.path.expanduser('~/Desktop/Logs_GetMsgInfo_AlternatingConnections/'), '')
+	filesList = '\n'.join(glob.glob(os.path.expanduser('~/Desktop/Logs_AlternatingConnections/Sample *')))
+	filesList = filesList.replace(os.path.expanduser('~/Desktop/Logs_AlternatingConnections/'), '')
 	print(filesList)
 	print()
-	maxConnections = int(input(f'Starting at file "Sample {fileSampleNumber + 1} numConnections X.csv"\n\nHow many connections should be initially made? (From 1 to 10)\nPreferably start with 1 connection: '))
+	print(f'Starting at file "Sample {fileSampleNumber + 1} ..."')
 	print()
-	path = os.path.expanduser('~/Desktop/Logs_GetMsgInfo_AlternatingConnections')
-	if not os.path.exists(path):
-	    os.makedirs(path)
+	print()
+	eclipsing = input('Is this an eclipse attack? (y/n)').lower() in ['y', 'yes']
+	if eclipsing:
+		eclipse_real_numpeers = int(input(f'How many REAL connections would you like? '))
+		eclipse_fake_numpeers = int(input(f'How many FAKE connections would you like? '))
+		eclipse_drop_rate = float(input(f'What is the packet drop rate (0 to 1)? (for the file name) '))
+		maxConnections = eclipse_real_numpeers + eclipse_fake_numpeers
+		print(f'Total number of connections: ' + maxConnections)
+	else:
+		maxConnections = int(input(f'How many connections should be initially made? (From 1 to 10)\nPreferably start with 1 connection: '))
 
-	file = resetNode(None, maxConnections)#open(os.path.expanduser(f'~/Desktop/Logs_GetMsgInfo_AlternatingConnections/sample0.csv'), 'w+')
-	targetDateTime = datetime.datetime.now()
-	log(file, targetDateTime, 1)
+
+	waitForConnectionNum = input(f'Do you want to log ONLY when the number of connections is at {maxConnections}? (y/n)').lower() in ['y', 'yes']
+
+	print()
+	print()
+	print(f'Starting file name: {getFileName()}')
+	if eclipsing:
+		print(f'Real connections: {eclipse_real_numpeers}')
+		print(f'Fake connections: {eclipse_fake_numpeers}')
+		print(f'Packet drop rate: {eclipse_drop_rate}')
+	print(f'Maximum connections: {maxConnections}')
+	print(f'Pause if connections don\'t equal {maxConnections}: {waitForConnectionNum}')
+	print()
+	confirm = input(f'Does all of this look correct? (y/n)').lower() in ['y', 'yes']
+	if confirm:
+		path = os.path.expanduser('~/Desktop/Logs_AlternatingConnections')
+		if not os.path.exists(path):
+			print('Creating "Logs_AlternatingConnections" folder on desktop...')
+		    os.makedirs(path)
+
+		file = resetNode(None)#open(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/sample0.csv'), 'w+')
+		targetDateTime = datetime.datetime.now()
+		log(file, targetDateTime, 1)
+	else:
+		print('Then please restart the script')
+		sys.exit()
 
 
 init()
