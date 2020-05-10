@@ -16,6 +16,7 @@ from test_framework.messages import (
     msg_filterclear,
     msg_filterload,
     msg_getdata,
+    msg_mempool,
 )
 from test_framework.mininode import P2PInterface
 from test_framework.script import MAX_SCRIPT_ELEMENT_SIZE
@@ -93,6 +94,20 @@ class FilterTest(BitcoinTestFramework):
 
         filter_node.send_and_ping(msg_filterclear())
 
+    def test_msg_mempool(self):
+        self.log.info("Check that a node with bloom filters enabled services p2p mempool messages")
+        filter_peer = FilterNode()
+
+        self.log.info("Create a tx relevant to the peer before connecting")
+        filter_address = self.nodes[0].decodescript(filter_peer.watch_script_pubkey)['addresses'][0]
+        txid = self.nodes[0].sendtoaddress(filter_address, 90)
+
+        self.log.info("Send a mempool msg after connecting and check that the tx is received")
+        self.nodes[0].add_p2p_connection(filter_peer)
+        filter_peer.send_and_ping(filter_peer.watch_filter_init)
+        self.nodes[0].p2p.send_message(msg_mempool())
+        filter_peer.wait_for_tx(txid)
+
     def run_test(self):
         filter_node = self.nodes[0].add_p2p_connection(FilterNode())
 
@@ -123,7 +138,7 @@ class FilterTest(BitcoinTestFramework):
         assert not filter_node.merkleblock_received
         assert not filter_node.tx_received
 
-        self.log.info('Check that we receive a tx in reply to a mempool msg if the filter matches a mempool tx')
+        self.log.info('Check that we receive a tx if the filter matches a mempool tx')
         filter_node.merkleblock_received = False
         txid = self.nodes[0].sendtoaddress(filter_address, 90)
         filter_node.wait_for_tx(txid)
@@ -152,7 +167,9 @@ class FilterTest(BitcoinTestFramework):
         self.log.info("Check that division-by-zero remote crash bug [CVE-2013-5700] is fixed")
         filter_node.send_and_ping(msg_filterload(data=b'', nHashFuncs=1))
         filter_node.send_and_ping(msg_filteradd(data=b'letstrytocrashthisnode'))
+        self.nodes[0].disconnect_p2ps()
 
+        self.test_msg_mempool()
 
 if __name__ == '__main__':
     FilterTest().main()
