@@ -832,7 +832,7 @@ def init():
 		path = os.path.expanduser('~/Desktop/Logs_AlternatingConnections')
 		if not os.path.exists(path):
 			print('Creating "Logs_AlternatingConnections" folder on desktop...')
-		    os.makedirs(path)
+			os.makedirs(path)
 
 		file = resetNode(None)#open(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/sample0.csv'), 'w+')
 		targetDateTime = datetime.datetime.now()
