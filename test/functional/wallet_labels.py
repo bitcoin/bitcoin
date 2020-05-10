@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016-2018 The Bitcoin Core developers
+# Copyright (c) 2019-2020 Xenios SEZC
+# https://www.veriblock.org
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test label RPCs.
@@ -17,6 +19,7 @@ from test_framework.wallet_util import (
     labels_value,
     test_address,
 )
+from test_framework.payout import POW_PAYOUT
 
 class WalletLabelsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -32,13 +35,13 @@ class WalletLabelsTest(BitcoinTestFramework):
         assert_equal(len(node.listunspent()), 0)
 
         # Note each time we call generate, all generated coins go into
-        # the same address, so we call twice to get two addresses w/50 each
+        # the same address, so we call twice to get two addresses w/POW_PAYOUT each
         node.generatetoaddress(nblocks=1, address=node.getnewaddress(label='coinbase'))
         node.generatetoaddress(nblocks=101, address=node.getnewaddress(label='coinbase'))
-        assert_equal(node.getbalance(), 100)
+        assert_equal(node.getbalance(), (POW_PAYOUT*2))
 
         # there should be 2 address groups
-        # each with 1 address with a balance of 50 Bitcoins
+        # each with 1 address with a balance of POW_PAYOUT vBitcoins
         address_groups = node.listaddressgroupings()
         assert_equal(len(address_groups), 2)
         # the addresses aren't linked now, but will be after we send to the
@@ -47,14 +50,14 @@ class WalletLabelsTest(BitcoinTestFramework):
         for address_group in address_groups:
             assert_equal(len(address_group), 1)
             assert_equal(len(address_group[0]), 3)
-            assert_equal(address_group[0][1], 50)
+            assert_equal(address_group[0][1], POW_PAYOUT)
             assert_equal(address_group[0][2], 'coinbase')
             linked_addresses.add(address_group[0][0])
 
-        # send 50 from each address to a third address not in this wallet
+        # send POW_PAYOUT from each address to a third address not in this wallet
         common_address = "msf4WtN1YQKXvNtvdFYt9JBnUD2FB41kjr"
         node.sendmany(
-            amounts={common_address: 100},
+            amounts={common_address: (POW_PAYOUT * 2)},
             subtractfeefrom=[common_address],
             minconf=1,
         )

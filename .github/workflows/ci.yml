@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - master
+      - feature/fix-functional-tests
 
   pull_request:
     branches:
@@ -71,10 +72,7 @@ jobs:
           --disable-bench
           --disable-gmock
       - name: make
-        run: make -j2
-      - name: make deploy
-        if: success()
-        run: make deploy
+        run: make -j2 deploy
       - name: create artifacts
         if: success()
         run: |
@@ -99,6 +97,10 @@ jobs:
         with:
           name: test-suite.log
           path: src/test-suite.log
+      - name: run functional tests
+        if: always()
+        timeout-minutes: 60
+        run: python3 test/functional/test_runner.py --combinedlogslen=4000
 
   x86_64-w64-mingw32:
     runs-on: ubuntu-latest
@@ -308,4 +310,8 @@ jobs:
       - name: make
         run: make -j2
       - name: make check
-        run: make check
+        run: make
+      - name: run functional tests
+        if: always()
+        timeout-minutes: 60
+        run: python3 test/functional/test_runner.py --combinedlogslen=4000

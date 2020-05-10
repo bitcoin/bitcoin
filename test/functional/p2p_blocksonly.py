@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 Xenios SEZC
+# https://www.veriblock.org
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test p2p blocksonly"""
@@ -8,6 +10,7 @@ from test_framework.messages import msg_tx, CTransaction, FromHex
 from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
+from test_framework.payout import POW_PAYOUT
 
 
 class P2PBlocksOnly(BitcoinTestFramework):
@@ -27,7 +30,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
                 'vout': 0
             }],
             outputs=[{
-                self.nodes[0].get_deterministic_priv_key().address: 50 - 0.00125
+                self.nodes[0].get_deterministic_priv_key().address: POW_PAYOUT - 0.00125
             }],
         )
         sigtx = self.nodes[0].signrawtransactionwithkey(

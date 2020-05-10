@@ -66,10 +66,7 @@ jobs:
           --enable-lcov
           --enable-lcov-branch-coverage
       - name: make
-        run: make -j2
-      - name: make deploy
-        if: success()
-        run: make deploy
+        run: make -j2 deploy
       - name: create artifacts
         if: success()
         run: |
@@ -101,6 +98,10 @@ jobs:
       - name: Run sonarqube
         if: success()
         run: sonar-scanner -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+      - name: run functional tests
+        if: always()
+        timeout-minutes: 60
+        run: python3 test/functional/test_runner.py --combinedlogslen=4000
 
   windows:
     runs-on: windows-latest
@@ -183,11 +184,12 @@ jobs:
       - name: rpcauth-test
         shell: cmd
         run: python test\util\rpcauth-test.py
-#      - name: test_runner
-#        if: always()
-#        shell: cmd
-#        run: |
-#          python test\functional\test_runner.py --ansi --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
+      - name: test_runner
+        if: always()
+        timeout-minutes: 60
+        shell: cmd
+        run: |
+          python test\functional\test_runner.py --combinedlogslen=4000 --exclude feature_fee_estimation
 
   macos:
     runs-on: macos-latest
@@ -246,7 +248,12 @@ jobs:
       - name: make
         run: make -j2
       - name: make check
+        timeout-minutes: 20
         run: make check
+      - name: run functional tests
+        if: always()
+        timeout-minutes: 60
+        run: python3 test/functional/test_runner.py --combinedlogslen=4000
 
   x86_64-apple-darwin16:
     runs-on: ubuntu-latest

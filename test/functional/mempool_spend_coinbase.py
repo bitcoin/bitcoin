@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2018 The Bitcoin Core developers
+# Copyright (c) 2019-2020 Xenios SEZC
+# https://www.veriblock.org
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test spending coinbase transactions.
@@ -15,6 +17,7 @@ but less mature coinbase spends are NOT.
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.blocktools import create_raw_transaction
 from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.payout import POW_PAYOUT
 
 
 class MempoolSpendCoinbaseTest(BitcoinTestFramework):
@@ -34,7 +37,7 @@ class MempoolSpendCoinbaseTest(BitcoinTestFramework):
         # is too immature to spend.
         b = [self.nodes[0].getblockhash(n) for n in range(101, 103)]
         coinbase_txids = [self.nodes[0].getblock(h)['tx'][0] for h in b]
-        spends_raw = [create_raw_transaction(self.nodes[0], txid, node0_address, amount=49.99) for txid in coinbase_txids]
+        spends_raw = [create_raw_transaction(self.nodes[0], txid, node0_address, amount=(POW_PAYOUT-0.01)) for txid in coinbase_txids]
 
         spend_101_id = self.nodes[0].sendrawtransaction(spends_raw[0])
 

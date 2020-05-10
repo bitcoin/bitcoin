@@ -2,6 +2,8 @@
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
 # Copyright (c) 2010-2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 Xenios SEZC
+# https://www.veriblock.org
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Bitcoin P2P network half-a-node.
@@ -80,10 +82,13 @@ MESSAGEMAP = {
     b"version": msg_version,
 }
 
+# Edit these parameters to match src/chainparams.cpp
 VBK_NETWORK = 0x4
+
 
 def calculate_network_magic(index):
     return bytes([index, index, index, index + VBK_NETWORK])
+
 
 MAGIC_BYTES = {
     "mainnet": calculate_network_magic(1),   # mainnet
@@ -91,6 +96,8 @@ MAGIC_BYTES = {
     "regtest": calculate_network_magic(3),   # regtest
 }
 
+
+# VBK
 
 class P2PConnection(asyncio.Protocol):
     """A low-level connection object to a node's P2P interface.

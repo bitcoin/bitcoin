@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 Xenios SEZC
+# https://www.veriblock.org
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the RBF code."""
@@ -11,6 +13,7 @@ from test_framework.script import CScript, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
 from test_framework.script_util import DUMMY_P2WPKH_SCRIPT
+from test_framework.payout import POW_PAYOUT
 
 MAX_REPLACEMENT_LIMIT = 100
 
@@ -206,7 +209,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def test_doublespend_tree(self):
         """Doublespend of a big tree of transactions"""
 
-        initial_nValue = 50*COIN
+        initial_nValue = POW_PAYOUT*COIN
         tx0_outpoint = make_utxo(self.nodes[0], initial_nValue)
 
         def branch(prevout, initial_value, max_txs, tree_width=5, fee=0.0001*COIN, _total_txs=None):

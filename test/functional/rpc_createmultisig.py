@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 Xenios SEZC
+# https://www.veriblock.org
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multisig RPCs"""
@@ -11,6 +13,7 @@ from test_framework.util import (
     assert_equal,
 )
 from test_framework.key import ECPubKey
+from test_framework.payout import POW_PAYOUT
 
 import binascii
 import decimal
@@ -108,7 +111,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         height = node0.getblockchaininfo()["blocks"]
         assert 150 < height < 350
-        total = 149 * 50 + (height - 149 - 100) * 25
+        total = 149 * POW_PAYOUT + (height - 149 - 100) * (POW_PAYOUT/2)
         assert bal1 == 0
         assert bal2 == self.moved
         assert bal0 + bal1 + bal2 == total

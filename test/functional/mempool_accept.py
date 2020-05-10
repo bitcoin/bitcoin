@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 Xenios SEZC
+# https://www.veriblock.org
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool acceptance of raw transactions."""
@@ -29,6 +31,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     hex_str_to_bytes,
 )
+from test_framework.payout import POW_PAYOUT
 
 
 class MempoolAcceptanceTest(BitcoinTestFramework):
@@ -66,7 +69,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         coin = coins.pop()  # Pick a random coin(base) to spend
         raw_tx_in_block = node.signrawtransactionwithwallet(node.createrawtransaction(
             inputs=[{'txid': coin['txid'], 'vout': coin['vout']}],
-            outputs=[{node.getnewaddress(): 0.3}, {node.getnewaddress(): 49}],
+            outputs=[{node.getnewaddress(): 0.3}, {node.getnewaddress(): (POW_PAYOUT-1)}],
         ))['hex']
         txid_in_block = node.sendrawtransaction(hexstring=raw_tx_in_block, maxfeerate=0)
         node.generate(1)

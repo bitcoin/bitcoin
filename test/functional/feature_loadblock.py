@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 Xenios SEZC
+# https://www.veriblock.org
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test loadblock option
@@ -53,7 +55,7 @@ class LoadblockTest(BitcoinTestFramework):
             cfg.write("host={}\n".format(node_url.hostname))
             cfg.write("output_file={}\n".format(bootstrap_file))
             cfg.write("max_height=100\n")
-            cfg.write("netmagic=fabfb5da\n")
+            cfg.write("netmagic=03030307\n")
             cfg.write("input={}\n".format(blocks_dir))
             cfg.write("genesis={}\n".format(genesis_block))
             cfg.write("hashlist={}\n".format(hash_list.name))
