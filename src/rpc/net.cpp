@@ -1227,7 +1227,7 @@ static UniValue forcerealfake(const JSONRPCRequest& request)
     std::string realStr = request.params[0].get_str();
     std::string fakeStr = request.params[1].get_str();
 
-    int real = 0,fake  = 0;
+    int real = 0, fake  = 0;
     try {
       real = std::stoi(realStr);
     } catch(...) {
@@ -1270,6 +1270,8 @@ static UniValue forcerealfake(const JSONRPCRequest& request)
             }
         }
     }
+
+    result.pushKV("At correct peer count", (real == 0 && fake == 0));
 
     return result;
 }
