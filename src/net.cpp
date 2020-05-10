@@ -16,6 +16,7 @@
 #include <crypto/sha256.h>
 #include <netbase.h>
 #include <net_permissions.h>
+#include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
 #include <ui_interface.h>
@@ -631,14 +632,14 @@ int CNode::GetSendVersion() const
 int V1TransportDeserializer::readHeader(const char *pch, unsigned int nBytes)
 {
     // copy data to temporary parsing buffer
-    unsigned int nRemaining = 24 - nHdrPos;
+    unsigned int nRemaining = CMessageHeader::HEADER_SIZE - nHdrPos;
     unsigned int nCopy = std::min(nRemaining, nBytes);
 
     memcpy(&hdrbuf[nHdrPos], pch, nCopy);
     nHdrPos += nCopy;
 
     // if header incomplete, exit
-    if (nHdrPos < 24)
+    if (nHdrPos < CMessageHeader::HEADER_SIZE)
         return nCopy;
 
     // deserialize to CMessageHeader
