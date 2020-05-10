@@ -706,10 +706,21 @@ def fixBitcoinConf():
 			configData = configFile.read()
 		configData = re.sub(r'\s*maxconnections\s*=\s*[0-9]+', '', configData)
 		configData += '\n' + 'maxconnections=' + str(maxConnections)
+		print(configData)
 		with open(datadir + '/bitcoin.conf', 'w') as configFile:
 			configFile.write(configData)
 	except:
 		print('ERROR: Failed to update bitcoin.conf')
+		try:
+			with open(datadir + '/bitcoin.conf', 'r') as configFile:
+				configData = configFile.read()
+			configData = re.sub(r'\s*maxconnections\s*=\s*[0-9]+', '', configData)
+			configData += '\n' + 'maxconnections=' + str(maxConnections)
+			print(configData)
+			with open(datadir + '/bitcoin.conf', 'w') as configFile:
+				configFile.write(configData)
+		except:
+			pass
 
 
 def resetNode():
@@ -828,19 +839,20 @@ def init():
 	print(f'Pause if connections don\'t equal {maxConnections}: {waitForConnectionNum}')
 	print()
 	confirm = input(f'Does all of this look correct? (y/n) ').lower() in ['y', 'yes']
-	if confirm:
-		path = os.path.expanduser('~/Desktop/Logs_AlternatingConnections')
-		if not os.path.exists(path):
-			print('Creating "Logs_AlternatingConnections" folder on desktop...')
-			os.makedirs(path)
-
-		file = newFile(None)
-		resetNode() #open(os.path.expanduser(f'~/Desktop/Logs_AlternatingConnections/sample0.csv'), 'w+')
-		targetDateTime = datetime.datetime.now()
-		log(file, targetDateTime, 1)
-	else:
+	if not confirm:
 		print('Then please restart the script')
 		sys.exit()
+		return
+
+	path = os.path.expanduser('~/Desktop/Logs_AlternatingConnections')
+	if not os.path.exists(path):
+		print('Creating "Logs_AlternatingConnections" folder on desktop...')
+		os.makedirs(path)
+
+	file = newFile(None)
+	resetNode()
+	targetDateTime = datetime.datetime.now()
+	log(file, targetDateTime, 1)
 
 
 init()
