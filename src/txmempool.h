@@ -621,7 +621,7 @@ public:
     void removeProTxKeyChangedConflicts(const CTransaction &tx, const uint256& proTxHash, const uint256& newKeyHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeProTxConflicts(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void removeExpiredAssetUnlock(unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void removeExpiredAssetUnlock(int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void clear();
     void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free

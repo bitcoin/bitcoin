@@ -572,7 +572,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
     for (auto& pQuorumBaseBlockIndex : pQuorumBaseBlockIndexes) {
         assert(pQuorumBaseBlockIndex);
         // populate cache for keepOldConnections most recent quorums only
-        bool populate_cache = vecResultQuorums.size() < llmq_params_opt->keepOldConnections;
+        bool populate_cache = vecResultQuorums.size() < static_cast<size_t>(llmq_params_opt->keepOldConnections);
         auto quorum = GetQuorum(llmqType, pQuorumBaseBlockIndex, populate_cache);
         assert(quorum != nullptr);
         vecResultQuorums.emplace_back(quorum);
@@ -1077,7 +1077,7 @@ void CQuorumManager::StartCleanupOldQuorumDataThread(const CBlockIndex* pIndex) 
                 uint256 quorum_key;
                 if (cache.get(pindex_loop->GetBlockHash(), quorum_key)) {
                     quorum_keys.insert(quorum_key);
-                    if (quorum_keys.size() >= params.keepOldKeys) break; // extra safety belt
+                    if (quorum_keys.size() >= static_cast<size_t>(params.keepOldKeys)) break; // extra safety belt
                 }
                 pindex_loop = pindex_loop->pprev;
             }

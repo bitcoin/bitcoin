@@ -987,7 +987,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
 /**
   * Called when a lenght of chain is increased. Removes from mempool expired asset-unlock transactions
   */
-void CTxMemPool::removeExpiredAssetUnlock(unsigned int nBlockHeight)
+void CTxMemPool::removeExpiredAssetUnlock(int nBlockHeight)
 {
     AssertLockHeld(cs);
     // items to removed should be firstly collected to independed list,

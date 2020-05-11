@@ -123,7 +123,7 @@ bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, gsl::not_null<const 
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-not-active-quorum");
     }
 
-    if (pindexTip->nHeight < requestedHeight || pindexTip->nHeight >= getHeightToExpiry()) {
+    if (static_cast<uint32_t>(pindexTip->nHeight) < requestedHeight || pindexTip->nHeight >= getHeightToExpiry()) {
         LogPrint(BCLog::CREDITPOOL, "Asset unlock tx %d with requested height %d could not be accepted on height: %d\n",
                 index, requestedHeight, pindexTip->nHeight);
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-too-late");

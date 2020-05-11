@@ -398,8 +398,8 @@ bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_handler, co
         }
 
         // We check if our best CL is newer than the one from previous block Coinbase
-        auto curCLHeight = best_clsig.getHeight();
-        auto prevCLHeight = static_cast<uint32_t>(pindexPrev->nHeight) - prevBlockCoinbaseChainlock->second - 1;
+        int curCLHeight = best_clsig.getHeight();
+        int prevCLHeight = pindexPrev->nHeight - static_cast<int>(prevBlockCoinbaseChainlock->second) - 1;
         if (curCLHeight < prevCLHeight) {
             // Our best CL isn't newer: inserting CL from previous block
             bestCLHeightDiff = prevBlockCoinbaseChainlock->second + 1;
@@ -407,7 +407,7 @@ bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_handler, co
         }
         else {
             // Our best CL is newer
-            bestCLHeightDiff = static_cast<uint32_t>(pindexPrev->nHeight) - best_clsig.getHeight();
+            bestCLHeightDiff = pindexPrev->nHeight - best_clsig.getHeight();
             bestCLSignature = best_clsig.getSig();
         }
 
@@ -423,7 +423,7 @@ bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_handler, co
         }
 
         // Inserting our best CL
-        bestCLHeightDiff = static_cast<uint32_t>(pindexPrev->nHeight) - best_clsig.getHeight();
+        bestCLHeightDiff = pindexPrev->nHeight - best_clsig.getHeight();
         bestCLSignature = chainlock_handler.GetBestChainLock().getSig();
 
         return true;
