@@ -82,12 +82,13 @@ namespace GUIUtil
     QFont fixedPitchFont();
 
     // Set up widgets for address and amounts
-    void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
+    void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent, bool fAllowURI = false);
     void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
     // Parse "dash:" URI into recipient object, return true on successful parsing
     bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
     bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
+    bool validateBitcoinURI(const QString& uri);
     QString formatBitcoinURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition

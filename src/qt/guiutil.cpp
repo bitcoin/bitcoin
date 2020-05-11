@@ -185,7 +185,7 @@ static std::string DummyAddress(const CChainParams &params)
     return "";
 }
 
-void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
+void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent, bool fAllowURI)
 {
     parent->setFocusProxy(widget);
 
@@ -196,7 +196,7 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
     widget->setPlaceholderText(QObject::tr("Enter a Dash address (e.g. %1)").arg(
         QString::fromStdString(DummyAddress(Params()))));
 #endif
-    widget->setValidator(new BitcoinAddressEntryValidator(parent));
+    widget->setValidator(new BitcoinAddressEntryValidator(parent, fAllowURI));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
 }
 
@@ -288,6 +288,12 @@ bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
     }
     QUrl uriInstance(uri);
     return parseBitcoinURI(uriInstance, out);
+}
+
+bool validateBitcoinURI(const QString& uri)
+{
+    SendCoinsRecipient rcp;
+    return parseBitcoinURI(uri, &rcp);
 }
 
 QString formatBitcoinURI(const SendCoinsRecipient &info)
