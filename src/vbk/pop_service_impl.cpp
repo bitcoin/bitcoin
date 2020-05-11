@@ -277,7 +277,10 @@ PopServiceImpl::PopServiceImpl(const altintegration::Config& config)
     altTree->connectOnInvalidateBlock([&](const altintegration::BlockIndex<altintegration::AltBlock>& invalidated) {
         LOCK(cs_main);
         auto index = LookupBlockIndex(uint256(invalidated.getHash()));
-        assert(index); // if alt tree knows this index, then we also should know
+        if(!index) {
+            // we don't know this block, do nothing.
+            return;
+        }
         if (invalidated.status & altintegration::BLOCK_FAILED_CHILD) {
             index->nStatus |= BLOCK_FAILED_CHILD;
         }
