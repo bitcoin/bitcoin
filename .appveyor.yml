@@ -1,0 +1,90 @@
+version: '{branch}.{build}'
+skip_tags: true
+image: Visual Studio 2019
+configuration: Release
+platform: x64
+clone_depth: 5
+environment:
+  APPVEYOR_SAVE_CACHE_ON_ERROR: true
+  CLCACHE_SERVER: 1
+  PATH: 'C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%'
+  PYTHONUTF8: 1
+  QT_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/v1.6/Qt5.9.8_x64_static_vs2019.zip'
+  QT_DOWNLOAD_HASH: '9a8c6eb20967873785057fdcd329a657c7f922b0af08c5fde105cc597dd37e21'
+  QT_LOCAL_PATH: 'C:\Qt5.9.8_x64_static_vs2019'
+  VCPKG_INSTALL_PATH: 'C:\tools\vcpkg\installed'
+cache:
+- C:\tools\vcpkg\installed -> build_msvc\vcpkg-packages.txt
+- C:\Users\appveyor\clcache -> .appveyor.yml, build_msvc\**, **\Makefile.am, **\*.vcxproj.in
+- C:\Qt5.9.8_x64_static_vs2019
+install:
+- cmd: pip install --quiet git+https://github.com/frerich/clcache.git@v4.2.0
+# Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
+# - cmd: pip install zmq
+# Powershell block below is to install the c++ dependencies via vcpkg. The pseudo code is:
+# 1. Check whether the vcpkg install directory exists (note that updating the vcpkg-packages.txt file
+#    will cause the appveyor cache rules to invalidate the directory)
+# 2. If the directory is missing:
+#    a. Update the vcpkg source (including port files) and build the vcpkg binary,
+#    b. Install the missing packages.
+- ps: |
+      $env:PACKAGES = Get-Content -Path build_msvc\vcpkg-packages.txt
+      Write-Host "vcpkg list: $env:PACKAGES"
+      if(!(Test-Path -Path ($env:VCPKG_INSTALL_PATH))) {
+          cd c:\tools\vcpkg
+          $env:GIT_REDIRECT_STDERR = '2>&1' # git is writing non-errors to STDERR when doing git pull. Send to STDOUT instead.
+          git pull origin master
+          .\bootstrap-vcpkg.bat
+          Add-Content "C:\tools\vcpkg\triplets\$env:PLATFORM-windows-static.cmake" "set(VCPKG_BUILD_TYPE release)"
+          .\vcpkg install --triplet $env:PLATFORM-windows-static $env:PACKAGES.split() > $null
+          cd "$env:APPVEYOR_BUILD_FOLDER"
+      }
+      else {
+        Write-Host "required vcpkg packages already installed."
+      }
+      c:\tools\vcpkg\vcpkg integrate install
+before_build:
+- ps:  clcache -M 536870912
+# Powershell block below is to download and extract the Qt static libraries. The pseudo code is:
+# 1. If the Qt destination directory exists assume it is correct and do nothing. To
+#    force a fresh install of the packages delete the job's appveyor cache.
+# 2. Otherwise:
+#    a. Download the zip file with the prebuilt Qt static libraries.
+#    b. Check that the downloaded file matches the expected hash.
+#    c. Extract the zip file to the specific destination path expected by the msbuild projects.
+- ps: |
+      if(!(Test-Path -Path ($env:QT_LOCAL_PATH))) {
+        Write-Host "Downloading Qt binaries.";
+        Invoke-WebRequest -Uri $env:QT_DOWNLOAD_URL -Out qtdownload.zip;
+        Write-Host "Qt binaries successfully downloaded, checking hash against $env:QT_DOWNLOAD_HASH...";
+        if((Get-FileHash qtdownload.zip).Hash -eq $env:QT_DOWNLOAD_HASH) {
+          Expand-Archive qtdownload.zip -DestinationPath $env:QT_LOCAL_PATH;
+          Write-Host "Qt binary download matched the expected hash.";
+        }
+        else {
+          Write-Host "ERROR: Qt binary download did not match the expected hash.";
+          Exit-AppveyorBuild;
+        }
+      }
+      else {
+         Write-Host "Qt binaries already present.";
+      }
+- cmd: python build_msvc\msvc-autogen.py
+- ps:  Start-Process clcache-server
+- ps:  fsutil behavior set disablelastaccess 0 # Enable Access time feature on Windows (for clcache)
+build_script:
+- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitcoin.sln /m /v:q /nologo
+after_build:
+- ps:  fsutil behavior set disablelastaccess 1 # Disable Access time feature on Windows (better performance)
+- ps:  clcache -z
+#- 7z a bitcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
+test_script:
+- cmd: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
+- cmd: src\bench_bitcoin.exe -evals=1 -scaling=0 > NUL
+- ps:  python test\util\bitcoin-util-test.py
+- cmd: python test\util\rpcauth-test.py
+# Fee estimation test failing on appveyor with: WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted.
+- cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
+artifacts:
+#- path: bitcoin-%APPVEYOR_BUILD_VERSION%.zip
+deploy: off

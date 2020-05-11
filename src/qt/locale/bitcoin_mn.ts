@@ -26,6 +26,10 @@
         <translation>Одоо сонгогдсон байгаа хаягуудыг жагсаалтаас устгах</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Хайлт хийхийн тулд хаяг эсвэл шошгыг оруул</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
     </message>
@@ -70,10 +74,6 @@
         <translation>Сүлжээтэй тааруулж байна...</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Нод</translation>
-    </message>
-    <message>
         <source>&amp;Transactions</source>
         <translation>Гүйлгээнүүд</translation>
     </message>
@@ -114,24 +114,12 @@
         <translation>&amp;Нууц Үгийг Солих...</translation>
     </message>
     <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Хүлээн авах хаяг</translation>
-    </message>
-    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Түрүйвчийг цоожлох нууц үгийг солих</translation>
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Оношилгоо ба засварын консолыг онгойлго</translation>
-    </message>
-    <message>
-        <source>BitcoinHD</source>
-        <translation>Биткойн</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Түрүйвч</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -202,6 +190,12 @@
     </message>
     </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -224,10 +218,6 @@
     <message>
         <source>version</source>
         <translation>хувилбар</translation>
-    </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Хэрэглээ:</translation>
     </message>
     </context>
 <context>
@@ -252,14 +242,13 @@
     <name>OpenURIDialog</name>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    </context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
         <translation>Сонголтууд</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>МБ</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -314,9 +303,6 @@
         <translation>үл мэдэгдэх</translation>
     </message>
 </context>
-<context>
-    <name>QObject::QObject</name>
-    </context>
 <context>
     <name>QRImageWidget</name>
     </context>
@@ -408,9 +394,21 @@
         <source>Copy &amp;Address</source>
         <translation>Хаягийг &amp;Хуулбарлах</translation>
     </message>
-    </context>
+    <message>
+        <source>Amount</source>
+        <translation>Хэмжээ</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Түрүйвч</translation>
+    </message>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Огноо</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -524,13 +522,22 @@
     </message>
     </context>
 <context>
-    <name>SplashScreen</name>
-    </context>
-<context>
     <name>TrafficGraphWidget</name>
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>Огноо</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>үл мэдэгдэх</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Хэмжээ</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -541,36 +548,51 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Огноо</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Confirmed</source>
+        <translation>Баталгаажлаа</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Огноо</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>
     </context>
 <context>
     <name>WalletModel</name>
+    <message>
+        <source>Send Coins</source>
+        <translation>Зоос явуулах</translation>
+    </message>
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Экспортдлох</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Сонголтууд:</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>Түрүйвчийн сонголтууд:</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Мэдээллэл</translation>
-    </message>
     <message>
         <source>Insufficient funds</source>
         <translation>Таны дансны үлдэгдэл хүрэлцэхгүй байна</translation>
@@ -590,10 +612,6 @@
     <message>
         <source>Done loading</source>
         <translation>Ачааллаж дууслаа</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Алдаа</translation>
     </message>
 </context>
 </TS>

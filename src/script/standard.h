@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include <memory>
+#include <set>
 
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 
@@ -24,13 +25,13 @@ class CScriptID : public uint160
 {
 public:
     CScriptID() : uint160() {}
-    CScriptID(const CScript& in);
+    explicit CScriptID(const CScript& in);
     CScriptID(const uint160& in) : uint160(in) {}
 };
 
 /**
- * Default setting for nMaxDatacarrierBytes. 8000 bytes of data,
- * +1 for OP_RETURN, +2 for the pushdata opcodes.
+ * Default setting for nMaxDatacarrierBytes. 8000 bytes of data, +1 for OP_RETURN,
+ * +2 for the pushdata opcodes.
  */
 static const unsigned int MAX_OP_RETURN_RELAY = 8003;
 
@@ -74,10 +75,32 @@ public:
     friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
 };
 
+struct PKHash : public uint160
+{
+    PKHash() : uint160() {}
+    explicit PKHash(const uint160& hash) : uint160(hash) {}
+    explicit PKHash(const CPubKey& pubkey);
+    using uint160::uint160;
+};
+
+struct WitnessV0KeyHash;
+struct ScriptHash : public uint160
+{
+    ScriptHash() : uint160() {}
+    // These don't do what you'd expect.
+    // Use ScriptHash(GetScriptForDestination(...)) instead.
+    explicit ScriptHash(const WitnessV0KeyHash& hash) = delete;
+    explicit ScriptHash(const PKHash& hash) = delete;
+    explicit ScriptHash(const uint160& hash) : uint160(hash) {}
+    explicit ScriptHash(const CScript& script);
+    using uint160::uint160;
+};
+
 struct WitnessV0ScriptHash : public uint256
 {
     WitnessV0ScriptHash() : uint256() {}
     explicit WitnessV0ScriptHash(const uint256& hash) : uint256(hash) {}
+    explicit WitnessV0ScriptHash(const CScript& script);
     using uint256::uint256;
 };
 
@@ -113,14 +136,14 @@ struct WitnessUnknown
 /**
  * A txout script template with a specific destination. It is either:
  *  * CNoDestination: no destination set
- *  * CKeyID: TX_PUBKEYHASH destination (P2PKH)
- *  * CScriptID: TX_SCRIPTHASH destination (P2SH)
+ *  * PKHash: TX_PUBKEYHASH destination (P2PKH)
+ *  * ScriptHash: TX_SCRIPTHASH destination (P2SH)
  *  * WitnessV0ScriptHash: TX_WITNESS_V0_SCRIPTHASH destination (P2WSH)
  *  * WitnessV0KeyHash: TX_WITNESS_V0_KEYHASH destination (P2WPKH)
  *  * WitnessUnknown: TX_WITNESS_UNKNOWN destination (P2W???)
  *  A CTxDestination is the internal data type encoded in a bitcoin address
  */
-typedef boost::variant<CNoDestination, CKeyID, CScriptID, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessUnknown> CTxDestination;
+typedef boost::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessUnknown> CTxDestination;
 
 /** Check whether a CTxDestination is a CNoDestination. */
 bool IsValidDestination(const CTxDestination& dest);
@@ -135,11 +158,10 @@ const char* GetTxnOutputType(txnouttype t);
  * script hash, for P2PKH it will contain the key hash, etc.
  *
  * @param[in]   scriptPubKey   Script to parse
- * @param[out]  typeRet        The script type
  * @param[out]  vSolutionsRet  Vector of parsed pubkeys and hashes
- * @return                     True if script matches standard template
+ * @return                     The script type. TX_NONSTANDARD represents a failed solve.
  */
-bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
+txnouttype Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>& vSolutionsRet);
 
 /**
  * Parse a standard scriptPubKey for the destination address. Assigns result to
@@ -155,8 +177,7 @@ CTxDestination ExtractDestination(const CScript& scriptPubKey);
  * multisig scripts, this populates the addressRet vector with the pubkey IDs
  * and nRequiredRet with the n required to spend. For other destinations,
  * addressRet is populated with a single value and nRequiredRet is set to 1.
- * Returns true if successful. Currently does not extract address from
- * pay-to-witness scripts.
+ * Returns true if successful.
  *
  * Note: this function confuses destinations (a subset of CScripts that are
  * encodable as an address) with key identifiers (of keys involved in a
@@ -198,16 +219,20 @@ enum DatacarrierType : unsigned int {
     DATACARRIER_TYPE_MIN = 0x0000000f,
     DATACARRIER_TYPE_MAX = 0x10000000,
 
+    // Alias for unknown
+    DATACARRIER_TYPE_UNKNOWN = DATACARRIER_TYPE_MIN,
+
     // Type of consensus relevant
     //! See https://btchd.org/wiki/datacarrier/bind-plotter
     DATACARRIER_TYPE_BINDPLOTTER = 0x00000010,
-    //! See https://btchd.org/wiki/datacarrier/rental
-    DATACARRIER_TYPE_RENTAL      = 0x00000011,
+    //! See https://btchd.org/wiki/datacarrier/point
+    DATACARRIER_TYPE_POINT       = 0x00000011,
     //! See https://btchd.org/wiki/datacarrier/contract
     DATACARRIER_TYPE_CONTRACT    = 0x00000012,
     //! See https://btchd.org/wiki/datacarrier/text
     DATACARRIER_TYPE_TEXT        = 0x00000013,
 };
+typedef std::set<DatacarrierType> DatacarrierTypes;
 
 /** Datacarrier payload */
 struct DatacarrierPayload
@@ -238,22 +263,22 @@ struct BindPlotterPayload : public DatacarrierPayload
     }
 };
 
-/** For rental */
-struct RentalPayload : public DatacarrierPayload
+/** For point */
+struct PointPayload : public DatacarrierPayload
 {
-    CAccountID borrowerAccountID;
+    CAccountID receiverID;
 
-    RentalPayload() : DatacarrierPayload(DATACARRIER_TYPE_RENTAL) {}
-    const CAccountID& GetBorrowerAccountID() const { return borrowerAccountID; }
+    PointPayload() : DatacarrierPayload(DATACARRIER_TYPE_POINT) {}
+    const CAccountID& GetReceiverID() const { return receiverID; }
 
     // Checkable cast for CDatacarrierPayloadRef
-    static RentalPayload * As(CDatacarrierPayloadRef &ref) {
-        assert(ref->type == DATACARRIER_TYPE_RENTAL);
-        return (RentalPayload*) ref.get();
+    static PointPayload * As(CDatacarrierPayloadRef &ref) {
+        assert(ref->type == DATACARRIER_TYPE_POINT);
+        return (PointPayload*) ref.get();
     }
-    static const RentalPayload * As(const CDatacarrierPayloadRef &ref) {
-        assert(ref->type == DATACARRIER_TYPE_RENTAL);
-        return (const RentalPayload*) ref.get();
+    static const PointPayload * As(const CDatacarrierPayloadRef &ref) {
+        assert(ref->type == DATACARRIER_TYPE_POINT);
+        return (const PointPayload*) ref.get();
     }
 };
 
@@ -277,10 +302,10 @@ struct TextPayload : public DatacarrierPayload
 };
 
 /** The bind plotter lock amount */
-static const CAmount PROTOCOL_BINDPLOTTER_LOCKAMOUNT = 10 * CENT;
+static const CAmount PROTOCOL_BINDPLOTTER_LOCKAMOUNT = COIN / 10;
 
 /** The bind plotter transaction fee */
-static const CAmount PROTOCOL_BINDPLOTTER_MINFEE = 10 * CENT;
+static const CAmount PROTOCOL_BINDPLOTTER_MINFEE = COIN / 10;
 
 /** The height for bind plotter default maximum relative tip height */
 static const int PROTOCOL_BINDPLOTTER_DEFAULTMAXALIVE = 24;
@@ -300,16 +325,18 @@ bool IsValidPlotterID(const std::string& strPlotterId, uint64_t *id = nullptr);
 /** Generate a bind plotter script. */
 CScript GetBindPlotterScriptForDestination(const CTxDestination& dest, const std::string& passphrase, int lastActiveHeight);
 
+/** Decode bind plotter script. */
+bool DecodeBindPlotterScript(const CScript &script, uint64_t& plotterId, std::string& pubkeyHex, std::string& signatureHex, int& lastActiveHeight);
 uint64_t GetBindPlotterIdFromScript(const CScript &script);
 
-/** The minimal rental amount */
-static const CAmount PROTOCOL_RENTAL_AMOUNT_MIN = 1 * COIN;
+/** The minimal point amount */
+static const CAmount PROTOCOL_POINT_AMOUNT_MIN = 1 * COIN;
 
-/** The rental script size */
-static const int PROTOCOL_RENTAL_SCRIPTSIZE = 27;
+/** The point script size */
+static const int PROTOCOL_POINT_SCRIPTSIZE = 27;
 
-/** Generate a rental script. */
-CScript GetRentalScriptForDestination(const CTxDestination& dest);
+/** Generate a point script. */
+CScript GetPointScriptForDestination(const CTxDestination& dest);
 
 /** The text script maximum size. OP_RETURN(1) + type(5) + size(4) */
 static const int PROTOCOL_TEXT_MAXSIZE = MAX_OP_RETURN_RELAY - 10;
@@ -318,8 +345,7 @@ static const int PROTOCOL_TEXT_MAXSIZE = MAX_OP_RETURN_RELAY - 10;
 CScript GetTextScript(const std::string& text);
 
 /** Parse a datacarrier transaction. */
-CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight);
-CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight, bool& fReject, int& lastActiveHeight);
-CDatacarrierPayloadRef ExtractTransactionDatacarrierUnlimit(const CTransaction& tx, int nHeight);
+CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight = 0, const DatacarrierTypes &filters = {});
+CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight, const DatacarrierTypes &filters, bool& fReject, int& lastActiveHeight);
 
 #endif // BITCOIN_SCRIPT_STANDARD_H

@@ -47,7 +47,7 @@
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>ज्या पत्त्यावर नाणी प्राप्त करायची आहेत तो </translation>
+        <translation>ज्या पत्त्यावर नाणी प्राप्त करायची आहेत तो</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -64,10 +64,6 @@
     <message>
         <source>These are your BitcoinHD addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>पैसे पाठविण्यासाठीचे हे तुमचे बिटकॉईन पत्त्ते आहेत. नाणी पाठविण्यापूर्वी नेहमी रक्कम आणि प्राप्त होणारा पत्ता तपासून पहा.</translation>
-    </message>
-    <message>
-        <source>These are your BitcoinHD addresses for receiving payments.</source>
-        <translation>पैसे प्राप्त करण्यासाठीचे हे तुमचे बिटकॉईन पत्त्ते आहेत.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -98,6 +94,12 @@
     <name>CoinControlDialog</name>
     </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     </context>
 <context>
@@ -116,6 +118,9 @@
     <name>OpenURIDialog</name>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    </context>
+<context>
     <name>OptionsDialog</name>
     </context>
 <context>
@@ -129,9 +134,6 @@
     </context>
 <context>
     <name>QObject</name>
-    </context>
-<context>
-    <name>QObject::QObject</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -164,9 +166,6 @@
     <name>SignVerifyMessageDialog</name>
     </context>
 <context>
-    <name>SplashScreen</name>
-    </context>
-<context>
     <name>TrafficGraphWidget</name>
     </context>
 <context>
@@ -185,6 +184,9 @@
     <name>UnitDisplayStatusBarControl</name>
     </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
     </context>
 <context>
@@ -192,10 +194,6 @@
     </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>सध्याच्या टॅबमधील डेटा एका फाईलमध्ये एक्स्पोर्ट करा</translation>

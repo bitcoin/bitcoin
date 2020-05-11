@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 The Bitcoin Core developers
+// Copyright (c) 2015-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,9 +6,9 @@
 #define BITCOIN_HTTPSERVER_H
 
 #include <string>
-#include <map>
 #include <stdint.h>
 #include <functional>
+#include <map>
 
 static const int DEFAULT_HTTP_THREADS=4;
 static const int DEFAULT_HTTP_WORKQUEUE=16;
@@ -27,13 +27,13 @@ bool InitHTTPServer();
  * This is separate from InitHTTPServer to give users race-condition-free time
  * to register their handlers between InitHTTPServer and StartHTTPServer.
  */
-bool StartHTTPServer();
+void StartHTTPServer();
 /** Interrupt HTTP server threads */
 void InterruptHTTPServer();
 /** Stop HTTP server */
 void StopHTTPServer();
 
-/** Change logging level for libevent. Removes BCLog::LIBEVENT from logCategories if
+/** Change logging level for libevent. Removes BCLog::LIBEVENT from log categories if
  * libevent doesn't support debug logging.*/
 bool UpdateHTTPServerLogging(bool enable);
 
@@ -75,22 +75,22 @@ public:
 
     /** Get requested URI.
      */
-    std::string GetURI();
+    std::string GetURI() const;
 
     /** Get CService (address:ip) for the origin of the http request.
      */
-    CService GetPeer();
+    CService GetPeer() const;
 
     /** Get request method.
      */
-    RequestMethod GetRequestMethod();
+    RequestMethod GetRequestMethod() const;
 
     /**
      * Get the request header specified by hdr, or an empty string.
      * Return a pair (isPresent,string).
      */
-    std::pair<bool, std::string> GetHeader(const std::string& hdr);
-    
+    std::pair<bool, std::string> GetHeader(const std::string& hdr) const;
+
     /**
      * Get the request query parameters.
      * Return a map (name,value).
@@ -141,7 +141,7 @@ public:
      * deleteWhenTriggered deletes this event object after the event is triggered (and the handler called)
      * handler is the handler to call when the event is triggered.
      */
-    HTTPEvent(struct event_base* base, bool deleteWhenTriggered, const std::function<void(void)>& handler);
+    HTTPEvent(struct event_base* base, bool deleteWhenTriggered, const std::function<void()>& handler);
     ~HTTPEvent();
 
     /** Trigger the event. If tv is 0, trigger it immediately. Otherwise trigger it after
@@ -150,11 +150,9 @@ public:
     void trigger(struct timeval* tv);
 
     bool deleteWhenTriggered;
-    std::function<void(void)> handler;
+    std::function<void()> handler;
 private:
     struct event* ev;
 };
-
-std::string urlDecode(const std::string &urlEncoded);
 
 #endif // BITCOIN_HTTPSERVER_H

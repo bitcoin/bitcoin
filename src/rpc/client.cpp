@@ -1,11 +1,11 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/client.h>
 #include <rpc/protocol.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <set>
 #include <stdint.h>
@@ -18,6 +18,7 @@ public:
     std::string paramName;  //!< parameter name
 };
 
+// clang-format off
 /**
  * Specify a (method, idx, name) here if the argument is a non-string RPC
  * argument and needs to be converted from JSON.
@@ -27,43 +28,35 @@ public:
 static const CRPCConvertParam vRPCConvertParams[] =
 {
     { "setmocktime", 0, "timestamp" },
-    { "generate", 0, "nblocks" },
-    { "generatetoaddress", 0, "nblocks" },
-    { "submitNonce", 2, "height" },
-    { "submitNonce", 4, "checkBind" },
+    { "utxoupdatepsbt", 1, "descriptors" },
     { "getnetworkhashps", 0, "nblocks" },
     { "getnetworkhashps", 1, "height" },
     { "sendtoaddress", 1, "amount" },
     { "sendtoaddress", 4, "subtractfeefromamount" },
     { "sendtoaddress", 5 , "replaceable" },
     { "sendtoaddress", 6 , "conf_target" },
+    { "sendtoaddress", 10, "avoid_reuse" },
     { "settxfee", 0, "amount" },
+    { "sethdseed", 0, "newkeypool" },
     { "getreceivedbyaddress", 1, "minconf" },
-    { "getreceivedbyaccount", 1, "minconf" },
+    { "getreceivedbylabel", 1, "minconf" },
     { "listreceivedbyaddress", 0, "minconf" },
     { "listreceivedbyaddress", 1, "include_empty" },
     { "listreceivedbyaddress", 2, "include_watchonly" },
-    { "listreceivedbyaccount", 0, "minconf" },
-    { "listreceivedbyaccount", 1, "include_empty" },
-    { "listreceivedbyaccount", 2, "include_watchonly" },
+    { "listreceivedbylabel", 0, "minconf" },
+    { "listreceivedbylabel", 1, "include_empty" },
+    { "listreceivedbylabel", 2, "include_watchonly" },
     { "getbalance", 1, "minconf" },
     { "getbalance", 2, "include_watchonly" },
+    { "getbalance", 3, "avoid_reuse" },
     { "getblockhash", 0, "height" },
     { "waitforblockheight", 0, "height" },
     { "waitforblockheight", 1, "timeout" },
     { "waitforblock", 1, "timeout" },
     { "waitfornewblock", 0, "timeout" },
-    { "dumpprivkeys", 0, "from_index"},
-    { "dumpprivkeys", 1, "to_index"},
-    { "move", 2, "amount" },
-    { "move", 3, "minconf" },
-    { "sendfrom", 2, "amount" },
-    { "sendfrom", 3, "minconf" },
     { "listtransactions", 1, "count" },
     { "listtransactions", 2, "skip" },
     { "listtransactions", 3, "include_watchonly" },
-    { "listaccounts", 0, "minconf" },
-    { "listaccounts", 1, "include_watchonly" },
     { "walletpassphrase", 1, "timeout" },
     { "getblocktemplate", 0, "template_request" },
     { "listsinceblock", 1, "target_confirmations" },
@@ -74,6 +67,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendmany", 4, "subtractfeefrom" },
     { "sendmany", 5 , "replaceable" },
     { "sendmany", 6 , "conf_target" },
+    { "deriveaddresses", 1, "range" },
+    { "scantxoutset", 1, "scanobjects" },
     { "addmultisigaddress", 0, "nrequired" },
     { "addmultisigaddress", 1, "keys" },
     { "createmultisig", 0, "nrequired" },
@@ -88,18 +83,40 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getblockheader", 1, "verbose" },
     { "getchaintxstats", 0, "nblocks" },
     { "gettransaction", 1, "include_watchonly" },
+    { "gettransaction", 2, "verbose" },
     { "getrawtransaction", 1, "verbose" },
     { "createrawtransaction", 0, "inputs" },
     { "createrawtransaction", 1, "outputs" },
     { "createrawtransaction", 2, "locktime" },
     { "createrawtransaction", 3, "replaceable" },
     { "decoderawtransaction", 1, "iswitness" },
-    { "signrawtransaction", 1, "prevtxs" },
-    { "signrawtransaction", 2, "privkeys" },
+    { "signrawtransactionwithkey", 1, "privkeys" },
+    { "signrawtransactionwithkey", 2, "prevtxs" },
+    { "signrawtransactionwithwallet", 1, "prevtxs" },
     { "sendrawtransaction", 1, "allowhighfees" },
+    { "sendrawtransaction", 1, "maxfeerate" },
+    { "testmempoolaccept", 0, "rawtxs" },
+    { "testmempoolaccept", 1, "allowhighfees" },
+    { "testmempoolaccept", 1, "maxfeerate" },
     { "combinerawtransaction", 0, "txs" },
     { "fundrawtransaction", 1, "options" },
     { "fundrawtransaction", 2, "iswitness" },
+    { "walletcreatefundedpsbt", 0, "inputs" },
+    { "walletcreatefundedpsbt", 1, "outputs" },
+    { "walletcreatefundedpsbt", 2, "locktime" },
+    { "walletcreatefundedpsbt", 3, "options" },
+    { "walletcreatefundedpsbt", 4, "bip32derivs" },
+    { "walletprocesspsbt", 1, "sign" },
+    { "walletprocesspsbt", 3, "bip32derivs" },
+    { "createpsbt", 0, "inputs" },
+    { "createpsbt", 1, "outputs" },
+    { "createpsbt", 2, "locktime" },
+    { "createpsbt", 3, "replaceable" },
+    { "combinepsbt", 0, "txs"},
+    { "joinpsbts", 0, "txs"},
+    { "finalizepsbt", 1, "extract"},
+    { "converttopsbt", 1, "permitsigdata"},
+    { "converttopsbt", 2, "iswitness"},
     { "gettxout", 1, "n" },
     { "gettxout", 2, "include_mempool" },
     { "gettxoutproof", 0, "txids" },
@@ -113,10 +130,11 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "importmulti", 1, "options" },
     { "verifychain", 0, "checklevel" },
     { "verifychain", 1, "nblocks" },
+    { "getblockstats", 0, "hash_or_height" },
+    { "getblockstats", 1, "stats" },
     { "pruneblockchain", 0, "height" },
     { "keypoolrefill", 0, "newsize" },
     { "getrawmempool", 0, "verbose" },
-    { "estimatefee", 0, "nblocks" },
     { "estimatesmartfee", 0, "conf_target" },
     { "estimaterawfee", 0, "conf_target" },
     { "estimaterawfee", 1, "threshold" },
@@ -125,12 +143,37 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "setban", 2, "bantime" },
     { "setban", 3, "absolute" },
     { "setnetworkactive", 0, "state" },
+    { "setwalletflag", 1, "value" },
     { "getmempoolancestors", 1, "verbose" },
     { "getmempooldescendants", 1, "verbose" },
     { "bumpfee", 1, "options" },
     { "logging", 0, "include" },
     { "logging", 1, "exclude" },
     { "disconnectnode", 1, "nodeid" },
+    // Echo with conversion (For testing only)
+    { "echojson", 0, "arg0" },
+    { "echojson", 1, "arg1" },
+    { "echojson", 2, "arg2" },
+    { "echojson", 3, "arg3" },
+    { "echojson", 4, "arg4" },
+    { "echojson", 5, "arg5" },
+    { "echojson", 6, "arg6" },
+    { "echojson", 7, "arg7" },
+    { "echojson", 8, "arg8" },
+    { "echojson", 9, "arg9" },
+    { "rescanblockchain", 0, "start_height"},
+    { "rescanblockchain", 1, "stop_height"},
+    { "createwallet", 1, "disable_private_keys"},
+    { "createwallet", 2, "blank"},
+    { "createwallet", 4, "avoid_reuse"},
+    { "getnodeaddresses", 0, "count"},
+    { "stop", 0, "wait" },
+
+    /* BitcoinHD */
+    { "generatetoaddress", 0, "nblocks" },
+    { "generatetoprivkey", 0, "nblocks" },
+    { "dumpprivkeys", 0, "from_index"},
+    { "dumpprivkeys", 1, "to_index"},
     { "bindplotter", 2, "allow_high_fee" },
     { "bindplotter", 5, "replaceable" },
     { "bindplotter", 6, "conf_target" },
@@ -157,20 +200,12 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listpledges", 3, "include_invalid" },
     { "getplottermininginfo", 1, "verbose" },
     { "getchaintips", 0, "verbose" },
-    // Echo with conversion (For testing only)
-    { "echojson", 0, "arg0" },
-    { "echojson", 1, "arg1" },
-    { "echojson", 2, "arg2" },
-    { "echojson", 3, "arg3" },
-    { "echojson", 4, "arg4" },
-    { "echojson", 5, "arg5" },
-    { "echojson", 6, "arg6" },
-    { "echojson", 7, "arg7" },
-    { "echojson", 8, "arg8" },
-    { "echojson", 9, "arg9" },
-    { "rescanblockchain", 0, "start_height"},
-    { "rescanblockchain", 1, "stop_height"},
+
+    /* BitcoinHD & Burst mining compatible */
+    { "submitNonce", 2, "height" },
+    { "submitNonce", 4, "checkBind" },
 };
+// clang-format on
 
 class CRPCConvertTable
 {

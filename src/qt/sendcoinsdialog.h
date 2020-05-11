@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,7 +16,6 @@ class ClientModel;
 class PlatformStyle;
 class SendCoinsEntry;
 class SendCoinsRecipient;
-class CWallet;
 
 namespace Ui {
     class SendCoinsDialog;
@@ -32,7 +31,7 @@ class SendCoinsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SendCoinsDialog(const PlatformStyle *platformStyle, QWidget *parent = 0);
+    explicit SendCoinsDialog(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
     ~SendCoinsDialog();
 
     void setClientModel(ClientModel *clientModel);
@@ -52,15 +51,10 @@ public Q_SLOTS:
     void accept();
     SendCoinsEntry *addEntry();
     void updateTabsAndLabels();
-    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
-                    const CAmount& loanBalance, const CAmount& borrowBalance, const CAmount& lockedBalance,
-                    const CAmount& watchBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance,
-                    const CAmount& watchLoanBalance, const CAmount& watchBorrowBalance, const CAmount& watchLockedBalance);
+    void setBalance(const interfaces::WalletBalances& balances);
 
-#ifdef ENABLE_WALLET
-    /** Current wallet primary address changed */
-    void currentWalletPrimaryAddressChanged(CWallet *wallet);
-#endif
+Q_SIGNALS:
+    void coinsSent(const uint256& txid);
 
 private:
     Ui::SendCoinsDialog *ui;
@@ -69,7 +63,6 @@ private:
     bool fNewRecipientAllowed;
     bool fFeeMinimized;
     const PlatformStyle *platformStyle;
-    QString txCustomText;
 
     // Process WalletModel::SendCoinsReturn and generate a pair consisting
     // of a message and message flags for use in Q_EMIT message().
@@ -86,7 +79,7 @@ private:
 private Q_SLOTS:
     void onOperateMethodComboBoxChanged(int index);
     void on_sendButton_clicked();
-    void on_genBindDataButton_clicked();
+    void on_checkBindDataButton_clicked();
     void on_buttonChooseFee_clicked();
     void on_buttonMinimizeFee_clicked();
     void removeEntry(SendCoinsEntry* entry);
@@ -104,10 +97,9 @@ private Q_SLOTS:
     void coinControlClipboardBytes();
     void coinControlClipboardLowOutput();
     void coinControlClipboardChange();
-    void setMinimumFee();
     void updateFeeSectionControls();
-    void updateMinFeeLabel();
     void updateSmartFeeLabel();
+    void primaryAddressChanged();
 
 Q_SIGNALS:
     // Fired when a message should be reported to the user
@@ -122,7 +114,7 @@ class SendConfirmationDialog : public QMessageBox
     Q_OBJECT
 
 public:
-    SendConfirmationDialog(const QString &title, const QString &text, int secDelay = SEND_CONFIRM_DELAY, QWidget *parent = 0);
+    SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = SEND_CONFIRM_DELAY, QWidget* parent = nullptr);
     int exec();
 
 private Q_SLOTS:

@@ -1,13 +1,15 @@
 *.tar.gz
 
 *.exe
+*.pdb
 src/btchd
 src/btchdd
 src/btchd-cli
 src/btchd-tx
-src/test/test_btchd
-src/test/test_btchd_fuzzy
-src/qt/test/test_btchd-qt
+src/btchd-wallet
+src/test/test_bitcoin
+src/test/test_bitcoin_fuzzy
+src/qt/test/test_bitcoin-qt
 
 # autoreconf
 Makefile.in
@@ -33,6 +35,7 @@ libtool
 src/config/bitcoin-config.h
 src/config/bitcoin-config.h.in
 src/config/stamp-h1
+src/obj
 share/setup.nsi
 share/qt/Info.plist
 
@@ -61,10 +64,10 @@ src/qt/bitcoin-qt.includes
 *.pyc
 *.o
 *.o-*
-*.patch
 *.a
 *.pb.cc
 *.pb.h
+*.dat
 
 *.log
 *.trs
@@ -73,6 +76,10 @@ src/qt/bitcoin-qt.includes
 *.json.h
 *.raw.h
 
+# Only ignore unexpected patches
+*.patch
+!depends/patches/**/*.patch
+
 #libtool object files
 *.lo
 *.la
@@ -80,13 +87,17 @@ src/qt/bitcoin-qt.includes
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
+!depends/Makefile
 btchd-qt
-BTCHD-Qt.app
+BitcoinHD-Qt.app
 background.tiff*
+
+# Qt Creator
+Makefile.am.user
 
 # Unit-tests
 Makefile.test
-btchd-qt_test
+bitcoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -99,7 +110,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_btchd.coverage/
+test_bitcoin.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -116,3 +127,13 @@ test/cache/*
 
 libbitcoinconsensus.pc
 contrib/devtools/split-debug.sh
+
+# Output from running db4 installation
+db4/
+
+# clang-check
+*.plist
+
+osx_volname
+dist/
+*.background.tiff

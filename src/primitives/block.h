@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -56,7 +56,7 @@ public:
         if (nFlags & 0x8000000000000000L) {
             READWRITE(LIMITED_VECTOR(vchPubKey, CPubKey::COMPRESSED_PUBLIC_KEY_SIZE));
             // Signature block data exclude vchSignature
-            if (!(s.GetType() & SER_UNSIGNATURED)) {
+            if (!(GetSerializeType(s) & SER_UNSIGNATURED)) {
                 READWRITE(LIMITED_VECTOR(vchSignature, CPubKey::SIGNATURE_SIZE));
             }
         }
@@ -89,7 +89,6 @@ public:
     }
 };
 
-
 class CBlock : public CBlockHeader
 {
 public:
@@ -107,14 +106,14 @@ public:
     CBlock(const CBlockHeader &header)
     {
         SetNull();
-        *((CBlockHeader*)this) = header;
+        *(static_cast<CBlockHeader*>(this)) = header;
     }
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(*(CBlockHeader*)this);
+        READWRITEAS(CBlockHeader, *this);
         READWRITE(vtx);
     }
 

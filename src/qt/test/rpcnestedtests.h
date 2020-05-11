@@ -1,15 +1,12 @@
-// Copyright (c) 2016-2017 The Bitcoin Core developers
+// Copyright (c) 2016-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_TEST_RPC_NESTED_TESTS_H
-#define BITCOIN_QT_TEST_RPC_NESTED_TESTS_H
+#ifndef BITCOIN_QT_TEST_RPCNESTEDTESTS_H
+#define BITCOIN_QT_TEST_RPCNESTEDTESTS_H
 
 #include <QObject>
 #include <QTest>
-
-#include <txdb.h>
-#include <txmempool.h>
 
 class RPCNestedTests : public QObject
 {
@@ -19,4 +16,4 @@ class RPCNestedTests : public QObject
     void rpcNestedTests();
 };
 
-#endif // BITCOIN_QT_TEST_RPC_NESTED_TESTS_H
+#endif // BITCOIN_QT_TEST_RPCNESTEDTESTS_H

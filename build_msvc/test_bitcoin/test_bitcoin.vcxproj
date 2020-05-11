@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\common.init.vcxproj" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A56B73DB-D46D-4882-8374-1FE3FFA08F07}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\test\*_tests.cpp" />
+    <ClCompile Include="..\..\src\test\*_properties.cpp" />
+    <ClCompile Include="..\..\src\test\gen\*_gen.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\*_tests.cpp" />
+    <ClCompile Include="..\..\src\test\setup_common.cpp" />
+    <ClCompile Include="..\..\src\test\main.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\*_fixture.cpp" />
+    <ClCompile Include="..\..\src\test\util\*.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
+      <Project>{2b384fa8-9ee1-4544-93cb-0d733c25e8ce}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_cli\libbitcoin_cli.vcxproj">
+      <Project>{0667528c-d734-4009-adf9-c0d6c4a5a5a6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_common\libbitcoin_common.vcxproj">
+      <Project>{7c87e378-df58-482e-aa2f-1bc129bc19ce}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_crypto\libbitcoin_crypto.vcxproj">
+      <Project>{6190199c-6cf4-4dad-bfbd-93fa72a760c1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_server\libbitcoin_server.vcxproj">
+      <Project>{460fee33-1fe1-483f-b3bf-931ff8e969a5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_util\libbitcoin_util.vcxproj">
+      <Project>{b53a5535-ee9d-4c6f-9a26-f79ee3bc3754}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_wallet\libbitcoin_wallet.vcxproj">
+      <Project>{93b86837-b543-48a5-a89b-7c87abb77df2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_zmq\libbitcoin_zmq.vcxproj">
+      <Project>{792d487f-f14c-49fc-a9de-3fc150f31c3f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libunivalue\libunivalue.vcxproj">
+      <Project>{5724ba7d-a09a-4ba8-800b-c4c1561b3d69}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libsecp256k1\libsecp256k1.vcxproj">
+      <Project>{bb493552-3b8c-4a8c-bf69-a6e7a51d2ea6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libleveldb\libleveldb.vcxproj">
+      <Project>{18430fef-6b61-4c53-b396-718e02850f1b}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Target Name="RawBenchHeaderGen" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>There was an error executing the JSON test header generation task.</ErrorText>
+    </PropertyGroup>
+    <ItemGroup>
+      <JsonTestFile Include="..\..\src\test\data\*.json" />
+    </ItemGroup>
+    <HeaderFromHexdump RawFilePath="%(JsonTestFile.FullPath)" HeaderFilePath="%(JsonTestFile.FullPath).h" SourceHeader="namespace json_tests{ static unsigned const char %(JsonTestFile.Filename)[] = {" SourceFooter="};}" />
+  </Target>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Label="hexdumpTarget" Project="..\msbuild\tasks\hexdump.targets" />
+  <Import Project="..\common.vcxproj" />
+</Project>

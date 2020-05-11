@@ -14,6 +14,10 @@
         <translation>Dele active selectam inscriptionem ex enumeratione</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Insere inscriptionem vel titulum ut quaeras</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Exporta data in hac tabella in plicam</translation>
     </message>
@@ -138,14 +142,6 @@
         <translation>&amp;Verifica nuntium...</translation>
     </message>
     <message>
-        <source>BitcoinHD</source>
-        <translation>BitcoinHD</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Cassidile</translation>
-    </message>
-    <message>
         <source>&amp;Send</source>
         <translation>&amp;Mitte</translation>
     </message>
@@ -222,6 +218,10 @@
         <translation>Recentissimo</translation>
     </message>
     <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Fenestra</translation>
+    </message>
+    <message>
         <source>Catching up...</source>
         <translation>Persequens...</translation>
     </message>
@@ -262,6 +262,12 @@
     </message>
     </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -289,15 +295,7 @@
         <source>Command-line options</source>
         <translation>Optiones mandati initiantis</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Usus:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>Optiones mandati intiantis</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -322,6 +320,9 @@
     </context>
 <context>
     <name>OpenURIDialog</name>
+    </context>
+<context>
+    <name>OpenWalletActivity</name>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -467,10 +468,15 @@
     </message>
 </context>
 <context>
-    <name>QObject::QObject</name>
-    </context>
-<context>
     <name>QRImageWidget</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Resultato URI nimis longo, conare minuere verba pro titulo / nuntio.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Error codificandi URI in codicem QR.</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -552,9 +558,21 @@
         <source>Copy &amp;Address</source>
         <translation>&amp;Copia Inscriptionem</translation>
     </message>
-    </context>
+    <message>
+        <source>Amount</source>
+        <translation>Quantitas</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Cassidile</translation>
+    </message>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Dies</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -597,6 +615,10 @@
     <message>
         <source>S&amp;end</source>
         <translation>&amp;Mitte</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Transactionis merces</translation>
     </message>
     </context>
 <context>
@@ -708,17 +730,26 @@
     </message>
     </context>
 <context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-</context>
-<context>
     <name>TrafficGraphWidget</name>
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>Dies</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>ignotum</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Transactionis merces</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Quantitas</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -729,68 +760,51 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Dies</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Confirmed</source>
+        <translation>Confirmatum</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Dies</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>
     </context>
 <context>
     <name>WalletModel</name>
+    <message>
+        <source>Send Coins</source>
+        <translation>Mitte Nummos</translation>
+    </message>
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Exporta</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exporta data in hac tabella in plicam</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Optiones:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Specifica indicem datorum</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Conecta ad nodum acceptare inscriptiones parium, et disconecte</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Specifica tuam propriam publicam inscriptionem</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Accipe terminalis et JSON-RPC mandata.</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Operare infere sicut daemon et mandata accipe</translation>
-    </message>
-    <message>
-        <source>BitcoinHD Core</source>
-        <translation>BitcoinHD Nucleus</translation>
-    </message>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Conglutina ad inscriptionem datam et semper in eam ausculta.  Utere [moderatrum]:porta notationem pro IPv6</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Facere mandatum quotiescumque cassidilis transactio mutet (%s in mandato sbstituitur ab TxID)</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Accipe conexiones externas (praedefinitum: 1 nisi -proxy neque -connect)</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Optiones creandi frustorum:</translation>
-    </message>
     <message>
         <source>Corrupted block database detected</source>
         <translation>Corruptum databasum frustorum invenitur</translation>
@@ -816,10 +830,6 @@
         <translation>Error aperiendo databasum frustorum</translation>
     </message>
     <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Error: Inopia spatii disci!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Non potuisse auscultare in ulla porta.  Utere -listen=0 si hoc vis.</translation>
     </message>
@@ -832,18 +842,6 @@
         <translation>Verificante frusta...</translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>Informatio</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Mitte informationem vestigii/debug ad terminale potius quam plicam debug.log</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Diminue plicam debug.log ad initium clientis (praedefinitum: 1 nisi -debug)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>Signandum transactionis abortum est</translation>
     </message>
@@ -854,26 +852,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transactio nimis magna</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Nomen utentis pro conexionibus JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Monitio</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Tessera pro conexionibus JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Pelle mandatum quando optissimum frustum mutat (%s in mandato substituitur ab hash frusti)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Permitte quaerenda DNS pro -addnode, -seednode, et -connect</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
@@ -902,10 +880,6 @@
     <message>
         <source>Done loading</source>
         <translation>Completo lengendi</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Error</translation>
     </message>
 </context>
 </TS>

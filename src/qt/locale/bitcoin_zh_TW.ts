@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.1" language="zh_TW">
+<TS language="zh_TW" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -30,6 +28,10 @@
     <message>
         <source>Delete the currently selected address from the list</source>
         <translation>把目前選擇的位址從列表中刪掉</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation>請輸入要搜尋的位址或標記</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -68,8 +70,8 @@
         <translation>這些是你要付款過去的比特硬幣位址。在付錢之前，務必要檢查金額和收款位址是否正確。</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD addresses for receiving payments.</source>
-        <translation>這些是你用來收款的比特硬幣位址。</translation>
+        <source>These are your BitcoinHD addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>這些是您用於接收付款的比特硬幣位址。 使用接收分頁中的"生成新接收位址"按鈕創建新的位置。</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -82,10 +84,6 @@
     <message>
         <source>&amp;Edit</source>
         <translation>編輯(&amp;E)</translation>
-    </message>
-    <message>
-        <source>Set as &amp;Primary Address</source>
-        <translation>設置為主要位址(&amp;P)</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -103,6 +101,10 @@
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <translation>儲存位址列表到 %1 時發生錯誤。請重試一次。</translation>
     </message>
+    <message>
+        <source>Set as &amp;Primary address</source>
+        <translation>設置為主要位址(&amp;P)</translation>
+    </message>
 </context>
 <context>
     <name>AddressTableModel</name>
@@ -115,36 +117,12 @@
         <translation>位址</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>可花費金額</translation>
-    </message>
-    <message>
-        <source>Loan</source>
-        <translation>指向金額</translation>
-    </message>
-    <message>
-        <source>Borrow</source>
-        <translation>被指向金額</translation>
-    </message>
-    <message>
-        <source>Locked</source>
-        <translation>鎖定金額</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(無標記)</translation>
     </message>
     <message>
         <source>Primary address</source>
         <translation>主要位址</translation>
-    </message>
-    <message>
-        <source>Watchonly address</source>
-        <translation>僅觀察位址</translation>
-    </message>
-    <message>
-        <source>Spendable: %1;Locked: %2;Loan to: %3;Borrow from: %4;Available for mining: %5</source>
-        <translation>可花費的金額: %1;鎖定的金額（綁定和指向鎖定的總金額）: %2;指向的金額: %3;被指向的金額: %4;可用於開採的金額: %5</translation>
     </message>
 </context>
 <context>
@@ -164,14 +142,6 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>重複新密碼</translation>
-    </message>
-    <message>
-        <source>Show password</source>
-        <translation>顯示密碼</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>輸入錢包的新密碼。&lt;br/&gt;密碼請用&lt;b&gt;10 個以上的隨機字元&lt;/b&gt;，或是&lt;b&gt;8 個以上的字詞&lt;/b&gt;。</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -198,16 +168,12 @@
         <translation>改變密碼</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>請輸入錢包的舊密碼和新密碼。</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>確認錢包加密</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINHDS&lt;/b&gt;!</source>
-        <translation>警告: 如果把錢包加密後又忘記密碼，你就會從此&lt;b&gt;失去其中所有的 BHD &lt;/b&gt;！</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHDs&lt;/b&gt;!</source>
+        <translation>警告: 如果把錢包加密後又忘記密碼，你就會從此&lt;b&gt;失去其中所有的BHD了&lt;/b&gt;！</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -218,12 +184,12 @@
         <translation>錢包已加密</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 現在要關閉，好完成加密程序。請注意，加密錢包不能完全防止入侵你的電腦的惡意程式偷取錢幣。</translation>
+        <source>Remember that encrypting your wallet cannot fully protect your BHDs from being stolen by malware infecting your computer.</source>
+        <translation>請記得, 即使將錢包加密, 也不能完全防止因惡意軟體入侵, 而導致位元幣被偷.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>重要: 請改用新產生有加密的錢包檔，來取代舊錢包檔的備份。為了安全性的理由，當你開始使用新的有加密的錢包後，舊錢包檔的備份就不能再使用了。</translation>
+        <translation>重要須知: 請改用新造出來、有加密的錢包檔，來取代舊錢包檔的備份。為了安全起見，當你開始使用新的有加密的錢包後，舊錢包檔的備份就沒有用了。</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -284,10 +250,6 @@
         <translation>總覽(&amp;O)</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>節點</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>顯示錢包一般總覽</translation>
     </message>
@@ -344,16 +306,12 @@
         <translation>改變密碼(&amp;C)...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>付款位址(&amp;S)...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>收款位址(&amp;R)...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>開啓 &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>錢包:</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -374,6 +332,10 @@
     <message>
         <source>Reindexing blocks on disk...</source>
         <translation>正在為磁碟裡的區塊重建索引...</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>代理伺服器&lt;b&gt;已經啟用&lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a BitcoinHD address</source>
@@ -398,18 +360,6 @@
     <message>
         <source>&amp;Verify message...</source>
         <translation>驗證訊息(&amp;V)...</translation>
-    </message>
-    <message>
-        <source>BitcoinHD</source>
-        <translation>比特硬幣</translation>
-    </message>
-    <message>
-        <source>BitcoinHD Chain</source>
-        <translation>比特硬幣</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>錢包</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -448,14 +398,6 @@
         <translation>設定(&amp;S)</translation>
     </message>
     <message>
-        <source>T&amp;ools</source>
-        <translation>工具(&amp;O)</translation>
-    </message>
-    <message>
-        <source>&amp;Generate mining account</source>
-        <translation>生成挖礦訊息(&amp;G)</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>說明(&amp;H)</translation>
     </message>
@@ -485,9 +427,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to BitcoinHD network</source>
-        <translation>
-            <numerusform>%n 個運作中的比特硬幣網路連線</numerusform>
-        </translation>
+        <translation><numerusform>%n 個運作中的比特硬幣網路連線</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -499,9 +439,7 @@
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
-            <numerusform>已經處理了 %n 個區塊的交易紀錄。</numerusform>
-        </translation>
+        <translation><numerusform>已經處理了 %n 個區塊的交易紀錄。</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -532,8 +470,56 @@
         <translation>最新狀態</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>付款位址(&amp;S)</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>收款位址(&amp;R)</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>打開錢包</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>打開一個錢包檔</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>關上錢包...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>關上錢包</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible BitcoinHD command-line options</source>
         <translation>顯示 %1 的說明訊息，來取得可用命令列選項的列表</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>預設錢包</translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>没有可用的钱包</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>視窗(&amp;W)</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>縮小</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>缩放</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>主窗口</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -548,6 +534,14 @@
         <translation>正在趕進度...</translation>
     </message>
     <message>
+        <source>Error: %1</source>
+        <translation>错误：%1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>警告：%1</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>日期: %1
@@ -557,6 +551,12 @@
         <source>Amount: %1
 </source>
         <translation>金額: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>錢包: %1
 </translation>
     </message>
     <message>
@@ -594,6 +594,10 @@
         <translation>產生 HD 金鑰&lt;b&gt;已經停用&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>私钥&lt;b&gt;禁用&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>錢包&lt;b&gt;已加密&lt;/b&gt;並且&lt;b&gt;解鎖中&lt;/b&gt;</translation>
     </message>
@@ -606,16 +610,28 @@
         <translation>發生了致命的錯誤。比特硬幣軟體沒辦法再繼續安全執行，只好結束。</translation>
     </message>
     <message>
-        <source>Please save your mining account.</source>
-        <translation>請保存好你的挖礦賬號。</translation>
+        <source>BitcoinHD Core</source>
+        <translation>比特硬幣</translation>
+    </message>
+    <message>
+        <source>&amp;Generate plotting account</source>
+        <translation>生成挖礦訊息(&amp;G)</translation>
+    </message>
+    <message>
+        <source>Generate plotting account</source>
+        <translation>生成挖礦訊息</translation>
+    </message>
+    <message>
+        <source>This account is randomly generated, please save it. Loss will make plotting data invalid.</source>
+        <translation>此賬戶是隨機生成的，請妥善保管。丟失將導致算力作廢。</translation>
     </message>
     <message>
         <source>Passphrase: %1</source>
-        <translation>腦密碼: %1</translation>
+        <translation>腦密碼：%1</translation>
     </message>
     <message>
-        <source>ID: %1</source>
-        <translation>算力 ID: %1</translation>
+        <source>Plotter ID: %1</source>
+        <translation>算力ID：%1</translation>
     </message>
 </context>
 <context>
@@ -770,6 +786,12 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -792,10 +814,6 @@
         <translation>位址(&amp;A)</translation>
     </message>
     <message>
-        <source>New receiving address</source>
-        <translation>造新的收款位址</translation>
-    </message>
-    <message>
         <source>New sending address</source>
         <translation>造新的付款位址</translation>
     </message>
@@ -808,12 +826,16 @@
         <translation>編輯付款位址</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is not a valid BitcoinHD address.</source>
+        <source>The entered address "%1" is not a valid BitcoinHD address.</source>
         <translation>輸入的位址 %1 並不是有效的比特硬幣位址。</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>輸入的位址 %1 在位址簿中已經有了。</translation>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>%1 已經是標記為 %2 的收款位址了，不可以又是付款位址。</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>輸入的位址 %1 本來就在位址簿中了，標記為 %2。</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -865,46 +887,6 @@
         <source>Command-line options</source>
         <translation>命令列選項</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>用法:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>命令列選項</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>使用介面選項:</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: %u)</source>
-        <translation>啓動時選擇資料目錄(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>設定語言，比如說 de_DE (預設值: 系統語系)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>啓動時縮到最小</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>設定付款請求時所使用的 SSL 根憑證(預設值: 系統憑證庫)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: %u)</source>
-        <translation>顯示啓動畫面(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Reset all settings changed in the GUI</source>
-        <translation>重置所有在使用界面更改的設定</translation>
-    </message>
-    <message>
-        <source>BitcoinHD Chain</source>
-        <translation>比特硬幣</translation>
-    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -945,10 +927,6 @@
         <translation>比特硬幣</translation>
     </message>
     <message>
-        <source>BitcoinHD Chain</source>
-        <translation>比特硬幣</translation>
-    </message>
-    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation>在這個目錄中至少會存放 %1 GB 的資料，並且還會隨時間增加。</translation>
     </message>
@@ -965,8 +943,8 @@
         <translation>錢包檔也會存放在這個目錄中。</translation>
     </message>
     <message>
-        <source>Error: Specified data directory &quot;%1&quot; cannot be created.</source>
-        <translation>錯誤: 無法新增指定的資料目錄 &quot;%1&quot;。</translation>
+        <source>Error: Specified data directory "%1" cannot be created.</source>
+        <translation>錯誤: 無法新增指定的資料目錄: %1</translation>
     </message>
     <message>
         <source>Error</source>
@@ -974,17 +952,13 @@
     </message>
     <message numerus="yes">
         <source>%n GB of free space available</source>
-        <translation>
-            <numerusform>可用空間尚存 %n GB</numerusform>
-        </translation>
+        <translation><numerusform>可用空間尚存 %n GB</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
-        <translation>
-            <numerusform>(需要 %n GB)</numerusform>
-        </translation>
+        <translation><numerusform>(需要 %n GB)</numerusform></translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -992,11 +966,11 @@
         <translation>表單</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet&apos;s balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD network, as detailed below.</source>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD network, as detailed below.</source>
         <translation>最近的交易可能還看不到，因此錢包餘額可能不正確。在錢包軟體完成跟比特硬幣網路的同步後，這裡的資訊就會正確。詳情請見下面。</translation>
     </message>
     <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Attempting to spend BHDs that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
         <translation>使用還沒顯示出來的交易所影響到的比特硬幣可能會不被網路所接受。</translation>
     </message>
     <message>
@@ -1032,8 +1006,8 @@
         <translation>隱藏</translation>
     </message>
     <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>不明。正在同步前導資料(%1)中...</translation>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>不明。正在同步前導資料中(%1, %2%)...</translation>
     </message>
 </context>
 <context>
@@ -1060,11 +1034,18 @@
     </message>
 </context>
 <context>
-    <name>OptionsDialog</name>
+    <name>OpenWalletActivity</name>
     <message>
-        <source>BitcoinHD Chain</source>
-        <translation>比特硬幣</translation>
+        <source>default wallet</source>
+        <translation>默认钱包</translation>
     </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>正在打开钱包&lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsDialog</name>
     <message>
         <source>Options</source>
         <translation>選項</translation>
@@ -1086,10 +1067,6 @@
         <translation>資料庫快取大小(&amp;D)</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB (百萬位元組)</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>指令碼驗證執行緒數目(&amp;V)</translation>
     </message>
@@ -1107,7 +1084,7 @@
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
-        <translation>隱藏系統通知區圖示。</translation>
+        <translation>隱藏系統通知區圖示</translation>
     </message>
     <message>
         <source>&amp;Hide tray icon</source>
@@ -1120,10 +1097,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>在交易頁籤的情境選單出現的第三方網址連結(URL)，比如說區塊探索網站。網址中的 %s 會被取代為交易的雜湊值。可以用直線符號 | 來分隔多個連結。</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>從命令列取代掉以上設定的選項有:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1144,6 +1117,26 @@
     <message>
         <source>&amp;Network</source>
         <translation>網路(&amp;N)</translation>
+    </message>
+    <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>啟用時有些進階功能會不能使用，不過區塊資料還是會被完全驗證。如果把這個設定改回來，會需要重新下載整個區塊鏈。區塊資料實際使用的磁碟空間會比設定值稍微大一點。</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>修剪區塊資料大小到</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB (十億位元組)</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>把這個設定改回來會需要重新下載整個區塊鏈。</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1179,7 +1172,7 @@
     </message>
     <message>
         <source>Accept connections from outside.</source>
-        <translation>接受外來連線。</translation>
+        <translation>接受外來連線</translation>
     </message>
     <message>
         <source>Allow incomin&amp;g connections</source>
@@ -1268,6 +1261,10 @@
     <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>第三方交易網址連結(&amp;T)</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>这个对话框中的设置已被如下命令行选项或配置文件项覆盖：</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1361,30 +1358,6 @@
         <translation>還沒成熟的開採金額</translation>
     </message>
     <message>
-        <source>Locked:</source>
-        <translation>鎖定的金額:</translation>
-    </message>
-    <message>
-        <source>Total of balance that have to be locked (for bind plotter and loan), and do not yet count toward the spendable balance</source>
-        <translation>被鎖定的總額(綁定算力和指向)，未計入當前金額</translation>
-    </message>
-    <message>
-        <source>Load to:</source>
-        <translation>指向的總額:</translation>
-    </message>
-    <message>
-        <source>Total of balance that have to be loan, and do not yet count toward the spendable balance</source>
-        <translation>指向的總額，未計入當前餘額</translation>
-    </message>
-    <message>
-        <source>Borrow from:</source>
-        <translation>被指向的總額:</translation>
-    </message>
-    <message>
-        <source>Total of balance that have to be borrow, and do not yet count toward the spendable balance</source>
-        <translation>指向的總額，未計入當前餘額</translation>
-    </message>
-    <message>
         <source>Balances</source>
         <translation>餘額</translation>
     </message>
@@ -1421,16 +1394,28 @@
         <translation>所有只能看位址的目前全部餘額</translation>
     </message>
     <message>
-        <source>Locked (for bind plotter and loan) balance to watch-only addresses</source>
-        <translation>只能看位址(watch-only address)鎖定的金額(綁定算力和指向)</translation>
+        <source>Frozen:</source>
+        <translation>凍結金額:</translation>
     </message>
     <message>
-        <source>Loan to to watch-only addresses</source>
-        <translation>只能看位址(watch-only address)指向的金額</translation>
+        <source>Total of balance that have to be frozen (by bind plotter locked and point sent), and do not yet count toward the spendable balance</source>
+        <translation>凍結的總金額（綁定算力鎖定的總金額和指向出去的總金額），未計入當前餘額</translation>
     </message>
     <message>
-        <source>Borrow from watch-only addresses</source>
-        <translation>只能看位址(watch-only address)被指向的金額</translation>
+        <source>Total of balance that have to be frozen (by bind plotter locked and point sent), and do not yet count toward the spendable balance in watch-only addresses</source>
+        <translation>只能看位址中凍結的總金額（綁定算力鎖定的總金額和指向出去的總金額），未計入當前餘額</translation>
+    </message>
+    <message>
+        <source>Point Received:</source>
+        <translation>被指向總額:</translation>
+    </message>
+    <message>
+        <source>Total of balance that have to be point received, and do not yet count toward the spendable balance</source>
+        <translation>被指向的總金額，未計入當前餘額</translation>
+    </message>
+    <message>
+        <source>Total of balance that have to be point received, and do not yet count toward the spendable balance in watch-only addresses</source>
+        <translation>只能看位址中被指向的總金額，未計入當前餘額</translation>
     </message>
 </context>
 <context>
@@ -1448,8 +1433,20 @@
         <translation>URI 處理</translation>
     </message>
     <message>
+        <source>'btchd://' is not a valid URI. Use 'btchd:' instead.</source>
+        <translation>字首為 btchd:// 不是有效的 URI，請改用 btchd: 開頭。</translation>
+    </message>
+    <message>
+        <source>You are using a BIP70 URL which will be unsupported in the future.</source>
+        <translation>你正在使用BIP70 URL，它在未来会被终止支持。</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>取得付款要求的 URL 無效: %1</translation>
+    </message>
+    <message>
+        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
+        <translation>无法处理支付请求，因为编译时没有启用BIP70支持。</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1472,7 +1469,7 @@
         <translation>付款的要求被拒絕了</translation>
     </message>
     <message>
-        <source>Payment request network doesn&apos;t match client network.</source>
+        <source>Payment request network doesn't match client network.</source>
         <translation>付款要求的網路類型跟客戶端不符。</translation>
     </message>
     <message>
@@ -1591,33 +1588,23 @@
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
-            <numerusform>%n 秒鐘</numerusform>
-        </translation>
+        <translation><numerusform>%n 秒鐘</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
-            <numerusform>%n 分鐘</numerusform>
-        </translation>
+        <translation><numerusform>%n 分鐘</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
-        <translation>
-            <numerusform>%n 小時</numerusform>
-        </translation>
+        <translation><numerusform>%n 小時</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation>
-            <numerusform>%n 天</numerusform>
-        </translation>
+        <translation><numerusform>%n 天</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
-        <translation>
-            <numerusform>%n 星期</numerusform>
-        </translation>
+        <translation><numerusform>%n 星期</numerusform></translation>
     </message>
     <message>
         <source>%1 and %2</source>
@@ -1625,9 +1612,7 @@
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
-        <translation>
-            <numerusform>%n 年</numerusform>
-        </translation>
+        <translation><numerusform>%n 年</numerusform></translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -1646,27 +1631,24 @@
         <translation>%1 GB (十億位元組)</translation>
     </message>
     <message>
-        <source>%1 didn&apos;t yet exit safely...</source>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>错误：指定的数据目录“%1”不存在。</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation>错误：无法解析配置文件：%1</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>错误：%1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely...</source>
         <translation>%1 還沒有安全地結束...</translation>
     </message>
     <message>
         <source>unknown</source>
         <translation>未知</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation>錯誤: 不存在指定的資料目錄 &quot;%1&quot; 。</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>錯誤: 沒辦法解析設定檔: %1。只能用「名稱=設定值」這種語法。</translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation>錯誤: %1</translation>
     </message>
 </context>
 <context>
@@ -1680,6 +1662,18 @@
         <translation>複製圖片(&amp;C)</translation>
     </message>
     <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>URI 太长，请试着精简标签或消息文本。</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>把 URI 编码成二维码时发生错误。</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>不支援QR code</translation>
+    </message>
+    <message>
         <source>Save QR Code</source>
         <translation>儲存 QR Code</translation>
     </message>
@@ -1690,10 +1684,6 @@
 </context>
 <context>
     <name>RPCConsole</name>
-    <message>
-        <source>BitcoinHD Chain</source>
-        <translation>比特硬幣</translation>
-    </message>
     <message>
         <source>N/A</source>
         <translation>未知</translation>
@@ -1719,12 +1709,20 @@
         <translation>使用 BerkeleyDB 版本</translation>
     </message>
     <message>
-        <source>Using SQLite version</source>
-        <translation>使用 SQLite 版本</translation>
-    </message>
-    <message>
         <source>Datadir</source>
         <translation>資料目錄</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>如果不想用默认的数据目录位置，请用 '%1' 这个选项来指定新的位置。</translation>
+    </message>
+    <message>
+        <source>Blocksdir</source>
+        <translation>区块存储目录</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>如果要自定义区块存储目录的位置，请用 '%1' 这个选项来指定新的位置。</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1763,32 +1761,12 @@
         <translation>記憶體使用量</translation>
     </message>
     <message>
-        <source>Current Wallet</source>
-        <translation>當前錢包</translation>
+        <source>Wallet: </source>
+        <translation>錢包:</translation>
     </message>
     <message>
-        <source>Primary address</source>
-        <translation>主要地址</translation>
-    </message>
-    <message>
-        <source>Primary address balance</source>
-        <translation>主要地址餘額</translation>
-    </message>
-    <message>
-        <source>Bind plotter</source>
-        <translation>綁定到錢包的算力</translation>
-    </message>
-    <message>
-        <source>Estimate capacity</source>
-        <translation>估算的算力</translation>
-    </message>
-    <message>
-        <source>Balance for mining</source>
-        <translation>挖礦需要的金額</translation>
-    </message>
-    <message>
-        <source>None</source>
-        <translation>無</translation>
+        <source>(none)</source>
+        <translation>(無)</translation>
     </message>
     <message>
         <source>&amp;Reset</source>
@@ -1812,7 +1790,7 @@
     </message>
     <message>
         <source>Select a peer to view detailed information.</source>
-        <translation>選一個節點來看詳細資訊。</translation>
+        <translation>選一個節點來看詳細資訊</translation>
     </message>
     <message>
         <source>Whitelisted</source>
@@ -1983,6 +1961,14 @@
         <translation>網路活動已關閉</translation>
     </message>
     <message>
+        <source>Executing command without any wallet</source>
+        <translation>不使用任何錢包來執行指令</translation>
+    </message>
+    <message>
+        <source>Executing command using "%1" wallet</source>
+        <translation>使用 %1 錢包來執行指令</translation>
+    </message>
+    <message>
         <source>(node id: %1)</source>
         <translation>(節點識別碼: %1)</translation>
     </message>
@@ -2046,6 +2032,10 @@
         <translation>要求付款的金額，可以不填。不確定金額時可以留白或是填零。</translation>
     </message>
     <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;生成新的接收位址</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>把表單中的所有欄位清空。</translation>
     </message>
@@ -2054,20 +2044,16 @@
         <translation>清空</translation>
     </message>
     <message>
+        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
+        <translation>使用 segwit 原生位址(也叫做 Bech32 或 BIP-173)可以減少日後的交易手續費，也比較不容易打錯字，不過會跟舊版的錢包軟體不相容。如果沒有勾選的話，會改產生與舊版錢包軟體相容的位址。</translation>
+    </message>
+    <message>
+        <source>Generate native segwit (Bech32) address</source>
+        <translation>產生 segwit 原生位址(Bech32)</translation>
+    </message>
+    <message>
         <source>Requested payments history</source>
         <translation>先前要求付款的記錄</translation>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation>要求付款(&amp;R)</translation>
-    </message>
-    <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32 位址(BIP-173)是一種花費成本較小，且較不容易打錯的位址類型。如果沒有勾選的話，會使用以 P2SH 包裝的 SegWit 位址，這種位址類型跟舊版錢包相容。</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>產生 Bech32 位址</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -2142,19 +2128,15 @@
     </message>
     <message>
         <source>Label</source>
-        <translation>標記</translation>
+        <translation>標記:</translation>
     </message>
     <message>
         <source>Message</source>
         <translation>訊息</translation>
     </message>
     <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>產生的 URI 過長，請試著縮短標記或訊息的文字內容。</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>把 URI 編碼成 QR Code 時發生錯誤。</translation>
+        <source>Wallet</source>
+        <translation>錢包</translation>
     </message>
 </context>
 <context>
@@ -2165,7 +2147,7 @@
     </message>
     <message>
         <source>Label</source>
-        <translation>標記</translation>
+        <translation>標記:</translation>
     </message>
     <message>
         <source>Message</source>
@@ -2236,7 +2218,7 @@
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>如果這項有打開，但是找零位址是空的或無效，那麼找零的錢會送到一個新產生的位址去。</translation>
+        <translation>如果這項有打開，但是找零位址是空的或無效，那麼找零的錢會送到一個新造出來的位址去。</translation>
     </message>
     <message>
         <source>Custom change address</source>
@@ -2263,24 +2245,20 @@
         <translation>展開手續費設定</translation>
     </message>
     <message>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 satoshis.</source>
+        <translation>指定每一千位元祖(kB)擬真大小的交易所要付出的手續費。
+
+注意: 交易手續費是以位元組為單位來計算。因此當指定手續費為每千位元組 100 個 satoshi 時，對於一筆大小為 500 位元組(一千位元組的一半)的交易，其手續費會只有  50 個 satoshi。</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>每千位元組</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 satoshis in fee, while &quot;total at least&quot; pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>如果自訂手續費設定為 1000 satoshi, 而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 satoshi 的手續費，換做選「總共至少」就會付 1000 satoshi. 但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
-    </message>
-    <message>
         <source>Hide</source>
         <translation>隱藏</translation>
-    </message>
-    <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for BitcoinHD transactions than the network can process.</source>
-        <translation>當交易量少於區塊可容納的空間時，只付最低手續費不會有什麽問題。但是當交易量的需求成長到超過整體網路可以處理的量時，可能會造成一筆一直不會被確認的交易。</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(請看提示)</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -2293,10 +2271,6 @@
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
         <translation>(手續費智慧演算法還沒準備好。通常都要等幾個區塊才行...)</translation>
-    </message>
-    <message>
-        <source>Generate bind plotter data</source>
-        <translation>生成綁定算力數據</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2315,6 +2289,14 @@
         <translation>零散錢:</translation>
     </message>
     <message>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for BitcoinHD transactions than the network can process.</source>
+        <translation>当交易量小于可用区块空间时，矿工和中继节点可能会执行最低手续费率限制。按照这个最低费率来支付手续费也是可以的，但请注意，一旦交易需求超出比特硬币网络能处理的限度，你的交易可能永远也无法确认。</translation>
+    </message>
+    <message>
+        <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
+        <translation>手續費太低的話可能會造成永遠無法確認的交易(請參考提示)</translation>
+    </message>
+    <message>
         <source>Confirmation time target:</source>
         <translation>目標確認時間:</translation>
     </message>
@@ -2323,7 +2305,7 @@
         <translation>啟用手續費追加</translation>
     </message>
     <message>
-        <source>With Replace-By-Fee (BIP-125) you can increase a transaction&apos;s fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
         <translation>手續費追加(Replace-By-Fee, BIP-125)可以讓你在送出交易後才來提高手續費。不用這個功能的話，建議付比較高的手續費來降低交易延遲的風險。</translation>
     </message>
     <message>
@@ -2341,30 +2323,6 @@
     <message>
         <source>S&amp;end</source>
         <translation>付款(&amp;E)</translation>
-    </message>
-    <message>
-        <source>Generating bind data</source>
-        <translation>生成綁定數據</translation>
-    </message>
-    <message>
-        <source>Generate &amp;Bind Data</source>
-        <translation>生成綁定數據(&amp;B)</translation>
-    </message>
-    <message>
-        <source>Bind plotter data</source>
-        <translation>綁定數據</translation>
-    </message>
-    <message>
-        <source>Invalid bind plotter data!</source>
-        <translation>無效的綁定數據！</translation>
-    </message>
-    <message>
-        <source>This string look like signatured bind plotter data!</source>
-        <translation>這串字符看起來像是已經簽名的綁定數據！</translation>
-    </message>
-    <message>
-        <source>You can copy and send below signature bind data to %1 owner, and let the bind active:</source>
-        <translation>你可以安全的拷貝並發送下面已簽名的綁定數據給 %1 地址的擁有者以激活綁定:</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -2399,6 +2357,14 @@
         <translation>%1 (%2 個區塊)</translation>
     </message>
     <message>
+        <source> from wallet '%1'</source>
+        <translation>從錢包 %1</translation>
+    </message>
+    <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 到 '%2'</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 給 %2</translation>
     </message>
@@ -2407,28 +2373,32 @@
         <translation>你確定要付錢出去嗎？</translation>
     </message>
     <message>
-        <source>added as transaction fee</source>
-        <translation>加做交易手續費</translation>
-    </message>
-    <message>
-        <source>%1 of this transaction fee is a package reward for miners, and %2 is directly destroyed.</source>
-        <translation>此交易費中 %1 為給礦工的打包獎勵，%2 直接銷毀。</translation>
-    </message>
-    <message>
-        <source>Total Amount %1</source>
-        <translation>總金額 %1</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>或</translation>
     </message>
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
-        <translation>你可以之後再提高手續費(有 BIP-125 手續費追加的標記)。</translation>
+        <translation>你可以之後再提高手續費(有 BIP-125 手續費追加的標記)</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction.</source>
+        <translation>請再次確認交易內容。</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>交易手續費</translation>
     </message>
     <message>
         <source>Not signalling Replace-By-Fee, BIP-125.</source>
         <translation>沒有 BIP-125 手續費追加的標記。</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>總金額</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>要查看收件人列表，請單擊"顯示詳細訊息..."</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2470,17 +2440,13 @@
         <source>Payment request expired.</source>
         <translation>付款的要求過期了。</translation>
     </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>只付必要的手續費 %1</translation>
-    </message>
-    <message>
+    <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>預計在 %n 個區塊內開始確認。</translation>
+        <translation><numerusform>预计在等待 %n 个区块后会有第一个确认。</numerusform></translation>
     </message>
     <message>
         <source>Warning: Invalid BitcoinHD address</source>
-        <translation>警告: 比特硬幣位址無效</translation>
+        <translation>警告:比特硬幣位址無效</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2503,7 +2469,7 @@
         <translation>支付到</translation>
     </message>
     <message>
-        <source>Loan to</source>
+        <source>Point to</source>
         <translation>指向到</translation>
     </message>
     <message>
@@ -2511,12 +2477,12 @@
         <translation>綁定到</translation>
     </message>
     <message>
-        <source>Confirm loan to</source>
-        <translation>確認發送指向</translation>
+        <source>&amp;Check</source>
+        <translation>檢查(&amp;C)</translation>
     </message>
     <message>
-        <source>Are you sure you want loan?</source>
-        <translation>您確定要指向嗎？</translation>
+        <source>Check bind data</source>
+        <translation>檢查綁定數據</translation>
     </message>
     <message>
         <source>Confirm bind plotter</source>
@@ -2531,8 +2497,12 @@
         <translation>把 %1 綁定到 %2</translation>
     </message>
     <message>
-        <source>The operation will lock %1 in %2.</source>
-        <translation>此操作將會在 %2 鎖定 %1。</translation>
+        <source>The operation will lock %1.</source>
+        <translation>此操作將會鎖定 %1。</translation>
+    </message>
+    <message>
+        <source>You can unbind later, and the locked amount will be returned to this address.</source>
+        <translation>你可以在隨後解綁算力，鎖定的金額將歸還到這個位址。</translation>
     </message>
     <message>
         <source>This binding operation triggers anti-cheating mechanism and therefore requires a large transaction fee %1.</source>
@@ -2547,24 +2517,16 @@
         <translation>綁定算力共識將在 %1 高度之後啟用。</translation>
     </message>
     <message>
-        <source>The rental consensus active on %1 after.</source>
-        <translation>指向共識將在 %1 高度之後啟用。</translation>
+        <source>Confirm point</source>
+        <translation>確認指向</translation>
     </message>
     <message>
-        <source>The lock amount to bind plotter must be %1.</source>
-        <translation>綁定算力需要鎖定的交易額必須是 %1 。</translation>
+        <source>Are you sure you want point?</source>
+        <translation>您確定要指向嗎？</translation>
     </message>
     <message>
-        <source>The plotter %1 already binded to %2.</source>
-        <translation>算力 %1 和地址 %2 已經綁定過。</translation>
-    </message>
-    <message>
-        <source>Loan to amount must be larger than %1.</source>
-        <translation>有效的指向額除必須大於 %1 。</translation>
-    </message>
-    <message>
-        <source>Loan to amount must be larger than %1 on exclude fee %2.</source>
-        <translation>有效的指向額除去交易費用 %2 後必須大於 %1 。</translation>
+        <source>You can withdraw this point at any time, and the amount will be returned to this address.</source>
+        <translation>你可以隨時解除這筆指向，金額將歸還到這個位址。</translation>
     </message>
     <message>
         <source>Copy bind data</source>
@@ -2579,27 +2541,11 @@
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>付給(&amp;T):</translation>
-    </message>
-    <message>
-        <source>Loan &amp;To:</source>
-        <translation>指向给(&amp;T):</translation>
-    </message>
-    <message>
-        <source>Bind &amp;To:</source>
-        <translation>綁給(&amp;T):</translation>
+        <translation>支付給(&amp;T):</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
         <translation>標記(&amp;L):</translation>
-    </message>
-    <message>
-        <source>&amp;Plotter:</source>
-        <translation>算力(&amp;P):</translation>
-    </message>
-        <message>
-        <source>&amp;Valid Height:</source>
-        <translation>有效時間(&amp;V):</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2630,8 +2576,8 @@
         <translation>刪掉這個項目</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>手續費會從要付款出去的金額中扣掉。因此收款人會收到比輸入的金額還要少的 bitcoin。如果有多個收款人的話，手續費會平均分配來扣除。</translation>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less BHDs than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>手續費會從要付款出去的金額中扣掉。因此收款人會收到比輸入的金額還要少的比特硬幣。如果有多個收款人的話，手續費會平均分配來扣除。</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2655,11 +2601,11 @@
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>請輸入這個位址的標記，來把它加進去已使用過位址的清單</translation>
+        <translation>請輸入這個位址的標記，來把它加進去已使用過位址的清單。</translation>
     </message>
     <message>
         <source>A message that was attached to the btchd: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BitcoinHD network.</source>
-        <translation>附加在 BitcoinHD 付款協議的資源識別碼(URI)中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到比特硬幣網路上。</translation>
+        <translation>附加在比特硬幣付款協議的資源識別碼(URI)中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到比特硬幣網路上。</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2672,6 +2618,26 @@
     <message>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>請輸入這個位址的標記來把它加進位址簿中</translation>
+    </message>
+    <message>
+        <source>Point &amp;To:</source>
+        <translation>指向給(&amp;T):</translation>
+    </message>
+    <message>
+        <source>Bind &amp;To:</source>
+        <translation>綁定給(&amp;T)：</translation>
+    </message>
+    <message>
+        <source>&amp;Plotter:</source>
+        <translation>算力(&amp;P)：</translation>
+    </message>
+    <message>
+        <source>&amp;Alive Time:</source>
+        <translation>有效時間(&amp;A)：</translation>
+    </message>
+    <message>
+        <source>%1 (%2 blocks)</source>
+        <translation>%1 (%2 個區塊)</translation>
     </message>
     <message>
         <source>Enter your plotter passphrase or bind hex data</source>
@@ -2707,7 +2673,7 @@
         <translation>簽署訊息(&amp;S)</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <source>You can sign messages/agreements with your addresses to prove you can receive BHDs sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation>你可以用自己的位址簽署訊息或合約，來證明你可以從該位址收款。但是請小心，不要簽署語意含糊不清，或隨機產生的內容，因為釣魚式詐騙可能會用騙你簽署的手法來冒充是你。只有在語句中的細節你都同意時才簽署。</translation>
     </message>
     <message>
@@ -2763,7 +2729,7 @@
         <translation>驗證訊息(&amp;V)</translation>
     </message>
     <message>
-        <source>Enter the receiver&apos;s address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
+        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
         <translation>請在下面輸入收款人的位址，訊息(請確定完整複製了所包含的換行，空格，跳位符號等等)，以及簽章，來驗證這個訊息。請小心，除了訊息內容以外，不要對簽章本身過度解讀，以避免被用「中間人攻擊法」詐騙。請注意，通過驗證的簽章只能證明簽章人確實可以從該位址收款，不能證明任何交易中的付款人身份！</translation>
     </message>
     <message>
@@ -2783,7 +2749,7 @@
         <translation>重設所有訊息驗證欄位</translation>
     </message>
     <message>
-        <source>Click &quot;Sign Message&quot; to generate signature</source>
+        <source>Click "Sign Message" to generate signature</source>
         <translation>請按一下「簽署訊息」來產生簽章</translation>
     </message>
     <message>
@@ -2836,17 +2802,6 @@
     </message>
 </context>
 <context>
-    <name>SplashScreen</name>
-    <message>
-        <source>BitcoinHD Chain</source>
-        <translation>比特硬幣</translation>
-    </message>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-</context>
-<context>
     <name>TrafficGraphWidget</name>
     <message>
         <source>KB/s</source>
@@ -2857,9 +2812,7 @@
     <name>TransactionDesc</name>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform>到下 %n 個區塊生出來前可修改</numerusform>
-        </translation>
+        <translation><numerusform>到下 %n 個區塊生出來前可修改</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2868,10 +2821,6 @@
     <message>
         <source>conflicted with a transaction with %1 confirmations</source>
         <translation>跟一個目前確認 %1 次的交易互相衝突</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1 次/離線中</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
@@ -2900,16 +2849,6 @@
     <message>
         <source>Status</source>
         <translation>狀態</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>，還沒成功公告出去</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation>
-            <numerusform>，已公告給 %n 個節點</numerusform>
-        </translation>
     </message>
     <message>
         <source>Date</source>
@@ -2953,9 +2892,7 @@
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
-            <numerusform>再等 %n 個區塊生出來後成熟</numerusform>
-        </translation>
+        <translation><numerusform>再等 %n 個區塊生出來後成熟</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2998,6 +2935,10 @@
         <translation>交易總大小</translation>
     </message>
     <message>
+        <source>Transaction virtual size</source>
+        <translation>交易擬真大小</translation>
+    </message>
+    <message>
         <source>Output index</source>
         <translation>輸出索引</translation>
     </message>
@@ -3006,7 +2947,7 @@
         <translation>商家</translation>
     </message>
     <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation>生產出來的錢要再等 %1 個區塊生出來後才成熟可以用。當區塊生產出來時會公布到網路上，來被加進區塊鏈。如果加失敗了，狀態就會變成「不被接受」，而且不能夠花。如果在你生產出區塊的幾秒鐘內，也有其他節點生產出來的話，就有可能會發生這種情形。</translation>
     </message>
     <message>
@@ -3034,6 +2975,14 @@
         <translation>否</translation>
     </message>
     <message>
+        <source>Has withdraw</source>
+        <translation>已赎回</translation>
+    </message>
+    <message>
+        <source>Relevant transaction ID</source>
+        <translation>關聯的交易</translation>
+    </message>
+    <message>
         <source>This binding has been unable to mine</source>
         <translation>此綁定已經不能挖礦</translation>
     </message>
@@ -3046,16 +2995,8 @@
         <translation>算力 ID</translation>
     </message>
     <message>
-        <source>Unbinded Plotter ID</source>
-        <translation>已解綁 ID</translation>
-    </message>
-    <message>
-        <source>Withdrawn</source>
-        <translation>已解除指向</translation>
-    </message>
-    <message>
-        <source>Relevant transaction ID</source>
-        <translation>關聯的交易</translation>
+        <source>Unbinded plotter</source>
+        <translation>已解綁</translation>
     </message>
 </context>
 <context>
@@ -3081,21 +3022,15 @@
     </message>
     <message>
         <source>Label</source>
-        <translation>標記</translation>
+        <translation>標記:</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform>到下 %n 個區塊生出來前可修改</numerusform>
-        </translation>
+        <translation><numerusform>到下 %n 個區塊生出來前可修改</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
         <translation>到 %1 前可修改</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>離線中</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -3120,10 +3055,6 @@
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>未成熟(確認 %1 次，會在 %2 次後可用)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>沒有其他節點收到這個區塊，也許它不會被接受！</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
@@ -3162,42 +3093,6 @@
         <translation>(無標記)</translation>
     </message>
     <message>
-        <source>Binded plotter</source>
-        <translation>綁定算力</translation>
-    </message>
-    <message>
-        <source>Unbinded plotter</source>
-        <translation>解綁算力</translation>
-    </message>
-    <message>
-        <source>This bind plotter has unbinded</source>
-        <translation>此綁定已解除</translation>
-    </message>
-    <message>
-        <source>This binding has been unable to mine</source>
-        <translation>此綁定已經不能挖礦</translation>
-    </message>
-    <message>
-        <source>Loan to</source>
-        <translation>指向</translation>
-    </message>
-    <message>
-        <source>Borrow from</source>
-        <translation>被指向</translation>
-    </message>
-    <message>
-        <source>This rental has withdraw</source>
-        <translation>此指向已被解除</translation>
-    </message>
-    <message>
-        <source>Loan to yourself</source>
-        <translation>指向給自己</translation>
-    </message>
-    <message>
-        <source>Withdrawn loan</source>
-        <translation>解除指向</translation>
-    </message>
-    <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>交易狀態。把游標停在欄位上會顯示確認次數。</translation>
     </message>
@@ -3211,7 +3106,7 @@
     </message>
     <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation>不論如何有一個只能觀看的地只有參與這次的交易。</translation>
+        <translation>不論如何有一個只能觀看的地只有參與這次的交易</translation>
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
@@ -3220,6 +3115,42 @@
     <message>
         <source>Amount removed from or added to balance.</source>
         <translation>要減掉或加進餘額的金額。</translation>
+    </message>
+    <message>
+        <source>Binded plotter</source>
+        <translation>綁定算力</translation>
+    </message>
+    <message>
+        <source>Unbinded plotter</source>
+        <translation>解綁算力</translation>
+    </message>
+    <message>
+        <source>This bind plotter has unbinded</source>
+        <translation>此綁定已解除</translation>
+    </message>
+    <message>
+        <source>This bind has been unable to mine</source>
+        <translation>此綁定已經不能挖礦</translation>
+    </message>
+    <message>
+        <source>Point sent</source>
+        <translation>發出指向</translation>
+    </message>
+    <message>
+        <source>Point received</source>
+        <translation>收到指向</translation>
+    </message>
+    <message>
+        <source>Withdraw point</source>
+        <translation>解除指向</translation>
+    </message>
+    <message>
+        <source>This point has withdraw</source>
+        <translation>此指向已被解除</translation>
+    </message>
+    <message>
+        <source>Point to yourself</source>
+        <translation>指向給自己</translation>
     </message>
 </context>
 <context>
@@ -3269,34 +3200,6 @@
         <translation>開採所得</translation>
     </message>
     <message>
-        <source>Binded plotter</source>
-        <translation>綁定算力</translation>
-    </message>
-    <message>
-        <source>Unbinded plotter</source>
-        <translation>解綁算力</translation>
-    </message>
-    <message>
-        <source>Loan to</source>
-        <translation>指向</translation>
-    </message>
-    <message>
-        <source>Borrow from</source>
-        <translation>被指向</translation>
-    </message>
-    <message>
-        <source>This rental has withdraw</source>
-        <translation>此指向已被解除</translation>
-    </message>
-    <message>
-        <source>Loan to yourself</source>
-        <translation>指向給自己</translation>
-    </message>
-    <message>
-        <source>Withdrawn loan</source>
-        <translation>解除指向</translation>
-    </message>
-    <message>
         <source>Other</source>
         <translation>其它</translation>
     </message>
@@ -3315,14 +3218,6 @@
     <message>
         <source>Increase transaction fee</source>
         <translation>提高手續費</translation>
-    </message>
-    <message>
-        <source>Unbind plotter</source>
-        <translation>解綁算力</translation>
-    </message>
-    <message>
-        <source>Withdraw rental</source>
-        <translation>解除指向</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -3382,7 +3277,7 @@
     </message>
     <message>
         <source>Label</source>
-        <translation>標記</translation>
+        <translation>標記:</translation>
     </message>
     <message>
         <source>Address</source>
@@ -3416,12 +3311,39 @@
         <source>to</source>
         <translation>到</translation>
     </message>
+    <message>
+        <source>Binded plotter</source>
+        <translation>綁定算力</translation>
+    </message>
+    <message>
+        <source>Point sent</source>
+        <translation>發出指向</translation>
+    </message>
+    <message>
+        <source>Point received</source>
+        <translation>收到指向</translation>
+    </message>
+    <message>
+        <source>Unfreeze transaction</source>
+        <translation>解凍交易</translation>
+    </message>
 </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
         <source>Unit to show amounts in. Click to select another unit.</source>
         <translation>金額顯示單位。可以點選其他單位。</translation>
+    </message>
+</context>
+<context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>關閉錢包</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>關上錢包太久的話且修剪模式又有開啟的話，可能會造成日後需要重新同步整個區塊鏈。</translation>
     </message>
 </context>
 <context>
@@ -3466,7 +3388,7 @@
         <translation>確認手續費提升</translation>
     </message>
     <message>
-        <source>Can&apos;t sign transaction.</source>
+        <source>Can't sign transaction.</source>
         <translation>沒辦法簽署交易。</translation>
     </message>
     <message>
@@ -3474,56 +3396,60 @@
         <translation>沒辦法提交交易</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>預設錢包</translation>
+    </message>
+    <message>
+        <source>Unfreeze error</source>
+        <translation>解凍錯誤</translation>
+    </message>
+    <message>
+        <source>Create transaction failed</source>
+        <translation>創建交易失敗</translation>
+    </message>
+    <message>
+        <source>Could not commit transaction</source>
+        <translation>無法提交交易</translation>
+    </message>
+    <message>
         <source>Unbind plotter</source>
         <translation>解綁算力</translation>
     </message>
     <message>
-        <source>Withdraw rental</source>
-        <translation>解除指向</translation>
-    </message>
-    <message>
-        <source>Unbind plotter error</source>
-        <translation>解綁算力失敗</translation>
-    </message>
-    <message>
-        <source>Withdraw rental error</source>
-        <translation>解除指向失敗</translation>
-    </message>
-    <message>
         <source>Are you sure you want to unbind plotter?</source>
-        <translation>你是否確認解綁算力?</translation>
+        <translation>你確定要解綁算力嗎？</translation>
     </message>
     <message>
-        <source>Are you sure you want to withdraw loan?</source>
-        <translation>你是否確認解除指向?</translation>
-    </message>
-    <message>
-        <source>Transaction fee:</source>
-        <translation>交易費：</translation>
-    </message>
-    <message>
-        <source>Binded address:</source>
-        <translation>綁定的位址：</translation>
+        <source>Address:</source>
+        <translation>位址：</translation>
     </message>
     <message>
         <source>Plotter ID:</source>
-        <translation>算力 ID：</translation>
+        <translation>算力ID：</translation>
     </message>
     <message>
-        <source>Unbind plotter active on %1 block height (%2 blocks after, about %3 minute).</source>
-        <translation>解綁生效的區塊高度為 %1 （%2 個區塊之後，大約需要 %3 分鐘）。</translation>
+        <source>Return amount:</source>
+        <translation>退還金額：</translation>
+    </message>
+    <message>
+        <source>Transaction fee:</source>
+        <translation>交易費用：</translation>
+    </message>
+    <message>
+        <source>Withdraw point</source>
+        <translation>取消指向</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to withdraw point?</source>
+        <translation>你確定要取消這筆指向嗎？</translation>
     </message>
     <message>
         <source>From address:</source>
-        <translation>來自：</translation>
+        <translation>源地址：</translation>
     </message>
     <message>
         <source>To address:</source>
-        <translation>到：</translation>
-    </message>
-    <message>
-        <source>Amount:</source>
-        <translation>總額：</translation>
+        <translation>目的地址：</translation>
     </message>
 </context>
 <context>
@@ -3560,44 +3486,16 @@
         <source>The wallet data was successfully saved to %1.</source>
         <translation>錢包的資料已經成功儲存到 %1 了。</translation>
     </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
 </context>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>BitcoinHD</source>
-        <translation>比特硬幣</translation>
-    </message>
-    <message>
-        <source>BitcoinHD Chain</source>
-        <translation>比特硬幣</translation>
-    </message>
-    <message>
-        <source>Options:</source>
-        <translation>選項:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>指定資料目錄</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>連線到某個節點來取得其它節點的位址，然後斷線</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>指定自己的公開位址</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>接受指令列和 JSON-RPC 指令</translation>
-    </message>
-    <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation>依據 MIT 軟體授權條款散布，詳情請見附帶的 %s 檔案或是 %s</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation>如果沒有提供 &lt;category&gt; 或是值為 1 就會輸出所有的除錯資訊。</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -3616,44 +3514,20 @@
         <translation>錯誤: 發生了致命的內部錯誤，詳情請看 debug.log</translation>
     </message>
     <message>
-        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
-        <translation>交易付款時每千位元組(kB)的交易手續費(單位是 %s，預設值: %s)</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>正在修剪區塊資料庫中...</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>用護靈模式在背景執行並接受指令</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation>無法啟動 HTTP 伺服器。詳情請看除錯紀錄。</translation>
     </message>
     <message>
-        <source>BitcoinHD Core</source>
-        <translation>比特硬幣核心</translation>
-    </message>
-    <message>
         <source>The %s developers</source>
         <translation>%s 開發人員</translation>
     </message>
     <message>
-        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
-        <translation>當沒有足夠的資料計算預估手續費時，所使用的手續費費率(單位是 %s/kB, 預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
-        <translation>接受從白名點節點收到的轉發交易，即使沒有(符合準則)轉發出去(預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
-        <translation>增加一個要連線的節線，並試著保持對它的連線不斷(詳情請見 RPC 指令 addnode 的說明)</translation>
-    </message>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>和指定的位址繫結，並且一直在指定位址聽候連線。IPv6 請用 [主機]:通訊埠 這種格式</translation>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>无法生成找零地址密钥。 内部密钥池中没有密钥，也无法生成任何密钥。</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3664,43 +3538,11 @@
         <translation>無法同時指定特定連線位址以及自動尋找連線。</translation>
     </message>
     <message>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
-        <translation>只連線到指定的節點。用 -connect=0 可以關閉自動連線。(套用於這個節點的規則與 -addnode 相同)</translation>
-    </message>
-    <message>
-        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation>清掉錢包裡的所有交易，並且在下次啟動時，使用 -rescan 來從區塊鏈中復原回來</translation>
-    </message>
-    <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>讀取錢包檔 %s 時發生錯誤！所有的密鑰都正確讀取了，但是交易資料或位址簿資料可能會缺少或不正確。</translation>
     </message>
     <message>
-        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
-        <translation>不要對一種類別紀錄除錯資訊。可以和 -debug=1 配合，用來輸入除了指定的一種或多種類別外的所有除錯紀錄。</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>當錢包有交易改變時要執行的指令(指令中的 %s 會被取代成交易識別碼)</translation>
-    </message>
-    <message>
-        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
-        <translation>為了將摘要區塊完整回組而額外保留在記憶體中的交易數量(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
-        <translation>假設已經在區塊鏈中的區塊以及其先前的區塊都合法，因此對它們略過指令碼驗證(0 表示一律要驗證，預設值: %s, 測試網路: %s)</translation>
-    </message>
-    <message>
-        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
-        <translation>跟其他節點的時間差最高可接受的中位數值。本機所認為的時間可能會被其他節點影響，往前或往後在這個值之內。(預設值: %u 秒)</translation>
-    </message>
-    <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>允許一次錢包交易或未加工交易付出的最高總手續費(單位是 %s)；設定太低的話，可能會無法進行資料量大的交易(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Please check that your computer&apos;s date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>請檢查電腦日期和時間是否正確！%s 沒辦法在時鐘不準的情況下正常運作。</translation>
     </message>
     <message>
@@ -3708,24 +3550,8 @@
         <translation>如果你覺得 %s 有用，可以幫助我們。關於這個軟體的更多資訊請見 %s。</translation>
     </message>
     <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
-        <translation>是否允許在節點位址數目不足時，使用域名查詢來搜尋節點 (預設值: 當沒用 -connect 時為 1)</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>修剪(刪除)掉老舊區塊以降低需要的儲存空間。這樣會增加一個 RPC 指令 pruneblockchain，可以使用它來刪除指定的區塊；也可以指定目標儲存空間大小，以啟用對老舊區塊的自動修剪功能。這個模式跟 -txindex 和 -rescan 參數不相容。警告: 還原回不修剪模式會需要重新下載一整個區塊鏈。(預設值: 0 表示不修剪區塊，1 表示允許使用 RPC 指令做修剪，&gt;%u 的值表示為區塊資料的目標大小，單位是百萬位元組，MiB)</translation>
-    </message>
-    <message>
-        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
-        <translation>設定製造區塊時，所要包含交易每千位元組的最低手續費(單位是 %s)。(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>設定指令碼驗證的執行緒數目 (%u 到 %d，0 表示程式自動決定，小於 0 表示保留處理器核心不用的數目，預設值: %d)</translation>
-    </message>
-    <message>
-        <source>The block database contains a block which appears to be from the future. This may be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct</source>
-        <translation>區塊資料庫中有來自未來的區塊。可能是你電腦的日期時間不對。如果確定電腦日期時間沒錯的話，就重建區塊資料庫看看</translation>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation>區塊資料庫中有來自未來的區塊。可能是你電腦的日期時間不對。如果確定電腦日期時間沒錯的話，就重建區塊資料庫看看。</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -3741,19 +3567,7 @@
     </message>
     <message>
         <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
-        <translation>沒辦法將資料庫倒轉回分岔前的狀態。必須要重新下載區塊鍊</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>是否要使用「通用即插即用」協定(UPnP)，來設定聽候連線的通訊埠的對應(預設值: 當有聽候連線且沒有指定 -proxy 參數時為 1)</translation>
-    </message>
-    <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>JSON-RPC 連線要用的使用者名稱和雜湊密碼。&lt;userpw&gt; 的格式是：&lt;使用者名稱&gt;:&lt;調味值&gt;$&lt;雜湊值&gt;。在 share/rpcuser 目錄下有一個示範的 python 程式。之後客戶端程式就可以用這對參數正常連線：rpcuser=&lt;使用者名稱&gt; 和 rpcpassword=&lt;密碼&gt;。這個選項可以給很多次</translation>
-    </message>
-    <message>
-        <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
-        <translation>錢包軟體不會產生違反記憶池交易鏈限制的交易(預設值: %u)</translation>
+        <translation>沒辦法將資料庫倒轉回分岔前的狀態。必須要重新下載區塊鍊。</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
@@ -3762,10 +3576,6 @@
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>警告: 我們和某些連線的節點對於區塊鏈結的決定不同！你可能需要升級，或是需要等其它的節點升級。</translation>
-    </message>
-    <message>
-        <source>Whether to save the mempool on shutdown and load on restart (default: %u)</source>
-        <translation>是否要在結束時儲存記憶池，並在下次重起時載入(預設值: %u)</translation>
     </message>
     <message>
         <source>%d of last 100 blocks have unexpected version</source>
@@ -3780,84 +3590,28 @@
         <translation>參數 -maxmempool 至少要給 %d 百萬位元組(MB)</translation>
     </message>
     <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; 可以是:</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>是否接受外來連線(預設值: 當沒有 -proxy 或 -connect 時為 1)</translation>
-    </message>
-    <message>
-        <source>Append comment to the user agent string</source>
-        <translation>對使用者代理字串添加註解</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
-        <translation>啟動時嘗試從壞掉的錢包檔復原密鑰</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>區塊製造選項:</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -%s address: &apos;%s&apos;</source>
-        <translation>沒辦法解析 -%s 參數指定的位址: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <source>Chain selection options:</source>
-        <translation>區塊鏈選項:</translation>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation>沒辦法解析 -%s 參數指定的位址: '%s'</translation>
     </message>
     <message>
         <source>Change index out of range</source>
         <translation>找零的索引值超出範圍</translation>
     </message>
     <message>
-        <source>Connection options:</source>
-        <translation>連線選項:</translation>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>对 %s 的配置设置只对 %s 网络生效，如果它位于配置的 [%s] 章节的话</translation>
     </message>
     <message>
-        <source>Copyright (C) %s</source>
-        <translation>版權所有 (C) %s</translation>
+        <source>Copyright (C) %i-%i</source>
+        <translation>版權所有 (C) %i-%i</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
         <translation>發現區塊資料庫壞掉了</translation>
     </message>
     <message>
-        <source>Debugging/Testing options:</source>
-        <translation>除錯與測試選項:</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>不要載入錢包，並且拿掉錢包相關的 RPC 功能請求</translation>
-    </message>
-    <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>你想要現在重建區塊資料庫嗎？</translation>
-    </message>
-    <message>
-        <source>Enable publish hash block in &lt;address&gt;</source>
-        <translation>開啟傳送區塊雜湊值到目標 ZeroMQ 位址 &lt;address&gt; 去</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction in &lt;address&gt;</source>
-        <translation>開啟傳送交易雜湊值到目標 ZeroMQ 位址 &lt;address&gt; 去</translation>
-    </message>
-    <message>
-        <source>Enable publish raw block in &lt;address&gt;</source>
-        <translation>開啟傳送區塊原始資料到目標 ZeroMQ 位址 &lt;address&gt; 去</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction in &lt;address&gt;</source>
-        <translation>開啟傳送交易原始資料到目標 ZeroMQ 位址 &lt;address&gt; 去</translation>
-    </message>
-    <message>
-        <source>Enable transaction replacement in the memory pool (default: %u)</source>
-        <translation>對交易暫存池啟用替代交易(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Error creating %s: You can&apos;t create non-HD wallets with this version.</source>
-        <translation>產生 %s 發生錯誤：這個版本不能用來產生非 HD 錢包。</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3870,6 +3624,10 @@
     <message>
         <source>Error loading %s</source>
         <translation>載入檔案 %s 時發生錯誤</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation>載入 %s 時發生錯誤: 只有在造新錢包時能夠指定不允許私鑰</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -3886,10 +3644,6 @@
     <message>
         <source>Error opening block database</source>
         <translation>打開區塊資料庫時發生錯誤</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>錯誤: 磁碟空間很少！</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -3912,48 +3666,52 @@
         <translation>初始化時的基本檢查失敗了。%s 就要關閉了。</translation>
     </message>
     <message>
-        <source>Invalid amount for -%s=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>參數 -%s=&lt;金額&gt; 指定的金額無效: &apos;%s&apos;</translation>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>無效的 P2P 權限: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -discardfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>設定 -discardfee=&lt;金額&gt; 的金額無效: &apos;%s&apos;</translation>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation>參數 -%s=&lt;金額&gt; 指定的金額無效: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>設定 -fallbackfee=&lt;金額&gt; 的金額無效: &apos;%s&apos;</translation>
+        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
+        <translation>設定 -discardfee=&lt;金額&gt; 的金額無效: '%s'</translation>
     </message>
     <message>
-        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
-        <translation>在記憶體暫存池中保持最多 &lt;n&gt; 個百萬位元組的交易(預設值: %u)</translation>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
+        <translation>設定 -fallbackfee=&lt;金額&gt; 的金額無效: '%s'</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>指定的區塊目錄 "%s" 不存在。</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation>不明的位址類型 '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>不明的找零位址類型 '%s'</translation>
+    </message>
+    <message>
+        <source>Upgrading txindex database</source>
+        <translation>正在升級 txindex 資料庫</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>
         <translation>正在載入 P2P 位址資料...</translation>
     </message>
     <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>錯誤: 磁碟空間很少！</translation>
+    </message>
+    <message>
         <source>Loading banlist...</source>
         <translation>正在載入禁止連線名單中...</translation>
     </message>
     <message>
-        <source>Location of the auth cookie (default: data dir)</source>
-        <translation>認證 cookie 資料的位置(預設值: 同資料目錄)</translation>
-    </message>
-    <message>
         <source>Not enough file descriptors available.</source>
         <translation>檔案描述元不足。</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>只和 &lt;net&gt; 網路上的節點連線(ipv4, ipv6, 或 onion)</translation>
-    </message>
-    <message>
-        <source>Print this help message and exit</source>
-        <translation>顯示說明訊息後結束</translation>
-    </message>
-    <message>
-        <source>Print version and exit</source>
-        <translation>顯示版本後結束</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3964,32 +3722,12 @@
         <translation>修剪模式和 -txindex 參數不相容。</translation>
     </message>
     <message>
-        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
-        <translation>從磁碟裡的區塊檔 blk*.dat 重建區塊鏈狀態和區塊索引</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state from the currently indexed blocks</source>
-        <translation>從目前已編索引的區塊資料重建區塊鏈狀態</translation>
-    </message>
-    <message>
         <source>Replaying blocks...</source>
         <translation>正在對區塊進行重算...</translation>
     </message>
     <message>
         <source>Rewinding blocks...</source>
         <translation>正在倒轉回區塊鏈之前的狀態...</translation>
-    </message>
-    <message>
-        <source>Send transactions with full-RBF opt-in enabled (RPC only, default: %u)</source>
-        <translation>送出允許提高手續費(full-RBF)的交易(僅適用於 RPC 指令，預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>設定資料庫快取大小是多少百萬位元組(MB，範圍: %d 到 %d，預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>指定錢包檔(會在資料目錄中)</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
@@ -4004,16 +3742,8 @@
         <translation>沒辦法繫結在這台電腦上的 %s 。%s 可能已經在執行了。</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>忽略了不再支援的 -benchmark 參數，請改用 -debug=bench。</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>忽略了不再支援的 -debugnet 參數，請改用 -debug=net。</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>找到不再支援的 -tor 參數，請改用 -onion 參數。</translation>
+        <source>Unable to generate keys</source>
+        <translation>沒辦法產生密鑰</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
@@ -4024,14 +3754,6 @@
         <translation>正在升級 UTXO 資料庫</translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>使用通用隨插即用 (UPnP) 協定來設定對應的服務連接埠(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Use the test chain</source>
-        <translation>使用測試區塊鏈</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>使用者代理註解(%s)中含有不安全的字元。</translation>
     </message>
@@ -4040,92 +3762,24 @@
         <translation>正在驗證區塊資料...</translation>
     </message>
     <message>
-        <source>Wallet debugging/testing options:</source>
-        <translation>錢包除錯與測試選項:</translation>
-    </message>
-    <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
         <translation>錢包需要重寫: 請重新啓動 %s 來完成</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>錢包選項:</translation>
-    </message>
-    <message>
-        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
-        <translation>允許指定的來源建立 JSON-RPC 連線。&lt;ip&gt; 的有效值可以是一個單獨位址(像是 1.2.3.4)，一個網段/網段罩遮值(像是 1.2.3.4/255.255.255.0)，或是網段/CIDR值(像是 1.2.3.4/24)。這個選項可以設定多次</translation>
-    </message>
-    <message>
-        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation>和指定的位址繫結，並且把連線過來的節點放進白名單。IPv6 請用 [主機]:通訊埠 這種格式</translation>
-    </message>
-    <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>用系統預設權限來造出新的檔案，而不是用使用者權限罩遮(umask)值 077 (只有在關掉錢包功能時才有作用)</translation>
-    </message>
-    <message>
-        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
-        <translation>找出自己的網際網路位址(預設值: 當有聽候連線且沒有指定 -externalip 或 -proxy 時為 1)</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>錯誤: 聽候外來連線失敗(回傳錯誤 %s)</translation>
     </message>
     <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>當收到相關警示，或發現相當長的分支時，所要執行的指令(指令中的 %s 會被取代成警示訊息)</translation>
-    </message>
-    <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
-        <translation>當處理轉發的交易、挖礦、或製造交易時，如果每千位元組(kB)的手續費比這個值(單位是 %s)低，就視為沒付手續費(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation>當沒有設定 paytxfee 時，自動包含可以讓交易能在平均 n 個區塊內開始確認的手續費(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation>-maxtxfee=&lt;amount&gt;: &apos;%s&apos; 的金額無效 (必須大於最低轉發手續費 %s 以避免交易無法確認)</translation>
-    </message>
-    <message>
-        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation>轉發和開採時，對只帶資料的交易的大小上限(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation>對每個代理連線使用隨機產生的憑證。這個選項會開啟 Tor 的串流隔離(預設值: %u)</translation>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>-maxtxfee=&lt;amount&gt;: '%s' 的金額無效 (必須大於最低轉發手續費 %s 以避免交易無法確認)</translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>扣除手續費後的交易金額太少而不能傳送</translation>
     </message>
     <message>
-        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>在白名單中的節點不會因為偵測到阻斷服務攻擊(DoS)而被停用。來自這些節點的交易也一定會被轉發，即使說交易本來就在記憶池裡了也一樣。適用於像是閘道伺服器</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation>回到非修剪的模式需要用 -reindex 參數來重建資料庫。這會導致重新下載整個區塊鏈</translation>
-    </message>
-    <message>
-        <source>(default: %u)</source>
-        <translation>(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Accept public REST requests (default: %u)</source>
-        <translation>接受公開的REST請求 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation>自動產生 Tor 隱藏服務(預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>透過 SOCKS5 代理伺服器連線</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can&apos;t disable HD on an already existing HD wallet</source>
-        <translation>載入 %s 發生錯誤：不能對已存在的 HD 錢包停用 HD 功能</translation>
+        <translation>回到非修剪的模式需要用 -reindex 參數來重建資料庫。這會導致重新下載整個區塊鏈。</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -4136,80 +3790,62 @@
         <translation>升級區塊鏈狀態資料庫時發生錯誤</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file on startup</source>
-        <translation>啟動時從其它來源的 blk000??.dat 檔匯入區塊</translation>
+        <source>Error: Disk space is low for %s</source>
+        <translation>错误： %s 所在的磁盘空间低。</translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>資訊</translation>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>無效的 -onion 位址或主機名稱: '%s'</translation>
     </message>
     <message>
-        <source>Invalid -onion address or hostname: &apos;%s&apos;</source>
-        <translation>無效的 -onion 位址或主機名稱: &apos;%s&apos;</translation>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>無效的 -proxy 位址或主機名稱: '%s'</translation>
     </message>
     <message>
-        <source>Invalid -proxy address or hostname: &apos;%s&apos;</source>
-        <translation>無效的 -proxy 位址或主機名稱: &apos;%s&apos;</translation>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation>設定 -paytxfee=&lt;金額&gt; 的金額無效: '%s' (至少要有 %s)</translation>
     </message>
     <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least %s)</source>
-        <translation>設定 -paytxfee=&lt;金額&gt; 的金額無效: &apos;%s&apos; (至少要有 %s)</translation>
+        <source>Invalid netmask specified in -whitelist: '%s'</source>
+        <translation>指定在 -whitelist 的網段無效: '%s'</translation>
     </message>
     <message>
-        <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
-        <translation>指定在 -whitelist 的網段無效: &apos;%s&apos;</translation>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation>指定 -whitebind 時必須包含通訊埠: '%s'</translation>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>保持最多 &lt;n&gt; 無法連結的交易在記憶體 (預設: %u)</translation>
-    </message>
-    <message>
-        <source>Need to specify a port with -whitebind: &apos;%s&apos;</source>
-        <translation>指定 -whitebind 時必須包含通訊埠: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <source>Node relay options:</source>
-        <translation>節點轉發選項:</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>RPC 伺服器選項:</translation>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>修剪模式與 -blockfilterindex不相容。</translation>
     </message>
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation>因為系統的限制，將 -maxconnections 參數從 %d 降到了 %d。</translation>
+        <translation>因為系統的限制，將 -maxconnections 參數從 %d 降到了 %d</translation>
     </message>
     <message>
-        <source>Rescan the block chain for missing wallet transactions on startup</source>
-        <translation>啟動時重新掃描區塊鏈，來尋找錢包可能漏掉的交易</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>在終端機顯示追蹤或除錯資訊，而不是寫到檔案 debug.log 中</translation>
-    </message>
-    <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>顯示所有的除錯選項 (用法: --help --help-debug)</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>客戶端軟體啓動時把 debug.log 檔縮小(預設值: 當沒有 -debug 時為 1)</translation>
+        <source>Section [%s] is not recognized.</source>
+        <translation>无法识别配置章节 [%s]。</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>簽署交易失敗</translation>
     </message>
     <message>
-        <source>Specified -walletdir &quot;%s&quot; does not exist</source>
-        <translation>以 -walletdir 指定的路徑 &quot;%s&quot; 不存在</translation>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>以 -walletdir 指定的路徑 "%s" 不存在</translation>
     </message>
     <message>
-        <source>Specified -walletdir &quot;%s&quot; is a relative path</source>
-        <translation>以 -walletdir 指定的路徑 &quot;%s&quot; 是相對路徑</translation>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>以 -walletdir 指定的路徑 "%s" 是相對路徑</translation>
     </message>
     <message>
-        <source>Specified -walletdir &quot;%s&quot; is not a directory</source>
-        <translation>以 -walletdir 指定的路徑 &quot;%s&quot; 不是個目錄</translation>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>以 -walletdir 指定的路徑 "%s" 不是個目錄</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>指定的配置文件 %s 不存在
+</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -4220,20 +3856,8 @@
         <translation>這套軟體屬於實驗性質。</translation>
     </message>
     <message>
-        <source>Tor control port password (default: empty)</source>
-        <translation>Tor 控制埠密碼(預設值: 空白)</translation>
-    </message>
-    <message>
-        <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>開啟聽候 onion 連線時的 Tor 控制埠號碼(預設值: %s)</translation>
-    </message>
-    <message>
         <source>Transaction amount too small</source>
         <translation>交易金額太小</translation>
-    </message>
-    <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>根據交易手續費準則，本交易的位元量過大</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -4244,136 +3868,32 @@
         <translation>無法和這台電腦上的 %s 繫結(回傳錯誤 %s)</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>无法创建PID文件'%s': %s</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
-        <translation>無法產生初始的金鑰</translation>
+        <translation>無法產生初始的密鑰</translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format on startup</source>
-        <translation>啟動時把錢包檔案升級成最新的格式</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>JSON-RPC 連線使用者名稱</translation>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>未知 -blockfilterindex 數值 %s.</translation>
     </message>
     <message>
         <source>Verifying wallet(s)...</source>
         <translation>正在驗證錢包資料...</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>錢包檔 %s 沒有在錢包目錄 %s 裡面</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>警告</translation>
-    </message>
-    <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
         <translation>警告: 不明的交易規則被啟用了(versionbit %i)</translation>
-    </message>
-    <message>
-        <source>Whether to operate in a blocks only mode (default: %u)</source>
-        <translation>是否要用只要區塊模式運作(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>改變 -txindex 參數後，必須要用 -reindex 參數來重建資料庫</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>正在砍掉錢包中的所有交易...</translation>
     </message>
     <message>
-        <source>ZeroMQ notification options:</source>
-        <translation>ZeroMQ 通知選項:</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>JSON-RPC 連線密碼</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>當最新區塊改變時要執行的指令(指令中的 %s 會被取代成區塊雜湊值)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>允許對 -addnode, -seednode, -connect 的參數使用域名查詢</translation>
-    </message>
-    <message>
-        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation>(1 表示保留交易描述資料，像是帳戶使用者和付款請求資訊；2 表示丟掉交易描述資料)</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>參數 -maxtxfee 設定了很高的金額！這可是你一次交易就有可能付出的最高手續費。</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
-        <translation>和指定的位址繫結以聽候 JSON-RPC 連線。必須同時指定 -rpcallowip 這項設定才有作用。不一定要指定埠號，指定的話會覆蓋掉 -rpcport 設定。IPv6 請用 [主機]:通訊埠 這種格式。這個選項可以設定多次。(預設值: 127.0.0.1 和 ::1，也就是 localhost。當有指定 -rpcallowip 時，預設值為 0.0.0.0 和 ::，也就是所有位址)</translation>
-    </message>
-    <message>
-        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>不要讓交易留在記憶池中超過 &lt;n&gt; 個小時(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
-        <translation>轉發和開採時，交易資料中每個 sigop 的等同位元組數(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can&apos;t enable HD on an already existing non-HD wallet</source>
-        <translation>載入 %s 發生錯誤：不能對已存在的非 HD 錢包啟用 HD 功能</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
-        <translation>載入錢包檔 %s 失敗。-wallet 參數只能指定檔案名稱(不包含路徑)。</translation>
-    </message>
-    <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>當製造交易時，如果每千位元組(kB)的手續費比這個值(單位是 %s)低，就視為沒付手續費(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
-        <translation>強制轉發從白名點節點收到的交易，即使它們違反了本機的轉發準則(預設值: %d)</translation>
-    </message>
-    <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
-        <translation>使用 -checkblocks 檢查區塊的仔細程度(0 到 4，預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation>維護全部交易的索引，用在 getrawtransaction 這個 RPC 請求(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
-        <translation>避免與亂搞的節點連線的秒數(預設: %u)</translation>
-    </message>
-    <message>
-        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
-        <translation>輸出除錯資訊(預設值: %u, 不一定要指定 &lt;category&gt;)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>設定 BIP141 區塊重量的最大值為指定值乘以 4。此設定即將淘汰，請改用 blockmaxweight</translation>
-    </message>
-    <message>
-        <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
-        <translation>設定非冗長模式時，回傳的交易原始資料或區塊位元值的序列化形式：無 segwit 為 0，或是有 segwit 為 1 (預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Specify directory to hold wallets (default: &lt;datadir&gt;/wallets if it exists, otherwise &lt;datadir&gt;)</source>
-        <translation>指定用來放錢包檔的目錄(預設值: 如果存在的話就用 &lt;datadir&gt;/wallets, 否則為 &lt;datadir&gt;)</translation>
-    </message>
-    <message>
-        <source>Specify location of debug log file: this can be an absolute path or a path relative to the data directory (default: %s)</source>
-        <translation>指定除錯紀錄檔的位址: 可以用絕對路徑，也可以用相對於資料路徑的相對路徑(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
-        <translation>支援用布倫過濾器來過濾區塊和交易(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
-        <translation>容許自動免找零成為手續費的交易手續費率(單位: %s/kB, 預設值: %s)。注意: 如果在該費率下，找零的零錢會成為零散錢，則自動棄掉成為手續費。但棄掉的零錢費率永遠不會大於零散錢的轉發費率，金額也不會大於最長預估確認時間所需的手續費</translation>
     </message>
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
@@ -4388,136 +3908,16 @@
         <translation>網路版本字串的總長度(%i)超過最大長度(%i)了。請減少 uacomment 參數的數目或長度。</translation>
     </message>
     <message>
-        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
-        <translation>試著保持輸出流量在目標值以下，單位是每 24 小時的百萬位元組(MiB)數，0 表示沒有限制(預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn&apos;t possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>找到不再支援的 -socks 參數。現在只支援 SOCKS5 協定的代理伺服器，因此不可以指定 SOCKS 協定版本了。</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>忽略不支援的參數 -whitelistalwaysrelay，請改用 -whitelistrelay 和 -whitelistforcerelay​ 的組合。</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>使用另外的 SOCK5 代理伺服器，來透過 Tor 隱藏服務跟其他節點聯絡(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>使用另外的 SOCK(&amp;)5 代理伺服器，來透過 Tor 隱藏服務跟其他節點聯絡:</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</source>
-        <translation>警告: 有礦工正在開採不明版本的區塊！這表示有不明的交易規則正在作用中</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>警告: 錢包檔壞掉，但資料被救回來了！原來的檔案 %s 改儲存為 %s，在目錄 %s 下。 如果餘額或交易資料有誤的話，你應該要從備份資料復原回來。</translation>
-    </message>
-    <message>
-        <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
-        <translation>把來自指定位址(例如：1.2.3.4)或 CIDR 格式網段(例如：1.2.3.0/24)的節點放進白名單。這個選項可以設定多次。</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
         <translation>%s 的設定值異常大！</translation>
     </message>
     <message>
-        <source>(default: %s)</source>
-        <translation>(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation>是否一定要用域名查詢來搜尋節點(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
-        <translation>載入錢包檔 %s 失敗。-wallet 參數檔名的檔案必須是一般檔案。</translation>
-    </message>
-    <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>載入錢包檔 %s 失敗。-wallet 參數指定了重複的檔名。</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
-        <translation>載入錢包檔 %s 失敗。-wallet 參數檔名含有無效的字元。</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation>啓動時檢查的區塊數(預設值: %u, 指定 0 表示全部)</translation>
-    </message>
-    <message>
-        <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>在除錯輸出內容中包含網際網路位址(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>密鑰池已經乾了，請先執行 keypoolrefill</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>在通訊埠 &lt;port&gt; 聽候 JSON-RPC 連線(預設值: %u, 或若為測試網路: %u)</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>在通訊埠 &lt;port&gt; 聽候連線(預設值: %u, 或若為測試網路: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
-        <translation>維持與節點連線數的上限為 &lt;n&gt; 個(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>讓錢包能公告交易</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>每個連線的接收緩衝區大小上限為 &lt;n&gt;*1000 個位元組(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>每個連線的傳送緩衝區大小上限為 &lt;n&gt;*1000 個位元組(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation>在除錯輸出內容前附加時間(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation>允許轉發和開採只帶資料的交易(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation>允許轉發非 P2SH 的多簽章交易(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation>設定密鑰池大小為 &lt;n&gt; (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight (default: %d)</source>
-        <translation>設定 BIP141 區塊重量的最大值(預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation>設定處理 RPC 服務請求的執行緒數目(預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>指定設定檔(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>指定連線在幾毫秒後逾時 (最少值: 1, 預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>指定行程識別碼檔案(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation>傳送交易時可以花還沒確認的零錢(預設值: %u)</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
@@ -4536,10 +3936,6 @@
         <translation>這是你交易付款時所要付的手續費。</translation>
     </message>
     <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>與亂搞的節點斷線的臨界值 (預設: %u)</translation>
-    </message>
-    <message>
         <source>Transaction amounts must not be negative</source>
         <translation>交易金額不能是負的</translation>
     </message>
@@ -4552,12 +3948,28 @@
         <translation>交易必須至少要有一個收款人</translation>
     </message>
     <message>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>在 -onlynet 指定了不明的網路別: &apos;%s&apos;</translation>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation>在 -onlynet 指定了不明的網路別: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
         <translation>累積金額不足</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
+        <translation>無法將一個非 HD 分支錢包升級成不支援預先分支密鑰池的 HD 分支錢包版本。請用  -upgradewallet=169900 參數或是不指定版本的 -upgradewallet 參數來升級錢包。</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation>計算預估手續費失敗了，也沒有備用手續費(fallbackfee)可用。請再多等待幾個區塊，或是啟用 -fallbackfee 參數。</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>警告: 在不允許私鑰的錢包 {%s} 中發現有私鑰</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>沒辦法寫入資料目錄 '%s'，請檢查是否有權限。</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4580,8 +3992,64 @@
         <translation>載入完成</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>錯誤</translation>
+        <source>BitcoinHD Core</source>
+        <translation>比特硬幣</translation>
+    </message>
+</context>
+<!-- qtbase_zh.ts -->
+<context>
+    <name>QPlatformTheme</name>
+    <message>
+        <source>Yes</source>
+        <translation>是</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>否</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>確定</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>關閉</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>套用</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>重置</translation>
+    </message>
+    <message>
+        <source>Help</source>
+        <translation>說明</translation>
+    </message>
+    <message>
+        <source>Discard</source>
+        <translation>丟棄</translation>
+    </message>
+    <message>
+        <source>Abort</source>
+        <translation>終止</translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation>重試</translation>
+    </message>
+    <message>
+        <source>Ignore</source>
+        <translation>忽略</translation>
+    </message>
+    <message>
+        <source>Restore Defaults</source>
+        <translation>還原到預設值</translation>
     </message>
 </context>
 </TS>

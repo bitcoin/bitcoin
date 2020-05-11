@@ -1,6 +1,10 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
 
 #include <qt/sendcoinsentry.h>
 #include <qt/forms/ui_sendcoinsentry.h>
@@ -11,14 +15,15 @@
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 
-#include <validation.h>
+#include <chainparams.h>
 
 #include <QApplication>
 #include <QClipboard>
 
 #include <array>
 
-static const std::array<int, 11> bindActiveHeights = { {6, 12, 24, 144, 288, 288*2, 288*3, 288*4, 288*5, 288*6, 288*7} };
+static const int hour_blocks = 3600 / 180;
+static const std::array<int, 5> bindActiveHeights = { {1*hour_blocks, 1*24*hour_blocks, 2*24*hour_blocks, 3*24*hour_blocks, PROTOCOL_BINDPLOTTER_MAXALIVE} };
 int getPlotterDataValidHeightForIndex(int index) {
     if (index+1 > static_cast<int>(bindActiveHeights.size())) {
         return bindActiveHeights.back();
@@ -37,18 +42,18 @@ int getIndexForPlotterDataValidHeight(int height) {
     return bindActiveHeights.size() - 1;
 }
 
-SendCoinsEntry::SendCoinsEntry(PayOperateMethod _payOperateMethod, const PlatformStyle *_platformStyle, QWidget *parent) :
+SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, const PlatformStyle *_platformStyle, QWidget *parent) :
     QStackedWidget(parent),
-    payOperateMethod(_payOperateMethod),
+    payOperateMethod(payOperateMethod),
     ui(new Ui::SendCoinsEntry),
-    model(0),
+    model(nullptr),
     platformStyle(_platformStyle)
 {
     ui->setupUi(this);
 
     ui->plotterPassphraseLabel->setVisible(false);
     ui->plotterPassphrase->setVisible(false);
-    ui->plotterDataValidHeightLabel->setVisible(false);
+    ui->plotterDataAliveHeightLabel->setVisible(false);
     ui->plotterDataValidHeightSelector->setVisible(false);
 
     ui->addressBookButton->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
@@ -62,9 +67,7 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod _payOperateMethod, const Platfor
 
     if (platformStyle->getUseExtraSpacing())
         ui->payToLayout->setSpacing(4);
-#if QT_VERSION >= 0x040700
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
-#endif
 
     // normal bitcoin address field
     GUIUtil::setupAddressWidget(ui->payTo, this);
@@ -72,16 +75,16 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod _payOperateMethod, const Platfor
     ui->payTo_is->setFont(GUIUtil::fixedPitchFont());
 
     // Connect signals
-    connect(ui->payAmount, SIGNAL(valueChanged()), this, SIGNAL(payAmountChanged()));
-    connect(ui->checkboxSubtractFeeFromAmount, SIGNAL(toggled(bool)), this, SIGNAL(subtractFeeFromAmountChanged()));
-    connect(ui->deleteButton, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    connect(ui->deleteButton_is, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    connect(ui->deleteButton_s, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    connect(ui->useAvailableBalanceButton, SIGNAL(clicked()), this, SLOT(useAvailableBalanceClicked()));
+    connect(ui->payAmount, &BitcoinAmountField::valueChanged, this, &SendCoinsEntry::payAmountChanged);
+    connect(ui->checkboxSubtractFeeFromAmount, &QCheckBox::toggled, this, &SendCoinsEntry::subtractFeeFromAmountChanged);
+    connect(ui->deleteButton, &QPushButton::clicked, this, &SendCoinsEntry::deleteClicked);
+    connect(ui->deleteButton_is, &QPushButton::clicked, this, &SendCoinsEntry::deleteClicked);
+    connect(ui->deleteButton_s, &QPushButton::clicked, this, &SendCoinsEntry::deleteClicked);
+    connect(ui->useAvailableBalanceButton, &QPushButton::clicked, this, &SendCoinsEntry::useAvailableBalanceClicked);
 
     // Pay method
-    if (payOperateMethod == PayOperateMethod::LoanTo) {
-        ui->payToLabel->setText(tr("Loan &To:"));
+    if (payOperateMethod == PayOperateMethod::Point) {
+        ui->payToLabel->setText(tr("Point &To:"));
     } else if (payOperateMethod == PayOperateMethod::BindPlotter) {
         ui->payToLabel->setText(tr("Bind &To:"));
         ui->labellLabel->setVisible(false);
@@ -92,15 +95,13 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod _payOperateMethod, const Platfor
         ui->useAvailableBalanceButton->setVisible(false);
         ui->plotterPassphraseLabel->setVisible(true);
         ui->plotterPassphrase->setVisible(true);
-    #if QT_VERSION >= 0x040700
         ui->plotterPassphrase->setPlaceholderText(tr("Enter your plotter passphrase or bind hex data"));
-    #endif
-        ui->plotterDataValidHeightLabel->setVisible(true);
+        ui->plotterDataAliveHeightLabel->setVisible(true);
         ui->plotterDataValidHeightSelector->setVisible(true);
         for (const int n : bindActiveHeights) {
             assert(n > 0 && n <= PROTOCOL_BINDPLOTTER_MAXALIVE);
             ui->plotterDataValidHeightSelector->addItem(tr("%1 (%2 blocks)")
-                .arg(GUIUtil::formatNiceTimeOffset(n*Params().GetConsensus().BHDIP008TargetSpacing))
+                .arg(GUIUtil::formatNiceTimeOffset(n*Params().GetConsensus().nPowTargetSpacing))
                 .arg(n));
         }
         ui->plotterDataValidHeightSelector->setCurrentIndex(getIndexForPlotterDataValidHeight(PROTOCOL_BINDPLOTTER_DEFAULTMAXALIVE));
@@ -142,7 +143,7 @@ void SendCoinsEntry::setModel(WalletModel *_model)
     this->model = _model;
 
     if (_model && _model->getOptionsModel())
-        connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsEntry::updateDisplayUnit);
 
     clear();
 }
@@ -167,7 +168,7 @@ void SendCoinsEntry::clear()
     ui->memoTextLabel_s->clear();
     ui->payAmount_s->clear();
 
-    // update the display unit, to not use the default ("BitcoinHD")
+    // update the display unit, to not use the default ("BTC")
     updateDisplayUnit();
 
     // Update for bind plotter
@@ -192,7 +193,7 @@ void SendCoinsEntry::useAvailableBalanceClicked()
     Q_EMIT useAvailableBalance(this);
 }
 
-bool SendCoinsEntry::validate()
+bool SendCoinsEntry::validate(interfaces::Node& node)
 {
     if (!model)
         return false;
@@ -200,9 +201,11 @@ bool SendCoinsEntry::validate()
     // Check input validity
     bool retval = true;
 
+#ifdef ENABLE_BIP70
     // Skip checks for payment request
     if (recipient.paymentRequest.IsInitialized())
         return retval;
+#endif
 
     if (!model->validateAddress(ui->payTo->text()))
     {
@@ -216,23 +219,23 @@ bool SendCoinsEntry::validate()
     }
 
     // Sending a zero amount is invalid
-    if (ui->payAmount->value(0) <= 0)
+    if (ui->payAmount->value(nullptr) <= 0)
     {
         ui->payAmount->setValid(false);
         retval = false;
     }
 
     // Reject dust outputs:
-    if (retval && GUIUtil::isDust(ui->payTo->text(), ui->payAmount->value())) {
+    if (retval && GUIUtil::isDust(node, ui->payTo->text(), ui->payAmount->value())) {
         ui->payAmount->setValid(false);
         retval = false;
     }
 
     // Special tx amount
-    if (payOperateMethod == PayOperateMethod::LoanTo)
+    if (payOperateMethod == PayOperateMethod::Point)
     {
-        if (ui->payAmount->value() < PROTOCOL_RENTAL_AMOUNT_MIN ||
-                (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked && ui->payAmount->value() <= PROTOCOL_RENTAL_AMOUNT_MIN)) {
+        if (ui->payAmount->value() < PROTOCOL_POINT_AMOUNT_MIN ||
+                (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked && ui->payAmount->value() <= PROTOCOL_POINT_AMOUNT_MIN)) {
             ui->payAmount->setValid(false);
             retval = false;
         }
@@ -251,16 +254,18 @@ bool SendCoinsEntry::validate()
 
 SendCoinsRecipient SendCoinsEntry::getValue()
 {
+#ifdef ENABLE_BIP70
     // Payment request
     if (recipient.paymentRequest.IsInitialized())
         return recipient;
+#endif
 
     // Normal payment
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
     if (payOperateMethod == PayOperateMethod::BindPlotter) {
         recipient.plotterPassphrase = ui->plotterPassphrase->text().trimmed();
-        recipient.plotterDataValidHeight = getPlotterDataValidHeightForIndex(ui->plotterDataValidHeightSelector->currentIndex());
+        recipient.plotterDataAliveHeight = getPlotterDataValidHeightForIndex(ui->plotterDataValidHeightSelector->currentIndex());
     }
     recipient.amount = ui->payAmount->value();
     recipient.message = ui->messageTextLabel->text();
@@ -286,6 +291,7 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
 {
     recipient = value;
 
+#ifdef ENABLE_BIP70
     if (recipient.paymentRequest.IsInitialized()) // payment request
     {
         if (recipient.authenticatedMerchant.isEmpty()) // unauthenticated
@@ -306,10 +312,12 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
         }
     }
     else // normal payment
+#endif
     {
         // message
         ui->messageTextLabel->setText(recipient.message);
         ui->messageTextLabel->setVisible(!recipient.message.isEmpty());
+        ui->messageLabel->setVisible(!recipient.message.isEmpty());
 
         ui->addAsLabel->clear();
         ui->plotterPassphrase->clear();

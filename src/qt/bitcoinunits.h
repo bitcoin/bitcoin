@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -56,9 +56,10 @@ public:
      */
     enum Unit
     {
-        BHD,
-        mBHD,
-        uBHD
+        BTC,
+        mBTC,
+        uBTC,
+        SAT
     };
 
     enum SeparatorStyle
@@ -96,8 +97,6 @@ public:
     static bool parse(int unit, const QString &value, CAmount *val_out);
     //! Gets title for amount column including current display unit if optionsModel reference available */
     static QString getAmountColumnTitle(int unit);
-    //! Format as string
-    static QString formatCapacity(uint64_t capacityGB);
     ///@}
 
     //! @name AbstractListModel implementation

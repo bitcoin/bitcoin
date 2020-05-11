@@ -1,11 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <uint256.h>
 
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -29,24 +29,23 @@ void base_blob<BITS>::SetHex(const char* psz)
     memset(data, 0, sizeof(data));
 
     // skip leading spaces
-    while (isspace(*psz))
+    while (IsSpace(*psz))
         psz++;
 
     // skip 0x
-    if (psz[0] == '0' && tolower(psz[1]) == 'x')
+    if (psz[0] == '0' && ToLower(psz[1]) == 'x')
         psz += 2;
 
     // hex string to uint
-    const char* pbegin = psz;
-    while (::HexDigit(*psz) != -1)
-        psz++;
-    psz--;
+    size_t digits = 0;
+    while (::HexDigit(psz[digits]) != -1)
+        digits++;
     unsigned char* p1 = (unsigned char*)data;
     unsigned char* pend = p1 + WIDTH;
-    while (psz >= pbegin && p1 < pend) {
-        *p1 = ::HexDigit(*psz--);
-        if (psz >= pbegin) {
-            *p1 |= ((unsigned char)::HexDigit(*psz--) << 4);
+    while (digits > 0 && p1 < pend) {
+        *p1 = ::HexDigit(psz[--digits]);
+        if (digits > 0) {
+            *p1 |= ((unsigned char)::HexDigit(psz[--digits]) << 4);
             p1++;
         }
     }

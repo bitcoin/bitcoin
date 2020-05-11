@@ -1,8 +1,8 @@
-<!-- This issue tracker is only for technical issues related to Bitcoin Core.
+<!-- This issue tracker is only for technical issues related to BitcoinHD Core.
 
-General bitcoin questions and/or support requests are best directed to the Bitcoin StackExchange at https://bitcoin.stackexchange.com.
+General BitcoinHD questions and/or support requests are best directed to the BitcoinHD StackExchange at https://btchd.stackexchange.com.
 
-For reporting security issues, please read instructions at https://bitcoincore.org/en/contact/.
+For reporting security issues, please read instructions at https://btchd.org/en/contact/.
 
 If the node is "stuck" during sync or giving "block checksum mismatch" errors, please ensure your hardware is stable by running memtest and observe CPU temperature with a load-test tool such as linpack before creating an issue! -->
 
@@ -13,9 +13,11 @@ If the node is "stuck" during sync or giving "block checksum mismatch" errors, p
 
 <!--- How reliably can you reproduce the issue, what are the steps to do so? -->
 
-<!-- What version of Bitcoin Core are you using, where did you get it (website, self-compiled, etc)? -->
+<!-- What version of BitcoinHD Core are you using, where did you get it (website, self-compiled, etc)? -->
 
 <!-- What type of machine are you observing the error on (OS/CPU and disk type)? -->
+
+<!-- GUI-related issue? What is your operating system and its version? If Linux, what is your desktop environment and graphical shell? -->
 
 <!-- Any extra information that might be useful in the debugging process. -->
 <!--- This is normally the contents of a `debug.log` or `config.log` file. Raw text or a link to a pastebin type site are preferred. -->

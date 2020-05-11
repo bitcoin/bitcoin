@@ -1,11 +1,13 @@
 ---
 name: "bitcoin-win-signer"
+distro: "ubuntu"
 suites:
-- "trusty"
+- "bionic"
 architectures:
 - "amd64"
 packages:
-- "libssl-dev"
+# Once osslsigncode supports openssl 1.1, we can change this back to libssl-dev
+- "libssl1.0-dev"
 - "autoconf"
 remotes:
 - "url": "https://github.com/bitcoin-core/bitcoin-detached-sigs.git"
@@ -15,6 +17,8 @@ files:
 - "osslsigncode-Backports-to-1.7.1.patch"
 - "bitcoin-win-unsigned.tar.gz"
 script: |
+  set -e -o pipefail
+
   BUILD_DIR=`pwd`
   SIGDIR=${BUILD_DIR}/signature/win
   UNSIGNED_DIR=${BUILD_DIR}/unsigned

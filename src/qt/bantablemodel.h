@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,11 +7,17 @@
 
 #include <net.h>
 
+#include <memory>
+
 #include <QAbstractTableModel>
 #include <QStringList>
 
 class ClientModel;
 class BanTablePriv;
+
+namespace interfaces {
+    class Node;
+}
 
 struct CCombinedBan {
     CSubNet subnet;
@@ -39,7 +45,7 @@ class BanTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit BanTableModel(ClientModel *parent = 0);
+    explicit BanTableModel(interfaces::Node& node, ClientModel *parent = nullptr);
     ~BanTableModel();
     void startAutoRefresh();
     void stopAutoRefresh();
@@ -65,6 +71,7 @@ public Q_SLOTS:
     void refresh();
 
 private:
+    interfaces::Node& m_node;
     ClientModel *clientModel;
     QStringList columns;
     std::unique_ptr<BanTablePriv> priv;

@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,11 +9,11 @@
 #include <serialize.h>
 #include <streams.h>
 
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(PrevectorTests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(prevector_tests, TestingSetup)
 
 template<unsigned int N, typename T>
 class prevector_tester {
@@ -36,7 +36,7 @@ class prevector_tester {
         {
             local_check(a == b);
         }
-    void local_check(bool b) 
+    void local_check(bool b)
     {
         passed &= b;
     }
@@ -183,14 +183,34 @@ public:
         pre_vector = pre_vector_alt;
     }
 
+    void resize_uninitialized(realtype values) {
+        size_t r = values.size();
+        size_t s = real_vector.size() / 2;
+        if (real_vector.capacity() < s + r) {
+            real_vector.reserve(s + r);
+        }
+        real_vector.resize(s);
+        pre_vector.resize_uninitialized(s);
+        for (auto v : values) {
+            real_vector.push_back(v);
+        }
+        auto p = pre_vector.size();
+        pre_vector.resize_uninitialized(p + r);
+        for (auto v : values) {
+            pre_vector[p] = v;
+            ++p;
+        }
+        test();
+    }
+
     ~prevector_tester() {
         BOOST_CHECK_MESSAGE(passed, "insecure_rand: " + rand_seed.ToString());
     }
 
     prevector_tester() {
         SeedInsecureRand();
-        rand_seed = insecure_rand_seed;
-        rand_cache = insecure_rand_ctx;
+        rand_seed = InsecureRand256();
+        rand_cache = FastRandomContext(rand_seed);
     }
 };
 
@@ -206,7 +226,7 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
                 test.erase(InsecureRandRange(test.size()));
             }
             if (InsecureRandBits(3) == 2) {
-                int new_size = std::max<int>(0, std::min<int>(30, test.size() + (InsecureRandRange(5)) - 2));
+                int new_size = std::max(0, std::min(30, (int)test.size() + (int)InsecureRandRange(5) - 2));
                 test.resize(new_size);
             }
             if (InsecureRandBits(3) == 3) {
@@ -259,6 +279,14 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             }
             if (InsecureRandBits(5) == 18) {
                 test.move();
+            }
+            if (InsecureRandBits(5) == 19) {
+                unsigned int num = 1 + (InsecureRandBits(4));
+                std::vector<int> values(num);
+                for (auto &v : values) {
+                    v = InsecureRand32();
+                }
+                test.resize_uninitialized(values);
             }
         }
     }

@@ -1,5 +1,5 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2017 The Bitcoin Core developers
+// Copyright (c) 2012-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,26 +7,25 @@
 
 #include <hash.h>
 #include <serialize.h>
-#include <streams.h>
 
 int CAddrInfo::GetTriedBucket(const uint256& nKey) const
 {
-    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetKey()).GetHash().GetCheapHash();
-    uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup() << (hash1 % ADDRMAN_TRIED_BUCKETS_PER_GROUP)).GetHash().GetCheapHash();
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetKey()).GetCheapHash();
+    uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup() << (hash1 % ADDRMAN_TRIED_BUCKETS_PER_GROUP)).GetCheapHash();
     return hash2 % ADDRMAN_TRIED_BUCKET_COUNT;
 }
 
 int CAddrInfo::GetNewBucket(const uint256& nKey, const CNetAddr& src) const
 {
     std::vector<unsigned char> vchSourceGroupKey = src.GetGroup();
-    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup() << vchSourceGroupKey).GetHash().GetCheapHash();
-    uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << vchSourceGroupKey << (hash1 % ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP)).GetHash().GetCheapHash();
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup() << vchSourceGroupKey).GetCheapHash();
+    uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << vchSourceGroupKey << (hash1 % ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP)).GetCheapHash();
     return hash2 % ADDRMAN_NEW_BUCKET_COUNT;
 }
 
 int CAddrInfo::GetBucketPosition(const uint256 &nKey, bool fNew, int nBucket) const
 {
-    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << (fNew ? 'N' : 'K') << nBucket << GetKey()).GetHash().GetCheapHash();
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << (fNew ? 'N' : 'K') << nBucket << GetKey()).GetCheapHash();
     return hash1 % ADDRMAN_BUCKET_SIZE;
 }
 
@@ -187,7 +186,7 @@ void CAddrMan::MakeTried(CAddrInfo& info, int nId)
     info.fInTried = true;
 }
 
-void CAddrMan::Good_(const CService& addr, int64_t nTime)
+void CAddrMan::Good_(const CService& addr, bool test_before_evict, int64_t nTime)
 {
     int nId;
 
@@ -217,7 +216,7 @@ void CAddrMan::Good_(const CService& addr, int64_t nTime)
         return;
 
     // find a bucket it is in now
-    int nRnd = RandomInt(ADDRMAN_NEW_BUCKET_COUNT);
+    int nRnd = insecure_rand.randrange(ADDRMAN_NEW_BUCKET_COUNT);
     int nUBucket = -1;
     for (unsigned int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; n++) {
         int nB = (n + nRnd) % ADDRMAN_NEW_BUCKET_COUNT;
@@ -233,10 +232,24 @@ void CAddrMan::Good_(const CService& addr, int64_t nTime)
     if (nUBucket == -1)
         return;
 
-    LogPrint(BCLog::ADDRMAN, "Moving %s to tried\n", addr.ToString());
+    // which tried bucket to move the entry to
+    int tried_bucket = info.GetTriedBucket(nKey);
+    int tried_bucket_pos = info.GetBucketPosition(nKey, false, tried_bucket);
 
-    // move nId to the tried tables
-    MakeTried(info, nId);
+    // Will moving this address into tried evict another entry?
+    if (test_before_evict && (vvTried[tried_bucket][tried_bucket_pos] != -1)) {
+        // Output the entry we'd be colliding with, for debugging purposes
+        auto colliding_entry = mapInfo.find(vvTried[tried_bucket][tried_bucket_pos]);
+        LogPrint(BCLog::ADDRMAN, "Collision inserting element into tried table (%s), moving %s to m_tried_collisions=%d\n", colliding_entry != mapInfo.end() ? colliding_entry->second.ToString() : "", addr.ToString(), m_tried_collisions.size());
+        if (m_tried_collisions.size() < ADDRMAN_SET_TRIED_COLLISION_SIZE) {
+            m_tried_collisions.insert(nId);
+        }
+    } else {
+        LogPrint(BCLog::ADDRMAN, "Moving %s to tried\n", addr.ToString());
+
+        // move nId to the tried tables
+        MakeTried(info, nId);
+    }
 }
 
 bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty)
@@ -279,7 +292,7 @@ bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimeP
         int nFactor = 1;
         for (int n = 0; n < pinfo->nRefCount; n++)
             nFactor *= 2;
-        if (nFactor > 1 && (RandomInt(nFactor) != 0))
+        if (nFactor > 1 && (insecure_rand.randrange(nFactor) != 0))
             return false;
     } else {
         pinfo = Create(addr, source, &nId);
@@ -344,12 +357,12 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
 
     // Use a 50% chance for choosing between tried and new table entries.
     if (!newOnly &&
-       (nTried > 0 && (nNew == 0 || RandomInt(2) == 0))) { 
+       (nTried > 0 && (nNew == 0 || insecure_rand.randbool() == 0))) {
         // use a tried node
         double fChanceFactor = 1.0;
         while (1) {
-            int nKBucket = RandomInt(ADDRMAN_TRIED_BUCKET_COUNT);
-            int nKBucketPos = RandomInt(ADDRMAN_BUCKET_SIZE);
+            int nKBucket = insecure_rand.randrange(ADDRMAN_TRIED_BUCKET_COUNT);
+            int nKBucketPos = insecure_rand.randrange(ADDRMAN_BUCKET_SIZE);
             while (vvTried[nKBucket][nKBucketPos] == -1) {
                 nKBucket = (nKBucket + insecure_rand.randbits(ADDRMAN_TRIED_BUCKET_COUNT_LOG2)) % ADDRMAN_TRIED_BUCKET_COUNT;
                 nKBucketPos = (nKBucketPos + insecure_rand.randbits(ADDRMAN_BUCKET_SIZE_LOG2)) % ADDRMAN_BUCKET_SIZE;
@@ -357,7 +370,7 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
             int nId = vvTried[nKBucket][nKBucketPos];
             assert(mapInfo.count(nId) == 1);
             CAddrInfo& info = mapInfo[nId];
-            if (RandomInt(1 << 30) < fChanceFactor * info.GetChance() * (1 << 30))
+            if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
                 return info;
             fChanceFactor *= 1.2;
         }
@@ -365,8 +378,8 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
         // use a new node
         double fChanceFactor = 1.0;
         while (1) {
-            int nUBucket = RandomInt(ADDRMAN_NEW_BUCKET_COUNT);
-            int nUBucketPos = RandomInt(ADDRMAN_BUCKET_SIZE);
+            int nUBucket = insecure_rand.randrange(ADDRMAN_NEW_BUCKET_COUNT);
+            int nUBucketPos = insecure_rand.randrange(ADDRMAN_BUCKET_SIZE);
             while (vvNew[nUBucket][nUBucketPos] == -1) {
                 nUBucket = (nUBucket + insecure_rand.randbits(ADDRMAN_NEW_BUCKET_COUNT_LOG2)) % ADDRMAN_NEW_BUCKET_COUNT;
                 nUBucketPos = (nUBucketPos + insecure_rand.randbits(ADDRMAN_BUCKET_SIZE_LOG2)) % ADDRMAN_BUCKET_SIZE;
@@ -374,7 +387,7 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
             int nId = vvNew[nUBucket][nUBucketPos];
             assert(mapInfo.count(nId) == 1);
             CAddrInfo& info = mapInfo[nId];
-            if (RandomInt(1 << 30) < fChanceFactor * info.GetChance() * (1 << 30))
+            if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
                 return info;
             fChanceFactor *= 1.2;
         }
@@ -470,7 +483,7 @@ void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr)
         if (vAddr.size() >= nNodes)
             break;
 
-        int nRndPos = RandomInt(vRandom.size() - n) + n;
+        int nRndPos = insecure_rand.randrange(vRandom.size() - n) + n;
         SwapRandom(n, nRndPos);
         assert(mapInfo.count(vRandom[n]) == 1);
 
@@ -518,6 +531,88 @@ void CAddrMan::SetServices_(const CService& addr, ServiceFlags nServices)
     info.nServices = nServices;
 }
 
-int CAddrMan::RandomInt(int nMax){
-    return GetRandInt(nMax);
+void CAddrMan::ResolveCollisions_()
+{
+    for (std::set<int>::iterator it = m_tried_collisions.begin(); it != m_tried_collisions.end();) {
+        int id_new = *it;
+
+        bool erase_collision = false;
+
+        // If id_new not found in mapInfo remove it from m_tried_collisions
+        if (mapInfo.count(id_new) != 1) {
+            erase_collision = true;
+        } else {
+            CAddrInfo& info_new = mapInfo[id_new];
+
+            // Which tried bucket to move the entry to.
+            int tried_bucket = info_new.GetTriedBucket(nKey);
+            int tried_bucket_pos = info_new.GetBucketPosition(nKey, false, tried_bucket);
+            if (!info_new.IsValid()) { // id_new may no longer map to a valid address
+                erase_collision = true;
+            } else if (vvTried[tried_bucket][tried_bucket_pos] != -1) { // The position in the tried bucket is not empty
+
+                // Get the to-be-evicted address that is being tested
+                int id_old = vvTried[tried_bucket][tried_bucket_pos];
+                CAddrInfo& info_old = mapInfo[id_old];
+
+                // Has successfully connected in last X hours
+                if (GetAdjustedTime() - info_old.nLastSuccess < ADDRMAN_REPLACEMENT_HOURS*(60*60)) {
+                    erase_collision = true;
+                } else if (GetAdjustedTime() - info_old.nLastTry < ADDRMAN_REPLACEMENT_HOURS*(60*60)) { // attempted to connect and failed in last X hours
+
+                    // Give address at least 60 seconds to successfully connect
+                    if (GetAdjustedTime() - info_old.nLastTry > 60) {
+                        LogPrint(BCLog::ADDRMAN, "Replacing %s with %s in tried table\n", info_old.ToString(), info_new.ToString());
+
+                        // Replaces an existing address already in the tried table with the new address
+                        Good_(info_new, false, GetAdjustedTime());
+                        erase_collision = true;
+                    }
+                } else if (GetAdjustedTime() - info_new.nLastSuccess > ADDRMAN_TEST_WINDOW) {
+                    // If the collision hasn't resolved in some reasonable amount of time,
+                    // just evict the old entry -- we must not be able to
+                    // connect to it for some reason.
+                    LogPrint(BCLog::ADDRMAN, "Unable to test; replacing %s with %s in tried table anyway\n", info_old.ToString(), info_new.ToString());
+                    Good_(info_new, false, GetAdjustedTime());
+                    erase_collision = true;
+                }
+            } else { // Collision is not actually a collision anymore
+                Good_(info_new, false, GetAdjustedTime());
+                erase_collision = true;
+            }
+        }
+
+        if (erase_collision) {
+            m_tried_collisions.erase(it++);
+        } else {
+            it++;
+        }
+    }
+}
+
+CAddrInfo CAddrMan::SelectTriedCollision_()
+{
+    if (m_tried_collisions.size() == 0) return CAddrInfo();
+
+    std::set<int>::iterator it = m_tried_collisions.begin();
+
+    // Selects a random element from m_tried_collisions
+    std::advance(it, insecure_rand.randrange(m_tried_collisions.size()));
+    int id_new = *it;
+
+    // If id_new not found in mapInfo remove it from m_tried_collisions
+    if (mapInfo.count(id_new) != 1) {
+        m_tried_collisions.erase(it);
+        return CAddrInfo();
+    }
+
+    CAddrInfo& newInfo = mapInfo[id_new];
+
+    // which tried bucket to move the entry to
+    int tried_bucket = newInfo.GetTriedBucket(nKey);
+    int tried_bucket_pos = newInfo.GetBucketPosition(nKey, false, tried_bucket);
+
+    int id_old = vvTried[tried_bucket][tried_bucket_pos];
+
+    return mapInfo[id_old];
 }

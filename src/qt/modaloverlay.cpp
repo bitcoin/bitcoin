@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2017 The Bitcoin Core developers
+// Copyright (c) 2016-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,8 @@
 #include <QResizeEvent>
 #include <QPropertyAnimation>
 
+static const int MAX_SAMPLES = 5000;
+
 ModalOverlay::ModalOverlay(QWidget *parent) :
 QWidget(parent),
 ui(new Ui::ModalOverlay),
@@ -21,13 +23,14 @@ layerIsVisible(false),
 userClosed(false)
 {
     ui->setupUi(this);
-    connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(closeClicked()));
+    connect(ui->closeButton, &QPushButton::clicked, this, &ModalOverlay::closeClicked);
     if (parent) {
         parent->installEventFilter(this);
         raise();
     }
 
     blockProcessTime.clear();
+    blockProcessTime.reserve(MAX_SAMPLES + 1);
     setVisible(false);
 }
 
@@ -71,17 +74,18 @@ void ModalOverlay::setKnownBestHeight(int count, const QDateTime& blockDate)
     if (count > bestHeaderHeight) {
         bestHeaderHeight = count;
         bestHeaderDate = blockDate;
+        UpdateHeaderSyncLabel();
     }
 }
 
 void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVerificationProgress)
 {
-    QDateTime currentDate = QDateTime::currentDateTime();
+    const auto msecsSinceEpoch = QDateTime::currentDateTime().toMSecsSinceEpoch();
 
     // keep a vector of samples of verification progress at height
-    blockProcessTime.push_front(qMakePair(currentDate.toMSecsSinceEpoch(), nVerificationProgress));
+    blockProcessTime.push_front(qMakePair(msecsSinceEpoch, nVerificationProgress));
 
-    // show progress speed if we have more then one sample
+    // show progress speed if we have more than one sample
     if (blockProcessTime.size() >= 2) {
         double progressDelta = 0;
         double progressPerHour = 0;
@@ -92,7 +96,7 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
             QPair<qint64, double> sample = blockProcessTime[i];
 
             // take first sample after 500 seconds or last available one
-            if (sample.first < (currentDate.toMSecsSinceEpoch() - 500 * 1000) || i == blockProcessTime.size() - 1) {
+            if (sample.first < (msecsSinceEpoch - 500 * 1000) || i == blockProcessTime.size() - 1) {
                 progressDelta = blockProcessTime[0].second - sample.second;
                 timeDelta = blockProcessTime[0].first - sample.first;
                 progressPerHour = progressDelta / (double) timeDelta * 1000 * 3600;
@@ -104,20 +108,19 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
         ui->progressIncreasePerH->setText(QString::number(progressPerHour * 100, 'f', 2)+"%");
 
         // show expected remaining time
-        if(remainingMSecs >= 0) {	
+        if(remainingMSecs >= 0) {
             ui->expectedTimeLeft->setText(GUIUtil::formatNiceTimeOffset(remainingMSecs / 1000.0));
         } else {
             ui->expectedTimeLeft->setText(QObject::tr("unknown"));
         }
 
-        static const int MAX_SAMPLES = 5000;
         if (blockProcessTime.count() > MAX_SAMPLES) {
             blockProcessTime.remove(MAX_SAMPLES, blockProcessTime.count() - MAX_SAMPLES);
         }
     }
 
     // show the last block date
-    ui->newestBlockDate->setText(blockDate.toString(Qt::SystemLocaleLongDate));
+    ui->newestBlockDate->setText(blockDate.toString());
 
     // show the percentage done according to nVerificationProgress
     ui->percentageProgress->setText(QString::number(nVerificationProgress*100, 'f', 2)+"%");
@@ -127,18 +130,23 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
         // not syncing
         return;
 
-    // estimate the number of headers left based on TargetSpacing
+    // estimate the number of headers left based on nPowTargetSpacing
     // and check if the gui is not aware of the best header (happens rarely)
-    int estimateNumHeadersLeft = bestHeaderDate.secsTo(currentDate) / Consensus::GetTargetSpacing(bestHeaderHeight, Params().GetConsensus());
+    int estimateNumHeadersLeft = ((bestHeaderDate.toMSecsSinceEpoch() - msecsSinceEpoch) / 1000) / Params().GetConsensus().nPowTargetSpacing;
     bool hasBestHeader = bestHeaderHeight >= count;
 
     // show remaining number of blocks
     if (estimateNumHeadersLeft < HEADER_HEIGHT_DELTA_SYNC && hasBestHeader) {
         ui->numberOfBlocksLeft->setText(QString::number(bestHeaderHeight - count));
     } else {
-        ui->numberOfBlocksLeft->setText(tr("Unknown. Syncing Headers (%1)...").arg(bestHeaderHeight));
+        UpdateHeaderSyncLabel();
         ui->expectedTimeLeft->setText(tr("Unknown..."));
     }
+}
+
+void ModalOverlay::UpdateHeaderSyncLabel() {
+    int est_headers_left = bestHeaderDate.secsTo(QDateTime::currentDateTime()) / Params().GetConsensus().nPowTargetSpacing;
+    ui->numberOfBlocksLeft->setText(tr("Unknown. Syncing Headers (%1, %2%)...").arg(bestHeaderHeight).arg(QString::number(100.0 / (bestHeaderHeight + est_headers_left) * bestHeaderHeight, 'f', 1)));
 }
 
 void ModalOverlay::toggleVisibility()
