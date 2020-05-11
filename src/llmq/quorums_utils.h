@@ -69,6 +69,14 @@ public:
             }
         }
     }
+    static std::string ToHexStr(const std::vector<bool>& vBits)
+    {
+        std::vector<uint8_t> vBytes((vBits.size() + 7) / 8);
+        for (size_t i = 0; i < vBits.size(); i++) {
+            vBytes[i / 8] |= vBits[i] << (i % 8);
+        }
+        return HexStr(vBytes);
+    }
 };
 
 } // namespace llmq

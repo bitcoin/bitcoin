@@ -5,6 +5,8 @@
 #ifndef DASH_QUORUMS_COMMITMENT_H
 #define DASH_QUORUMS_COMMITMENT_H
 
+#include <llmq/quorums_utils.h>
+
 #include <consensus/params.h>
 
 #include <evo/deterministicmns.h>
@@ -94,8 +96,13 @@ public:
         obj.push_back(Pair("llmqType", (int)llmqType));
         obj.push_back(Pair("quorumHash", quorumHash.ToString()));
         obj.push_back(Pair("signersCount", CountSigners()));
+        obj.push_back(Pair("signers", CLLMQUtils::ToHexStr(signers)));
         obj.push_back(Pair("validMembersCount", CountValidMembers()));
+        obj.push_back(Pair("validMembers", CLLMQUtils::ToHexStr(validMembers)));
         obj.push_back(Pair("quorumPublicKey", quorumPublicKey.ToString()));
+        obj.push_back(Pair("quorumVvecHash", quorumVvecHash.ToString()));
+        obj.push_back(Pair("quorumSig", quorumSig.ToString()));
+        obj.push_back(Pair("membersSig", membersSig.ToString()));
     }
 };
 
