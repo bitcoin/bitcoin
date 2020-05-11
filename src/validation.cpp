@@ -1728,8 +1728,6 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
         }
     }
 
-    // move best block pointer to prevout block
-    view.SetBestBlock(pindex->pprev->GetBlockHash());
 
     if (fSpentIndex) {
         if (!pblocktree->UpdateSpentIndex(spentIndex)) {
@@ -1749,6 +1747,8 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
         }
     }
 
+    // move best block pointer to prevout block
+    view.SetBestBlock(pindex->pprev->GetBlockHash());
     evoDb->WriteBestBlock(pindex->pprev->GetBlockHash());
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
@@ -4322,6 +4322,13 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
         // Pass check = true as every addition may be an overwrite.
         AddCoins(inputs, *tx, pindex->nHeight, true);
     }
+
+    CValidationState state;
+    if (!ProcessSpecialTxsInBlock(block, pindex, state, false /*fJustCheck*/, false /*fScriptChecks*/)) {
+        return error("RollforwardBlock(DASH): ProcessSpecialTxsInBlock for block %s failed with %s",
+            pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+    }
+
     return true;
 }
 
@@ -4356,8 +4363,13 @@ bool CChainState::ReplayBlocks(const CChainParams& params, CCoinsView* view)
         assert(pindexFork != nullptr);
     }
 
+    auto dbTx = evoDb->BeginTransaction();
+
     // Rollback along the old branch.
     while (pindexOld != pindexFork) {
+        // TODO: RollforwardBlock should update not only coins but also evodb and additional indexes.
+        // Disable recovery from a crash during a fork until this is implemented.
+        return error("ReplayBlocks(): recovery from a db crash during a fork is not supported yet");
         if (pindexOld->nHeight > 0) { // Never disconnect the genesis block.
             CBlock block;
             if (!ReadBlockFromDisk(block, pindexOld, params.GetConsensus())) {
@@ -4385,7 +4397,10 @@ bool CChainState::ReplayBlocks(const CChainParams& params, CCoinsView* view)
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
-    cache.Flush();
+    evoDb->WriteBestBlock(pindexNew->GetBlockHash());
+    bool flushed = cache.Flush();
+    assert(flushed);
+    dbTx->Commit();
     uiInterface.ShowProgress("", 100, false);
     return true;
 }

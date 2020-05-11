@@ -135,6 +135,11 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
     // until the first non-null commitment has been mined. After the non-null commitment, no other commitments are
     // allowed, including null commitments.
     for (const auto& p : Params().GetConsensus().llmqs) {
+        // skip these checks when replaying blocks after the crash
+        if (!chainActive.Tip()) {
+            break;
+        }
+
         auto type = p.first;
 
         // does the currently processed block contain a (possibly null) commitment for the current session?
@@ -180,6 +185,12 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)qc.llmqType);
 
     uint256 quorumHash = GetQuorumBlockHash((Consensus::LLMQType)qc.llmqType, nHeight);
+
+    // skip `bad-qc-block` checks below when replaying blocks after the crash
+    if (!chainActive.Tip()) {
+        quorumHash = qc.quorumHash;
+    }
+
     if (quorumHash.IsNull()) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-block");
     }
