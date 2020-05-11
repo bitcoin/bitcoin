@@ -13,6 +13,7 @@
 #include <memory>
 
 class BitcoinGUI;
+class BitcoinMobileGUI;
 class ClientModel;
 class NetworkStyle;
 class OptionsModel;
@@ -107,7 +108,11 @@ private:
     interfaces::Node& m_node;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
+#ifdef MOBILE_GUI
+    BitcoinMobileGUI *window;
+#else
     BitcoinGUI *window;
+#endif
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer{nullptr};

@@ -132,6 +132,11 @@ Coding Style (Python)
 
 Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
 
+Coding Style (QML)
+---------------------
+
+Refer to [https://doc.qt.io/qt-5/qml-codingconventions.html](https://doc.qt.io/qt-5/qml-codingconventions.html).
+
 Coding Style (Doxygen-compatible comments)
 ------------------------------------------
 

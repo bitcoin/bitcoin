@@ -76,6 +76,26 @@ public:
         RawDecorationRole,
     };
 
+    QHash<int, QByteArray> roleNames() const {
+        QHash<int, QByteArray> roles;
+        roles[TypeRole] = "type";
+        roles[DateRole] = "date";
+        roles[WatchonlyRole] = "watchonly";
+        roles[WatchonlyDecorationRole] = "watchonlydecoration";
+        roles[LongDescriptionRole] = "longdescription";
+        roles[AddressRole] = "address";
+        roles[LabelRole] = "label";
+        roles[AmountRole] = "amount";
+        roles[TxHashRole] = "txhash";
+        roles[TxHexRole] = "txhex";
+        roles[TxPlainTextRole] = "txplaintext";
+        roles[ConfirmedRole] = "confirmed";
+        roles[FormattedAmountRole] = "formattedamount";
+        roles[StatusRole] = "status";
+        roles[RawDecorationRole] = "rawdecoration";
+        return roles;
+    }
+
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
