@@ -285,7 +285,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     CGovernanceObject govobj(hashParent, nRevision, nTime, txidFee, strDataHex);
 
     LogPrint(BCLog::GOBJECT, "gobject_submit -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
-                govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), request.params[5].get_str());
+                govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), txidFee.ToString());
 
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
         CProposalValidator validator(strDataHex, false);
