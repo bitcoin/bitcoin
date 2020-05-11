@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2017 The Bitcoin Core developers
+// Copyright (c) 2017-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,21 +6,18 @@
 #define BITCOIN_CONSENSUS_TX_VERIFY_H
 
 #include <amount.h>
+#include <primitives/transaction.h>
 
 #include <stdint.h>
 #include <vector>
 
-#include <primitives/transaction.h>
-
 class CBlockIndex;
 class CBindPlotterInfo;
 class CCoinsViewCache;
+class CTransaction;
 class CValidationState;
 
 /** Transaction validation functions */
-
-/** Context-independent validity checks */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs=true);
 
 namespace Consensus {
 struct Params;
@@ -53,6 +50,16 @@ bool CheckTxInputs(const CTransaction& tx, const CCoinsViewCache& inputs, const 
 int GetBindPlotterLimitHeight(int nBindHeight, const CBindPlotterInfo& lastBindInfo, const Params& params);
 int GetUnbindPlotterLimitHeight(const CBindPlotterInfo& bindInfo, const CCoinsViewCache& inputs, const Params& params);
 
+/**
+ * Return bind plotter punishment amount
+ * 
+ * Change bind require high transaction fee. Diff reward between full-balance and low-balance.
+ * Example:
+ *   23.75BHD - 7.5BHD = 16.25BHD
+ *   16.25BHD pay to black hole
+ * */
+CAmount GetBindPlotterPunishmentAmount(int nBindHeight, const Params& params);
+
 } // namespace Consensus
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */
@@ -66,7 +73,7 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
 
 /**
  * Count ECDSA signature operations in pay-to-script-hash inputs.
- * 
+ *
  * @param[in] mapInputs Map of previous transactions that have outputs we're spending
  * @return maximum number of sigops required to validate this transaction's inputs
  * @see CTransaction::FetchInputs

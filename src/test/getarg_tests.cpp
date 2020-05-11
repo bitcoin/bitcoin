@@ -1,11 +1,13 @@
-// Copyright (c) 2012-2017 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util.h>
-#include <test/test_bitcoin.h>
+#include <util/strencodings.h>
+#include <util/system.h>
+#include <test/setup_common.h>
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
@@ -17,21 +19,32 @@ static void ResetArgs(const std::string& strArg)
 {
     std::vector<std::string> vecArg;
     if (strArg.size())
-      boost::split(vecArg, strArg, boost::is_space(), boost::token_compress_on);
+      boost::split(vecArg, strArg, IsSpace, boost::token_compress_on);
 
     // Insert dummy executable name:
     vecArg.insert(vecArg.begin(), "testbitcoin");
 
     // Convert to char*:
     std::vector<const char*> vecChar;
-    for (std::string& s : vecArg)
+    for (const std::string& s : vecArg)
         vecChar.push_back(s.c_str());
 
-    gArgs.ParseParameters(vecChar.size(), vecChar.data());
+    std::string error;
+    BOOST_CHECK(gArgs.ParseParameters(vecChar.size(), vecChar.data(), error));
+}
+
+static void SetupArgs(const std::vector<std::pair<std::string, unsigned int>>& args)
+{
+    gArgs.ClearArgs();
+    for (const auto& arg : args) {
+        gArgs.AddArg(arg.first, "", arg.second, OptionsCategory::OPTIONS);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(boolarg)
 {
+    const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_BOOL);
+    SetupArgs({foo});
     ResetArgs("-foo");
     BOOST_CHECK(gArgs.GetBoolArg("-foo", false));
     BOOST_CHECK(gArgs.GetBoolArg("-foo", true));
@@ -84,6 +97,9 @@ BOOST_AUTO_TEST_CASE(boolarg)
 
 BOOST_AUTO_TEST_CASE(stringarg)
 {
+    const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_STRING);
+    const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_STRING);
+    SetupArgs({foo, bar});
     ResetArgs("");
     BOOST_CHECK_EQUAL(gArgs.GetArg("-foo", ""), "");
     BOOST_CHECK_EQUAL(gArgs.GetArg("-foo", "eleven"), "eleven");
@@ -108,6 +124,9 @@ BOOST_AUTO_TEST_CASE(stringarg)
 
 BOOST_AUTO_TEST_CASE(intarg)
 {
+    const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_INT);
+    const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_INT);
+    SetupArgs({foo, bar});
     ResetArgs("");
     BOOST_CHECK_EQUAL(gArgs.GetArg("-foo", 11), 11);
     BOOST_CHECK_EQUAL(gArgs.GetArg("-foo", 0), 0);
@@ -127,6 +146,9 @@ BOOST_AUTO_TEST_CASE(intarg)
 
 BOOST_AUTO_TEST_CASE(doubledash)
 {
+    const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_ANY);
+    const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_ANY);
+    SetupArgs({foo, bar});
     ResetArgs("--foo");
     BOOST_CHECK_EQUAL(gArgs.GetBoolArg("-foo", false), true);
 
@@ -137,6 +159,9 @@ BOOST_AUTO_TEST_CASE(doubledash)
 
 BOOST_AUTO_TEST_CASE(boolargno)
 {
+    const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_BOOL);
+    const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_BOOL);
+    SetupArgs({foo, bar});
     ResetArgs("-nofoo");
     BOOST_CHECK(!gArgs.GetBoolArg("-foo", true));
     BOOST_CHECK(!gArgs.GetBoolArg("-foo", false));

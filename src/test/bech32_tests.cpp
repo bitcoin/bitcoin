@@ -3,13 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bech32.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(bech32_tests, BasicTestingSetup)
 
-bool CaseInsensitiveEqual(const std::string &s1, const std::string &s2)
+static bool CaseInsensitiveEqual(const std::string &s1, const std::string &s2)
 {
     if (s1.size() != s2.size()) return false;
     for (size_t i = 0; i < s1.size(); ++i) {
@@ -57,6 +57,8 @@ BOOST_AUTO_TEST_CASE(bip173_testvectors_invalid)
         "A1G7SGD8",
         "10a06t8",
         "1qzzfhee",
+        "a12UEL5L",
+        "A12uEL5L",
     };
     for (const std::string& str : CASES) {
         auto ret = bech32::Decode(str);

@@ -1,22 +1,24 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_UNDO_H
 #define BITCOIN_UNDO_H
 
+#include <coins.h>
 #include <compressor.h>
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <serialize.h>
+#include <version.h>
 
 /** Undo information for a CTxIn
  *
  *  Contains the prevout's CTxOut being spent, and its metadata as well
  *  (coinbase or not, height). The serialization contains a dummy value of
- *  zero. This is be compatible with older versions which expect to see
+ *  zero. This is compatible with older versions which expect to see
  *  the transaction version there.
  */
 class TxInUndoSerializer
@@ -26,7 +28,7 @@ class TxInUndoSerializer
 public:
     template<typename Stream>
     void Serialize(Stream &s) const {
-        unsigned int nCode = (txout->extraData ? 0x80000000 : 0) | (txout->nHeight << 1) | (txout->fCoinBase ? 0x01 : 0x00);
+        unsigned int nCode = (txout->extraData ? 0x80000000 : 0) | (txout->nHeight * 2 + (txout->fCoinBase ? 1u : 0u));
         ::Serialize(s, VARINT(nCode));
         if (txout->nHeight > 0) {
             // Required to maintain compatibility with older undo format.
@@ -38,8 +40,8 @@ public:
             ::Serialize(s, VARINT((unsigned int&)txout->extraData->type));
             if (txout->extraData->type == DATACARRIER_TYPE_BINDPLOTTER) {
                 ::Serialize(s, VARINT(BindPlotterPayload::As(txout->extraData)->id));
-            } else if (txout->extraData->type == DATACARRIER_TYPE_RENTAL) {
-                ::Serialize(s, REF(RentalPayload::As(txout->extraData)->GetBorrowerAccountID()));
+            } else if (txout->extraData->type == DATACARRIER_TYPE_POINT) {
+                ::Serialize(s, REF(PointPayload::As(txout->extraData)->GetReceiverID()));
             } else
                 assert(false);
         }
@@ -57,18 +59,18 @@ public:
     void Unserialize(Stream &s) {
         unsigned int nCode = 0;
         ::Unserialize(s, VARINT(nCode));
-        txout->nHeight = (nCode&0x7fffffff) >> 1;
-        txout->fCoinBase = nCode & 0x01;
+        txout->nHeight = (nCode & 0x7fffffff) / 2;
+        txout->fCoinBase = nCode & 1;
         if (txout->nHeight > 0) {
             // Old versions stored the version number for the last spend of
             // a transaction's outputs. Non-final spends were indicated with
             // height = 0.
-            int nVersionDummy;
+            unsigned int nVersionDummy;
             ::Unserialize(s, VARINT(nVersionDummy));
         }
-        ::Unserialize(s, REF(CTxOutCompressor(REF(txout->out))));
-        txout->Refresh();
+        ::Unserialize(s, CTxOutCompressor(REF(txout->out)));
 
+        txout->Refresh();
         txout->extraData = nullptr;
         if (nCode & 0x80000000) {
             unsigned int extraDataType = 0;
@@ -76,9 +78,9 @@ public:
             if (extraDataType == DATACARRIER_TYPE_BINDPLOTTER) {
                 txout->extraData = std::make_shared<BindPlotterPayload>();
                 ::Unserialize(s, VARINT(BindPlotterPayload::As(txout->extraData)->id));
-            } else if (extraDataType == DATACARRIER_TYPE_RENTAL) {
-                txout->extraData = std::make_shared<RentalPayload>();
-                ::Unserialize(s, REF(RentalPayload::As(txout->extraData)->GetBorrowerAccountID()));
+            } else if (extraDataType == DATACARRIER_TYPE_POINT) {
+                txout->extraData = std::make_shared<PointPayload>();
+                ::Unserialize(s, REF(PointPayload::As(txout->extraData)->GetReceiverID()));
             } else
                 assert(false);
         }
@@ -87,7 +89,7 @@ public:
     explicit TxInUndoDeserializer(Coin* coin) : txout(coin) {}
 };
 
-static const size_t MIN_TRANSACTION_INPUT_WEIGHT = WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxIn(), SER_NETWORK, PROTOCOL_VERSION);
+static const size_t MIN_TRANSACTION_INPUT_WEIGHT = WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxIn(), PROTOCOL_VERSION);
 static const size_t MAX_INPUTS_PER_BLOCK = MAX_BLOCK_WEIGHT / MIN_TRANSACTION_INPUT_WEIGHT;
 
 /** Undo information for a CTransaction */
@@ -103,7 +105,7 @@ public:
         uint64_t count = vprevout.size();
         ::Serialize(s, COMPACTSIZE(REF(count)));
         for (const auto& prevout : vprevout) {
-            ::Serialize(s, REF(TxInUndoSerializer(&prevout)));
+            ::Serialize(s, TxInUndoSerializer(&prevout));
         }
     }
 
@@ -117,7 +119,7 @@ public:
         }
         vprevout.resize(count);
         for (auto& prevout : vprevout) {
-            ::Unserialize(s, REF(TxInUndoDeserializer(&prevout)));
+            ::Unserialize(s, TxInUndoDeserializer(&prevout));
         }
     }
 };

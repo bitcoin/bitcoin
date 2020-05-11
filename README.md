@@ -25,9 +25,6 @@ the BitcoinHD Core software, see https://btchd.org/#wallet, or read the
 License
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/licenses/MIT.
-
 BitcoinHD Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
@@ -72,7 +69,7 @@ not straightforward.
 Translations
 ------------
 
-BitcoinHD base on bitcoin and shares resources with it.
+The BitcoinHD Core base on Bitcoin Core and shares resources with it.
 
 Changes to translations as well as new translations can be submitted to
 [Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).

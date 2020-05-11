@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,7 @@
 #include <random.h>
 #include <streams.h>
 #include <tinyformat.h>
-#include <util.h>
+#include <util/system.h>
 
 namespace {
 
@@ -22,8 +22,8 @@ bool SerializeDB(Stream& stream, const Data& data)
     // Write and commit header, data
     try {
         CHashWriter hasher(SER_DISK, CLIENT_VERSION);
-        stream << FLATDATA(Params().MessageStart()) << data;
-        hasher << FLATDATA(Params().MessageStart()) << data;
+        stream << Params().MessageStart() << data;
+        hasher << Params().MessageStart() << data;
         stream << hasher.GetHash();
     } catch (const std::exception& e) {
         return error("%s: Serialize or I/O error - %s", __func__, e.what());
@@ -44,17 +44,30 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
     fs::path pathTmp = GetDataDir() / tmpfn;
     FILE *file = fsbridge::fopen(pathTmp, "wb");
     CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
-    if (fileout.IsNull())
+    if (fileout.IsNull()) {
+        fileout.fclose();
+        remove(pathTmp);
         return error("%s: Failed to open file %s", __func__, pathTmp.string());
+    }
 
     // Serialize
-    if (!SerializeDB(fileout, data)) return false;
-    FileCommit(fileout.Get());
+    if (!SerializeDB(fileout, data)) {
+        fileout.fclose();
+        remove(pathTmp);
+        return false;
+    }
+    if (!FileCommit(fileout.Get())) {
+        fileout.fclose();
+        remove(pathTmp);
+        return error("%s: Failed to flush file %s", __func__, pathTmp.string());
+    }
     fileout.fclose();
 
     // replace existing file, if any, with new file
-    if (!RenameOver(pathTmp, path))
+    if (!RenameOver(pathTmp, path)) {
+        remove(pathTmp);
         return error("%s: Rename-into-place failed", __func__);
+    }
 
     return true;
 }
@@ -66,7 +79,7 @@ bool DeserializeDB(Stream& stream, Data& data, bool fCheckSum = true)
         CHashVerifier<Stream> verifier(&stream);
         // de-serialize file header (network specific magic number) and ..
         unsigned char pchMsgTmp[4];
-        verifier >> FLATDATA(pchMsgTmp);
+        verifier >> pchMsgTmp;
         // ... verify the network matches ours
         if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
             return error("%s: Invalid network magic number", __func__);
@@ -104,19 +117,18 @@ bool DeserializeFileDB(const fs::path& path, Data& data)
 
 }
 
-CBanDB::CBanDB()
+CBanDB::CBanDB(fs::path ban_list_path) : m_ban_list_path(std::move(ban_list_path))
 {
-    pathBanlist = GetDataDir() / "banlist.dat";
 }
 
 bool CBanDB::Write(const banmap_t& banSet)
 {
-    return SerializeFileDB("banlist", pathBanlist, banSet);
+    return SerializeFileDB("banlist", m_ban_list_path, banSet);
 }
 
 bool CBanDB::Read(banmap_t& banSet)
 {
-    return DeserializeFileDB(pathBanlist, banSet);
+    return DeserializeFileDB(m_ban_list_path, banSet);
 }
 
 CAddrDB::CAddrDB()

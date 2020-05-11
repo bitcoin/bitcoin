@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the RPC call related to the uptime command.
@@ -23,7 +23,7 @@ class UptimeTest(BitcoinTestFramework):
     def _test_uptime(self):
         wait_time = 10
         self.nodes[0].setmocktime(int(time.time() + wait_time))
-        assert(self.nodes[0].uptime() >= wait_time)
+        assert self.nodes[0].uptime() >= wait_time
 
 
 if __name__ == '__main__':

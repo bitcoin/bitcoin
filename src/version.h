@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017 The Bitcoin Core developers
+// Copyright (c) 2012-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,42 +9,16 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 80024;
-
-//! BHDIP 008, full mortgage subsidy, 3 minutes, 2 MiB
-static const int BHDIP008_VERSION = 80024;
-
-//! BHDIP 007, Signature & Dynamic ratio version
-static const int BHDIP007_SIGN_VERSION = 80023;
-
-//! BHDIP 006, Unsignature version
-static const int BHDIP006_UNSIGN_VERSION = 80022;
-
-//! BHDIP 006, limit unbind plotter, softfork
-static const int BHDIP006_LIMITUNBIND_VERSION = 80021;
-
-//! BHDIP 006, bind plotter, point to
-static const int BHDIP006_VERSION = 80020;
-
-//! test with this version
-static const int PRETEST_VERSION = 80015;
-
-//! disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION = 80024;
-
-
-/********************************************************/
-/* Bitcoin original version */
-/********************************************************/
-
-//! fork from bitcoin 70015
-static const int BITCOIN_VERSION = 70015;
+static const int PROTOCOL_VERSION = 80025;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
 
 //! In this version, 'getheaders' was introduced.
 static const int GETHEADERS_VERSION = 31800;
+
+//! disconnect from peers older than this proto version
+static const int MIN_PEER_PROTO_VERSION = 80024;
 
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this
@@ -67,5 +41,20 @@ static const int SHORT_IDS_BLOCKS_VERSION = 70014;
 
 //! not banning for invalid compact blocks starts with this version
 static const int INVALID_CB_NO_BAN_VERSION = 70015;
+
+//! test with this version
+static const int PRETEST_VERSION = 80015;
+
+//! BHDIP 006, bind plotter, point
+static const int UNIFORMTX_VERSION = 80020;
+
+//! BHDIP 006, limit unbind plotter, softfork
+static const int LIMITUNBIND_VERSION = 80021;
+
+//! BHDIP 007, signature & dynamic ratio version
+static const int SIGN_VERSION = 80023;
+
+//! BHDIP 008, 3 minutes, 2 MiB, full pledge subsidy
+static const int BLOCKINTERVAL180_VERSION = 80024;
 
 #endif // BITCOIN_VERSION_H

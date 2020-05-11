@@ -1,13 +1,14 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
 #include <crypto/shabal256.h>
+#include <logging.h>
 #include <poc/poc.h>
 #include <script/standard.h>
-#include <util.h>
+#include <validation.h>
 
 /**
  * CChain implementation
@@ -28,20 +29,20 @@ CBlockLocator CChain::GetLocator(const CBlockIndex *pindex, int lastCheckpointHe
     std::vector<uint256> vHave;
     vHave.reserve(32);
 
-    int nStep = 1;
     if (!pindex)
         pindex = Tip();
-    if (pindex && lastCheckpointHeight > pindex->nHeight + 1000) {
-        // Always use checkpoint
-        int nStep = 1000;
+    if (pindex && lastCheckpointHeight > pindex->nHeight + (int) MAX_HEADERS_RESULTS) {
+        // Always use checkpoints
+        const int batchCount = (int) MAX_HEADERS_RESULTS;
+        int nStep = batchCount;
+        LogPrint(BCLog::NET, "GetLocator(by checkpoints):\r\n");
         if (Contains(pindex)) {
             // O(1)
-            pindex = (*this)[std::max(1000 * (pindex->nHeight / 1000), 0)];
+            pindex = (*this)[std::max(batchCount * (pindex->nHeight / batchCount), 0)];
         } else {
             // O(log n)
-            pindex = pindex->GetAncestor(std::max(1000 * (pindex->nHeight / 1000), 0));
+            pindex = pindex->GetAncestor(std::max(batchCount * (pindex->nHeight / batchCount), 0));
         }
-        LogPrint(BCLog::NET, "GetLocator(by checkpoints):\r\n");
         while (pindex) {
             vHave.push_back(pindex->GetBlockHash());
             LogPrint(BCLog::NET, "\t%6d: %s\r\n", pindex->nHeight, pindex->GetBlockHash().ToString());
@@ -49,7 +50,7 @@ CBlockLocator CChain::GetLocator(const CBlockIndex *pindex, int lastCheckpointHe
             if (pindex->nHeight == 0)
                 break;
             // Exponentially larger steps back, plus the genesis block.
-            int nHeight = std::max(1000 * ((pindex->nHeight - nStep) / 1000), 0);
+            int nHeight = std::max(batchCount * ((pindex->nHeight - nStep) / batchCount), 0);
             if (Contains(pindex)) {
                 // Use O(1) CChain index if possible.
                 pindex = (*this)[nHeight];
@@ -61,6 +62,7 @@ CBlockLocator CChain::GetLocator(const CBlockIndex *pindex, int lastCheckpointHe
                 nStep *= 2;
         }
     } else {
+        int nStep = 1;
         LogPrint(BCLog::NET, "GetLocator:\r\n");
         while (pindex) {
             vHave.push_back(pindex->GetBlockHash());
@@ -96,10 +98,11 @@ const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
     return pindex;
 }
 
-CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime) const
+CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime, int height) const
 {
-    std::vector<CBlockIndex*>::const_iterator lower = std::lower_bound(vChain.begin(), vChain.end(), nTime,
-        [](CBlockIndex* pBlock, const int64_t& time) -> bool { return pBlock->GetBlockTimeMax() < time; });
+    std::pair<int64_t, int> blockparams = std::make_pair(nTime, height);
+    std::vector<CBlockIndex*>::const_iterator lower = std::lower_bound(vChain.begin(), vChain.end(), blockparams,
+        [](CBlockIndex* pBlock, const std::pair<int64_t, int>& blockparams) -> bool { return pBlock->GetBlockTimeMax() < blockparams.first || pBlock->nHeight < blockparams.second; });
     return (lower == vChain.end() ? nullptr : *lower);
 }
 
@@ -208,7 +211,7 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
         r = from.nChainWork - to.nChainWork;
         sign = -1;
     }
-    r = r * arith_uint256(Consensus::GetTargetSpacing(tip.nHeight, params)) / GetBlockProof(tip, params);
+    r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockProof(tip, params);
     if (r.bits() > 63) {
         return sign * std::numeric_limits<int64_t>::max();
     }

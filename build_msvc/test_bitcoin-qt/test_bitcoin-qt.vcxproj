@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\common.init.vcxproj" />
+  <Import Project="..\common.qt.init.vcxproj" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{51201D5E-D939-4854-AE9D-008F03FF518E}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\test\setup_common.cpp" />
+    <ClCompile Include="..\..\src\qt\test\addressbooktests.cpp" />
+    <ClCompile Include="..\..\src\qt\test\apptests.cpp" />
+    <ClCompile Include="..\..\src\qt\test\compattests.cpp" />
+    <ClCompile Include="..\..\src\qt\test\rpcnestedtests.cpp" />
+    <ClCompile Include="..\..\src\qt\test\test_main.cpp" />
+    <ClCompile Include="..\..\src\qt\test\uritests.cpp" />
+    <ClCompile Include="..\..\src\qt\test\util.cpp" />
+    <ClCompile Include="..\..\src\qt\test\wallettests.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\wallet_test_fixture.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_addressbooktests.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_apptests.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_compattests.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_rpcnestedtests.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_uritests.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_wallettests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
+      <Project>{2b384fa8-9ee1-4544-93cb-0d733c25e8ce}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_cli\libbitcoin_cli.vcxproj">
+      <Project>{0667528c-d734-4009-adf9-c0d6c4a5a5a6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_common\libbitcoin_common.vcxproj">
+      <Project>{7c87e378-df58-482e-aa2f-1bc129bc19ce}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_crypto\libbitcoin_crypto.vcxproj">
+      <Project>{6190199c-6cf4-4dad-bfbd-93fa72a760c1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_qt\libbitcoin_qt.vcxproj">
+      <Project>{2b4abff8-d1fd-4845-88c9-1f3c0a6512bf}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_server\libbitcoin_server.vcxproj">
+      <Project>{460fee33-1fe1-483f-b3bf-931ff8e969a5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_util\libbitcoin_util.vcxproj">
+      <Project>{b53a5535-ee9d-4c6f-9a26-f79ee3bc3754}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_wallet\libbitcoin_wallet.vcxproj">
+      <Project>{93b86837-b543-48a5-a89b-7c87abb77df2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_zmq\libbitcoin_zmq.vcxproj">
+      <Project>{792d487f-f14c-49fc-a9de-3fc150f31c3f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libleveldb\libleveldb.vcxproj">
+      <Project>{18430fef-6b61-4c53-b396-718e02850f1b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libsecp256k1\libsecp256k1.vcxproj">
+      <Project>{bb493552-3b8c-4a8c-bf69-a6e7a51d2ea6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libunivalue\libunivalue.vcxproj">
+      <Project>{5724ba7d-a09a-4ba8-800b-c4c1561b3d69}</Project>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\libbitcoin_qt\$(GeneratedFilesOutDir)\..\;$(QtIncludeDir)\QtTest;$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(QtReleaseLibaries);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+    <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\libbitcoin_qt\$(GeneratedFilesOutDir)\..\;$(QtIncludeDir)\QtTest;$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(QtDebugLibraries);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <MocTestFiles Include="..\..\src\qt\test\addressbooktests.h" />
+    <MocTestFiles Include="..\..\src\qt\test\apptests.h" />
+    <MocTestFiles Include="..\..\src\qt\test\compattests.h" />
+    <MocTestFiles Include="..\..\src\qt\test\paymentservertests.h" />
+    <MocTestFiles Include="..\..\src\qt\test\rpcnestedtests.h" />
+    <MocTestFiles Include="..\..\src\qt\test\uritests.h" />
+    <MocTestFiles Include="..\..\src\qt\test\wallettests.h" />
+  </ItemGroup>
+  <Target Name="moccode" Inputs="@(MocTestFiles)" Outputs="@(MocTestFiles->'$(GeneratedFilesOutDir)\moc\moc_%(Filename).cpp')">
+    <PropertyGroup>
+      <ErrorText>There was an error executing the test_bitcoin-qt moc code generation task.</ErrorText>
+    </PropertyGroup>
+    <Exec Command="echo Performing test_bitcoin-qt moc generation task, output path $(GeneratedFilesOutDir)\moc." />
+    <MakeDir Directories="$(GeneratedFilesOutDir)\moc\" />
+    <Exec Command="$(QtToolsDir)\moc.exe $(MOC_DEFINES) &quot;%(MocTestFiles.Identity)&quot; -o $(GeneratedFilesOutDir)\moc\moc_%(Filename).cpp" />
+  </Target>
+  <Target Name="QtTestCleanGeneratedFiles">
+    <Exec Command="echo Clean test_bitcoin-qt generated files from $(GeneratedFilesOutDir)." />
+    <RemoveDir Directories="$(GeneratedFilesOutDir)\moc\*" />
+    <RemoveDir Directories="$(GeneratedFilesOutDir)\moc" />
+  </Target>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <PropertyGroup>
+    <BuildDependsOn>
+       moccode;
+       $(BuildDependsOn);
+    </BuildDependsOn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <CleanDependsOn>
+        QtTestCleanGeneratedFiles;
+        $(CleanDependsOn);
+    </CleanDependsOn>
+  </PropertyGroup>
+ </Project>

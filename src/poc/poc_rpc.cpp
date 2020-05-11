@@ -1,24 +1,21 @@
-// Copyright (c) 2017-2018 The BitcoinHD Core developers
+// Copyright (c) 2017-2020 The BitcoinHD Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <poc/poc.h>
-#include <base58.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <key_io.h>
 #include <net.h>
 #include <poc/passphrase.h>
-#include <rpc/safemode.h>
+#include <rpc/protocol.h>
 #include <rpc/server.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <univalue.h>
 #include <validation.h>
 
 #include <iomanip>
 #include <sstream>
-
-namespace poc { namespace rpc {
 
 static UniValue getMiningInfo(const JSONRPCRequest& request)
 {
@@ -36,12 +33,12 @@ static UniValue getMiningInfo(const JSONRPCRequest& request)
         );
     }
 
-    if (IsInitialBlockDownload()) {
+    if (::ChainstateActive().IsInitialBlockDownload()) {
         throw std::runtime_error("Is initial block downloading!");
     }
 
     LOCK(cs_main);
-    const CBlockIndex *pindexLast = chainActive.Tip();
+    const CBlockIndex *pindexLast = ::ChainActive().Tip();
     if (pindexLast == nullptr) {
         throw std::runtime_error("Block chain tip is empty!");
     }
@@ -77,7 +74,7 @@ static UniValue submitNonce(const JSONRPCRequest& request)
         );
     }
 
-    if (IsInitialBlockDownload())
+    if (::ChainstateActive().IsInitialBlockDownload())
         throw std::runtime_error("Is initial block downloading!");
 
     uint64_t nNonce = static_cast<uint64_t>(std::stoull(request.params[0].get_str()));
@@ -99,14 +96,14 @@ static UniValue submitNonce(const JSONRPCRequest& request)
     }
 
     LOCK(cs_main);
-    const CBlockIndex *pindexMining = chainActive[nTargetHeight < 1 ? chainActive.Height() : (nTargetHeight - 1)];
+    const CBlockIndex *pindexMining = ::ChainActive()[nTargetHeight < 1 ? ::ChainActive().Height() : (nTargetHeight - 1)];
     if (pindexMining == nullptr)
         throw std::runtime_error("Invalid mining height");
 
     UniValue result(UniValue::VOBJ);
     try {
         uint64_t bestDeadline = 0;
-        uint64_t deadline = AddNonce(bestDeadline, *pindexMining, nNonce, nPlotterId, generateTo, fCheckBind, Params().GetConsensus());
+        uint64_t deadline = poc::AddNonce(bestDeadline, *pindexMining, nNonce, nPlotterId, generateTo, fCheckBind, Params().GetConsensus());
         result.pushKV("result", "success");
         result.pushKV("deadline", deadline);
         result.pushKV("height", pindexMining->nHeight + 1);
@@ -136,10 +133,10 @@ static UniValue addSignPrivkey(const JSONRPCRequest& request)
         );
     }
 
-    std::string address;
-    if (!poc::AddMiningSignaturePrivkey(request.params[0].get_str(), &address))
+    CTxDestination dest = poc::AddMiningSignaturePrivkey(DecodeSecret(request.params[0].get_str()));
+    if (!IsValidDestination(dest))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
-    return address;
+    return EncodeDestination(dest);
 }
 
 static UniValue listSignAddresses(const JSONRPCRequest& request)
@@ -154,8 +151,8 @@ static UniValue listSignAddresses(const JSONRPCRequest& request)
     }
 
     UniValue addresses(UniValue::VARR);
-    for (const std::string &address : poc::GetMiningSignatureAddresses()) {
-        addresses.push_back(address);
+    for (const CTxDestination &dest : poc::GetMiningSignatureAddresses()) {
+        addresses.push_back(EncodeDestination(dest));
     }
 
     return addresses;
@@ -191,7 +188,7 @@ static UniValue getNewPlotter(const JSONRPCRequest& request)
         );
     }
 
-    std::string passphrase = poc::generatePassPhrase();
+    std::string passphrase = poc::generatePassphrase();
     uint64_t plotterID = PocLegacy::GeneratePlotterId(passphrase);
 
     UniValue result(UniValue::VOBJ);
@@ -200,17 +197,17 @@ static UniValue getNewPlotter(const JSONRPCRequest& request)
     return result;
 }
 
-}}
-
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)                  argNames
-  //  --------------------- ------------------------  -----------------------           ----------
-    { "hidden",             "getMiningInfo",          &poc::rpc::getMiningInfo,         { } },
-    { "hidden",             "submitNonce",            &poc::rpc::submitNonce,           { "nonce", "plotterId", "height", "address", "checkBind" } },
-    { "poc",                "addsignprivkey",         &poc::rpc::addSignPrivkey,        { "privkey" } },
-    { "poc",                "listsignaddresses",      &poc::rpc::listSignAddresses,     { } },
-    { "poc",                "getplotterid",           &poc::rpc::getPlotterId,          { "passPhrase" } },
-    { "poc",                "getnewplotter",          &poc::rpc::getNewPlotter,         { } },
+  //  --------------------- ------------------------  ----------------------  ----------
+    { "poc",                "addsignprivkey",         &addSignPrivkey,        { "privkey" } },
+    { "poc",                "listsignaddresses",      &listSignAddresses,     { } },
+    { "poc",                "getplotterid",           &getPlotterId,          { "passPhrase" } },
+    { "poc",                "getnewplotter",          &getNewPlotter,         { } },
+
+    //! Burst mining compatible
+    { "hidden",             "getMiningInfo",          &getMiningInfo,         { } },
+    { "hidden",             "submitNonce",            &submitNonce,           { "nonce", "plotterId", "height", "address", "checkBind" } },
 };
 
 void RegisterPoCRPCCommands(CRPCTable &t)

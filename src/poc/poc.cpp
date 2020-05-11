@@ -1,26 +1,28 @@
-// Copyright (c) 2017-2018 The BitcoinHD Core developers
+// Copyright (c) 2017-2020 The BitcoinHD Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <poc/poc.h>
-#include <base58.h>
 #include <chainparams.h>
 #include <compat/endian.h>
 #include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <crypto/shabal256.h>
+#include <key_io.h>
+#include <logging.h>
 #include <miner.h>
 #include <rpc/protocol.h>
+#include <rpc/request.h>
+#include <threadinterrupt.h>
+#include <timedata.h>
 #include <ui_interface.h>
-#include <util.h>
-#include <utiltime.h>
+#include <util/time.h>
+#include <util/validation.h>
 #include <validation.h>
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif
-#include <timedata.h>
-#include <threadinterrupt.h>
 
 #include <cinttypes>
 #include <cmath>
@@ -47,16 +49,14 @@ struct GeneratorState {
     GeneratorState() : best(poc::INVALID_DEADLINE) { }
 };
 typedef std::unordered_map<uint64_t, GeneratorState> Generators; // Generation low 64bits -> GeneratorState
-Generators mapGenerators;
+Generators mapGenerators GUARDED_BY(cs_main);
 
 std::shared_ptr<CBlock> CreateBlock(const GeneratorState &generateState)
 {
-    AssertLockHeld(cs_main);
-
     std::unique_ptr<CBlockTemplate> pblocktemplate;
     try {
-        pblocktemplate = BlockAssembler(Params()).CreateNewBlock(GetScriptForDestination(generateState.dest), true,
-            generateState.plotterId, generateState.nonce, generateState.best / chainActive.Tip()->nBaseTarget,
+        pblocktemplate = BlockAssembler(Params()).CreateNewBlock(GetScriptForDestination(generateState.dest),
+            generateState.plotterId, generateState.nonce, generateState.best / ::ChainActive().Tip()->nBaseTarget,
             generateState.privKey);
     } catch (std::exception &e) {
         const char *what = e.what();
@@ -74,14 +74,13 @@ CThreadInterrupt interruptCheckDeadline;
 std::thread threadCheckDeadline;
 void CheckDeadlineThread()
 {
-    RenameThread("bitcoin-checkdeadline");
+    util::ThreadRename("bitcoin-checkdeadline");
     while (!interruptCheckDeadline) {
         if (!interruptCheckDeadline.sleep_for(std::chrono::milliseconds(500)))
             break;
 
         std::shared_ptr<CBlock> pblock;
-        bool fProcessNewBlock = false;
-        bool fReActivateBestChain = false;
+        CBlockIndex *pTrySnatchTip = nullptr;
         {
             LOCK(cs_main);
             if (!mapGenerators.empty()) {
@@ -90,11 +89,10 @@ void CheckDeadlineThread()
                         "Check your computer time or add -maxtimeadjustment=0 \n", GetTimeOffset());
                 }
                 int64_t nAdjustedTime = GetAdjustedTime();
-                CBlockIndex *pindexTip = chainActive.Tip();
-                auto it = mapGenerators.cbegin();
-                while (it != mapGenerators.cend() && !pblock) {
+                CBlockIndex *pindexTip = ::ChainActive().Tip();
+                for (auto it = mapGenerators.cbegin(); it != mapGenerators.cend() && pblock == nullptr; ) {
                     if (pindexTip->GetNextGenerationSignature().GetUint64(0) == it->first) {
-                        // Current round
+                        //! Current round
                         uint64_t deadline = it->second.best / pindexTip->nBaseTarget;
                         if (nAdjustedTime + 1 >= (int64_t)pindexTip->nTime + (int64_t)deadline) {
                             // Forge
@@ -106,15 +104,13 @@ void CheckDeadlineThread()
                                     it->second.height, it->second.nonce, it->second.plotterId, deadline);
                             } else {
                                 LogPrint(BCLog::POC, "Created block: hash=%s, time=%d\n", pblock->GetHash().ToString(), pblock->nTime);
-                                fProcessNewBlock = true;
                             }
                         } else {
-                            // Continue wait forge time
                             ++it;
                             continue;
                         }
                     } else if (pindexTip->GetGenerationSignature().GetUint64(0) == it->first) {
-                        // Previous round
+                        //! Previous round
                         // Process future post block (MAX_FUTURE_BLOCK_TIME). My deadline is best (highest chainwork).
                         uint64_t mineDeadline = it->second.best / pindexTip->pprev->nBaseTarget;
                         uint64_t tipDeadline = (uint64_t) (pindexTip->GetBlockTime() - pindexTip->pprev->GetBlockTime() - 1);
@@ -122,41 +118,59 @@ void CheckDeadlineThread()
                             LogPrint(BCLog::POC, "Snatch block: height=%d, nonce=%" PRIu64 ", plotterId=%" PRIu64 ", deadline=%" PRIu64 " <= %" PRIu64 "\n",
                                 it->second.height, it->second.nonce, it->second.plotterId, mineDeadline, tipDeadline);
 
-                            // Invalidate tip block
-                            CValidationState state;
-                            if (!InvalidateBlock(state, Params(), pindexTip)) {
-                                LogPrint(BCLog::POC, "Snatch block fail: invalidate %s got\n\t%s\n", pindexTip->ToString(), state.GetRejectReason());
-                            } else {
-                                fReActivateBestChain = true;
-                                ResetBlockFailureFlags(pindexTip);
-
-                                pblock = CreateBlock(it->second);
-                                if (!pblock) {
-                                    LogPrintf("Snatch block fail: height=%d, nonce=%" PRIu64 ", plotterId=%" PRIu64 ", deadline=%" PRIu64 "\n",
-                                        it->second.height, it->second.nonce, it->second.plotterId, mineDeadline);
-                                } else if (GetBlockProof(*pblock, Params().GetConsensus()) > GetBlockProof(*pindexTip, Params().GetConsensus())) {
-                                    LogPrint(BCLog::POC, "Snatch block success: height=%d, hash=%s\n", it->second.height, pblock->GetHash().ToString());
-                                    fProcessNewBlock = true;
-                                }
-                            }
+                            //! Try snatch block
+                            pTrySnatchTip = pindexTip;
+                            break;
                         }
                     }
 
                     it = mapGenerators.erase(it);
                 }
+
+            } else {
+                continue;
             }
         }
 
-        // Update best. Not hold cs_main
-        if (fReActivateBestChain) {
+        //! Try snatch block
+        if (pTrySnatchTip != nullptr) {
+            assert(pblock == nullptr);
             CValidationState state;
-            ActivateBestChain(state, Params());
-            assert (state.IsValid());
+            if (!InvalidateBlock(state, Params(), pTrySnatchTip)) {
+                LogPrint(BCLog::POC, "Snatch block fail: invalidate %s got\n\t%s\n", pTrySnatchTip->ToString(), state.GetRejectReason());
+            } else {
+                {
+                    LOCK(cs_main);
+                    ResetBlockFailureFlags(pTrySnatchTip);
+
+                    auto itDummyProof = mapGenerators.find(pTrySnatchTip->GetGenerationSignature().GetUint64(0));
+                    if (itDummyProof != mapGenerators.end()) {
+                        pblock = CreateBlock(itDummyProof->second);
+                        if (!pblock) {
+                            LogPrintf("Snatch block fail: height=%d, nonce=%" PRIu64 ", plotterId=%" PRIu64 "\n",
+                                itDummyProof->second.height, itDummyProof->second.nonce, itDummyProof->second.plotterId);
+                        } else if (GetBlockProof(*pblock, Params().GetConsensus()) <= GetBlockProof(*pTrySnatchTip, Params().GetConsensus())) {
+                            //! Lowest chainwork, give up
+                            LogPrintf("Snatch block give up: height=%d, nonce=%" PRIu64 ", plotterId=%" PRIu64 "\n",
+                                itDummyProof->second.height, itDummyProof->second.nonce, itDummyProof->second.plotterId);
+                            pblock.reset();
+                        } else {
+                            LogPrint(BCLog::POC, "Snatch block success: height=%d, hash=%s\n", itDummyProof->second.height, pblock->GetHash().ToString());
+                        }
+                    }
+                    mapGenerators.erase(itDummyProof);
+                }
+
+                //! Reset best
+                if (!ActivateBestChain(state, Params())) {
+                    LogPrintf("Activate best chain fail: %s\n", __func__, FormatStateMessage(state));
+                    assert (false);
+                }
+            }
         }
 
-        // Broadcast. Not hold cs_main
-        if (fProcessNewBlock && !ProcessNewBlock(Params(), pblock, true, nullptr))
-            LogPrintf("Process new block fail %s\n", pblock->ToString());
+        if (pblock && !ProcessNewBlock(Params(), pblock, true, nullptr))
+            LogPrintf("%s: Process new block fail %s\n", __func__, pblock->ToString());
     }
 
     LogPrintf("Exit PoC forge thread\n");
@@ -476,7 +490,7 @@ uint64_t AddNonce(uint64_t& bestDeadline, const CBlockIndex& miningBlockIndex,
         miningBlockIndex.nHeight + 1, nNonce, nPlotterId, calcDeadline);
     bestDeadline = calcDeadline;
     bool fNewBest = false;
-    if (miningBlockIndex.nHeight >= chainActive.Height() - 1) {
+    if (miningBlockIndex.nHeight >= ::ChainActive().Height() - 1) {
         // Only tip and previous block
         auto it = mapGenerators.find(miningBlockIndex.GetNextGenerationSignature().GetUint64(0));
         if (it != mapGenerators.end()) {
@@ -497,7 +511,7 @@ uint64_t AddNonce(uint64_t& bestDeadline, const CBlockIndex& miningBlockIndex,
         if (generateTo.empty()) {
             // Update generate address from wallet
         #ifdef ENABLE_WALLET
-            CWalletRef pwallet = vpwallets.empty() ? nullptr : vpwallets[0];
+            auto pwallet = HasWallets() ? GetWallets()[0] : nullptr;
             if (!pwallet)
                 throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Require generate destination address or private key");
             dest = pwallet->GetPrimaryDestination();
@@ -506,12 +520,9 @@ uint64_t AddNonce(uint64_t& bestDeadline, const CBlockIndex& miningBlockIndex,
         #endif
         } else {
             dest = DecodeDestination(generateTo);
-            if (!boost::get<CScriptID>(&dest)) {
+            if (!boost::get<ScriptHash>(&dest)) {
                 // Maybe privkey
-                CBitcoinSecret vchSecret;
-                if (!vchSecret.SetString(generateTo))
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid generate destination address or private key");
-                CKey key = vchSecret.GetKey();
+                CKey key = DecodeSecret(generateTo);
                 if (!key.IsValid()) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid generate destination address or private key");
                 } else {
@@ -519,11 +530,11 @@ uint64_t AddNonce(uint64_t& bestDeadline, const CBlockIndex& miningBlockIndex,
                     // P2SH-Segwit
                     CKeyID keyid = privKey->GetPubKey().GetID();
                     CTxDestination segwit = WitnessV0KeyHash(keyid);
-                    dest = CScriptID(GetScriptForDestination(segwit));
+                    dest = ScriptHash(GetScriptForDestination(segwit));
                 }
             }
         }
-        if (!boost::get<CScriptID>(&dest))
+        if (!boost::get<ScriptHash>(&dest))
             throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid BitcoinHD address");
 
         // Check bind
@@ -531,14 +542,14 @@ uint64_t AddNonce(uint64_t& bestDeadline, const CBlockIndex& miningBlockIndex,
             const CAccountID accountID = ExtractAccountID(dest);
             if (accountID.IsNull())
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD address");
-            if (!pcoinsTip->HaveActiveBindPlotter(accountID, nPlotterId))
+            if (!::ChainstateActive().CoinsTip().HaveActiveBindPlotter(accountID, nPlotterId))
                 throw JSONRPCError(RPC_INVALID_REQUEST,
                     strprintf("%" PRIu64 " with %s not active bind", nPlotterId, EncodeDestination(dest)));
         }
 
         // Update private key for signature. Pre-set
         if (miningBlockIndex.nHeight + 1 >= params.BHDIP007Height) {
-            uint64_t destId = boost::get<CScriptID>(&dest)->GetUint64(0);
+            uint64_t destId = boost::get<ScriptHash>(&dest)->GetUint64(0);
 
             // From cache
             if (!privKey && mapSignaturePrivKeys.count(destId))
@@ -547,7 +558,7 @@ uint64_t AddNonce(uint64_t& bestDeadline, const CBlockIndex& miningBlockIndex,
             // From wallets
         #ifdef ENABLE_WALLET
             if (!privKey) {
-                for (CWalletRef pwallet : vpwallets) {
+                for (auto pwallet : GetWallets()) {
                     CKeyID keyid = GetKeyForDestination(*pwallet, dest);
                     if (!keyid.IsNull()) {
                         CKey key;
@@ -588,7 +599,7 @@ uint64_t AddNonce(uint64_t& bestDeadline, const CBlockIndex& miningBlockIndex,
 CBlockList GetEvalBlocks(int nHeight, bool fAscent, const Consensus::Params& params)
 {
     AssertLockHeld(cs_main);
-    assert(nHeight >= 0 && nHeight <= chainActive.Height());
+    assert(nHeight >= 0 && nHeight <= ::ChainActive().Height());
 
     CBlockList vBlocks;
     int nBeginHeight = std::max(nHeight - params.nCapacityEvalWindow + 1, params.BHDIP001PreMiningEndHeight + 1);
@@ -596,11 +607,11 @@ CBlockList GetEvalBlocks(int nHeight, bool fAscent, const Consensus::Params& par
         vBlocks.reserve(nHeight - nBeginHeight + 1);
         if (fAscent) {
             for (int height = nBeginHeight; height <= nHeight; height++) {
-                vBlocks.push_back(std::cref(*(chainActive[height])));
+                vBlocks.push_back(std::cref(*(::ChainActive()[height])));
             }
         } else {
             for (int height = nHeight; height >= nBeginHeight; height--) {
-                vBlocks.push_back(std::cref(*(chainActive[height])));
+                vBlocks.push_back(std::cref(*(::ChainActive()[height])));
             }
         }
     }
@@ -721,7 +732,7 @@ CAmount EvalMiningRatio(int nMiningHeight, int64_t nNetCapacityTB, const Consens
         if (pRatioStage) *pRatioStage = nStage;
 
         CAmount nStartRatio = RoundPledgeRatio((CAmount) (std::pow(0.666667f, (float) nStage) * params.BHDIP001MiningRatio));
-        CAmount nTargetRatio =  RoundPledgeRatio((CAmount) (std::pow(0.666667f, (float) (nStage + 1)) * params.BHDIP001MiningRatio));
+        CAmount nTargetRatio = RoundPledgeRatio((CAmount) (std::pow(0.666667f, (float) (nStage + 1)) * params.BHDIP001MiningRatio));
         assert (nTargetRatio > ratio_precise && nStartRatio > nTargetRatio);
 
         int64_t nStartCapacityTB = (((int64_t)1) << nStage) * params.BHDIP007MiningRatioStage;
@@ -737,7 +748,7 @@ CAmount GetMiningRatio(int nMiningHeight, const Consensus::Params& params, int* 
     int64_t* pRatioCapacityTB, int *pRatioBeginHeight)
 {
     AssertLockHeld(cs_main);
-    assert(nMiningHeight > 0 && nMiningHeight <= chainActive.Height() + 1);
+    assert(nMiningHeight > 0 && nMiningHeight <= ::ChainActive().Height() + 1);
 
     int64_t nNetCapacityTB = 0;
     if (nMiningHeight <= params.BHDIP007SmoothEndHeight) {
@@ -801,7 +812,7 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const uint
                 nBlockCount++;
 
                 // 1. Multi plotter generate to same wallet (like pool)
-                // 2. Same plotter generate to multi wallets (for decrease pledge)
+                // 2. Same plotter generate to multi wallets (for decrease point)
                 if (block.generatorAccountID == generatorAccountID || block.nPlotterId == nPlotterId) {
                     nMinedCount++;
 
@@ -815,7 +826,7 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const uint
             }
         );
 
-        // Old consensus pledge
+        // Old consensus point
         if (pOldMiningRequireBalance != nullptr && nBlockCount > 0) {
             if (nOldMinedCount == -1) {
                 // Multi mining
@@ -862,40 +873,29 @@ bool CheckProofOfCapacity(const CBlockIndex& prevBlockIndex, const CBlockHeader&
     }
 }
 
-bool AddMiningSignaturePrivkey(const std::string& privkey, std::string* newAddress)
-{
-    CBitcoinSecret vchSecret;
-    if (vchSecret.SetString(privkey)) {
-        CKey key = vchSecret.GetKey();
-        if (key.IsValid()) {
-            // P2SH-Segwit
-            std::shared_ptr<CKey> privKeyPtr = std::make_shared<CKey>(key);
-            CKeyID keyid = privKeyPtr->GetPubKey().GetID();
-            CTxDestination segwit = WitnessV0KeyHash(keyid);
-            CTxDestination dest = CScriptID(GetScriptForDestination(segwit));
-            if (newAddress)
-                *newAddress = EncodeDestination(dest);
-
-            LOCK(cs_main);
-            mapSignaturePrivKeys[boost::get<CScriptID>(&dest)->GetUint64(0)] = privKeyPtr;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-std::vector<std::string> GetMiningSignatureAddresses()
+CTxDestination AddMiningSignaturePrivkey(const CKey& key)
 {
     LOCK(cs_main);
 
-    std::vector<std::string> addresses;
+    std::shared_ptr<CKey> privKeyPtr = std::make_shared<CKey>(key);
+    CKeyID keyid = privKeyPtr->GetPubKey().GetID();
+    CTxDestination segwit = WitnessV0KeyHash(keyid);
+    CTxDestination dest = ScriptHash(GetScriptForDestination(segwit));
+    mapSignaturePrivKeys[boost::get<ScriptHash>(&dest)->GetUint64(0)] = privKeyPtr;
+    return dest;
+}
+
+std::vector<CTxDestination> GetMiningSignatureAddresses()
+{
+    LOCK(cs_main);
+
+    std::vector<CTxDestination> addresses;
     addresses.reserve(mapSignaturePrivKeys.size());
     for (auto it = mapSignaturePrivKeys.cbegin(); it != mapSignaturePrivKeys.cend(); it++) {
         CKeyID keyid = it->second->GetPubKey().GetID();
         CTxDestination segwit = WitnessV0KeyHash(keyid);
-        CTxDestination dest = CScriptID(GetScriptForDestination(segwit));
-        addresses.push_back(EncodeDestination(dest));
+        CTxDestination dest = ScriptHash(GetScriptForDestination(segwit));
+        addresses.push_back(dest);
     }
 
     return addresses;
@@ -915,11 +915,11 @@ bool StartPOC()
         if (gArgs.IsArgSet("-signprivkey")) {
             for (const std::string &privkey : gArgs.GetArgs("-signprivkey")) {
                 std::string strkeyLog = (privkey.size() > 2 ? privkey.substr(0, 2) : privkey) + "**************************************************";
-                std::string address;
-                if (poc::AddMiningSignaturePrivkey(privkey, &address)) {
-                    LogPrintf("Success import mining-sign address %s from `-signprivkey` \"%s\"\n", address, strkeyLog);
+                CTxDestination dest = poc::AddMiningSignaturePrivkey(DecodeSecret(privkey));
+                if (IsValidDestination(dest)) {
+                    LogPrintf("  Success import mining sign key for %s from `-signprivkey` \"%s\"\n", EncodeDestination(dest), strkeyLog);
                 } else {
-                    LogPrintf("Fail import mining-sign private key from `-signprivkey` \"%s\"\n", strkeyLog);
+                    LogPrintf("  Fail import mining sign private key from `-signprivkey` \"%s\"\n", strkeyLog);
                 }
             }
             gArgs.ForceSetArg("-signprivkey", "");
@@ -927,14 +927,14 @@ bool StartPOC()
 
     #ifdef ENABLE_WALLET
         // From current wallet
-        for (CWalletRef pwallet : vpwallets) {
+        for (auto pwallet : GetWallets()) {
             CTxDestination dest = pwallet->GetPrimaryDestination();
             CKeyID keyid = GetKeyForDestination(*pwallet, dest);
             if (!keyid.IsNull()) {
                 std::shared_ptr<CKey> privKey = std::make_shared<CKey>();
                 if (pwallet->GetKey(keyid, *privKey)) {
                     LOCK(cs_main);
-                    mapSignaturePrivKeys[boost::get<CScriptID>(&dest)->GetUint64(0)] = privKey;
+                    mapSignaturePrivKeys[boost::get<ScriptHash>(&dest)->GetUint64(0)] = privKey;
 
                     LogPrintf("Import mining-sign private key from wallet primary address %s\n", EncodeDestination(dest));
                 }

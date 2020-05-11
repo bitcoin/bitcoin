@@ -4,6 +4,8 @@
 
 #include <bech32.h>
 
+#include <assert.h>
+
 namespace
 {
 
@@ -58,11 +60,11 @@ uint32_t PolyMod(const data& v)
 
     // During the course of the loop below, `c` contains the bitpacked coefficients of the
     // polynomial constructed from just the values of v that were processed so far, mod g(x). In
-    // the above example, `c` initially corresponds to 1 mod (x), and after processing 2 inputs of
+    // the above example, `c` initially corresponds to 1 mod g(x), and after processing 2 inputs of
     // v, it corresponds to x^2 + v0*x + v1 mod g(x). As 1 mod g(x) = 1, that is the starting value
     // for `c`.
     uint32_t c = 1;
-    for (auto v_i : v) {
+    for (const auto v_i : v) {
         // We want to update `c` to correspond to a polynomial with one extra term. If the initial
         // value of `c` consists of the coefficients of c(x) = f(x) mod g(x), we modify it to
         // correspond to c'(x) = (f(x) * x + v_i) mod g(x), where v_i is the next input to
@@ -145,11 +147,15 @@ namespace bech32
 
 /** Encode a Bech32 string. */
 std::string Encode(const std::string& hrp, const data& values) {
+    // First ensure that the HRP is all lowercase. BIP-173 requires an encoder
+    // to return a lowercase Bech32 string, but if given an uppercase HRP, the
+    // result will always be invalid.
+    for (const char& c : hrp) assert(c < 'A' || c > 'Z');
     data checksum = CreateChecksum(hrp, values);
     data combined = Cat(values, checksum);
     std::string ret = hrp + '1';
     ret.reserve(ret.size() + combined.size());
-    for (auto c : combined) {
+    for (const auto c : combined) {
         ret += CHARSET[c];
     }
     return ret;
@@ -160,9 +166,9 @@ std::pair<std::string, data> Decode(const std::string& str) {
     bool lower = false, upper = false;
     for (size_t i = 0; i < str.size(); ++i) {
         unsigned char c = str[i];
-        if (c < 33 || c > 126) return {};
         if (c >= 'a' && c <= 'z') lower = true;
-        if (c >= 'A' && c <= 'Z') upper = true;
+        else if (c >= 'A' && c <= 'Z') upper = true;
+        else if (c < 33 || c > 126) return {};
     }
     if (lower && upper) return {};
     size_t pos = str.rfind('1');
@@ -172,7 +178,8 @@ std::pair<std::string, data> Decode(const std::string& str) {
     data values(str.size() - 1 - pos);
     for (size_t i = 0; i < str.size() - 1 - pos; ++i) {
         unsigned char c = str[i + pos + 1];
-        int8_t rev = (c < 33 || c > 126) ? -1 : CHARSET_REV[c];
+        int8_t rev = CHARSET_REV[c];
+
         if (rev == -1) {
             return {};
         }

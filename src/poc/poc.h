@@ -1,15 +1,15 @@
-// Copyright (c) 2017-2018 The BitcoinHD Core developers
+// Copyright (c) 2017-2020 The BitcoinHD Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_POC_POC_H
 #define BITCOIN_POC_POC_H
 
-#include <script/script.h>
-
 #include <amount.h>
 #include <arith_uint256.h>
 #include <primitives/transaction.h>
+#include <script/script.h>
+#include <script/standard.h>
 #include <uint256.h>
 
 #include <stdlib.h>
@@ -22,6 +22,7 @@ class CBlockHeader;
 class CBlock;
 class CBlockIndex;
 class CCoinsViewCache;
+class CKey;
 
 namespace Consensus { struct Params; }
 
@@ -216,19 +217,18 @@ bool CheckProofOfCapacity(const CBlockIndex& prevBlockIndex, const CBlockHeader&
 /**
  * Add private key for mining signature
  *
- * @param privkey       Private key for signing
- * @param newAddress    Private key related P2WSH address
+ * @param key               Private key for signing
  *
- * @return Return false on private key invalid
+ * @return Return P2WSH address
  */
-bool AddMiningSignaturePrivkey(const std::string& privkey, std::string* newAddress = nullptr);
+CTxDestination AddMiningSignaturePrivkey(const CKey& key);
 
 /**
  * Get mining signature addresses
  *
  * @return Imported signature key related P2WSH addresses
  */
-std::vector<std::string> GetMiningSignatureAddresses();
+std::vector<CTxDestination> GetMiningSignatureAddresses();
 
 }
 

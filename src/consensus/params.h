@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,6 @@
 
 #include <amount.h>
 #include <uint256.h>
-
 #include <limits>
 #include <map>
 #include <set>
@@ -19,8 +18,6 @@ namespace Consensus {
 enum DeploymentPos
 {
     DEPLOYMENT_TESTDUMMY,
-    DEPLOYMENT_CSV, // Deployment of BIP68, BIP112, and BIP113.
-    DEPLOYMENT_SEGWIT, // Deployment of BIP141, BIP143, and BIP147.
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
@@ -66,9 +63,9 @@ struct Params {
     int BHDIP001PreMiningEndHeight;
     /** BitcoinHD fund zero height */
     int BHDIP001FundZeroLastHeight;
-    /** BitcoinHD fund royalty for full mortgage. 1000% */
+    /** BitcoinHD fund royalty for full pledge. 1000% */
     int BHDIP001FundRoyaltyForFullMortgage;
-    /** BitcoinHD fund royalty for low mortgage. 1000% */
+    /** BitcoinHD fund royalty for low pledge. 1000% */
     int BHDIP001FundRoyaltyForLowMortgage;
     /** BitcoinHD miner mining ratio per TB */
     CAmount BHDIP001MiningRatio;
@@ -109,17 +106,23 @@ struct Params {
 
     /** Proof of Capacity parameters */
     bool fAllowMinDifficultyBlocks;
+    bool fPowNoRetargeting;
+    int64_t nPowTargetSpacing;
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
 
-    /** Block height at which BIP16 becomes active */
-    int BIP16Height;
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     /** Block height at which BIP65 becomes active */
     int BIP65Height;
     /** Block height at which BIP66 becomes active */
     int BIP66Height;
+    /** Block height at which CSV (BIP68, BIP112 and BIP113) becomes active */
+    int CSVHeight;
+    /** Block height at which Segwit (BIP141, BIP143 and BIP147) becomes active.
+     * Note that segwit v0 script rules are enforced on all blocks except the
+     * BIP 16 exception blocks. */
+    int SegwitHeight;
 };
 
 // Get target time space

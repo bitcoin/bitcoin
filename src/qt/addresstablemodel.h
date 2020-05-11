@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,13 +8,14 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
-enum OutputType : int;
+enum class OutputType;
 
-class PlatformStyle;
 class AddressTablePriv;
 class WalletModel;
 
-class CWallet;
+namespace interfaces {
+class Wallet;
+}
 
 /**
    Qt model of the address book in the core. This allows views to access and modify the address book.
@@ -24,18 +25,12 @@ class AddressTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit AddressTableModel(const PlatformStyle *platformStyle, CWallet *wallet, WalletModel *parent = 0);
+    explicit AddressTableModel(WalletModel *parent = nullptr);
     ~AddressTableModel();
 
     enum ColumnIndex {
-        Status = 0,     /**< Status */
-        Watchonly = 1,  /**< Watchonly */
-        Label = 2,      /**< User specified label */
-        Address = 3,    /**< BitcoinHD address */
-        Amount = 4,     /**< BitcoinHD amount */
-        LockedAmount = 5, /**< BitcoinHD locked amount */
-        LoanAmount = 6,   /**< BitcoinHD rental loan amount */
-        BorrowAmount = 7,  /**< BitcoinHD  rental borrow amount */
+        Label = 0,   /**< User specified label */
+        Address = 1  /**< Bitcoin address */
     };
 
     enum RoleIndex {
@@ -62,7 +57,7 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
+    QModelIndex index(int row, int column, const QModelIndex &parent) const;
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     Qt::ItemFlags flags(const QModelIndex &index) const;
     /*@}*/
@@ -72,9 +67,11 @@ public:
      */
     QString addRow(const QString &type, const QString &label, const QString &address, const OutputType address_type);
 
-    /* Look up label for address in address book, if not found return empty string.
-     */
+    /** Look up label for address in address book, if not found return empty string. */
     QString labelForAddress(const QString &address) const;
+
+    /** Look up purpose for address in address book, if not found return empty string. */
+    QString purposeForAddress(const QString &address) const;
 
     /* Look up row index of an address in the model.
        Return -1 if not found.
@@ -83,16 +80,21 @@ public:
 
     EditStatus getEditStatus() const { return editStatus; }
 
-    CWallet * getWallet() { return wallet; }
+    OutputType GetDefaultAddressType() const;
+
+    /* Primary address
+     */
+    bool IsPrimaryAddress(const QString &address) const;
+    void SetPrimaryAddress(const QString &address);
 
 private:
-    const PlatformStyle *platformStyle;
-
-    WalletModel *walletModel;
-    CWallet *wallet;
-    AddressTablePriv *priv;
+    WalletModel* const walletModel;
+    AddressTablePriv *priv = nullptr;
     QStringList columns;
-    EditStatus editStatus;
+    EditStatus editStatus = OK;
+
+    /** Look up address book data given an address string. */
+    bool getAddressData(const QString &address, std::string* name, std::string* purpose) const;
 
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
@@ -102,13 +104,9 @@ public Q_SLOTS:
      */
     void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);
 
-    /* Update address list balance
+    /* Primary address changed
      */
-    void updateBalance();
-
-    /* Reload address list
-     */
-    void reload();
+    void primaryAddressChanged();
 
     friend class AddressTablePriv;
 };

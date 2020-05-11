@@ -1,6 +1,5 @@
 # Linearize
-Construct a linear, no-fork, best version of the Bitcoin blockchain. The scripts
-run using Python 3 but are compatible with Python 2.
+Construct a linear, no-fork, best version of the Bitcoin blockchain.
 
 ## Step 1: Download hash list
 
@@ -12,7 +11,7 @@ Required configuration file settings for linearize-hashes:
 
 Optional config file setting for linearize-hashes:
 * RPC: `host`  (Default: `127.0.0.1`)
-* RPC: `port`  (Default: `8732`)
+* RPC: `port`  (Default: `8332`)
 * Blockchain: `min_height`, `max_height`
 * `rev_hash_bytes`: If true, the written block hash list will be
 byte-reversed. (In other words, the hash returned by getblockhash will have its

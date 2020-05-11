@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,32 +10,59 @@
 #include <qt/forms/ui_addressbookpage.h>
 
 #include <qt/addresstablemodel.h>
-#include <qt/bitcoingui.h>
 #include <qt/csvmodelwriter.h>
 #include <qt/editaddressdialog.h>
 #include <qt/guiutil.h>
 #include <qt/platformstyle.h>
 
-#include <base58.h>
-#include <script/standard.h>
-#include <sync.h>
-#include <util.h>
-#include <wallet/wallet.h>
+#include <key_io.h>
 
-#include <QList>
 #include <QIcon>
 #include <QMenu>
-#include <QModelIndex>
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
+
+class AddressBookSortFilterProxyModel final : public QSortFilterProxyModel
+{
+    const QString m_type;
+
+public:
+    AddressBookSortFilterProxyModel(const QString& type, QObject* parent)
+        : QSortFilterProxyModel(parent)
+        , m_type(type)
+    {
+        setDynamicSortFilter(true);
+        setFilterCaseSensitivity(Qt::CaseInsensitive);
+        setSortCaseSensitivity(Qt::CaseInsensitive);
+    }
+
+protected:
+    bool filterAcceptsRow(int row, const QModelIndex& parent) const
+    {
+        auto model = sourceModel();
+        auto label = model->index(row, AddressTableModel::Label, parent);
+
+        if (model->data(label, AddressTableModel::TypeRole).toString() != m_type) {
+            return false;
+        }
+
+        auto address = model->index(row, AddressTableModel::Address, parent);
+
+        if (filterRegExp().indexIn(model->data(address).toString()) < 0 &&
+            filterRegExp().indexIn(model->data(label).toString()) < 0) {
+            return false;
+        }
+
+        return true;
+    }
+};
 
 AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode, Tabs _tab, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddressBookPage),
-    model(0),
+    model(nullptr),
     mode(_mode),
-    tab(_tab),
-    setPrimaryAction(0)
+    tab(_tab)
 {
     ui->setupUi(this);
 
@@ -59,7 +86,7 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
         case SendingTab: setWindowTitle(tr("Choose the address to send coins to")); break;
         case ReceivingTab: setWindowTitle(tr("Choose the address to receive coins with")); break;
         }
-        connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(accept()));
+        connect(ui->tableView, &QTableView::doubleClicked, this, &QDialog::accept);
         ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
         ui->tableView->setFocus();
         ui->closeButton->setText(tr("C&hoose"));
@@ -77,13 +104,13 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     {
     case SendingTab:
         ui->labelExplanation->setText(tr("These are your BitcoinHD addresses for sending payments. Always check the amount and the receiving address before sending coins."));
+        ui->deleteAddress->setVisible(true);
         ui->newAddress->setVisible(true);
-        ui->deleteAddress->setVisible(mode == AddressBookPage::ForEditing);
         break;
     case ReceivingTab:
-        ui->labelExplanation->setText(tr("These are your BitcoinHD addresses for receiving payments."));
+        ui->labelExplanation->setText(tr("These are your BitcoinHD addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses."));
+        ui->deleteAddress->setVisible(false);
         ui->newAddress->setVisible(false);
-        ui->deleteAddress->setVisible(mode == AddressBookPage::ForEditing);
         break;
     }
 
@@ -92,31 +119,30 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     QAction *copyLabelAction = new QAction(tr("Copy &Label"), this);
     QAction *editAction = new QAction(tr("&Edit"), this);
     deleteAction = new QAction(ui->deleteAddress->text(), this);
-    setPrimaryAction = new QAction(tr("Set as &Primary Address"), this);
+    setPrimaryAction = new QAction(tr("Set as &Primary address"), this);
 
     // Build context menu
     contextMenu = new QMenu(this);
     contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
-    if (mode == AddressBookPage::ForEditing) {
-        contextMenu->addAction(editAction);
+    contextMenu->addAction(editAction);
+    if(tab == SendingTab)
         contextMenu->addAction(deleteAction);
-        if (tab == ReceivingTab) {
-            contextMenu->addSeparator();
-            contextMenu->addAction(setPrimaryAction);
-        }
+    contextMenu->addSeparator();
+    if (tab == ReceivingTab) {
+        contextMenu->addAction(setPrimaryAction);
     }
 
     // Connect signals for context menu actions
-    connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(on_copyAddress_clicked()));
-    connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(onCopyLabelAction()));
-    connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
-    connect(deleteAction, SIGNAL(triggered()), this, SLOT(on_deleteAddress_clicked()));
-    connect(setPrimaryAction, SIGNAL(triggered()), this, SLOT(onSetPrimaryAction()));
+    connect(copyAddressAction, &QAction::triggered, this, &AddressBookPage::on_copyAddress_clicked);
+    connect(copyLabelAction, &QAction::triggered, this, &AddressBookPage::onCopyLabelAction);
+    connect(editAction, &QAction::triggered, this, &AddressBookPage::onEditAction);
+    connect(deleteAction, &QAction::triggered, this, &AddressBookPage::on_deleteAddress_clicked);
+    connect(setPrimaryAction, &QAction::triggered, this, &AddressBookPage::onSetPrimaryAction);
 
-    connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
+    connect(ui->tableView, &QWidget::customContextMenuRequested, this, &AddressBookPage::contextualMenu);
 
-    connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(accept()));
+    connect(ui->closeButton, &QPushButton::clicked, this, &QDialog::accept);
 }
 
 AddressBookPage::~AddressBookPage()
@@ -130,77 +156,24 @@ void AddressBookPage::setModel(AddressTableModel *_model)
     if(!_model)
         return;
 
-    proxyModel = new QSortFilterProxyModel(this);
+    auto type = tab == ReceivingTab ? AddressTableModel::Receive : AddressTableModel::Send;
+    proxyModel = new AddressBookSortFilterProxyModel(type, this);
     proxyModel->setSourceModel(_model);
-    proxyModel->setDynamicSortFilter(true);
-    proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-    proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    switch(tab)
-    {
-    case ReceivingTab:
-        // Receive filter
-        proxyModel->setFilterRole(AddressTableModel::TypeRole);
-        proxyModel->setFilterFixedString(AddressTableModel::Receive);
-        break;
-    case SendingTab:
-        // Send filter
-        proxyModel->setFilterRole(AddressTableModel::TypeRole);
-        proxyModel->setFilterFixedString(AddressTableModel::Send);
-        break;
-    }
+
+    connect(ui->searchLineEdit, &QLineEdit::textChanged, proxyModel, &QSortFilterProxyModel::setFilterWildcard);
+
     ui->tableView->setModel(proxyModel);
     ui->tableView->sortByColumn(AddressTableModel::Label, Qt::AscendingOrder);
 
     // Set column widths
-#if QT_VERSION < 0x050000
-    if (tab == ReceivingTab) {
-        ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::Status, QHeaderView::ResizeToContents);
-        ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::Watchonly, QHeaderView::ResizeToContents);
-    } else {
-        ui->tableView->setColumnHidden(AddressTableModel::Status, true);
-        ui->tableView->setColumnHidden(AddressTableModel::Watchonly, true);
-    }
-    ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::Label, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::Address, QHeaderView::ResizeToContents);
-    if (tab == ReceivingTab) {
-        ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::Amount, QHeaderView::ResizeToContents);
-        ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::LockedAmount, QHeaderView::ResizeToContents);
-        ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::LoanAmount, QHeaderView::ResizeToContents);
-        ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::BorrowAmount, QHeaderView::ResizeToContents);
-    } else {
-        ui->tableView->setColumnHidden(AddressTableModel::Amount, true);
-        ui->tableView->setColumnHidden(AddressTableModel::LockedAmount, true);
-        ui->tableView->setColumnHidden(AddressTableModel::LoanAmount, true);
-        ui->tableView->setColumnHidden(AddressTableModel::BorrowAmount, true);
-    }
-#else
-    if (tab == ReceivingTab) {
-        ui->tableView->horizontalHeader()->setSectionResizeMode(AddressTableModel::Status, QHeaderView::ResizeToContents);
-        ui->tableView->horizontalHeader()->setSectionResizeMode(AddressTableModel::Watchonly, QHeaderView::ResizeToContents);
-    } else {
-        ui->tableView->setColumnHidden(AddressTableModel::Status, true);
-        ui->tableView->setColumnHidden(AddressTableModel::Watchonly, true);
-    }
     ui->tableView->horizontalHeader()->setSectionResizeMode(AddressTableModel::Label, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setSectionResizeMode(AddressTableModel::Address, QHeaderView::ResizeToContents);
-    if (tab == ReceivingTab) {
-        ui->tableView->horizontalHeader()->setSectionResizeMode(AddressTableModel::Amount, QHeaderView::ResizeToContents);
-        ui->tableView->horizontalHeader()->setSectionResizeMode(AddressTableModel::LockedAmount, QHeaderView::ResizeToContents);
-        ui->tableView->horizontalHeader()->setSectionResizeMode(AddressTableModel::LoanAmount, QHeaderView::ResizeToContents);
-        ui->tableView->horizontalHeader()->setSectionResizeMode(AddressTableModel::BorrowAmount, QHeaderView::ResizeToContents);
-    } else {
-        ui->tableView->setColumnHidden(AddressTableModel::Amount, true);
-        ui->tableView->setColumnHidden(AddressTableModel::LockedAmount, true);
-        ui->tableView->setColumnHidden(AddressTableModel::LoanAmount, true);
-        ui->tableView->setColumnHidden(AddressTableModel::BorrowAmount, true);
-    }
-#endif
 
-    connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
-        this, SLOT(selectionChanged()));
+    connect(ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged,
+        this, &AddressBookPage::selectionChanged);
 
     // Select row for newly created address
-    connect(_model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewAddress(QModelIndex,int,int)));
+    connect(_model, &AddressTableModel::rowsInserted, this, &AddressBookPage::selectNewAddress);
 
     selectionChanged();
 }
@@ -219,14 +192,8 @@ void AddressBookPage::onSetPrimaryAction()
 {
     QList<QModelIndex> currentIndexes = GUIUtil::getEntryData(ui->tableView, AddressTableModel::Address);
     if (!currentIndexes.isEmpty()) {
-        std::string strAddress = currentIndexes.at(0).data(Qt::EditRole).toString().toStdString();
-        CTxDestination dest = DecodeDestination(strAddress);
-        {
-            LOCK(model->getWallet()->cs_wallet);
-            if (model->getWallet()->SetPrimaryDestination(dest)) {
-                model->reload();
-            }
-        }
+        QString address = currentIndexes.at(0).data(Qt::EditRole).toString();
+        model->SetPrimaryAddress(address);
     }
 }
 
@@ -256,10 +223,11 @@ void AddressBookPage::on_newAddress_clicked()
     if(!model)
         return;
 
-    EditAddressDialog dlg(
-        tab == SendingTab ?
-        EditAddressDialog::NewSendingAddress :
-        EditAddressDialog::NewReceivingAddress, this);
+    if (tab == ReceivingTab) {
+        return;
+    }
+
+    EditAddressDialog dlg(EditAddressDialog::NewSendingAddress, this);
     dlg.setModel(model);
     if(dlg.exec())
     {
@@ -287,27 +255,21 @@ void AddressBookPage::selectionChanged()
     if(!table->selectionModel())
         return;
 
-    QModelIndexList indexes = table->selectionModel()->selectedRows();
-    if(!indexes.isEmpty())
+    if(table->selectionModel()->hasSelection())
     {
         switch(tab)
         {
         case SendingTab:
             // In sending tab, allow deletion of selection
             ui->deleteAddress->setEnabled(true);
+            ui->deleteAddress->setVisible(true);
             deleteAction->setEnabled(true);
             break;
         case ReceivingTab:
             // Deleting receiving addresses, however, is not allowed
-            {
-                LOCK(model->getWallet()->cs_wallet);
-                QModelIndex index = indexes.at(0);
-                std::string strAddress = index.sibling(index.row(), (int)AddressTableModel::Address).data(Qt::EditRole).toString().toStdString();
-                CTxDestination dest = DecodeDestination(strAddress);
-                bool fDontDelete = model->getWallet()->IsPrimaryDestination(dest) || (::IsMine(*model->getWallet(), dest) & ISMINE_SPENDABLE) != 0;
-                ui->deleteAddress->setEnabled(!fDontDelete);
-                deleteAction->setEnabled(!fDontDelete);
-            }
+            ui->deleteAddress->setEnabled(false);
+            ui->deleteAddress->setVisible(false);
+            deleteAction->setEnabled(false);
             break;
         }
         ui->copyAddress->setEnabled(true);
@@ -356,14 +318,8 @@ void AddressBookPage::on_exportButton_clicked()
 
     // name, column, role
     writer.setModel(proxyModel);
-    writer.addColumn("Status", AddressTableModel::Status, Qt::EditRole);
-    writer.addColumn("Watchonly", AddressTableModel::Watchonly, Qt::EditRole);
     writer.addColumn("Label", AddressTableModel::Label, Qt::EditRole);
     writer.addColumn("Address", AddressTableModel::Address, Qt::EditRole);
-    writer.addColumn("Amount", AddressTableModel::Amount, Qt::EditRole);
-    writer.addColumn("Locked amount", AddressTableModel::LockedAmount, Qt::EditRole);
-    writer.addColumn("Loan amount", AddressTableModel::LoanAmount, Qt::EditRole);
-    writer.addColumn("Borrow amount", AddressTableModel::BorrowAmount, Qt::EditRole);
 
     if(!writer.write()) {
         QMessageBox::critical(this, tr("Exporting Failed"),
@@ -374,14 +330,12 @@ void AddressBookPage::on_exportButton_clicked()
 void AddressBookPage::contextualMenu(const QPoint &point)
 {
     QModelIndex index = ui->tableView->indexAt(point);
-    if (index.isValid())
+    if(index.isValid())
     {
         if (setPrimaryAction) {
-            std::string strAddress = index.sibling(index.row(), (int)AddressTableModel::Address).data(Qt::EditRole).toString().toStdString();
-            CTxDestination dest = DecodeDestination(strAddress);
-            setPrimaryAction->setEnabled(!model->getWallet()->IsPrimaryDestination(dest));
+            QString address = index.sibling(index.row(), (int)AddressTableModel::Address).data(Qt::EditRole).toString();
+            setPrimaryAction->setEnabled(!model->IsPrimaryAddress(address));
         }
-
         contextMenu->exec(QCursor::pos());
     }
 }

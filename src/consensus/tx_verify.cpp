@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2017 The Bitcoin Core developers
+// Copyright (c) 2017-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,7 @@
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/script.h>
-#include <utilmoneystr.h>
+#include <util/moneystr.h>
 #include <validation.h>
 
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
@@ -157,61 +157,12 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs)
-{
-    // Basic checks that don't depend on any context
-    if (tx.vin.empty())
-        return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
-    if (tx.vout.empty())
-        return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
-    // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
-
-    // Check for negative or overflow output values
-    CAmount nValueOut = 0;
-    for (const auto& txout : tx.vout)
-    {
-        if (txout.nValue < 0)
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-        if (txout.nValue > MAX_MONEY)
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-        nValueOut += txout.nValue;
-        if (!MoneyRange(nValueOut))
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
-    }
-
-    // Check for duplicate inputs - note that this check is slow so we skip it in CheckBlock
-    if (fCheckDuplicateInputs) {
-        std::set<COutPoint> vInOutPoints;
-        for (const auto& txin : tx.vin)
-        {
-            if (!vInOutPoints.insert(txin.prevout).second)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
-        }
-    }
-
-    if (tx.IsCoinBase())
-    {
-        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
-    }
-    else
-    {
-        for (const auto& txin : tx.vin)
-            if (txin.prevout.IsNull())
-                return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
-    }
-
-    return true;
-}
-
 bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const CCoinsViewCache& prevInputs,
     int nSpendHeight, CAmount& txfee, const CAccountID& generatorAccountID, CheckTxLevel level, const Consensus::Params& params)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent", false,
+        return state.Invalid(ValidationInvalidReason::TX_MISSING_INPUTS, false, REJECT_INVALID, "bad-txns-inputs-missingorspent",
                          strprintf("%s: inputs missing/spent", __func__));
     }
 
@@ -223,32 +174,31 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 
         // If prev is coinbase, check that it's matured
         if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
-            return state.Invalid(false,
-                REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
+            return state.Invalid(ValidationInvalidReason::TX_PREMATURE_SPEND, false, REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
         // Check for negative or overflow input values
         nValueIn += coin.out.nValue;
         if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
         }
 
         // Check special coin spend
         if (coin.extraData && (!tx.IsUniform() || tx.vin.size() != 1 || tx.vout.size() != 1))
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-spend-special-coin");
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-inputvalues-spend-special-coin");
     }
 
     const CAmount value_out = tx.GetValueOut();
     if (nValueIn < value_out) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-in-belowout",
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
     }
 
     // Tally transaction fees
     CAmount txfee_aux = nValueIn - value_out;
     if (!MoneyRange(txfee_aux)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-fee-outofrange");
     }
 
     // Check uniform transaction. Inputs[i] == Outputs[j]
@@ -257,12 +207,12 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         for (unsigned int i = 1; i < tx.vin.size(); ++i) {
             const Coin& coin = inputs.AccessCoin(tx.vin[i].prevout);
             if (coin.out.scriptPubKey != scriptPubKey)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputdest-invaliduniform");
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-inputdest-invaliduniform");
         }
         for (unsigned int i = 0; i < tx.vout.size(); ++i) {
             const CTxOut &out = tx.vout[i];
             if (out.nValue != 0 && out.scriptPubKey != scriptPubKey)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-outputdest-invaliduniform");
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-outputdest-invaliduniform");
         }
     }
 
@@ -272,38 +222,37 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             // Unbind & Withdraw
             const Coin& coin = inputs.AccessCoin(tx.vin[0].prevout);
             if (!coin.extraData && nSpendHeight >= params.BHDIP007Height)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-invaliduniform-unlock");
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-invaliduniform-unlock");
             if (coin.extraData && coin.extraData->type == DATACARRIER_TYPE_BINDPLOTTER) {
                 if (level != CheckTxLevel::Consensus && static_cast<int>(coin.nHeight) == nSpendHeight)
-                    return state.Invalid(false, REJECT_INVALID, "bad-unbindplotter-strict-limit");
+                    return state.Invalid(ValidationInvalidReason::TX_INVALID_BIND, false, REJECT_INVALID, "bad-unbindplotter-strict-limit");
                 if (nSpendHeight < GetUnbindPlotterLimitHeight(CBindPlotterInfo(tx.vin[0].prevout, coin), prevInputs, params))
-                    return state.Invalid(false, REJECT_INVALID, "bad-unbindplotter-limit");
+                    return state.Invalid(ValidationInvalidReason::TX_INVALID_BIND, false, REJECT_INVALID, "bad-unbindplotter-limit");
             }
         } else {
-            // Bind & Rental
-            CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(tx, nSpendHeight);
+            // Bind & Point
+            CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(tx, nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_POINT});
             if (nSpendHeight >= params.BHDIP007Height && !payload)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-invaliduniform-type");
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-invaliduniform-type");
 
             // Bind plotter
             if (payload && payload->type == DATACARRIER_TYPE_BINDPLOTTER && nSpendHeight >= params.BHDIP006LimitBindPlotterHeight) {
                 // Low fee
                 if (txfee_aux < PROTOCOL_BINDPLOTTER_MINFEE)
-                    return state.DoS(100, false, REJECT_INVALID, "bad-bindplotter-lowfee");
+                    return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-bindplotter-lowfee");
 
                 // Limit bind by last
                 const CBindPlotterInfo lastBindInfo = prevInputs.GetLastBindPlotterInfo(BindPlotterPayload::As(payload)->GetId());
                 if (!lastBindInfo.outpoint.IsNull()) {
                     // Forbidden self-packaging change active bind tx
                     if (lastBindInfo.valid && !generatorAccountID.IsNull() && generatorAccountID == ExtractAccountID(tx.vout[0].scriptPubKey))
-                        return state.DoS(100, false, REJECT_INVALID, "bad-bindplotter-selfpackaging");
+                        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-bindplotter-selfpackaging");
 
                     if (nSpendHeight < GetBindPlotterLimitHeight(nSpendHeight, lastBindInfo, params)) {
-                        // Change bind require high transaction fee. Diff reward between full-balance and low-balance.
-                        // 23.75 - 7.5 = 16.25
-                        CAmount diffReward = (GetBlockSubsidy(nSpendHeight, params) * (params.BHDIP001FundRoyaltyForLowMortgage - params.BHDIP001FundRoyaltyForFullMortgage)) / 1000;
+                        // Change bind plotter punishment
+                        CAmount diffReward = GetBindPlotterPunishmentAmount(nSpendHeight, params);
                         if (txfee_aux < diffReward + PROTOCOL_BINDPLOTTER_MINFEE)
-                            return state.Invalid(false, REJECT_INVALID, "bad-bindplotter-limitlowfee");
+                            return state.Invalid(ValidationInvalidReason::TX_INVALID_BIND, false, REJECT_INVALID, "bad-bindplotter-lowpunishment");
 
                         // Only pay small transaction fee to miner. Other fee to black hole
                         txfee_aux -= diffReward;
@@ -339,7 +288,7 @@ int Consensus::GetBindPlotterLimitHeight(int nBindHeight, const CBindPlotterInfo
 
     // Mined block in <EvalWindow>, next block unlimit
     for (int nHeight = nEvalBeginHeight; nHeight <= nEvalEndHeight; nHeight++) {
-        if (chainActive[nHeight]->nPlotterId == lastBindInfo.plotterId)
+        if (::ChainActive()[nHeight]->nPlotterId == lastBindInfo.plotterId)
             return std::max(nHeight, lastBindInfo.nHeight) + 1;
     }
 
@@ -347,7 +296,7 @@ int Consensus::GetBindPlotterLimitHeight(int nBindHeight, const CBindPlotterInfo
     const int nBeginMiningHeight = lastBindInfo.nHeight;
     const int nEndMiningHeight = std::min(lastBindInfo.nHeight + params.nCapacityEvalWindow, nEvalEndHeight);
     for (int nHeight = nBeginMiningHeight; nHeight <= nEndMiningHeight; nHeight++) {
-        if (chainActive[nHeight]->generatorAccountID == lastBindInfo.accountID)
+        if (::ChainActive()[nHeight]->generatorAccountID == lastBindInfo.accountID)
             return lastBindInfo.nHeight + params.nCapacityEvalWindow;
     }
 
@@ -369,7 +318,7 @@ int Consensus::GetUnbindPlotterLimitHeight(const CBindPlotterInfo& bindInfo, con
 
     // 2.5%, Large capacity unlimit
     for (int height = nEvalBeginHeight + 1, nMinedBlockCount = 0; height <= nEvalEndHeight; height++) {
-        if (chainActive[height]->nPlotterId == bindInfo.plotterId) {
+        if (::ChainActive()[height]->nPlotterId == bindInfo.plotterId) {
             if (++nMinedBlockCount > params.nCapacityEvalWindow / 40)
                 return std::max(std::min(height, bindInfo.nHeight + params.nCapacityEvalWindow), bindInfo.nHeight);
         }
@@ -379,7 +328,7 @@ int Consensus::GetUnbindPlotterLimitHeight(const CBindPlotterInfo& bindInfo, con
         //! Issues: Infinitely +<EvalWindow> when mine to any address
         // Delay unbind EvalWindow blocks when mined block
         for (int nHeight = nEvalEndHeight; nHeight > nEvalBeginHeight; nHeight--) {
-            if (chainActive[nHeight]->nPlotterId == bindInfo.plotterId)
+            if (::ChainActive()[nHeight]->nPlotterId == bindInfo.plotterId)
                 return nHeight + params.nCapacityEvalWindow;
         }
     } else if (nSpendHeight < params.BHDIP007Height) {
@@ -394,14 +343,14 @@ int Consensus::GetUnbindPlotterLimitHeight(const CBindPlotterInfo& bindInfo, con
 
         // Last mining in current wallet will lock +<EvalWindow>
         for (int nHeight = nEndMiningHeight; nHeight >= nBeginMiningHeight; nHeight--) {
-            CBlockIndex *pindex = chainActive[nHeight];
+            CBlockIndex *pindex = ::ChainActive()[nHeight];
             if (pindex->generatorAccountID == bindInfo.accountID && pindex->nPlotterId == bindInfo.plotterId)
                 return nHeight + params.nCapacityEvalWindow;
         }
 
         // Participate mining lock <EvalWindow>
         for (int nHeight = nEndMiningHeight; nHeight >= nBeginMiningHeight; nHeight--) {
-            if (chainActive[nHeight]->generatorAccountID == bindInfo.accountID)
+            if (::ChainActive()[nHeight]->generatorAccountID == bindInfo.accountID)
                 return bindInfo.nHeight + params.nCapacityEvalWindow;
         }
     } else {
@@ -415,10 +364,15 @@ int Consensus::GetUnbindPlotterLimitHeight(const CBindPlotterInfo& bindInfo, con
         const int nBeginMiningHeight = bindInfo.nHeight;
         const int nEndMiningHeight = (bindInfo.outpoint == changeBindInfo.outpoint) ? nEvalEndHeight : changeBindInfo.nHeight;
         for (int nHeight = nBeginMiningHeight; nHeight <= nEndMiningHeight; nHeight++) {
-            if (chainActive[nHeight]->generatorAccountID == bindInfo.accountID)
+            if (::ChainActive()[nHeight]->generatorAccountID == bindInfo.accountID)
                 return bindInfo.nHeight + params.nCapacityEvalWindow;
         }
     }
 
     return bindInfo.nHeight + 1;
+}
+
+CAmount Consensus::GetBindPlotterPunishmentAmount(int nBindHeight, const Params& params)
+{
+    return (GetBlockSubsidy(nBindHeight, params) * (params.BHDIP001FundRoyaltyForLowMortgage - params.BHDIP001FundRoyaltyForFullMortgage)) / 1000;
 }

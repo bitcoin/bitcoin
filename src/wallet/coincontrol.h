@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,12 +12,14 @@
 
 #include <boost/optional.hpp>
 
+const int DEFAULT_MIN_DEPTH = 0;
+const int DEFAULT_MAX_DEPTH = 9999999;
 
 /** Coin pick policy */
 enum class CoinPickPolicy {
-    IncludeIfSet = 0,   //! Pick all coin if "destPick" set. Default
-    ExcludeIfSet,       //! Pick all coin but exclude if "destPick" set
-    MoveAllTo,          //! Pick all but exclude "destPick". Only for move to
+    IncludeIfSet = 0,   //! Pick all coin if "m_pick_dest" set. Default
+    ExcludeIfSet,       //! Pick all coin but exclude if "m_pick_dest" set
+    MoveAllTo,          //! Pick all but exclude "m_pick_dest". Only for move to
 };
 
 /** Coin Control Features. */
@@ -26,50 +28,43 @@ class CCoinControl
 public:
     //! Custom change destination, if not set will output to primary destination
     CTxDestination destChange;
-    //! Custom change type, ignored if destChange is set, defaults to g_change_type
-    OutputType change_type;
+    //! Override the default change type if set, ignored if destChange is set
+    boost::optional<OutputType> m_change_type;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;
-    //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
+    //! Includes watch only addresses which are solvable
     bool fAllowWatchOnly;
     //! Override automatic min/max checks on fee, m_feerate must be set if true
     bool fOverrideFeeRate;
-    //! Override the default payTxFee if set
+    //! Override the wallet's m_pay_tx_fee if set
     boost::optional<CFeeRate> m_feerate;
     //! Override the default confirmation target if set
     boost::optional<unsigned int> m_confirm_target;
-    //! Signal BIP-125 replace by fee.
-    bool signalRbf;
+    //! Override the wallet's m_signal_rbf if set
+    boost::optional<bool> m_signal_bip125_rbf;
+    //! Avoid partial use of funds sent to a given address
+    bool m_avoid_partial_spends;
+    //! Forbids inclusion of dirty (previously used) addresses
+    bool m_avoid_address_reuse;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
-    //! Use fixed fee on m_fee_mode=FeeEstimateMode::FIXED
-    CAmount fixedFee;
+    //! Minimum chain depth value for coin availability
+    int m_min_depth = DEFAULT_MIN_DEPTH;
+    //! Maximum chain depth value for coin availability
+    int m_max_depth = DEFAULT_MAX_DEPTH;
+    //! Maximum transaction fee
+    CAmount m_min_txfee;
     //! Coin pick policy
-    CoinPickPolicy coinPickPolicy;
-    //! Custom pick destination, if not set unlimit select
-    CTxDestination destPick;
+    CoinPickPolicy m_coin_pick_policy;
+    //! Custom pick destination.Unlimit select when not set 
+    CTxDestination m_pick_dest;
 
     CCoinControl()
     {
         SetNull();
     }
 
-    void SetNull()
-    {
-        destChange = CNoDestination();
-        change_type = g_change_type;
-        fAllowOtherInputs = false;
-        fAllowWatchOnly = false;
-        setSelected.clear();
-        m_feerate.reset();
-        fOverrideFeeRate = false;
-        m_confirm_target.reset();
-        signalRbf = fWalletRbf;
-        m_fee_mode = FeeEstimateMode::UNSET;
-        fixedFee = 0;
-        coinPickPolicy = CoinPickPolicy::IncludeIfSet;
-        destPick = CNoDestination();
-    }
+    void SetNull();
 
     bool HasSelected() const
     {
