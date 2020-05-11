@@ -1386,6 +1386,14 @@
         <source>The supplied proxy address is invalid.</source>
         <translation>Die eingegebene Proxy-Adresse ist ungültig.</translation>
     </message>
+    <message>
+        <source>Enable &amp;Omni</source>
+        <translation>Aktivieren Omni(&amp;O)</translation>
+    </message>
+    <message>
+        <source>Whether to enable Omni or not.</source>
+        <translation>Aktivieren oder deaktivieren Sie die Omni-Funktion.</translation>
+    </message>
 </context>
 <context>
     <name>OverviewPage</name>

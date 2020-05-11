@@ -47,6 +47,10 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
+#ifdef ENABLE_OMNICORE
+#include <omnicore_api.h>
+#endif
+
 #include <cinttypes>
 #include <future>
 #include <sstream>
@@ -1049,6 +1053,12 @@ bool MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs
 
     GetMainSignals().TransactionAddedToMempool(ptx);
 
+#ifdef ENABLE_OMNICORE
+    if (omnicore_api::Enabled()) {
+        omnicore_api::TryToAddToMarkerCache(ptx);
+    }
+#endif
+
     return true;
 }
 
@@ -1629,12 +1639,14 @@ void CChainState::InvalidBlockFound(CBlockIndex *pindex, const CValidationState 
     }
 }
 
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight)
+static void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight, std::shared_ptr<std::map<COutPoint, Coin>> removedCoins)
 {
     // mark inputs spent
     if (!tx.IsCoinBase()) {
         txundo.vprevout.reserve(tx.vin.size());
         for (const CTxIn &txin : tx.vin) {
+            if (removedCoins)
+                removedCoins->emplace(txin.prevout, inputs.AccessCoin(txin.prevout));
             txundo.vprevout.emplace_back();
             bool is_spent = inputs.SpendCoin(txin.prevout, &txundo.vprevout.back());
             assert(is_spent);
@@ -1647,7 +1659,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
 {
     CTxUndo txundo;
-    UpdateCoins(tx, inputs, txundo, nHeight);
+    UpdateCoins(tx, inputs, txundo, nHeight, nullptr);
 }
 
 bool CScriptCheck::operator()() {
@@ -1845,6 +1857,11 @@ static bool AbortNode(CValidationState& state, const std::string& strMessage, co
 {
     AbortNode(strMessage, userMessage, prefix);
     return state.Error(strMessage);
+}
+
+void DoAbortNode(const std::string& strMessage, const std::string& userMessage)
+{
+    AbortNode(strMessage, userMessage);
 }
 
 /**
@@ -2089,7 +2106,8 @@ static int64_t nBlocksTotal = 0;
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
-                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck)
+                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck,
+                  std::shared_ptr<std::map<COutPoint, Coin>> removedCoins)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2267,7 +2285,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         if (i > 0) {
             blockundo.vtxundo.push_back(CTxUndo());
         }
-        UpdateCoins(tx, mutableView, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
+        UpdateCoins(tx, mutableView, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight, removedCoins);
     }
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
@@ -2608,7 +2626,7 @@ void CChainState::PruneAndFlush() {
     }
 }
 
-static void DoWarning(const std::string& strWarning)
+void DoWarning(const std::string& strWarning)
 {
     static bool fWarned = false;
     SetMiscWarning(strWarning);
@@ -2725,9 +2743,30 @@ bool CChainState::DisconnectTip(CValidationState& state, const CChainParams& cha
     m_chain.SetTip(pindexDelete->pprev);
 
     UpdateTip(pindexDelete->pprev, chainparams);
+
+#ifdef ENABLE_OMNICORE
+    //! Omni Core: begin block disconnect notification
+    if (omnicore_api::Enabled()) {
+        LogPrint(BCLog::HANDLER, "Omni Core handler: block disconnect begin [height: %d, reindex: %d]\n", m_chain.Height(), (int)fReindex);
+        omnicore_api::HandlerDiscBegin(pindexDelete->nHeight);
+    }
+#endif
+
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     GetMainSignals().BlockDisconnected(pblock);
+
+#ifdef ENABLE_OMNICORE
+    if (omnicore_api::Enabled()) {
+        for (const CTransactionRef& ptx : pblock->vtx) {
+            omnicore_api::TryToAddToMarkerCache(ptx);
+        }
+
+        LogPrint(BCLog::HANDLER, "Omni Core handler: block disconnect end [height: %d, reindex: %d]\n", m_chain.Height(), (int)fReindex);
+    }
+    //! Omni Core: end of block disconnect notification
+#endif
+
     return true;
 }
 
@@ -2820,13 +2859,20 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
         pthisBlock = pblock;
     }
     const CBlock& blockConnecting = *pthisBlock;
+    // Map used by Omni to track removals from the UTXO DB for this block.
+    std::shared_ptr<std::map<COutPoint, Coin>> removedCoins;
+#ifdef ENABLE_OMNICORE
+    if (omnicore_api::Enabled()) {
+        removedCoins = std::make_shared<std::map<COutPoint, Coin>>();
+    }
+#endif
     // Apply the block atomically to the chain state.
     int64_t nTime2 = GetTimeMicros(); nTimeReadFromDisk += nTime2 - nTime1;
     int64_t nTime3;
     LogPrint(BCLog::BENCH, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
     {
         CCoinsViewCache view(&CoinsTip());
-        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
+        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, false, removedCoins);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
@@ -2845,6 +2891,15 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
         return false;
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime5 - nTime4) * MILLI, nTimeChainState * MICRO, nTimeChainState * MILLI / nBlocksTotal);
+
+#ifdef ENABLE_OMNICORE
+    //! Omni Core: begin block connect notification
+    if (omnicore_api::Enabled()) {
+        LogPrint(BCLog::HANDLER, "Omni Core handler: block connect begin [height: %d]\n", m_chain.Height());
+        omnicore_api::HandlerBlockBegin(m_chain.Height(), pindexNew);
+    }
+#endif
+
     // Remove conflicting transactions from the mempool.;
     mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
     disconnectpool.removeForBlock(blockConnecting.vtx);
@@ -2855,6 +2910,26 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
     LogPrint(BCLog::BENCH, "  - Connect postprocess: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime5) * MILLI, nTimePostConnect * MICRO, nTimePostConnect * MILLI / nBlocksTotal);
     LogPrint(BCLog::BENCH, "- Connect block: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime1) * MILLI, nTimeTotal * MICRO, nTimeTotal * MILLI / nBlocksTotal);
+
+#ifdef ENABLE_OMNICORE
+    if (omnicore_api::Enabled()) {
+        //! Omni Core: transaction position within the block
+        unsigned int nTxIdx = 0;
+
+        //! Omni Core: number of meta transactions found
+        unsigned int nNumMetaTxs = 0;
+
+        for (size_t i = 0; i < blockConnecting.vtx.size(); i++) {
+            //! Omni Core: new confirmed transaction notification
+            LogPrint(BCLog::HANDLER, "Omni Core handler: new confirmed transaction [height: %d, idx: %u]\n", pindexNew->nHeight, nTxIdx);
+            if (omnicore_api::HandlerTx(*blockConnecting.vtx[i], pindexNew->nHeight, nTxIdx++, pindexNew, removedCoins)) ++nNumMetaTxs;
+        }
+
+        //! Omni Core: end of block connect notification
+        LogPrint(BCLog::HANDLER, "Omni Core handler: block connect end [new height: %d, found: %u txs]\n", pindexNew->nHeight, nNumMetaTxs);
+        omnicore_api::HandlerBlockEnd(pindexNew->nHeight, pindexNew, nNumMetaTxs);
+    }
+#endif
 
     connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
     return true;
@@ -3117,6 +3192,16 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
                 for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
                     assert(trace.pblock && trace.pindex);
                     GetMainSignals().BlockConnected(trace.pblock, trace.pindex, trace.conflictedTxs);
+#ifdef ENABLE_OMNICORE
+                    if (omnicore_api::Enabled()) {
+                        for (const CTransactionRef& ptx : *trace.conflictedTxs) {
+                            omnicore_api::RemoveFromMarkerCache(ptx->GetHash());
+                        }
+                        for (size_t i = 0; i < trace.pblock->vtx.size(); i++) {
+                            omnicore_api::RemoveFromMarkerCache(trace.pblock->vtx[i]->GetHash());
+                        }
+                    }
+#endif
                 }
             } while (!m_chain.Tip() || (starting_tip && CBlockIndexWorkComparator()(m_chain.Tip(), starting_tip)));
             if (!blocks_connected) return true;

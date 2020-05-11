@@ -57,4 +57,7 @@ static const int SIGN_VERSION = 80023;
 //! BHDIP 008, 3 minutes, 2 MiB, full pledge subsidy
 static const int BLOCKINTERVAL180_VERSION = 80024;
 
+//! Omnicore protocal support
+static const int SUBCHAIN_OMNICORE_VERSION = 80025;
+
 #endif // BITCOIN_VERSION_H

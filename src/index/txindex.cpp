@@ -288,3 +288,13 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
     block_hash = header.GetHash();
     return true;
 }
+
+int TxIndex::ReadTxPos(const uint256& txid) const
+{
+    CDiskTxPos postx;
+    if (m_db->ReadTxPos(txid, postx)) {
+        return postx.nTxOffset;
+    }
+
+    return 0;
+}

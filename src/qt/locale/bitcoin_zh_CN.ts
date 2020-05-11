@@ -1418,6 +1418,14 @@
         <source>The supplied proxy address is invalid.</source>
         <translation>提供的代理服务器地址无效。</translation>
     </message>
+    <message>
+        <source>Enable &amp;Omni</source>
+        <translation>启用 Omni(&amp;O)</translation>
+    </message>
+    <message>
+        <source>Whether to enable Omni or not.</source>
+        <translation>启用或者关闭 Omni 功能。</translation>
+    </message>
 </context>
 <context>
     <name>OverviewPage</name>

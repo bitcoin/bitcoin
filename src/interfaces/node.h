@@ -5,6 +5,10 @@
 #ifndef BITCOIN_INTERFACES_NODE_H
 #define BITCOIN_INTERFACES_NODE_H
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <addrdb.h>     // For banmap_t
 #include <amount.h>     // For CAmount
 #include <net.h>        // For CConnman::NumConnections
@@ -261,6 +265,20 @@ public:
     //! Register handler for best deadline changed messages.
     using NotifyBestDeadlineChangedFn = std::function<void(int32_t nHeight, uint64_t nPlotterId, uint64_t nNonce, uint64_t nNewDeadline)>;
     virtual std::unique_ptr<Handler> handleNotifyBestDeadlineChanged(NotifyBestDeadlineChangedFn fn) = 0;
+
+#ifdef ENABLE_OMNICORE
+    using OmniStateChangedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleOmniStateChanged(OmniStateChangedFn fn) = 0;
+
+    using OmniPendingChangedFn = std::function<void(bool pending)>;
+    virtual std::unique_ptr<Handler> handleOmniPendingChanged(OmniPendingChangedFn fn) = 0;
+
+    using OmniBalanceChangedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleOmniBalanceChanged(OmniBalanceChangedFn fn) = 0;
+
+    using OmniStateInvalidatedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleOmniStateInvalidated(OmniStateInvalidatedFn fn) = 0;
+#endif
 };
 
 //! Return implementation of Node interface.

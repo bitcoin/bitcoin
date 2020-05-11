@@ -5,6 +5,10 @@
 #ifndef BITCOIN_RPC_REGISTER_H
 #define BITCOIN_RPC_REGISTER_H
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 /** These are in one header file to avoid creating tons of single-function
  * headers for everything under src/rpc/ */
 class CRPCTable;
@@ -22,7 +26,20 @@ void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 /** Register PoC RPC commands */
 void RegisterPoCRPCCommands(CRPCTable &tableRPC);
 
-static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
+#ifdef ENABLE_OMNICORE
+/** Register Omni data retrieval RPC commands */
+void RegisterOmniDataRetrievalRPCCommands(CRPCTable &tableRPC);
+#ifdef ENABLE_WALLET
+/** Register Omni transaction creation RPC commands */
+void RegisterOmniTransactionCreationRPCCommands(CRPCTable &tableRPC);
+#endif
+/** Register Omni payload creation RPC commands */
+void RegisterOmniPayloadCreationRPCCommands(CRPCTable &tableRPC);
+/** Register Omni raw transaction RPC commands */
+void RegisterOmniRawTransactionRPCCommands(CRPCTable &tableRPC);
+#endif
+
+static inline void RegisterAllCoreRPCCommands(CRPCTable &t, bool enableOmni = false)
 {
     RegisterBlockchainRPCCommands(t);
     RegisterNetRPCCommands(t);
@@ -30,6 +47,18 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterMiningRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
     RegisterPoCRPCCommands(t);
+
+#ifdef ENABLE_OMNICORE
+    if (enableOmni) {
+        /* Omni Core RPCs: */
+        RegisterOmniDataRetrievalRPCCommands(t);
+#ifdef ENABLE_WALLET
+        RegisterOmniTransactionCreationRPCCommands(t);
+#endif
+        RegisterOmniPayloadCreationRPCCommands(t);
+        RegisterOmniRawTransactionRPCCommands(t);
+    }
+#endif
 }
 
 #endif // BITCOIN_RPC_REGISTER_H

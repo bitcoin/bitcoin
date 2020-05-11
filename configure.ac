@@ -109,6 +109,12 @@ AC_ARG_ENABLE([wallet],
   [enable_wallet=$enableval],
   [enable_wallet=yes])
 
+AC_ARG_ENABLE([omnicore],
+  [AS_HELP_STRING([--disable-omnicore],
+  [disable omnicore (enabled by default)])],
+  [enable_omnicore=$enableval],
+  [enable_omnicore=yes])
+
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
   [enable UPNP (default is yes if libminiupnpc is found)])],
@@ -1002,6 +1008,7 @@ if test "x$enable_fuzz" = "xyes"; then
   bitcoin_enable_qt_test=no
   bitcoin_enable_qt_dbus=no
   enable_wallet=no
+  enable_omnicore=no
   use_bench=no
   use_upnp=no
   use_zmq=no
@@ -1433,6 +1440,20 @@ else
   AC_MSG_RESULT(no)
 fi
 
+dnl enable omnicore
+AC_MSG_CHECKING([if omnicore should be enabled])
+if test x$enable_omnicore != xno; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_OMNICORE],[1],[Define to 1 to enable omnicore functions])
+  define(_OMNICORE_VERSION_MAJOR, 0)
+  define(_OMNICORE_VERSION_MINOR, 8)
+  define(_OMNICORE_VERSION_PATCH, 1)
+  define(_OMNICORE_VERSION_BUILD, 0)
+  define(_OMNICORE_VERSION_RC, 0)
+else
+  AC_MSG_RESULT(no)
+fi
+
 dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
@@ -1544,6 +1565,7 @@ AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
 AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
 AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
+AM_CONDITIONAL([ENABLE_OMNICORE],[test x$enable_omnicore = xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
 AM_CONDITIONAL([ENABLE_FUZZ],[test x$enable_fuzz = xyes])
 AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
@@ -1584,6 +1606,15 @@ AC_SUBST(BITCOIN_GUI_NAME)
 AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
 AC_SUBST(BITCOIN_WALLET_TOOL_NAME)
+
+AC_DEFINE(OMNICORE_VERSION_MAJOR, _OMNICORE_VERSION_MAJOR, [Omni Core major version])
+AC_DEFINE(OMNICORE_VERSION_MINOR, _OMNICORE_VERSION_MINOR, [Omni Core minor version])
+AC_DEFINE(OMNICORE_VERSION_PATCH, _OMNICORE_VERSION_PATCH, [Omni Core patch version])
+AC_DEFINE(OMNICORE_VERSION_BUILD, _OMNICORE_VERSION_BUILD, [Omni Core build number])
+AC_SUBST(OMNICORE_VERSION_MAJOR, _OMNICORE_VERSION_MAJOR)
+AC_SUBST(OMNICORE_VERSION_MINOR, _OMNICORE_VERSION_MINOR)
+AC_SUBST(OMNICORE_VERSION_PATCH, _OMNICORE_VERSION_PATCH)
+AC_SUBST(OMNICORE_VERSION_BUILD, _OMNICORE_VERSION_BUILD)
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(DEBUG_CPPFLAGS)
@@ -1682,6 +1713,7 @@ esac
 echo
 echo "Options used to compile and link:"
 echo "  with wallet   = $enable_wallet"
+echo "  with omnicore = $enable_omnicore"
 echo "  with gui / qt = $bitcoin_enable_qt"
 if test x$bitcoin_enable_qt != xno; then
     echo "    with bip70  = $enable_bip70"

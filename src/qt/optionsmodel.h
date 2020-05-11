@@ -55,6 +55,7 @@ public:
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
         Listen,                 // bool
+        EnableOmniCore,         // bool
         OptionIDRowCount,
     };
 

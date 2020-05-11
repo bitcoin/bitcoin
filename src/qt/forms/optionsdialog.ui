@@ -226,6 +226,16 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="enableOmniCore">
+            <property name="toolTip">
+             <string>Whether to enable Omni or not.</string>
+            </property>
+            <property name="text">
+             <string>Enable &amp;Omni</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

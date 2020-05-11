@@ -3197,8 +3197,14 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
 
 bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet,
                                 int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign,
-                                int32_t nTxVersion)
+                                int32_t nTxVersion, bool omni, CAmount min_fee)
 {
+#ifndef ENABLE_OMNICORE
+    // Disabled omni
+    assert(!omni);
+    assert(min_fee == 0);
+#endif
+
     if (nTxVersion != 0 && nTxVersion != CTransaction::CURRENT_VERSION && nTxVersion != CTransaction::UNIFORM_VERSION)
         return false;
     if (nTxVersion < 0 || nTxVersion > CTransaction::MAX_STANDARD_VERSION)
@@ -3363,6 +3369,28 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                             return false;
                         }
                     }
+
+#ifdef ENABLE_OMNICORE
+                    if (omni) {
+                        // Omni funded send. If vin amount minus the amount to select is less than the dust
+                        // threshold then add the dust threshold to the amount to select and try again. This
+                        // avoids dropping the "change" output which would otherwise be added to the fee and
+                        // generating an Omni "send to self without change" error.
+                        CAmount nAmount = nValueIn - nValueToSelect;
+                        CAmount nDust = GetDustThreshold(CTxOut(nAmount, scriptChange), discard_rate);
+                        int i = 0; // Stop after 5 iterations
+                        while (nAmount < nDust && ++i < 6) {
+                            nValueToSelect = nValueIn + (nDust - nAmount);
+                            nValueIn = 0;
+                            if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used))
+                            {
+                                strFailReason = _("Insufficient funds").translated;
+                                return false;
+                            }
+                            nAmount = nValueIn - nValueToSelect;
+                        }
+                    }
+#endif
                 } else {
                     bnb_used = false;
                 }
@@ -3413,7 +3441,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     return false;
                 }
 
-                nFeeNeeded = GetMinimumFee(*this, nBytes, coin_control, &feeCalc);
+                nFeeNeeded = std::max(min_fee, GetMinimumFee(*this, nBytes, coin_control, &feeCalc));
                 if (feeCalc.reason == FeeReason::FALLBACK && !m_allow_fallback_fee) {
                     // eventually allow a fallback fee
                     strFailReason = _("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.").translated;
