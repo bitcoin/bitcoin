@@ -29,8 +29,13 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # Check that using non-existent datadir in conf file fails
         conf_file = os.path.join(default_data_dir, "dash.conf")
-        with open(conf_file, 'a', encoding='utf8') as f:
+
+        # datadir needs to be set before [regtest] section
+        conf_file_contents = open(conf_file, encoding='utf8').read()
+        with open(conf_file, 'w', encoding='utf8') as f:
             f.write("datadir=" + new_data_dir + "\n")
+            f.write(conf_file_contents)
+
         self.assert_start_raises_init_error(0, ['-conf='+conf_file], 'Error reading configuration file: specified data directory "' + new_data_dir + '" does not exist.')
 
         # Create the directory and ensure the config file now works

@@ -26,9 +26,11 @@
 #include <exception>
 #include <map>
 #include <memory>
+#include <set>
 #include <stdint.h>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include <boost/signals2/signal.hpp>
@@ -254,6 +256,16 @@ bool OpenDebugLog();
 void ShrinkDebugFile();
 void runCommand(const std::string& strCommand);
 
+/**
+ * Most paths passed as configuration arguments are treated as relative to
+ * the datadir if they are not absolute.
+ *
+ * @param path The path to be conditionally prefixed with datadir.
+ * @param net_specific Forwarded to GetDataDir().
+ * @return The normalized path.
+ */
+fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific = true);
+
 inline bool IsSwitchChar(char c)
 {
 #ifdef WIN32
@@ -266,12 +278,34 @@ inline bool IsSwitchChar(char c)
 class ArgsManager
 {
 protected:
+    friend class ArgsManagerHelper;
+
     mutable CCriticalSection cs_args;
-    std::map<std::string, std::string> mapArgs;
-    std::map<std::string, std::vector<std::string>> mapMultiArgs;
+    std::map<std::string, std::vector<std::string>> m_override_args;
+    std::map<std::string, std::vector<std::string>> m_config_args;
+    std::string m_network;
+    std::set<std::string> m_network_only_args;
+
+    void ReadConfigStream(std::istream& stream);
+
 public:
+    ArgsManager();
+
+    /**
+     * Select the network in use
+     */
+    void SelectConfigNetwork(const std::string& network);
+
     void ParseParameters(int argc, const char*const argv[]);
     void ReadConfigFile(const std::string& confPath);
+
+    /**
+     * Log warnings for options in m_section_only_args when
+     * they are specified in the default section but not overridden
+     * on the command line or in a network-specific section in the
+     * config file.
+     */
+    void WarnForSectionOnlyArgs();
 
     /**
      * Return a vector of strings of the given argument
@@ -288,6 +322,15 @@ public:
      * @return true if the argument has been set
      */
     bool IsArgSet(const std::string& strArg) const;
+
+    /**
+     * Return true if the argument was originally passed as a negated option,
+     * i.e. -nofoo.
+     *
+     * @param strArg Argument to get (e.g. "-foo")
+     * @return true if the argument was passed negated
+     */
+    bool IsArgNegated(const std::string& strArg) const;
 
     /**
      * Return string argument or default value
@@ -337,8 +380,20 @@ public:
     // Forces an arg setting. Called by SoftSetArg() if the arg hasn't already
     // been set. Also called directly in testing.
     void ForceSetArg(const std::string& strArg, const std::string& strValue);
-    void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values);
     void ForceRemoveArg(const std::string& strArg);
+
+    /**
+     * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
+     * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
+     */
+    std::string GetChainName() const;
+
+    /**
+     * Looks for -devnet and returns either "devnet-<name>" or simply "devnet" if no name was specified.
+     * This function should never be called for non-devnets.
+     * @return either "devnet-<name>" or "devnet"; raises runtime error if no -devent was specified.
+     */
+    std::string GetDevNetName() const;
 };
 
 extern ArgsManager gArgs;

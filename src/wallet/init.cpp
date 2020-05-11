@@ -253,63 +253,29 @@ bool WalletInit::Verify()
 
     uiInterface.InitMessage(_("Verifying wallet(s)..."));
 
+    std::vector<std::string> wallet_files = gArgs.GetArgs("-wallet");
+
+    // Parameter interaction code should have thrown an error if -salvagewallet
+    // was enabled with more than wallet file, so the wallet_files size check
+    // here should have no effect.
+    bool salvage_wallet = gArgs.GetBoolArg("-salvagewallet", false) && wallet_files.size() <= 1;
+
     // Keep track of each wallet absolute path to detect duplicates.
     std::set<fs::path> wallet_paths;
 
-    for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        // Do some checking on wallet path. It should be either a:
-        //
-        // 1. Path where a directory can be created.
-        // 2. Path to an existing directory.
-        // 3. Path to a symlink to a directory.
-        // 4. For backwards compatibility, the name of a data file in -walletdir.
-        fs::path wallet_path = fs::absolute(walletFile, GetWalletDir());
-        fs::file_type path_type = fs::symlink_status(wallet_path).type();
-        if (!(path_type == fs::file_not_found || path_type == fs::directory_file ||
-              (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
-              (path_type == fs::regular_file && fs::path(walletFile).filename() == walletFile))) {
-            return InitError(strprintf(
-                _("Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
-                  "database/log.?????????? files can be stored, a location where such a directory could be created, "
-                  "or (for backwards compatibility) the name of an existing data file in -walletdir (%s)"),
-                walletFile, GetWalletDir()));
-        }
+    for (const auto wallet_file : wallet_files) {
+        fs::path wallet_path = fs::absolute(wallet_file, GetWalletDir());
 
         if (!wallet_paths.insert(wallet_path).second) {
-            return InitError(strprintf(_("Error loading wallet %s. Duplicate -wallet filename specified."), walletFile));
+            return InitError(strprintf(_("Error loading wallet %s. Duplicate -wallet filename specified."), wallet_file));
         }
 
-        std::string strError;
-        if (!CWalletDB::VerifyEnvironment(wallet_path, strError)) {
-            return InitError(strError);
-        }
-
-        std::string strWarning;
-        std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(walletFile, CWalletDBWrapper::Create(wallet_path));
-        if (!tempWallet->AutoBackupWallet(wallet_path, strWarning, strError)) {
-            if (!strWarning.empty())
-                InitWarning(strWarning);
-            if (!strError.empty())
-                return InitError(strError);
-        }
-
-        if (gArgs.GetBoolArg("-salvagewallet", false)) {
-            // Recover readable keypairs:
-            CWallet dummyWallet("dummy", CWalletDBWrapper::CreateDummy());
-            std::string backup_filename;
-            if (!CWalletDB::Recover(wallet_path, (void *)&dummyWallet, CWalletDB::RecoverKeysOnlyFilter, backup_filename)) {
-                return false;
-            }
-        }
-
-        bool dbV = CWalletDB::VerifyDatabaseFile(wallet_path, strWarning, strError);
-        if (!strWarning.empty()) {
-            InitWarning(strWarning);
-        }
-        if (!dbV) {
-            InitError(strError);
-            return false;
-        }
+        std::string error_string;
+        std::string warning_string;
+        bool verify_success = CWallet::Verify(wallet_file, salvage_wallet, error_string, warning_string);
+        if (!error_string.empty()) InitError(error_string);
+        if (!warning_string.empty()) InitWarning(warning_string);
+        if (!verify_success) return false;
     }
 
     return true;
@@ -336,8 +302,12 @@ bool WalletInit::Open()
 void WalletInit::Start(CScheduler& scheduler)
 {
     for (CWallet* pwallet : GetWallets()) {
-        pwallet->postInitProcess(scheduler);
+        pwallet->postInitProcess();
     }
+
+    // Run a thread to flush wallet periodically
+    scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
+
     if (!fMasternodeMode && privateSendClient.fEnablePrivateSend) {
         scheduler.scheduleEvery(std::bind(&CPrivateSendClientManager::DoMaintenance, std::ref(privateSendClient),
                                             std::ref(*g_connman)), 1 * 1000);
