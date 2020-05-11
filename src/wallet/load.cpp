@@ -82,7 +82,7 @@ bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& walle
     }
 }
 
-void StartWallets(CScheduler& scheduler)
+void StartWallets(CScheduler& scheduler, const ArgsManager& args)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->postInitProcess();

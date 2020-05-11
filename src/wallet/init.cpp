@@ -9,6 +9,7 @@
 #include <node/context.h>
 #include <node/ui_interface.h>
 #include <outputtype.h>
+#include <util/check.h>
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -16,9 +17,9 @@
 #include <wallet/wallet.h>
 #include <walletinitinterface.h>
 
-class WalletInit : public WalletInitInterface {
+class WalletInit : public WalletInitInterface
+{
 public:
-
     //! Was the wallet component compiled in.
     bool HasWalletSupport() const override {return true;}
 
@@ -112,10 +113,11 @@ bool WalletInit::ParameterInteraction() const
 
 void WalletInit::Construct(NodeContext& node) const
 {
-    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
+    ArgsManager& args = *Assert(node.args);
+    if (args.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
         return;
     }
-    gArgs.SoftSetArg("-wallet", "");
-    node.chain_clients.emplace_back(interfaces::MakeWalletClient(*node.chain, gArgs.GetArgs("-wallet")));
+    args.SoftSetArg("-wallet", "");
+    node.chain_clients.emplace_back(interfaces::MakeWalletClient(*node.chain, args, args.GetArgs("-wallet")));
 }
