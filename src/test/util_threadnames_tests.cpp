@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(util_threadnames_test_rename_threaded)
 
     std::set<std::string> names = RenameEnMasse(100);
 
-    BOOST_CHECK_EQUAL(names.size(), 100);
+    BOOST_CHECK_EQUAL(names.size(), 100U);
 
     // Names "test_thread.[n]" should exist for n = [0, 99]
     for (int i = 0; i < 100; ++i) {

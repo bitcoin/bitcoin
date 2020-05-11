@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(shuffle_stat_test)
     }
     BOOST_CHECK(chi_score > 58.1411); // 99.9999% confidence interval
     BOOST_CHECK(chi_score < 210.275);
-    BOOST_CHECK_EQUAL(sum, 12000);
+    BOOST_CHECK_EQUAL(sum, 12000U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
