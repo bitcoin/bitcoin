@@ -1576,84 +1576,80 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 // Recursively determine the rounds of a given input (How deep is the PrivateSend chain for a given input)
 int CWallet::GetRealOutpointPrivateSendRounds(const COutPoint& outpoint, int nRounds) const
 {
-    static std::map<uint256, CMutableTransaction> mDenomWtxes;
+    LOCK(cs_wallet);
 
-    if(nRounds >= MAX_PRIVATESEND_ROUNDS) {
+    if (nRounds >= MAX_PRIVATESEND_ROUNDS) {
         // there can only be MAX_PRIVATESEND_ROUNDS rounds max
         return MAX_PRIVATESEND_ROUNDS - 1;
     }
 
-    uint256 hash = outpoint.hash;
-    unsigned int nout = outpoint.n;
-
-    // TODO wtx should refer to a CWalletTx object, not a pointer, based on surrounding code
-    const CWalletTx* wtx = GetWalletTx(hash);
-    if(wtx != nullptr)
-    {
-        std::map<uint256, CMutableTransaction>::const_iterator mdwi = mDenomWtxes.find(hash);
-        if (mdwi == mDenomWtxes.end()) {
-            // not known yet, let's add it
-            LogPrint(BCLog::PRIVATESEND, "GetRealOutpointPrivateSendRounds INSERTING %s\n", hash.ToString());
-            mDenomWtxes[hash] = CMutableTransaction(*wtx->tx);
-        } else if(mDenomWtxes[hash].vout[nout].nRounds != -10) {
-            // found and it's not an initial value, just return it
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-
-        // bounds check
-        if (nout >= wtx->tx->vout.size()) {
-            // should never actually hit this
-            LogPrint(BCLog::PRIVATESEND, "GetRealOutpointPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, -4);
-            return -4;
-        }
-
-        if (CPrivateSend::IsCollateralAmount(wtx->tx->vout[nout].nValue)) {
-            mDenomWtxes[hash].vout[nout].nRounds = -3;
-            LogPrint(BCLog::PRIVATESEND, "GetRealOutpointPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-        //make sure the final output is non-denominate
-        if (!CPrivateSend::IsDenominatedAmount(wtx->tx->vout[nout].nValue)) { //NOT DENOM
-            mDenomWtxes[hash].vout[nout].nRounds = -2;
-            LogPrint(BCLog::PRIVATESEND, "GetRealOutpointPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-        bool fAllDenoms = true;
-        for (const auto& out : wtx->tx->vout) {
-            fAllDenoms = fAllDenoms && CPrivateSend::IsDenominatedAmount(out.nValue);
-        }
-
-        // this one is denominated but there is another non-denominated output found in the same tx
-        if (!fAllDenoms) {
-            mDenomWtxes[hash].vout[nout].nRounds = 0;
-            LogPrint(BCLog::PRIVATESEND, "GetRealOutpointPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-        int nShortest = -10; // an initial value, should be no way to get this by calculations
-        bool fDenomFound = false;
-        // only denoms here so let's look up
-        for (const auto& txinNext : wtx->tx->vin) {
-            if (IsMine(txinNext)) {
-                int n = GetRealOutpointPrivateSendRounds(txinNext.prevout, nRounds + 1);
-                // denom found, find the shortest chain or initially assign nShortest with the first found value
-                if(n >= 0 && (n < nShortest || nShortest == -10)) {
-                    nShortest = n;
-                    fDenomFound = true;
-                }
-            }
-        }
-        mDenomWtxes[hash].vout[nout].nRounds = fDenomFound
-                ? (nShortest >= MAX_PRIVATESEND_ROUNDS - 1 ? MAX_PRIVATESEND_ROUNDS : nShortest + 1) // good, we a +1 to the shortest one but only MAX_PRIVATESEND_ROUNDS rounds max allowed
-                : 0;            // too bad, we are the fist one in that chain
-        LogPrint(BCLog::PRIVATESEND, "GetRealOutpointPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-        return mDenomWtxes[hash].vout[nout].nRounds;
+    auto pair = mapOutpointRoundsCache.emplace(outpoint, -10);
+    auto nRoundsRef = &pair.first->second;
+    if (!pair.second) {
+        // we already processed it, just return what we have
+        return *nRoundsRef;
     }
 
-    return nRounds - 1;
+    // TODO wtx should refer to a CWalletTx object, not a pointer, based on surrounding code
+    const CWalletTx* wtx = GetWalletTx(outpoint.hash);
+
+    if (wtx == nullptr || wtx->tx == nullptr) {
+        // no such tx in this wallet
+        *nRoundsRef = -1;
+        LogPrint(BCLog::PRIVATESEND, "%s FAILED    %-70s %3d\n", __func__, outpoint.ToStringShort(), -1);
+        return *nRoundsRef;
+    }
+
+    // bounds check
+    if (outpoint.n >= wtx->tx->vout.size()) {
+        // should never actually hit this
+        *nRoundsRef = -4;
+        LogPrint(BCLog::PRIVATESEND, "%s FAILED    %-70s %3d\n", __func__, outpoint.ToStringShort(), -4);
+        return *nRoundsRef;
+    }
+
+    auto txOutRef = &wtx->tx->vout[outpoint.n];
+
+    if (CPrivateSend::IsCollateralAmount(txOutRef->nValue)) {
+        *nRoundsRef = -3;
+        LogPrint(BCLog::PRIVATESEND, "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
+        return *nRoundsRef;
+    }
+
+    // make sure the final output is non-denominate
+    if (!CPrivateSend::IsDenominatedAmount(txOutRef->nValue)) { //NOT DENOM
+        *nRoundsRef = -2;
+        LogPrint(BCLog::PRIVATESEND, "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
+        return *nRoundsRef;
+    }
+
+    for (const auto& out : wtx->tx->vout) {
+        if (!CPrivateSend::IsDenominatedAmount(out.nValue)) {
+            // this one is denominated but there is another non-denominated output found in the same tx
+            *nRoundsRef = 0;
+            LogPrint(BCLog::PRIVATESEND, "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
+            return *nRoundsRef;
+        }
+    }
+
+    int nShortest = -10; // an initial value, should be no way to get this by calculations
+    bool fDenomFound = false;
+    // only denoms here so let's look up
+    for (const auto& txinNext : wtx->tx->vin) {
+        if (IsMine(txinNext)) {
+            int n = GetRealOutpointPrivateSendRounds(txinNext.prevout, nRounds + 1);
+            // denom found, find the shortest chain or initially assign nShortest with the first found value
+            if(n >= 0 && (n < nShortest || nShortest == -10)) {
+                nShortest = n;
+                fDenomFound = true;
+            }
+        }
+    }
+    *nRoundsRef = fDenomFound
+            ? (nShortest >= MAX_PRIVATESEND_ROUNDS - 1 ? MAX_PRIVATESEND_ROUNDS : nShortest + 1) // good, we a +1 to the shortest one but only MAX_PRIVATESEND_ROUNDS rounds max allowed
+            : 0;            // too bad, we are the fist one in that chain
+    LogPrint(BCLog::PRIVATESEND, "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
+    return *nRoundsRef;
 }
 
 // respect current settings
