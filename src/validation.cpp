@@ -5135,6 +5135,104 @@ bool DumpMempool(const CTxMemPool& pool)
     return true;
 }
 
+static const uint64_t COINSCACHE_DUMP_VERSION = 1;
+
+bool LoadCoinsCache(CCoinsViewCache& coinsCache)
+{
+    int64_t start = GetTimeMicros();
+
+    FILE* filestr = fsbridge::fopen(GetDataDir() / "coinscache.dat", "rb");
+    CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
+    if (file.IsNull()) {
+        LogPrintf("Failed to open coins cache file from disk. Continuing anyway.\n");
+        return false;
+    }
+
+    try {
+        uint64_t version;
+        file >> version;
+        if (version != COINSCACHE_DUMP_VERSION) {
+            return false;
+        }
+
+        uint64_t persisted_size;
+        file >> persisted_size;
+        uint64_t dbcache = gArgs.GetArg("-dbcache", nDefaultDbCache);
+        // If cache was persisted with larger dbcache don't use it
+        if (persisted_size > dbcache) {
+            return false;
+        }
+
+        uint64_t num;
+        file >> num;
+        uint64_t total = num;
+        int64_t last = GetTimeMillis();
+        while (num--) {
+            COutPoint outpoint;
+            file >> outpoint;
+            coinsCache.AccessCoin(outpoint);
+            int64_t now = GetTimeMillis();
+            if ((now-last)*MILLI > 5) {
+                LogPrintf("Warming coins cache: %i%% complete. Run with -persistcoinscache=0 to disable.\n", (int)((total-num)/(double)total * 100));
+                last = now;
+            }
+        }
+
+    } catch (const std::exception& e) {
+        LogPrintf("Failed to deserialize coins cache data on disk: %s. Continuing anyway.\n", e.what());
+        return false;
+    }
+
+    int64_t end = GetTimeMicros();
+    LogPrintf("Imported coins cache from disk: %i utxos added to in-memory cache in %gs\n", coinsCache.GetCacheSize(), (end-start)*MICRO);
+    return true;
+}
+
+bool DumpCoinsCache(const CCoinsViewCache& coinsCache)
+{
+    int64_t start = GetTimeMicros();
+
+    static Mutex dump_mutex;
+    LOCK(dump_mutex);
+
+    try {
+        FILE* filestr = fsbridge::fopen(GetDataDir() / "coinscache.dat.new", "wb");
+        if (!filestr) {
+            return false;
+        }
+
+        CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
+
+        uint64_t version = COINSCACHE_DUMP_VERSION;
+        file << version;
+
+        uint64_t dbcache = gArgs.GetArg("-dbcache", nDefaultDbCache);
+        file << dbcache;
+
+        uint64_t count = 0;
+        const auto& cacheMap = coinsCache.GetCacheMap();
+        for(const auto& imap: cacheMap)
+            if (!imap.second.coin.IsSpent())
+                count++;
+        file << (uint64_t)count;
+
+        for (const auto& imap : cacheMap)
+            if (!imap.second.coin.IsSpent())
+                file << imap.first;
+
+        if (!FileCommit(file.Get()))
+            throw std::runtime_error("FileCommit failed");
+        file.fclose();
+        RenameOver(GetDataDir() / "coinscache.dat.new", GetDataDir() / "coinscache.dat");
+        int64_t end = GetTimeMicros();
+        LogPrintf("Dumped coins cache in %gs\n", (end-start)*MICRO);
+    } catch (const std::exception& e) {
+        LogPrintf("Failed to dump coins cache: %s. Continuing anyway.\n", e.what());
+        return false;
+    }
+    return true;
+}
+
 //! Guess how far we are in the verification process at the given block index
 //! require cs_main if pindex has not been validated yet (because nChainTx might be unset)
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pindex) {

@@ -318,6 +318,9 @@ public:
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
 
+    //! The in memory cache of the coins view
+    const CCoinsMap& GetCacheMap() const { return cacheCoins; };
+
 private:
     /**
      * @note this is marked const, but may actually append to `cacheCoins`, increasing
