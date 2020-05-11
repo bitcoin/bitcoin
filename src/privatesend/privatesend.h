@@ -65,9 +65,8 @@ enum PoolState : int32_t {
     POOL_STATE_ACCEPTING_ENTRIES,
     POOL_STATE_SIGNING,
     POOL_STATE_ERROR,
-    POOL_STATE_SUCCESS,
     POOL_STATE_MIN = POOL_STATE_IDLE,
-    POOL_STATE_MAX = POOL_STATE_SUCCESS
+    POOL_STATE_MAX = POOL_STATE_ERROR
 };
 template<> struct is_serializable_enum<PoolState> : std::true_type {};
 

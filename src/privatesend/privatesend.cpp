@@ -217,8 +217,6 @@ std::string CPrivateSendBaseSession::GetStateString() const
         return "SIGNING";
     case POOL_STATE_ERROR:
         return "ERROR";
-    case POOL_STATE_SUCCESS:
-        return "SUCCESS";
     default:
         return "UNKNOWN";
     }

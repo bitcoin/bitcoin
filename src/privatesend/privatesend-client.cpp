@@ -155,27 +155,7 @@ void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& 
         CPrivateSendStatusUpdate psssup;
         vRecv >> psssup;
 
-        if (psssup.nState < POOL_STATE_MIN || psssup.nState > POOL_STATE_MAX) {
-            LogPrint(BCLog::PRIVATESEND, "DSSTATUSUPDATE -- psssup.nState is out of bounds: %d\n", psssup.nState);
-            return;
-        }
-
-        if (psssup.nStatusUpdate < STATUS_REJECTED || psssup.nStatusUpdate > STATUS_ACCEPTED) {
-            LogPrint(BCLog::PRIVATESEND, "DSSTATUSUPDATE -- psssup.nStatusUpdate is out of bounds: %d\n", psssup.nStatusUpdate);
-            return;
-        }
-
-        if (psssup.nMessageID < MSG_POOL_MIN || psssup.nMessageID > MSG_POOL_MAX) {
-            LogPrint(BCLog::PRIVATESEND, "DSSTATUSUPDATE -- psssup.nMessageID is out of bounds: %d\n", psssup.nMessageID);
-            return;
-        }
-
-        LogPrint(BCLog::PRIVATESEND, "DSSTATUSUPDATE -- psssup.nSessionID %d  psssup.nState: %d  psssup.nStatusUpdate: %d  psssup.nMessageID %d (%s)\n",
-            psssup.nSessionID, psssup.nState, psssup.nStatusUpdate, psssup.nMessageID, CPrivateSend::GetMessageByID(psssup.nMessageID));
-
-        if (!CheckPoolStateUpdate(psssup)) {
-            LogPrint(BCLog::PRIVATESEND, "DSSTATUSUPDATE -- CheckPoolStateUpdate failed\n");
-        }
+        ProcessPoolStateUpdate(psssup);
 
     } else if (strCommand == NetMsgType::DSFINALTX) {
         if (pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
@@ -328,8 +308,6 @@ std::string CPrivateSendClientSession::GetStatus(bool fWaitForBlock)
         return strprintf(_("Found enough users, signing ( waiting %s )"), strSuffix);
     case POOL_STATE_ERROR:
         return _("PrivateSend request incomplete:") + " " + strLastMessage + " " + _("Will retry...");
-    case POOL_STATE_SUCCESS:
-        return _("PrivateSend request complete:") + " " + strLastMessage;
     default:
         return strprintf(_("Unknown state: id = %u"), nState);
     }
@@ -377,56 +355,37 @@ bool CPrivateSendClientManager::GetMixingMasternodesInfo(std::vector<CDeterminis
 }
 
 //
-// Check the mixing progress and send client updates if a Masternode
-//
-void CPrivateSendClientSession::CheckPool()
-{
-    // reset if we're here for 10 seconds
-    if ((nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) && GetTime() - nTimeLastSuccessfulStep >= 10) {
-        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::CheckPool -- timeout, RESETTING\n");
-        UnlockCoins();
-        if (nState == POOL_STATE_ERROR) {
-            keyHolderStorage.ReturnAll();
-        } else {
-            keyHolderStorage.KeepAll();
-        }
-        SetNull();
-    }
-}
-
-//
 // Check session timeouts
 //
 bool CPrivateSendClientSession::CheckTimeout()
 {
     if (fMasternodeMode) return false;
 
-    // catching hanging sessions
-    switch (nState) {
-    case POOL_STATE_ERROR:
-        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::CheckTimeout -- Pool error -- Running CheckPool\n");
-        CheckPool();
-        break;
-    case POOL_STATE_SUCCESS:
-        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::CheckTimeout -- Pool success -- Running CheckPool\n");
-        CheckPool();
-        break;
-    default:
-        break;
+    if (nState == POOL_STATE_IDLE) return false;
+
+    if (nState == POOL_STATE_ERROR) {
+        if (GetTime() - nTimeLastSuccessfulStep >= 10) {
+            // reset after being in POOL_STATE_ERROR for 10 or more seconds
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- resetting session %d\n", __func__, nSessionID);
+            SetNull();
+        }
+        return false;
     }
 
     int nLagTime = 10; // give the server a few extra seconds before resetting.
     int nTimeout = (nState == POOL_STATE_SIGNING) ? PRIVATESEND_SIGNING_TIMEOUT : PRIVATESEND_QUEUE_TIMEOUT;
     bool fTimeout = GetTime() - nTimeLastSuccessfulStep >= nTimeout + nLagTime;
 
-    if (nState == POOL_STATE_IDLE || !fTimeout) return false;
+    if (!fTimeout) return false;
 
-    LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::CheckTimeout -- %s timed out (%ds) -- resetting\n",
-        (nState == POOL_STATE_SIGNING) ? "Signing" : "Session", nTimeout);
+    LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- %s %d timed out (%ds)\n", __func__,
+        (nState == POOL_STATE_SIGNING) ? "Signing at session" : "Session", nSessionID, nTimeout);
+
+    SetState(POOL_STATE_ERROR);
     UnlockCoins();
     keyHolderStorage.ReturnAll();
-    SetNull();
-    SetState(POOL_STATE_ERROR);
+    nTimeLastSuccessfulStep = GetTime();
+    strLastMessage = CPrivateSend::GetMessageByID(ERR_SESSION);
 
     return true;
 }
@@ -509,39 +468,52 @@ bool CPrivateSendClientSession::SendDenominate(const std::vector<std::pair<CTxDS
     return true;
 }
 
-// Incoming message from Masternode updating the progress of mixing
-bool CPrivateSendClientSession::CheckPoolStateUpdate(CPrivateSendStatusUpdate psssup)
+// Process incoming messages from Masternode updating the progress of mixing
+void CPrivateSendClientSession::ProcessPoolStateUpdate(CPrivateSendStatusUpdate psssup)
 {
-    if (fMasternodeMode) return false;
+    if (fMasternodeMode) return;
 
     // do not update state when mixing client state is one of these
-    if (nState == POOL_STATE_IDLE || nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) return false;
+    if (nState == POOL_STATE_IDLE || nState == POOL_STATE_ERROR) return;
 
-    strAutoDenomResult = _("Masternode:") + " " + CPrivateSend::GetMessageByID(psssup.nMessageID);
-
-    // if rejected at any state
-    if (psssup.nStatusUpdate == STATUS_REJECTED) {
-        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::CheckPoolStateUpdate -- entry is rejected by Masternode\n");
-        UnlockCoins();
-        keyHolderStorage.ReturnAll();
-        SetNull();
-        SetState(POOL_STATE_ERROR);
-        strLastMessage = CPrivateSend::GetMessageByID(psssup.nMessageID);
-        return true;
+    if (psssup.nState < POOL_STATE_MIN || psssup.nState > POOL_STATE_MAX) {
+        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- psssup.nState is out of bounds: %d\n", __func__, psssup.nState);
+        return;
     }
 
-    if (psssup.nStatusUpdate == STATUS_ACCEPTED && nState == psssup.nState) {
-        if (psssup.nState == POOL_STATE_QUEUE && nSessionID == 0 && psssup.nSessionID != 0) {
-            // new session id should be set only in POOL_STATE_QUEUE state
-            nSessionID = psssup.nSessionID;
+    if (psssup.nMessageID < MSG_POOL_MIN || psssup.nMessageID > MSG_POOL_MAX) {
+        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- psssup.nMessageID is out of bounds: %d\n", __func__, psssup.nMessageID);
+        return;
+    }
+
+    std::string strMessageTmp = CPrivateSend::GetMessageByID(psssup.nMessageID);
+    strAutoDenomResult = _("Masternode:") + " " + strMessageTmp;
+
+    switch (psssup.nStatusUpdate) {
+        case STATUS_REJECTED: {
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- rejected by Masternode: %s\n", __func__, strMessageTmp);
+            SetState(POOL_STATE_ERROR);
+            UnlockCoins();
+            keyHolderStorage.ReturnAll();
             nTimeLastSuccessfulStep = GetTime();
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::CheckPoolStateUpdate -- set nSessionID to %d\n", nSessionID);
-            return true;
+            strLastMessage = strMessageTmp;
+            break;
+        }
+        case STATUS_ACCEPTED: {
+            if (nState == psssup.nState && psssup.nState == POOL_STATE_QUEUE && nSessionID == 0 && psssup.nSessionID != 0) {
+                // new session id should be set only in POOL_STATE_QUEUE state
+                nSessionID = psssup.nSessionID;
+                nTimeLastSuccessfulStep = GetTime();
+                strMessageTmp += strprintf(" Set nSessionID to %d.", nSessionID);
+            }
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- accepted by Masternode: %s\n", __func__, strMessageTmp);
+            break;
+        }
+        default: {
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- psssup.nStatusUpdate is out of bounds: %d\n", __func__, psssup.nStatusUpdate);
+            break;
         }
     }
-
-    // only situations above are allowed, fail in any other case
-    return false;
 }
 
 //

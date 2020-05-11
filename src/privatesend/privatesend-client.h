@@ -115,13 +115,11 @@ private:
     /// step 2: send denominated inputs and outputs prepared in step 1
     bool SendDenominate(const std::vector<std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, CConnman& connman);
 
-    /// Get Masternode updates about the progress of mixing
-    bool CheckPoolStateUpdate(CPrivateSendStatusUpdate psssup);
+    /// Process Masternode updates about the progress of mixing
+    void ProcessPoolStateUpdate(CPrivateSendStatusUpdate psssup);
     // Set the 'state' value, with some logging and capturing when the state changed
     void SetState(PoolState nStateNew);
 
-    /// Check for process
-    void CheckPool();
     void CompletedTransaction(PoolMessage nMessageID);
 
     /// As a client, check and sign the final transaction
