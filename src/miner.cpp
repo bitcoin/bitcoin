@@ -202,9 +202,9 @@ void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries& testSet)
 bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost) const
 {
     // TODO: switch to weight-based accounting for packages instead of vsize-based accounting.
-    if (nBlockWeight + WITNESS_SCALE_FACTOR * packageSize >= nBlockMaxWeight)
+    if (nBlockWeight + WITNESS_SCALE_FACTOR * packageSize > nBlockMaxWeight)
         return false;
-    if (nBlockSigOpsCost + packageSigOpsCost >= MAX_BLOCK_SIGOPS_COST)
+    if (nBlockSigOpsCost + packageSigOpsCost > MAX_BLOCK_SIGOPS_COST)
         return false;
     return true;
 }
