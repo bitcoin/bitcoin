@@ -71,6 +71,9 @@ fs::path GetDefaultDataDir();
 // The blocks directory is always net specific.
 const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
+#ifdef ENABLE_OMNICORE
+const fs::path GetOmniDataDir();
+#endif
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption();
 /** Tests only */
@@ -117,6 +120,9 @@ enum class OptionsCategory {
     COMMANDS,
     REGISTER_COMMANDS,
     POC,
+#ifdef ENABLE_OMNICORE
+    OMNI,
+#endif
 
     HIDDEN // Always the last option to avoid printing these in the help
 };

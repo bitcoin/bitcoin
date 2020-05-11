@@ -69,6 +69,11 @@ WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, co
         result.tx_point_address_is_mine = ::IsMine(wallet, result.tx_point_address);
     }
 
+    //! for Omni
+    result.available_credit = wtx.GetAvailableCredit(locked_chain);
+    result.hash_block = wtx.GetBlockHash();
+    result.order_pos = wtx.nOrderPos;
+
     return result;
 }
 
@@ -240,13 +245,15 @@ public:
         int& change_pos,
         CAmount& fee,
         std::string& fail_reason,
-        int32_t tx_version) override
+        int32_t tx_version,
+        bool omni,
+        CAmount min_fee) override
     {
         auto locked_chain = m_wallet->chain().lock();
         LOCK(m_wallet->cs_wallet);
         CTransactionRef tx;
         if (!m_wallet->CreateTransaction(*locked_chain, recipients, tx, fee, change_pos,
-                fail_reason, coin_control, sign, tx_version)) {
+                fail_reason, coin_control, sign, tx_version, omni, min_fee)) {
             return {};
         }
         return tx;

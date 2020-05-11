@@ -34,6 +34,9 @@
 /* Define to 1 to enable wallet functions */
 #define ENABLE_WALLET 1
 
+/* Define to 1 to enable omni functions */
+#define ENABLE_OMNICORE 1
+
 /* Define to 1 to enable ZMQ functions */
 #define ENABLE_ZMQ 1
 
@@ -338,6 +341,18 @@
 
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #define LT_OBJDIR ".libs/"
+
+/* Omni Core build number */
+#define OMNICORE_VERSION_BUILD 0
+
+/* Omni Core major version */
+#define OMNICORE_VERSION_MAJOR 0
+
+/* Omni Core minor version */
+#define OMNICORE_VERSION_MINOR 8
+
+/* Omni Core patch version */
+#define OMNICORE_VERSION_PATCH 1
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "https://github.com/btchd/btchd/issues"

@@ -161,7 +161,9 @@ public:
         int& change_pos,
         CAmount& fee,
         std::string& fail_reason,
-        int32_t tx_version = 0) = 0;
+        int32_t tx_version = 0,
+        bool omni = false,
+        CAmount min_fee = 0) = 0;
 
     //! Produce a script signature using a generic signature creator.
     virtual bool produceSignature(const BaseSignatureCreator& creator,
@@ -411,6 +413,11 @@ struct WalletTx
     //! for BitcoinHD point/withdraw tx
     CTxDestination tx_point_address;
     isminetype tx_point_address_is_mine;
+
+    //! for Omni
+    CAmount available_credit;
+    uint256 hash_block;
+    int64_t order_pos; // position in ordered transaction list
 };
 
 //! Updated transaction status.

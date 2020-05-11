@@ -1387,6 +1387,14 @@
         <source>The supplied proxy address is invalid.</source>
         <translation>プロキシアドレスが無効です。</translation>
     </message>
+    <message>
+        <source>Enable &amp;Omni</source>
+        <translation>有効にする Omni(&amp;O)</translation>
+    </message>
+    <message>
+        <source>Whether to enable Omni or not.</source>
+        <translation>Omni 機能を有効または無効にします。</translation>
+    </message>
 </context>
 <context>
     <name>OverviewPage</name>

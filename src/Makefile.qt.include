@@ -290,6 +290,12 @@ BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_BIP70_CPP)
 endif # ENABLE_BIP70
 endif # ENABLE_WALLET
 
+if ENABLE_OMNICORE
+RES_ICONS += qt/res/icons/omni_hourglass.png
+BITCOIN_QT_H += qt/omnicore_qtutils.h
+BITCOIN_QT_BASE_CPP += qt/omnicore_qtutils.cpp
+endif
+
 RES_IMAGES =
 
 RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)

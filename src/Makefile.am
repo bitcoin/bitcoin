@@ -246,6 +246,9 @@ BITCOIN_CORE_H = \
   zmq/zmqpublishnotifier.h \
   zmq/zmqrpc.h
 
+if ENABLE_OMNICORE
+BITCOIN_CORE_H += omnicore_api.h
+endif
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
@@ -315,6 +318,10 @@ libbitcoin_server_a_SOURCES += wallet/init.cpp
 endif
 if !ENABLE_WALLET
 libbitcoin_server_a_SOURCES += dummywallet.cpp
+endif
+
+if ENABLE_OMNICORE
+libbitcoin_server_a_SOURCES += omnicore_api.cpp
 endif
 
 if ENABLE_ZMQ
@@ -742,4 +749,13 @@ endif
 # TODO enable tests
 #if ENABLE_QT_TESTS
 #include Makefile.qttest.include
+#endif
+
+if ENABLE_OMNICORE
+include Makefile.omnicore.include
+endif
+
+# TODO enable tests
+#if ENABLE_TESTS
+#include Makefile.omnitest.include
 #endif

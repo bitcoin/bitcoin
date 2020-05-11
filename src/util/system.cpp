@@ -625,6 +625,11 @@ std::string ArgsManager::GetHelpMessage() const
             case OptionsCategory::POC:
                 usage += HelpMessageGroup("PoC options:");
                 break;
+#ifdef ENABLE_OMNICORE
+            case OptionsCategory::OMNI:
+                usage += HelpMessageGroup("Omni options:");
+                break;
+#endif
             default:
                 break;
         }
@@ -781,6 +786,13 @@ const fs::path &GetDataDir(bool fNetSpecific)
 
     return path;
 }
+
+#ifdef ENABLE_OMNICORE
+const fs::path GetOmniDataDir()
+{
+    return GetDataDir() / "omni";
+}
+#endif
 
 bool CheckDataDirOption()
 {
@@ -1214,6 +1226,10 @@ std::string CopyrightHolders(const std::string& strTemplate)
     std::string strCopyrightHolders;
     // BitcoinHD Core
     strCopyrightHolders += strprintf(strTemplate, strprintf("2017-%i ", COPYRIGHT_YEAR) + strprintf(_(COPYRIGHT_HOLDERS).translated, _(COPYRIGHT_HOLDERS_SUBSTITUTION).translated));
+#ifdef ENABLE_OMNICORE
+    // Omni Core
+    strCopyrightHolders += "\n" + strprintf(strTemplate, std::string("2013-2015 ") + strprintf(_("The %s developers").translated, _("Omni Core").translated));
+#endif
     // Bitcoin Core
     strCopyrightHolders += "\n" + strprintf(strTemplate, std::string("2009-2019 ") + strprintf(_("The %s developers").translated, _("Bitcoin Core").translated));
 

@@ -154,6 +154,14 @@ void OptionsModel::Init(bool resetSettings)
         addOverriddenOption("-lang");
 
     language = settings.value("language").toString();
+
+    // OmniCore
+#ifdef ENABLE_OMNICORE
+    if (!settings.contains("fEnableOmniCore"))
+        settings.setValue("fEnableOmniCore", DEFAULT_OMNICORE);
+    if (!m_node.softSetBoolArg("-omni", settings.value("fEnableOmniCore").toBool()))
+        addOverriddenOption("-omni");
+#endif
 }
 
 /** Helper function to copy contents from one QSettings to another.
@@ -314,6 +322,10 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nThreadsScriptVerif");
         case Listen:
             return settings.value("fListen");
+#ifdef ENABLE_OMNICORE
+        case EnableOmniCore:
+            return settings.value("fEnableOmniCore");
+#endif
         default:
             return QVariant();
         }
@@ -462,6 +474,14 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+#ifdef ENABLE_OMNICORE
+        case EnableOmniCore:
+            if (settings.value("fEnableOmniCore") != value) {
+                settings.setValue("fEnableOmniCore", value);
+                setRestartRequired(true);
+            }
+            break;
+#endif
         default:
             break;
         }

@@ -1,0 +1,7 @@
+#ifndef BITCOIN_OMNICORE_SEEDBLOCKS_H
+#define BITCOIN_OMNICORE_SEEDBLOCKS_H
+
+bool SkipBlock(int nBlock);
+
+
+#endif // BITCOIN_OMNICORE_SEEDBLOCKS_H

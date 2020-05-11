@@ -36,6 +36,10 @@
 #include <util/system.h>
 #include <util/threadnames.h>
 
+#ifdef ENABLE_OMNICORE
+#include <omnicore_api.h>
+#endif
+
 #include <memory>
 
 #include <QApplication>
@@ -419,6 +423,10 @@ int GuiMain(int argc, char* argv[])
 #endif
     SetupEnvironment();
     util::ThreadSetInternalName("main");
+
+#ifdef ENABLE_OMNICORE
+    omnicore_api::EnableQtMode();
+#endif
 
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
 

@@ -119,6 +119,12 @@ public:
 
     /** Post new deadline. */
     ADD_SIGNALS_DECL_WRAPPER(NotifyBestDeadlineChanged, void, int32_t nHeight, uint64_t nPlotterId, uint64_t nNonce, uint64_t nNewDeadline);
+
+    /** For Omni Core. */
+    ADD_SIGNALS_DECL_WRAPPER(OmniStateChanged, void);
+    ADD_SIGNALS_DECL_WRAPPER(OmniPendingChanged, void, bool);
+    ADD_SIGNALS_DECL_WRAPPER(OmniBalanceChanged, void);
+    ADD_SIGNALS_DECL_WRAPPER(OmniStateInvalidated, void);
 };
 
 /** Show warning message **/

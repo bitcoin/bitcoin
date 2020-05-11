@@ -56,6 +56,10 @@
 #include <validationinterface.h>
 #include <walletinitinterface.h>
 
+#ifdef ENABLE_OMNICORE
+#include <omnicore_api.h>
+#endif
+
 #include <stdint.h>
 #include <stdio.h>
 #include <set>
@@ -273,6 +277,10 @@ void Shutdown(InitInterfaces& interfaces)
         client->stop();
     }
 
+#ifdef ENABLE_OMNICORE
+    omnicore_api::Shutdown();
+#endif
+
 #if ENABLE_ZMQ
     if (g_zmq_notification_interface) {
         UnregisterValidationInterface(g_zmq_notification_interface);
@@ -311,6 +319,9 @@ static void HandleSIGTERM(int)
 static void HandleSIGHUP(int)
 {
     LogInstance().m_reopen_file = true;
+#ifdef ENABLE_OMNICORE
+    omnicore_api::ReopenDebugLog();
+#endif
 }
 #else
 static BOOL WINAPI consoleCtrlHandler(DWORD dwCtrlType)
@@ -551,6 +562,40 @@ void SetupServerArgs()
     // BitcoinHD
     gArgs.AddArg("-forcecheckdeadline", strprintf("Force check every block work (default: %u)", DEFAULT_CHECKWORK_ENABLED), ArgsManager::ALLOW_ANY, OptionsCategory::POC);
     gArgs.AddArg("-signprivkey", "Import private key for block signature", ArgsManager::ALLOW_ANY, OptionsCategory::POC);
+
+#ifdef ENABLE_OMNICORE
+    gArgs.AddArg("-omni", strprintf("Enable omnicore (default: %u)", DEFAULT_OMNICORE), ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omnistartclean", "Clear all persistence files on startup; triggers reparsing of Omni transactions (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omnitxcache", "The maximum number of transactions in the input transaction cache (default: 500000)", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omniprogressfrequency", "Time in seconds after which the initial scanning progress is reported (default: 30)", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omniseedblockfilter", "Set skipping of blocks without Omni transactions during initial scan (default: 1)", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omnilogfile", "The path of the log file (default: omnicore.log)", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omnidebug=<category>", "Enable or disable log categories, can be \"all\" or \"none\"", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omniautocommit", "Enable or disable broadcasting of transactions, when creating transactions (default: 1)", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omnioverrideforcedshutdown", "Overwrite shutdown, triggered by an alert (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omnialertallowsender", "Whitelist senders of alerts, can be \"any\")", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omnialertignoresender", "Ignore senders of alerts", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omniactivationignoresender", "Ignore senders of activations", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omniactivationallowsender", "Whitelist senders of activations", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omniuiwalletscope", "Max. transactions to show in trade and transaction history (default: 65535)", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+    gArgs.AddArg("-omnishowblockconsensushash", "Calculate and log the consensus hash for the specified block", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
+#else
+    hidden_args.emplace_back("-omni");
+    hidden_args.emplace_back("-omnistartclean");
+    hidden_args.emplace_back("-omnitxcache");
+    hidden_args.emplace_back("-omniprogressfrequency");
+    hidden_args.emplace_back("-omniseedblockfilter");
+    hidden_args.emplace_back("-omnilogfile");
+    hidden_args.emplace_back("-omnidebug");
+    hidden_args.emplace_back("-omniautocommit");
+    hidden_args.emplace_back("-omnioverrideforcedshutdown");
+    hidden_args.emplace_back("-omnialertallowsender");
+    hidden_args.emplace_back("-omnialertignoresender");
+    hidden_args.emplace_back("-omomniactivationignoresenderni");
+    hidden_args.emplace_back("-omniactivationallowsender");
+    hidden_args.emplace_back("-omniuiwalletscope");
+    hidden_args.emplace_back("-omnishowblockconsensushash");
+#endif
 
 #if HAVE_DECL_DAEMON
     gArgs.AddArg("-daemon", "Run in the background as a daemon and accept commands", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1293,7 +1338,11 @@ bool AppInitMain(InitInterfaces& interfaces)
     /* Register RPC commands regardless of -server setting so they will be
      * available in the GUI RPC console even if external calls are disabled.
      */
+#ifdef ENABLE_OMNICORE
+    RegisterAllCoreRPCCommands(tableRPC, gArgs.GetBoolArg("-omni", DEFAULT_OMNICORE));
+#else
     RegisterAllCoreRPCCommands(tableRPC);
+#endif
     for (const auto& client : interfaces.chain_clients) {
         client->registerRpcs();
     }
@@ -1777,12 +1826,26 @@ bool AppInitMain(InitInterfaces& interfaces)
         GetBlockFilterIndex(filter_type)->Start();
     }
 
+#ifdef ENABLE_OMNICORE
+    // ********************************************************* Step 8.5: load omni core
+    if (gArgs.GetBoolArg("-omni", DEFAULT_OMNICORE)) {
+        uiInterface.InitMessage(_("Parsing Omni Layer transactions...").translated);
+        omnicore_api::Init();
+    }
+#endif
+
     // ********************************************************* Step 9: load wallet
     for (const auto& client : interfaces.chain_clients) {
         if (!client->load()) {
             return false;
         }
     }
+#ifdef ENABLE_OMNICORE
+    // Omni Core code should be initialized and wallet should now be loaded, perform an initial populat$
+    if (omnicore_api::Enabled()) {
+        omnicore_api::CheckWalletUpdate();
+    }
+#endif
 
     // ********************************************************* Step 10: data directory maintenance
 

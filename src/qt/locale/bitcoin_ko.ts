@@ -1290,6 +1290,14 @@
         <source>The supplied proxy address is invalid.</source>
         <translation>지정한 프록시 주소가 잘못되었습니다.</translation>
     </message>
+    <message>
+        <source>Enable &amp;Omni</source>
+        <translation>사용 Omni(&amp;O)</translation>
+    </message>
+    <message>
+        <source>Whether to enable Omni or not.</source>
+        <translation>Omni 기능 활성화 또는 비활성화.</translation>
+    </message>
 </context>
 <context>
     <name>OverviewPage</name>

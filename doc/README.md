@@ -77,6 +77,7 @@ The BitcoinHD repo's [root README](/README.md) contains relevant information on 
 - [Init Scripts (systemd/upstart/openrc)](init.md)
 - [ZMQ](zmq.md)
 - [PSBT support](psbt.md)
+- [Omni support](./omnicore/release-notes.md)
 
 License
 ---------------------

@@ -151,6 +151,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::QT, "qt"},
     {BCLog::LEVELDB, "leveldb"},
     {BCLog::POC, "poc"},
+    {BCLog::HANDLER, "handler"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };
