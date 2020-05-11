@@ -10,6 +10,9 @@
 #include <flatfile.h>
 #include <index/base.h>
 
+/** Interval between compact filter checkpoints. See BIP 157. */
+static constexpr int CFCHECKPT_INTERVAL = 1000;
+
 /**
  * BlockFilterIndex is used to store and retrieve block filters, hashes, and headers for a range of
  * blocks by height. An index is constructed for each supported filter type with its own database
@@ -29,6 +32,9 @@ private:
 
     bool ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& filter) const;
     size_t WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& filter);
+
+    RecursiveMutex m_cs_headers_cache;
+    std::map<uint256, uint256> m_headers_cache GUARDED_BY(m_cs_headers_cache);
 
 protected:
     bool Init() override;
@@ -54,7 +60,7 @@ public:
     bool LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out) const;
 
     /** Get a single filter header by block. */
-    bool LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out) const;
+    bool LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out);
 
     /** Get a range of filters between two heights on a chain. */
     bool LookupFilterRange(int start_height, const CBlockIndex* stop_index,

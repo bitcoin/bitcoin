@@ -31,6 +31,8 @@ constexpr char DB_FILTER_POS = 'P';
 constexpr unsigned int MAX_FLTR_FILE_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for fltr?????.dat files */
 constexpr unsigned int FLTR_FILE_CHUNK_SIZE = 0x100000; // 1 MiB
+/** Maximum size of the cfheaders cache */
+constexpr size_t CF_HEADERS_CACHE_MAX_SZ{2000};
 
 namespace {
 
@@ -387,13 +389,30 @@ bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter&
     return ReadFilterFromDisk(entry.pos, filter_out);
 }
 
-bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out) const
+bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out)
 {
+    {
+        // Check the headers cache
+        LOCK(m_cs_headers_cache);
+        auto header = m_headers_cache.find(block_index->GetBlockHash());
+        if (header != m_headers_cache.end()) {
+            header_out = header->second;
+            return true;
+        }
+    }
+
     DBVal entry;
     if (!LookupOne(*m_db, block_index, entry)) {
         return false;
     }
 
+    if (block_index->nHeight % CFCHECKPT_INTERVAL == 0) {
+        // Add to the headers cache
+        LOCK(m_cs_headers_cache);
+        if (m_headers_cache.size() < CF_HEADERS_CACHE_MAX_SZ) {
+            m_headers_cache.emplace(block_index->GetBlockHash(), entry.header);
+        }
+    }
     header_out = entry.header;
     return true;
 }
