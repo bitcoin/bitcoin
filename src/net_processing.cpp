@@ -1792,6 +1792,7 @@ bool static ProcessHeadersMessage(CNode* pfrom, CConnman* connman, CTxMemPool& m
             MaybePunishNodeForBlock(pfrom->GetId(), state, via_compact_block, "invalid header received");
             return false;
         }
+        connman->m_watchdog->LogHeader(headers);
     }
 
     {

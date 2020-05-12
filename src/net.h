@@ -23,6 +23,7 @@
 #include <sync.h>
 #include <threadinterrupt.h>
 #include <uint256.h>
+#include <watchdog.h>
 
 #include <atomic>
 #include <deque>
@@ -136,6 +137,7 @@ public:
         CClientUIInterface* uiInterface = nullptr;
         NetEventsInterface* m_msgproc = nullptr;
         BanMan* m_banman = nullptr;
+        CWatchdog* m_watchdog = nullptr;
         unsigned int nSendBufferMaxSize = 0;
         unsigned int nReceiveFloodSize = 0;
         uint64_t nMaxOutboundTimeframe = 0;
@@ -163,6 +165,7 @@ public:
         nBestHeight = connOptions.nBestHeight;
         clientInterface = connOptions.uiInterface;
         m_banman = connOptions.m_banman;
+        m_watchdog = connOptions.m_watchdog;
         m_msgproc = connOptions.m_msgproc;
         nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
         nReceiveFloodSize = connOptions.nReceiveFloodSize;
@@ -324,6 +327,9 @@ public:
     int64_t PoissonNextSendInbound(int64_t now, int average_interval_seconds);
 
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
+
+    /* Connection manager watchdog pointer access */
+    CWatchdog* m_watchdog;
 
 private:
     struct ListenSocket {
