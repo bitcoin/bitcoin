@@ -38,6 +38,7 @@ def main():
     )
     parser.add_argument(
         '--par',
+        '-j',
         type=int,
         default=4,
         help='How many targets to merge or execute in parallel.',
