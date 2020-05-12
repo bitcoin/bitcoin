@@ -310,6 +310,8 @@ UniValue importaddress(const JSONRPCRequest& request)
         } else {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
         }
+        // Scan mempool for transactions
+        pwallet->chain().requestMempoolTransactions(*pwallet);
     }
     if (fRescan)
     {
