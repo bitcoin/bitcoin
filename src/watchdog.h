@@ -5,8 +5,13 @@
 #ifndef BITCOIN_WATCHDOG_H
 #define BITCOIN_WATCHDOG_H
 
+#include <chrono>
 #include <primitives/block.h>
 #include <stdint.h>
+
+/* How often to scan for anomalies */
+//TODO: make if configurable
+static constexpr std::chrono::minutes SCAN_ANOMALIES_INTERVAL{60};
 
 class CWatchdog
 {

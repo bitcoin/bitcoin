@@ -1949,5 +1949,9 @@ bool AppInitMain(NodeContext& node)
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL);
 
+    CWatchdog* watchdog = node.watchdog.get();
+    node.scheduler->scheduleEvery([watchdog]{
+            watchdog->ScanAnomalies();
+    }, SCAN_ANOMALIES_INTERVAL);
     return true;
 }
