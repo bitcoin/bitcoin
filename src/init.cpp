@@ -10,6 +10,7 @@
 #include <init.h>
 
 #include <addrman.h>
+#include <altnet.h>
 #include <amount.h>
 #include <banman.h>
 #include <blockfilter.h>
@@ -169,6 +170,8 @@ void Interrupt(NodeContext& node)
     if (g_txindex) {
         g_txindex->Interrupt();
     }
+    if (node.altstack)
+        node.altstack->Interrupt();
     ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Interrupt(); });
 }
 
@@ -213,6 +216,9 @@ void Shutdown(NodeContext& node)
         LOCK2(::cs_main, ::g_cs_orphans);
         node.connman->StopNodes();
     }
+    if (node.altstack) {
+        node.altstack->Stop();
+    }
 
     StopTorControl();
 
@@ -227,6 +233,7 @@ void Shutdown(NodeContext& node)
     node.peer_logic.reset();
     node.connman.reset();
     node.banman.reset();
+    node.altstack.reset();
 
     if (::mempool.IsLoaded() && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(::mempool);
@@ -1378,6 +1385,9 @@ bool AppInitMain(NodeContext& node)
     assert(!node.watchdog);
     node.watchdog = MakeUnique<CWatchdog>();
 
+    assert(!node.altstack);
+    node.altstack = MakeUnique<CAltstack>();
+
     node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, *node.mempool));
     RegisterValidationInterface(node.peer_logic.get());
 
@@ -1933,6 +1943,9 @@ bool AppInitMain(NodeContext& node)
         }
     }
     if (!node.connman->Start(*node.scheduler, connOptions)) {
+        return false;
+    }
+    if (!node.altstack->Start()) {
         return false;
     }
 

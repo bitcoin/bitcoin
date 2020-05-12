@@ -34,9 +34,9 @@ private:
 public:
     CAltstack();
     ~CAltstack();
-    void Start();
+    bool Start();
     void Stop();
     void Interrupt();
-}
+};
 
 #endif // BITCOIN_ALTNET_H
