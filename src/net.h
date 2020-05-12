@@ -77,6 +77,8 @@ static const int MAX_ADDNODE_CONNECTIONS = 8;
 static const int INBOUND_EVICTION_PROTECTION_TIME = 1;
 /** Maximum number of block-relay-only outgoing connections */
 static const int MAX_BLOCKS_ONLY_CONNECTIONS = 2;
+/** Maximum number of feeler connections */
+static const int MAX_FEELER_CONNECTIONS = 1;
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** The maximum number of peer connections to maintain.
