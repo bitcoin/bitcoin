@@ -1612,26 +1612,32 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
     std::vector<CInv> vNotFound;
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
 
-    // Note that if we receive a getdata for a MSG_TX or MSG_WITNESS_TX from a
-    // block-relay-only outbound peer, we will stop processing further getdata
-    // messages from this peer (likely resulting in our peer eventually
-    // disconnecting us).
-    if (pfrom->m_tx_relay != nullptr) {
-        // mempool entries added before this time have likely expired from mapRelay
-        const std::chrono::seconds longlived_mempool_time = GetTime<std::chrono::seconds>() - RELAY_TX_CACHE_TIME;
-        const std::chrono::seconds mempool_req = pfrom->m_tx_relay->m_last_mempool_req.load();
+    // mempool entries added before this time have likely expired from mapRelay
+    const std::chrono::seconds longlived_mempool_time = GetTime<std::chrono::seconds>() - RELAY_TX_CACHE_TIME;
+    // Get last mempool request time
+    const std::chrono::seconds mempool_req = pfrom->m_tx_relay != nullptr ? pfrom->m_tx_relay->m_last_mempool_req.load()
+                                                                          : std::chrono::seconds::min();
 
+    {
         LOCK(cs_main);
 
+        // Process as many TX items from the front of the getdata queue as
+        // possible, since they're common and it's efficient to batch process
+        // them.
         while (it != pfrom->vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX)) {
             if (interruptMsgProc)
                 return;
-            // Don't bother if send buffer is too full to respond anyway
+            // The send buffer provides backpressure. If there's no space in
+            // the buffer, pause processing until the next call.
             if (pfrom->fPauseSend)
                 break;
 
-            const CInv &inv = *it;
-            it++;
+            const CInv &inv = *it++;
+
+            if (pfrom->m_tx_relay == nullptr) {
+                // Ignore GETDATA requests for transactions from blocks-only peers.
+                continue;
+            }
 
             // Send stream from relay memory
             bool push = false;
@@ -1665,18 +1671,16 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
         }
     } // release cs_main
 
+    // Only process one BLOCK item per call, since they're uncommon and can be
+    // expensive to process.
     if (it != pfrom->vRecvGetData.end() && !pfrom->fPauseSend) {
-        const CInv &inv = *it;
+        const CInv &inv = *it++;
         if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_WITNESS_BLOCK) {
-            it++;
             ProcessGetBlockData(pfrom, chainparams, inv, connman);
         }
+        // else: If the first item on the queue is an unknown type, we erase it
+        // and continue processing the queue on the next call.
     }
-
-    // Unknown types in the GetData stay in vRecvGetData and block any future
-    // message from this peer, see vRecvGetData check in ProcessMessages().
-    // Depending on future p2p changes, we might either drop unknown getdata on
-    // the floor or disconnect the peer.
 
     pfrom->vRecvGetData.erase(pfrom->vRecvGetData.begin(), it);
 
