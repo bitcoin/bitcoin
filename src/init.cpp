@@ -1404,12 +1404,12 @@ bool AppInitMain(NodeContext& node)
     
    
     if (!sporkManager.SetSporkAddress(gArgs.GetArg("-sporkaddr", Params().SporkAddress())))
-        return InitError(_("Invalid spork address specified with -sporkaddr").translated);
+        return InitError(Untranslated("Invalid spork address specified with -sporkaddr"));
 
     if (gArgs.IsArgSet("-sporkkey")) // spork priv key
     {
         if (!sporkManager.SetPrivKey(gArgs.GetArg("-sporkkey", "")))
-            return InitError(_("Unable to sign spork message, wrong key?").translated);
+            return InitError(Untranslated("Unable to sign spork message, wrong key?"));
     }
     assert(!node.scheduler);
     node.scheduler = MakeUnique<CScheduler>();
@@ -1982,19 +1982,19 @@ bool AppInitMain(NodeContext& node)
     
 
     if(fLiteMode && fMasternodeMode) {
-        return InitError(_("You can not start a masternode in lite mode.").translated);
+        return InitError(Untranslated("You can not start a masternode in lite mode."));
     }
     if(fMasternodeMode) {
         LogPrintf("MASTERNODE:\n");
         std::string errorMessage = "";
         if(!CheckSpecs(errorMessage)){
-            return InitError(errorMessage);
+            return InitError(Untranslated(errorMessage));
         }
         std::array<char, 128> buffer;
         std::string result;
         std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("pidof syscoind | wc -w", "r"), pclose);
         if (!pipe) {
-           return InitError("popen() failed!");
+           return InitError(Untranslated("popen() failed!"));
         }
         while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
             result += buffer.data();
@@ -2002,19 +2002,19 @@ bool AppInitMain(NodeContext& node)
         int resultInt = 0;
         result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
         if(!result.empty() && !ParseInt32(result, &resultInt))
-            return InitError("Could not parse result from pidof");
+            return InitError(Untranslated("Could not parse result from pidof"));
 
         if(resultInt != 1)   
-            return InitError(_("Ensure you are running this masternode in a Unix OS and that only on syscoind is running...").translated); 
+            return InitError(Untranslated("Ensure you are running this masternode in a Unix OS and that only on syscoind is running...")); 
                          
         std::string strMasterNodePrivKey = gArgs.GetArg("-masternodeprivkey", "");
         if(!strMasterNodePrivKey.empty()) {
             if(!CMessageSigner::GetKeysFromSecret(strMasterNodePrivKey, activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode))
-                return InitError(_("Invalid masternodeprivkey. Please see documentation.").translated);
+                return InitError(Untranslated("Invalid masternodeprivkey. Please see documentation."));
 
             LogPrintf("  pubKeyMasternode: %s\n", EncodeDestination(PKHash(activeMasternode.pubKeyMasternode)));
         } else {
-            return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help.").translated);
+            return InitError(Untranslated("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
         }
     }
 
@@ -2036,7 +2036,7 @@ bool AppInitMain(NodeContext& node)
         uiInterface.InitMessage(_("Loading fulfilled requests cache...").translated);
         CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
         if(!flatdb4.Load(netfulfilledman)) {
-            return InitError(_("Failed to load fulfilled requests cache from").translated + "\n" + (pathDB / strDBName).string());
+            return InitError(Untranslated(strprintf("Failed to load fulfilled requests cache from %s\n", (pathDB / strDBName).string())));
         }
     }  
    if (ShutdownRequested()) {
