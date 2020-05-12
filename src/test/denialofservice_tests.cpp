@@ -151,11 +151,11 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, *m_node.scheduler, *m_node.mempool);
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    constexpr int max_outbound_full_relay = 8;
+    constexpr int max_outbound_full_relay = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS;
     CConnman::Options options;
-    options.nMaxConnections = 125;
+    options.nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
     options.m_max_outbound_full_relay = max_outbound_full_relay;
-    options.nMaxFeeler = 1;
+    options.nMaxFeeler = MAX_FEELER_CONNECTIONS;
 
     connman->Init(options);
     std::vector<CNode *> vNodes;
