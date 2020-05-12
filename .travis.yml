@@ -74,7 +74,6 @@ builddocker: &builddocker
     # no need to run tests again here
     - if [ "$DOCKER_BUILD" = "true" ]; then $DOCKER_RUN_IN_BUILDER ./ci/dash/build_depends.sh && $DOCKER_RUN_IN_BUILDER ./ci/dash/build_src.sh && BUILD_DIR=build-ci/dashcore-$BUILD_TARGET ./ci/dash/build-docker.sh; fi
     - CI_RETRY_EXE="travis_retry"
-    - CI_WAIT="while sleep 500; do echo .; done"
     - CACHE_ERR_MSG="Error! Initial build successful, but not enough time remains to run later build stages and tests. See https://docs.travis-ci.com/user/customizing-the-build#build-timeouts . Please manually re-run this job by using the travis restart button. The next run should not time out because the build cache has been saved."
 before_install:
   - set -o errexit; source ./ci/test/00_setup_env.sh
