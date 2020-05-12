@@ -1609,11 +1609,14 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
 }
 
 //! Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed).
-CTransactionRef static FindTxForGetData(const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds longlived_mempool_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+CTransactionRef static FindTxForGetData(const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds longlived_mempool_time) LOCKS_EXCLUDED(cs_main)
 {
-    // Look up transaction in relay pool
-    auto mi = mapRelay.find(txid);
-    if (mi != mapRelay.end()) return mi->second;
+    {
+        LOCK(cs_main);
+        // Look up transaction in relay pool
+        auto mi = mapRelay.find(txid);
+        if (mi != mapRelay.end()) return mi->second;
+    }
 
     auto txinfo = mempool.info(txid);
     if (txinfo.tx) {
@@ -1642,37 +1645,31 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
     const std::chrono::seconds mempool_req = pfrom->m_tx_relay != nullptr ? pfrom->m_tx_relay->m_last_mempool_req.load()
                                                                           : std::chrono::seconds::min();
 
-    {
-        LOCK(cs_main);
+    // Process as many TX items from the front of the getdata queue as
+    // possible, since they're common and it's efficient to batch process
+    // them.
+    while (it != pfrom->vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX)) {
+        if (interruptMsgProc) return;
+        // The send buffer provides backpressure. If there's no space in
+        // the buffer, pause processing until the next call.
+        if (pfrom->fPauseSend) break;
 
-        // Process as many TX items from the front of the getdata queue as
-        // possible, since they're common and it's efficient to batch process
-        // them.
-        while (it != pfrom->vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX)) {
-            if (interruptMsgProc)
-                return;
-            // The send buffer provides backpressure. If there's no space in
-            // the buffer, pause processing until the next call.
-            if (pfrom->fPauseSend)
-                break;
+        const CInv &inv = *it++;
 
-            const CInv &inv = *it++;
-
-            if (pfrom->m_tx_relay == nullptr) {
-                // Ignore GETDATA requests for transactions from blocks-only peers.
-                continue;
-            }
-
-            CTransactionRef tx = FindTxForGetData(inv.hash, mempool_req, longlived_mempool_time);
-            if (tx) {
-                int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
-                connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
-                mempool.RemoveUnbroadcastTx(inv.hash);
-            } else {
-                vNotFound.push_back(inv);
-            }
+        if (pfrom->m_tx_relay == nullptr) {
+            // Ignore GETDATA requests for transactions from blocks-only peers.
+            continue;
         }
-    } // release cs_main
+
+        CTransactionRef tx = FindTxForGetData(inv.hash, mempool_req, longlived_mempool_time);
+        if (tx) {
+            int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
+            connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
+            mempool.RemoveUnbroadcastTx(inv.hash);
+        } else {
+            vNotFound.push_back(inv);
+        }
+    }
 
     // Only process one BLOCK item per call, since they're uncommon and can be
     // expensive to process.
