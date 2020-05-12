@@ -108,7 +108,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         if(pfrom->nVersion >= GOVERNANCE_FILTER_PROTO_VERSION) {
             vRecv >> filter;
-            filter.UpdateEmptyFull();
         }
         else {
             filter.clear();
