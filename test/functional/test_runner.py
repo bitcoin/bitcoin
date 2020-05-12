@@ -229,6 +229,7 @@ BASE_SCRIPTS = [
     # renable with SYS data
     #'p2p_dos_header_tree.py',
     'p2p_unrequested_blocks.py',
+    'p2p_blockfilters.py',
     'feature_includeconf.py',
     'feature_asmap.py',
     'mempool_unbroadcast.py',
