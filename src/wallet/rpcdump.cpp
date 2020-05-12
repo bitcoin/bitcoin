@@ -185,6 +185,8 @@ UniValue importprivkey(const JSONRPCRequest& request)
                 pwallet->ImportScripts({GetScriptForDestination(WitnessV0KeyHash(vchAddress))}, 0 /* timestamp */);
             }
         }
+        // Scan mempool for transactions
+        pwallet->chain().requestMempoolTransactions(*pwallet);
     }
     if (fRescan) {
         RescanWallet(*pwallet, reserver);

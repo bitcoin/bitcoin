@@ -272,6 +272,7 @@ class WalletTest(BitcoinTestFramework):
 
         self.log.info('Check if mempool is taken into account after import*')
         address = self.nodes[0].getnewaddress()
+        privkey = self.nodes[0].dumpprivkey(address)
         self.nodes[0].sendtoaddress(address, 0.1)
         self.nodes[0].unloadwallet('')
         # check importaddress on fresh wallet
@@ -283,6 +284,10 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], Decimal('0.1'))
         assert_equal(self.nodes[0].getbalances()['watchonly']['untrusted_pending'], 0)
         self.nodes[0].unloadwallet('w1')
+        # check importprivkey on fresh wallet
+        self.nodes[0].createwallet('w2', False, True)
+        self.nodes[0].importprivkey(privkey)
+        assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], Decimal('0.1'))
 
 if __name__ == '__main__':
     WalletTest().main()
