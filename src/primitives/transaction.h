@@ -310,14 +310,14 @@ struct AssetCoinInfoCompression
 {
     template<typename Stream, typename I> void Ser(Stream& s, I val)
     {
-        s << VARINT_MODE(val.nAsset, VarIntMode::NONNEGATIVE_SIGNED);
+        s << VARINT(val.nAsset);
         if(val.nAsset > 0) {
             s << VARINT(CompressAmount(val.nValue));
         }
     }
     template<typename Stream, typename I> void Unser(Stream& s, I& val)
     {
-        s >> VARINT_MODE(val.nAsset, VarIntMode::NONNEGATIVE_SIGNED);
+        s >> VARINT(val.nAsset);
         if(val.nAsset > 0) {
             uint64_t v;
             s >> VARINT(v);
@@ -328,13 +328,13 @@ struct AssetCoinInfoCompression
 
 class CAssetCoinInfo {
 public:
-	int32_t nAsset;
+	uint32_t nAsset;
 	CAmount nValue;
 	CAssetCoinInfo() {
 		SetNull();
         nValue = 0;
 	}
-    CAssetCoinInfo(const int32_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) { }
+    CAssetCoinInfo(const uint32_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) { }
  
     friend bool operator==(const CAssetCoinInfo& a, const CAssetCoinInfo& b)
     {
@@ -472,7 +472,7 @@ public:
 		return !(a == b);
 	}
 };
-typedef std::map<int32_t, std::vector<CAssetOut> > assetOutputType;
+typedef std::map<uint32_t, std::vector<CAssetOut> > assetOutputType;
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
@@ -537,7 +537,7 @@ public:
     // Return sum of txouts.
     CAmount GetValueOut() const;
     // SYSCOIN
-    bool GetAssetValueOut(const bool &isAssetTx, std::unordered_map<int32_t, CAmount> &mapAssetOut, TxValidationState& state) const;
+    bool GetAssetValueOut(const bool &isAssetTx, std::unordered_map<uint32_t, CAmount> &mapAssetOut, TxValidationState& state) const;
     /**
      * Get the total transaction size in bytes, including witness data.
      * "Total Size" defined in BIP141 and BIP144.
@@ -760,5 +760,5 @@ int GetSyscoinDataOutput(const CTransaction& tx);
 bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, int& nOut);
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
 typedef std::unordered_map<uint32_t, uint256> EthereumMintTxMap;
-typedef std::unordered_map<int32_t, CAsset > AssetMap;
+typedef std::unordered_map<uint32_t, CAsset > AssetMap;
 #endif // SYSCOIN_PRIMITIVES_TRANSACTION_H

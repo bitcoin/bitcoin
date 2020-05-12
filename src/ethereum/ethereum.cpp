@@ -103,7 +103,7 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
  * @param witnessAddress The destination witness address for the minting
  * @return true if everything is valid
  */
-bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, CAmount& nAmount, int32_t& nAsset, CWitnessAddress& witnessAddress) {
+bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, CAmount& nAmount, uint32_t& nAsset, CWitnessAddress& witnessAddress) {
     // total 5 or 6 fields are expected @ 32 bytes each field, 6 fields if witness > 32 bytes + 4 byte method hash
     if(vchInputData.size() < 164 || vchInputData.size() > 196) {
       return false;  
@@ -123,12 +123,12 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     arith_uint256 outputAmountArith = UintToArith256(uint256(vchAmount));
     nAmount = outputAmountArith.GetLow64();
     
-    // convert the vch into a int32_t (nAsset)
+    // convert the vch into a uint32_t (nAsset)
     // should be in position 68 walking backwards
-    nAsset = static_cast<int32_t>(vchInputData[67]);
-    nAsset |= static_cast<int32_t>(vchInputData[66]) << 8;
-    nAsset |= static_cast<int32_t>(vchInputData[65]) << 16;
-    nAsset |= static_cast<int32_t>(vchInputData[64]) << 24;
+    nAsset = static_cast<uint32_t>(vchInputData[67]);
+    nAsset |= static_cast<uint32_t>(vchInputData[66]) << 8;
+    nAsset |= static_cast<uint32_t>(vchInputData[65]) << 16;
+    nAsset |= static_cast<uint32_t>(vchInputData[64]) << 24;
     
     size_t dataPos = 130;
     // skip data field marker (32 bytes) + 31 bytes offset to the varint _byte

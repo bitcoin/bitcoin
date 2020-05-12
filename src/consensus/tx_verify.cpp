@@ -165,8 +165,8 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     }
     const bool &isAssetTx = IsAssetTx(tx.nVersion);
     CAmount nValueIn = 0;
-    std::unordered_map<int32_t, CAmount> mapAssetIn;
-    std::unordered_map<int32_t, CAmount> mapAssetOut;
+    std::unordered_map<uint32_t, CAmount> mapAssetIn;
+    std::unordered_map<uint32_t, CAmount> mapAssetOut;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);

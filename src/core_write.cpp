@@ -26,7 +26,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
     CAsset dbAsset;
     for(const auto &it: tx.voutAssets) {
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-        const int32_t &nAsset = it.first;
+        const uint32_t &nAsset = it.first;
         GetAsset(nAsset, dbAsset);
         oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
         oAssetAllocationReceiversObj.__pushKV("symbol", dbAsset.strSymbol);
@@ -63,7 +63,7 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
         CAmount nTotal = 0;
         for(const auto &it: tx.voutAssets) {
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            const int32_t &nAsset = it.first;
+            const uint32_t &nAsset = it.first;
             CAsset dbAsset;
             GetAsset(nAsset, dbAsset);
             oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
@@ -102,7 +102,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 	if(asset.IsNull())
 		return false;
     CAsset dbAsset;
-    const int32_t &nAsset = asset.voutAssets.begin()->first;
+    const uint32_t &nAsset = asset.voutAssets.begin()->first;
     GetAsset(nAsset, dbAsset);
     entry.__pushKV("txtype", stringFromSyscoinTx(tx.nVersion));
     entry.__pushKV("txid", tx.GetHash().GetHex());  
