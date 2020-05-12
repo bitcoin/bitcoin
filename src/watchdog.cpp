@@ -5,6 +5,7 @@
 #include <watchdog.h>
 
 #include <util/time.h>
+#include <watchdoginterface.h>
 
 CWatchdog::CWatchdog()
 {
@@ -15,6 +16,7 @@ CWatchdog::~CWatchdog() {}
 
 void CWatchdog::ScanAnomalies()
 {
+    GetWatchSignals().BlockHeaderAnomalie();
 }
 
 void CWatchdog::LogHeader(const std::vector<CBlockHeader>& block)
