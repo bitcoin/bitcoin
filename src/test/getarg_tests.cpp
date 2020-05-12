@@ -13,9 +13,18 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(getarg_tests, BasicTestingSetup)
+namespace getarg_tests{
+    class LocalTestingSetup : BasicTestingSetup {
+        protected:
+        void SetupArgs(const std::vector<std::pair<std::string, unsigned int>>& args);
+        void ResetArgs(const std::string& strArg);
+        ArgsManager m_args;
+    };
+}
 
-static void ResetArgs(const std::string& strArg)
+BOOST_FIXTURE_TEST_SUITE(getarg_tests, LocalTestingSetup)
+
+void LocalTestingSetup :: ResetArgs(const std::string& strArg)
 {
     std::vector<std::string> vecArg;
     if (strArg.size())
@@ -33,7 +42,7 @@ static void ResetArgs(const std::string& strArg)
     BOOST_CHECK(gArgs.ParseParameters(vecChar.size(), vecChar.data(), error));
 }
 
-static void SetupArgs(const std::vector<std::pair<std::string, unsigned int>>& args)
+void LocalTestingSetup :: SetupArgs(const std::vector<std::pair<std::string, unsigned int>>& args)
 {
     gArgs.ClearArgs();
     for (const auto& arg : args) {
