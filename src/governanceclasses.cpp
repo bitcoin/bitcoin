@@ -518,7 +518,7 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
         return 0;
     }
     const int nSuperblock = nBlockHeight / consensusParams.nSuperblockCycle;
-    CAmount nPaymentsLimit;
+    CAmount nPaymentsLimit = 0;
     if(nSuperblock > 120){
     	// some part of all blocks issued during the cycle goes to superblock, see GetBlockSubsidy
     	CAmount nTotalRewardWithMasternodes;
