@@ -53,7 +53,6 @@ private:
 public:
     std::unique_ptr<DbEnv> dbenv;
     std::map<std::string, std::reference_wrapper<BerkeleyDatabase>> m_databases;
-    std::unordered_map<std::string, WalletDatabaseFileId> m_fileids;
     std::condition_variable_any m_db_in_use;
 
     BerkeleyEnvironment(const fs::path& env_directory);
