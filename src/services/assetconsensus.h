@@ -54,10 +54,10 @@ public:
 class CAssetDB : public CDBWrapper {
 public:
     CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {}
-    bool EraseAsset(const int32_t& nAsset) {
+    bool EraseAsset(const uint32_t& nAsset) {
         return Erase(nAsset);
     }   
-    bool ReadAsset(const int32_t& nAsset, CAsset& asset) {
+    bool ReadAsset(const uint32_t& nAsset, CAsset& asset) {
         return Read(nAsset, asset);
     }  
     bool Flush(const AssetMap &mapAssets);

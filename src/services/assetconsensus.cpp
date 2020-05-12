@@ -66,7 +66,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         return FormatSyscoinErrorMessage(state, "mint-invalid-vout-map-size", bSanityCheck);
     }
     auto it = tx.voutAssets.begin();
-    const int32_t &nAsset = it->first;
+    const uint32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
     if(vecVout.size() != 1) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-vout-size", bSanityCheck);
@@ -249,7 +249,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     
     CAmount outputAmount;
-    int32_t nAssetEth = 0;
+    uint32_t nAssetEth = 0;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     std::vector<unsigned char> vchERC20ContractAddress;
     CWitnessAddress witnessAddress;
@@ -371,7 +371,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-vout-map-size", bSanityCheck);
             }
             auto it = tx.voutAssets.begin();
-            const int32_t &nAsset = it->first;
+            const uint32_t &nAsset = it->first;
             const std::vector<CAssetOut> &vecVout = it->second;
             if(vecVout.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-vout-size", bSanityCheck);
@@ -439,7 +439,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
 
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     auto it = tx.voutAssets.begin();
-    const int32_t &nAsset = it->first;
+    const uint32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
     const int &nOut = GetSyscoinDataOutput(tx);
     if(nOut < 0) {
@@ -480,7 +480,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
         return false;
     }
     auto it = tx.voutAssets.begin();
-    const int32_t &nAsset = it->first;
+    const uint32_t &nAsset = it->first;
     #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
     #else
@@ -521,7 +521,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
 
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     auto it = tx.voutAssets.begin();
-    const int32_t &nAsset = it->first;
+    const uint32_t &nAsset = it->first;
     #if __cplusplus > 201402 
     mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
     #else
@@ -556,7 +556,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         return FormatSyscoinErrorMessage(state, "asset-invalid-vout-map-size", bSanityCheck);
     }
     auto it = tx.voutAssets.begin();
-    const int32_t &nAsset = it->first;
+    const uint32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
     CAsset dbAsset;
     #if __cplusplus > 201402 

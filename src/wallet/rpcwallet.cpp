@@ -2915,7 +2915,7 @@ UniValue listunspent(const JSONRPCRequest& request)
     CAmount nMaximumAmountAsset = MAX_ASSET;
     CAmount nMinimumSumAmountAsset = MAX_ASSET;
     uint64_t nMaximumCount = 0;
-    int32_t nAsset = 0;
+    uint32_t nAsset = 0;
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();

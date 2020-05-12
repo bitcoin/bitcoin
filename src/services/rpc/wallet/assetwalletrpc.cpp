@@ -442,7 +442,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     }
     data.clear();
     // generate deterministic guid based on input txid
-    const int32_t &nAsset = GenerateSyscoinGuid(mtx.vin[0].prevout);
+    const uint32_t &nAsset = GenerateSyscoinGuid(mtx.vin[0].prevout);
     newAsset.voutAssets.clear();
     newAsset.voutAssets[nAsset].push_back(CAssetOut(0, 0));
     newAsset.SerializeData(data);
@@ -684,7 +684,6 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     CTxOut change_prototype_txout(0, scriptPubKey);
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
     theAsset.ClearAsset();
-    theAsset.nBalance = 0;
     theAsset.voutAssets[nAsset].push_back(CAssetOut(0, 0));
 
     std::vector<unsigned char> data;
@@ -900,7 +899,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     CAssetAllocation theAssetAllocation;
     CMutableTransaction mtx;
 	UniValue receivers = valueTo.get_array();
-    std::map<int32_t, CAmount> mapAssetTotals;
+    std::map<uint32_t, CAmount> mapAssetTotals;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
         CAmount nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];
@@ -908,7 +907,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address\" or \"amount\"}");
 
 		const UniValue &receiverObj = receiver.get_obj();
-        const int32_t &nAsset = find_value(receiverObj, "asset_guid").get_int();
+        const uint32_t &nAsset = find_value(receiverObj, "asset_guid").get_uint();
         CAsset theAsset;
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
@@ -1377,7 +1376,7 @@ UniValue listunspentasset(const JSONRPCRequest& request) {
     RPCHelpMan{"listunspentasset",
     "\nHelper function which just calls listunspent to find unspent UTXO's for an asset.",   
     {	
-        {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."},	
+        {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The syscoin asset guid to get the information of."},	
         {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},	
     },	
     RPCResult{
@@ -1387,7 +1386,7 @@ UniValue listunspentasset(const JSONRPCRequest& request) {
         HelpExampleCli("listunspentasset", "2328882 0")	
         + HelpExampleRpc("listunspentasset", "2328882 0")	
     }}.Check(request);	
-    int32_t nAsset = request.params[0].get_int();
+    uint32_t nAsset = request.params[0].get_uint();
     int nMinDepth = 1;
     if (!request.params[1].isNull()) {
         nMinDepth = request.params[1].get_int();

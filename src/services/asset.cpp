@@ -76,9 +76,9 @@ bool CAsset::UnserializeFromTx(const CTransaction &tx) {
 }
 
 
-int32_t GenerateSyscoinGuid(const COutPoint& outPoint) {
+uint32_t GenerateSyscoinGuid(const COutPoint& outPoint) {
     const arith_uint256 &txidArith = UintToArith256(outPoint.hash);
-    int32_t low32 = (int32_t)txidArith.GetLow64();
+    uint32_t low32 = (uint32_t)txidArith.GetLow64();
     low32 += outPoint.n;
     if(low32 < 0){
         low32 *= -1;
@@ -95,7 +95,7 @@ void CAsset::SerializeData( std::vector<unsigned char> &vchData) {
 	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 }
 
-bool GetAsset(const int32_t &nAsset,
+bool GetAsset(const uint32_t &nAsset,
         CAsset& txPos) {
     if (passetdb == nullptr || !passetdb->ReadAsset(nAsset, txPos))
         return false;
@@ -146,7 +146,7 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx) {
     return true;
 }
 
-bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<int32_t, CAmount> &mapAssetIn, const std::unordered_map<int32_t, CAmount> &mapAssetOut) {
+bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<uint32_t, CAmount> &mapAssetIn, const std::unordered_map<uint32_t, CAmount> &mapAssetOut) {
     if(!IsSyscoinWithNoInputTx(tx.nVersion)) {
         if(mapAssetIn != mapAssetOut) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assets-io-mismatch");
@@ -156,7 +156,7 @@ bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const
         if(mapAssetIn.size() != 1) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-wrong-number-inputs");
         }
-        const int32_t &nAsset = mapAssetIn.begin()->first;
+        const uint32_t &nAsset = mapAssetIn.begin()->first;
         for(const auto& outAsset: mapAssetOut) {
             if(outAsset.first != nAsset) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-io-mismatch");

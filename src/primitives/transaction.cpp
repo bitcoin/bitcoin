@@ -344,7 +344,7 @@ void CMutableTransaction::LoadAssets()
         
         const size_t &nVoutSize = vout.size();
         for(const auto &it: voutAssets) {
-            const int32_t &nAsset = it.first;
+            const uint32_t &nAsset = it.first;
             if(it.second.empty()) {
                 throw std::ios_base::failure("asset empty outputs");
             }
@@ -364,7 +364,7 @@ void CMutableTransaction::LoadAssets()
         }       
     }
 }
-bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<int32_t, CAmount> &mapAssetOut, TxValidationState& state) const
+bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<uint32_t, CAmount> &mapAssetOut, TxValidationState& state) const
 {
     std::unordered_set<uint32_t> setUsedIndex;
     for(const auto &it: voutAssets) {
@@ -372,7 +372,7 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<in
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-empty");
         }
         CAmount nTotal = 0;
-        const int32_t &nAsset = it.first;
+        const uint32_t &nAsset = it.first;
         if(nAsset < 0) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-negative-guid");
         }

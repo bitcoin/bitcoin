@@ -16,7 +16,7 @@ static const uint32_t MAX_ETHEREUM_TX_ROOTS = 120000;
 static const uint32_t DOWNLOAD_ETHEREUM_TX_ROOTS = 50000;
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromString(const std::string &str);
-int32_t GenerateSyscoinGuid(const COutPoint& outPoint);
+uint32_t GenerateSyscoinGuid(const COutPoint& outPoint);
 std::string stringFromSyscoinTx(const int &nVersion);
 bool ReserializeAssetCommitment(CMutableTransaction& tx);
 std::string assetFromTx(const int &nVersion);
@@ -57,6 +57,9 @@ public:
         vchPrevContract.clear();
         voutAssets.clear();
         nPrevUpdateFlags = nUpdateFlags;
+        nBalance = 0;
+        nTotalSupply = 0;
+        nMaxSupply = 0;
     }
 
     SERIALIZE_METHODS(CAsset, obj) {
@@ -82,6 +85,6 @@ public:
     void SerializeData(std::vector<unsigned char>& vchData);
 };
 static CAsset emptyAsset;
-bool GetAsset(const int32_t &nAsset,CAsset& txPos);
-bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<int32_t, CAmount> &mapAssetIn, const std::unordered_map<int32_t, CAmount> &mapAssetOut);
+bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
+bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<uint32_t, CAmount> &mapAssetIn, const std::unordered_map<uint32_t, CAmount> &mapAssetOut);
 #endif // SYSCOIN_SERVICES_ASSET_H

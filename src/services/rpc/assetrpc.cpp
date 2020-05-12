@@ -21,7 +21,7 @@ extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 
 
-bool BuildAssetJson(const CAsset& asset, const int32_t& nAsset, UniValue& oAsset) {
+bool BuildAssetJson(const CAsset& asset, const uint32_t& nAsset, UniValue& oAsset) {
     oAsset.__pushKV("asset_guid", nAsset);
     oAsset.__pushKV("symbol", asset.strSymbol);
 	oAsset.__pushKV("public_value", stringFromVch(asset.vchPubData));
@@ -35,7 +35,7 @@ bool BuildAssetJson(const CAsset& asset, const int32_t& nAsset, UniValue& oAsset
 }
 bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes) {
 	std::string strTxid = "";
-    int32_t nAsset = 0;
+    uint32_t nAsset = 0;
 	if (!oOptions.isNull()) {
 		const UniValue &txid = find_value(oOptions, "txid");
 		if (txid.isStr()) {
@@ -49,7 +49,7 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 	std::unique_ptr<CDBIterator> pcursor(passetdb.NewIterator());
 	pcursor->SeekToFirst();
 	CAsset txPos;
-	int32_t key = 0;
+	uint32_t key = 0;
 	uint32_t index = 0;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
