@@ -201,6 +201,8 @@ RPCHelpMan importaddress()
                 "\nAdds an address or script (in hex) that can be watched as if it were in your wallet but cannot be used to spend. Requires a new wallet backup.\n"
             "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported address exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
+            "The rescan parameter can be set to false if the key was never used to create transactions. If it is set to false,\n"
+            "but the key was used to create transactions, rescanwallet needs to be called with the appropriate block range.\n"
             "If you have the full public key, you should call importpubkey instead of this.\n"
             "Hint: use importmulti to import more than one address.\n"
             "\nNote: If you import a non-standard raw script in hex form, outputs sending to it will be treated\n"
@@ -209,7 +211,7 @@ RPCHelpMan importaddress()
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Bitcoin address (or hex-encoded script)"},
                     {"label", RPCArg::Type::STR, RPCArg::Default{""}, "An optional label"},
-                    {"rescan", RPCArg::Type::BOOL, RPCArg::Default{true}, "Rescan the wallet for transactions"},
+                    {"rescan", RPCArg::Type::BOOL, RPCArg::Default{true}, "Scan the chain and mempool for wallet transactions."},
                     {"p2sh", RPCArg::Type::BOOL, RPCArg::Default{false}, "Add the P2SH version of the script as well"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
