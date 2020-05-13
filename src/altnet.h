@@ -13,6 +13,8 @@
 #include <streams.h>
 #include <sync.h>
 #include <util/system.h>
+
+#include <map>
 #include <vector>
 
 class AltLogicValidation;
@@ -43,11 +45,16 @@ private:
     RecursiveMutex cs_vDrivers;
     std::vector<CDriver*> vDrivers GUARDED_BY(cs_vDrivers);
 
+    RecursiveMutex cs_vNodesDriver;
+    std::map<uint32_t, CDriver*> mapNodesDriver GUARDED_BY(cs_vNodesDriver);
+
     std::thread threadWarmupDrivers;
     std::thread threadHandleDrivers;
     std::thread threadAltProcessing;
 
     AltLogicValidation* m_msgproc;
+
+    CDriver *Driver(uint32_t node_id);
 
 public:
     CAltstack();
