@@ -103,6 +103,7 @@ BITCOIN_CORE_H = \
   addrdb.h \
   addrman.h \
   altnet.h \
+  alt_processing.h\
   attributes.h \
   banman.h \
   base58.h \
@@ -277,6 +278,7 @@ libbitcoin_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   altnet.cpp \
+  alt_processing.cpp \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
