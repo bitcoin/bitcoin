@@ -1391,6 +1391,9 @@ bool AppInitMain(NodeContext& node)
     node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, *node.mempool));
     RegisterValidationInterface(node.peer_logic.get());
 
+    node.alt_logic.reset(new AltLogicValidation(node.altstack.get()));
+    RegisterWatchdogInterface(node.alt_logic.get());
+
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
     for (const std::string& cmt : gArgs.GetArgs("-uacomment")) {
@@ -1945,7 +1948,7 @@ bool AppInitMain(NodeContext& node)
     if (!node.connman->Start(*node.scheduler, connOptions)) {
         return false;
     }
-    if (!node.altstack->Start()) {
+    if (!node.altstack->Start(node.alt_logic.get())) {
         return false;
     }
 

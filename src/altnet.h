@@ -6,6 +6,7 @@
 #ifndef BITCOIN_ALTNET_H
 #define BITCOIN_ALTNET_H
 
+#include <alt_processing.h>
 #include <drivers.h>
 #include <thread>
 #include <threadinterrupt.h>
@@ -13,6 +14,8 @@
 #include <sync.h>
 #include <util/system.h>
 #include <vector>
+
+class AltLogicValidation;
 
 /* Data payload and its origin node */
 class CAltMsg {
@@ -44,10 +47,12 @@ private:
     std::thread threadHandleDrivers;
     std::thread threadAltProcessing;
 
+    AltLogicValidation* m_msgproc;
+
 public:
     CAltstack();
     ~CAltstack();
-    bool Start();
+    bool Start(AltLogicValidation* alt_logic);
     void Stop();
     void Interrupt();
 

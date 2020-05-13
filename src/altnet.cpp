@@ -16,8 +16,9 @@ CAltstack::~CAltstack()
     Stop();
 }
 
-bool CAltstack::Start()
+bool CAltstack::Start(AltLogicValidation *alt_logic)
 {
+    m_msgproc = alt_logic;
     interruptNet.reset();
     flagInterruptAltProc = false;
 
@@ -63,6 +64,7 @@ void CAltstack::ThreadHandleDrivers()
         // Listen for new connections on any driver.
         for (auto&& pdriver: vDrivers) {
             if (pdriver->Listen(m_node_id)) {
+                m_msgproc->InitializeNode(pdriver->GetId(), pdriver->GetCapabilities(), m_node_id);
                 m_node_id++;
             }
             if (interruptNet) return;
@@ -90,8 +92,11 @@ void CAltstack::ThreadAltProcessing()
     while (!flagInterruptAltProc) {
         {
             LOCK(cs_vRecvMsg);
-            for (auto&& msg: vRecvMsg)
+            for (auto&& msg: vRecvMsg) {
+                m_msgproc->ProcessMessage(msg);
+            }
             vRecvMsg.clear();
         }
+        m_msgproc->SendMessage();
     }
 }

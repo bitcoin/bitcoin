@@ -8,6 +8,8 @@
 #include <altnet.h>
 #include <drivers.h>
 
+class CAltstack;
+
 class AltLogicValidation final {
 private:
     CAltstack* const m_altstack;

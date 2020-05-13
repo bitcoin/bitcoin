@@ -5,6 +5,7 @@
 #include <node/context.h>
 
 #include <altnet.h>
+#include <alt_processing.h>
 #include <banman.h>
 #include <interfaces/chain.h>
 #include <net.h>
