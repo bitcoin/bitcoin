@@ -3332,8 +3332,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>收到指向</translation>
     </message>
     <message>
-        <source>Unfreeze transaction</source>
-        <translation>解凍交易</translation>
+        <source>Withdraw/Unbind</source>
+        <translation>贖回/解綁</translation>
     </message>
 </context>
 <context>

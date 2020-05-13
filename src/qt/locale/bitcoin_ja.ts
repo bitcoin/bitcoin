@@ -101,6 +101,10 @@
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <translation>トランザクション履歴を %1 へ保存する際にエラーが発生しました。再試行してください。</translation>
     </message>
+    <message>
+        <source>Set as &amp;Primary address</source>
+        <translation>プライマリアドレスとして設定(&amp;P)</translation>
+    </message>
 </context>
 <context>
     <name>AddressTableModel</name>
@@ -115,6 +119,10 @@
     <message>
         <source>(no label)</source>
         <translation>(ラベル無し)</translation>
+    </message>
+    <message>
+        <source>Primary address</source>
+        <translation>主アドレス</translation>
     </message>
 </context>
 <context>
@@ -633,6 +641,30 @@
     <message>
         <source>A fatal error occurred. BitcoinHD can no longer continue safely and will quit.</source>
         <translation>致命的なエラーが発生しました。BitcoinHD を安全に動作し続けることができないため終了します。</translation>
+    </message>
+    <message>
+        <source>BitcoinHD Core</source>
+        <translation>BitcoinHD</translation>
+    </message>
+    <message>
+        <source>&amp;Generate plotting account</source>
+        <translation>マイニングアカウントを生成(&amp;G)</translation>
+    </message>
+    <message>
+        <source>Generate plotting account</source>
+        <translation>マイニングアカウントを生成</translation>
+    </message>
+    <message>
+        <source>This account is randomly generated, please save it. Loss will make plotting data invalid.</source>
+        <translation>このアカウントはランダムに生成されます。適切に保管してください。 損失は​​計算能力を時代遅れにします。</translation>
+    </message>
+    <message>
+        <source>Passphrase: %1</source>
+        <translation>脳のパスワード: %1</translation>
+    </message>
+    <message>
+        <source>Plotter ID: %1</source>
+        <translation>マイニングID: %1</translation>
     </message>
 </context>
 <context>
@@ -2230,6 +2262,74 @@
         <source>Requested</source>
         <translation>リクエストされた金額</translation>
     </message>
+    <message>
+        <source>Pay to</source>
+        <translation>支払った</translation>
+    </message>
+    <message>
+        <source>Point to</source>
+        <translation>指し示す</translation>
+    </message>
+    <message>
+        <source>Bind to</source>
+        <translation>にバインド</translation>
+    </message>
+    <message>
+        <source>&amp;Check</source>
+        <translation>試験(&amp;C)</translation>
+    </message>
+    <message>
+        <source>Check bind data</source>
+        <translation>バインディングデータを確認する</translation>
+    </message>
+    <message>
+        <source>Confirm bind plotter</source>
+        <translation>バインディングIDを確認</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to bind plotter?</source>
+        <translation>IDをバインドしてもよろしいですか?</translation>
+    </message>
+    <message>
+        <source>%1 bind to %2</source>
+        <translation>％1 を ％2 にバインド</translation>
+    </message>
+    <message>
+        <source>The operation will lock %1.</source>
+        <translation>このアクションは ％1 をロックします。</translation>
+    </message>
+    <message>
+        <source>You can unbind later, and the locked amount will be returned to this address.</source>
+        <translation>後でIDを解くことができ、ロックされた金額がこのアドレスに返されます。</translation>
+    </message>
+    <message>
+        <source>This binding operation triggers anti-cheating mechanism and therefore requires a large transaction fee %1.</source>
+        <translation>このバインド操作によって不正行為防止メカニズムがトリガーされたため、％1 の巨大な取引手数料が必要でした。</translation>
+    </message>
+    <message>
+        <source>%1 small bind plotter fee active on %2 block height (%3 blocks after, about %4 minute).</source>
+        <translation>％1 の低拘束料金は、％2 の高さの後に有効になります（％3 ブロック後、約 ％4 分かかります）。</translation>
+    </message>
+    <message>
+        <source>The bind plotter consensus active on %1 after.</source>
+        <translation>バインディングIDコンセンサスは、高さ ％1 の後で有効になります。</translation>
+    </message>
+    <message>
+        <source>Confirm point</source>
+        <translation>ポインティングを確認</translation>
+    </message>
+    <message>
+        <source>Are you sure you want point?</source>
+        <translation>ポイントしてもよろしいですか？</translation>
+    </message>
+    <message>
+        <source>You can withdraw this point at any time, and the amount will be returned to this address.</source>
+        <translation>このポイントはいつでも解除でき、金額はこの住所に返金されます。</translation>
+    </message>
+    <message>
+        <source>Copy bind data</source>
+        <translation>写す</translation>
+    </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -2612,6 +2712,30 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Enter a label for this address to add it to your address book</source>
         <translation>アドレス帳に追加するには、このアドレスのラベルを入力します</translation>
     </message>
+    <message>
+        <source>Point &amp;To:</source>
+        <translation>指し示す(&amp;T):</translation>
+    </message>
+    <message>
+        <source>Bind &amp;To:</source>
+        <translation>にバインド(&amp;T):</translation>
+    </message>
+    <message>
+        <source>&amp;Plotter:</source>
+        <translation>Plotter(&amp;P):</translation>
+    </message>
+    <message>
+        <source>&amp;Alive Time:</source>
+        <translation>有効時間(&amp;A):</translation>
+    </message>
+    <message>
+        <source>%1 (%2 blocks)</source>
+        <translation>％1（％2 ブロック）</translation>
+    </message>
+    <message>
+        <source>Enter your plotter passphrase or bind hex data</source>
+        <translation>IDの頭脳パスワードまたはバインドされたデータを入力してください</translation>
+    </message>
 </context>
 <context>
     <name>SendConfirmationDialog</name>
@@ -2947,6 +3071,30 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>false</source>
         <translation>いいえ</translation>
     </message>
+    <message>
+        <source>Has withdraw</source>
+        <translation>利用済み</translation>
+    </message>
+    <message>
+        <source>Relevant transaction ID</source>
+        <translation>関連取引</translation>
+    </message>
+    <message>
+        <source>This binding has been unable to mine</source>
+        <translation>このバインディングはもうマイニングできません</translation>
+    </message>
+    <message>
+        <source>Unbind plotter active on %1 block height (%2 blocks after, about %3 minute).</source>
+        <translation>ブロック解除の有効なブロックの高さは、％1です（2％ブロック後、約％3分かかります）。</translation>
+    </message>
+    <message>
+        <source>Plotter ID</source>
+        <translation>マイニングID</translation>
+    </message>
+    <message>
+        <source>Unbinded plotter</source>
+        <translation>アンタイド</translation>
+    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -3064,6 +3212,42 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Amount removed from or added to balance.</source>
         <translation>残高から増えた又は減った総額。</translation>
+    </message>
+    <message>
+        <source>Binded plotter</source>
+        <translation>バインドID</translation>
+    </message>
+    <message>
+        <source>Unbinded plotter</source>
+        <translation>IDをバインド解除</translation>
+    </message>
+    <message>
+        <source>This bind plotter has unbinded</source>
+        <translation>このバインディングがリリースされました</translation>
+    </message>
+    <message>
+        <source>This bind has been unable to mine</source>
+        <translation>このバインディングはもうマイニングできません</translation>
+    </message>
+    <message>
+        <source>Point sent</source>
+        <translation>指摘する</translation>
+    </message>
+    <message>
+        <source>Point received</source>
+        <translation>指示を受け取る</translation>
+    </message>
+    <message>
+        <source>Withdraw point</source>
+        <translation>指示を受け取る</translation>
+    </message>
+    <message>
+        <source>This point has withdraw</source>
+        <translation>このポイントは利用されました</translation>
+    </message>
+    <message>
+        <source>Point to yourself</source>
+        <translation>自分を指す</translation>
     </message>
 </context>
 <context>
@@ -3224,6 +3408,22 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>to</source>
         <translation>〜</translation>
     </message>
+    <message>
+        <source>Binded plotter</source>
+        <translation>バインドされたID</translation>
+    </message>
+    <message>
+        <source>Point sent</source>
+        <translation>指摘する</translation>
+    </message>
+    <message>
+        <source>Point received</source>
+        <translation>指示を受け取る</translation>
+    </message>
+    <message>
+        <source>Withdraw/Unbind</source>
+        <translation>償還/結合解除</translation>
+    </message>
 </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -3299,6 +3499,58 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>default wallet</source>
         <translation>デフォルトウォレット</translation>
+    </message>
+    <message>
+        <source>Unfreeze error</source>
+        <translation>凍結解除エラー</translation>
+    </message>
+    <message>
+        <source>Create transaction failed</source>
+        <translation>トランザクションの作成に失敗しました</translation>
+    </message>
+    <message>
+        <source>Could not commit transaction</source>
+        <translation>トランザクションを送信できません</translation>
+    </message>
+    <message>
+        <source>Unbind plotter</source>
+        <translation>IDをバインド解除</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to unbind plotter?</source>
+        <translation>IDの関連付けを解除してもよろしいですか？</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>アドレス:</translation>
+    </message>
+    <message>
+        <source>Plotter ID:</source>
+        <translation>マイニングID:</translation>
+    </message>
+    <message>
+        <source>Return amount:</source>
+        <translation>返金金額:</translation>
+    </message>
+    <message>
+        <source>Transaction fee:</source>
+        <translation>取引料金:</translation>
+    </message>
+    <message>
+        <source>Withdraw point</source>
+        <translation>アンポイント</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to withdraw point?</source>
+        <translation>このポイントをキャンセルしてもよろしいですか？</translation>
+    </message>
+    <message>
+        <source>From address:</source>
+        <translation>送信元アドレス:</translation>
+    </message>
+    <message>
+        <source>To address:</source>
+        <translation>宛先アドレス: </translation>
     </message>
 </context>
 <context>

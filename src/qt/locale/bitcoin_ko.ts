@@ -101,6 +101,10 @@
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <translation>%1으로 주소 리스트를 저장하는 동안 오류가 발생했습니다. 다시 시도해주세요.</translation>
     </message>
+    <message>
+        <source>Set as &amp;Primary address</source>
+        <translation>기본 주소로 설정 (&amp;P)</translation>
+    </message>
 </context>
 <context>
     <name>AddressTableModel</name>
@@ -115,6 +119,10 @@
     <message>
         <source>(no label)</source>
         <translation>(라벨 없음)</translation>
+    </message>
+    <message>
+        <source>Primary address</source>
+        <translation>기본 주소</translation>
     </message>
 </context>
 <context>
@@ -604,6 +612,30 @@
     <message>
         <source>A fatal error occurred. BitcoinHD can no longer continue safely and will quit.</source>
         <translation>치명적인 오류가 발생했습니다. 비트코인을 더이상 안전하게 진행할 수 없어 곧 종료합니다.</translation>
+    </message>
+    <message>
+        <source>BitcoinHD Core</source>
+        <translation>BitcoinHD</translation>
+    </message>
+    <message>
+        <source>&amp;Generate plotting account</source>
+        <translation>마이닝 계정 만들기 (&amp;G)</translation>
+    </message>
+    <message>
+        <source>Generate plotting account</source>
+        <translation>마이닝 계정 만들기</translation>
+    </message>
+    <message>
+        <source>This account is randomly generated, please save it. Loss will make plotting data invalid.</source>
+        <translation>이 계정은 임의로 생성됩니다. 저장하십시오. 손실되면 마이닝 데이터가 유효하지 않게됩니다.</translation>
+    </message>
+    <message>
+        <source>Passphrase: %1</source>
+        <translation>암호: %1</translation>
+    </message>
+    <message>
+        <source>Plotter ID: %1</source>
+        <translation>채광 ID: %1</translation>
     </message>
 </context>
 <context>
@@ -2117,6 +2149,74 @@
         <source>Requested</source>
         <translation>요청됨</translation>
     </message>
+    <message>
+        <source>Pay to</source>
+        <translation>에 지불하다</translation>
+    </message>
+    <message>
+        <source>Point to</source>
+        <translation>가리키다</translation>
+    </message>
+    <message>
+        <source>Bind to</source>
+        <translation>에 바인딩</translation>
+    </message>
+    <message>
+        <source>&amp;Check</source>
+        <translation>검사 (&amp;C)</translation>
+    </message>
+    <message>
+        <source>Check bind data</source>
+        <translation>바인드 데이터 확인</translation>
+    </message>
+    <message>
+        <source>Confirm bind plotter</source>
+        <translation>바인드 ID 확인</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to bind plotter?</source>
+        <translation>ID를 바인딩 하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>%1 bind to %2</source>
+        <translation>%1 이 %2 에 바인딩</translation>
+    </message>
+    <message>
+        <source>The operation will lock %1.</source>
+        <translation>작업이 % 1을 잠급니다.</translation>
+    </message>
+    <message>
+        <source>You can unbind later, and the locked amount will be returned to this address.</source>
+        <translation>나중에 바인드 해제 할 수 있으며 잠금 된 금액이이 주소로 반환됩니다.</translation>
+    </message>
+    <message>
+        <source>This binding operation triggers anti-cheating mechanism and therefore requires a large transaction fee %1.</source>
+        <translation>이 바인딩 작업은 부정 행위 방지 메커니즘을 트리거하므로 큰 거래 수수료 %1 이 (가) 필요합니다.</translation>
+    </message>
+    <message>
+        <source>%1 small bind plotter fee active on %2 block height (%3 blocks after, about %4 minute).</source>
+        <translation>%2 블록 높이에서 활성화 된 %1 소규모 바인드 플로터 요금 (%3 분 후, 약 %4 분).</translation>
+    </message>
+    <message>
+        <source>The bind plotter consensus active on %1 after.</source>
+        <translation>바인드 플로터 컨센서스가 %1 이후에 활성화되었습니다.</translation>
+    </message>
+    <message>
+        <source>Confirm point</source>
+        <translation>ポインティングを確認</translation>
+    </message>
+    <message>
+        <source>Are you sure you want point?</source>
+        <translation>당신은 포인트를 원하십니까?</translation>
+    </message>
+    <message>
+        <source>You can withdraw this point at any time, and the amount will be returned to this address.</source>
+        <translation>언제든지이 포인트를 인출 할 수 있으며 금액은이 주소로 반환됩니다.</translation>
+    </message>
+    <message>
+        <source>Copy bind data</source>
+        <translation>바인드 데이터 복사</translation>
+    </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -2487,6 +2587,30 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Enter a label for this address to add it to your address book</source>
         <translation>주소록에 추가하려면 라벨을 입력하세요</translation>
     </message>
+    <message>
+        <source>Point &amp;To:</source>
+        <translation>가리키다 (&amp;T):</translation>
+    </message>
+    <message>
+        <source>Bind &amp;To:</source>
+        <translation>에 바인딩 (&amp;T):</translation>
+    </message>
+    <message>
+        <source>&amp;Plotter:</source>
+        <translation>Plotter (&amp;P):<translation>
+    </message>
+    <message>
+        <source>&amp;Alive Time:</source>
+        <translation>살아있는 시간 (&amp;A):</translation>
+    </message>
+    <message>
+        <source>%1 (%2 blocks)</source>
+        <translation>%1 (%2 블록)</translation>
+    </message>
+    <message>
+        <source>Enter your plotter passphrase or bind hex data</source>
+        <translation>플로터 비밀번호 문구를 입력하거나 16 진수 데이터를 바인딩하십시오</translation>
+    </message>
 </context>
 <context>
     <name>SendConfirmationDialog</name>
@@ -2818,6 +2942,30 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>false</source>
         <translation>거짓</translation>
     </message>
+    <message>
+        <source>Has withdraw</source>
+        <translation>철회했다</translation>
+    </message>
+    <message>
+        <source>Relevant transaction ID</source>
+        <translation>관련 거래 ID</translation>
+    </message>
+    <message>
+        <source>This binding has been unable to mine</source>
+        <translation>이 바인딩은 채굴 할 수 없습니다</translation>
+    </message>
+    <message>
+        <source>Unbind plotter active on %1 block height (%2 blocks after, about %3 minute).</source>
+        <translation>%1 블록 높이에서 바인딩 해제 플로터가 활성화되었습니다 (약 %3 분 후 %2 블록).</translation>
+    </message>
+    <message>
+        <source>Plotter ID</source>
+        <translation>마이닝 ID</translation>
+    </message>
+    <message>
+        <source>Unbinded plotter</source>
+        <translation>바인딩되지 않은 ID</translation>
+    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -2935,6 +3083,42 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Amount removed from or added to balance.</source>
         <translation>늘어나거나 줄어든 액수.</translation>
+    </message>
+    <message>
+        <source>Binded plotter</source>
+        <translation>바인드 ID</translation>
+    </message>
+    <message>
+        <source>Unbinded plotter</source>
+        <translation>바인딩되지 않은 ID</translation>
+    </message>
+    <message>
+        <source>This bind plotter has unbinded</source>
+        <translation>이 바인드 플로터는 바인드 해제되었습니다</translation>
+    </message>
+    <message>
+        <source>This bind has been unable to mine</source>
+        <translation>이 결속은 채굴 할 수 없었습니다</translation>
+    </message>
+    <message>
+        <source>Point sent</source>
+        <translation>포인트 전송</translation>
+    </message>
+    <message>
+        <source>Point received</source>
+        <translation>포인트 받음</translation>
+    </message>
+    <message>
+        <source>Withdraw point</source>
+        <translation>인출 점</translation>
+    </message>
+    <message>
+        <source>This point has withdraw</source>
+        <translation>이 시점은 철회했다</translation>
+    </message>
+    <message>
+        <source>Point to yourself</source>
+        <translation>자신을 가리킴</translation>
     </message>
 </context>
 <context>
@@ -3095,6 +3279,22 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>to</source>
         <translation>상대방</translation>
     </message>
+    <message>
+        <source>Binded plotter</source>
+        <translation>바인드 ID</translation>
+    </message>
+    <message>
+        <source>Point sent</source>
+        <translation>포인트 전송</translation>
+    </message>
+    <message>
+        <source>Point received</source>
+        <translation>포인트 받음</translation>
+    </message>
+    <message>
+        <source>Withdraw/Unbind</source>
+        <translation>인출 / 바인드 해제</translation>
+    </message>
 </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -3166,6 +3366,58 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>default wallet</source>
         <translation>기본 지갑</translation>
+    </message>
+    <message>
+        <source>Unfreeze error</source>
+        <translation>고정 해제 오류</translation>
+    </message>
+    <message>
+        <source>Create transaction failed</source>
+        <translation>거래 생성 실패</translation>
+    </message>
+    <message>
+        <source>Could not commit transaction</source>
+        <translation>거래를 할 수 없습니다</translation>
+    </message>
+    <message>
+        <source>Unbind plotter</source>
+        <translation>바인딩 해제 ID</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to unbind plotter?</source>
+        <translation>플로터 바인딩을 해제 하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>주소:</translation>
+    </message>
+    <message>
+        <source>Plotter ID:</source>
+        <translation>마이닝 ID:</translation>
+    </message>
+    <message>
+        <source>Return amount:</source>
+        <translation>반품 금액:</translation>
+    </message>
+    <message>
+        <source>Transaction fee:</source>
+        <translation>거래 수수료:</translation>
+    </message>
+    <message>
+        <source>Withdraw point</source>
+        <translation>인출 점</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to withdraw point?</source>
+        <translation>포인트를 인출 하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>From address:</source>
+        <translation>주소에서:</translation>
+    </message>
+    <message>
+        <source>To address:</source>
+        <translation>목적지 주소:</translation>
     </message>
 </context>
 <context>
