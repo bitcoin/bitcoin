@@ -41,9 +41,6 @@
 /* Define to 1 to enable ZMQ functions */
 #define ENABLE_ZMQ 1
 
-/* parameter and return value type for __fdelt_chk */
-/* #undef FDELT_TYPE */
-
 /* define if the Boost library is available */
 #define HAVE_BOOST /**/
 
