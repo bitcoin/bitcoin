@@ -14,6 +14,26 @@
 
 class CAltMsg;
 
+/* Represents a transport capabilities */
+class TransportCapabilities
+{
+public:
+    /** Whether this transport can send */
+    bool fSending;
+
+    /** Whether this transport can receive */
+    bool fReceiving;
+
+    /** Whether this transport support headers */
+    bool fHeaders;
+
+    TransportCapabilities(bool fSendingIn, bool fReceivingIn, bool fHeadersIn)
+        : fSending(fSendingIn),
+          fReceiving(fReceivingIn),
+          fHeaders(fHeadersIn)
+    {}
+};
+
 /**
  * Implement a transport-specific driver to support natively its
  * processing.
