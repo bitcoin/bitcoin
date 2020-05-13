@@ -120,8 +120,7 @@ public:
 };
 
 /** Show warning message **/
-// TODO: InitWarning() should take a bilingual_str parameter.
-void InitWarning(const std::string& str);
+void InitWarning(const bilingual_str& str);
 
 /** Show error message **/
 bool InitError(const bilingual_str& str);
