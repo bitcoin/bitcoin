@@ -42,6 +42,7 @@ private:
 
     std::thread threadWarmupDrivers;
     std::thread threadHandleDrivers;
+    std::thread threadAltProcessing;
 
 public:
     CAltstack();
@@ -53,6 +54,7 @@ public:
     /* Altstack threads */
     void ThreadWarmupDrivers();
     void ThreadHandleDrivers();
+    void ThreadAltProcessing();
 };
 
 #endif // BITCOIN_ALTNET_H

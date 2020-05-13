@@ -24,6 +24,8 @@ bool CAltstack::Start()
     threadWarmupDrivers = std::thread(&TraceThread<std::function<void()> >, "drivers-warmup", std::function<void()>(std::bind(&CAltstack::ThreadWarmupDrivers, this)));
 
     threadHandleDrivers = std::thread(&TraceThread<std::function<void()> >, "altstack-handle", std::function<void()>(std::bind(&CAltstack::ThreadHandleDrivers, this)));
+
+    threadAltProcessing = std::thread(&TraceThread<std::function<void()> >, "altstack-processing", std::function<void()>(std::bind(&CAltstack::ThreadAltProcessing, this)));
     return true;
 }
 
@@ -32,6 +34,8 @@ void CAltstack::Stop() {
         threadWarmupDrivers.join();
     if (threadHandleDrivers.joinable())
         threadHandleDrivers.join();
+    if (threadAltProcessing.joinable())
+        threadAltProcessing.join();
 }
 
 void CAltstack::Interrupt() {
@@ -77,6 +81,17 @@ void CAltstack::ThreadHandleDrivers()
             LOCK(cs_vRecvMsg);
             vRecvMsg.push_back(msg);
             if (interruptNet) return;
+        }
+    }
+}
+
+void CAltstack::ThreadAltProcessing()
+{
+    while (!flagInterruptAltProc) {
+        {
+            LOCK(cs_vRecvMsg);
+            for (auto&& msg: vRecvMsg)
+            vRecvMsg.clear();
         }
     }
 }
