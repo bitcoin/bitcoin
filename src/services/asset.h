@@ -18,7 +18,6 @@ std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromString(const std::string &str);
 uint32_t GenerateSyscoinGuid(const COutPoint& outPoint);
 std::string stringFromSyscoinTx(const int &nVersion);
-bool ReserializeAssetCommitment(CMutableTransaction& tx);
 std::string assetFromTx(const int &nVersion);
 enum {
     ASSET_UPDATE_ADMIN=1, // god mode flag, governs flags field below

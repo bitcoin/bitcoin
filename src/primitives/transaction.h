@@ -621,17 +621,6 @@ struct CMutableTransaction
     // SYSCOIN
     bool HasAssets() const;
     void LoadAssets();
-    // from vouts, store assetInfo in voutAssets
-    inline void LoadAssetsFromVout() 
-    {
-        voutAssets.clear();
-        for(unsigned int i = 0; i< vout.size(); i++) {
-            const CTxOut& txOut = vout[i];
-            if(!txOut.assetInfo.IsNull()) {
-                voutAssets[txOut.assetInfo.nAsset].push_back(CAssetOut(i, txOut.assetInfo.nValue));
-            }
-        }      
-    }
 };
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;

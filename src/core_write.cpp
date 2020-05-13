@@ -22,9 +22,10 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
     entry.__pushKV("txid", txHash.GetHex());
     entry.__pushKV("blockhash", hashBlock.GetHex());  
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
-    CAmount nTotal = 0;
+   
     CAsset dbAsset;
     for(const auto &it: tx.voutAssets) {
+        CAmount nTotal = 0;
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
         const uint32_t &nAsset = it.first;
         GetAsset(nAsset, dbAsset);
@@ -60,8 +61,8 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
         entry.__pushKV("txid", txHash.GetHex());
         entry.__pushKV("blockhash", hashBlock.GetHex());  
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
-        CAmount nTotal = 0;
         for(const auto &it: tx.voutAssets) {
+            CAmount nTotal = 0;
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
             const uint32_t &nAsset = it.first;
             CAsset dbAsset;

@@ -102,54 +102,10 @@ bool GetAsset(const uint32_t &nAsset,
     return true;
 }
 
-bool ReserializeAssetCommitment(CMutableTransaction& mtx) {
-    // load tx.voutAssets from tx.vout.assetInfo info
-    // when change is added this function should be called and preceding this the vout.assetInfo
-    // should all be in sync with the asset commitment in OP_RETURN. This will resync that commitment
-    // because when change is added the vout.assetInfo is filled and we should capture that in LoadAssetsFromVout as it
-    // re-orders tx->voutAssets if change address was somewhere before the last asset output
-    mtx.LoadAssetsFromVout();
-    // store tx.voutAssets into OP_RETURN data overwriting previous commitment
-    const CTransactionRef& tx = MakeTransactionRef(mtx);
-    std::vector<unsigned char> data;
-    if(IsSyscoinMintTx(tx->nVersion)) {
-        CMintSyscoin mintSyscoin(*tx);
-        mintSyscoin.voutAssets = tx->voutAssets;
-        mintSyscoin.SerializeData(data);
-    } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
-        CBurnSyscoin burnSyscoin(*tx);
-        burnSyscoin.voutAssets = tx->voutAssets;
-        burnSyscoin.SerializeData(data);
-    } else if(IsAssetTx(tx->nVersion)) {
-        CAsset asset(*tx);
-        asset.voutAssets = tx->voutAssets;
-        asset.SerializeData(data); 
-    } else if(IsAssetAllocationTx(tx->nVersion)) {
-        CAssetAllocation allocation(*tx);
-        allocation.voutAssets = tx->voutAssets;
-        allocation.SerializeData(data); 
-    }
-    // find previous commitment (OP_RETURN) and replace script
-    CScript scriptData;
-    scriptData << OP_RETURN << data;
-    bool bFoundData = false;
-    for(auto& vout: mtx.vout) {
-        if(vout.scriptPubKey.IsUnspendable()) {
-            vout.scriptPubKey = scriptData;
-            bFoundData = true;
-            break;
-        }
-    }
-    if(!bFoundData) {
-        return false;
-    }
-    return true;
-}
-
 bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<uint32_t, CAmount> &mapAssetIn, const std::unordered_map<uint32_t, CAmount> &mapAssetOut) {
     if(!IsSyscoinWithNoInputTx(tx.nVersion)) {
         if(mapAssetIn != mapAssetOut) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assets-io-mismatch");
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-io-mismatch");
         }
     // for asset sends ensure that all inputs of a single asset, and all outputs match the asset guid
     } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
