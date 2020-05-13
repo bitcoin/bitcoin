@@ -165,7 +165,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     abandonAction = new QAction(tr("Abandon transaction"), this);
     bumpFeeAction = new QAction(tr("Increase transaction fee"), this);
     bumpFeeAction->setObjectName("bumpFeeAction");
-    unfreezeAction = new QAction(tr("Unfreeze transaction"), this);
+    unfreezeAction = new QAction(tr("Withdraw/Unbind"), this);
     unfreezeAction->setObjectName("unfreezeAction");
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
