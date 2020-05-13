@@ -1272,7 +1272,7 @@ bool AppInitParameterInteraction()
 
     // Warn if unrecognized section name are present in the config file.
     for (const auto& section : gArgs.GetUnrecognizedSections()) {
-        InitWarning(strprintf("%s:%i " + _("Section [%s] is not recognized.").translated, section.m_file, section.m_line, section.m_name));
+        InitWarning(strprintf(Untranslated("%s:%i ") + _("Section [%s] is not recognized."), section.m_file, section.m_line, section.m_name));
     }
 
     if (!fs::is_directory(GetBlocksDir())) {
@@ -1355,7 +1355,7 @@ bool AppInitParameterInteraction()
     nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS, nMaxConnections);
 
     if (nMaxConnections < nUserMaxConnections)
-        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations.").translated, nUserMaxConnections, nMaxConnections));
+        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
     if (gArgs.IsArgSet("-debug")) {
@@ -1366,7 +1366,7 @@ bool AppInitParameterInteraction()
             [](std::string cat){return cat == "0" || cat == "none";})) {
             for (const auto& cat : categories) {
                 if (!LogInstance().EnableCategory(cat)) {
-                    InitWarning(strprintf(_("Unsupported logging category %s=%s.").translated, "-debug", cat));
+                    InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debug", cat));
                 }
             }
         }
@@ -1375,7 +1375,7 @@ bool AppInitParameterInteraction()
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : gArgs.GetArgs("-debugexclude")) {
         if (!LogInstance().DisableCategory(cat)) {
-            InitWarning(strprintf(_("Unsupported logging category %s=%s.").translated, "-debugexclude", cat));
+            InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
         }
     }
 
@@ -1513,18 +1513,18 @@ bool AppInitParameterInteraction()
         const bool fRecoveryEnabled{llmq::CLLMQUtils::QuorumDataRecoveryEnabled()};
         const bool fQuorumVvecRequestsEnabled{llmq::CLLMQUtils::GetEnabledQuorumVvecSyncEntries().size() > 0};
         if (!fRecoveryEnabled && fQuorumVvecRequestsEnabled) {
-            InitWarning("-llmq-qvvec-sync set but recovery is disabled due to -llmq-data-recovery=0");
+            InitWarning(Untranslated("-llmq-qvvec-sync set but recovery is disabled due to -llmq-data-recovery=0"));
         }
     } catch (const std::invalid_argument& e) {
         return InitError(Untranslated(e.what()));
     }
 
     if (gArgs.IsArgSet("-maxorphantx")) {
-        InitWarning("-maxorphantx is not supported anymore. Use -maxorphantxsize instead.");
+        InitWarning(Untranslated("-maxorphantx is not supported anymore. Use -maxorphantxsize instead."));
     }
 
     if (gArgs.IsArgSet("-masternode")) {
-        InitWarning(_("-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.").translated);
+        InitWarning(_("-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode."));
     }
 
     if (gArgs.IsArgSet("-masternodeblsprivkey")) {
@@ -1549,7 +1549,7 @@ bool AppInitParameterInteraction()
     }
 
     if (gArgs.IsArgSet("-litemode")) {
-        InitWarning(_("-litemode is deprecated.").translated + (gArgs.GetBoolArg("-litemode", false) ? (" "  + _("Its replacement -disablegovernance has been forced instead.").translated) : ( " " + _("It has been replaced by -disablegovernance.").translated)));
+        InitWarning(strprintf(_("-litemode is deprecated.%s"), (gArgs.GetBoolArg("-litemode", false) ? (" "  + _("Its replacement -disablegovernance has been forced instead.").translated) : ( " " + _("It has been replaced by -disablegovernance.").translated))));
         gArgs.ForceRemoveArg("-litemode");
     }
 
@@ -1557,7 +1557,7 @@ bool AppInitParameterInteraction()
     LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
 
     if (fDisableGovernance) {
-        InitWarning(_("You are starting with governance validation disabled.").translated + (fPruneMode ? " " + _("This is expected because you are running a pruned node.").translated : ""));
+        InitWarning(strprintf(_("You are starting with governance validation disabled.%s"), (fPruneMode ? " " + _("This is expected because you are running a pruned node.").translated : "")));
     }
 
     return true;
@@ -1642,7 +1642,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         LogPrintf("Config file: %s\n", config_file_path.string());
     } else if (gArgs.IsArgSet("-conf")) {
         // Warn if no conf file exists at path provided by user
-        InitWarning(strprintf(_("The specified config file %s does not exist\n").translated, config_file_path.string()));
+        InitWarning(strprintf(_("The specified config file %s does not exist\n"), config_file_path.string()));
     } else {
         // Not categorizing as "Warning" because it's the default behavior
         LogPrintf("Config file: %s (not found, skipping)\n", config_file_path.string());

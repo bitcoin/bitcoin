@@ -433,7 +433,7 @@ bool WalletModel::autoBackupWallet(QString& strBackupWarningRet, QString& strBac
     bilingual_str strBackupError;
     std::vector<bilingual_str> warnings;
     bool result = m_wallet->autoBackupWallet("", strBackupError, warnings);
-    strBackupWarningRet = QString::fromStdString(Join(warnings, "\n", OpTranslated));
+    strBackupWarningRet = QString::fromStdString(Join(warnings, Untranslated("\n")).translated);
     strBackupErrorRet = QString::fromStdString(strBackupError.translated);
     return result;
 }
