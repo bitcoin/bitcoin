@@ -52,6 +52,10 @@ void CAltstack::ThreadWarmupDrivers()
         //TODO: CDriver::LoadAtInit() ?
         pdriver->SetId(id);
         pdriver->Warmup();
+        if (pdriver->Warmup()) { // Warmup==true implies default connection
+            m_msgproc->InitializeNode(pdriver->GetId(), pdriver->GetCapabilities(), m_node_id);
+            m_node_id++;
+        }
         id++;
     }
 }
