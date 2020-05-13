@@ -519,7 +519,16 @@ UniValue CreateAssetUpdateTx(const int32_t& nVersionIn, const uint32_t &nAsset, 
     // if enough for change + max fee, we try to take fee from this output
     if(nGas > (MIN_CHANGE + pwallet->m_default_max_tx_fee)) {
         recp.fSubtractFeeFromAmount = true;
+        CAmount nTotalOther = 0;
+        // deduct other sys amounts from this output which will pay the outputs and fees
+        for(const auto& recipient: vecSend) {
+            nTotalOther += recipient.nAmount;
+        }
+        // if adding other outputs would make this output not have enough to pay the fee, don't sub fee from amount
+        if(nTotalOther >= (nGas - (MIN_CHANGE + pwallet->m_default_max_tx_fee)))
+            recp.fSubtractFeeFromAmount = false;
     }
+
     // order matters here as vecSend is in sync with asset commitment, it may change later when
     // change is added but it will resync the commitment there
     vecSend.push_back(recp);
@@ -900,7 +909,8 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     CMutableTransaction mtx;
 	UniValue receivers = valueTo.get_array();
     std::map<uint32_t, CAmount> mapAssetTotals;
-	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
+    unsigned int idx;
+	for (idx = 0; idx < receivers.size(); idx++) {
         CAmount nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];
 		if (!receiver.isObject())
@@ -920,9 +930,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			const CAmount &nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
 			if (nAmount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-            auto& voutAsset = theAssetAllocation.voutAssets[nAsset];
-            const size_t len = voutAsset.size();
-            voutAsset.push_back(CAssetOut(len, nAmount));
+            theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(idx, nAmount));
 
             CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
@@ -938,9 +946,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         CTxDestination auxFeeAddress;
         const CAmount &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, theAsset.nPrecision, auxFeeAddress);
         if(nAuxFee > 0){
-            auto& voutAsset = theAssetAllocation.voutAssets[nAsset];
-            const size_t len = voutAsset.size();
-            voutAsset.push_back(CAssetOut(len, nAuxFee));
+            theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(idx, nAuxFee));
             const CScript& scriptPubKey = GetScriptForDestination(auxFeeAddress);
             CTxOut change_prototype_txout(0, scriptPubKey);
             CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
