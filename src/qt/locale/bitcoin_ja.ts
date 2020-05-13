@@ -3509,10 +3509,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>トランザクションの作成に失敗しました</translation>
     </message>
     <message>
-        <source>Could not commit transaction</source>
-        <translation>トランザクションを送信できません</translation>
-    </message>
-    <message>
         <source>Unbind plotter</source>
         <translation>IDをバインド解除</translation>
     </message>
