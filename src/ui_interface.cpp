@@ -63,7 +63,7 @@ bool InitError(const bilingual_str& str)
     return false;
 }
 
-void InitWarning(const std::string& str)
+void InitWarning(const bilingual_str& str)
 {
-    uiInterface.ThreadSafeMessageBox(Untranslated(str), "", CClientUIInterface::MSG_WARNING);
+    uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING);
 }
