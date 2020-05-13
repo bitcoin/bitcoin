@@ -399,7 +399,7 @@ bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, bilingual_str& 
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, walletFile);
     fs::path walletDir = env->Directory();
 
-    LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(nullptr, nullptr, nullptr));
+    LogPrintf("Using BerkeleyDB version %s\n", BerkeleyDatabaseVersion());
     LogPrintf("Using wallet %s\n", file_path.string());
 
     if (!env->Open(true /* retry */)) {
@@ -915,4 +915,9 @@ void BerkeleyDatabase::ReloadDbEnv()
     if (!IsDummy()) {
         env->ReloadDbEnv();
     }
+}
+
+std::string BerkeleyDatabaseVersion()
+{
+    return DbEnv::version(nullptr, nullptr, nullptr);
 }
