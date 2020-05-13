@@ -112,3 +112,10 @@ CDriver *CAltstack::Driver(uint32_t node_id) {
         return nullptr;
     return it->second;
 }
+
+void CAltstack::PushMessage(uint32_t driver_id, CSerializedNetMsg&& msg)
+{
+    LOCK(cs_vDrivers);
+    CDriver *driver = Driver(driver_id);
+    driver->Send(std::move(msg));
+}

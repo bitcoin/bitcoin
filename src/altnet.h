@@ -8,6 +8,8 @@
 
 #include <alt_processing.h>
 #include <drivers.h>
+#include <net.h>
+#include <netmessagemaker.h>
 #include <thread>
 #include <threadinterrupt.h>
 #include <streams.h>
@@ -67,6 +69,8 @@ public:
     void ThreadWarmupDrivers();
     void ThreadHandleDrivers();
     void ThreadAltProcessing();
+
+    void PushMessage(uint32_t node_id, CSerializedNetMsg&& msg);
 };
 
 #endif // BITCOIN_ALTNET_H
