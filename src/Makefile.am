@@ -130,6 +130,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
+  drivers.h \
   flatfile.h \
   fs.h \
   httprpc.h \
