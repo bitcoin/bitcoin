@@ -25,7 +25,7 @@
 static uniformer::Result PreconditionChecks(interfaces::Chain::Lock& locked_chain, const CWallet* wallet, const CWalletTx& wtx, std::vector<std::string>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet)
 {
     if (wtx.IsUnfrozen(locked_chain)) {
-        errors.push_back("Transaction has unfrozen or not frozen");
+        errors.push_back("Transaction has unfrozen");
         return uniformer::Result::INVALID_PARAMETER;
     }
 
