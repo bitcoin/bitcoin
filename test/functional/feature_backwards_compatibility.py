@@ -26,7 +26,7 @@ from test_framework.test_framework import SyscoinTestFramework
 from test_framework.descriptors import descsum_create
 
 from test_framework.util import (
-    adjust_bitcoin_conf_for_pre_17,
+    adjust_syscoin_conf_for_pre_17,
     assert_equal,
     sync_blocks,
     sync_mempools,
@@ -61,7 +61,7 @@ class BackwardsCompatibilityTest(SyscoinTestFramework):
             160300,
         ])
         # adapt bitcoin.conf, because older bitcoind's don't recognize config sections
-        adjust_bitcoin_conf_for_pre_17(self.nodes[5].bitcoinconf)
+        adjust_syscoin_conf_for_pre_17(self.nodes[5].bitcoinconf)
 
         self.start_nodes()
 
