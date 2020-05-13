@@ -112,7 +112,8 @@ inline bool VerifyTopLevelMerkleRoot(const CBlock& block, BlockValidationState& 
     uint256 hashMerkleRoot2 = VeriBlock::TopLevelMerkleRoot(pprevIndex, block, &mutated);
 
     if (block.hashMerkleRoot != hashMerkleRoot2) {
-        return state.Invalid(BlockValidationResult ::BLOCK_MUTATED, "bad-txnmrklroot", "hashMerkleRoot mismatch");
+        return state.Invalid(BlockValidationResult ::BLOCK_MUTATED, "bad-txnmrklroot",
+            strprintf("hashMerkleRoot mismatch. expected %s, got %s", hashMerkleRoot2.GetHex(), block.hashMerkleRoot.GetHex()));
     }
 
     // Check for merkle tree malleability (CVE-2012-2459): repeating sequences

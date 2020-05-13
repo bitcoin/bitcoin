@@ -52,6 +52,12 @@ struct ContextInfoContainer {
         return ret;
     }
 
+    uint256 getTopLevelMerkleRoot()
+    {
+        auto un = getUnauthenticatedHash();
+        return Hash(txMerkleRoot.begin(), txMerkleRoot.end(), un.begin(), un.end());
+    }
+
     std::vector<uint8_t> getAuthenticated() const
     {
         auto v = this->getUnauthenticated();

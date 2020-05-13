@@ -29,6 +29,7 @@ from test_framework.util import (
     wait_until,
 )
 
+
 # P2PInterface is a class containing callbacks to be executed when a P2P
 # message is received from the node-under-test. Subclass P2PInterface and
 # override the on_*() methods if you need custom behaviour.
@@ -58,6 +59,7 @@ class BaseNode(P2PInterface):
     def on_inv(self, message):
         """Override the standard on_inv callback"""
         pass
+
 
 def custom_function():
     """Do some custom behaviour
@@ -162,7 +164,9 @@ class ExampleTest(BitcoinTestFramework):
 
         self.log.info("Create some blocks")
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
-        self.block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time'] + 1
+        self.bestblock = self.nodes[0].getblock(self.nodes[0].getbestblockhash())
+        self.block_time = self.bestblock['time'] + 1
+        self.next_block_height = self.bestblock['height'] + 1
 
         height = self.nodes[0].getblockcount()
 
@@ -170,7 +174,8 @@ class ExampleTest(BitcoinTestFramework):
             # Use the mininode and blocktools functionality to manually build a block
             # Calling the generate() rpc is easier, but this allows us to exactly
             # control the blocks and transactions.
-            block = create_block(self.tip, create_coinbase(height+1), self.block_time)
+            block = create_block(self.nodes[0], self.tip, create_coinbase(height + 1), self.block_time,
+                                 prevheight=height)
             block.solve()
             block_message = msg_block(block)
             # Send message is used to send a P2P message to the node over our P2PInterface
@@ -178,6 +183,7 @@ class ExampleTest(BitcoinTestFramework):
             self.tip = block.sha256
             blocks.append(self.tip)
             self.block_time += 1
+            self.nodes[0].waitforblockheight(height)
             height += 1
 
         self.log.info("Wait for node1 to reach current tip (height 11) using RPC")
@@ -203,7 +209,8 @@ class ExampleTest(BitcoinTestFramework):
 
         # wait_until() will loop until a predicate condition is met. Use it to test properties of the
         # P2PInterface objects.
-        wait_until(lambda: sorted(blocks) == sorted(list(self.nodes[2].p2p.block_receive_map.keys())), timeout=5, lock=mininode_lock)
+        wait_until(lambda: sorted(blocks) == sorted(list(self.nodes[2].p2p.block_receive_map.keys())), timeout=5,
+                   lock=mininode_lock)
 
         self.log.info("Check that each block was received only once")
         # The network thread uses a global lock on data access to the P2PConnection objects when sending and receiving
@@ -212,6 +219,7 @@ class ExampleTest(BitcoinTestFramework):
         with mininode_lock:
             for block in self.nodes[2].p2p.block_receive_map.values():
                 assert_equal(block, 1)
+
 
 if __name__ == '__main__':
     ExampleTest().main()

@@ -595,11 +595,12 @@ BLOCK_HEADER_SIZE = len(CBlockHeader().serialize())
 assert_equal(BLOCK_HEADER_SIZE, 80)
 
 class CBlock(CBlockHeader):
-    __slots__ = ("vtx",)
+    __slots__ = ("vtx", "contextinfo")
 
     def __init__(self, header=None):
         super(CBlock, self).__init__(header)
         self.vtx = []
+        self.contextinfo = None
 
     def deserialize(self, f):
         super(CBlock, self).deserialize(f)
@@ -624,6 +625,10 @@ class CBlock(CBlockHeader):
                 newhashes.append(hash256(hashes[i] + hashes[i2]))
             hashes = newhashes
         return uint256_from_str(hashes[0])
+
+    def get_top_level_merkle_root(self):
+        self.contextinfo.setTxRootInt(self.calc_merkle_root())
+        return self.contextinfo.getTopLevelMerkleRoot()
 
     def calc_merkle_root(self):
         hashes = []
