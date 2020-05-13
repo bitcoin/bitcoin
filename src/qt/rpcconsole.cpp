@@ -24,7 +24,7 @@
 #include <univalue.h>
 
 #ifdef ENABLE_WALLET
-#include <db_cxx.h>
+#include <wallet/db.h>
 #include <wallet/wallet.h>
 #endif
 
@@ -34,9 +34,10 @@
 #include <QScrollBar>
 #include <QScreen>
 #include <QSettings>
+#include <QString>
+#include <QStringList>
 #include <QTime>
 #include <QTimer>
-#include <QStringList>
 
 // TODO: add a scrollback limit, as there is currently none
 // TODO: make it possible to filter out categories (esp debug messages when implemented)
@@ -480,7 +481,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
 
     // set library version labels
 #ifdef ENABLE_WALLET
-    ui->berkeleyDBVersion->setText(DbEnv::version(nullptr, nullptr, nullptr));
+    ui->berkeleyDBVersion->setText(QString::fromStdString(BerkeleyDatabaseVersion()));
 #else
     ui->label_berkeleyDBVersion->hide();
     ui->berkeleyDBVersion->hide();
