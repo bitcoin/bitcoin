@@ -24,8 +24,8 @@
 //! mined, or conflicts with a mined transaction. Return a uniformer::Result.
 static uniformer::Result PreconditionChecks(interfaces::Chain::Lock& locked_chain, const CWallet* wallet, const CWalletTx& wtx, std::vector<std::string>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet)
 {
-    if (wallet->HasWalletSpend(wtx.GetHash())) {
-        errors.push_back("Transaction has descendants in the wallet");
+    if (wtx.IsUnfrozen(locked_chain)) {
+        errors.push_back("Transaction has unfrozen or not frozen");
         return uniformer::Result::INVALID_PARAMETER;
     }
 
@@ -197,7 +197,7 @@ Result CreateUnfreezeTransaction(CWallet* wallet, const COutPoint& outpoint,
     auto locked_chain = wallet->chain().lock();
     LOCK(wallet->cs_wallet);
     const CWalletTx* wtx = wallet->GetWalletTx(outpoint.hash);
-    if (wtx == nullptr || outpoint.n != 0 || wtx->IsUnfrozen(*locked_chain)) {
+    if (wtx == nullptr || outpoint.n != 0) {
         errors.push_back("Can't unfreeze");
         return Result::INVALID_REQUEST;
     }
