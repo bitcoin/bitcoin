@@ -37,7 +37,7 @@ public:
             bool receivedComplaint : 1;
             bool receivedJustification : 1;
             bool receivedPrematureCommitment : 1;
-        };
+        } statusBits;
         uint8_t statusBitset;
     };
 
@@ -65,7 +65,7 @@ public:
             bool sentPrematureCommitment : 1;
 
             bool aborted : 1;
-        };
+        } statusBits;
         uint8_t statusBitset;
     };
 

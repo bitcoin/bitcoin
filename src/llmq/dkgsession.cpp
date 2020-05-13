@@ -202,7 +202,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
     logger.Flush();
 
     dkgDebugManager.UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
-        status.sentContributions = true;
+        status.statusBits.sentContributions = true;
         return true;
     });
 
@@ -285,7 +285,7 @@ void CDKGSession::ReceiveMessage(const CDKGContribution& qc, bool& retBan)
     RelayInvToParticipants(inv);
 
     dkgDebugManager.UpdateLocalMemberStatus(params.type, quorumIndex, member->idx, [&](CDKGDebugMemberStatus& status) {
-        status.receivedContribution = true;
+        status.statusBits.receivedContribution = true;
         return true;
     });
 
@@ -325,7 +325,7 @@ void CDKGSession::ReceiveMessage(const CDKGContribution& qc, bool& retBan)
     if (complain) {
         member->weComplain = true;
         dkgDebugManager.UpdateLocalMemberStatus(params.type, quorumIndex, member->idx, [&](CDKGDebugMemberStatus& status) {
-            status.weComplain = true;
+            status.statusBits.weComplain = true;
             return true;
         });
         return;
@@ -393,7 +393,7 @@ void CDKGSession::VerifyPendingContributions()
             logger.Batch("invalid contribution from %s. will complain later", m->dmn->proTxHash.ToString());
             m->weComplain = true;
             dkgDebugManager.UpdateLocalMemberStatus(params.type, quorumIndex, m->idx, [&](CDKGDebugMemberStatus& status) {
-                status.weComplain = true;
+                status.statusBits.weComplain = true;
                 return true;
             });
         } else {
@@ -520,7 +520,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
     logger.Flush();
 
     dkgDebugManager.UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
-        status.sentComplaint = true;
+        status.statusBits.sentComplaint = true;
         return true;
     });
 
@@ -593,7 +593,7 @@ void CDKGSession::ReceiveMessage(const CDKGComplaint& qc, bool& retBan)
     RelayInvToParticipants(inv);
 
     dkgDebugManager.UpdateLocalMemberStatus(params.type, quorumIndex, member->idx, [&](CDKGDebugMemberStatus& status) {
-        status.receivedComplaint = true;
+        status.statusBits.receivedComplaint = true;
         return true;
     });
 
@@ -714,7 +714,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
     logger.Flush();
 
     dkgDebugManager.UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
-        status.sentJustification = true;
+        status.statusBits.sentJustification = true;
         return true;
     });
 
@@ -804,7 +804,7 @@ void CDKGSession::ReceiveMessage(const CDKGJustification& qj, bool& retBan)
     RelayInvToParticipants(inv);
 
     dkgDebugManager.UpdateLocalMemberStatus(params.type, quorumIndex, member->idx, [&](CDKGDebugMemberStatus& status) {
-        status.receivedJustification = true;
+        status.statusBits.receivedJustification = true;
         return true;
     });
 
@@ -1026,7 +1026,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
     logger.Flush();
 
     dkgDebugManager.UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
-        status.sentPrematureCommitment = true;
+        status.statusBits.sentPrematureCommitment = true;
         return true;
     });
 
@@ -1163,7 +1163,7 @@ void CDKGSession::ReceiveMessage(const CDKGPrematureCommitment& qc, bool& retBan
     RelayInvToParticipants(inv);
 
     dkgDebugManager.UpdateLocalMemberStatus(params.type, quorumIndex, member->idx, [&](CDKGDebugMemberStatus& status) {
-        status.receivedPrematureCommitment = true;
+        status.statusBits.receivedPrematureCommitment = true;
         return true;
     });
 
@@ -1298,7 +1298,7 @@ void CDKGSession::MarkBadMember(size_t idx)
         return;
     }
     dkgDebugManager.UpdateLocalMemberStatus(params.type, quorumIndex, idx, [&](CDKGDebugMemberStatus& status) {
-        status.bad = true;
+        status.statusBits.bad = true;
         return true;
     });
     member->bad = true;

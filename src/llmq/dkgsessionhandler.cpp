@@ -567,7 +567,7 @@ void CDKGSessionHandler::PhaseHandlerThread()
             HandleDKGRound();
         } catch (AbortPhaseException& e) {
             dkgDebugManager.UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
-                status.aborted = true;
+                status.statusBits.aborted = true;
                 return true;
             });
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s qi[%d] - aborted current DKG session\n", __func__, params.name, quorumIndex);
