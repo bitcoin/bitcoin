@@ -41,6 +41,7 @@ private:
     std::vector<CDriver*> vDrivers GUARDED_BY(cs_vDrivers);
 
     std::thread threadWarmupDrivers;
+    std::thread threadHandleDrivers;
 
 public:
     CAltstack();
@@ -51,6 +52,7 @@ public:
 
     /* Altstack threads */
     void ThreadWarmupDrivers();
+    void ThreadHandleDrivers();
 };
 
 #endif // BITCOIN_ALTNET_H
