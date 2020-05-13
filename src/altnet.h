@@ -6,8 +6,13 @@
 #ifndef BITCOIN_ALTNET_H
 #define BITCOIN_ALTNET_H
 
+#include <drivers.h>
+#include <thread>
 #include <threadinterrupt.h>
 #include <streams.h>
+#include <sync.h>
+#include <util/system.h>
+#include <vector>
 
 /* Data payload and its origin node */
 class CAltMsg {
@@ -31,12 +36,21 @@ private:
 
     RecursiveMutex cs_vRecvMsg;
     std::vector<CAltMsg> vRecvMsg;
+
+    RecursiveMutex cs_vDrivers;
+    std::vector<CDriver*> vDrivers GUARDED_BY(cs_vDrivers);
+
+    std::thread threadWarmupDrivers;
+
 public:
     CAltstack();
     ~CAltstack();
     bool Start();
     void Stop();
     void Interrupt();
+
+    /* Altstack threads */
+    void ThreadWarmupDrivers();
 };
 
 #endif // BITCOIN_ALTNET_H

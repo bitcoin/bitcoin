@@ -20,12 +20,29 @@ bool CAltstack::Start()
 {
     interruptNet.reset();
     flagInterruptAltProc = false;
+
+    threadWarmupDrivers = std::thread(&TraceThread<std::function<void()> >, "drivers-warmup", std::function<void()>(std::bind(&CAltstack::ThreadWarmupDrivers, this)));
     return true;
 }
 
-void CAltstack::Stop() {}
+void CAltstack::Stop() {
+    if (threadWarmupDrivers.joinable())
+        threadWarmupDrivers.join();
+}
 
 void CAltstack::Interrupt() {
     flagInterruptAltProc = true;
     interruptNet();
+}
+
+void CAltstack::ThreadWarmupDrivers()
+{
+    uint32_t id = 0;
+    LOCK(cs_vDrivers);
+    for (auto&& pdriver: vDrivers) {
+        //TODO: CDriver::LoadAtInit() ?
+        pdriver->SetId(id);
+        pdriver->Warmup();
+        id++;
+    }
 }
