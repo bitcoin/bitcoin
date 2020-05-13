@@ -3532,10 +3532,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>创建交易失败</translation>
     </message>
     <message>
-        <source>Could not commit transaction</source>
-        <translation>无法提交交易</translation>
-    </message>
-    <message>
         <source>Unbind plotter</source>
         <translation>解绑算力</translation>
     </message>

@@ -2597,7 +2597,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>&amp;Plotter:</source>
-        <translation>Plotter (&amp;P):<translation>
+        <translation>Plotter (&amp;P):</translation>
     </message>
     <message>
         <source>&amp;Alive Time:</source>
@@ -3374,10 +3374,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Create transaction failed</source>
         <translation>거래 생성 실패</translation>
-    </message>
-    <message>
-        <source>Could not commit transaction</source>
-        <translation>거래를 할 수 없습니다</translation>
     </message>
     <message>
         <source>Unbind plotter</source>
