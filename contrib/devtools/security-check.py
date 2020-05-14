@@ -12,33 +12,33 @@ import subprocess
 import sys
 import os
 
+from typing import List, Optional
+
 READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
 OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
 OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
-NONFATAL = {} # checks which are non-fatal for now but only generate a warning
 
-def check_ELF_PIE(executable):
+def run_command(command) -> str:
+    p = subprocess.run(command, stdout=subprocess.PIPE, check=True, universal_newlines=True)
+    return p.stdout
+
+def check_ELF_PIE(executable) -> bool:
     '''
     Check for position independent executable (PIE), allowing for address space randomization.
     '''
-    p = subprocess.Popen([READELF_CMD, '-h', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([READELF_CMD, '-h', '-W', executable])
 
     ok = False
     for line in stdout.splitlines():
-        line = line.split()
-        if len(line)>=2 and line[0] == 'Type:' and line[1] == 'DYN':
+        tokens = line.split()
+        if len(line)>=2 and tokens[0] == 'Type:' and tokens[1] == 'DYN':
             ok = True
     return ok
 
 def get_ELF_program_headers(executable):
     '''Return type and flags for ELF program headers'''
-    p = subprocess.Popen([READELF_CMD, '-l', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([READELF_CMD, '-l', '-W', executable])
+
     in_headers = False
     count = 0
     headers = []
@@ -62,7 +62,7 @@ def get_ELF_program_headers(executable):
             count += 1
     return headers
 
-def check_ELF_NX(executable):
+def check_ELF_NX(executable) -> bool:
     '''
     Check that no sections are writable and executable (including the stack)
     '''
@@ -75,7 +75,7 @@ def check_ELF_NX(executable):
             have_wx = True
     return have_gnu_stack and not have_wx
 
-def check_ELF_RELRO(executable):
+def check_ELF_RELRO(executable) -> bool:
     '''
     Check for read-only relocations.
     GNU_RELRO program header must exist
@@ -84,7 +84,8 @@ def check_ELF_RELRO(executable):
     have_gnu_relro = False
     for (typ, flags) in get_ELF_program_headers(executable):
         # Note: not checking flags == 'R': here as linkers set the permission differently
-        # This does not affect security: the permission flags of the GNU_RELRO program header are ignored, the PT_LOAD header determines the effective permissions.
+        # This does not affect security: the permission flags of the GNU_RELRO program
+        # header are ignored, the PT_LOAD header determines the effective permissions.
         # However, the dynamic linker need to write to this area so these are RW.
         # Glibc itself takes care of mprotecting this area R after relocations are finished.
         # See also https://marc.info/?l=binutils&m=1498883354122353
@@ -92,93 +93,69 @@ def check_ELF_RELRO(executable):
             have_gnu_relro = True
 
     have_bindnow = False
-    p = subprocess.Popen([READELF_CMD, '-d', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([READELF_CMD, '-d', '-W', executable])
+
     for line in stdout.splitlines():
         tokens = line.split()
         if len(tokens)>1 and tokens[1] == '(BIND_NOW)' or (len(tokens)>2 and tokens[1] == '(FLAGS)' and 'BIND_NOW' in tokens[2:]):
             have_bindnow = True
     return have_gnu_relro and have_bindnow
 
-def check_ELF_Canary(executable):
+def check_ELF_Canary(executable) -> bool:
     '''
     Check for use of stack canary
     '''
-    p = subprocess.Popen([READELF_CMD, '--dyn-syms', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([READELF_CMD, '--dyn-syms', '-W', executable])
+
     ok = False
     for line in stdout.splitlines():
         if '__stack_chk_fail' in line:
             ok = True
     return ok
 
-def get_PE_dll_characteristics(executable):
-    '''
-    Get PE DllCharacteristics bits.
-    Returns a tuple (arch,bits) where arch is 'i386:x86-64' or 'i386'
-    and bits is the DllCharacteristics value.
-    '''
-    p = subprocess.Popen([OBJDUMP_CMD, '-x',  executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
-    arch = ''
+def get_PE_dll_characteristics(executable) -> int:
+    '''Get PE DllCharacteristics bits'''
+    stdout = run_command([OBJDUMP_CMD, '-x',  executable])
+
     bits = 0
     for line in stdout.splitlines():
         tokens = line.split()
-        if len(tokens)>=2 and tokens[0] == 'architecture:':
-            arch = tokens[1].rstrip(',')
         if len(tokens)>=2 and tokens[0] == 'DllCharacteristics':
             bits = int(tokens[1],16)
-    return (arch,bits)
+    return bits
 
 IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA = 0x0020
 IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE    = 0x0040
 IMAGE_DLL_CHARACTERISTICS_NX_COMPAT       = 0x0100
 
-def check_PE_DYNAMIC_BASE(executable):
+def check_PE_DYNAMIC_BASE(executable) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
-    (arch,bits) = get_PE_dll_characteristics(executable)
-    reqbits = IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE
-    return (bits & reqbits) == reqbits
+    bits = get_PE_dll_characteristics(executable)
+    return (bits & IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE) == IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE
 
-# On 64 bit, must support high-entropy 64-bit address space layout randomization in addition to DYNAMIC_BASE
-# to have secure ASLR.
-def check_PE_HIGH_ENTROPY_VA(executable):
+# Must support high-entropy 64-bit address space layout randomization
+# in addition to DYNAMIC_BASE to have secure ASLR.
+def check_PE_HIGH_ENTROPY_VA(executable) -> bool:
     '''PIE: DllCharacteristics bit 0x20 signifies high-entropy ASLR'''
-    (arch,bits) = get_PE_dll_characteristics(executable)
-    if arch == 'i386:x86-64':
-        reqbits = IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA
-    else: # Unnecessary on 32-bit
-        assert(arch == 'i386')
-        reqbits = 0
-    return (bits & reqbits) == reqbits
+    bits = get_PE_dll_characteristics(executable)
+    return (bits & IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA) == IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA
 
 def check_PE_RELOC_SECTION(executable) -> bool:
     '''Check for a reloc section. This is required for functional ASLR.'''
-    p = subprocess.Popen([OBJDUMP_CMD, '-h',  executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([OBJDUMP_CMD, '-h',  executable])
+
     for line in stdout.splitlines():
         if '.reloc' in line:
             return True
     return False
 
-def check_PE_NX(executable):
+def check_PE_NX(executable) -> bool:
     '''NX: DllCharacteristics bit 0x100 signifies nxcompat (DEP)'''
-    (arch,bits) = get_PE_dll_characteristics(executable)
+    bits = get_PE_dll_characteristics(executable)
     return (bits & IMAGE_DLL_CHARACTERISTICS_NX_COMPAT) == IMAGE_DLL_CHARACTERISTICS_NX_COMPAT
 
-def get_MACHO_executable_flags(executable):
-    p = subprocess.Popen([OTOOL_CMD, '-vh', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+def get_MACHO_executable_flags(executable) -> List[str]:
+    stdout = run_command([OTOOL_CMD, '-vh', executable])
 
     flags = []
     for line in stdout.splitlines():
@@ -222,10 +199,7 @@ def check_MACHO_LAZY_BINDINGS(executable) -> bool:
     Check for no lazy bindings.
     We don't use or check for MH_BINDATLOAD. See #18295.
     '''
-    p = subprocess.Popen([OTOOL_CMD, '-l', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([OTOOL_CMD, '-l', executable])
 
     for line in stdout.splitlines():
         tokens = line.split()
@@ -238,10 +212,8 @@ def check_MACHO_Canary(executable) -> bool:
     '''
     Check for use of stack canary
     '''
-    p = subprocess.Popen([OTOOL_CMD, '-Iv', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
+    stdout = run_command([OTOOL_CMD, '-Iv', executable])
+
     ok = False
     for line in stdout.splitlines():
         if '___stack_chk_fail' in line:
@@ -270,7 +242,7 @@ CHECKS = {
 ]
 }
 
-def identify_executable(executable):
+def identify_executable(executable) -> Optional[str]:
     with open(filename, 'rb') as f:
         magic = f.read(4)
     if magic.startswith(b'MZ'):
@@ -292,18 +264,12 @@ if __name__ == '__main__':
                 continue
 
             failed = []
-            warning = []
             for (name, func) in CHECKS[etype]:
                 if not func(filename):
-                    if name in NONFATAL:
-                        warning.append(name)
-                    else:
-                        failed.append(name)
+                    failed.append(name)
             if failed:
                 print('%s: failed %s' % (filename, ' '.join(failed)))
                 retval = 1
-            if warning:
-                print('%s: warning %s' % (filename, ' '.join(warning)))
         except IOError:
             print('%s: cannot open' % filename)
             retval = 1
