@@ -2781,8 +2781,11 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
                 }
             }
         }
-        // at this point nChangePosInOut output should be available to add new asset commitment to
-        mintSyscoin.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
+        // add new output if assetInfo is valid (its an asset change output not a syscoin-only output)
+        if(!assetInfo.IsNull()) {
+            // at this point nChangePosInOut output should be available to add new asset commitment to
+            mintSyscoin.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
+        }
         mintSyscoin.SerializeData(data);
     } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
         CBurnSyscoin burnSyscoin(*tx);
@@ -2793,7 +2796,9 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
                 }
             }
         }
-        burnSyscoin.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
+        if(!assetInfo.IsNull()) {
+            burnSyscoin.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
+        }
         burnSyscoin.SerializeData(data);
     } else if(IsAssetTx(tx->nVersion)) {
         CAsset asset(*tx);
@@ -2804,7 +2809,9 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
                 }
             }
         }
-        asset.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
+        if(!assetInfo.IsNull()) {
+            asset.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
+        }
         asset.SerializeData(data); 
     } else if(IsAssetAllocationTx(tx->nVersion)) {
         CAssetAllocation allocation(*tx);
@@ -2815,7 +2822,9 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
                 }
             }
         }
-        allocation.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
+        if(!assetInfo.IsNull()) {
+            allocation.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
+        }
         allocation.SerializeData(data); 
     }
     // find previous commitment (OP_RETURN) and replace script
@@ -3064,7 +3073,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                         }
                         std::vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosInOut;
                         txNew.vout.insert(position, newTxOut);
-                        if(isAssetChange) {
+                        if(tx.HasAssets()) {
                             if(!ReserializeAssetCommitment(txNew, nChangeAsset, (uint32_t)nChangePosInOut)) {
                                 error = _("Reserialize asset commitment failed after change output added");
                                 return false;     
