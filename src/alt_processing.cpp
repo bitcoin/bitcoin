@@ -64,4 +64,15 @@ void AltLogicValidation::InitializeNode(uint32_t driver_id, TransportCapabilitie
 
 void AltLogicValidation::FinalizeNode() {}
 
-void AltLogicValidation::BlockHeaderAnomalie() {}
+void AltLogicValidation::BlockHeaderAnomalie() {
+    LOCK(cs_main);
+    CBlockIndex *pindexBestHeader = ::ChainActive().Tip();
+    const CNetMsgMaker msgMaker(209);
+
+    // "Anycast" headers fetching
+    for (std::map<uint32_t, CAltNodeState>::iterator iter = mapNodeState.begin(); iter != mapNodeState.end(); iter++)
+    {
+        if (iter->second.caps.fSending && iter->second.caps.fReceiving && iter->second.caps.fHeaders)
+            m_altstack->PushMessage(iter->second.driver_id, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexBestHeader), uint256()));
+    }
+}
