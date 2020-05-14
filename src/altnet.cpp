@@ -18,6 +18,7 @@ CAltstack::~CAltstack()
 
 bool CAltstack::Start(AltLogicValidation *alt_logic)
 {
+    LogPrint(BCLog::ALTSTACK, "Boostrapping Altstack\n");
     m_msgproc = alt_logic;
     interruptNet.reset();
     flagInterruptAltProc = false;

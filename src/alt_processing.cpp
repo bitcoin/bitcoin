@@ -21,6 +21,8 @@ CAltNodeState *AltLogicValidation::State(uint32_t node_id) {
 bool AltLogicValidation::ProcessMessage(CAltMsg& msg) {
     if (msg.m_command == NetMsgType::GETHEADERS) {
 
+        LogPrint(BCLog::ALTSTACK, "Receive GETHEADERS from %d\n", msg.m_node_id);
+
         LOCK(cs_vNodeState);
         CAltNodeState *node = State(msg.m_node_id);
         // Peer ask for a reply, check receiving capability
@@ -33,7 +35,10 @@ bool AltLogicValidation::ProcessMessage(CAltMsg& msg) {
 
         //TODO: implement checks
         const CBlockIndex* pindex = nullptr;
+        const CBlockIndex* tip = nullptr;
+        tip = ::ChainActive().Tip();
         pindex = FindForkInGlobalIndex(::ChainActive(), locator);
+        LogPrint(BCLog::ALTSTACK, "Fetch header starting from %s, tip %s\n", pindex->GetBlockHeader().GetHash().ToString(), tip->GetBlockHeader().GetHash().ToString());
         if (pindex)
             pindex = ::ChainActive().Next(pindex);
 
@@ -44,6 +49,7 @@ bool AltLogicValidation::ProcessMessage(CAltMsg& msg) {
             if (pindex->GetBlockHash() == hashStop)
                 break;
         }
+        LogPrint(BCLog::ALTSTACK, "Sending back %d headers\n", vHeaders.size());
         const CNetMsgMaker msgMaker(209);
         if (vHeaders.size() > 0)
             m_altstack->PushMessage(node->driver_id, msgMaker.Make(NetMsgType::HEADERS, vHeaders));
@@ -68,6 +74,10 @@ void AltLogicValidation::BlockHeaderAnomalie() {
     LOCK(cs_main);
     CBlockIndex *pindexBestHeader = ::ChainActive().Tip();
     const CNetMsgMaker msgMaker(209);
+
+    const CBlockIndex* pindex = nullptr;
+    pindex = ::ChainActive().Tip();
+    LogPrint(BCLog::ALTSTACK, "Block header anomalie detected - Anycasting header fetching from %s\n", pindex->GetBlockHeader().GetHash().ToString());
 
     // "Anycast" headers fetching
     for (std::map<uint32_t, CAltNodeState>::iterator iter = mapNodeState.begin(); iter != mapNodeState.end(); iter++)

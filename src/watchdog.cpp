@@ -4,6 +4,7 @@
 
 #include <watchdog.h>
 
+#include <logging.h>
 #include <util/time.h>
 #include <watchdoginterface.h>
 
@@ -16,6 +17,7 @@ CWatchdog::~CWatchdog() {}
 
 void CWatchdog::ScanAnomalies()
 {
+    LogPrint(BCLog::ALTSTACK, "Block header anomalie detected - notifying subscribers\n");
     GetWatchSignals().BlockHeaderAnomalie();
 }
 
