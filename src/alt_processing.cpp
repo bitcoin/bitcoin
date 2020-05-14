@@ -55,6 +55,21 @@ bool AltLogicValidation::ProcessMessage(CAltMsg& msg) {
             m_altstack->PushMessage(node->driver_id, msgMaker.Make(NetMsgType::HEADERS, vHeaders));
         return true;
     }
+    if (msg.m_command == NetMsgType::HEADERS) {
+
+        LogPrint(BCLog::ALTSTACK, "Receive HEADERS from %d\n", msg.m_node_id);
+
+        std::vector<CBlockHeader> headers;
+
+        unsigned int nCount = ReadCompactSize(msg.m_recv);
+        headers.resize(nCount);
+        for (unsigned int n = 0; n < nCount; n++) {
+            msg.m_recv >> headers[n];
+        }
+        const CBlockIndex* pindex = nullptr;
+        pindex = ::ChainActive().Tip();
+        LogPrint(BCLog::ALTSTACK, "Receiver header %s vs tip %s\n", headers[0].GetHash().ToString(), pindex->GetBlockHeader().GetHash().ToString());
+    }
     return true;
 }
 
