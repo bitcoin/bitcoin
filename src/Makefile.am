@@ -132,6 +132,7 @@ BITCOIN_CORE_H = \
   core_memusage.h \
   cuckoocache.h \
   drivers.h \
+  drivers/clightning.h \
   flatfile.h \
   fs.h \
   httprpc.h \
@@ -284,6 +285,7 @@ libbitcoin_server_a_SOURCES = \
   blockfilter.cpp \
   chain.cpp \
   consensus/tx_verify.cpp \
+  drivers/clightning.cpp \
   flatfile.cpp \
   httprpc.cpp \
   httpserver.cpp \

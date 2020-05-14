@@ -5,6 +5,11 @@
 
 #include <altnet.h>
 
+#include <drivers/clightning.h>
+
+//TODO: hack, need dynamic module loading
+std::unique_ptr<ClightningDriver> g_clightning = MakeUnique<ClightningDriver>();
+
 CAltstack::CAltstack() {
     m_node_id = 0;
 }
@@ -22,6 +27,8 @@ bool CAltstack::Start(AltLogicValidation *alt_logic)
     m_msgproc = alt_logic;
     interruptNet.reset();
     flagInterruptAltProc = false;
+
+    vDrivers.emplace_back(std::move(g_clightning.get()));
 
     threadWarmupDrivers = std::thread(&TraceThread<std::function<void()> >, "drivers-warmup", std::function<void()>(std::bind(&CAltstack::ThreadWarmupDrivers, this)));
 
