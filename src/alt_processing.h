@@ -10,6 +10,7 @@
 #include <drivers.h>
 #include <sync.h>
 #include <validation.h>
+#include <watchdoginterface.h>
 
 #include <map>
 
@@ -30,7 +31,7 @@ public:
         driver_id(driver_id), caps(caps), pindexBestHeaderReceived(nullptr) {}
 };
 
-class AltLogicValidation final {
+class AltLogicValidation final : public CWatchdogInterface {
 private:
     CAltstack* const m_altstack;
 
@@ -52,6 +53,11 @@ public:
      * Send queued protocol messages to be sent to a given node id
      */
     bool SendMessage();
+
+    /**
+     * Overriden from CValidationInterface *
+     */
+    void BlockHeaderAnomalie();
 };
 
 #endif // BITCOIN_ALT_PROCESSING_H

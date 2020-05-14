@@ -63,3 +63,5 @@ void AltLogicValidation::InitializeNode(uint32_t driver_id, TransportCapabilitie
 }
 
 void AltLogicValidation::FinalizeNode() {}
+
+void AltLogicValidation::BlockHeaderAnomalie() {}
