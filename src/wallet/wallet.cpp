@@ -2782,7 +2782,7 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
             }
         }
         // add new output if assetInfo is valid (its an asset change output not a syscoin-only output)
-        if(!assetInfo.IsNull()) {
+        if(assetInfo.nValue > 0) {
             // at this point nChangePosInOut output should be available to add new asset commitment to
             mintSyscoin.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
         }
@@ -2796,7 +2796,7 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
                 }
             }
         }
-        if(!assetInfo.IsNull()) {
+        if(assetInfo.nValue > 0) {
             burnSyscoin.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
         }
         burnSyscoin.SerializeData(data);
@@ -2809,7 +2809,7 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
                 }
             }
         }
-        if(!assetInfo.IsNull()) {
+        if(assetInfo.nValue > 0) {
             asset.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
         }
         asset.SerializeData(data); 
@@ -2822,7 +2822,7 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
                 }
             }
         }
-        if(!assetInfo.IsNull()) {
+        if(assetInfo.nValue > 0) {
             allocation.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
         }
         allocation.SerializeData(data); 
@@ -3073,7 +3073,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                         }
                         std::vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosInOut;
                         txNew.vout.insert(position, newTxOut);
-                        if(tx.HasAssets()) {
+                        if(txNew.HasAssets()) {
                             if(!ReserializeAssetCommitment(txNew, nChangeAsset, (uint32_t)nChangePosInOut)) {
                                 error = _("Reserialize asset commitment failed after change output added");
                                 return false;     
