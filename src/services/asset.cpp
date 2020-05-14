@@ -80,9 +80,6 @@ uint32_t GenerateSyscoinGuid(const COutPoint& outPoint) {
     const arith_uint256 &txidArith = UintToArith256(outPoint.hash);
     uint32_t low32 = (uint32_t)txidArith.GetLow64();
     low32 += outPoint.n;
-    if(low32 < 0){
-        low32 *= -1;
-    }
     if(low32 <= SYSCOIN_TX_VERSION_ALLOCATION_SEND*10){
         low32 = SYSCOIN_TX_VERSION_ALLOCATION_SEND*10;
     }

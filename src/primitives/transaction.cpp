@@ -373,10 +373,6 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<ui
         }
         CAmount nTotal = 0;
         const uint32_t &nAsset = it.first;
-        if(nAsset < 0) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-negative-guid");
-        }
-        
         const size_t &nVoutSize = vout.size();
         for(const auto& voutAsset: it.second) {
             const uint32_t& nOut = voutAsset.n;
