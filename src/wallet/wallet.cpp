@@ -2767,7 +2767,6 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
 }
 // SYSCOIN
 bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &assetInfo, const uint32_t &nChangePosInOut) {
-    LogPrintf("ReserializeAssetCommitment assetInfo asset %d value %lld nChangePosInOut %d\n", assetInfo.nAsset, assetInfo.nValue, nChangePosInOut);
     // store tx.voutAssets into OP_RETURN data overwriting previous commitment
     const CTransactionRef& tx = MakeTransactionRef(mtx);
     std::vector<unsigned char> data;
