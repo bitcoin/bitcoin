@@ -16,14 +16,36 @@
 #include <string>
 #include <vector>
 
+/**
+ * A network type.
+ * @note An address may belong to more than one network, for example `10.0.0.1`
+ * belongs to both `NET_UNROUTABLE` and `NET_IPV4`.
+ * Keep these sequential starting from 0 and `NET_MAX` as the last entry.
+ * We have loops like `for (int i = 0; i < NET_MAX; i++)` that expect to iterate
+ * over all enum values and also `GetExtNetwork()` "extends" this enum by
+ * introducing standalone constants starting from `NET_MAX`.
+ */
 enum Network
 {
+    /// Addresses from these networks are not publicly routable on the global Internet.
     NET_UNROUTABLE = 0,
+
+    /// IPv4
     NET_IPV4,
+
+    /// IPv6
     NET_IPV6,
+
+    /// TORv2
     NET_ONION,
+
+    /// A set of dummy addresses that map a name to an IPv6 address. These
+    /// addresses belong to RFC4193's fc00::/7 subnet (unique-local addresses).
+    /// We use them to map a string or FQDN to an IPv6 address in CAddrMan to
+    /// keep track of which DNS seeds were used.
     NET_INTERNAL,
 
+    /// Dummy value to indicate the number of NET_* constants.
     NET_MAX,
 };
 
