@@ -13,7 +13,7 @@ from test_framework.messages import (
     msg_getcfcheckpt,
 )
 from test_framework.mininode import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes,
@@ -21,7 +21,7 @@ from test_framework.util import (
     wait_until,
 )
 
-class CompactFiltersTest(BitcoinTestFramework):
+class CompactFiltersTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.rpc_timeout = 480
