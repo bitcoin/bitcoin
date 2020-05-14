@@ -3221,6 +3221,7 @@ void PeerManagerImpl::ProcessMessage(
         LOCK(cs_main);
 
         const auto current_time = GetTime<std::chrono::microseconds>();
+        uint256* best_block{nullptr};
 
         for (CInv &inv : vInv)
         {
@@ -3256,18 +3257,14 @@ void PeerManagerImpl::ProcessMessage(
                     state->fSyncStarted = true;
                     state->nHeadersSyncTimeout = GetTimeMicros() + HEADERS_DOWNLOAD_TIMEOUT_BASE + HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER * (GetAdjustedTime() - pindexBestHeader->GetBlockTime())/(m_chainparams.GetConsensus().nPowTargetSpacing);
                     nSyncStarted++;
-                    // We used to request the full block here, but since headers-announcements are now the
-                    // primary method of announcement on the network, and since, in the case that a node
-                    // fell back to inv we probably have a reorg which we should get the headers for first,
-                    // we now only provide a getheaders response here. When we receive the headers, we will
-                    // then ask for the blocks we need.
-                    std::string msg_type = (pfrom.nServices & NODE_HEADERS_COMPRESSED) ? NetMsgType::GETHEADERS2 : NetMsgType::GETHEADERS;
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(msg_type, m_chainman.ActiveChain().GetLocator(pindexBestHeader), inv.hash));
-                    LogPrint(BCLog::NET, "%s (%d) %s to peer=%d\n", msg_type, pindexBestHeader->nHeight, inv.hash.ToString(), pfrom.GetId());
+                    // Headers-first is the primary method of announcement on
+                    // the network. If a node fell back to sending blocks by inv,
+                    // it's probably for a re-org. The final block hash
+                    // provided should be the highest, so send a getheaders and
+                    // then fetch the blocks we need to catch up.
+                    best_block = &inv.hash;
                 }
-            }
-            else
-            {
+            } else {
                 static std::set<int> allowWhileInIBDObjs = {
                         MSG_SPORK
                 };
@@ -3296,6 +3293,12 @@ void PeerManagerImpl::ProcessMessage(
                 }
             }
         }
+        if (best_block != nullptr) {
+            std::string msg_type = (pfrom.nServices & NODE_HEADERS_COMPRESSED) ? NetMsgType::GETHEADERS2 : NetMsgType::GETHEADERS;
+            m_connman.PushMessage(&pfrom, msgMaker.Make(msg_type, m_chainman.ActiveChain().GetLocator(pindexBestHeader), *best_block));
+            LogPrint(BCLog::NET, "%s (%d) %s to peer=%d\n", msg_type, pindexBestHeader->nHeight, best_block->ToString(), pfrom.GetId());
+        }
+
         return;
     }
 
