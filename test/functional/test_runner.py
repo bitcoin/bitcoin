@@ -191,6 +191,7 @@ BASE_SCRIPTS = [
     'wallet_createwallet.py --descriptors',
     'wallet_watchonly.py --legacy-wallet',
     'wallet_watchonly.py --usecli --legacy-wallet',
+    'wallet_db.py',
     'wallet_reorgsrestore.py',
     'interface_http.py',
     'interface_rpc.py',
