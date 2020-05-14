@@ -594,7 +594,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if(tx.vout[vecVout[0].n].assetInfo.nValue != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
             }
-            if (tx.vout[nOut].nValue < 500*COIN) {
+            if (tx.vout[nOut].nValue < 150*COIN) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
             if (nAsset <= (SYSCOIN_TX_VERSION_ALLOCATION_SEND*10)) {

@@ -427,8 +427,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
     scriptData << OP_RETURN << data;
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
-    // 500 SYS fee for new asset
-    opreturnRecipient.nAmount = 500*COIN;
+    // 150 SYS fee for new asset
+    opreturnRecipient.nAmount = 150*COIN;
     
     mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
     CAmount nFeeRequired = 0;
@@ -449,8 +449,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
     scriptData.clear();
     scriptData << OP_RETURN << data;
     CreateFeeRecipient(scriptData, opreturnRecipient);
-    // 500 SYS fee for new asset
-    opreturnRecipient.nAmount = 500*COIN;
+    // 150 SYS fee for new asset
+    opreturnRecipient.nAmount = 150*COIN;
     mtx.vout.clear();
     mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
     mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
