@@ -5,9 +5,9 @@
 
 #include <node/coinstats.h>
 
-#include <coins.h>
 #include <crypto/muhash.h>
 #include <hash.h>
+#include <index/coinstatsindex.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <util/system.h>
@@ -22,17 +22,21 @@ static void ApplyStats(CCoinsStats &stats, MuHash3072& muhash, const uint256& ha
         COutPoint outpoint = COutPoint(hash, output.first);
         Coin coin = output.second;
 
-        TruncatedSHA512Writer ss(SER_DISK, 0);
-        ss << outpoint;
-        ss << (uint32_t)(coin.nHeight * 2 + coin.fCoinBase);
-        ss << coin.out;
-        muhash *= MuHash3072(ss.GetHash().begin());
+        muhash *= MuHash3072(GetTruncatedSHA512Hash(outpoint, coin).begin());
 
         stats.nTransactionOutputs++;
         stats.nTotalAmount += output.second.out.nValue;
         stats.nBogoSize += 32 /* txid */ + 4 /* vout index */ + 4 /* height + coinbase */ + 8 /* amount */ +
                            2 /* scriptPubKey len */ + output.second.out.scriptPubKey.size() /* scriptPubKey */;
     }
+}
+
+uint256 GetTruncatedSHA512Hash(const COutPoint& outpoint, const Coin& coin) {
+    TruncatedSHA512Writer ss(SER_DISK, 0);
+    ss << outpoint;
+    ss << (uint32_t)(coin.nHeight * 2 + coin.fCoinBase);
+    ss << coin.out;
+    return ss.GetHash();
 }
 
 //! Calculate statistics about the unspent transaction output set
