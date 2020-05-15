@@ -21,6 +21,7 @@
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
+#include <txmempool.h>
 #include <util/bip32.h>
 #include <util/check.h>
 #include <util/error.h>
@@ -1111,11 +1112,41 @@ void CWallet::transactionAddedToMempool(const CTransactionRef& ptx) {
     }
 }
 
-void CWallet::transactionRemovedFromMempool(const CTransactionRef &ptx) {
+void CWallet::transactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolRemovalReason reason) {
     LOCK(cs_wallet);
     auto it = mapWallet.find(ptx->GetHash());
     if (it != mapWallet.end()) {
         it->second.fInMempool = false;
+    }
+    // Handle transactions that were removed from the mempool because they
+    // conflict with transactions in a newly connected block.
+    if (reason == MemPoolRemovalReason::CONFLICT) {
+        // Call SyncNotifications, so external -walletnotify notifications will
+        // be triggered for these transactions. Set Status::UNCONFIRMED instead
+        // of Status::CONFLICTED for a few reasons:
+        //
+        // 1. The transactionRemovedFromMempool callback does not currently
+        //    provide the conflicting block's hash and height, and for backwards
+        //    compatibility reasons it may not be not safe to store conflicted
+        //    wallet transactions with a null block hash. See
+        //    https://github.com/bitcoin/bitcoin/pull/18600#discussion_r420195993.
+        // 2. For most of these transactions, the wallet's internal conflict
+        //    detection in the blockConnected handler will subsequently call
+        //    MarkConflicted and update them with CONFLICTED status anyway. This
+        //    applies to any wallet transaction that has inputs spent in the
+        //    block, or that has ancestors in the wallet with inputs spent by
+        //    the block.
+        // 3. Longstanding behavior since the sync implementation in
+        //    https://github.com/bitcoin/bitcoin/pull/9371 and the prior sync
+        //    implementation before that was to mark these transactions
+        //    unconfirmed rather than conflicted.
+        //
+        // Nothing described above should be seen as an unchangeable requirement
+        // when improving this code in the future. The wallet's heuristics for
+        // distinguishing between conflicted and unconfirmed transactions are
+        // imperfect, and could be improved in general, see
+        // https://github.com/bitcoin-core/bitcoin-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
+        SyncTransaction(ptx, {CWalletTx::Status::UNCONFIRMED, /* block height  */ 0, /* block hash */ {}, /* index */ 0});
     }
 }
 
@@ -1129,7 +1160,7 @@ void CWallet::blockConnected(const CBlock& block, int height)
     for (size_t index = 0; index < block.vtx.size(); index++) {
         CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, height, block_hash, index);
         SyncTransaction(block.vtx[index], confirm);
-        transactionRemovedFromMempool(block.vtx[index]);
+        transactionRemovedFromMempool(block.vtx[index], MemPoolRemovalReason::BLOCK);
     }
 }
 
