@@ -180,6 +180,32 @@
         <translation>הארנק מוצפן</translation>
     </message>
     <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>הקש את הסיסמא בשביל הארנק.
+השתמש בסיסמא הכוללת עשר או יותר תווים אקראים, או שמונה או יותר מילים
+</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>הקש את הסיסמא הישנה והחדשה בשביל הארנק.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>זכור שהצפנת הארנק לא יכולה להגן עליך לגמרי מגניבת המטבעות שלך על ידי תוכנה זדונית שנמצאת על המחשב שלך.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>הארנק הוא מוצפן</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>הארנק שלך עומד להיות מוצפן</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>הארנק שלך מוצפן כעת</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>חשוב! כל גיבוי קודם שעשית לארנק שלך יש להחליף עם קובץ הארנק המוצפן שזה עתה נוצר. מסיבות אבטחה, גיבויים קודמים של קובץ הארנק הלא-מוצפן יהפכו לחסרי שימוש ברגע שתתחיל להשתמש בארנק החדש המוצפן.</translation>
     </message>
@@ -300,6 +326,14 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>פתיחת &amp;כתובת משאב…</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>צור ארנק...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>צור ארנק חדש</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -739,9 +773,21 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>יצירת הארנק נכשלה</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>אזהרה לגבי יצירת הארנק</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>צור ארנק.</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>

@@ -1790,6 +1790,14 @@
         <translation>Blocos Sincronizados</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>O sistema autonômo mapeado usado para diversificar a seleção de pares.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Mapeado como</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>User Agent</translation>
     </message>

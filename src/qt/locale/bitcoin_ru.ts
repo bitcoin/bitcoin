@@ -482,12 +482,24 @@
         <translation>Готов</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>Окно узла</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>Открыть консоль отладки и диагностики узла</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>&amp;Адреса для отправлений</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
         <translation>&amp;Адреса для получений</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>Открыть биткойн: URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1050,12 +1062,24 @@
         <translation>Спрятать</translation>
     </message>
     <message>
+        <source>Esc</source>
+        <translation>Выйти</translation>
+    </message>
+    <message>
+        <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
+        <translation>%1 синхронизировано. Заголовки и блоки будут скачиваться с узлов сети и проверяться до тех пока не будет достигнут конец цепи блоков.</translation>
+    </message>
+    <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
         <translation>Неизвестно. Синхронизация заголовков (%1, %2%)...</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open bitcoin URI</source>
+        <translation>Открыть URI биткойна</translation>
+    </message>
     <message>
         <source>URI:</source>
         <translation>URI:</translation>
@@ -1449,6 +1473,10 @@
         <translation>'bitcoin://' не верный URI. Используйте 'bitcoin:' вместо этого.</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 is not supported.</source>
+        <translation>Невозможно обработать запрос платежа потому что BIP70 не поддерживается.</translation>
+    </message>
+    <message>
         <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
         <translation>Из-за широко распространенных недостатков безопасности в BIP70 настоятельно рекомендуется игнорировать любые торговые инструкции по переключению кошельков.</translation>
     </message>
@@ -1765,6 +1793,10 @@
         <translation>Пользовательский агент</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>Окно узла</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Открыть отладочный лог-файл %1 с текущего каталога данных. Для больших лог-файлов это может занять несколько секунд.</translation>
     </message>
@@ -1974,6 +2006,14 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Необязательная сумма для запроса. Оставьте пустым или укажите ноль, чтобы запросить неопределённую сумму.</translation>
+    </message>
+    <message>
+        <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
+        <translation>Необязательная метка, ассоциированная с новым адресом приёма (используется вами, чтобы идентифицировать выставленные счёт). Также она присоединяется к запросу платежа.</translation>
+    </message>
+    <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation>Необязательное сообщение, которое присоединяется к запросу платежа и может быть показано отправителю.</translation>
     </message>
     <message>
         <source>&amp;Create new receiving address</source>
@@ -2301,6 +2341,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%1 (%2 блоков)</translation>
     </message>
     <message>
+        <source>Cr&amp;eate Unsigned</source>
+        <translation>Создать Без Подписи</translation>
+    </message>
+    <message>
         <source> from wallet '%1'</source>
         <translation>с кошелька '%1'</translation>
     </message>
@@ -2311,6 +2355,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>%1 to %2</source>
         <translation>С %1 на %2</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Вы хотите подготовить черновик транзакции?</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -2349,8 +2397,20 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Подтвердить отправку монет</translation>
     </message>
     <message>
+        <source>Confirm transaction proposal</source>
+        <translation>Подтвердите предложенную транзакцию</translation>
+    </message>
+    <message>
+        <source>Copy PSBT to clipboard</source>
+        <translation>Копировать PSBT в буфер обмена</translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation>Отправить</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>PSBT скопирована</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2572,6 +2632,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The Bitcoin address the message was signed with</source>
         <translation>Биткойн-адрес, которым было подписано сообщение</translation>
+    </message>
+    <message>
+        <source>The signed message to verify</source>
+        <translation>Подписанное сообщение для проверки</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
@@ -3159,6 +3223,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Confirm fee bump</source>
         <translation>Подтвердите оплату</translation>
+    </message>
+    <message>
+        <source>Can't draft transaction.</source>
+        <translation>Невозможно подготовить черновик транзакции.</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>PSBT скопирована</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>

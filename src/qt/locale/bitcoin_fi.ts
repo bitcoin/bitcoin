@@ -482,12 +482,24 @@
         <translation>Rahansiirtohistoria on ajan tasalla</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>Solmu ikkuna</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>Avaa solmun diagnostiikka- ja vianmäärityskonsoli </translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>&amp;Lähetysosoitteet</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
         <translation>&amp;Vastaanotto-osoitteet</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>Avaa bitcoin: URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -783,7 +795,11 @@
         <source>Create wallet failed</source>
         <translation>Lompakon luonti epäonnistui</translation>
     </message>
-    </context>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Luo lompakkovaroitus</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
@@ -801,6 +817,10 @@
     <message>
         <source>Encrypt Wallet</source>
         <translation>Salaa lompakko</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Poista tämän lompakon yksityiset avaimet käytöstä. Lompakot, joissa yksityiset avaimet on poistettu käytöstä, eivät sisällä yksityisiä avaimia, eikä niissä voi olla HD-juurisanoja tai tuotuja yksityisiä avaimia. Tämä on ihanteellinen katselulompakkoihin.</translation>
     </message>
     <message>
         <source>Disable Private Keys</source>
@@ -1042,12 +1062,20 @@
         <translation>Piilota</translation>
     </message>
     <message>
+        <source>Esc</source>
+        <translation>Poistu</translation>
+    </message>
+    <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
         <translation>Tuntematon. Synkronoidaan tunnisteita (%1, %2%)...</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open bitcoin URI</source>
+        <translation>Avaa bitcoin URI</translation>
+    </message>
     <message>
         <source>URI:</source>
         <translation>URI:</translation>
@@ -1058,6 +1086,10 @@
     <message>
         <source>Open wallet failed</source>
         <translation>Lompakon avaaminen epäonnistui</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Avoimen lompakon varoitus</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -1437,6 +1469,10 @@
         <translation>'bitcoin://' ei ole kelvollinen URI. Käytä 'bitcoin:' sen sijaan.</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 is not supported.</source>
+        <translation>Maksupyyntöä ei voida käsitellä, koska BIP70:tä ei tueta.</translation>
+    </message>
+    <message>
         <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
         <translation>Tämän virheen saadessasi tulee sinun pyytää kauppiaalta BIP21 -yhteensopivaa URI-osoitetta.</translation>
     </message>
@@ -1745,8 +1781,20 @@
         <translation>Synkronoidut lohkot</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Kartoitettu autonominen järjestelmä, jota käytetään monipuolistamaan solmuvalikoimaa</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Kartoitettu AS</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Käyttöliittymä</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>Solmun näkymä</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -1958,6 +2006,14 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Valinnainen pyyntömäärä. Jätä tyhjäksi tai nollaksi jos et pyydä tiettyä määrää.</translation>
+    </message>
+    <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation>Valinnainen viesti, joka on liitetty maksupyyntöön ja joka voidaan näyttää lähettäjälle.</translation>
+    </message>
+    <message>
+        <source>&amp;Create new receiving address</source>
+        <translation> &amp;Luo uusi vastaanotto-osoite</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2209,6 +2265,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Tomu:</translation>
     </message>
     <message>
+        <source>Hide transaction fee settings</source>
+        <translation> Piilota siirtomaksuasetukset</translation>
+    </message>
+    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation>Mikäli lohkoissa ei ole tilaa kaikille siirtotapahtumille, voi louhijat sekä välittävät solmut pakottaa vähimmäispalkkion. Tämän vähimmäispalkkion maksaminen on täysin OK, mutta huomaa, että se saattaa johtaa siihen, ettei siirto vahvistu koskaan, jos bitcoin-siirtoja on enemmän kuin mitä verkko pystyy käsittelemään.</translation>
     </message>
@@ -2315,6 +2375,26 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Confirm send coins</source>
         <translation>Vahvista kolikoiden lähetys</translation>
+    </message>
+    <message>
+        <source>Confirm transaction proposal</source>
+        <translation>Vahvista siirtoehdotus</translation>
+    </message>
+    <message>
+        <source>Copy PSBT to clipboard</source>
+        <translation>Kopioi PSBT leikepöydälle</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Lähetä</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>PSBT kopioitu</translation>
+    </message>
+    <message>
+        <source>Watch-only balance:</source>
+        <translation>Katselulompakon saldo:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2570,6 +2650,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Lompakon avaaminen peruttiin.</translation>
     </message>
     <message>
+        <source>No error</source>
+        <translation>Ei virhettä</translation>
+    </message>
+    <message>
         <source>Private key for the entered address is not available.</source>
         <translation>Yksityistä avainta syötetylle osoitteelle ei ole saatavilla.</translation>
     </message>
@@ -2738,6 +2822,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Transaction virtual size</source>
         <translation>Tapahtuman näennäiskoko</translation>
+    </message>
+    <message>
+        <source> (Certificate was not verified)</source>
+        <translation> (Sertifikaattia ei vahvistettu)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -3109,6 +3197,14 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Vahvista palkkion korotus</translation>
     </message>
     <message>
+        <source>Can't draft transaction.</source>
+        <translation> Siirtoa ei voida laatia.</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>PSBT kopioitu</translation>
+    </message>
+    <message>
         <source>Can't sign transaction.</source>
         <translation>Siirtoa ei voida allekirjoittaa.</translation>
     </message>
@@ -3331,6 +3427,14 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Määrättyä lohkohakemistoa "%s" ei ole olemassa.</translation>
     </message>
     <message>
+        <source>Unknown address type '%s'</source>
+        <translation>Tuntematon osoitetyyppi '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>Tuntematon vaihtorahatyyppi '%s'</translation>
+    </message>
+    <message>
         <source>Upgrading txindex database</source>
         <translation>Päivitetään txindex -tietokantaa</translation>
     </message>
@@ -3550,7 +3654,7 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     </message>
     <message>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Tämä on lähetyksestä maksettava maksu jonka maksat</translation>
+        <translation>Tämä on se siirtomaksu, jonka maksat, mikäli lähetät siirron.</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
@@ -3575,6 +3679,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
         <translation>Siirtomaksun arviointi epäonnistui. Odota muutama lohko tai käytä -fallbackfee -valintaa..</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>Varoitus: lompakosta {%s} tunnistetut yksityiset avaimet, on poistettu käytöstä</translation>
     </message>
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>

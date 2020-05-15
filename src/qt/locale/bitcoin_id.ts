@@ -482,12 +482,24 @@
         <translation>Terbaru</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>Jendela Node</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>Buka konsol debug dan diagnosa node</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>Address &amp;Pengirim</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
         <translation>Address &amp;Penerima</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>Buka URI bitcoin:</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1050,12 +1062,20 @@
         <translation>Sembunyikan</translation>
     </message>
     <message>
+        <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
+        <translation>%1 menyinkronkan. Program ini akan mengunduh header dan blok dari rekan dan memvalidasi sampai blok terbaru.</translation>
+    </message>
+    <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
         <translation>Tidak diketahui. Sinkronisasi Header (%1, %2%)...</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open bitcoin URI</source>
+        <translation>Buka URI bitcoin:</translation>
+    </message>
     <message>
         <source>URI:</source>
         <translation>URI:</translation>
@@ -1449,6 +1469,10 @@
         <translation>'bitcoin://' bukanlah alamat URI yang valid. Silakan gunakan 'bitcoin:'.</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 is not supported.</source>
+        <translation>Tidak dapat memproses pembayaran karena dukungan BIP70 tidak disertakan.</translation>
+    </message>
+    <message>
         <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
         <translation>Berhubung kelemahan keamanan yang meluas di BIP70, sangat disarankan agar instruksi pedagang untuk mengganti dompet diabaikan.</translation>
     </message>
@@ -1765,6 +1789,10 @@
         <translation>Agen Pengguna
 
 </translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>Jendela Node</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2343,6 +2371,14 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Konfirmasi pengiriman koin</translation>
     </message>
     <message>
+        <source>PSBT copied</source>
+        <translation>PSBT disalin</translation>
+    </message>
+    <message>
+        <source>Watch-only balance:</source>
+        <translation>Saldo (hanya lihat):</translation>
+    </message>
+    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Alamat penerima tidak sesuai. Mohon periksa kembali.</translation>
     </message>
@@ -2588,6 +2624,10 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Pembukaan kunci dompet dibatalkan.</translation>
     </message>
     <message>
+        <source>No error</source>
+        <translation>Tidak ada kesalahan</translation>
+    </message>
+    <message>
         <source>Private key for the entered address is not available.</source>
         <translation>Private key untuk alamat yang dimasukkan tidak tersedia.</translation>
     </message>
@@ -2638,8 +2678,20 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Buka sampai %1</translation>
     </message>
     <message>
+        <source>conflicted with a transaction with %1 confirmations</source>
+        <translation>Konflik dengan sebuah transaksi dengan %1 konfirmasi</translation>
+    </message>
+    <message>
         <source>0/unconfirmed, %1</source>
         <translation>0/belum dikonfirmasi, %1</translation>
+    </message>
+    <message>
+        <source>in memory pool</source>
+        <translation>Dalam pool memory</translation>
+    </message>
+    <message>
+        <source>not in memory pool</source>
+        <translation>Tidak dalam pool memory</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
@@ -2947,6 +2999,10 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Biaya baru:</translation>
     </message>
     <message>
+        <source>PSBT copied</source>
+        <translation>PSBT disalin</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>wallet default</translation>
     </message>
@@ -3039,6 +3095,14 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
     <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>Setiap transaksi dalam dompet sedang di-'Zap'...</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation>Transaksi mempunyai rantai mempool yang terlalu panjang</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation>Transaksi harus mempunyai paling tidak satu penerima</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

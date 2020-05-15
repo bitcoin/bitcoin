@@ -21,16 +21,136 @@
         <source>C&amp;lose</source>
         <translation>কপি/প্রতিলিপি</translation>
     </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>বাছাইকৃত ঠিকানাটি লিস্ট থেকে মুছুন</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>বর্তমান ট্যাবের ডেটা একটি ফাইলে এক্সপোর্ট করুন</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>এক্সপোর্ট</translation>
+    </message>
+    <message>
+        <source>&amp;Delete</source>
+        <translation>মুছুন</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>কয়েন পাঠানোর ঠিকানা বাছাই করুন</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>কয়েন পাওয়ার ঠিকানা বাছাই করুন</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>গ্রহণের ঠিকানা</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>এগুলো আপনার পেমেন্ট পাঠানোর বিটকয়েন ঠিকানা। কয়েন পাঠানোর আগে পরিমাণ ও গ্রহণের ঠিকানা সব সময় যাচাই করুন।</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>ঠিকানার তালিকা এক্সপোর্ট করুন</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>কমা দিয়ে পৃথককৃত ফাইল (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>এক্সপোর্ট ব্যর্থ হয়েছে</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
     <message>
+        <source>Label</source>
+        <translation>লেবেল</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>ঠিকানা </translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(লেবেলহীন)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation>পাসফ্রেজ ডায়লগ</translation>
+    </message>
+    <message>
+        <source>Enter passphrase</source>
+        <translation>পাসফ্রেজ প্রদান করুন</translation>
+    </message>
+    <message>
+        <source>New passphrase</source>
+        <translation>নতুন পাসফ্রেজ</translation>
+    </message>
+    <message>
+        <source>Repeat new passphrase</source>
+        <translation>পুনরায় নতুন পাসফ্রেজ</translation>
+    </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation>পাসফ্রেজ দেখুন</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>ওয়ালেট এনক্রিপ্ট করুন</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>ওয়ালেট খুলতে আপনার ওয়ালেট পাসফ্রেজ প্রয়োজন</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>ওয়ালেট খুলুন</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>ওয়ালেট ডিক্রিপ্ট করতে আপনার ওয়ালেট পাসফ্রেজ প্রয়োজন</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>ওয়ালেট ডিক্রিপ্ট করুন</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>পাসফ্রেজ পরিবর্তন করুন</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>ওয়ালেট এনক্রিপশন নিশ্চিত করুন</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>সতর্কতা : ওয়ালেট এনক্রিপ্ট করে পাসফ্রেজ ভুলে গেলে আপনি &lt;b&gt;সব বিটকয়েন হারাবেন&lt;/b&gt;!</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>সত্যিই আপনার ওয়ালেট এনক্রিপ্ট করতে চান?</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>ওয়ালেট এনক্রিপ্ট করা হয়েছে</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>ওয়ালেটের পুরাতন ও নতুন পাসফ্রেজ দিন</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>ওয়ালেট এনক্রিপ্ট হতে যাচ্ছে</translation>
+    </message>
     </context>
 <context>
     <name>BanTableModel</name>
@@ -44,6 +164,10 @@
     </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>(no label)</source>
+        <translation>(লেবেলহীন)</translation>
+    </message>
     </context>
 <context>
     <name>CreateWalletActivity</name>
@@ -106,13 +230,29 @@
         <source>Address</source>
         <translation>ঠিকানা </translation>
     </message>
+    <message>
+        <source>Label</source>
+        <translation>লেবেল</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>লেবেল</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(লেবেলহীন)</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(লেবেলহীন)</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     </context>
@@ -141,12 +281,32 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>লেবেল</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(লেবেলহীন)</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>কমা দিয়ে পৃথককৃত ফাইল (*.csv)</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>লেবেল</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>ঠিকানা </translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>এক্সপোর্ট ব্যর্থ হয়েছে</translation>
     </message>
     </context>
 <context>
@@ -163,6 +323,14 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>এক্সপোর্ট</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>বর্তমান ট্যাবের ডেটা একটি ফাইলে এক্সপোর্ট করুন</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

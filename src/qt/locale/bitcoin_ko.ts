@@ -188,6 +188,22 @@
         <translation>지갑의 이전 비밀번호와 새로운 비밀번호를 입력하세요.</translation>
     </message>
     <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>지갑을 암호화 해도 컴퓨터에 바이러스가 있을시 안전하기 않다는 것을 참고하세요.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>암호화할 지갑</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>지갑이 바로 암호화 됩니다.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>지갑이 암호화 되었습니다.</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>중요: 본인 지갑 파일에서 만든 예전 백업들은 새로 생성한 암호화된 지갑 파일로 교체해야 합니다. 보안상 이유로, 새 암호화된 지갑을 사용하게 되면 이전에 암호화하지 않은 지갑 파일의 백업은 사용할 수 없게 됩니다.</translation>
     </message>
@@ -308,6 +324,14 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>&amp;URI 열기...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>지갑 생성하기...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>새로운 지갑 생성하기</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -458,6 +482,14 @@
         <translation>최신의</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>노드 창</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>노드 디버깅 및 진단 콘솔 열기 </translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>보내는 주소(&amp;S)</translation>
     </message>
@@ -524,6 +556,10 @@
     <message>
         <source>Error: %1</source>
         <translation>오류: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>경고: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -747,9 +783,37 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>지갑 &lt;b&gt;%1&lt;/b&gt; 생성중...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>지갑 생성하기 실패</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>지갑 생성 경고</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>지갑 생성하기</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>지갑 이름</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>지갑 암호화</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>빈 지갑 만들기</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -1655,6 +1719,10 @@
     <message>
         <source>User Agent</source>
         <translation>유저 에이전트</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>노드 창</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>

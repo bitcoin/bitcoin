@@ -1435,7 +1435,7 @@
     </message>
     <message>
         <source>Spendable:</source>
-        <translation>Na voljo:</translation>
+        <translation>Na voljo za pošiljanje:</translation>
     </message>
     <message>
         <source>Recent transactions</source>

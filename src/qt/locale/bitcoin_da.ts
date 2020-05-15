@@ -1789,6 +1789,14 @@
         <translation>Synkroniserede blokke</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Afbildning fra Autonome Systemer (et Internet-Protocol-rutefindingsprefiks) til IP-adresser som bruges til at diversificere knudeforbindelser. Den engelske betegnelse er "asmap".</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Autonomt-System-afbildning</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Brugeragent</translation>
     </message>

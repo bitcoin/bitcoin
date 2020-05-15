@@ -67,7 +67,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>これらは、あなたが知っている支払い送り先の Bitcoin アドレスです。コインを送る前に、必ず金額と送金先アドレスを確認してください。</translation>
+        <translation>これらは、あなたが知っている送信先の Bitcoin アドレスです。コインを送る前に必ず、金額と受取用アドレスを確認してください。</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
@@ -91,7 +91,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>テキスト CSV (*.csv)</translation>
+        <translation>CSVファイル (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -114,7 +114,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(ラベル無し)</translation>
+        <translation>（ラベル無し）</translation>
     </message>
 </context>
 <context>
@@ -133,7 +133,7 @@
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>新しいパスフレーズをもう一度</translation>
+        <translation>新しいパスフレーズをもう一度入力</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -169,7 +169,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>警告: もしもあなたのウォレットを暗号化してパスフレーズを忘れてしまったら、&lt;b&gt;あなたの Bitcoin はすべて失われます&lt;/b&gt;！</translation>
+        <translation>警告: ウォレットの暗号化後にパスフレーズを忘れてしまった場合、&lt;b&gt;あなたの Bitcoin はすべて失われます&lt;/b&gt;！</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -206,7 +206,7 @@
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>重要: 今までに作成されたウォレット ファイルのバックアップは、暗号化された新しいウォレット ファイルに置き換える必要があります。セキュリティ上の理由により、暗号化された新しいウォレットを使い始めると、暗号化されていないウォレット ファイルのバックアップはすぐに使えなくなります。</translation>
+        <translation>重要: 今までに作成されたウォレットファイルのバックアップは、暗号化された新しいウォレットファイルに置き換える必要があります。セキュリティ上の理由により、暗号化された新しいウォレットを使い始めると、暗号化されていないウォレットファイルのバックアップはすぐに使えなくなります。</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -392,7 +392,7 @@
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation>メイン ウインドウを表示または非表示する</translation>
+        <translation>メインウィンドウを表示または非表示にする</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -400,7 +400,7 @@
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Bitcoin アドレスでメッセージに署名して、アドレスを所有していることを証明する</translation>
+        <translation>Bitcoin アドレスでメッセージに署名することで、そのアドレスの所有権を証明する</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
@@ -424,7 +424,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>支払いをリクエストする (QRコードと bitcoin: URIを生成する)&lt;</translation>
+        <translation>支払いをリクエストする（QRコードと bitcoin:で始まるURIを生成する）</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -483,6 +483,10 @@
         <translation>ブロックは最新</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>ノードウィンドウ</translation>
+    </message>
+    <message>
         <source>Open node debugging and diagnostic console</source>
         <translation>ノードのデバッグ・診断コンソールを開く</translation>
     </message>
@@ -516,7 +520,7 @@
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>%1 のヘルプ メッセージを表示して、使用可能な XPChain のコマンドライン オプションの一覧を見る。</translation>
+        <translation>%1 のヘルプ メッセージを表示し、使用可能な Bitcoin のコマンドラインオプション一覧を見る。</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -528,7 +532,7 @@
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>ウインドウ (&amp;W)</translation>
+        <translation>ウィンドウ (&amp;W)</translation>
     </message>
     <message>
         <source>Minimize</source>
@@ -731,7 +735,7 @@
     </message>
     <message>
         <source>Copy fee</source>
-        <translation>手数料をコピーす</translation>
+        <translation>手数料をコピー</translation>
     </message>
     <message>
         <source>Copy after fee</source>
@@ -767,11 +771,11 @@
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>ひとつの入力につき %1 satoshi 前後ずれることがあります。</translation>
+        <translation>インプット毎に %1 satoshi 前後変動する場合があります。</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(ラベル無し)</translation>
+        <translation>（ラベル無し）</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
@@ -779,7 +783,7 @@
     </message>
     <message>
         <source>(change)</source>
-        <translation>(おつり)</translation>
+        <translation>（おつり）</translation>
     </message>
 </context>
 <context>
@@ -895,7 +899,7 @@
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>新しいデータ ディレクトリが作成されます。</translation>
+        <translation>新しいデータディレクトリが作成されます。</translation>
     </message>
     <message>
         <source>name</source>
@@ -926,7 +930,7 @@
     </message>
     <message>
         <source>Command-line options</source>
-        <translation>コマンドライン オプション</translation>
+        <translation>コマンドラインオプション</translation>
     </message>
 </context>
 <context>
@@ -945,7 +949,7 @@
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>OKをクリックすると、%1 は %4 がリリースされた%3年最初の取引からの完全な %4 ブロックチェーン（%2GB）のダウンロードおよび処理を開始します。</translation>
+        <translation>OKをクリックすると、%1 は %4 がリリースされた%3年における最初の取引からの完全な %4 ブロックチェーン（%2GB）のダウンロードおよび処理を開始します。</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
@@ -961,11 +965,11 @@
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation>デフォルトのデータ ディレクトリを使用</translation>
+        <translation>デフォルトのデータディレクトリを使用</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>カスタム データ ディレクトリを使用:</translation>
+        <translation>カスタムデータディレクトリを使用:</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -973,7 +977,7 @@
     </message>
     <message>
         <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
-        <translation>最新の%1 GBを除いて、検証後にブロックを破棄 (剪定する)</translation>
+        <translation>最新の%1 GBを除き、検証後にブロックを破棄する（剪定する）</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1024,7 +1028,7 @@
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>まだ表示されていない取引が関係する Bitcoin を使用しようとすると、ネットワークから認証を受けられません。</translation>
+        <translation>まだ表示されていない取引が関係する Bitcoin の使用を試みた場合、ネットワークから認証を受けられません。</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1044,7 +1048,7 @@
     </message>
     <message>
         <source>Progress increase per hour</source>
-        <translation>一時間あたりの進捗増加</translation>
+        <translation>一時間毎の進捗増加</translation>
     </message>
     <message>
         <source>calculating...</source>
@@ -1052,15 +1056,19 @@
     </message>
     <message>
         <source>Estimated time left until synced</source>
-        <translation>同期完了までの推定残り時間</translation>
+        <translation>同期完了までの推定時間</translation>
     </message>
     <message>
         <source>Hide</source>
         <translation>隠す</translation>
     </message>
     <message>
+        <source>Esc</source>
+        <translation>Esc</translation>
+    </message>
+    <message>
         <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
-        <translation>%1は現在同期中です。ブロック チェーンの先端に到達するまで、ピアからヘッダーとブロックをダウンロードし検証します。</translation>
+        <translation>%1は現在同期中です。ブロックチェーンの先端に到達するまで、ピアからヘッダーとブロックをダウンロードし検証します。</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
@@ -1213,7 +1221,7 @@
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation>未検証のお釣りを使用する(&amp;S)</translation>
+        <translation>未承認のお釣りを使用する(&amp;S)</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1782,8 +1790,20 @@
         <translation>同期済みブロック</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>ピア選択の多様化に使用できるマップ化された自律システム。</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>マップ化された自律システム</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>ユーザーエージェント</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>ノードウィンドウ</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2258,6 +2278,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>ダスト:</translation>
     </message>
     <message>
+        <source>Hide transaction fee settings</source>
+        <translation>トランザクション手数料の設定を隠す</translation>
+    </message>
+    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation>ブロック内の空きよりトランザクション流量が少ない場合、マイナーや中継ノードは最低限の手数料でも処理することがあります。この最低限の手数料だけを支払っても問題ありませんが、一度トランザクションの需要がネットワークの処理能力を超えてしまった場合には、トランザクションが永久に承認されなくなってしまう可能性があることにご注意ください。</translation>
     </message>
@@ -2326,6 +2350,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%1 (%2 ブロック)</translation>
     </message>
     <message>
+        <source>Cr&amp;eate Unsigned</source>
+        <translation>未署名で作成</translation>
+    </message>
+    <message>
         <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <translation>オフライン%1ウォレットまたはPSBTに対応したハードウェアウォレットと合わせて使用するためのPSBT(部分的に署名されたトランザクション)を作成します。</translation>
     </message>
@@ -2342,8 +2370,16 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%1 送金先: %2</translation>
     </message>
     <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>このトランザクションのひな形を作成しますか？</translation>
+    </message>
+    <message>
         <source>Are you sure you want to send?</source>
         <translation>送金してもよろしいですか？</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>トランザクション提案を確認してください。これにより、部分的に署名されたビットコイン・トランザクション（PSBT）が作成されます。これをコピーして例えばオフラインの %1 ウォレットやPSBTを扱えるハードウェアウォレットで残りの署名が出来ます。</translation>
     </message>
     <message>
         <source>or</source>
@@ -2378,12 +2414,24 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>送金の確認</translation>
     </message>
     <message>
+        <source>Confirm transaction proposal</source>
+        <translation>トランザクション提案を承認する</translation>
+    </message>
+    <message>
         <source>Copy PSBT to clipboard</source>
         <translation>PSBTをクリップボードにコピー</translation>
     </message>
     <message>
+        <source>Send</source>
+        <translation>送金</translation>
+    </message>
+    <message>
         <source>PSBT copied</source>
         <translation>PSBTがコピーされました</translation>
+    </message>
+    <message>
+        <source>Watch-only balance:</source>
+        <translation>監視限定残高</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2479,6 +2527,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Remove this entry</source>
         <translation>この項目を削除</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>送金する金額の単位を選択</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -3186,6 +3238,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>手数料を上乗せしてもよろしいですか？</translation>
     </message>
     <message>
+        <source>Do you want to draft a transaction with fee increase?</source>
+        <translation>このトランザクションに手数料を上乗せしたひな形を作成しますか？</translation>
+    </message>
+    <message>
         <source>Current fee:</source>
         <translation>現在の手数料:</translation>
     </message>
@@ -3200,6 +3256,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Confirm fee bump</source>
         <translation>手数料上乗せの確認</translation>
+    </message>
+    <message>
+        <source>Can't draft transaction.</source>
+        <translation>トランザクションのひな型を作成できませんでした。</translation>
     </message>
     <message>
         <source>PSBT copied</source>

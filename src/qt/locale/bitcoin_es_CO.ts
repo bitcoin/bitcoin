@@ -993,7 +993,7 @@
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = auto, &lt;0 = deja muchos núcleos gratis)</translation>
+        <translation>(0 = auto, &lt;0 = deja esta cantidad de núcleos libres)</translation>
     </message>
     <message>
         <source>W&amp;allet</source>

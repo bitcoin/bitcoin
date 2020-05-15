@@ -394,6 +394,10 @@
         <translation>Mostrar u ocultar la ventana principal</translation>
     </message>
     <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Encriptar las claves privadas que pertenecen a su billetera</translation>
+    </message>
+    <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation>Firmar mensajes con sus direcciones Bitcoin para demostrar la propiedad</translation>
     </message>
@@ -1785,6 +1789,14 @@
         <translation>Bloques sincronizados</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>El Sistema Autónomo mapeado utilizado para la selección diversificada de participantes.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>SA Mapeado</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Agente de usuario</translation>
     </message>
@@ -2002,6 +2014,14 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Monto opcional a solicitar. Dejarlo vacío o en cero para no solicitar un monto específico.</translation>
+    </message>
+    <message>
+        <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
+        <translation>Etiqueta opcional para asociar con la nueva dirección de recepción (utilizado por ti para identificar una factura). También esta asociado a la solicitud de pago.</translation>
+    </message>
+    <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation>Mensaje opcional asociado a la solicitud de pago que podría ser presentado al remitente </translation>
     </message>
     <message>
         <source>&amp;Create new receiving address</source>
@@ -2257,6 +2277,10 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>Polvo:</translation>
     </message>
     <message>
+        <source>Hide transaction fee settings</source>
+        <translation>Esconder ajustes de tarifas de transacción</translation>
+    </message>
+    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation>Cuando hay menos volumen de transacciones que espacio en los bloques, los mineros y los nodos de retransmisión pueden imponer una comisión mínima. Pagar solo esta comisión mínima está bien, pero tenga en cuenta que esto puede resultar en una transacción nunca confirmada una vez que haya más demanda de transacciones de Bitcoin de la que la red puede procesar.</translation>
     </message>
@@ -2381,8 +2405,24 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>Confirmar el envío de monedas</translation>
     </message>
     <message>
+        <source>Confirm transaction proposal</source>
+        <translation>Confirme la propuesta de transaccion</translation>
+    </message>
+    <message>
+        <source>Copy PSBT to clipboard</source>
+        <translation>Copiar la TBPF al portapapeles</translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation>Enviar</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>TBPF copiada</translation>
+    </message>
+    <message>
+        <source>Watch-only balance:</source>
+        <translation>Visualización unicamente balance:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2478,6 +2518,10 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Remove this entry</source>
         <translation>Eliminar esta entrada.</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>El monto a enviar en las unidades seleccionadas</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -2606,6 +2650,14 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>La dirección Bitcoin con la que se firmó el mensaje</translation>
     </message>
     <message>
+        <source>The signed message to verify</source>
+        <translation>El mensaje firmado para verificar</translation>
+    </message>
+    <message>
+        <source>The signature given when the message was signed</source>
+        <translation>La firma proporcionada cuando el mensaje fue firmado</translation>
+    </message>
+    <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>Verificar el mensaje para comprobar que fue firmado con la dirección Bitcoin indicada</translation>
     </message>
@@ -2636,6 +2688,10 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Wallet unlock was cancelled.</source>
         <translation>El desbloqueo del monedero fue cancelado.</translation>
+    </message>
+    <message>
+        <source>No error</source>
+        <translation>Sin error </translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -3173,6 +3229,10 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>¿Desea incrementar la comisión?</translation>
     </message>
     <message>
+        <source>Do you want to draft a transaction with fee increase?</source>
+        <translation>¿Desea preparar una transacción con aumento de comisión ?</translation>
+    </message>
+    <message>
         <source>Current fee:</source>
         <translation>Comisión actual:</translation>
     </message>
@@ -3187,6 +3247,14 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Confirm fee bump</source>
         <translation>Confirmar incremento de comisión</translation>
+    </message>
+    <message>
+        <source>Can't draft transaction.</source>
+        <translation>No se pudo preparar la transacción.</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>TBPF copiada</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
@@ -3353,6 +3421,14 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Corrupted block database detected</source>
         <translation>Corrupción de base de datos de bloques detectada.</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation>No se pudo encontrar el archivo asmap %s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation>No se pudo analizar el archivo asmap %s</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>

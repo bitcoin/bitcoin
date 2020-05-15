@@ -82,4 +82,5 @@ QT_TS = \
   qt/locale/bitcoin_zh.ts \
   qt/locale/bitcoin_zh_CN.ts \
   qt/locale/bitcoin_zh_HK.ts \
-  qt/locale/bitcoin_zh_TW.ts
+  qt/locale/bitcoin_zh_TW.ts \
+  qt/locale/bitcoin_zu.ts
