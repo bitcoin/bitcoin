@@ -160,6 +160,9 @@ A complete list of `@xxx` commands can be found at http://www.doxygen.nl/manual/
 As Doxygen recognizes the comments by the delimiters (`/**` and `*/` in this case), you don't
 *need* to provide any commands for a comment to be valid; just a description text is fine.
 
+Note: when adding a todo entry, consider whether it would rather be better suited as an issue on github
+instead. TODO entries often become stale or outdated, where issues provide a higher degree of interactivity.
+
 To describe a class, use the same construct above the class definition:
 ```c++
 /**
