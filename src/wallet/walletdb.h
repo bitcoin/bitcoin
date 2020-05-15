@@ -291,7 +291,4 @@ void MaybeCompactWalletDB();
 //! Unserialize a given Key-Value pair and load it into the wallet
 bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr);
 
-/* Recover filter (used as callback), will only let keys (cryptographical keys) as KV/key-type pass through */
-bool RecoverKeysOnlyFilter(void *callbackData, CDataStream ssKey, CDataStream ssValue);
-
 #endif // BITCOIN_WALLET_WALLETDB_H
