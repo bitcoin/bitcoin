@@ -323,7 +323,7 @@ static const char *HEADER_END = "HEADER=END";
 static const char *DATA_END = "DATA=END";
 typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char> > KeyValPair;
 
-bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& newFilename)
+bool RecoverDatabaseFile(const fs::path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& newFilename)
 {
     std::string filename;
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, filename);
