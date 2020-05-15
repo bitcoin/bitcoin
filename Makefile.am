@@ -48,7 +48,6 @@ DIST_CONTRIB = \
 	       $(top_srcdir)/contrib/linearize/linearize-hashes.py
 
 DIST_SHARE = \
-  $(top_srcdir)/share/genbuild.sh \
   $(top_srcdir)/share/rpcauth
 
 BIN_CHECKS=$(top_srcdir)/contrib/devtools/symbol-check.py \
