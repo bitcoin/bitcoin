@@ -100,7 +100,7 @@ class WalletDumpTest(BitcoinTestFramework):
         self.nodes[0].keypoolrefill()
 
         # Test scripts dump by adding a 1-of-1 multisig address
-        multisig_addr = self.nodes[0].addmultisigaddress(1, [addrs[1]["address"]])
+        multisig_addr = self.nodes[0].addmultisigaddress(1, [addrs[1]["address"]])["address"]
         script_addrs = [multisig_addr]
 
         # dump unencrypted wallet

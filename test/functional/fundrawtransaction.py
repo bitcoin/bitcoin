@@ -359,7 +359,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         addr1Obj = self.nodes[1].validateaddress(addr1)
         addr2Obj = self.nodes[1].validateaddress(addr2)
 
-        mSigObj = self.nodes[1].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])
+        mSigObj = self.nodes[1].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
 
         inputs = []
         outputs = {mSigObj:11}
@@ -392,7 +392,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         addr4Obj = self.nodes[1].validateaddress(addr4)
         addr5Obj = self.nodes[1].validateaddress(addr5)
 
-        mSigObj = self.nodes[1].addmultisigaddress(4, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey']])
+        mSigObj = self.nodes[1].addmultisigaddress(4, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey']])['address']
 
         inputs = []
         outputs = {mSigObj:11}
@@ -419,7 +419,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         addr1Obj = self.nodes[2].validateaddress(addr1)
         addr2Obj = self.nodes[2].validateaddress(addr2)
 
-        mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])
+        mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
 
 
         # send 12 DASH to msig addr

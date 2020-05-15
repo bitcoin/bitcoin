@@ -146,7 +146,15 @@ class DIP3Test(BitcoinTestFramework):
             self.test_protx_update_service(mn)
 
         self.log.info("testing P2SH/multisig for payee addresses")
-        multisig = self.nodes[0].createmultisig(1, [self.nodes[0].getnewaddress(), self.nodes[0].getnewaddress()])['address']
+
+        # Create 1 of 2 multisig
+        addr1 = self.nodes[0].getnewaddress()
+        addr2 = self.nodes[0].getnewaddress()
+
+        addr1Obj = self.nodes[0].validateaddress(addr1)
+        addr2Obj = self.nodes[0].validateaddress(addr2)
+
+        multisig = self.nodes[0].createmultisig(1, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
         self.update_mn_payee(mns[0], multisig)
         found_multisig_payee = False
         for i in range(len(mns)):

@@ -81,7 +81,8 @@ class ListTransactionsTest(BitcoinTestFramework):
                            {"category":"receive","amount":Decimal("0.44")},
                            {"txid":txid, "account" : "toself"} )
 
-        multisig = self.nodes[1].createmultisig(1, [self.nodes[1].getnewaddress()])
+        pubkey = self.nodes[1].validateaddress(self.nodes[1].getnewaddress())['pubkey']
+        multisig = self.nodes[1].createmultisig(1, [pubkey])
         self.nodes[0].importaddress(multisig["redeemScript"], "watchonly", False, True)
         txid = self.nodes[1].sendtoaddress(multisig["address"], 0.1)
         self.nodes[1].generate(1)
