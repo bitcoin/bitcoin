@@ -67,15 +67,6 @@ public:
     fs::path Directory() const { return strPath; }
 
     bool Verify(const std::string& strFile);
-    /**
-     * Salvage data from a file that Verify says is bad.
-     * fAggressive sets the DB_AGGRESSIVE flag (see berkeley DB->verify() method documentation).
-     * Appends binary key/value pairs to vResult, returns true if successful.
-     * NOTE: reads the entire database into memory, so cannot be used
-     * for huge databases.
-     */
-    typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char> > KeyValPair;
-    bool Salvage(const std::string& strFile, std::vector<KeyValPair>& vResult);
 
     bool Open(bool retry);
     void Close();

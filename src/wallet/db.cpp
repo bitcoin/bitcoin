@@ -317,6 +317,12 @@ BerkeleyBatch::SafeDbt::operator Dbt*()
     return &m_dbt;
 }
 
+/* End of headers, beginning of key/value data */
+static const char *HEADER_END = "HEADER=END";
+/* End of key/value data */
+static const char *DATA_END = "DATA=END";
+typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char> > KeyValPair;
+
 bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& newFilename)
 {
     std::string filename;
@@ -342,8 +348,61 @@ bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, boo
         return false;
     }
 
-    std::vector<BerkeleyEnvironment::KeyValPair> salvagedData;
-    bool fSuccess = env->Salvage(newFilename, salvagedData);
+    /**
+     * Salvage data from a file. The DB_AGGRESSIVE flag is being used (see berkeley DB->verify() method documentation).
+     * key/value pairs are appended to salvagedData which are then written out to a new wallet file.
+     * NOTE: reads the entire database into memory, so cannot be used
+     * for huge databases.
+     */
+    std::vector<KeyValPair> salvagedData;
+
+    std::stringstream strDump;
+
+    Db db(env->dbenv.get(), 0);
+    result = db.verify(newFilename.c_str(), nullptr, &strDump, DB_SALVAGE | DB_AGGRESSIVE);
+    if (result == DB_VERIFY_BAD) {
+        LogPrintf("Salvage: Database salvage found errors, all data may not be recoverable.\n");
+    }
+    if (result != 0 && result != DB_VERIFY_BAD) {
+        LogPrintf("Salvage: Database salvage failed with result %d.\n", result);
+        return false;
+    }
+
+    // Format of bdb dump is ascii lines:
+    // header lines...
+    // HEADER=END
+    //  hexadecimal key
+    //  hexadecimal value
+    //  ... repeated
+    // DATA=END
+
+    std::string strLine;
+    while (!strDump.eof() && strLine != HEADER_END)
+        getline(strDump, strLine); // Skip past header
+
+    std::string keyHex, valueHex;
+    while (!strDump.eof() && keyHex != DATA_END) {
+        getline(strDump, keyHex);
+        if (keyHex != DATA_END) {
+            if (strDump.eof())
+                break;
+            getline(strDump, valueHex);
+            if (valueHex == DATA_END) {
+                LogPrintf("Salvage: WARNING: Number of keys in data does not match number of values.\n");
+                break;
+            }
+            salvagedData.push_back(make_pair(ParseHex(keyHex), ParseHex(valueHex)));
+        }
+    }
+
+    bool fSuccess;
+    if (keyHex != DATA_END) {
+        LogPrintf("Salvage: WARNING: Unexpected end of file while reading salvage output.\n");
+        fSuccess = false;
+    } else {
+        fSuccess = (result == 0);
+    }
+
     if (salvagedData.empty())
     {
         LogPrintf("Salvage(aggressive) found no records in %s.\n", newFilename);
@@ -365,7 +424,7 @@ bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, boo
     }
 
     DbTxn* ptxn = env->TxnBegin();
-    for (BerkeleyEnvironment::KeyValPair& row : salvagedData)
+    for (KeyValPair& row : salvagedData)
     {
         if (recoverKVcallback)
         {
@@ -419,64 +478,6 @@ bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, bilingual_str&
     // also return true if files does not exists
     return true;
 }
-
-/* End of headers, beginning of key/value data */
-static const char *HEADER_END = "HEADER=END";
-/* End of key/value data */
-static const char *DATA_END = "DATA=END";
-
-bool BerkeleyEnvironment::Salvage(const std::string& strFile, std::vector<BerkeleyEnvironment::KeyValPair>& vResult)
-{
-    LOCK(cs_db);
-    assert(mapFileUseCount.count(strFile) == 0);
-
-    std::stringstream strDump;
-
-    Db db(dbenv.get(), 0);
-    int result = db.verify(strFile.c_str(), nullptr, &strDump, DB_SALVAGE | DB_AGGRESSIVE);
-    if (result == DB_VERIFY_BAD) {
-        LogPrintf("BerkeleyEnvironment::Salvage: Database salvage found errors, all data may not be recoverable.\n");
-    }
-    if (result != 0 && result != DB_VERIFY_BAD) {
-        LogPrintf("BerkeleyEnvironment::Salvage: Database salvage failed with result %d.\n", result);
-        return false;
-    }
-
-    // Format of bdb dump is ascii lines:
-    // header lines...
-    // HEADER=END
-    //  hexadecimal key
-    //  hexadecimal value
-    //  ... repeated
-    // DATA=END
-
-    std::string strLine;
-    while (!strDump.eof() && strLine != HEADER_END)
-        getline(strDump, strLine); // Skip past header
-
-    std::string keyHex, valueHex;
-    while (!strDump.eof() && keyHex != DATA_END) {
-        getline(strDump, keyHex);
-        if (keyHex != DATA_END) {
-            if (strDump.eof())
-                break;
-            getline(strDump, valueHex);
-            if (valueHex == DATA_END) {
-                LogPrintf("BerkeleyEnvironment::Salvage: WARNING: Number of keys in data does not match number of values.\n");
-                break;
-            }
-            vResult.push_back(make_pair(ParseHex(keyHex), ParseHex(valueHex)));
-        }
-    }
-
-    if (keyHex != DATA_END) {
-        LogPrintf("BerkeleyEnvironment::Salvage: WARNING: Unexpected end of file while reading salvage output.\n");
-        return false;
-    }
-
-    return (result == 0);
-}
-
 
 void BerkeleyEnvironment::CheckpointLSN(const std::string& strFile)
 {
