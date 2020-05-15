@@ -115,11 +115,12 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         chainstate.GetCoinsCacheSizeState(tx_pool, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 1 << 10),
         CoinsCacheSizeState::OK);
 
+    const size_t empty_pool_memory_usage = tx_pool.DynamicMemoryUsage();
     for (int i{0}; i < 3; ++i) {
         add_coin(view);
         print_view_mem_usage(view);
         BOOST_CHECK_EQUAL(
-            chainstate.GetCoinsCacheSizeState(tx_pool, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ 1 << 10),
+            chainstate.GetCoinsCacheSizeState(tx_pool, MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes*/ (1 << 10) + empty_pool_memory_usage),
             CoinsCacheSizeState::OK);
     }
 
@@ -135,7 +136,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         BOOST_CHECK(usage_percentage >= 0.9);
         BOOST_CHECK(usage_percentage < 1);
         BOOST_CHECK_EQUAL(
-            chainstate.GetCoinsCacheSizeState(tx_pool, MAX_COINS_CACHE_BYTES, 1 << 10),
+            chainstate.GetCoinsCacheSizeState(tx_pool, MAX_COINS_CACHE_BYTES, (1 << 10) + empty_pool_memory_usage),
             CoinsCacheSizeState::LARGE);
     }
 
