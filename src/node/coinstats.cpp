@@ -89,22 +89,24 @@ static void ApplyStats(CCoinsStats& stats, const uint256& hash, const std::map<u
 
 //! Calculate statistics about the unspent transaction output set
 template <typename T>
-static bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point)
+static bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point, const CBlockIndex* pindex)
 {
     std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
     assert(pcursor);
-    stats.hashBlock = pcursor->GetBestBlock();
 
-    const CBlockIndex* pindex;
-    {
-        LOCK(cs_main);
-        assert(std::addressof(g_chainman.m_blockman) == std::addressof(blockman));
-        pindex = blockman.LookupBlockIndex(stats.hashBlock);
-        stats.nHeight = Assert(pindex)->nHeight;
+    if (!pindex) {
+        {
+            LOCK(cs_main);
+            assert(std::addressof(g_chainman.m_blockman) == std::addressof(blockman));
+            pindex = blockman.LookupBlockIndex(view->GetBestBlock());
+        }
     }
+    stats.nHeight = Assert(pindex)->nHeight;
+    stats.hashBlock = pindex->GetBlockHash();
 
     // Use CoinStatsIndex if it is available and a hash_type of Muhash or None was requested
     if ((stats.m_hash_type == CoinStatsHashType::MUHASH || stats.m_hash_type == CoinStatsHashType::NONE) && g_coin_stats_index) {
+        stats.from_index = true;
         return g_coin_stats_index->LookUpStats(pindex, stats);
     }
 
@@ -141,19 +143,19 @@ static bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& 
     return true;
 }
 
-bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, const std::function<void()>& interruption_point)
+bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, const std::function<void()>& interruption_point, const CBlockIndex* pindex)
 {
     switch (stats.m_hash_type) {
     case(CoinStatsHashType::HASH_SERIALIZED): {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        return GetUTXOStats(view, blockman, stats, ss, interruption_point);
+        return GetUTXOStats(view, blockman, stats, ss, interruption_point, pindex);
     }
     case(CoinStatsHashType::MUHASH): {
         MuHash3072 muhash;
-        return GetUTXOStats(view, blockman, stats, muhash, interruption_point);
+        return GetUTXOStats(view, blockman, stats, muhash, interruption_point, pindex);
     }
     case(CoinStatsHashType::NONE): {
-        return GetUTXOStats(view, blockman, stats, nullptr, interruption_point);
+        return GetUTXOStats(view, blockman, stats, nullptr, interruption_point, pindex);
     }
     } // no default case, so the compiler can warn about missing cases
     assert(false);
