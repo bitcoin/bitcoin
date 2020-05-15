@@ -211,6 +211,7 @@ protected:
     Db* pdb;
     std::string strFile;
     DbTxn* activeTxn;
+    Dbc* m_cursor;
     bool fReadOnly;
     bool fFlushOnClose;
     BerkeleyEnvironment *env;
@@ -323,8 +324,9 @@ public:
         return (ret == 0);
     }
 
-    Dbc* GetCursor();
-    int ReadAtCursor(Dbc* pcursor, CDataStream& ssKey, CDataStream& ssValue);
+    bool StartCursor();
+    bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete);
+    void CloseCursor();
     bool TxnBegin();
     bool TxnCommit();
     bool TxnAbort();
