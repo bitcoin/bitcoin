@@ -56,7 +56,7 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
         bilingual_str error_string;
         std::vector<bilingual_str> warnings;
         bool verify_success = CWallet::Verify(chain, location, salvage_wallet, error_string, warnings);
-        if (!warnings.empty()) chain.initWarning(Join(warnings, "\n", OpTranslated));
+        if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
         if (!verify_success) {
             chain.initError(error_string);
             return false;
@@ -73,7 +73,7 @@ bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& walle
             bilingual_str error;
             std::vector<bilingual_str> warnings;
             std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile), error, warnings);
-            if (!warnings.empty()) chain.initWarning(Join(warnings, "\n", OpTranslated));
+            if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
             if (!pwallet) {
                 chain.initError(error);
                 return false;

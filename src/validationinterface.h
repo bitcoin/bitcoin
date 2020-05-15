@@ -22,20 +22,20 @@ class CValidationInterface;
 class uint256;
 class CScheduler;
 
-// These functions dispatch to one or all registered wallets
-
-/** Register a wallet to receive updates from core */
-void RegisterValidationInterface(CValidationInterface* pwalletIn);
-/** Unregister a wallet from core */
-void UnregisterValidationInterface(CValidationInterface* pwalletIn);
-/** Unregister all wallets from core */
+/** Register subscriber */
+void RegisterValidationInterface(CValidationInterface* callbacks);
+/** Unregister subscriber. DEPRECATED. This is not safe to use when the RPC server or main message handler thread is running. */
+void UnregisterValidationInterface(CValidationInterface* callbacks);
+/** Unregister all subscribers */
 void UnregisterAllValidationInterfaces();
 
 // Alternate registration functions that release a shared_ptr after the last
 // notification is sent. These are useful for race-free cleanup, since
 // unregistration is nonblocking and can return before the last notification is
 // processed.
+/** Register subscriber */
 void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
+/** Unregister subscriber */
 void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
 
 /**
