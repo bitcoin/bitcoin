@@ -26,22 +26,27 @@ const std::string CLIENT_NAME("Satoshi");
 
 //! git will put "#define GIT_COMMIT_ID ..." on the next line inside archives. $Format:%n#define GIT_COMMIT_ID "%H"$
 
-#ifdef BUILD_GIT_TAG
-    #define BUILD_DESC BUILD_GIT_TAG
-    #define BUILD_SUFFIX ""
+#define BITCOIN_CLIENT_VERSION "v" STRINGIZE(CLIENT_VERSION_MAJOR) "." STRINGIZE(CLIENT_VERSION_MINOR) "." STRINGIZE(CLIENT_VERSION_REVISION)
+
+#if CLIENT_VERSION_BUILD > 0
+    #define BITCOIN_CLIENT_BUILD "." STRINGIZE(CLIENT_VERSION_BUILD)
 #else
-    #define BUILD_DESC "v" STRINGIZE(CLIENT_VERSION_MAJOR) "." STRINGIZE(CLIENT_VERSION_MINOR) \
-                       "." STRINGIZE(CLIENT_VERSION_REVISION) "." STRINGIZE(CLIENT_VERSION_BUILD)
-    #ifdef BUILD_GIT_COMMIT
-        #define BUILD_SUFFIX "-" BUILD_GIT_COMMIT
-    #elif defined(GIT_COMMIT_ID)
-        #define BUILD_SUFFIX "-g" GIT_COMMIT_ID
-    #else
-        #define BUILD_SUFFIX "-unk"
-    #endif
+    #define BITCOIN_CLIENT_BUILD ""
 #endif
 
-const std::string CLIENT_BUILD(BUILD_DESC BUILD_SUFFIX);
+#if CLIENT_VERSION_RC > 0
+    #define BITCOIN_CLIENT_RC "rc" STRINGIZE(CLIENT_VERSION_RC)
+#else
+    #define BITCOIN_CLIENT_RC ""
+#endif
+
+#ifdef GIT_COMMIT_ID
+    #define BUILD_SUFFIX "-g" GIT_COMMIT_ID
+#else
+    #define BUILD_SUFFIX ""
+#endif
+
+const std::string CLIENT_BUILD(BITCOIN_CLIENT_VERSION BITCOIN_CLIENT_BUILD BITCOIN_CLIENT_RC BUILD_SUFFIX);
 
 static std::string FormatVersion(int nVersion)
 {
