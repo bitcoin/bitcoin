@@ -9,9 +9,6 @@
 #include <fs.h>
 #include <streams.h>
 
-bool RecoverDatabaseFile(const fs::path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
-
-/* Recover filter (used as callback), will only let keys (cryptographical keys) as KV/key-type pass through */
-bool RecoverKeysOnlyFilter(void *callbackData, CDataStream ssKey, CDataStream ssValue);
+bool RecoverDatabaseFile(const fs::path& file_path);
 
 #endif // BITCOIN_WALLET_SALVAGE_H
