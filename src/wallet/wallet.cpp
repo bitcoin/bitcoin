@@ -4091,7 +4091,6 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CCon
                 coin.BindWallet(this);
                 NotifyTransactionChanged(this, txin.prevout.hash, CT_UPDATED);
                 updated_hahes.insert(txin.prevout.hash);
-                privateSendClient.RemoveSkippedDenom(coin.tx->vout[txin.prevout.n].nValue);
             }
         }
 
