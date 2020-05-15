@@ -67,6 +67,10 @@ border: 0;
 font-weight: bold;
 }
 
+QToolBar > QToolButton:disabled {
+color: #444;
+}
+
 QToolBar > QLabel {
 border: 0;
 margin:10px 0 0 0;
