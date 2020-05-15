@@ -343,7 +343,7 @@ bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, boo
     }
 
     std::vector<BerkeleyEnvironment::KeyValPair> salvagedData;
-    bool fSuccess = env->Salvage(newFilename, true, salvagedData);
+    bool fSuccess = env->Salvage(newFilename, salvagedData);
     if (salvagedData.empty())
     {
         LogPrintf("Salvage(aggressive) found no records in %s.\n", newFilename);
@@ -425,25 +425,17 @@ static const char *HEADER_END = "HEADER=END";
 /* End of key/value data */
 static const char *DATA_END = "DATA=END";
 
-bool BerkeleyEnvironment::Salvage(const std::string& strFile, bool fAggressive, std::vector<BerkeleyEnvironment::KeyValPair>& vResult)
+bool BerkeleyEnvironment::Salvage(const std::string& strFile, std::vector<BerkeleyEnvironment::KeyValPair>& vResult)
 {
     LOCK(cs_db);
     assert(mapFileUseCount.count(strFile) == 0);
 
-    u_int32_t flags = DB_SALVAGE;
-    if (fAggressive)
-        flags |= DB_AGGRESSIVE;
-
     std::stringstream strDump;
 
     Db db(dbenv.get(), 0);
-    int result = db.verify(strFile.c_str(), nullptr, &strDump, flags);
+    int result = db.verify(strFile.c_str(), nullptr, &strDump, DB_SALVAGE | DB_AGGRESSIVE);
     if (result == DB_VERIFY_BAD) {
         LogPrintf("BerkeleyEnvironment::Salvage: Database salvage found errors, all data may not be recoverable.\n");
-        if (!fAggressive) {
-            LogPrintf("BerkeleyEnvironment::Salvage: Rerun with aggressive mode to ignore errors and continue.\n");
-            return false;
-        }
     }
     if (result != 0 && result != DB_VERIFY_BAD) {
         LogPrintf("BerkeleyEnvironment::Salvage: Database salvage failed with result %d.\n", result);
