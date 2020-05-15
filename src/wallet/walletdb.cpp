@@ -588,6 +588,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
     return true;
 }
 
+bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr)
+{
+    CWalletScanState dummy_wss;
+    LOCK(pwallet->cs_wallet);
+    return ReadKeyValue(pwallet, ssKey, ssValue, dummy_wss, strType, strErr);
+}
+
 bool WalletBatch::IsKeyType(const std::string& strType)
 {
     return (strType == DBKeys::KEY ||
@@ -896,14 +903,12 @@ bool WalletBatch::Recover(const fs::path& wallet_path, std::string& out_backup_f
 bool WalletBatch::RecoverKeysOnlyFilter(void *callbackData, CDataStream ssKey, CDataStream ssValue)
 {
     CWallet *dummyWallet = reinterpret_cast<CWallet*>(callbackData);
-    CWalletScanState dummyWss;
     std::string strType, strErr;
     bool fReadOK;
     {
         // Required in LoadKeyMetadata():
         LOCK(dummyWallet->cs_wallet);
-        fReadOK = ReadKeyValue(dummyWallet, ssKey, ssValue,
-                               dummyWss, strType, strErr);
+        fReadOK = ReadKeyValue(dummyWallet, ssKey, ssValue, strType, strErr);
     }
     if (!IsKeyType(strType) && strType != DBKeys::HDCHAIN) {
         return false;
