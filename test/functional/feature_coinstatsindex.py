@@ -12,6 +12,7 @@ the index.
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_raises_rpc_error,
     try_rpc,
     wait_until,
 )
@@ -57,6 +58,23 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Everything left should be the same
         assert_equal(res1, res0)
 
+        self.log.info("Test that gettxoutsetinfo() can get fetch data on specific heights with index")
+
+        # Generate a new tip
+        node.generate(5)
+
+        # Fetch old stats by height
+        res2 = index_node.gettxoutsetinfo(102)
+        del res2['disk_size']
+        assert_equal(res0, res2)
+
+        # Fetch old stats by hash
+        res3 = index_node.gettxoutsetinfo(res0['bestblock'])
+        del res3['disk_size']
+        assert_equal(res0, res3)
+
+        # It does not work without coinstatsindex
+        assert_raises_rpc_error(-8, "Querying specific block heights requires CoinStatsIndex", node.gettxoutsetinfo, 102)
 
 if __name__ == '__main__':
     CoinStatsIndexTest().main()

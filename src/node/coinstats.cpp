@@ -39,24 +39,30 @@ uint256 GetTruncatedSHA512Hash(const COutPoint& outpoint, const Coin& coin) {
     return ss.GetHash();
 }
 
+bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats) {
+    return GetUTXOStats(view, stats, nullptr);
+};
+
 //! Calculate statistics about the unspent transaction output set
-bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
+bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats, const CBlockIndex* pindex)
 {
     stats = CCoinsStats();
     std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
     assert(pcursor);
-    stats.hashBlock = pcursor->GetBestBlock();
 
-    const CBlockIndex* block_index;
-    {
-        LOCK(cs_main);
-        block_index = LookupBlockIndex(pcursor->GetBestBlock());
+    if (pindex == nullptr) {
+        {
+            LOCK(cs_main);
+            pindex = LookupBlockIndex(pcursor->GetBestBlock());
+        }
     }
-    stats.nHeight = block_index->nHeight;
+
+    stats.hashBlock = pindex->GetBlockHash();
+    stats.nHeight = pindex->nHeight;
 
     // Use CoinStatsIndex if it is available
     if (g_coin_stats_index) {
-        if (g_coin_stats_index->LookupStats(block_index, stats)) {
+        if (g_coin_stats_index->LookupStats(pindex, stats)) {
             return true;
         } else {
             return false;
