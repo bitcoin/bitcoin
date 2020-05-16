@@ -117,6 +117,7 @@ FUZZ_TARGETS = \
   test/fuzz/script_interpreter \
   test/fuzz/script_ops \
   test/fuzz/script_sigcache \
+  test/fuzz/script_sign \
   test/fuzz/scriptnum_ops \
   test/fuzz/service_deserialize \
   test/fuzz/signature_checker \
@@ -986,6 +987,12 @@ test_fuzz_script_sigcache_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_sigcache_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_script_sigcache_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_script_sigcache_SOURCES = test/fuzz/script_sigcache.cpp
+
+test_fuzz_script_sign_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_sign_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_script_sign_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_script_sign_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_script_sign_SOURCES = test/fuzz/script_sign.cpp
 
 test_fuzz_scriptnum_ops_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_scriptnum_ops_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
