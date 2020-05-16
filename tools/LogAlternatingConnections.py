@@ -705,7 +705,7 @@ def fixBitcoinConf():
 		with open(datadir + '/bitcoin.conf', 'r') as configFile:
 			configData = configFile.read()
 		configData = re.sub(r'\s*maxconnections\s*=\s*[0-9]+', '', configData)
-		configData += '\n' + 'maxconnections=' + str(maxConnections)
+		if maxConnections != 10: configData += '\n' + 'maxconnections=' + str(maxConnections)
 		print(configData)
 		with open(datadir + '/bitcoin.conf', 'w') as configFile:
 			configFile.write(configData)
@@ -715,7 +715,7 @@ def fixBitcoinConf():
 			with open(datadir + '/bitcoin.conf', 'r') as configFile:
 				configData = configFile.read()
 			configData = re.sub(r'\s*maxconnections\s*=\s*[0-9]+', '', configData)
-			configData += '\n' + 'maxconnections=' + str(maxConnections)
+			if maxConnections != 10: configData += '\n' + 'maxconnections=' + str(maxConnections)
 			print(configData)
 			with open(datadir + '/bitcoin.conf', 'w') as configFile:
 				configFile.write(configData)
