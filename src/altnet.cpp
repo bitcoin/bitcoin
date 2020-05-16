@@ -97,7 +97,8 @@ void CAltstack::ThreadAltProcessing()
 {
     while (!flagInterruptAltProc) {
         {
-            LOCK(cs_vRecvMsg);
+            LOCK(cs_main);
+            LOCK2(cs_vDrivers, cs_vRecvMsg);
             for (auto&& msg: vRecvMsg) {
                 m_msgproc->ProcessMessage(msg);
             }
