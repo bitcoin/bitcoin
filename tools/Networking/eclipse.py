@@ -17,10 +17,10 @@ import time
 
 
 # Specify the attacker's genuine IP
-attacker_ip = '10.0.2.4'
+attacker_ip = '10.0.2.' + str(int(input('Attacker IP = 10.0.2.X, what is X? ')))
 
 # Specify the victim's IP, and port (8333 for Bitcoin)
-victim_ip = '10.0.2.5'
+victim_ip = '10.0.2.' + str(int(input('Victim IP = 10.0.2.X, what is X? ')))
 victim_port = 8333
 
 # How many identities should run simultaneously
