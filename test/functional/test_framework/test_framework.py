@@ -185,8 +185,18 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
         self.config = config
-        self.options.syscoind = os.getenv("SYSCOIND", default=config["environment"]["BUILDDIR"] + '/src/syscoind' + config["environment"]["EXEEXT"])
-        self.options.syscoincli = os.getenv("SYSCOINCLI", default=config["environment"]["BUILDDIR"] + '/src/syscoin-cli' + config["environment"]["EXEEXT"])
+        fname_syscoind = os.path.join(
+            config["environment"]["BUILDDIR"],
+            "src",
+            "syscoind" + config["environment"]["EXEEXT"]
+        )
+        fname_syscoincli = os.path.join(
+            config["environment"]["BUILDDIR"],
+            "src",
+            "syscoin-cli" + config["environment"]["EXEEXT"]
+        )
+        self.options.syscoind = os.getenv("SYSCOIND", default=fname_syscoind)
+        self.options.syscoincli = os.getenv("SYSCOINCLI", default=fname_syscoincli)
 
         self.options.previous_releases_path = os.getenv("PREVIOUS_RELEASES_DIR") or os.getcwd() + "/releases"
 
