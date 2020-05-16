@@ -110,6 +110,7 @@ FUZZ_TARGETS = \
   test/fuzz/rbf \
   test/fuzz/rolling_bloom_filter \
   test/fuzz/script \
+  test/fuzz/script_bitcoin_consensus \
   test/fuzz/script_deserialize \
   test/fuzz/script_flags \
   test/fuzz/script_ops \
@@ -940,6 +941,12 @@ test_fuzz_script_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_script_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_script_SOURCES = test/fuzz/script.cpp
+
+test_fuzz_script_bitcoin_consensus_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_bitcoin_consensus_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_script_bitcoin_consensus_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_script_bitcoin_consensus_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_script_bitcoin_consensus_SOURCES = test/fuzz/script_bitcoin_consensus.cpp
 
 test_fuzz_script_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DSCRIPT_DESERIALIZE=1
 test_fuzz_script_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
