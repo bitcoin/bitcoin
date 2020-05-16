@@ -20,7 +20,10 @@ VB_THRESHOLD = 108        # versionbits activation threshold for regtest
 VB_TOP_BITS = 0x20000000
 VB_UNKNOWN_BIT = 27       # Choose a bit unassigned to any deployment
 VB_UNKNOWN_VERSION = VB_TOP_BITS | (1 << VB_UNKNOWN_BIT)
+UNKNOWN_VERSION_SCHEMA = 0x60000000
+UNKNOWN_VERSION_SCHEMA_THRESHOLD = 51
 
+WARN_UNKNOWN_RULES_MINED = "Warning: Unrecognised block version being mined! Unknown rules may or may not be in effect"
 WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
 VB_PATTERN = re.compile("Warning: unknown new rules activated.*versionbit")
 
@@ -76,9 +79,32 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         assert not VB_PATTERN.match(node.getmininginfo()["warnings"])
         assert not VB_PATTERN.match(node.getnetworkinfo()["warnings"])
 
+        self.log.info("Check that there is a warning if >50 blocks in the last 100 were an unknown version schema")
+        # Build UNKNOWN_VERSION_SCHEMA_THRESHOLD blocks signaling some unknown schema
+        self.send_blocks_with_version(peer, UNKNOWN_VERSION_SCHEMA_THRESHOLD, UNKNOWN_VERSION_SCHEMA)
+        # Check that get*info() shows the 51/100 unknown block version error.
+        assert(WARN_UNKNOWN_RULES_MINED in node.getmininginfo()["warnings"])
+        assert(WARN_UNKNOWN_RULES_MINED in node.getnetworkinfo()["warnings"])
+        # Close the period normally
+        node.generatetoaddress(VB_PERIOD - UNKNOWN_VERSION_SCHEMA_THRESHOLD, node_deterministic_address)
+        # Make sure the warning remains
+        assert(WARN_UNKNOWN_RULES_MINED in node.getmininginfo()["warnings"])
+        assert(WARN_UNKNOWN_RULES_MINED in node.getnetworkinfo()["warnings"])
+
+        # Stop-start the node, and make sure the warning is gone
+        self.restart_node(0)
+        assert(WARN_UNKNOWN_RULES_MINED not in node.getmininginfo()["warnings"])
+        assert(WARN_UNKNOWN_RULES_MINED not in node.getnetworkinfo()["warnings"])
+        peer = node.add_p2p_connection(P2PInterface())
+
+        self.log.info("Check that there is a warning if >50 blocks in the last 100 were an unknown version")
         # Build one period of blocks with VB_THRESHOLD blocks signaling some unknown bit
         self.send_blocks_with_version(peer, VB_THRESHOLD, VB_UNKNOWN_VERSION)
         node.generatetoaddress(VB_PERIOD - VB_THRESHOLD, node_deterministic_address)
+
+        # Check that get*info() shows the 51/100 unknown block version error.
+        assert(WARN_UNKNOWN_RULES_MINED in node.getmininginfo()["warnings"])
+        assert(WARN_UNKNOWN_RULES_MINED in node.getnetworkinfo()["warnings"])
 
         self.log.info("Check that there is a warning if previous VB_BLOCKS have >=VB_THRESHOLD blocks with unknown versionbits version.")
         # Mine a period worth of expected blocks so the generic block-version warning

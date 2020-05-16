@@ -42,6 +42,7 @@ class NotificationsTest(BitcoinTestFramework):
             "-alertnotify=echo > {}".format(os.path.join(self.alertnotify_dir, '%s')),
             "-blocknotify=echo > {}".format(os.path.join(self.blocknotify_dir, '%s')),
         ], [
+            "-blockversion=211",
             "-rescan",
             "-walletnotify=echo > {}".format(os.path.join(self.walletnotify_dir, notify_outputname('%w', '%s'))),
         ]]
@@ -136,6 +137,24 @@ class NotificationsTest(BitcoinTestFramework):
             assert_equal(self.nodes[1].gettransaction(bump2)["confirmations"], 1)
 
         # TODO: add test for `-alertnotify` large fork notifications
+
+        # Mine 51 unknown-version blocks. -alertnotify should trigger on the 51st.
+        self.log.info("test -alertnotify")
+        self.nodes[1].generatetoaddress(51, ADDRESS_BCRT1_UNSPENDABLE)
+        self.sync_all()
+
+        # Give bitcoind 10 seconds to write the alert notification
+        self.wait_until(lambda: len(os.listdir(self.alertnotify_dir)), timeout=10)
+
+        for notify_file in os.listdir(self.alertnotify_dir):
+            os.remove(os.path.join(self.alertnotify_dir, notify_file))
+
+        # Mine more up-version blocks, should not get more alerts:
+        self.nodes[1].generatetoaddress(2, ADDRESS_BCRT1_UNSPENDABLE)
+        self.sync_all()
+
+        self.log.info("-alertnotify should not continue notifying for more unknown version blocks")
+        assert_equal(len(os.listdir(self.alertnotify_dir)), 0)
 
     def expect_wallet_notify(self, tx_ids):
         self.wait_until(lambda: len(os.listdir(self.walletnotify_dir)) >= len(tx_ids), timeout=10)
