@@ -220,7 +220,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		# Get verack packet
 		verack = s.recv(1024)
 		if verbose: print(f'Attaching temporary packet listeners to {interface}')
-		temp_listener = create_task(True, 'Temp victim identity ' + src_ip, sniff, s, None, src_ip, src_port, dst_ip, dst_port, interface)
+		temp_listener = create_task(True, 'Temp victim identity ' + src_ip, temp_sniff, s, None, src_ip, src_port, dst_ip, dst_port, interface)
 		# Send a ping
 		#s.sendall(ping_packet().to_bytes())
 	except:
@@ -300,6 +300,13 @@ def mirror_make_fake_connection(interface, src_ip, verbose=True):
 	if verbose: print('Mirrored connection successful!')
 	return s
 
+# Same as sniff, but doesn't disconnect after stopping
+def temp_sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
+	while not thread.stopped():
+		try:
+			packet, address = socket.recvfrom(65565)
+			create_task(True, 'Process temp packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
+		except: time.sleep(1)
 
 def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
 	while not thread.stopped():
