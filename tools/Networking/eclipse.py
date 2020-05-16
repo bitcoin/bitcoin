@@ -232,16 +232,14 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 	identity_address.append((src_ip, src_port))
 	identity_socket.append(s)
 
-	# Listen to the connections for future packets
-	if verbose: print(f'Attaching original packet listener to {interface}')
-	create_task(True, 'Victim identity ' + src_ip, sniff, s, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
 
 	mirror_socket = mirror_make_fake_connection(interface, src_ip, verbose)
 	if mirror_socket != None:
 		identity_mirror_socket.append(mirror_socket)
 	# Listen to the connections for future packets
 	if mirror_socket != None:
-		if verbose: print(f'Attaching mirror packet listener to {interface}')
+		if verbose: print(f'Attaching packet listeners to {interface}')
+		create_task(True, 'Victim identity ' + src_ip, sniff, s, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface)
 		create_task(True, 'Mirror identity ' + src_ip, mirror_sniff, mirror_socket, s, src_ip, src_port, dst_ip, dst_port, interface)
 
 # Reconnect a peer
