@@ -360,8 +360,6 @@ public:
         READWRITEAS(CService, *this);
     }
 
-    // TODO: make private (improves encapsulation)
-public:
     ServiceFlags nServices;
 
     // disk and network only
@@ -410,7 +408,6 @@ public:
     std::string GetCommand() const;
     std::string ToString() const;
 
-public:
     int type;
     uint256 hash;
 };
