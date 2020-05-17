@@ -15,6 +15,9 @@
 #include <qt/guiutil.h>
 #include <qt/platformstyle.h>
 
+#include <key_io.h>
+#include <wallet/wallet.h>
+
 #include <QIcon>
 #include <QMenu>
 #include <QMessageBox>
@@ -23,11 +26,13 @@
 class AddressBookSortFilterProxyModel final : public QSortFilterProxyModel
 {
     const QString m_type;
+    const bool m_hasPK;
 
 public:
-    AddressBookSortFilterProxyModel(const QString& type, QObject* parent)
+    AddressBookSortFilterProxyModel(const QString& type, QObject* parent, const bool hasPK)
         : QSortFilterProxyModel(parent)
         , m_type(type)
+        , m_hasPK(hasPK)
     {
         setDynamicSortFilter(true);
         setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -49,6 +54,14 @@ protected:
         if (filterRegExp().indexIn(model->data(address).toString()) < 0 &&
             filterRegExp().indexIn(model->data(label).toString()) < 0) {
             return false;
+        }
+
+        if (m_hasPK) {
+            CTxDestination destination = DecodeDestination(address.data(Qt::DisplayRole).toString().toStdString());
+            const PKHash* pkhash = boost::get<PKHash>(&destination);
+            if (!pkhash) {
+                return false;
+            }
         }
 
         return true;
@@ -83,6 +96,8 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
         {
         case SendingTab: setWindowTitle(tr("Choose the address to send coins to")); break;
         case ReceivingTab: setWindowTitle(tr("Choose the address to receive coins with")); break;
+        case SignMessageTab: setWindowTitle(tr("Choose the address to sign the message")); break;
+        case VerifyMessageTab: setWindowTitle(tr("Choose the address to verify the message")); break;
         }
         connect(ui->tableView, &QTableView::doubleClicked, this, &QDialog::accept);
         ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -95,9 +110,15 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
         {
         case SendingTab: setWindowTitle(tr("Sending addresses")); break;
         case ReceivingTab: setWindowTitle(tr("Receiving addresses")); break;
+        case SignMessageTab: setWindowTitle(tr("Signing addresses")); break;
+        case VerifyMessageTab: setWindowTitle(tr("Verifying message addresses")); break;
         }
         break;
     }
+
+    ui->deleteAddress->setVisible(false);
+    ui->newAddress->setVisible(false);
+
     switch(tab)
     {
     case SendingTab:
@@ -107,8 +128,12 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
         break;
     case ReceivingTab:
         ui->labelExplanation->setText(tr("These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses."));
-        ui->deleteAddress->setVisible(false);
-        ui->newAddress->setVisible(false);
+        break;
+    case SignMessageTab:
+        ui->labelExplanation->setText(tr("These are your Bitcoin addresses for signing messages."));
+        break;
+    case VerifyMessageTab:
+        ui->labelExplanation->setText(tr("These are your Bitcoin addresses for verifying messages."));
         break;
     }
 
@@ -151,8 +176,8 @@ void AddressBookPage::setModel(AddressTableModel *_model)
     if(!_model)
         return;
 
-    auto type = tab == ReceivingTab ? AddressTableModel::Receive : AddressTableModel::Send;
-    proxyModel = new AddressBookSortFilterProxyModel(type, this);
+    auto type = tab == SendingTab ? AddressTableModel::Send : AddressTableModel::Receive;
+    proxyModel = new AddressBookSortFilterProxyModel(type, this, (tab == SignMessageTab || tab == VerifyMessageTab));
     proxyModel->setSourceModel(_model);
 
     connect(ui->searchLineEdit, &QLineEdit::textChanged, proxyModel, &QSortFilterProxyModel::setFilterWildcard);
@@ -252,6 +277,8 @@ void AddressBookPage::selectionChanged()
             deleteAction->setEnabled(true);
             break;
         case ReceivingTab:
+        case SignMessageTab:
+        case VerifyMessageTab:
             // Deleting receiving addresses, however, is not allowed
             ui->deleteAddress->setEnabled(false);
             ui->deleteAddress->setVisible(false);

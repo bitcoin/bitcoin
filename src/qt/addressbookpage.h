@@ -30,7 +30,9 @@ class AddressBookPage : public QDialog
 public:
     enum Tabs {
         SendingTab = 0,
-        ReceivingTab = 1
+        ReceivingTab = 1,
+        SignMessageTab = 2,
+        VerifyMessageTab = 3
     };
 
     enum Mode {
