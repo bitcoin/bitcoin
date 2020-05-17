@@ -31,17 +31,14 @@
 #include <QKeyEvent>
 #include <QMenu>
 #include <QMessageBox>
-#include <QScrollBar>
 #include <QScreen>
+#include <QScrollBar>
 #include <QSettings>
 #include <QString>
 #include <QStringList>
 #include <QTime>
 #include <QTimer>
 
-// TODO: add a scrollback limit, as there is currently none
-// TODO: make it possible to filter out categories (esp debug messages when implemented)
-// TODO: receive errors and debug messages through ClientModel
 
 const int CONSOLE_HISTORY = 50;
 const int INITIAL_TRAFFIC_GRAPH_MINS = 30;
