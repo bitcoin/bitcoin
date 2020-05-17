@@ -16,7 +16,8 @@
 #include <string>
 #include <vector>
 
-void initialize() {
+void initialize()
+{
     static const ECCVerifyHandle verify_handle;
 }
 

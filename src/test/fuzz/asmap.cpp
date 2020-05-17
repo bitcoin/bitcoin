@@ -23,8 +23,8 @@ static const std::vector<bool> IPV4_PREFIX_ASMAP = {
     true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
     true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
     true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
-    true, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, // Match 0xFF
-    true, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true // Match 0xFF
+    true, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,         // Match 0xFF
+    true, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true          // Match 0xFF
 };
 
 void test_one_input(const std::vector<uint8_t>& buffer)

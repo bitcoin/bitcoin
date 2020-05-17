@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bloom.h>
-#include <optional.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -12,6 +11,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -35,7 +35,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             break;
         }
         case 1: {
-            const Optional<COutPoint> out_point = ConsumeDeserializable<COutPoint>(fuzzed_data_provider);
+            const std::optional<COutPoint> out_point = ConsumeDeserializable<COutPoint>(fuzzed_data_provider);
             if (!out_point) {
                 break;
             }
@@ -46,7 +46,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             break;
         }
         case 2: {
-            const Optional<uint256> u256 = ConsumeDeserializable<uint256>(fuzzed_data_provider);
+            const std::optional<uint256> u256 = ConsumeDeserializable<uint256>(fuzzed_data_provider);
             if (!u256) {
                 break;
             }
@@ -57,7 +57,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             break;
         }
         case 3: {
-            const Optional<CMutableTransaction> mut_tx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
+            const std::optional<CMutableTransaction> mut_tx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
             if (!mut_tx) {
                 break;
             }
