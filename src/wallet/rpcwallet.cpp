@@ -1404,7 +1404,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
                             {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
                             {RPCResult::Type::NUM, "vout", "the vout value"},
                             {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
-                                 "'send' category of transactions."},
+                                 "'send' category of transactions when all inputs belong to the wallet."},
                         },
                         TransactionDescriptionString()),
                         {
@@ -1518,7 +1518,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
                                     "for all other categories"},
                                 {RPCResult::Type::NUM, "vout", "the vout value"},
                                 {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
-                                     "'send' category of transactions."},
+                                     "'send' category of transactions when all inputs belong to the wallet."},
                             },
                             TransactionDescriptionString()),
                             {
@@ -1644,7 +1644,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
                     {
                         {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
                         {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
-                                     "'send' category of transactions."},
+                                     "'send' category of transactions when all inputs belong to the wallet."},
                     },
                     TransactionDescriptionString()),
                     {
@@ -1664,7 +1664,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
                                 {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
                                 {RPCResult::Type::NUM, "vout", "the vout value"},
                                 {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
-                                    "'send' category of transactions."},
+                                    "'send' category of transactions when all inputs belong to the wallet."},
                                 {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
                                      "'send' category of transactions."},
                             }},
