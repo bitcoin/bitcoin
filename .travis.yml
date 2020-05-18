@@ -113,9 +113,10 @@ jobs:
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
+      # Not enough memory on travis machines, so feature_block is excluded for now
       env: >-
+        TEST_RUNNER_EXTRA="--exclude feature_block"
         FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
-        TEST_RUNNER_EXTRA="--exclude feature_block"  # Not enough memory on travis machines
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
