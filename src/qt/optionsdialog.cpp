@@ -94,20 +94,41 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     ui->lang->setToolTip(ui->lang->toolTip().arg(PACKAGE_NAME));
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
+
+    /** Additional language names that aren't covered by QLocale as of version Qt 5.9.8*/
+    static const std::map<std::string, std::string> language_names = {
+#if (QT_VERSION < QT_VERSION_CHECK(5, 12, 0))
+        {"eo", "Esperanto"},
+        {"ku_IQ", "Kurdish - Iraq"},
+#endif
+        {"la", "Latin"},
+        {"pam", "Kapampangan"},
+        {"szl", "Silesian"},
+    };
+
     for (const QString &langStr : translations.entryList())
     {
         QLocale locale(langStr);
 
-        /** check if the locale name consists of 2 parts (language_country) */
-        if(langStr.contains("_"))
-        {
-            /** display language strings as "native language - native country (locale name)", e.g. "Deutsch - Deutschland (de)" */
-            ui->lang->addItem(locale.nativeLanguageName() + QString(" - ") + locale.nativeCountryName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
-        }
-        else
-        {
-            /** display language strings as "native language (locale name)", e.g. "Deutsch (de)" */
-            ui->lang->addItem(locale.nativeLanguageName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
+        /** check if the locale is supported by QLocale */
+        if (locale.nativeLanguageName().isEmpty()) {
+            std::map<std::string, std::string>::const_iterator it = language_names.find(langStr.toStdString());
+            if (it != language_names.end()) {
+                /** display language strings as "native language (locale name)", e.g. "Deutsch (de)" */
+                ui->lang->addItem(QString(it->second.c_str()) + QString(" (") + langStr + QString(")"), QVariant(langStr));
+            } else {
+                /** warning: the language is not supported by QLocale and also is not in additional languages fixed list */
+                ui->lang->addItem(QString("(") + langStr + QString(")"), QVariant(langStr));
+            }
+        } else {
+            /** check if the locale name consists of 2 parts (language_country) */
+            if (langStr.contains("_")) {
+                /** display language strings as "native language - native country (locale name)", e.g. "Deutsch - Deutschland (de)" */
+                ui->lang->addItem(locale.nativeLanguageName() + QString(" - ") + locale.nativeCountryName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
+            } else {
+                /** display language strings as "native language (locale name)", e.g. "Deutsch (de)" */
+                ui->lang->addItem(locale.nativeLanguageName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
+            }
         }
     }
     ui->unit->setModel(new BitcoinUnits(this));
