@@ -260,7 +260,8 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
                                   Q_ARG(int, height),
                                   Q_ARG(QDateTime, QDateTime::fromTime_t(blockTime)),
                                   Q_ARG(double, verificationProgress),
-                                  Q_ARG(bool, fHeader));
+                                  Q_ARG(bool, fHeader),
+                                  Q_ARG(bool, initialSync));
         assert(invoked);
         nLastUpdateNotification = now;
     }
