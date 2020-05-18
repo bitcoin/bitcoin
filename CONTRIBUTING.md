@@ -229,6 +229,25 @@ discussed extensively on the mailing list and IRC, be accompanied by a widely
 discussed BIP and have a generally widely perceived technical consensus of being
 a worthwhile change based on the judgement of the maintainers.
 
+#### Verifying a Rebase
+
+When someone rebases their PR, it can often be very difficult to ensure that
+extra changes were not included in that force push. This changes could be anything
+from merge conflicts to someone attempting to sneak something into the PR. To check
+that a PR is the same before and after force push, you can use the following function.
+Place this function in your `~/.bashrc`. In order for this function to work, both the
+before and after commits must be present locally.
+
+```
+function gfd() {
+        local fp1=$(git merge-base --fork-point develop $1)
+        local fp2=$(git merge-base --fork-point develop $2)
+        echo fp1=$fp1
+        echo fp2=$fp2
+        diff --color=always -u -I'^[^-+]' <(git diff $fp1..$1) <(git diff $fp2..$2)
+}
+```
+
 ### Finding Reviewers
 
 The review process is normally fairly responsive on the Dash Core repository, however
