@@ -9,7 +9,6 @@
 #include <httpserver.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
-#include <ui_interface.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -251,9 +250,6 @@ static bool InitRPCAuthentication()
     {
         LogPrintf("No rpcpassword set - using random cookie authentication.\n");
         if (!GenerateAuthCookie(&strRPCUserColonPass)) {
-            uiInterface.ThreadSafeMessageBox(
-                _("Error: A fatal internal error occurred, see debug.log for details"), // Same message as AbortNode
-                "", CClientUIInterface::MSG_ERROR);
             return false;
         }
     } else {
