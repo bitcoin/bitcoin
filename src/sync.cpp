@@ -77,8 +77,10 @@ private:
 
 using LockStackItem = std::pair<void*, CLockLocation>;
 using LockStack = std::vector<LockStackItem>;
-typedef std::map<std::pair<void*, void*>, LockStack> LockOrders;
-typedef std::set<std::pair<void*, void*> > InvLockOrders;
+
+using LockPair = std::pair<void*, void*>;
+using LockOrders = std::map<LockPair, LockStack>;
+using InvLockOrders = std::set<LockPair>;
 
 struct LockData {
     LockOrders lockorders;
@@ -95,7 +97,7 @@ LockData& GetLockData() {
 
 static thread_local LockStack g_lockstack;
 
-static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch, const LockStack& s1, const LockStack& s2)
+static void potential_deadlock_detected(const LockPair& mismatch, const LockStack& s1, const LockStack& s2)
 {
     LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
     LogPrintf("Previous lock order was:\n");
@@ -136,12 +138,12 @@ static void push_lock(void* c, const CLockLocation& locklocation)
         if (i.first == c)
             break;
 
-        std::pair<void*, void*> p1 = std::make_pair(i.first, c);
+        const LockPair p1 = std::make_pair(i.first, c);
         if (lockdata.lockorders.count(p1))
             continue;
         lockdata.lockorders.emplace(p1, g_lockstack);
 
-        std::pair<void*, void*> p2 = std::make_pair(c, i.first);
+        const LockPair p2 = std::make_pair(c, i.first);
         lockdata.invlockorders.insert(p2);
         if (lockdata.lockorders.count(p2))
             potential_deadlock_detected(p1, lockdata.lockorders[p2], lockdata.lockorders[p1]);
@@ -206,16 +208,16 @@ void DeleteLock(void* cs)
 {
     LockData& lockdata = GetLockData();
     std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
-    std::pair<void*, void*> item = std::make_pair(cs, nullptr);
+    const LockPair item = std::make_pair(cs, nullptr);
     LockOrders::iterator it = lockdata.lockorders.lower_bound(item);
     while (it != lockdata.lockorders.end() && it->first.first == cs) {
-        std::pair<void*, void*> invitem = std::make_pair(it->first.second, it->first.first);
+        const LockPair invitem = std::make_pair(it->first.second, it->first.first);
         lockdata.invlockorders.erase(invitem);
         lockdata.lockorders.erase(it++);
     }
     InvLockOrders::iterator invit = lockdata.invlockorders.lower_bound(item);
     while (invit != lockdata.invlockorders.end() && invit->first == cs) {
-        std::pair<void*, void*> invinvitem = std::make_pair(invit->second, invit->first);
+        const LockPair invinvitem = std::make_pair(invit->second, invit->first);
         lockdata.lockorders.erase(invinvitem);
         lockdata.invlockorders.erase(invit++);
     }
