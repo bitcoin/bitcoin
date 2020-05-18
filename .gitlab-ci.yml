@@ -156,6 +156,18 @@ x86_64-unknown-linux-gnu-debug:
     HOST: x86_64-unknown-linux-gnu
     DEP_OPTS: "DEBUG=1"
 
+x86_64-unknown-linux-gnu-nowalet:
+  extends: .build-depends-template
+  variables:
+    HOST: x86_64-unknown-linux-gnu
+    DEP_OPTS: "NO_WALLET=1"
+
+x86_64-unknown-linux-gnu-release:
+  extends: .build-depends-template
+  variables:
+    HOST: x86_64-unknown-linux-gnu
+    DEP_OPTS: "NO_UPNP=1"
+
 x86_64-apple-darwin11:
   extends: .build-depends-template
   variables:
@@ -201,14 +213,14 @@ linux64-build:
 linux64_nowallet-build:
   extends: .build-template
   needs:
-    - x86_64-unknown-linux-gnu
+    - x86_64-unknown-linux-gnu-nowalet
   variables:
     BUILD_TARGET: linux64_nowallet
 
 linux64_release-build:
   extends: .build-template
   needs:
-    - x86_64-unknown-linux-gnu
+    - x86_64-unknown-linux-gnu-release
   variables:
     BUILD_TARGET: linux64_release
 
