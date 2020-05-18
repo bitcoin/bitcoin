@@ -185,23 +185,27 @@ std::string LocksHeld()
     return result;
 }
 
+static bool LockHeld(void* mutex)
+{
+    for (const LockStackItem& i : g_lockstack) {
+        if (i.first == mutex) return true;
+    }
+
+    return false;
+}
+
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
 {
-    for (const LockStackItem& i : g_lockstack)
-        if (i.first == cs)
-            return;
+    if (LockHeld(cs)) return;
     tfm::format(std::cerr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld());
     abort();
 }
 
 void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
 {
-    for (const LockStackItem& i : g_lockstack) {
-        if (i.first == cs) {
-            tfm::format(std::cerr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld());
-            abort();
-        }
-    }
+    if (!LockHeld(cs)) return;
+    tfm::format(std::cerr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld());
+    abort();
 }
 
 void DeleteLock(void* cs)
