@@ -16,6 +16,8 @@
 #include <map>
 #include <set>
 #include <system_error>
+#include <thread>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -77,12 +79,14 @@ private:
 
 using LockStackItem = std::pair<void*, CLockLocation>;
 using LockStack = std::vector<LockStackItem>;
+using LockStacks = std::unordered_map<std::thread::id, LockStack>;
 
 using LockPair = std::pair<void*, void*>;
 using LockOrders = std::map<LockPair, LockStack>;
 using InvLockOrders = std::set<LockPair>;
 
 struct LockData {
+    LockStacks m_lock_stacks;
     LockOrders lockorders;
     InvLockOrders invlockorders;
     std::mutex dd_mutex;
@@ -94,8 +98,6 @@ LockData& GetLockData() {
     static LockData& lock_data = *new LockData();
     return lock_data;
 }
-
-static thread_local LockStack g_lockstack;
 
 static void potential_deadlock_detected(const LockPair& mismatch, const LockStack& s1, const LockStack& s2)
 {
@@ -132,16 +134,16 @@ static void push_lock(void* c, const CLockLocation& locklocation)
     LockData& lockdata = GetLockData();
     std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
 
-    g_lockstack.push_back(std::make_pair(c, locklocation));
-
-    for (const LockStackItem& i : g_lockstack) {
+    LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
+    lock_stack.emplace_back(c, locklocation);
+    for (const LockStackItem& i : lock_stack) {
         if (i.first == c)
             break;
 
         const LockPair p1 = std::make_pair(i.first, c);
         if (lockdata.lockorders.count(p1))
             continue;
-        lockdata.lockorders.emplace(p1, g_lockstack);
+        lockdata.lockorders.emplace(p1, lock_stack);
 
         const LockPair p2 = std::make_pair(c, i.first);
         lockdata.invlockorders.insert(p2);
@@ -152,7 +154,14 @@ static void push_lock(void* c, const CLockLocation& locklocation)
 
 static void pop_lock()
 {
-    g_lockstack.pop_back();
+    LockData& lockdata = GetLockData();
+    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+
+    LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
+    lock_stack.pop_back();
+    if (lock_stack.empty()) {
+        lockdata.m_lock_stacks.erase(std::this_thread::get_id());
+    }
 }
 
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry)
@@ -162,11 +171,17 @@ void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs
 
 void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line)
 {
-    if (!g_lockstack.empty()) {
-        const auto& lastlock = g_lockstack.back();
-        if (lastlock.first == cs) {
-            lockname = lastlock.second.Name();
-            return;
+    {
+        LockData& lockdata = GetLockData();
+        std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+
+        const LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
+        if (!lock_stack.empty()) {
+            const auto& lastlock = lock_stack.back();
+            if (lastlock.first == cs) {
+                lockname = lastlock.second.Name();
+                return;
+            }
         }
     }
     throw std::system_error(EPERM, std::generic_category(), strprintf("%s:%s %s was not most recent critical section locked", file, line, guardname));
@@ -179,15 +194,23 @@ void LeaveCritical()
 
 std::string LocksHeld()
 {
+    LockData& lockdata = GetLockData();
+    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+
+    const LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
     std::string result;
-    for (const LockStackItem& i : g_lockstack)
+    for (const LockStackItem& i : lock_stack)
         result += i.second.ToString() + std::string("\n");
     return result;
 }
 
 static bool LockHeld(void* mutex)
 {
-    for (const LockStackItem& i : g_lockstack) {
+    LockData& lockdata = GetLockData();
+    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+
+    const LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
+    for (const LockStackItem& i : lock_stack) {
         if (i.first == mutex) return true;
     }
 
