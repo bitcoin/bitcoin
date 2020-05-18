@@ -122,9 +122,9 @@ class P2PConnection(asyncio.Protocol):
     def is_connected(self):
         return self._transport is not None
 
-    def peer_connect(self, dstaddr, dstport, *, net, factor):
+    def peer_connect(self, dstaddr, dstport, *, net, timeout_factor):
         assert not self.is_connected
-        self.factor = factor
+        self.timeout_factor = timeout_factor
         self.dstaddr = dstaddr
         self.dstport = dstport
         # The initial message to send after the connection was made:
@@ -372,7 +372,7 @@ class P2PInterface(P2PConnection):
     # Connection helper methods
 
     def wait_until(self, test_function, timeout):
-        wait_until(test_function, timeout=timeout, lock=mininode_lock, factor=self.factor)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock, timeout_factor=self.timeout_factor)
 
     def wait_for_disconnect(self, timeout=60):
         test_function = lambda: not self.is_connected
