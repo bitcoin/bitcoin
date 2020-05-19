@@ -147,24 +147,6 @@ void SetServiceFlagsIBDCache(bool state) {
     g_initial_block_download_completed = state;
 }
 
-
-CAddress::CAddress() : CService()
-{
-    Init();
-}
-
-CAddress::CAddress(CService ipIn, ServiceFlags nServicesIn) : CService(ipIn)
-{
-    Init();
-    nServices = nServicesIn;
-}
-
-void CAddress::Init()
-{
-    nServices = NODE_NONE;
-    nTime = 100000000;
-}
-
 CInv::CInv()
 {
     type = 0;
