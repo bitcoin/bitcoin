@@ -1244,9 +1244,26 @@ static UniValue forcerealfake(const JSONRPCRequest& request)
     std::vector<CNodeStats> vstats;
     g_rpc_node->connman->GetNodeStats(vstats);
 
-    //for (std::vector<CNodeStats>::reverse_iterator i = vstats.rbegin(); i != vstats.rend(); ++i ) {
-    //    CNodeStats stats = *i;
+    // Go first to last, remove excess real nodes
     for (const CNodeStats& stats : vstats) {
+        CNodeStateStats statestats;
+        bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
+        if (fStateStats) {
+            if (stats.addrName.rfind("10.0.", 0) != 0) {
+                real--;
+                if(real < 0) {
+                    result.pushKV(stats.addrName, "Real (Disconnecting)");
+                    g_rpc_node->connman->DisconnectNode(stats.addrName);
+                } else {
+                    result.pushKV(stats.addrName, "Real");
+                }
+            }
+        }
+    }
+
+    // Go back to front, remove excess fake nodes
+    for (std::vector<CNodeStats>::reverse_iterator i = vstats.rbegin(); i != vstats.rend(); ++i ) {
+        CNodeStats stats = *i;
         CNodeStateStats statestats;
         bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
         if (fStateStats) {
@@ -1257,14 +1274,6 @@ static UniValue forcerealfake(const JSONRPCRequest& request)
                     g_rpc_node->connman->DisconnectNode(stats.addrName);
                 } else {
                     result.pushKV(stats.addrName, "Fake");
-                }
-            } else {
-                real--;
-                if(real < 0) {
-                    result.pushKV(stats.addrName, "Real (Disconnecting)");
-                    g_rpc_node->connman->DisconnectNode(stats.addrName);
-                } else {
-                    result.pushKV(stats.addrName, "Real");
                 }
             }
         }
