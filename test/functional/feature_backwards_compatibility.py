@@ -72,7 +72,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         res = self.nodes[self.num_nodes - 1].getblockchaininfo()
         assert_equal(res['blocks'], COINBASE_MATURITY + 1)
 
-        node_master = self.nodes[self.num_nodes - 5]
+        node_master = self.nodes[1]
         node_v19 = self.nodes[self.num_nodes - 4]
         node_v18 = self.nodes[self.num_nodes - 3]
         node_v17 = self.nodes[self.num_nodes - 2]
@@ -170,7 +170,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         assert info['private_keys_enabled']
         assert info['keypoolsize'] == 0
 
-        # Copy the wallets to older nodes:
+        # Unload wallets and copy to older nodes:
         node_master_wallets_dir = os.path.join(node_master.datadir, "regtest/wallets")
         node_v19_wallets_dir = os.path.join(node_v19.datadir, "regtest/wallets")
         node_v18_wallets_dir = os.path.join(node_v18.datadir, "regtest/wallets")
@@ -178,10 +178,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_v16_wallets_dir = os.path.join(node_v16.datadir, "regtest")
         node_master.unloadwallet("w1")
         node_master.unloadwallet("w2")
+        node_master.unloadwallet("w3")
         node_v19.unloadwallet("w1_v19")
         node_v19.unloadwallet("w2_v19")
+        node_v19.unloadwallet("w3_v19")
         node_v18.unloadwallet("w1_v18")
         node_v18.unloadwallet("w2_v18")
+        node_v18.unloadwallet("w3_v18")
 
         # Copy wallets to v0.16
         for wallet in os.listdir(node_master_wallets_dir):
@@ -318,7 +321,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # assert_raises_rpc_error(-4, "Wallet loading failed.", node_v17.loadwallet, 'w3_v18')
 
         # Instead, we stop node and try to launch it with the wallet:
-        self.stop_node(4)
+        self.stop_node(-2)
         node_v17.assert_start_raises_init_error(["-wallet=w3_v18"], "Error: Error loading w3_v18: Wallet requires newer version of Bitcoin Core")
         if self.options.descriptors:
             # Descriptor wallets appear to be corrupted wallets to old software
@@ -327,12 +330,12 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: wallet.dat corrupt, salvage failed")
         else:
             node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Bitcoin Core")
-        self.start_node(4)
+        self.start_node(-2)
 
         if not self.options.descriptors:
             # Descriptor wallets break compatibility, only run this test for legacy wallets
             # Open most recent wallet in v0.16 (no loadwallet RPC)
-            self.restart_node(5, extra_args=["-wallet=w2"])
+            self.restart_node(-1, extra_args=["-wallet=w2"])
             wallet = node_v16.get_wallet_rpc("w2")
             info = wallet.getwalletinfo()
             assert info['keypoolsize'] == 1
