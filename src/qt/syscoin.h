@@ -12,6 +12,8 @@
 #include <QApplication>
 #include <memory>
 
+#include <interfaces/node.h>
+
 class SyscoinGUI;
 class ClientModel;
 class NetworkStyle;
@@ -20,10 +22,7 @@ class PaymentServer;
 class PlatformStyle;
 class WalletController;
 class WalletModel;
-namespace interfaces {
-class Handler;
-class Node;
-} // namespace interfaces
+
 QT_BEGIN_NAMESPACE
 // SYSCOIN
 class QStringList;
@@ -44,7 +43,7 @@ public Q_SLOTS:
     void restart(const QStringList &args);
 
 Q_SIGNALS:
-    void initializeResult(bool success);
+    void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
     void shutdownResult();
     void runawayException(const QString &message);
 
@@ -96,7 +95,7 @@ public:
     void setupPlatformStyle();
 
 public Q_SLOTS:
-    void initializeResult(bool success);
+    void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
     void shutdownResult();
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
     void handleRunawayException(const QString &message);

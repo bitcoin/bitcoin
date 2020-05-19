@@ -82,6 +82,7 @@ static void RegisterMetaTypes()
 
     qRegisterMetaType<std::function<void()>>("std::function<void()>");
     qRegisterMetaType<QMessageBox::Icon>("QMessageBox::Icon");
+    qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
 }
 
 static QString GetLangTerritory()
@@ -165,8 +166,9 @@ void SyscoinCore::initialize()
     {
         qDebug() << __func__ << ": Running initialization in thread";
         util::ThreadRename("qt-init");
-        bool rv = m_node.appInitMain();
-        Q_EMIT initializeResult(rv);
+        interfaces::BlockAndHeaderTipInfo tip_info;
+        bool rv = m_node.appInitMain(&tip_info);
+        Q_EMIT initializeResult(rv, tip_info);
     } catch (const std::exception& e) {
         handleRunawayException(&e);
     } catch (...) {
@@ -367,7 +369,7 @@ void SyscoinApplication::requestShutdown()
     Q_EMIT requestedShutdown();
 }
 
-void SyscoinApplication::initializeResult(bool success)
+void SyscoinApplication::initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info)
 {
     qDebug() << __func__ << ": Initialization result: " << success;
     // Set exit result.
@@ -377,7 +379,7 @@ void SyscoinApplication::initializeResult(bool success)
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
         qInfo() << "Platform customization:" << platformStyle->getName();
         clientModel = new ClientModel(m_node, optionsModel);
-        window->setClientModel(clientModel);
+        window->setClientModel(clientModel, &tip_info);
 #ifdef ENABLE_WALLET
         if (WalletModel::isWalletEnabled()) {
             m_wallet_controller = new WalletController(*clientModel, platformStyle, this);
