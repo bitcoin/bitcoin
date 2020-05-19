@@ -220,7 +220,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		if verbose: print(f'Attaching temporary packet listeners to {interface}')
 		temp_listener = create_task(True, 'Temp victim identity ' + src_ip, temp_sniff, s, None, src_ip, src_port, dst_ip, dst_port, interface)
 		# Send a ping
-		s.sendall(ping_packet().to_bytes())
+		#s.sendall(ping_packet().to_bytes())
 	except:
 		print('Failed to send packets to victim')
 		time.sleep(1)
@@ -296,7 +296,7 @@ def mirror_make_fake_connection(interface, src_ip, verbose=True):
 	# Get verack packet
 	verack = s.recv(1024)
 	# Send a ping
-	s.sendall(ping_packet().to_bytes())
+	#s.sendall(ping_packet().to_bytes())
 	if verbose: print('Mirrored connection successful!')
 	return s
 
