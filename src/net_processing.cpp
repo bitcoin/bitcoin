@@ -477,6 +477,9 @@ private:
     /** When our tip was last updated. */
     std::atomic<int64_t> m_last_tip_update{0};
 
+    /** Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed). */
+    CTransactionRef FindTxForGetData(CNode* peer, const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds longlived_mempool_time) LOCKS_EXCLUDED(cs_main);
+
     void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main) EXCLUSIVE_LOCKS_REQUIRED(peer.m_getdata_requests_mutex);
 
     void ProcessBlock(CNode& pfrom, const std::shared_ptr<const CBlock>& pblock, bool fForceProcessing);
@@ -2079,6 +2082,37 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, const CChainParams& chai
     }
 }
 
+//! Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed).
+CTransactionRef PeerManagerImpl::FindTxForGetData(CNode* peer, const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds longlived_mempool_time) LOCKS_EXCLUDED(cs_main)
+{
+    // Check if the requested transaction is so recent that we're just
+    // about to announce it to the peer; if so, they certainly shouldn't
+    // know we already have it.
+    {
+        LOCK(peer->m_tx_relay->cs_tx_inventory);
+        if (peer->m_tx_relay->setInventoryTxToSend.count(txid)) return {};
+    }
+
+    {
+        LOCK(cs_main);
+        // Look up transaction in relay pool
+        auto mi = mapRelay.find(txid);
+        if (mi != mapRelay.end()) return mi->second;
+    }
+
+    auto txinfo = m_mempool.info(txid);
+    if (txinfo.tx) {
+        // To protect privacy, do not answer getdata using the mempool when
+        // that TX couldn't have been INVed in reply to a MEMPOOL request,
+        // or when it's too recent to have expired from mapRelay.
+        if ((mempool_req.count() && txinfo.m_time <= mempool_req) || txinfo.m_time <= longlived_mempool_time) {
+            return txinfo.tx;
+        }
+    }
+
+    return {};
+}
+
 void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc)
 {
     AssertLockNotHeld(cs_main);
@@ -2093,182 +2127,155 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
     const std::chrono::seconds mempool_req = !pfrom.IsAddrRelayPeer() ? pfrom.m_tx_relay->m_last_mempool_req.load()
                                                                           : std::chrono::seconds::min();
 
-    {
-        LOCK(cs_main);
+    // Process as many TX items from the front of the getdata queue as
+    // possible, since they're common and it's efficient to batch process
+    // them.
+    while (it != peer.m_getdata_requests.end() && it->IsKnownType()) {
+        if (interruptMsgProc)
+            return;
+        // The send buffer provides backpressure. If there's no space in
+        // the buffer, pause processing until the next call.
+        if (pfrom.fPauseSend)
+            break;
 
-        // Process as many TX items from the front of the getdata queue as
-        // possible, since they're common and it's efficient to batch process
-        // them.
-        while (it != peer.m_getdata_requests.end() && it->IsKnownType()) {
-            if (interruptMsgProc)
-                return;
-            // The send buffer provides backpressure. If there's no space in
-            // the buffer, pause processing until the next call.
-            if (pfrom.fPauseSend)
-                break;
+        const CInv &inv = *it;
 
-            const CInv &inv = *it;
+        if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK) {
+            break;
+        }
+        ++it;
 
-            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK) {
-                break;
-            }
-            ++it;
+        if (!pfrom.IsAddrRelayPeer() && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
+            // Note that if we receive a getdata for non-block messages
+            // from a block-relay-only outbound peer that violate the policy,
+            // we skip such getdata messages from this peer
+            continue;
+        }
 
-            if (!pfrom.IsAddrRelayPeer() && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
-                // Note that if we receive a getdata for non-block messages
-                // from a block-relay-only outbound peer that violate the policy,
-                // we skip such getdata messages from this peer
-                continue;
-            }
-
-            // Send stream from relay memory
-            bool push = false;
-            if (inv.type == MSG_TX || inv.type == MSG_DSTX) {
+        bool push = false;
+        if (inv.type == MSG_TX || inv.type == MSG_DSTX) {
+            CTransactionRef tx = FindTxForGetData(&pfrom, inv.hash, mempool_req, longlived_mempool_time);
+            if (tx) {
                 CCoinJoinBroadcastTx dstx;
                 if (inv.type == MSG_DSTX) {
                     dstx = CCoinJoin::GetDSTX(inv.hash);
                 }
-                auto mi = mapRelay.find(inv.hash);
-                if (mi != mapRelay.end()) {
-                    if (dstx) {
-                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::DSTX, dstx));
-                    } else {
-                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::TX, *mi->second));
-                    }
-                    push = true;
+                if (dstx) {
+                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::DSTX, dstx));
                 } else {
-                    auto txinfo = m_mempool.info(inv.hash);
-                    // To protect privacy, do not answer getdata using the mempool when
-                    // that TX couldn't have been INVed in reply to a MEMPOOL request,
-                    // or when it's too recent to have expired from mapRelay.
-                    if (txinfo.tx && (
-                         (mempool_req.count() && txinfo.m_time <= mempool_req)
-                          || (txinfo.m_time <= longlived_mempool_time)))
-                    {
-                        if (dstx) {
-                            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::DSTX, dstx));
-                        } else {
-                            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::TX, *txinfo.tx));
-                        }
-                        push = true;
-                    }
+                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::TX, *tx));
                 }
-            }
-
-            if (push) {
-                // We interpret fulfilling a GETDATA for a transaction as a
-                // successful initial broadcast and remove it from our
-                // unbroadcast set.
                 m_mempool.RemoveUnbroadcastTx(inv.hash);
-            }
-
-            if (!push && inv.type == MSG_SPORK) {
-                if (auto opt_spork = sporkManager->GetSporkByHash(inv.hash)) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SPORK, *opt_spork));
-                    push = true;
-                }
-            }
-
-            if (!push && inv.type == MSG_GOVERNANCE_OBJECT) {
-                CDataStream ss(SER_NETWORK, pfrom.GetSendVersion());
-                bool topush = false;
-                if (m_govman.HaveObjectForHash(inv.hash)) {
-                    ss.reserve(1000);
-                    if (m_govman.SerializeObjectForHash(inv.hash, ss)) {
-                        topush = true;
-                    }
-                }
-                if (topush) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
-                    push = true;
-                }
-            }
-
-            if (!push && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
-                CDataStream ss(SER_NETWORK, pfrom.GetSendVersion());
-                bool topush = false;
-                if (m_govman.HaveVoteForHash(inv.hash)) {
-                    ss.reserve(1000);
-                    if (m_govman.SerializeVoteForHash(inv.hash, ss)) {
-                        topush = true;
-                    }
-                }
-                if (topush) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
-                    push = true;
-                }
-            }
-
-            if (!push && (inv.type == MSG_QUORUM_FINAL_COMMITMENT)) {
-                llmq::CFinalCommitment o;
-                if (m_llmq_ctx->quorum_block_processor->GetMineableCommitmentByHash(
-                        inv.hash, o)) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
-                    push = true;
-                }
-            }
-
-            if (!push && (inv.type == MSG_QUORUM_CONTRIB)) {
-                llmq::CDKGContribution o;
-                if (m_llmq_ctx->qdkgsman->GetContribution(inv.hash, o)) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCONTRIB, o));
-                    push = true;
-                }
-            }
-
-            if (!push && (inv.type == MSG_QUORUM_COMPLAINT)) {
-                llmq::CDKGComplaint o;
-                if (m_llmq_ctx->qdkgsman->GetComplaint(inv.hash, o)) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCOMPLAINT, o));
-                    push = true;
-                }
-            }
-
-            if (!push && (inv.type == MSG_QUORUM_JUSTIFICATION)) {
-                llmq::CDKGJustification o;
-                if (m_llmq_ctx->qdkgsman->GetJustification(inv.hash, o)) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QJUSTIFICATION, o));
-                    push = true;
-                }
-            }
-
-            if (!push && (inv.type == MSG_QUORUM_PREMATURE_COMMITMENT)) {
-                llmq::CDKGPrematureCommitment o;
-                if (m_llmq_ctx->qdkgsman->GetPrematureCommitment(inv.hash, o)) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
-                    push = true;
-                }
-            }
-
-            if (!push && (inv.type == MSG_QUORUM_RECOVERED_SIG)) {
-                llmq::CRecoveredSig o;
-                if (m_llmq_ctx->sigman->GetRecoveredSigForGetData(inv.hash, o)) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
-                    push = true;
-                }
-            }
-
-            if (!push && (inv.type == MSG_CLSIG)) {
-                llmq::CChainLockSig o;
-                if (m_llmq_ctx->clhandler->GetChainLockByHash(inv.hash, o)) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CLSIG, o));
-                    push = true;
-                }
-            }
-
-            if (!push && inv.type == MSG_ISDLOCK) {
-                llmq::CInstantSendLock o;
-                if (m_llmq_ctx->isman->GetInstantSendLockByHash(inv.hash, o)) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::ISDLOCK, o));
-                    push = true;
-                }
-            }
-
-            if (!push) {
-                vNotFound.push_back(inv);
+                push = true;
             }
         }
-    } // release cs_main
+
+        if (!push && inv.type == MSG_SPORK) {
+            if (auto opt_spork = sporkManager->GetSporkByHash(inv.hash)) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SPORK, *opt_spork));
+                push = true;
+            }
+        }
+
+        if (!push && inv.type == MSG_GOVERNANCE_OBJECT) {
+            CDataStream ss(SER_NETWORK, pfrom.GetSendVersion());
+            bool topush = false;
+            if (m_govman.HaveObjectForHash(inv.hash)) {
+                ss.reserve(1000);
+                if (m_govman.SerializeObjectForHash(inv.hash, ss)) {
+                    topush = true;
+                }
+            }
+            if (topush) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
+                push = true;
+            }
+        }
+
+        if (!push && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
+            CDataStream ss(SER_NETWORK, pfrom.GetSendVersion());
+            bool topush = false;
+            if (m_govman.HaveVoteForHash(inv.hash)) {
+                ss.reserve(1000);
+                if (m_govman.SerializeVoteForHash(inv.hash, ss)) {
+                    topush = true;
+                }
+            }
+            if (topush) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
+                push = true;
+            }
+        }
+
+        if (!push && (inv.type == MSG_QUORUM_FINAL_COMMITMENT)) {
+            llmq::CFinalCommitment o;
+            if (m_llmq_ctx->quorum_block_processor->GetMineableCommitmentByHash(
+                    inv.hash, o)) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
+                push = true;
+            }
+        }
+
+        if (!push && (inv.type == MSG_QUORUM_CONTRIB)) {
+            llmq::CDKGContribution o;
+            if (m_llmq_ctx->qdkgsman->GetContribution(inv.hash, o)) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCONTRIB, o));
+                push = true;
+            }
+        }
+
+        if (!push && (inv.type == MSG_QUORUM_COMPLAINT)) {
+            llmq::CDKGComplaint o;
+            if (m_llmq_ctx->qdkgsman->GetComplaint(inv.hash, o)) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCOMPLAINT, o));
+                push = true;
+            }
+        }
+
+        if (!push && (inv.type == MSG_QUORUM_JUSTIFICATION)) {
+            llmq::CDKGJustification o;
+            if (m_llmq_ctx->qdkgsman->GetJustification(inv.hash, o)) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QJUSTIFICATION, o));
+                push = true;
+            }
+        }
+
+        if (!push && (inv.type == MSG_QUORUM_PREMATURE_COMMITMENT)) {
+            llmq::CDKGPrematureCommitment o;
+            if (m_llmq_ctx->qdkgsman->GetPrematureCommitment(inv.hash, o)) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
+                push = true;
+            }
+        }
+
+        if (!push && (inv.type == MSG_QUORUM_RECOVERED_SIG)) {
+            llmq::CRecoveredSig o;
+            if (m_llmq_ctx->sigman->GetRecoveredSigForGetData(inv.hash, o)) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
+                push = true;
+            }
+        }
+
+        if (!push && (inv.type == MSG_CLSIG)) {
+            llmq::CChainLockSig o;
+            if (m_llmq_ctx->clhandler->GetChainLockByHash(inv.hash, o)) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CLSIG, o));
+                push = true;
+            }
+        }
+
+        if (!push && inv.type == MSG_ISDLOCK) {
+            llmq::CInstantSendLock o;
+            if (m_llmq_ctx->isman->GetInstantSendLockByHash(inv.hash, o)) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::ISDLOCK, o));
+                push = true;
+            }
+        }
+
+        if (!push) {
+            vNotFound.push_back(inv);
+        }
+    }
 
     // Only process one BLOCK item per call, since they're uncommon and can be
     // expensive to process.
