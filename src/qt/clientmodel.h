@@ -17,10 +17,10 @@
 #include <uint256.h>
 
 class BanTableModel;
+class CBlockIndex;
 class OptionsModel;
 class PeerTableModel;
-
-class CBlockIndex;
+enum class SynchronizationState;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -128,7 +128,7 @@ Q_SIGNALS:
     void numConnectionsChanged(int count);
     void masternodeListChanged() const;
     void chainLockChanged(const QString& bestChainLockHash, int bestChainLockHeight);
-    void numBlocksChanged(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header);
+    void numBlocksChanged(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header, SynchronizationState sync_state);
     void additionalDataSyncProgressChanged(double nSyncProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void islockCountChanged(size_t count);

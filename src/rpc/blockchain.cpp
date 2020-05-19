@@ -340,7 +340,7 @@ static UniValue getbestchainlock(const JSONRPCRequest& request)
     return result;
 }
 
-void RPCNotifyBlockChange(bool ibd, const CBlockIndex * pindex)
+void RPCNotifyBlockChange(const CBlockIndex* pindex)
 {
     if(pindex) {
         LOCK(cs_blockchange);

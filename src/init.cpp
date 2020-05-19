@@ -104,11 +104,12 @@
 
 #include <statsd_client.h>
 
+#include <functional>
+#include <set>
 #include <stdint.h>
 #include <stdio.h>
 #include <memory>
 #include <optional>
-#include <set>
 #include <thread>
 #include <vector>
 
@@ -458,13 +459,13 @@ static void registerSignalHandler(int signal, void(*handler)(int))
 static boost::signals2::connection rpc_notify_block_change_connection;
 static void OnRPCStarted()
 {
-    rpc_notify_block_change_connection = uiInterface.NotifyBlockTip_connect(&RPCNotifyBlockChange);
+    rpc_notify_block_change_connection = uiInterface.NotifyBlockTip_connect(std::bind(RPCNotifyBlockChange, std::placeholders::_2));
 }
 
 static void OnRPCStopped()
 {
     rpc_notify_block_change_connection.disconnect();
-    RPCNotifyBlockChange(false, nullptr);
+    RPCNotifyBlockChange(nullptr);
     g_best_block_cv.notify_all();
     LogPrint(BCLog::RPC, "RPC stopped.\n");
 }
@@ -815,7 +816,7 @@ static bool fHaveGenesis = false;
 static Mutex g_genesis_wait_mutex;
 static std::condition_variable g_genesis_wait_cv;
 
-static void BlockNotifyGenesisWait(bool, const CBlockIndex *pBlockIndex)
+static void BlockNotifyGenesisWait(const CBlockIndex* pBlockIndex)
 {
     if (pBlockIndex != nullptr) {
         {
@@ -2108,8 +2109,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                                 MIN_BLOCKS_TO_KEEP);
                         }
 
-                        CBlockIndex* tip = chainstate->m_chain.Tip();
-                        RPCNotifyBlockChange(true, tip);
+                        const CBlockIndex* tip = chainstate->m_chain.Tip();
+                        RPCNotifyBlockChange(tip);
                         if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
                             strLoadError = _("The block database contains a block which appears to be from the future. "
                                     "This may be due to your computer's date and time being set incorrectly. "
@@ -2345,7 +2346,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     // No locking, as this happens before any background thread is started.
     boost::signals2::connection block_notify_genesis_wait_connection;
     if (::ChainActive().Tip() == nullptr) {
-        block_notify_genesis_wait_connection = uiInterface.NotifyBlockTip_connect(BlockNotifyGenesisWait);
+        block_notify_genesis_wait_connection = uiInterface.NotifyBlockTip_connect(std::bind(BlockNotifyGenesisWait, std::placeholders::_2));
     } else {
         fHaveGenesis = true;
     }
@@ -2353,8 +2354,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 #if HAVE_SYSTEM
     if (args.IsArgSet("-blocknotify")) {
         const std::string block_notify = args.GetArg("-blocknotify", "");
-        const auto BlockNotifyCallback = [block_notify](bool initialSync, const CBlockIndex* pBlockIndex) {
-            if (initialSync || !pBlockIndex)
+        const auto BlockNotifyCallback = [block_notify](SynchronizationState sync_state, const CBlockIndex* pBlockIndex) {
+            if (sync_state != SynchronizationState::POST_INIT || !pBlockIndex)
                 return;
 
             std::string strCmd = block_notify;
