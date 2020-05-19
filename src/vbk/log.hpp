@@ -14,7 +14,7 @@ namespace VeriBlock {
 struct VBTCLogger : public altintegration::Logger {
     ~VBTCLogger() override = default;
 
-    void log(altintegration::LogLevel l, const std::string& msg)
+    void log(altintegration::LogLevel l, const std::string& msg) override
     {
         LogPrint(BCLog::POP, "[alt-cpp] [%s] %s\n", altintegration::LevelToString(l), msg);
     }
