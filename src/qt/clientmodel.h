@@ -12,10 +12,10 @@
 #include <memory>
 
 class BanTableModel;
+class CBlockIndex;
 class OptionsModel;
 class PeerTableModel;
-
-class CBlockIndex;
+enum class SynchronizationState;
 
 namespace interfaces {
 class Handler;
@@ -100,7 +100,7 @@ private:
 
 Q_SIGNALS:
     void numConnectionsChanged(int count);
-    void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header);
+    void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header, SynchronizationState sync_state);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void networkActiveChanged(bool networkActive);
     void alertsChanged(const QString &warnings);
