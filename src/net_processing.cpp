@@ -1672,6 +1672,37 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
     }
 }
 
+//! Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed).
+CTransactionRef static FindTxForGetData(CNode* peer, const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds longlived_mempool_time) LOCKS_EXCLUDED(cs_main)
+{
+    // Check if the requested transaction is so recent that we're just
+    // about to announce it to the peer; if so, they certainly shouldn't
+    // know we already have it.
+    {
+        LOCK(peer->m_tx_relay->cs_tx_inventory);
+        if (peer->m_tx_relay->setInventoryTxToSend.count(txid)) return {};
+    }
+
+    {
+        LOCK(cs_main);
+        // Look up transaction in relay pool
+        auto mi = mapRelay.find(txid);
+        if (mi != mapRelay.end()) return mi->second;
+    }
+
+    auto txinfo = mempool.info(txid);
+    if (txinfo.tx) {
+        // To protect privacy, do not answer getdata using the mempool when
+        // that TX couldn't have been INVed in reply to a MEMPOOL request,
+        // or when it's too recent to have expired from mapRelay.
+        if ((mempool_req.count() && txinfo.m_time <= mempool_req) || txinfo.m_time <= longlived_mempool_time) {
+            return txinfo.tx;
+        }
+    }
+
+    return {};
+}
+
 void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnman* connman, CTxMemPool& mempool, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main)
 {
     AssertLockNotHeld(cs_main);
@@ -1686,158 +1717,120 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
     const std::chrono::seconds mempool_req = pfrom->m_tx_relay != nullptr ? pfrom->m_tx_relay->m_last_mempool_req.load()
                                                                           : std::chrono::seconds::min();
 
-    {
-        LOCK(cs_main);
+    // Process as many TX items from the front of the getdata queue as
+    // possible, since they're common and it's efficient to batch process
+    // them.
+    while (it != pfrom->vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX || (it->type >= MSG_SPORK && it->type <= MSG_MASTERNODE_VERIFY))) {
+        if (interruptMsgProc) return;
+        // The send buffer provides backpressure. If there's no space in
+        // the buffer, pause processing until the next call.
+        if (pfrom->fPauseSend) break;
 
-        // Process as many TX items from the front of the getdata queue as
-        // possible, since they're common and it's efficient to batch process
-        // them.
-        // SYSCOIN
-        while (it != pfrom->vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX|| (it->type >= MSG_SPORK && it->type <= MSG_MASTERNODE_VERIFY))) {
-            if (interruptMsgProc)
-                return;
-            // The send buffer provides backpressure. If there's no space in
-            // the buffer, pause processing until the next call.
-            if (pfrom->fPauseSend)
-                break;
-
-            const CInv &inv = *it++;
-
+        const CInv &inv = *it++;
+        if(inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) {
             if (pfrom->m_tx_relay == nullptr) {
                 // Ignore GETDATA requests for transactions from blocks-only peers.
                 continue;
             }
-
-            // Send stream from relay memory
-            bool push = false;
+            CTransactionRef tx = FindTxForGetData(pfrom, inv.hash, mempool_req, longlived_mempool_time);
+            if (tx) {
+                if(inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) {
+                    int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
+                    connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
+                    mempool.RemoveUnbroadcastTx(inv.hash);
+                } 
+            } else {
+                vNotFound.push_back(inv);
+            }
+        } else {
             // SYSCOIN
-            if(pfrom->m_tx_relay != nullptr && (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)){
-                auto mi = mapRelay.find(inv.hash);
-                int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
-                if (mi != mapRelay.end()) {
-                    connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *mi->second));
+            bool push = false;
+            if (inv.type == MSG_SPORK) {
+                if(mapSporks.count(inv.hash)) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, mapSporks[inv.hash]));
                     push = true;
-                } else {
-                    auto txinfo = mempool.info(inv.hash);
-                    // To protect privacy, do not answer getdata using the mempool when
-                    // that TX couldn't have been INVed in reply to a MEMPOOL request,
-                    // or when it's too recent to have expired from mapRelay.
-                    if (txinfo.tx && (
-                        (mempool_req.count() && txinfo.m_time <= mempool_req)
-                        || (txinfo.m_time <= longlived_mempool_time)))
-                    {
-                        connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *txinfo.tx));
-                        push = true;
-                    }
-                }
-                if (push) {
-                    // We interpret fulfilling a GETDATA for a transaction as a
-                    // successful initial broadcast and remove it from our
-                    // unbroadcast set.
-                    mempool.RemoveUnbroadcastTx(inv.hash);
-                } else {
-                    vNotFound.push_back(inv);
                 }
             }
-            else{
-                if (!push && inv.type == MSG_SPORK) {
-                    if(mapSporks.count(inv.hash)) {
-                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, mapSporks[inv.hash]));
-                        push = true;
-                    }
-                }
-
-                if (!push && inv.type == MSG_MASTERNODE_PAYMENT_VOTE) {
-                    if(mnpayments.HasVerifiedPaymentVote(inv.hash)) {
-                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[inv.hash]));
-                        push = true;
-                    }
-                }
-
-                if (!push && inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
-                    const CBlockIndex* bi = LookupBlockIndex(inv.hash);
-                    LOCK(cs_mapMasternodeBlocks);
-                    if (bi != nullptr && mnpayments.mapMasternodeBlocks.count(bi->nHeight)) {
-                        for(auto& payee: mnpayments.mapMasternodeBlocks[bi->nHeight].vecPayees) {
-                            std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
-                            for(auto& hash: vecVoteHashes) {
-                                if(mnpayments.HasVerifiedPaymentVote(hash)) {
-                                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[hash]));
-                                }
-                            }
-                        }
-                        push = true;
-                    }
-                }
-
-                if (!push && inv.type == MSG_MASTERNODE_ANNOUNCE) {
-                    if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)){
-                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNANNOUNCE, mnodeman.mapSeenMasternodeBroadcast[inv.hash].second));
-                        push = true;
-                    }
-                }
-
-                if (!push && inv.type == MSG_MASTERNODE_PING) {
-                    if(mnodeman.mapSeenMasternodePing.count(inv.hash)) {
-                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNPING, mnodeman.mapSeenMasternodePing[inv.hash]));
-                        push = true;
-                    }
-                }
-
-                if (!push && inv.type == MSG_GOVERNANCE_OBJECT) {
-                    LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
-                    CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
-                    bool topush = false;
-                    {
-                        if(governance.HaveObjectForHash(inv.hash)) {
-                            ss.reserve(1000);
-                            if(governance.SerializeObjectForHash(inv.hash, ss)) {
-                                topush = true;
-                            }
-                        }
-                    }
-                    LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
-                    if(topush) {
-                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
-                        push = true;
-                    }
-                }
-
-                if (!push && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
-                    CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
-                    bool topush = false;
-                    {
-                        if(governance.HaveVoteForHash(inv.hash)) {
-                            ss.reserve(1000);
-                            if(governance.SerializeVoteForHash(inv.hash, ss)) {
-                                topush = true;
-                            }
-                        }
-                    }
-                    if(topush) {
-                        LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
-                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
-                        push = true;
-                    }
-                }
-
-                if (!push && inv.type == MSG_MASTERNODE_VERIFY) {
-                    if(mnodeman.mapSeenMasternodeVerification.count(inv.hash)) {
-                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNVERIFY, mnodeman.mapSeenMasternodeVerification[inv.hash]));
-                        push = true;
-                    }
-                }              
-                if (push) {
-                    // We interpret fulfilling a GETDATA for a transaction as a
-                    // successful initial broadcast and remove it from our
-                    // unbroadcast set.
-                    mempool.RemoveUnbroadcastTx(inv.hash);
-                } else {
-                    vNotFound.push_back(inv);
+            else if (inv.type == MSG_MASTERNODE_PAYMENT_VOTE) {
+                if(mnpayments.HasVerifiedPaymentVote(inv.hash)) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[inv.hash]));
+                    push = true;
                 }
             }
+            else if (inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
+                const CBlockIndex* bi = LookupBlockIndex(inv.hash);
+                LOCK(cs_mapMasternodeBlocks);
+                if (bi != nullptr && mnpayments.mapMasternodeBlocks.count(bi->nHeight)) {
+                    for(auto& payee: mnpayments.mapMasternodeBlocks[bi->nHeight].vecPayees) {
+                        std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
+                        for(auto& hash: vecVoteHashes) {
+                            if(mnpayments.HasVerifiedPaymentVote(hash)) {
+                                connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[hash]));
+                            }
+                        }
+                    }
+                    push = true;
+                }
+            }
+            else if (inv.type == MSG_MASTERNODE_ANNOUNCE) {
+                if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)){
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNANNOUNCE, mnodeman.mapSeenMasternodeBroadcast[inv.hash].second));
+                    push = true;
+                }
+            }
+            else if (inv.type == MSG_MASTERNODE_PING) {
+                if(mnodeman.mapSeenMasternodePing.count(inv.hash)) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNPING, mnodeman.mapSeenMasternodePing[inv.hash]));
+                    push = true;
+                }
+            }
+            else if (inv.type == MSG_GOVERNANCE_OBJECT) {
+                LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
+                CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
+                bool topush = false;
+                {
+                    if(governance.HaveObjectForHash(inv.hash)) {
+                        ss.reserve(1000);
+                        if(governance.SerializeObjectForHash(inv.hash, ss)) {
+                            topush = true;
+                        }
+                    }
+                }
+                LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
+                if(topush) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
+                    push = true;
+                }
+            }
+            else if (inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
+                CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
+                bool topush = false;
+                {
+                    if(governance.HaveVoteForHash(inv.hash)) {
+                        ss.reserve(1000);
+                        if(governance.SerializeVoteForHash(inv.hash, ss)) {
+                            topush = true;
+                        }
+                    }
+                }
+                if(topush) {
+                    LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
+                    push = true;
+                }
+            }
+
+            else if (inv.type == MSG_MASTERNODE_VERIFY) {
+                if(mnodeman.mapSeenMasternodeVerification.count(inv.hash)) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNVERIFY, mnodeman.mapSeenMasternodeVerification[inv.hash]));
+                    push = true;
+                }
+            }
+            if (!push) {
+                vNotFound.push_back(inv);
+            }  
         }
-    } // release cs_main
+    }
 
     // Only process one BLOCK item per call, since they're uncommon and can be
     // expensive to process.
