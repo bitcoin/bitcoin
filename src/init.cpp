@@ -82,6 +82,8 @@
 #include <zmq/zmqrpc.h>
 #endif
 
+#include <vbk/log.hpp>
+
 static bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
@@ -846,6 +848,8 @@ void InitLogging()
     LogInstance().m_log_time_micros = gArgs.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
     LogInstance().m_log_threadnames = gArgs.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
     LogInstance().EnableCategory(BCLog::POP);
+    altintegration::SetLogger<VeriBlock::VBTCLogger>();
+    altintegration::GetLogger().level = altintegration::LogLevel::info;
 
     fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);
 

@@ -38,10 +38,10 @@ UniValue createPopTx(const CScript& scriptSig)
             nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */, false /* test accept */);
         if (result) {
             std::string err;
-            if(!g_rpc_chain->broadcastTransaction(tx_ref, err, 0, true)){
+            if (!g_rpc_chain->broadcastTransaction(tx_ref, err, 0, true)) {
                 throw JSONRPCError(RPC_TRANSACTION_ERROR, err);
             }
-//            RelayTransaction(hashTx, *this->connman);
+            //            RelayTransaction(hashTx, *this->connman);
             return hashTx.GetHex();
         }
 
@@ -202,7 +202,13 @@ UniValue submitpop(const JSONRPCRequest& request)
     return createPopTx(script);
 }
 
-UniValue debugpop(const JSONRPCRequest& request) {
+UniValue debugpop(const JSONRPCRequest& request)
+{
+    if (request.fHelp) {
+        throw std::runtime_error(
+            "debugpop\n"
+            "\nPrints alt-cpp-lib state into log.\n");
+    }
     auto& pop = VeriBlock::getService<VeriBlock::PopService>();
     LogPrint(BCLog::POP, "%s", pop.toPrettyString());
     return UniValue();

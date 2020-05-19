@@ -274,7 +274,7 @@ PopServiceImpl::PopServiceImpl(const altintegration::Config& config)
     config.validate();
     altTree = altintegration::Altintegration::create(config);
 
-    altTree->connectOnInvalidateBlock([&](const altintegration::BlockIndex<altintegration::AltBlock>& invalidated) {
+    altTree->connectOnValidityBlockChanged([&](const altintegration::BlockIndex<altintegration::AltBlock>& invalidated) {
         LOCK(cs_main);
         auto index = LookupBlockIndex(uint256(invalidated.getHash()));
         if(!index) {
@@ -282,10 +282,10 @@ PopServiceImpl::PopServiceImpl(const altintegration::Config& config)
             return;
         }
         if (invalidated.status & altintegration::BLOCK_FAILED_CHILD) {
-            index->nStatus |= BLOCK_FAILED_CHILD;
+            index->nStatus |= VERIBLOCK_BLOCK_FAILED_CHILD;
         }
         if (invalidated.status & altintegration::BLOCK_FAILED_POP) {
-            index->nStatus |= BLOCK_FAILED_VALID;
+            index->nStatus |= VERIBLOCK_BLOCK_FAILED_POP;
         }
     });
 }
