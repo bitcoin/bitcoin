@@ -65,7 +65,7 @@ RUN export VERIBLOCK_POP_CPP_VERSION=$(awk -F '=' '/\$\(package\)_version/{print
      cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION}; \
      mkdir build; \
      cd build; \
-     cmake .. -DCMAKE_BUILD_TYPE=Release -DWITH_ROCKSDB=OFF -DTESTING=OFF; \
+     cmake .. -DCMAKE_BUILD_TYPE=Debug -DWITH_ROCKSDB=OFF -DTESTING=OFF; \
      make -j$(nproc) install \
     )
 
