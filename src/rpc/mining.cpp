@@ -849,6 +849,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("capabilities", aCaps);
 
     UniValue aRules(UniValue::VARR);
+    aRules.push_back("csv");
     UniValue vbavailable(UniValue::VOBJ);
     for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
         Consensus::DeploymentPos pos = Consensus::DeploymentPos(j);
