@@ -574,12 +574,14 @@ def fetch(now):
 			if not success:
 				numSkippedSamples += 1
 				print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
+				if numSkippedSamples == 1800: resetNode() # After 1800 seconds / 30 minutes, just reset
 				return ''
 
 
 		if waitForConnectionNum and numPeers != maxConnections:
 			numSkippedSamples += 1
 			print(f'Connections at {numPeers}, waiting for it to reach {maxConnections}, attempt #{numSkippedSamples}')
+			if numSkippedSamples == 1800: resetNode() # After 1800 seconds / 30 minutes, just reset
 			return ''
 		messages = json.loads(bitcoin('getmsginfo'))
 		blockcount = int(bitcoin('getblockcount').strip())
