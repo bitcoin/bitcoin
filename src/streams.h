@@ -602,7 +602,7 @@ class CAutoFile
 {
 private:
     const int nType;
-    const int nVersion;
+    int nVersion;
 
     FILE* file;
 
@@ -650,6 +650,7 @@ public:
     //
     int GetType() const          { return nType; }
     int GetVersion() const       { return nVersion; }
+    void SetVersion(int n)       { nVersion = n; }
 
     void read(char* pch, size_t nSize)
     {

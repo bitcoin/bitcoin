@@ -102,13 +102,14 @@ private:
     CSHA256 ctx;
 
     const int nType;
-    const int nVersion;
+    int nVersion;
 public:
 
     CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
 
     int GetType() const { return nType; }
     int GetVersion() const { return nVersion; }
+    void SetVersion(int n) { nVersion = n; }
 
     void write(const char *pch, size_t size) {
         ctx.Write((const unsigned char*)pch, size);

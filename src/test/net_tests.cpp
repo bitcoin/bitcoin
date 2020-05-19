@@ -80,7 +80,7 @@ static CDataStream AddrmanToStream(CAddrManSerializationMock& _addrman)
     ssPeersIn << _addrman;
     std::string str = ssPeersIn.str();
     std::vector<unsigned char> vchData(str.begin(), str.end());
-    return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
+    return CDataStream(vchData, ssPeersIn.GetType(), ssPeersIn.GetVersion());
 }
 
 BOOST_FIXTURE_TEST_SUITE(net_tests, BasicTestingSetup)
@@ -142,6 +142,36 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     BOOST_CHECK(addrman2.size() == 3);
 }
 
+BOOST_AUTO_TEST_CASE(caddrdb_read_v1_ser)
+{
+    // Construct an AddrMan that serializes addresses in pre-BIP155 format.
+    CAddrManUncorrupted addrmanUncorrupted;
+    addrmanUncorrupted.m_format = CAddrMan::Format::V2;
+    addrmanUncorrupted.MakeDeterministic();
+
+    CService addr1, addr2, addr3;
+    BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
+    BOOST_CHECK(Lookup("250.7.2.2", addr2, 9999, false));
+    BOOST_CHECK(Lookup("250.7.3.3", addr3, 9999, false));
+
+    // Add three addresses to new table.
+    CService source;
+    BOOST_CHECK(Lookup("252.5.1.1", source, 8333, false));
+    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source));
+    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source));
+    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source));
+
+    // Test that the de-serialization does not throw an exception.
+    CDataStream ssPeers1 = AddrmanToStream(addrmanUncorrupted);
+    CAddrMan addrman1;
+
+    BOOST_CHECK(addrman1.size() == 0);
+    unsigned char message_start[4];
+    ssPeers1 >> message_start;
+    ssPeers1 >> addrman1;
+    BOOST_CHECK_EQUAL(addrman1.m_format, CAddrMan::Format::V2);
+    BOOST_CHECK_EQUAL(addrman1.size(), 3U);
+}
 
 BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
 {

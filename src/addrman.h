@@ -264,6 +264,17 @@ protected:
     void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
+    //! Serialization versions.
+    enum class Format : uint8_t {
+        V0 = 0, //!< historic format, before commit e6b343d88
+        V1 = 1, //!< for pre-asmap files
+        V2 = 2, //!< for files including asmap version
+        V3 = 3, //!< same as V2 plus addresses are in BIP155 format
+    };
+
+    //! Serialization / unserialization format.
+    Format m_format = Format::V3;
+
     // Compressed IP->ASN mapping, loaded from a file when a node starts.
     // Should be always empty if no file was provided.
     // This mapping is then used for bucketing nodes in Addrman.
@@ -285,8 +296,8 @@ public:
 
 
     /**
-     * serialized format:
-     * * version byte (1 for pre-asmap files, 2 for files including asmap version)
+     * Serialized format.
+     * * version byte (@see `Format`)
      * * 0x20 + nKey (serialized as if it were a vector, for backward compatibility)
      * * nNew
      * * nTried
@@ -318,8 +329,15 @@ public:
     {
         LOCK(cs);
 
-        unsigned char nVersion = 2;
-        s << nVersion;
+        const auto stream_version_orig = s.GetVersion();
+
+        if (m_format >= Format::V3) {
+            // Add ADDRV2_FORMAT to the version so that the CNetAddr and CAddress
+            // serialize methods produce an address in v2 format.
+            s.SetVersion(stream_version_orig | ADDRV2_FORMAT);
+        }
+
+        s << (uint8_t)m_format;
         s << ((unsigned char)32);
         s << nKey;
         s << nNew;
@@ -368,6 +386,8 @@ public:
             asmap_version = SerializeHash(m_asmap);
         }
         s << asmap_version;
+
+        s.SetVersion(stream_version_orig);
     }
 
     template<typename Stream>
@@ -376,8 +396,17 @@ public:
         LOCK(cs);
 
         Clear();
-        unsigned char nVersion;
-        s >> nVersion;
+
+        const auto stream_version_orig = s.GetVersion();
+
+        uint8_t format_tmp;
+        s >> format_tmp;
+        m_format = (Format)format_tmp;
+        if (m_format >= Format::V3) {
+            // Add ADDRV2_FORMAT to the version so that the CNetAddr and CAddress
+            // unserialize methods know that an address in v2 format is coming.
+            s.SetVersion(stream_version_orig | ADDRV2_FORMAT);
+        }
         unsigned char nKeySize;
         s >> nKeySize;
         if (nKeySize != 32) throw std::ios_base::failure("Incorrect keysize in addrman deserialization");
@@ -386,15 +415,17 @@ public:
         s >> nTried;
         int nUBuckets = 0;
         s >> nUBuckets;
-        if (nVersion != 0) {
+        if (m_format > Format::V0) {
             nUBuckets ^= (1 << 30);
         }
 
         if (nNew > ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE) {
+            s.SetVersion(stream_version_orig);
             throw std::ios_base::failure("Corrupt CAddrMan serialization, nNew exceeds limit.");
         }
 
         if (nTried > ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE) {
+            s.SetVersion(stream_version_orig);
             throw std::ios_base::failure("Corrupt CAddrMan serialization, nTried exceeds limit.");
         }
 
@@ -449,7 +480,7 @@ public:
             supplied_asmap_version = SerializeHash(m_asmap);
         }
         uint256 serialized_asmap_version;
-        if (nVersion > 1) {
+        if (m_format > Format::V1) {
             s >> serialized_asmap_version;
         }
 
@@ -457,13 +488,13 @@ public:
             CAddrInfo &info = mapInfo[n];
             int bucket = entryToBucket[n];
             int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
-            if (nVersion == 2 && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 &&
+            if (m_format >= Format::V2 && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 &&
                 info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS && serialized_asmap_version == supplied_asmap_version) {
                 // Bucketing has not changed, using existing bucket positions for the new table
                 vvNew[bucket][nUBucketPos] = n;
                 info.nRefCount++;
             } else {
-                // In case the new table data cannot be used (nVersion unknown, bucket count wrong or new asmap),
+                // In case the new table data cannot be used (m_format unknown, bucket count wrong or new asmap),
                 // try to give them a reference based on their primary source address.
                 LogPrint(BCLog::ADDRMAN, "Bucketing method was updated, re-bucketing addrman entries from disk\n");
                 bucket = info.GetNewBucket(nKey, m_asmap);
@@ -491,6 +522,8 @@ public:
         }
 
         Check();
+
+        s.SetVersion(stream_version_orig);
     }
 
     void Clear()
