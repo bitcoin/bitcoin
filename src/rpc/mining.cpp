@@ -125,7 +125,8 @@ static bool GenerateBlock(CBlock& block, uint64_t& max_tries, unsigned int& extr
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     BlockValidationState state;
-    if (!ProcessNewBlock(chainparams, shared_pblock, state, true, nullptr))
+    ProcessNewBlock(Params(), shared_pblock, state, true);
+    if (!state.IsValid())
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
 
     block_hash = block.GetHash();
@@ -942,13 +943,12 @@ static UniValue submitblock(const JSONRPCRequest& request)
         }
     }
 
-    bool new_block;
     auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
     RegisterSharedValidationInterface(sc);
     BlockValidationState dos_state;
-    bool accepted = ProcessNewBlock(Params(), blockptr, dos_state, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
+    bool new_block = ProcessNewBlock(Params(), blockptr, dos_state, /* fForceProcessing */ true);
     UnregisterSharedValidationInterface(sc);
-    if (!new_block && accepted) {
+    if (!new_block && dos_state.IsValid()) {
         return "duplicate";
     }
     if (!dos_state.IsValid()) {

@@ -161,9 +161,10 @@ extern uint64_t nPruneTarget;
  * best chain soon, or fForceProcessing is set), but pblock has been mutated,
  * state is guaranteed to be some non-IsValid() state.
  *
- * If fForceProcessing is set (or fNewBlock returns true), and state.IsValid(),
- * barring pruning and a desire to re-download a pruned block, there should
- * never be any reason to re-ProcessNewBlock any block with the same hash.
+ * If fForceProcessing is set (or the function returns true), and
+ * state.IsValid(), barring pruning and a desire to re-download a pruned block,
+ * there should never be any reason to re-ProcessNewBlock any block with the
+ * same hash.
  *
  * May not be called in a validationinterface callback.
  *
@@ -171,10 +172,9 @@ extern uint64_t nPruneTarget;
  * @param[out]  state             Only used for failures in CheckBlock/AcceptBlock. For failure in block connection,
  *                                a CValidationInterface BlockChecked callback is used to notify clients of validity.
  * @param[in]   fForceProcessing  Process this block even if unrequested; used for non-network block sources and whitelisted peers.
- * @param[out]  fNewBlock         A boolean which is set to indicate if the block was first received via this call
- * @returns     bool              If the block was processed, independently of block validity
+ * @returns     If the block was first received via this call
  */
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, BlockValidationState& state, bool fForceProcessing, bool* fNewBlock) LOCKS_EXCLUDED(cs_main);
+bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, BlockValidationState& state, bool fForceProcessing) LOCKS_EXCLUDED(cs_main);
 
 /**
  * Process incoming block headers.

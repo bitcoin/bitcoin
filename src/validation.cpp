@@ -3812,13 +3812,14 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     return true;
 }
 
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, BlockValidationState& dos_state, bool fForceProcessing, bool *fNewBlock)
+bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, BlockValidationState& dos_state, bool fForceProcessing)
 {
     AssertLockNotHeld(cs_main);
 
+    bool fNewBlock = false;
+
     {
         CBlockIndex *pindex = nullptr;
-        if (fNewBlock) *fNewBlock = false;
 
         // CheckBlock() does not support multi-threaded block validation because CBlock::fChecked can cause data race.
         // Therefore, the following critical section must include the CheckBlock() call as well.
@@ -3829,10 +3830,11 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         bool ret = CheckBlock(*pblock, dos_state, chainparams.GetConsensus());
         if (ret) {
             // Store to disk
-            ret = ::ChainstateActive().AcceptBlock(pblock, dos_state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
+            ret = ::ChainstateActive().AcceptBlock(pblock, dos_state, chainparams, &pindex, fForceProcessing, nullptr, &fNewBlock);
         }
         if (!ret) {
-            return error("%s: AcceptBlock FAILED (%s)", __func__, dos_state.ToString());
+            error("%s: AcceptBlock FAILED (%s)", __func__, dos_state.ToString());
+            return fNewBlock;
         }
     }
 
@@ -3840,9 +3842,9 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 
     BlockValidationState dummy_state; // Only used to report errors, not invalidity - ignore it
     if (!::ChainstateActive().ActivateBestChain(dummy_state, chainparams, pblock))
-        return error("%s: ActivateBestChain failed (%s)", __func__, dummy_state.ToString());
+        error("%s: ActivateBestChain failed (%s)", __func__, dummy_state.ToString());
 
-    return true;
+    return fNewBlock;
 }
 
 bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)

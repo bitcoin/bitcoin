@@ -33,8 +33,7 @@ CTxIn MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
     }
 
     BlockValidationState dos_state;
-    bool processed{ProcessNewBlock(Params(), block, dos_state, true, nullptr)};
-    assert(processed);
+    ProcessNewBlock(Params(), block, dos_state, true);
     assert(dos_state.IsValid());
 
     return CTxIn{block->vtx[0]->GetHash(), 0};

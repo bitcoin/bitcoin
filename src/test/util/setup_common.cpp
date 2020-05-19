@@ -229,7 +229,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     BlockValidationState dos_state;
-    ProcessNewBlock(chainparams, shared_pblock, dos_state, true, nullptr);
+    ProcessNewBlock(chainparams, shared_pblock, dos_state, true);
 
     CBlock result = block;
     return result;
