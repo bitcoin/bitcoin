@@ -81,10 +81,10 @@ public:
         return AppInitBasicSetup(argv) && AppInitParameterInteraction() && AppInitSanityChecks() &&
                AppInitLockDataDirectory();
     }
-    bool appInitMain() override
+    bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info) override
     {
         m_context->chain = MakeChain(*m_context);
-        return AppInitMain(m_context_ref, *m_context);
+        return AppInitMain(m_context_ref, *m_context, tip_info);
     }
     void appShutdown() override
     {
