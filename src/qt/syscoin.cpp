@@ -168,7 +168,6 @@ void SyscoinCore::initialize()
     try
     {
         util::ThreadRename("qt-init");
-        qDebug() << __func__ << ": Running initialization in thread";
         interfaces::BlockAndHeaderTipInfo tip_info;
         bool rv = m_node.appInitMain(&tip_info);
         Q_EMIT initializeResult(rv, tip_info);
@@ -390,7 +389,7 @@ void SyscoinApplication::initializeResult(bool success, interfaces::BlockAndHead
     {
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
         qInfo() << "Platform customization:" << platformStyle->getName();
-        clientModel = new ClientModel(node(), optionsModel);
+        clientModel = new ClientModel(m_node, optionsModel);
         window->setClientModel(clientModel, &tip_info);
 #ifdef ENABLE_WALLET
         if (WalletModel::isWalletEnabled()) {
