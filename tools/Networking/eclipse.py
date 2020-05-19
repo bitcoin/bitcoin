@@ -190,7 +190,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		close_connection(s, src_ip, src_port, interface)
 		time.sleep(3)
 		rand_ip = random_ip()
-		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
+		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, True, attempt_number - 1)
 		return
 
 	if verbose: print(f'Connecting ({src_ip} : {src_port}) to ({dst_ip} : {dst_port})...')
@@ -202,7 +202,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		close_connection(s, src_ip, src_port, interface)
 		time.sleep(3)
 		rand_ip = random_ip()
-		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
+		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, True, attempt_number - 1)
 		return
 
 	temp_listener = None
@@ -228,7 +228,7 @@ def make_fake_connection(src_ip, dst_ip, verbose=True, attempt_number = 0):
 		close_connection(s, src_ip, src_port, interface)
 		time.sleep(3)
 		rand_ip = random_ip()
-		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, False, attempt_number - 1)
+		create_task(False, 'Creating fake identity: ' + rand_ip, make_fake_connection, rand_ip, dst_ip, True, attempt_number - 1)
 		return
 
 	if verbose: print('Connection successful!')
