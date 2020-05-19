@@ -314,7 +314,8 @@ def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, int
 			packet, address = socket.recvfrom(65565)
 			create_task(True, 'Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
 		except: time.sleep(1)
-	reconnect(socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
+	#reconnect(socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
+	create_task(False, 'Reconnecting ' + victim_ip, reconnect, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
 	#close_connection(socket, dst_ip, dst_port, interface)
 
 def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
@@ -326,7 +327,8 @@ def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port
 			else:
 				pass # Dropped packet
 		except: time.sleep(1)
-	reconnect(socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
+	#reconnect(socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
+	create_task(False, 'Reconnecting ' + victim_ip, reconnect, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
 	#close_connection(socket, src_ip, src_port, interface)
 
 # Called when a packet is sniffed from the network
@@ -376,7 +378,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 		except Exception as e:
 			parent_thread.stop()
 			print(f'Lost connection to ({victim_ip} : {victim_port})')
-			create_task(False, 'Reconnecting ' + victim_ip, reconnect, socket, mirror_socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
+			#create_task(False, 'Reconnecting ' + victim_ip, reconnect, socket, mirror_socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
 
 		if mirror_socket == None: return # If the destination socket isn't running, ignore packet
 		ping = msg_ping(bitcoin_protocolversion)
@@ -386,7 +388,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 		except Exception as e:
 			parent_thread.stop()
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
-			create_task(False, 'Reconnecting ' + attacker_ip, reconnect, mirror_socket, socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
+			#create_task(False, 'Reconnecting ' + attacker_ip, reconnect, mirror_socket, socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
 	elif msg_type == 'pong': pass # Ignore version
 	elif msg_type == 'version': pass # Ignore version
 	elif msg_type == 'verack': pass # Ignore verack
@@ -397,7 +399,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 		except Exception as e:
 			parent_thread.stop()
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
-			create_task(False, 'Reconnecting ' + attacker_ip, reconnect, mirror_socket, socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
+			#create_task(False, 'Reconnecting ' + attacker_ip, reconnect, mirror_socket, socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
 
 	return True
 
@@ -457,7 +459,7 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 		except Exception as e:
 			parent_thread.stop()
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
-			create_task(False, 'Reconnecting ' + attacker_ip, reconnect, socket, orig_socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
+			#create_task(False, 'Reconnecting ' + attacker_ip, reconnect, socket, orig_socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
 
 		if orig_socket == None: return # If the destination socket isn't running, ignore packet
 		ping = msg_ping(bitcoin_protocolversion)
@@ -467,7 +469,7 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 		except Exception as e:
 			parent_thread.stop()
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
-			create_task(False, 'Reconnecting ' + victim_ip, reconnect, orig_socket, socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
+			#create_task(False, 'Reconnecting ' + victim_ip, reconnect, orig_socket, socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
 	elif msg_type == 'pong': pass
 	else:
 		if orig_socket == None: return False # If the destination socket isn't running, ignore packet
@@ -476,7 +478,7 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 		except Exception as e:
 			parent_thread.stop()
 			print(f'Lost connection to ({victim_ip} : {victim_port})')
-			create_task(False, 'Reconnecting ' + victim_ip, reconnect, orig_socket, socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
+			#create_task(False, 'Reconnecting ' + victim_ip, reconnect, orig_socket, socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
 
 		# print("Closing socket because of error: " + str(e))
 		# parent_thread.stop()
