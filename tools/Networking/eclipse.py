@@ -69,7 +69,7 @@ identity_socket = [] # Keeps the socket for each successful connection
 identity_mirror_socket = [] # The mirrored internal connections to Bitcoin Core
 
 # The file where the iptables backup is saved, then restored when the script ends
-iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
+#iptables_file_path = f'{os.path.abspath(os.getcwd())}/backup.iptables.rules'
 # Keeps track of all threads
 threads = []
 
@@ -146,14 +146,10 @@ def close_connection(socket, ip, port, interface):
 		socket.close()
 	except: successful = False
 	terminal(f'sudo ifconfig {interface} {ip} down')
-	try:
-		if socket in identity_socket: identity_socket.remove(socket)
-		del socket
-
-		if interface in identity_interface: identity_interface.remove(interface)
-		if (ip, port) in identity_address: identity_address.remove((ip, port))
-	except: successful = False
-
+	if socket in identity_socket: identity_socket.remove(socket)
+	del socket
+	if interface in identity_interface: identity_interface.remove(interface)
+	if (ip, port) in identity_address: identity_address.remove((ip, port))
 	print(f'Successfully closed connection to ({ip} : {port})')
 
 # Creates a fake connection to the victim
@@ -504,15 +500,15 @@ def initialize_bitcoin_info():
 		pass
 
 # Save a backyp of the iptable rules
-def backup_iptables():
-	terminal(f'iptables-save > {iptables_file_path}')
+#def backup_iptables():
+#	terminal(f'iptables-save > {iptables_file_path}')
 
 # Restore the backup of the iptable rules
-def cleanup_iptables():
-	if(os.path.exists(iptables_file_path)):
-		print('Cleaning up iptables configuration')
-		terminal(f'iptables-restore < {iptables_file_path}')
-		os.remove(iptables_file_path)
+#def cleanup_iptables():
+#	if(os.path.exists(iptables_file_path)):
+#		print('Cleaning up iptables configuration')
+#		terminal(f'iptables-restore < {iptables_file_path}')
+#		os.remove(iptables_file_path)
 
 # Remove all ip aliases that were created by the script
 def cleanup_ipaliases():
@@ -555,6 +551,11 @@ class Task(threading.Thread):
 
 # Creates a new thread and starts it
 def create_task(sendThreadAsFirstArg, name, function, *args):
+	if len(threads) >= 200:
+		# Remove the first 10 threads if it exceeds 200, to balance it out
+		for i in range(10):
+			threads[i].stop()
+			del threads[i]
 	task = Task(sendThreadAsFirstArg, name, function, *args)
 	threads.append(task)
 	task.start()
@@ -577,7 +578,7 @@ def on_close():
 	for socket in identity_socket:
 		socket.close()
 	cleanup_ipaliases()
-	cleanup_iptables()
+	#cleanup_iptables()
 	print('Cleanup complete. Goodbye.')
 
 # This is the first code to run
@@ -589,8 +590,8 @@ if __name__ == '__main__':
 	initialize_bitcoin_info()
 
 	atexit.register(on_close) # Make on_close() run when the script terminates
-	cleanup_iptables() # Restore any pre-existing iptables before backing up, just in case if the computer shutdown without restoring
-	backup_iptables()
+	#cleanup_iptables() # Restore any pre-existing iptables before backing up, just in case if the computer shutdown without restoring
+	#backup_iptables()
 
 	# Create the connections
 	for i in range(1, num_identities + 1):
