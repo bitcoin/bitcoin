@@ -848,7 +848,7 @@ void InitLogging()
     LogInstance().m_log_time_micros = gArgs.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
     LogInstance().m_log_threadnames = gArgs.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
     LogInstance().EnableCategory(BCLog::POP);
-    altintegration::SetLogger<VeriBlock::git VBTCLogger>();
+    altintegration::SetLogger<VeriBlock::VBTCLogger>();
     altintegration::GetLogger().level = altintegration::StringToLevel(std::getenv("VBK_LOG_LEVEL"));
 
     fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);
