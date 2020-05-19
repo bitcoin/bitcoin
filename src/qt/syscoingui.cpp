@@ -608,7 +608,7 @@ void SyscoinGUI::createToolBars()
     }
 }
 
-void SyscoinGUI::setClientModel(ClientModel *_clientModel)
+void SyscoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndHeaderTipInfo* tip_info)
 {
     this->clientModel = _clientModel;
     if(_clientModel)
@@ -622,8 +622,8 @@ void SyscoinGUI::setClientModel(ClientModel *_clientModel)
         connect(_clientModel, &ClientModel::numConnectionsChanged, this, &SyscoinGUI::setNumConnections);
         connect(_clientModel, &ClientModel::networkActiveChanged, this, &SyscoinGUI::setNetworkActive);
 
-        modalOverlay->setKnownBestHeight(_clientModel->getHeaderTipHeight(), QDateTime::fromTime_t(_clientModel->getHeaderTipTime()));
-        setNumBlocks(m_node.getNumBlocks(), QDateTime::fromTime_t(m_node.getLastBlockTime()), m_node.getVerificationProgress(), false, SynchronizationState::INIT_DOWNLOAD);
+        modalOverlay->setKnownBestHeight(tip_info->header_height, QDateTime::fromTime_t(tip_info->header_time));
+        setNumBlocks(tip_info->block_height, QDateTime::fromTime_t(tip_info->block_time), tip_info->verification_progress, false, SynchronizationState::INIT_DOWNLOAD);
         connect(_clientModel, &ClientModel::numBlocksChanged, this, &SyscoinGUI::setNumBlocks);
         // SYSCOIN
         connect(_clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &SyscoinGUI::setAdditionalDataSyncProgress);
@@ -635,7 +635,7 @@ void SyscoinGUI::setClientModel(ClientModel *_clientModel)
         // Show progress dialog
         connect(_clientModel, &ClientModel::showProgress, this, &SyscoinGUI::showProgress);
 
-        rpcConsole->setClientModel(_clientModel);
+        rpcConsole->setClientModel(_clientModel, tip_info->block_height, tip_info->block_time, tip_info->verification_progress);
 
         updateProxyIcon();
 

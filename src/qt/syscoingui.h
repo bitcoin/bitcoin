@@ -42,6 +42,7 @@ enum class SynchronizationState;
 namespace interfaces {
 class Handler;
 class Node;
+struct BlockAndHeaderTipInfo;
 }
 
 QT_BEGIN_NAMESPACE
@@ -76,7 +77,7 @@ public:
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
-    void setClientModel(ClientModel *clientModel);
+    void setClientModel(ClientModel *clientModel = nullptr, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
 #ifdef ENABLE_WALLET
     void setWalletController(WalletController* wallet_controller);
 #endif
