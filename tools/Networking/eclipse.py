@@ -380,7 +380,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 			print(f'Lost connection to ({victim_ip} : {victim_port})')
 			#create_task(False, 'Reconnecting ' + victim_ip, reconnect, socket, mirror_socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
 
-		if mirror_socket == None: return # If the destination socket isn't running, ignore packet
+		"""if mirror_socket == None: return # If the destination socket isn't running, ignore packet
 		ping = msg_ping(bitcoin_protocolversion)
 		ping.nonce = random.getrandbits(32)
 		try: # src --> dst
@@ -389,6 +389,7 @@ def packet_received(thread, parent_thread, packet, socket, mirror_socket, src_ip
 			parent_thread.stop()
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
 			#create_task(False, 'Reconnecting ' + attacker_ip, reconnect, mirror_socket, socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
+		"""
 	elif msg_type == 'pong': pass # Ignore version
 	elif msg_type == 'version': pass # Ignore version
 	elif msg_type == 'verack': pass # Ignore verack
@@ -461,7 +462,7 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
 			#create_task(False, 'Reconnecting ' + attacker_ip, reconnect, socket, orig_socket, src_ip, src_port, attacker_ip, attacker_port, interface, sniff_func)
 
-		if orig_socket == None: return # If the destination socket isn't running, ignore packet
+		"""if orig_socket == None: return # If the destination socket isn't running, ignore packet
 		ping = msg_ping(bitcoin_protocolversion)
 		ping.nonce = random.getrandbits(32)
 		try: # src --> dst
@@ -470,6 +471,7 @@ def mirror_packet_received(thread, parent_thread, packet, socket, orig_socket, s
 			parent_thread.stop()
 			print(f'Lost connection to ({attacker_ip} : {attacker_port})')
 			#create_task(False, 'Reconnecting ' + victim_ip, reconnect, orig_socket, socket, src_ip, src_port, victim_ip, victim_port, interface, sniff_func)
+		"""
 	elif msg_type == 'pong': pass
 	else:
 		if orig_socket == None: return False # If the destination socket isn't running, ignore packet
