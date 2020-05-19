@@ -126,7 +126,7 @@ static bool GenerateBlock(CBlock& block, uint64_t& max_tries, unsigned int& extr
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     BlockValidationState state;
     ProcessNewBlock(Params(), shared_pblock, state, true).wait();
-    if (!state.IsValid())
+    if (ChainActive().Tip()->GetBlockHash() != block.GetHash())
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
 
     block_hash = block.GetHash();

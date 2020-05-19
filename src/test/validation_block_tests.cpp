@@ -185,20 +185,24 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     std::vector<std::thread> threads;
     for (int i = 0; i < 10; i++) {
         threads.emplace_back([&blocks]() {
+            std::vector<std::future<bool>> thread_futures;
             FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
                 auto block = blocks[insecure.randrange(blocks.size() - 1)];
                 BlockValidationState dos_state;
-                ProcessNewBlock(Params(), block, dos_state, true).wait();
+                thread_futures.push_back(ProcessNewBlock(Params(), block, dos_state, true));
             }
 
             // to make sure that eventually we process the full chain - do it here
             for (auto block : blocks) {
                 if (block->vtx.size() == 1) {
                     BlockValidationState dos_state;
-                    ProcessNewBlock(Params(), block, dos_state, true).wait();
+                    thread_futures.push_back(ProcessNewBlock(Params(), block, dos_state, true));
                     assert(dos_state.IsValid());
                 }
+            }
+            for (std::future<bool>& future: thread_futures) {
+                future.wait();
             }
         });
     }
