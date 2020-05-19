@@ -219,7 +219,12 @@ class TestNode():
                 raise FailedToStartError(self._node_msg(
                     'bitcoind exited with status {} during initialization'.format(self.process.returncode)))
             try:
-                rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.chain, self.rpchost), self.index, timeout=self.rpc_timeout, coveragedir=self.coverage_dir)
+                rpc = get_rpc_proxy(
+                    rpc_url(self.datadir, self.index, self.chain, self.rpchost),
+                    self.index,
+                    timeout=self.rpc_timeout // 2,  # Shorter timeout to allow for one retry in case of ETIMEDOUT
+                    coveragedir=self.coverage_dir,
+                )
                 rpc.getblockcount()
                 # If the call to getblockcount() succeeds then the RPC connection is up
                 if self.version_is_at_least(190000):
@@ -260,7 +265,11 @@ class TestNode():
                 # succeeds. Try again to properly raise the FailedToStartError
                 pass
             except OSError as e:
-                if e.errno != errno.ECONNREFUSED:  # Port not yet open?
+                if e.errno == errno.ETIMEDOUT:
+                    pass  # Treat identical to ConnectionResetError
+                elif e.errno == errno.ECONNREFUSED:
+                    pass  # Port not yet open?
+                else:
                     raise  # unknown OS error
             except ValueError as e:  # cookie file not found and no rpcuser or rpcpassword; bitcoind is still starting
                 if "No RPC credentials" not in str(e):
