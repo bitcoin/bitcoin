@@ -21,12 +21,10 @@ struct CDiskTxPos : public FlatFilePos
 {
     unsigned int nTxOffset; // after header
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITEAS(FlatFilePos, *this);
-        READWRITE(VARINT(nTxOffset));
+    SERIALIZE_METHODS(CDiskTxPos, obj)
+    {
+        READWRITEAS(FlatFilePos, obj);
+        READWRITE(VARINT(obj.nTxOffset));
     }
 
     CDiskTxPos(const FlatFilePos &blockIn, unsigned int nTxOffsetIn) : FlatFilePos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
