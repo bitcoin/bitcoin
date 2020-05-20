@@ -108,6 +108,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
     if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
         masternodeListPage->setClientModel(_clientModel);
     }
+    if (walletModel) walletModel->setClientModel(_clientModel);
 }
 
 void WalletView::setWalletModel(WalletModel *_walletModel)
