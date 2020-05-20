@@ -664,7 +664,7 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
 QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    TransactionRecord *data = priv->index(walletModel->wallet(), walletModel->clientModel().getNumBlocks(), row);
+    TransactionRecord *data = priv->index(walletModel->wallet(), walletModel->getNumBlocks(), row);
     if(data)
     {
         return createIndex(row, column, data);
