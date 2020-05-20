@@ -460,6 +460,7 @@ private:
     Mutex mutexMsgProc;
     std::atomic<bool> flagInterruptMsgProc{false};
 
+    CThreadInterrupt m_interrupt_dnsseed_thread;
     CThreadInterrupt interruptNet;
 
     std::thread threadDNSAddressSeed;

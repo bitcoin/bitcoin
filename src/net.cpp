@@ -1621,7 +1621,7 @@ void CConnman::ThreadDNSAddressSeed()
                 std::chrono::seconds to_wait = seeds_wait_time;
                 while (to_wait.count() > 0) {
                     std::chrono::seconds w = std::min(DNSSEEDS_DELAY_FEW_PEERS, to_wait);
-                    if (!interruptNet.sleep_for(w)) return;
+                    if (!m_interrupt_dnsseed_thread.sleep_for(w)) return;
                     to_wait -= w;
 
                     int nRelevant = 0;
@@ -1644,13 +1644,13 @@ void CConnman::ThreadDNSAddressSeed()
             }
         }
 
-        if (interruptNet) return;
+        if (m_interrupt_dnsseed_thread) return;
 
         // hold off on querying seeds if p2p network deactivated
         if (!fNetworkActive) {
             LogPrintf("Waiting for network to be reactivated before querying DNS seeds.\n");
             do {
-                if (!interruptNet.sleep_for(std::chrono::seconds{1})) return;
+                if (!m_interrupt_dnsseed_thread.sleep_for(std::chrono::seconds{1})) return;
             } while (!fNetworkActive);
         }
 
@@ -2351,6 +2351,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     //
     assert(m_msgproc);
     InterruptSocks5(false);
+    m_interrupt_dnsseed_thread.reset();
     interruptNet.reset();
     flagInterruptMsgProc = false;
 
@@ -2413,6 +2414,7 @@ void CConnman::Interrupt()
     }
     condMsgProc.notify_all();
 
+    m_interrupt_dnsseed_thread();
     interruptNet();
     InterruptSocks5(true);
 
