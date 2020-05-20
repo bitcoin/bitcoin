@@ -714,7 +714,7 @@ public:
     void RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false);
 
     /** Returns transactions in unbroadcast set */
-    const std::set<uint256> GetUnbroadcastTxs() const {
+    std::set<uint256> GetUnbroadcastTxs() const {
         LOCK(cs);
         return m_unbroadcast_txids;
     }
