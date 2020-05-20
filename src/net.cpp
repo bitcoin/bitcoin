@@ -1936,15 +1936,20 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 LogPrint(BCLog::NET, "Making feeler connection to %s\n", addrConnect.ToString());
             }
 
-            // Open this connection as block-relay-only if we're already at our
-            // full-relay capacity, but not yet at our block-relay peer limit.
-            bool block_relay_only = nOutboundBlockRelay < m_max_outbound_block_relay && nOutboundFullRelay >= m_max_outbound_full_relay;
             ConnectionType conn_type;
-            if(fFeeler) {
+            // Determine what type of connection to open. If fFeeler is not
+            // set, open OUTBOUND connections until we meet our full-relay
+            // capacity. Then open BLOCK_RELAY connections until we hit our
+            // block-relay peer limit. Otherwise, default to opening an
+            // OUTBOUND connection.
+            if (fFeeler) {
                 conn_type = ConnectionType::FEELER;
-            } else if (block_relay_only) {
+            } else if (nOutboundFullRelay < m_max_outbound_full_relay) {
+                conn_type = ConnectionType::OUTBOUND;
+            } else if (nOutboundBlockRelay < m_max_outbound_block_relay) {
                 conn_type = ConnectionType::BLOCK_RELAY;
             } else {
+                // GetTryNewOutboundPeer() is true
                 conn_type = ConnectionType::OUTBOUND;
             }
 
