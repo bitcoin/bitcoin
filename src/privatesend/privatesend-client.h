@@ -19,18 +19,31 @@ class UniValue;
 static const int MIN_PRIVATESEND_SESSIONS = 1;
 static const int MIN_PRIVATESEND_ROUNDS = 2;
 static const int MIN_PRIVATESEND_AMOUNT = 2;
-static const int MIN_PRIVATESEND_DENOMS = 10;
+static const int MIN_PRIVATESEND_DENOMS_GOAL = 10;
+static const int MIN_PRIVATESEND_DENOMS_HARDCAP = 10;
 static const int MAX_PRIVATESEND_SESSIONS = 10;
 static const int MAX_PRIVATESEND_ROUNDS = 16;
-static const int MAX_PRIVATESEND_DENOMS = 100000;
+static const int MAX_PRIVATESEND_DENOMS_GOAL = 100000;
+static const int MAX_PRIVATESEND_DENOMS_HARDCAP = 100000;
 static const int MAX_PRIVATESEND_AMOUNT = MAX_MONEY / COIN;
 static const int DEFAULT_PRIVATESEND_SESSIONS = 4;
 static const int DEFAULT_PRIVATESEND_ROUNDS = 4;
 static const int DEFAULT_PRIVATESEND_AMOUNT = 1000;
-static const int DEFAULT_PRIVATESEND_DENOMS = 50;
+static const int DEFAULT_PRIVATESEND_DENOMS_GOAL = 50;
+static const int DEFAULT_PRIVATESEND_DENOMS_HARDCAP = 300;
 
 static const bool DEFAULT_PRIVATESEND_AUTOSTART = false;
 static const bool DEFAULT_PRIVATESEND_MULTISESSION = false;
+
+// How many new denom outputs to create before we consider the "goal" loop in CreateDenominated
+// a final one and start creating an actual tx. Same limit applies for the "hard cap" part of the algo.
+// NOTE: We do not allow txes larger than 100kB, so we have to limit the number of outputs here.
+// We still want to create a lot of outputs though.
+// Knowing that each CTxOut is ~35b big, 400 outputs should take 400 x ~35b = ~17.5kb.
+// More than 500 outputs starts to make qt quite laggy.
+// Additionally to need all 500 outputs (assuming a max per denom of 50) you'd need to be trying to
+// create denominations for over 3000 dash!
+static const int PRIVATESEND_DENOM_OUTPUTS_THRESHOLD = 500;
 
 // Warn user if mixing in gui or try to create backup if mixing in daemon mode
 // when we have only this many keys left
@@ -192,7 +205,8 @@ public:
     int nPrivateSendSessions;
     int nPrivateSendRounds;
     int nPrivateSendAmount;
-    int nPrivateSendDenoms;
+    int nPrivateSendDenomsGoal;
+    int nPrivateSendDenomsHardCap;
     bool fEnablePrivateSend;
     bool fPrivateSendRunning;
     bool fPrivateSendMultiSession;
@@ -209,7 +223,8 @@ public:
         nCachedBlockHeight(0),
         nPrivateSendRounds(DEFAULT_PRIVATESEND_ROUNDS),
         nPrivateSendAmount(DEFAULT_PRIVATESEND_AMOUNT),
-        nPrivateSendDenoms(DEFAULT_PRIVATESEND_DENOMS),
+        nPrivateSendDenomsGoal(DEFAULT_PRIVATESEND_DENOMS_GOAL),
+        nPrivateSendDenomsHardCap(DEFAULT_PRIVATESEND_DENOMS_HARDCAP),
         fEnablePrivateSend(false),
         fPrivateSendRunning(false),
         fPrivateSendMultiSession(DEFAULT_PRIVATESEND_MULTISESSION),
