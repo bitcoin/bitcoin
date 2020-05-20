@@ -21,7 +21,7 @@ jobs:
           echo "::set-env name=GIT_HASH::$(git rev-parse --short=7 "$GITHUB_SHA")"
           echo "::set-env name=LAST_TAG::$(git describe --tags $(git rev-list --tags --max-count=1))"
           echo "::set-env name=COMMITS_AHEAD::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
-          echo "::set-env name=BRANCH::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')"
+          echo "::set-env name=BRANCH::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//./g')"
           echo "::set-env name=TAGS::$(if [ "${{ github.event_name }}" == "push" ] && [ "$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" == "master" ]; then echo "latest,$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')"; elif [ "${{ github.event_name }}" == "pull_request" ]; then echo ""; else echo "$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')"; fi)"
       - name: Publish to Registry
         uses: elgohr/Publish-Docker-Github-Action@508d4ee
