@@ -74,11 +74,13 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
             "dummy",
             "-printtoconsole=0",
             "-logtimemicros",
+            "-logthreadnames",
             "-debug",
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
         },
         extra_args);
+    util::ThreadRename("test");
     fs::create_directories(m_path_root);
     gArgs.ForceSetArg("-datadir", m_path_root.string());
     ClearDatadirCache();

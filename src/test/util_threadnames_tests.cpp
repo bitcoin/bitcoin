@@ -53,8 +53,6 @@ std::set<std::string> RenameEnMasse(int num_threads)
  */
 BOOST_AUTO_TEST_CASE(util_threadnames_test_rename_threaded)
 {
-    BOOST_CHECK_EQUAL(util::ThreadGetInternalName(), "");
-
 #if !defined(HAVE_THREAD_LOCAL)
     // This test doesn't apply to platforms where we don't have thread_local.
     return;
