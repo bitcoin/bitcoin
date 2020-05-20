@@ -10,7 +10,7 @@ from test_framework.messages import (
     CAddress,
     NODE_NETWORK,
     NODE_WITNESS,
-    msg_addr,
+    msg_addrv2,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -30,11 +30,20 @@ for i in range(10):
 
 
 class AddrReceiver(P2PInterface):
-    def on_addr(self, message):
+    addrv2_received_and_checked = False
+
+    def __init__(self):
+        super().__init__(support_addrv2 = True)
+
+    def on_addrv2(self, message):
         for addr in message.addrs:
             assert_equal(addr.nServices, 9)
             assert addr.ip.startswith('123.123.123.')
             assert (8333 <= addr.port < 8343)
+        self.addrv2_received_and_checked = True
+
+    def wait_for_addrv2(self):
+        self.wait_until(lambda: "addrv2" in self.last_message)
 
 
 class AddrTest(BitcoinTestFramework):
@@ -45,7 +54,7 @@ class AddrTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info('Create connection that sends addr messages')
         addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
-        msg = msg_addr()
+        msg = msg_addrv2()
 
         self.log.info('Send too-large addr message')
         msg.addrs = ADDRS * 101
@@ -57,12 +66,14 @@ class AddrTest(BitcoinTestFramework):
         msg.addrs = ADDRS
         with self.nodes[0].assert_debug_log([
                 'Added 10 addresses from 127.0.0.1: 0 tried',
-                'received: addr (301 bytes) peer=0',
-                'sending addr (301 bytes) peer=1',
+                'received: addrv2 (131 bytes) peer=0',
+                'sending addrv2 (131 bytes) peer=1',
         ]):
             addr_source.send_and_ping(msg)
             self.nodes[0].setmocktime(int(time.time()) + 30 * 60)
-            addr_receiver.sync_with_ping()
+            addr_receiver.wait_for_addrv2()
+
+        assert addr_receiver.addrv2_received_and_checked
 
 
 if __name__ == '__main__':
