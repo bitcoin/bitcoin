@@ -13,7 +13,6 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <fs.h>
-#include <wallet/init.h>
 #include <key.h>
 #include <keystore.h>
 #include <validation.h>

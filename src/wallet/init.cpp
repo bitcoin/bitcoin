@@ -3,14 +3,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <wallet/init.h>
-
+#include <init.h>
 #include <keepass.h>
 #include <net.h>
 #include <scheduler.h>
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>
+#include <walletinitinterface.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
@@ -18,6 +18,48 @@
 #include <privatesend/privatesend-client.h>
 
 #include <functional>
+
+class WalletInit : public WalletInitInterface {
+public:
+
+    //! Return the wallets help message.
+    std::string GetHelpString(bool showDebug) override;
+
+    //! Wallets parameter interaction
+    bool ParameterInteraction() override;
+
+    //! Register wallet RPCs.
+    void RegisterRPC(CRPCTable &tableRPC) override;
+
+    //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
+    //  This function will perform salvage on the wallet if requested, as long as only one wallet is
+    //  being loaded (WalletParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
+    bool Verify() override;
+
+    //! Load wallet databases.
+    bool Open() override;
+
+    //! Complete startup of wallets.
+    void Start(CScheduler& scheduler) override;
+
+    //! Flush all wallets in preparation for shutdown.
+    void Flush() override;
+
+    //! Stop all wallets. Wallets will be flushed first.
+    void Stop() override;
+
+    //! Close all wallets.
+    void Close() override;
+
+    // Dash Specific Wallet Init
+    void AutoLockMasternodeCollaterals() override;
+    void InitPrivateSendSettings() override;
+    void InitKeePass() override;
+    bool InitAutoBackup() override;
+};
+
+static WalletInit g_wallet_init;
+WalletInitInterface* const g_wallet_init_interface = &g_wallet_init;
 
 std::string WalletInit::GetHelpString(bool showDebug)
 {

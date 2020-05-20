@@ -96,7 +96,31 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
-std::unique_ptr<WalletInitInterface> g_wallet_init_interface;
+
+#if !(ENABLE_WALLET)
+class DummyWalletInit : public WalletInitInterface {
+public:
+
+    std::string GetHelpString(bool showDebug) override {return std::string{};}
+    bool ParameterInteraction() override {return true;}
+    void RegisterRPC(CRPCTable &) override {}
+    bool Verify() override {return true;}
+    bool Open() override {return true;}
+    void Start(CScheduler& scheduler) override {}
+    void Flush() override {}
+    void Stop() override {}
+    void Close() override {}
+
+    // Dash Specific WalletInitInterface InitPrivateSendSettings
+    void AutoLockMasternodeCollaterals() override {}
+    void InitPrivateSendSettings() override {}
+    void InitKeePass() override {}
+    bool InitAutoBackup() override {return true;}
+};
+
+static DummyWalletInit g_dummy_wallet_init;
+WalletInitInterface* const g_wallet_init_interface = &g_dummy_wallet_init;
+#endif
 
 #if ENABLE_ZMQ
 static CZMQNotificationInterface* pzmqNotificationInterface = nullptr;
@@ -355,7 +379,6 @@ void Shutdown()
    // Shutdown part 2: Stop TOR thread and delete wallet instance
     StopTorControl();
     g_wallet_init_interface->Close();
-    g_wallet_init_interface.reset();
     globalVerifyHandle.reset();
     ECC_Stop();
     LogPrintf("%s: done\n", __func__);
