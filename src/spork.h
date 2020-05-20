@@ -25,11 +25,8 @@ enum SporkId : int32_t {
     SPORK_3_INSTANTSEND_BLOCK_FILTERING                    = 10002,
     SPORK_6_NEW_SIGS                                       = 10005,
     SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
-    SPORK_15_DETERMINISTIC_MNS_ENABLED                     = 10014,
-    SPORK_16_INSTANTSEND_AUTOLOCKS                         = 10015,
     SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
     SPORK_19_CHAINLOCKS_ENABLED                            = 10018,
-    SPORK_20_INSTANTSEND_LLMQ_BASED                        = 10019,
     SPORK_21_QUORUM_ALL_CONNECTED                          = 10020,
 
     SPORK_INVALID                                          = -1,
