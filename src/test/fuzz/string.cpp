@@ -93,7 +93,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     {
         CDataStream data_stream{SER_NETWORK, INIT_PROTO_VERSION};
         std::string s;
-        LimitedString<10> limited_string = LIMITED_STRING(s, 10);
+        auto limited_string = LIMITED_STRING(s, 10);
         data_stream << random_string_1;
         try {
             data_stream >> limited_string;
@@ -108,7 +108,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
     {
         CDataStream data_stream{SER_NETWORK, INIT_PROTO_VERSION};
-        const LimitedString<10> limited_string = LIMITED_STRING(random_string_1, 10);
+        const auto limited_string = LIMITED_STRING(random_string_1, 10);
         data_stream << limited_string;
         std::string deserialized_string;
         data_stream >> deserialized_string;
