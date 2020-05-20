@@ -22,6 +22,8 @@ from test_framework.messages import (
     CTxOut,
     CTxWitness,
     MAX_BLOCK_BASE_SIZE,
+    MSG_BLOCK,
+    MSG_TX,
     MSG_WITNESS_FLAG,
     NODE_NETWORK,
     NODE_WITNESS,
@@ -157,7 +159,7 @@ class TestP2PConn(P2PInterface):
     def announce_tx_and_wait_for_getdata(self, tx, timeout=60, success=True):
         with mininode_lock:
             self.last_message.pop("getdata", None)
-        self.send_message(msg_inv(inv=[CInv(1, tx.sha256)]))
+        self.send_message(msg_inv(inv=[CInv(MSG_TX, tx.sha256)]))
         if success:
             self.wait_for_getdata([tx.sha256], timeout)
         else:
@@ -173,7 +175,7 @@ class TestP2PConn(P2PInterface):
         if use_header:
             self.send_message(msg)
         else:
-            self.send_message(msg_inv(inv=[CInv(2, block.sha256)]))
+            self.send_message(msg_inv(inv=[CInv(MSG_BLOCK, block.sha256)]))
             self.wait_for_getheaders()
             self.send_message(msg)
         self.wait_for_getdata([block.sha256])
@@ -576,7 +578,7 @@ class SegWitTest(BitcoinTestFramework):
         # Verify that if a peer doesn't set nServices to include NODE_WITNESS,
         # the getdata is just for the non-witness portion.
         self.old_node.announce_tx_and_wait_for_getdata(tx)
-        assert self.old_node.last_message["getdata"].inv[0].type == 1
+        assert self.old_node.last_message["getdata"].inv[0].type == MSG_TX
 
         # Since we haven't delivered the tx yet, inv'ing the same tx from
         # a witness transaction ought not result in a getdata.
@@ -1310,9 +1312,9 @@ class SegWitTest(BitcoinTestFramework):
         tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
         # Also check that old_node gets a tx announcement, even though this is
         # a witness transaction.
-        self.old_node.wait_for_inv([CInv(1, tx2.sha256)])  # wait until tx2 was inv'ed
+        self.old_node.wait_for_inv([CInv(MSG_TX, tx2.sha256)])  # wait until tx2 was inv'ed
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=True)
-        self.old_node.wait_for_inv([CInv(1, tx3.sha256)])
+        self.old_node.wait_for_inv([CInv(MSG_TX, tx3.sha256)])
 
         # Test that getrawtransaction returns correct witness information
         # hash, size, vsize
