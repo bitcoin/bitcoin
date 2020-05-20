@@ -461,6 +461,7 @@ private:
     std::atomic<bool> flagInterruptMsgProc{false};
 
     CThreadInterrupt m_interrupt_dnsseed_thread;
+    CThreadInterrupt m_interrupt_addcon_thread;
     CThreadInterrupt interruptNet;
 
     std::thread threadDNSAddressSeed;

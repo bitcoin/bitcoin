@@ -2007,12 +2007,12 @@ void CConnman::ThreadOpenAddedConnections()
                 tried = true;
                 CAddress addr(CService(), NODE_NONE);
                 OpenNetworkConnection(addr, false, &grant, info.strAddedNode.c_str(), false, false, true);
-                if (!interruptNet.sleep_for(std::chrono::milliseconds(500)))
+                if (!m_interrupt_addcon_thread.sleep_for(std::chrono::milliseconds(500)))
                     return;
             }
         }
         // Retry every 60 seconds if a connection was attempted, otherwise two seconds
-        if (!interruptNet.sleep_for(std::chrono::seconds(tried ? 60 : 2)))
+        if (!m_interrupt_addcon_thread.sleep_for(std::chrono::seconds(tried ? 60 : 2)))
             return;
     }
 }
@@ -2352,6 +2352,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     assert(m_msgproc);
     InterruptSocks5(false);
     m_interrupt_dnsseed_thread.reset();
+    m_interrupt_addcon_thread.reset();
     interruptNet.reset();
     flagInterruptMsgProc = false;
 
@@ -2415,6 +2416,7 @@ void CConnman::Interrupt()
     condMsgProc.notify_all();
 
     m_interrupt_dnsseed_thread();
+    m_interrupt_addcon_thread();
     interruptNet();
     InterruptSocks5(true);
 
