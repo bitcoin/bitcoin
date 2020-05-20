@@ -92,6 +92,7 @@ from test_framework.mininode import (
     NODE_WITNESS,
     P2PInterface,
     mininode_lock,
+    MSG_BLOCK,
     msg_block,
     msg_getblocks,
     msg_getdata,
@@ -120,7 +121,7 @@ class BaseNode(P2PInterface):
         """Request data for a list of block hashes."""
         msg = msg_getdata()
         for x in block_hashes:
-            msg.inv.append(CInv(2, x))
+            msg.inv.append(CInv(MSG_BLOCK, x))
         self.send_message(msg)
 
     def send_get_headers(self, locator, hashstop):
@@ -131,7 +132,7 @@ class BaseNode(P2PInterface):
 
     def send_block_inv(self, blockhash):
         msg = msg_inv()
-        msg.inv = [CInv(2, blockhash)]
+        msg.inv = [CInv(MSG_BLOCK, blockhash)]
         self.send_message(msg)
 
     def send_header_for_blocks(self, new_blocks):
