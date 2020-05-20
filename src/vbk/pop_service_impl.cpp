@@ -128,7 +128,7 @@ bool PopServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, const
 PoPRewards PopServiceImpl::getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams)
 {
     auto& config = getService<Config>();
-    if ((pindexPrev.nHeight + 1) < (int)config.popconfig.alt->getRewardParams().rewardSettlementInterval()) return {};
+    if ((pindexPrev.nHeight + 1) < (int)config.popconfig.alt->getEndorsementSettlementInterval()) return {};
     auto state = altintegration::ValidationState();
     auto blockHash = pindexPrev.GetBlockHash();
     auto rewards = altTree->getPopPayout(blockHash.asVector(), state);
@@ -277,7 +277,7 @@ PopServiceImpl::PopServiceImpl(const altintegration::Config& config)
     altTree->connectOnValidityBlockChanged([&](const altintegration::BlockIndex<altintegration::AltBlock>& invalidated) {
         LOCK(cs_main);
         auto index = LookupBlockIndex(uint256(invalidated.getHash()));
-        if(!index) {
+        if (!index) {
             // we don't know this block, do nothing.
             return;
         }

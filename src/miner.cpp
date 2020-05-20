@@ -330,7 +330,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
         (void)ret;
     }
 
-    auto refreshDummy = [&](const std::vector<altintegration::AltPayloads>& p){
+    auto refreshDummy = [&](const std::vector<altintegration::AltPayloads>& p) {
         auto* index = altTree.getBlockIndex(dummyContainingBlock.hash);
         assert(index);
         index->status = BLOCK_VALID_TREE;
@@ -339,14 +339,14 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
 
     CTxMemPool::setEntries failedPopTx;
 
-    auto finalized = altintegration::Finalizer([&]() {
+    auto finalized = altintegration::Finalizer([&altTree, failedPopTx, dummyContainingBlock]() {
         LOCK(mempool.cs);
         // delete invalid PoP transactions
         for (auto& tx : failedPopTx) {
             mempool.removeRecursive(tx->GetTx(), MemPoolRemovalReason::BLOCK); // FIXME: a more appropriate removal reason
         }
 
-        altTree.removeSubtree(dummyContainingBlock.getHash());
+        altTree.removeSubtree(dummyContainingBlock.hash);
     });
 
     // mapModifiedTx will store sorted packages after they are modified
