@@ -1,10 +1,11 @@
 package=veriblock-pop-cpp
-$(package)_version=0740aa3e645f13cf3d4662947a32aa0f2df77e23
+$(package)_version=ccbcfd5e7d569bd840b7efde9ce903555e8014f6
 $(package)_download_path=https://github.com/VeriBlock/alt-integration-cpp/archive/
 $(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=5cd3f9ea11bc936d8526bd6fae3cdd3e7b5d2907a2bb138d86ba8a2b0f3e03ca
+$(package)_sha256_hash=e403506045f47567c465a35bda070cbff75b430396f4d5eded38513a9f8f7bb6
 $(package)_build_subdir=build
 $(package)_build_type=$(BUILD_TYPE)
+$(package)_asan=$(ASAN)
 
 define $(package)_preprocess_cmds
   mkdir -p build
@@ -13,7 +14,7 @@ endef
 ifeq ($(strip $(HOST)),)
   define $(package)_config_cmds
     cmake -DCMAKE_INSTALL_PREFIX=$(host_prefix) -DCMAKE_BUILD_TYPE=$(package)_build_type \
-    -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF ..
+    -DTESTING=OFF -DSHARED=OFF -DASAN:BOOL=$(package)_asan ..
   endef
 else ifeq ($(HOST), x86_64-apple-darwin16)
   define $(package)_config_cmds
@@ -21,18 +22,18 @@ else ifeq ($(HOST), x86_64-apple-darwin16)
     -DCMAKE_INSTALL_PREFIX=$(host_prefix) -DCMAKE_BUILD_TYPE=$(package)_build_type \
     -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
     -DCMAKE_C_COMPILER_TARGET=$(HOST) -DCMAKE_CXX_COMPILER_TARGET=$(HOST) \
-    -DCMAKE_OSX_SYSROOT=$(OSX_SDK) -DTESTING=OFF -DWITH_ROCKSDB=OFF \
+    -DCMAKE_OSX_SYSROOT=$(OSX_SDK) -DTESTING=OFF \
     -DSHARED=OFF ..
   endef
 else ifeq ($(HOST), x86_64-pc-linux-gnu)
   define $(package)_config_cmds
     cmake -DCMAKE_INSTALL_PREFIX=$(host_prefix) -DCMAKE_BUILD_TYPE=$(package)_build_type \
-    -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF ..
+    -DTESTING=OFF -DSHARED=OFF ..
   endef
 else
   define $(package)_config_cmds
     cmake -DCMAKE_C_COMPILER=$(HOST)-gcc -DCMAKE_CXX_COMPILER=$(HOST)-g++ \
-    -DCMAKE_INSTALL_PREFIX=$(host_prefix) -DTESTING=OFF -DWITH_ROCKSDB=OFF -DSHARED=OFF ..
+    -DCMAKE_INSTALL_PREFIX=$(host_prefix) -DTESTING=OFF -DSHARED=OFF ..
   endef
 endif
 

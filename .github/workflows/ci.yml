@@ -5,7 +5,6 @@ on:
     branches:
       - develop
       - master
-      - feature/fix-functional-tests
 
   pull_request:
     branches:
@@ -52,7 +51,7 @@ jobs:
         run: sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev
       - name: install veriblock-pop-cpp
         env:
-          BUILD_TYPE: DEBUG
+          BUILD_TYPE: Debug
         run: |
           (
           cd /opt;
@@ -61,7 +60,7 @@ jobs:
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DWITH_ROCKSDB=OFF;
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF;
           make -j2;
           sudo make install
           )
@@ -147,7 +146,7 @@ jobs:
         run: PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g')
       - name: set variables and build dependencies for x86_64-w64
         env:
-          BUILD_TYPE: DEBUG
+          BUILD_TYPE: Debug
           HOST: x86_64-w64-mingw32
           BASE_CACHE: ~/.depends_cache
         run: cd depends && make -j2
@@ -224,7 +223,7 @@ jobs:
           tar -xf depends/sdk-sources/MacOSX10.14.sdk.tar.xz -C depends/SDKs
       - name: set variables and build dependencies for x86_64-apple-darwin16
         env:
-          BUILD_TYPE: DEBUG
+          BUILD_TYPE: Debug
           HOST: x86_64-apple-darwin16
           BASE_CACHE: ~/.depends_cache
         run: cd depends && make -j2
@@ -293,7 +292,7 @@ jobs:
         run: brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python3 libevent librsvg ccache qrencode qt zeromq
       - name: install veriblock-pop-cpp
         env:
-          BUILD_TYPE: DEBUG
+          BUILD_TYPE: Debug
         run: |
           (
           cd /tmp;
@@ -302,7 +301,7 @@ jobs:
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DWITH_ROCKSDB=OFF;
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF;
           make -j2;
           sudo make install
           )
@@ -321,3 +320,80 @@ jobs:
         if: always()
         timeout-minutes: 60
         run: python3 test/functional/test_runner.py --combinedlogslen=4000
+
+  linux-asan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+        with:
+          path: main
+      - name: Extract branch name & commit
+        id: extract_branch
+        run: |
+          echo "::set-output name=git_hash::$(git rev-parse --short=7 "$GITHUB_SHA")"
+          echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//\./g')"
+          echo "::set-output name=commits_ahead::$(git rev-list $(git describe --tags $(git rev-list --tags --max-count=1)).. --count)"
+          echo "::set-output name=last_tag::$(git describe --tags $(git rev-list --tags --max-count=1))"
+      - name: Prepare ccache timestamp
+        id: cache_timestamp
+        run: |
+          current_date=`date --utc +%Y%m%d_%H%M%SZ`
+          echo "::set-output name=timestamp::${current_date}"
+      - name: ccache cache files
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        uses: actions/cache@v1.1.0
+        with:
+          path: ~/.ccache
+          key: linux-asan-ccache-${{ steps.cache_timestamp.outputs.timestamp }}
+          restore-keys: |
+            linux-asan-ccache-
+      - name: get version for veriblock-pop-cpp
+        run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
+      - name: veriblock-pop-cpp release version
+        run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
+      - name: add bitcoin ppa
+        run: sudo add-apt-repository ppa:bitcoin/bitcoin
+      - name: install build requirements
+        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 ccache libasan4
+      - name: install dependencies
+        run: sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev
+      - name: install veriblock-pop-cpp
+        env:
+          BUILD_TYPE: Debug
+        run: |
+          (
+          cd /opt;
+          wget https://github.com/VeriBlock/alt-integration-cpp/archive/${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
+          tar -xf ${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
+          cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
+          mkdir build;
+          cd build;
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DASAN=ON;
+          make -j2;
+          sudo make install
+          )
+      - name: autogen
+        run: ./autogen.sh
+      - name: configure
+        run: ./configure
+          --without-gui
+          --enable-werror
+          --disable-bench
+          --disable-gmock
+          --with-sanitizers=address
+      - name: make
+        run: make -j2 deploy
+#      - name: make check
+#        timeout-minutes: 20
+#        run: make check
+#      - name: upload logs
+#        uses: actions/upload-artifact@v1
+#        if: failure()
+#        with:
+#          name: test-suite.log
+#          path: src/test-suite.log
+#      - name: run functional tests
+#        if: always()
+#        timeout-minutes: 60
+#        run: python3 test/functional/test_runner.py --combinedlogslen=4000

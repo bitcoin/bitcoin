@@ -65,7 +65,7 @@ RUN export VERIBLOCK_POP_CPP_VERSION=$(awk -F '=' '/\$\(package\)_version/{print
      cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION}; \
      mkdir build; \
      cd build; \
-     cmake .. -DCMAKE_BUILD_TYPE=Debug -DWITH_ROCKSDB=OFF -DTESTING=OFF; \
+     cmake .. -DCMAKE_BUILD_TYPE=Debug -DTESTING=OFF; \
      make -j$(nproc) install \
     )
 
@@ -83,10 +83,11 @@ RUN ./configure LDFLAGS=-L`ls -d /opt/db*`/lib/ CPPFLAGS=-I`ls -d /opt/db*`/incl
 
 RUN make -j$(nproc) install
 
-RUN strip ${VBITCOIN_PREFIX}/bin/vbitcoin-cli
-RUN strip ${VBITCOIN_PREFIX}/bin/vbitcoind
-RUN strip ${VBITCOIN_PREFIX}/bin/vbitcoin-tx
-RUN strip ${VBITCOIN_PREFIX}/bin/vbitcoin-wallet
+# DO NOT STRIP debug symbols
+#RUN strip ${VBITCOIN_PREFIX}/bin/vbitcoin-cli
+#RUN strip ${VBITCOIN_PREFIX}/bin/vbitcoind
+#RUN strip ${VBITCOIN_PREFIX}/bin/vbitcoin-tx
+#RUN strip ${VBITCOIN_PREFIX}/bin/vbitcoin-wallet
 
 # Build stage for compiled artifacts
 FROM alpine
