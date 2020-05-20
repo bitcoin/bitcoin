@@ -1758,6 +1758,7 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                 }
             }
             else if (inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
+                LOCK(cs_main);
                 const CBlockIndex* bi = LookupBlockIndex(inv.hash);
                 LOCK(cs_mapMasternodeBlocks);
                 if (bi != nullptr && mnpayments.mapMasternodeBlocks.count(bi->nHeight)) {
