@@ -28,15 +28,13 @@ public:
         memcpy(charstrval, charstrvalin, sizeof(charstrval));
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(intval);
-        READWRITE(boolval);
-        READWRITE(stringval);
-        READWRITE(charstrval);
-        READWRITE(txval);
+    SERIALIZE_METHODS(CSerializeMethodsTestSingle, obj)
+    {
+        READWRITE(obj.intval);
+        READWRITE(obj.boolval);
+        READWRITE(obj.stringval);
+        READWRITE(obj.charstrval);
+        READWRITE(obj.txval);
     }
 
     bool operator==(const CSerializeMethodsTestSingle& rhs)
@@ -53,11 +51,10 @@ class CSerializeMethodsTestMany : public CSerializeMethodsTestSingle
 {
 public:
     using CSerializeMethodsTestSingle::CSerializeMethodsTestSingle;
-    ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(intval, boolval, stringval, charstrval, txval);
+    SERIALIZE_METHODS(CSerializeMethodsTestMany, obj)
+    {
+        READWRITE(obj.intval, obj.boolval, obj.stringval, obj.charstrval, obj.txval);
     }
 };
 

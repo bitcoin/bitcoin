@@ -93,12 +93,13 @@ private:
 
     friend class PartiallyDownloadedBlock;
 
-    static const int SHORTTXIDS_LENGTH = 6;
 protected:
     std::vector<uint64_t> shorttxids;
     std::vector<PrefilledTransaction> prefilledtxn;
 
 public:
+    static constexpr int SHORTTXIDS_LENGTH = 6;
+
     CBlockHeader header;
 
     // Dummy for deserialization
