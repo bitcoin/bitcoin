@@ -50,6 +50,7 @@ static_assert(sizeof(double) == 8, "64-bit double assumed");
 //             code.
 static_assert(sizeof(short) == 2, "16-bit short assumed");
 static_assert(sizeof(int) == 4, "32-bit int assumed");
+static_assert(sizeof(unsigned) == 4, "32-bit unsigned assumed");
 
 // Assumption: We assume size_t to be 32-bit or 64-bit.
 // Example(s): size_t assumed to be at least 32-bit in ecdsa_signature_parse_der_lax(...).
