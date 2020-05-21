@@ -7,6 +7,7 @@
 from decimal import Decimal
 
 from test_framework.messages import COIN
+from test_framework.mininode import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -58,6 +59,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
     def run_test(self):
         # Mine some blocks and have them mature.
+        self.nodes[0].add_p2p_connection(P2PTxInvStore()) # keep track of invs
         self.nodes[0].generate(101)
         utxo = self.nodes[0].listunspent(10)
         txid = utxo[0]['txid']
@@ -71,6 +73,10 @@ class MempoolPackagesTest(BitcoinTestFramework):
             (txid, sent_value) = self.chain_transaction(self.nodes[0], txid, 0, value, fee, 1)
             value = sent_value
             chain.append(txid)
+
+        # Wait until mempool transactions have passed initial broadcast (sent inv and received getdata)
+        # Otherwise, getrawmempool may be inconsistent with getmempoolentry if unbroadcast changes in between
+        self.nodes[0].p2p.wait_for_broadcast(chain)
 
         # Check mempool has MAX_ANCESTORS transactions in it, and descendant and ancestor
         # count and fees should look correct
@@ -212,6 +218,10 @@ class MempoolPackagesTest(BitcoinTestFramework):
         for tx in chain[:MAX_ANCESTORS_CUSTOM]:
             assert tx in mempool1
         # TODO: more detailed check of node1's mempool (fees etc.)
+        # check transaction unbroadcast info (should be false if in both mempools)
+        mempool = self.nodes[0].getrawmempool(True)
+        for tx in mempool:
+            assert_equal(mempool[tx]['unbroadcast'], False)
 
         # TODO: test ancestor size limits
 

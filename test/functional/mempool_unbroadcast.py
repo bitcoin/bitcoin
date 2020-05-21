@@ -53,6 +53,13 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         txFS = node.signrawtransactionwithwallet(txF["hex"])
         rpc_tx_hsh = node.sendrawtransaction(txFS["hex"])
 
+        # check transactions are in unbroadcast using rpc
+        mempoolinfo = self.nodes[0].getmempoolinfo()
+        assert_equal(mempoolinfo['unbroadcastcount'], 2)
+        mempool = self.nodes[0].getrawmempool(True)
+        for tx in mempool:
+            assert_equal(mempool[tx]['unbroadcast'], True)
+
         # check that second node doesn't have these two txns
         mempool = self.nodes[1].getrawmempool()
         assert rpc_tx_hsh not in mempool
@@ -70,6 +77,11 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         mempool = self.nodes[1].getrawmempool()
         assert rpc_tx_hsh in mempool
         assert wallet_tx_hsh in mempool
+
+        # check that transactions are no longer in first node's unbroadcast set
+        mempool = self.nodes[0].getrawmempool(True)
+        for tx in mempool:
+            assert_equal(mempool[tx]['unbroadcast'], False)
 
         self.log.info("Add another connection & ensure transactions aren't broadcast again")
 
