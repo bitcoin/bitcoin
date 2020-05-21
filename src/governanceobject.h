@@ -69,18 +69,23 @@ struct vote_instance_t {
           nCreationTime(nCreationTimeIn)
     {}
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    template<typename Stream>
+    void Serialize(Stream& s) const
     {
         int nOutcome = int(eOutcome);
-        READWRITE(nOutcome);
-        READWRITE(nTime);
-        READWRITE(nCreationTime);
-        if(ser_action.ForRead()) {
-            eOutcome = vote_outcome_enum_t(nOutcome);
-        }
+        s << nOutcome;
+        s << nTime;
+        s << nCreationTime;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        int nOutcome = int(eOutcome);
+        s >> nOutcome;
+        s >> nTime;
+        s >> nCreationTime;
+        eOutcome = vote_outcome_enum_t(nOutcome);
     }
 };
 
@@ -93,13 +98,10 @@ typedef vote_instance_m_t::const_iterator vote_instance_m_cit;
 struct vote_rec_t {
     vote_instance_m_t mapInstances;
 
-    ADD_SERIALIZE_METHODS;
-
-     template <typename Stream, typename Operation>
-     inline void SerializationOp(Stream& s, Operation ser_action)
-     {
-         READWRITE(mapInstances);
-     }
+    SERIALIZE_METHODS(vote_rec_t, obj)
+    {
+        READWRITE(obj.mapInstances);
+    }
 };
 
 /**
@@ -295,38 +297,58 @@ public:
 
     // SERIALIZER
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    template<typename Stream>
+    void Serialize(Stream& s) const
     {
         // SERIALIZE DATA FOR SAVING/LOADING OR NETWORK FUNCTIONS
-        READWRITE(nHashParent);
-        READWRITE(nRevision);
-        READWRITE(nTime);
-        READWRITE(nCollateralHash);
+        s << nHashParent;
+        s << nRevision;
+        s << nTime;
+        s << nCollateralHash;
         // using new format directly
-        READWRITE(vchData);
-        
-        READWRITE(nObjectType);
+        s << vchData;
+        s << nObjectType;
         
         // using new format directly
-        READWRITE(masternodeOutpoint);
+        s << masternodeOutpoint;
         
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            s << vchSig;
         }
         if(s.GetType() & SER_DISK) {
             // Only include these for the disk file format
-            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp Reading/writing votes from/to disk\n");
-            READWRITE(nDeletionTime);
-            READWRITE(fExpired);
-            READWRITE(mapCurrentMNVotes);
-            READWRITE(fileVotes);
-            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n", GetHash().ToString(), fileVotes.GetVoteCount());
+            s << nDeletionTime;
+            s << fExpired;
+            s << mapCurrentMNVotes;
+            s << fileVotes;
         }
+    }
 
-        // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        // SERIALIZE DATA FOR SAVING/LOADING OR NETWORK FUNCTIONS
+        s >> nHashParent;
+        s >> nRevision;
+        s >> nTime;
+        s >> nCollateralHash;
+        // using new format directly
+        s >> vchData;
+        s >> nObjectType;
+        
+        // using new format directly
+        s >> masternodeOutpoint;
+        
+        if (!(s.GetType() & SER_GETHASH)) {
+            s >> vchSig;
+        }
+        if(s.GetType() & SER_DISK) {
+            // Only include these for the disk file format
+            s >> nDeletionTime;
+            s >> fExpired;
+            s >> mapCurrentMNVotes;
+            s >> fileVotes;
+        }
     }
 
 private:

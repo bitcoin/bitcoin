@@ -16,14 +16,9 @@ class EthereumTxRoot {
     std::vector<unsigned char> vchReceiptRoot;
     int64_t nTimestamp;
     
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {      
-        READWRITE(vchBlockHash);
-        READWRITE(vchPrevHash);
-        READWRITE(vchTxRoot);
-        READWRITE(vchReceiptRoot);
-        READWRITE(nTimestamp);
+    SERIALIZE_METHODS(EthereumTxRoot, obj)
+    {
+        READWRITE(obj.vchBlockHash, obj.vchPrevHash, obj.vchTxRoot, obj.vchReceiptRoot, obj.nTimestamp);
     }
 };
 typedef std::unordered_map<uint32_t, EthereumTxRoot> EthereumTxRootMap;

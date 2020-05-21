@@ -193,16 +193,18 @@ public:
         return *this;
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    template<typename Stream>
+    void Serialize(Stream& s) const
     {
-        READWRITE(nMaxSize);
-        READWRITE(listItems);
-        if(ser_action.ForRead()) {
-            RebuildIndex();
-        }
+        s << nMaxSize;
+        s << listItems;
+    }
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> nMaxSize;
+        s >> listItems;
+        RebuildIndex();
     }
 
 private:

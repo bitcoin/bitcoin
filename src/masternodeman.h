@@ -94,35 +94,50 @@ public:
     // Keep track of all verifications I've seen
     std::map<uint256, CMasternodeVerification> mapSeenMasternodeVerification;
 
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
         LOCK(cs);
         std::string strVersion;
-        if(ser_action.ForRead()) {
-            READWRITE(strVersion);
-        }
-        else {
-            strVersion = SERIALIZATION_VERSION_STRING; 
-            READWRITE(strVersion);
-        }
+        strVersion = SERIALIZATION_VERSION_STRING; 
+        s << strVersion;
+        
 
-        READWRITE(mapMasternodes);
-        READWRITE(mAskedUsForMasternodeList);
-        READWRITE(mWeAskedForMasternodeList);
-        READWRITE(mWeAskedForMasternodeListEntry);
-        READWRITE(mMnbRecoveryRequests);
-        READWRITE(mMnbRecoveryGoodReplies);
-        READWRITE(nLastSentinelPingTime);
+        s << mapMasternodes;
+        s << mAskedUsForMasternodeList;
+        s << mWeAskedForMasternodeList;
+        s << mWeAskedForMasternodeListEntry;
+        s << mMnbRecoveryRequests;
+        s << mMnbRecoveryGoodReplies;
+        s << nLastSentinelPingTime;
 
-        READWRITE(mapSeenMasternodeBroadcast);
-        READWRITE(mapSeenMasternodePing);
-        if(ser_action.ForRead() && (strVersion != SERIALIZATION_VERSION_STRING)) {
+        s << mapSeenMasternodeBroadcast;
+        s << mapSeenMasternodePing;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        LOCK(cs);
+        std::string strVersion;
+        s >> strVersion;
+        
+
+        s >> mapMasternodes;
+        s >> mAskedUsForMasternodeList;
+        s >> mWeAskedForMasternodeList;
+        s >> mWeAskedForMasternodeListEntry;
+        s >> mMnbRecoveryRequests;
+        s >> mMnbRecoveryGoodReplies;
+        s >> nLastSentinelPingTime;
+
+        s >> mapSeenMasternodeBroadcast;
+        s >> mapSeenMasternodePing;
+        if(strVersion != SERIALIZATION_VERSION_STRING) {
             Clear();
         }
     }
+
 
     CMasternodeMan();
     /// Find an entry
