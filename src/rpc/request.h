@@ -10,6 +10,10 @@
 
 #include <univalue.h>
 
+namespace util {
+class Ref;
+} // namespace util
+
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id);
 UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id);
 std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id);
@@ -34,8 +38,9 @@ public:
     std::string URI;
     std::string authUser;
     std::string peerAddr;
+    const util::Ref& context;
 
-    JSONRPCRequest() : id(NullUniValue), params(NullUniValue), fHelp(false) {}
+    JSONRPCRequest(const util::Ref& context) : id(NullUniValue), params(NullUniValue), fHelp(false), context(context) {}
     void parse(const UniValue& valRequest);
 };
 
