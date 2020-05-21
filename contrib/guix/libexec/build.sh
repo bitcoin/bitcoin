@@ -3,6 +3,14 @@ export LC_ALL=C
 set -e -o pipefail
 export TZ=UTC
 
+if [ -n "$V" ]; then
+    # Print both unexpanded (-v) and expanded (-x) forms of commands as they are
+    # read from this file.
+    set -vx
+    # Set VERBOSE for CMake-based builds
+    export VERBOSE="$V"
+fi
+
 # Check that environment variables assumed to be set by the environment are set
 echo "Building for platform triple ${HOST:?not set} with reference timestamp ${SOURCE_DATE_EPOCH:?not set}..."
 echo "At most ${MAX_JOBS:?not set} jobs will run at once..."
