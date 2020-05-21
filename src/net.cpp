@@ -3686,7 +3686,7 @@ void CConnman::RecordBytesSent(uint64_t bytes)
         nMaxOutboundTotalBytesSentInCycle = 0;
     }
 
-    // TODO, exclude whitebind peers
+    // TODO, exclude peers with noban permission
     nMaxOutboundTotalBytesSentInCycle += bytes;
 }
 
