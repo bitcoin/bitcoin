@@ -60,18 +60,28 @@ public:
         {}
 
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(nSporkID);
-        READWRITE(nValue);
-        READWRITE(nTimeSigned);
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << nSporkID;
+        s << nValue;
+        s << nTimeSigned;
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            s << vchSig;
         }
     }
 
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> nSporkID;
+        s >> nValue;
+        s >> nTimeSigned;
+        if (!(s.GetType() & SER_GETHASH)) {
+            s >> vchSig;
+        }
+    }
+    
     uint256 GetHash() const;
     uint256 GetSignatureHash() const;
 

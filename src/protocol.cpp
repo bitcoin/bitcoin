@@ -40,6 +40,10 @@ const char *SENDCMPCT="sendcmpct";
 const char *CMPCTBLOCK="cmpctblock";
 const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
+const char *GETCFHEADERS="getcfheaders";
+const char *CFHEADERS="cfheaders";
+const char *GETCFCHECKPT="getcfcheckpt";
+const char *CFCHECKPT="cfcheckpt";
 // Syscoin message types
 const char *SPORK="spork";
 const char *GETSPORKS="getsporks";
@@ -53,9 +57,7 @@ const char *MNGOVERNANCESYNC="govsync";
 const char *MNGOVERNANCEOBJECT="govobj";
 const char *MNGOVERNANCEOBJECTVOTE="govobjvote";
 const char *MNVERIFY="mnv";
-const char *CFHEADERS="cfheaders";
-const char *GETCFCHECKPT="getcfcheckpt";
-const char *CFCHECKPT="cfcheckpt";
+
 } // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of

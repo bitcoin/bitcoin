@@ -58,13 +58,10 @@ public:
         vecVoteHashes.push_back(hashIn);
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(*(CScriptBase*)(&scriptPubKey));
-        READWRITE(vecVoteHashes);
-		READWRITE(nStartHeight);
+    SERIALIZE_METHODS(CMasternodePayee, obj)
+    {
+        READWRITEAS(CScriptBase, obj.scriptPubKey);
+        READWRITE(obj.vecVoteHashes, obj.nStartHeight);
     }
 
     CScript GetPayee() const { return scriptPubKey; }
@@ -90,12 +87,9 @@ public:
         vecPayees()
         {}
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(nBlockHeight);
-        READWRITE(vecPayees);
+    SERIALIZE_METHODS(CMasternodeBlockPayees, obj)
+    {
+        READWRITE(obj.nBlockHeight, obj.vecPayees);
     }
 
     void AddPayee(const CMasternodePaymentVote& vote, CConnman& connman);
@@ -134,21 +128,33 @@ public:
         vchSig()
         {}
 
-    ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-       
-        // using new format directly
-        READWRITE(masternodeOutpoint);
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << masternodeOutpoint;
         
-        READWRITE(nBlockHeight);
-		READWRITE(nStartHeight);
-        READWRITE(*(CScriptBase*)(&payee));
+        s << nBlockHeight;
+		s << nStartHeight;
+        s << *(CScriptBase*)(&payee);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            s << vchSig;
         }
     }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> masternodeOutpoint;
+        
+        s >> nBlockHeight;
+		s >> nStartHeight;
+        s >> *(CScriptBase*)(&payee);
+        if (!(s.GetType() & SER_GETHASH)) {
+            s >> vchSig;
+        }
+    }
+
 
     uint256 GetHash() const;
     uint256 GetSignatureHash() const;
@@ -189,12 +195,10 @@ public:
 
     CMasternodePayments() : nStorageCoeff(1.25), nMinBlocksToStore(5000) {}
 
-    ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(mapMasternodePaymentVotes);
-        READWRITE(mapMasternodeBlocks);
+    SERIALIZE_METHODS(CMasternodePayments, obj)
+    {
+        READWRITE(obj.mapMasternodePaymentVotes, obj.mapMasternodeBlocks);
     }
 
     void Clear();

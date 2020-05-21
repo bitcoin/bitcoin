@@ -9,12 +9,9 @@ class CWitnessAddress{
 public:
     unsigned char nVersion;
     std::vector<unsigned char> vchWitnessProgram;
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(nVersion);
-        READWRITE(vchWitnessProgram);
+    SERIALIZE_METHODS(CWitnessAddress, obj)
+    {
+        READWRITE(obj.nVersion, obj.vchWitnessProgram);
     }
     CWitnessAddress(const unsigned char &version, const std::vector<unsigned char> &vchWitnessProgram_) {
         nVersion = version;

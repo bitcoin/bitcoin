@@ -31,21 +31,30 @@ public:
         SetNull();
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(*(CPureBlockHeader*)this);
-
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << *(CPureBlockHeader*)this;
         if (this->IsAuxpow())
         {
-            if (ser_action.ForRead())
-                auxpow = std::make_shared<CAuxPow>();
             assert(auxpow != nullptr);
-            READWRITE(*auxpow);
-        } else if (ser_action.ForRead())
-            auxpow.reset();
+            s << *auxpow;
+        }
     }
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> *(CPureBlockHeader*)this;
+        if (this->IsAuxpow())
+        {
+            auxpow = std::make_shared<CAuxPow>();
+            assert(auxpow != nullptr);
+            s >> *auxpow;
+        } else {
+            auxpow.reset();
+        }
+    }
+
     
     void SetNull()
     {

@@ -43,29 +43,47 @@ public:
 
     explicit CMasternodePing(const COutPoint& outpoint);
 
-    ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << masternodeOutpoint;
         
-        // using new format directly
-        READWRITE(masternodeOutpoint);
-        
-        READWRITE(blockHash);
-        READWRITE(sigTime);
+        s << blockHash;
+        s << sigTime;
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            s << vchSig;
         }
-        READWRITE(fSentinelIsCurrent);
+        s << fSentinelIsCurrent;
         if(s.GetType() & SER_GETHASH)
-            READWRITE(nSentinelVersion / 1000000);
+            s << nSentinelVersion / 1000000;
         else
-             READWRITE(nSentinelVersion);
+             s << nSentinelVersion;
         if(s.GetType() & SER_GETHASH)
-            READWRITE(nDaemonVersion / 1000000);
+            s << nDaemonVersion / 1000000;
         else
-            READWRITE(nDaemonVersion);
+            s << nDaemonVersion;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> masternodeOutpoint;
         
+        s >> blockHash;
+        s >> sigTime;
+        if (!(s.GetType() & SER_GETHASH)) {
+            s >> vchSig;
+        }
+        s >> fSentinelIsCurrent;
+        if(s.GetType() & SER_GETHASH)
+            s >> nSentinelVersion / 1000000;
+        else
+             s >> nSentinelVersion;
+        if(s.GetType() & SER_GETHASH)
+            s >> nDaemonVersion / 1000000;
+        else
+            s >> nDaemonVersion;
     }
 
     uint256 GetHash() const;
@@ -143,12 +161,9 @@ enum state {
 //
 class CMasternode : public masternode_info_t
 {
-private:
+public:
     // critical section to protect the inner data structures
     mutable RecursiveMutex cs;
-
-public:
-
     enum CollateralStatus {
         COLLATERAL_OK,
         COLLATERAL_UTXO_NOT_FOUND,
@@ -173,29 +188,12 @@ public:
     explicit CMasternode(const CMasternodeBroadcast& mnb);
     CMasternode(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn, int retries);
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        LOCK(cs);
-        // using new format directly
-        READWRITE(outpoint);
-        READWRITE(nPingRetries);
-        READWRITE(addr);
-        READWRITE(pubKeyCollateralAddress);
-        READWRITE(pubKeyMasternode);
-        READWRITE(lastPing);
-        READWRITE(vchSig);
-        READWRITE(sigTime);
-        READWRITE(nTimeLastChecked);
-        READWRITE(nTimeLastPaid);
-        READWRITE(nActiveState);
-        READWRITE(nCollateralMinConfBlockHash);
-        READWRITE(nBlockLastPaid);
-        READWRITE(nProtocolVersion);
-        READWRITE(nPoSeBanScore);
-        READWRITE(nPoSeBanHeight);
-        READWRITE(mapGovernanceObjectsVotedOn);
+    SERIALIZE_METHODS(CMasternode, obj)
+    {
+        LOCK(obj.cs);
+        READWRITE(obj.outpoint, obj.nPingRetries, obj.addr, obj.pubKeyCollateralAddress, obj.pubKeyMasternode, obj.lastPing,
+        obj.vchSig, obj.sigTime, obj.nTimeLastChecked, obj.nTimeLastPaid, obj.nActiveState, obj.nCollateralMinConfBlockHash, 
+        obj.nBlockLastPaid, obj.nProtocolVersion, obj.nPoSeBanScore, obj.nPoSeBanHeight, obj.mapGovernanceObjectsVotedOn);
     }
 
     // CALCULATE A RANK AGAINST OF GIVEN BLOCK
@@ -304,24 +302,43 @@ public:
     CMasternodeBroadcast(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn) :
         CMasternode(addrNew, outpointNew, pubKeyCollateralAddressNew, pubKeyMasternodeNew, nProtocolVersionIn, 0), fRecovery(false) {}
 
-    ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        // using new format directly
-        READWRITE(outpoint);
+
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << outpoint;
         
-        READWRITE(addr);
-        READWRITE(pubKeyCollateralAddress);
-        READWRITE(pubKeyMasternode);
+        s << addr;
+        s << pubKeyCollateralAddress;
+        s << pubKeyMasternode;
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            s << vchSig;
         }
-        READWRITE(sigTime);
-        READWRITE(nProtocolVersion);
+        s << sigTime;
+        s << nProtocolVersion;
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(lastPing);
-            READWRITE(nPingRetries);
+            s << lastPing;
+            s << nPingRetries;
+        }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> outpoint;
+        
+        s >> addr;
+        s >> pubKeyCollateralAddress;
+        s >> pubKeyMasternode;
+        if (!(s.GetType() & SER_GETHASH)) {
+            s >> vchSig;
+        }
+        s >> sigTime;
+        s >> nProtocolVersion;
+        if (!(s.GetType() & SER_GETHASH)) {
+            s >> lastPing;
+            s >> nPingRetries;
         }
     }
 
@@ -361,19 +378,11 @@ public:
         nBlockHeight(nBlockHeight)
     {}
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        // using new format directly
-        READWRITE(masternodeOutpoint1);
-        READWRITE(masternodeOutpoint2);
-        READWRITE(addr);
-        READWRITE(nonce);
-        READWRITE(nBlockHeight);
-        READWRITE(vchSig1);
-        READWRITE(vchSig2);
+    SERIALIZE_METHODS(CMasternodeVerification, obj)
+    {
+        READWRITE(obj.masternodeOutpoint1, obj.masternodeOutpoint2, obj.addr, obj.nonce, obj.nBlockHeight, obj.vchSig1, obj.vchSig2);
     }
+
 
     uint256 GetHash() const
     {
