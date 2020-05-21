@@ -141,8 +141,6 @@ static const unsigned int MAX_HEADERS_SIZE = (6 << 20); // 6 MiB
  *  This is used starting with SIZE_HEADERS_LIMIT_VERSION peers.
  */
 static const unsigned int THRESHOLD_HEADERS_SIZE = (4 << 20); // 4 MiB
-/** Interval between compact filter checkpoints. See BIP 157. */
-static constexpr int CFCHECKPT_INTERVAL = 1000;
 
 struct COrphanTx {
     // When modifying, adapt the copy of this definition in tests/DoS_tests.
@@ -2164,7 +2162,7 @@ static bool PrepareBlockFilterRequest(CNode* pfrom, const CChainParams& chain_pa
                                       BlockFilterType filter_type,
                                       const uint256& stop_hash,
                                       const CBlockIndex*& stop_index,
-                                      const BlockFilterIndex*& filter_index)
+                                      BlockFilterIndex*& filter_index)
 {
     const bool supported_filter_type =
         (filter_type == BlockFilterType::BASIC &&
@@ -2219,7 +2217,7 @@ static void ProcessGetCFCheckPt(CNode* pfrom, CDataStream& vRecv, const CChainPa
     const BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
 
     const CBlockIndex* stop_index;
-    const BlockFilterIndex* filter_index;
+    BlockFilterIndex* filter_index;
     if (!PrepareBlockFilterRequest(pfrom, chain_params, filter_type, stop_hash,
                                    stop_index, filter_index)) {
         return;
