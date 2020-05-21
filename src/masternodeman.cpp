@@ -872,10 +872,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
             SendVerifyReply(pfrom, mnv, connman);
         } else if (mnv.vchSig2.empty()) {
             // CASE 2: we _probably_ got verification we requested from some masternode
-            ProcessVerifyReply(pfrom, mnv);
+            ProcessVerifyReply(pfrom, mnv, connman);
         } else {
             // CASE 3: we _probably_ got verification broadcast signed by some masternode which verified another one
-            ProcessVerifyBroadcast(pfrom, mnv);
+            ProcessVerifyBroadcast(pfrom, mnv, connman);
         }
     }
 }
@@ -1175,7 +1175,7 @@ void CMasternodeMan::SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv,
     netfulfilledman.AddFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-reply");
 }
 
-void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv)
+void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv, CConnman& connman)
 {
 
     std::string strError;
@@ -1270,7 +1270,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
 
                     mWeAskedForVerification[pnode->addr] = mnv;
                     mapSeenMasternodeVerification.insert(std::make_pair(mnv.GetHash(), mnv));
-                    mnv.Relay();
+                    mnv.Relay(connman);
 
                 } else {
                     vpMasternodesToBan.push_back(&mnpair.second);
@@ -1300,7 +1300,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
     }
 }
 
-void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv)
+void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv, CConnman& connman)
 {
 
     std::string strError;
@@ -1387,7 +1387,7 @@ void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerif
         if(!pmn1->IsPoSeVerified()) {
             pmn1->DecreasePoSeBanScore();
         }
-        mnv.Relay();
+        mnv.Relay(connman);
 
         LogPrint(BCLog::MN, "CMasternodeMan::ProcessVerifyBroadcast -- verified masternode %s for addr %s\n",
                     pmn1->outpoint.ToStringShort(), pmn1->addr.ToString());

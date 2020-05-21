@@ -179,12 +179,12 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
     return true;
 }
 
-void TestTransaction(const CTransactionRef& tx) {
+void TestTransaction(const CTransactionRef& tx, const util::Ref& context) {
     if(!fAssetIndex) { 
         throw JSONRPCError(RPC_WALLET_ERROR, "missing-asset-index");
     }
     AssertLockHeld(cs_main);
-    CTxMemPool& mempool = EnsureMemPool();
+    CTxMemPool& mempool = EnsureMemPool(context);
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
     CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(virtual_size);
 
@@ -285,7 +285,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
             error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
-    TestTransaction(tx);
+    TestTransaction(tx, request.context);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -463,7 +463,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    TestTransaction(tx);
+    TestTransaction(tx, request.context);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -472,7 +472,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     return res;
 }
 
-UniValue CreateAssetUpdateTx(const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) {
+UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) {
     AssertLockHeld(pwallet->cs_wallet);
     CCoinControl coin_control;
     CAmount nMinimumAmountAsset = 0;
@@ -547,7 +547,7 @@ UniValue CreateAssetUpdateTx(const int32_t& nVersionIn, const uint32_t &nAsset, 
             error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
-    TestTransaction(tx);
+    TestTransaction(tx, context);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -651,7 +651,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(SYSCOIN_TX_VERSION_ASSET_UPDATE, nAsset, pwallet, vecSend, opreturnRecipient);
+    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, nAsset, pwallet, vecSend, opreturnRecipient);
 }
 
 UniValue assettransfer(const JSONRPCRequest& request) {
@@ -702,7 +702,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(SYSCOIN_TX_VERSION_ASSET_UPDATE, nAsset, pwallet, vecSend, opreturnRecipient, &recp);
+    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, nAsset, pwallet, vecSend, opreturnRecipient, &recp);
 }
 
 UniValue assetsendmany(const JSONRPCRequest& request) {
@@ -794,7 +794,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     scriptData << OP_RETURN << data;
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
-    return CreateAssetUpdateTx(SYSCOIN_TX_VERSION_ASSET_SEND, nAsset, pwallet, vecSend, opreturnRecipient);
+    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_SEND, nAsset, pwallet, vecSend, opreturnRecipient);
 }
 
 UniValue assetsend(const JSONRPCRequest& request) {
@@ -833,7 +833,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(nAsset);
     paramsFund.push_back(output);
-    JSONRPCRequest requestMany;
+    JSONRPCRequest requestMany(request.context);
     requestMany.params = paramsFund;
     requestMany.URI = request.URI;
     return assetsendmany(requestMany);          
@@ -990,7 +990,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Could not sign modified OP_RETURN transaction");
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    TestTransaction(tx);
+    TestTransaction(tx, request.context);
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
@@ -1086,7 +1086,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
             error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
-    TestTransaction(tx);
+    TestTransaction(tx, request.context);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -1215,7 +1215,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
-    TestTransaction(tx);
+    TestTransaction(tx, request.context);
     mapValue_t mapValue;
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     UniValue res(UniValue::VOBJ);
@@ -1275,7 +1275,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     paramsFund.push_back(commentObj); // comment
     paramsFund.push_back(confObj); // conf_target
     paramsFund.push_back(feeObj); // estimate_mode
-    JSONRPCRequest requestMany;
+    JSONRPCRequest requestMany(request.context);
     requestMany.params = paramsFund;
     requestMany.URI = request.URI;
     return assetallocationsendmany(requestMany);          
@@ -1411,7 +1411,7 @@ UniValue listunspentasset(const JSONRPCRequest& request) {
     UniValue options(UniValue::VOBJ);
     options.__pushKV("assetGuid", nAsset);
     paramsFund.push_back(options);
-    JSONRPCRequest requestSpent;
+    JSONRPCRequest requestSpent(request.context);
     requestSpent.params = paramsFund;
     requestSpent.URI = request.URI;
     return listunspent(requestSpent);  

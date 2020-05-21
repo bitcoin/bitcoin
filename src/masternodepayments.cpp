@@ -898,7 +898,7 @@ void CMasternodePaymentVote::Relay(CConnman& connman) const
     }
 
     CInv inv(MSG_MASTERNODE_PAYMENT_VOTE, GetHash());
-    g_rpc_node->connman->RelayInv(inv);
+    connman.RelayInv(inv);
 }
 
 bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int nValidationHeight, int &nDos) const

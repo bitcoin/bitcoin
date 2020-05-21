@@ -49,7 +49,7 @@ UniValue mnsync(const JSONRPCRequest& request)
             }.ToString());
 
     std::string strMode = request.params[0].get_str();
-
+    NodeContext& node = EnsureNodeContext(request.context);
     if(strMode == "status") {
         UniValue objStatus(UniValue::VOBJ);
         objStatus.pushKV("AssetID", masternodeSync.GetAssetID());
@@ -66,14 +66,20 @@ UniValue mnsync(const JSONRPCRequest& request)
 
     if(strMode == "next")
     {
-        masternodeSync.SwitchToNextAsset(*g_rpc_node->connman);
+        if (!node.connman)
+            throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+        masternodeSync.SwitchToNextAsset(*node.connman);
         return "sync updated to " + masternodeSync.GetAssetName();
     }
 
     if(strMode == "reset")
     {
+        if (!node.connman)
+            throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
         masternodeSync.Reset();
-        masternodeSync.SwitchToNextAsset(*g_rpc_node->connman);
+        masternodeSync.SwitchToNextAsset(*node.connman);
         return "success";
     }
     return "failure";
@@ -102,7 +108,7 @@ UniValue spork(const JSONRPCRequest& request)
             return ret;
         }
     }
-
+    NodeContext& node = EnsureNodeContext(request.context);
     if (request.fHelp || request.params.size() != 2) {
         // default help, for basic mode
         throw std::runtime_error(
@@ -128,14 +134,14 @@ UniValue spork(const JSONRPCRequest& request)
         if(nSporkID == -1)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
 
-        if (!g_rpc_node->connman)
+        if (!node.connman)
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
         // SPORK VALUE
         int64_t nValue = request.params[1].get_int64();
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_rpc_node->connman)){
+        if(sporkManager.UpdateSpork(nSporkID, nValue, *node.connman)){
             sporkManager.ExecuteSpork(nSporkID, nValue);
             return "success";
         } else {

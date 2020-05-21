@@ -234,7 +234,10 @@ UniValue gobject(const JSONRPCRequest& request)
         if ((request.params.size() < 5) || (request.params.size() > 6))  {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject submit <parent-hash> <revision> <time> <data-hex> <fee-txid>'");
         }
-
+        NodeContext& node = EnsureNodeContext(request.context);
+        if(!node.connman)
+            throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+ 
         if(!masternodeSync.IsBlockchainSynced()) {
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
         }
@@ -331,9 +334,9 @@ UniValue gobject(const JSONRPCRequest& request)
 
         if(fMissingConfirmations) {
             governance.AddPostponedObject(govobj);
-            govobj.Relay(*g_rpc_node->connman);
+            govobj.Relay(*node.connman);
         } else {
-            governance.AddGovernanceObject(govobj, *g_rpc_node->connman);
+            governance.AddGovernanceObject(govobj, *node.connman);
         }
 
         return govobj.GetHash().ToString();
@@ -343,7 +346,10 @@ UniValue gobject(const JSONRPCRequest& request)
     {
         if(request.params.size() != 4)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-conf <governancehash> [funding|valid|delete] [yes|no|abstain]'");
-
+        NodeContext& node = EnsureNodeContext(request.context);
+        if(!node.connman)
+            throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+ 
         uint256 hash;
         std::string strVote;
 
@@ -399,7 +405,7 @@ UniValue gobject(const JSONRPCRequest& request)
         }
 
         CGovernanceException exception;
-        if(governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
+        if(governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
             nSuccessful++;
             statusObj.pushKV("result", "success");
         }
@@ -421,7 +427,10 @@ UniValue gobject(const JSONRPCRequest& request)
     {
         if(request.params.size() != 4)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-many <governancehash> [funding|valid|delete] [yes|no|abstain]'");
-
+        NodeContext& node = EnsureNodeContext(request.context);
+        if(!node.connman)
+            throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+ 
         uint256 hash;
         std::string strVote;
 
@@ -498,7 +507,7 @@ UniValue gobject(const JSONRPCRequest& request)
             }
 
             CGovernanceException exception;
-            if(governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
+            if(governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
                 nSuccessful++;
                 statusObj.pushKV("result", "success");
             }
@@ -524,7 +533,10 @@ UniValue gobject(const JSONRPCRequest& request)
     {
         if(request.params.size() != 5)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-name <governancehash> [funding|valid|delete] [yes|no|abstain] <masternode-name>'");
-
+        NodeContext& node = EnsureNodeContext(request.context);
+        if(!node.connman)
+            throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+ 
         uint256 hash;
         std::string strVote;
 
@@ -620,7 +632,7 @@ UniValue gobject(const JSONRPCRequest& request)
             // UPDATE LOCAL DATABASE WITH NEW OBJECT SETTINGS
 
             CGovernanceException exception;
-            if(governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
+            if(governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
                 nSuccessful++;
                 statusObj.pushKV("result", "success");
             }
@@ -905,7 +917,10 @@ UniValue voteraw(const JSONRPCRequest& request)
                         + HelpExampleRpc("voteraw", "\"tx-hash\", \"tx-index\", \"gov-hash\", \"funding\", \"yes\", \"time\", \"vote-sig\"")
                         }
                 }.ToString());
-
+    NodeContext& node = EnsureNodeContext(request.context);
+    if(!node.connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+ 
     uint256 hashMnTx = ParseHashV(request.params[0], "mn tx hash");
     int nMnTxIndex = request.params[1].get_int();
     COutPoint outpoint = COutPoint(hashMnTx, nMnTxIndex);
@@ -951,7 +966,7 @@ UniValue voteraw(const JSONRPCRequest& request)
     }
 
     CGovernanceException exception;
-    if(governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
+    if(governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
         return "Voted successfully";
     }
     else {

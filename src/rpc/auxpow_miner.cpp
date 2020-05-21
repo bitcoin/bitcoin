@@ -21,14 +21,10 @@
 namespace
 {
 
-void auxMiningCheck()
+void auxMiningCheck(CConnman &connman)
 {
-  if (!g_rpc_node->connman)
-    throw JSONRPCError (RPC_CLIENT_P2P_DISABLED,
-                        "Error: Peer-to-peer functionality missing or"
-                        " disabled");
 
-  if (g_rpc_node->connman->GetNodeCount (CConnman::CONNECTIONS_ALL) == 0
+  if (connman.GetNodeCount (CConnman::CONNECTIONS_ALL) == 0
         && !Params ().MineBlocksOnDemand ())
     throw JSONRPCError (RPC_CLIENT_NOT_CONNECTED,
                         "Syscoin is not connected!");
@@ -133,12 +129,15 @@ AuxpowMiner::lookupSavedBlock (const std::string& hashHex) const
 }
 
 UniValue
-AuxpowMiner::createAuxBlock (const CScript& scriptPubKey)
+AuxpowMiner::createAuxBlock (const CScript& scriptPubKey, const util::Ref& context)
 {
-  auxMiningCheck ();
+  NodeContext& node = EnsureNodeContext(context);
+  if(!node.connman)
+      throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+  auxMiningCheck (*node.connman);
   LOCK (cs);
 
-  const auto& mempool = EnsureMemPool ();
+  const auto& mempool = EnsureMemPool (context);
 
   uint256 target;
   const CBlock* pblock = getCurrentBlock (mempool, scriptPubKey, target);
@@ -158,9 +157,12 @@ AuxpowMiner::createAuxBlock (const CScript& scriptPubKey)
 
 bool
 AuxpowMiner::submitAuxBlock (const std::string& hashHex,
-                             const std::string& auxpowHex) const
+                             const std::string& auxpowHex, const util::Ref& context) const
 {
-  auxMiningCheck ();
+  NodeContext& node = EnsureNodeContext(context);
+  if(!node.connman)
+      throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+  auxMiningCheck (*node.connman);
 
   std::shared_ptr<CBlock> shared_block;
   {
