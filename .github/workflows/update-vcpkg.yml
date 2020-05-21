@@ -2,6 +2,8 @@ name: vcpkg
 
 on:
   push:
+    branches:
+      - master
     paths:
       - 'depends/packages/veriblock-pop-cpp.mk'
 
