@@ -2603,7 +2603,7 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Colar o endereço da área de transferência</translation>
+        <translation>Cole o endereço da área de transferência</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -2619,11 +2619,11 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Copiar a assinatura para a área de transferência do sistema</translation>
+        <translation>Copie a assinatura para a área de transferência do sistema</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Assinar mensagem para provar que você é dono deste endereço Bitcoin</translation>
+        <translation>Assine a mensagem para provar que você é dono deste endereço Bitcoin</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2659,7 +2659,7 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Verificar mensagem para se assegurar que ela foi assinada pelo dono de um endereço Bitcoin específico</translation>
+        <translation>Verifique a mensagem para se assegurar de que ela foi assinada pelo dono do endereço de Bitcoin específico</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -3328,11 +3328,11 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     </message>
     <message>
         <source>Pruning blockstore...</source>
-        <translation>Prunando os blocos existentes...</translation>
+        <translation>Podando os blocos existentes...</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation>Não foi possível iniciar o servidor HTTP. Veja o log de depuração para detaihes.</translation>
+        <translation>Não foi possível iniciar o servidor HTTP. Veja o log de depuração para detalhes.</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -3368,7 +3368,7 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Este é um build de teste pré-lançamento - use por sua conta e risco - não use para mineração ou comércio</translation>
+        <translation>Esta é uma build de teste pré-lançamento - use por sua conta e risco - não use para mineração ou comércio</translation>
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
@@ -3384,7 +3384,7 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Atenção: A rede não parecem concordar plenamente! Alguns mineiros parecem estar enfrentando problemas.</translation>
+        <translation>Atenção: A rede parece não concordar plenamente! Alguns mineradores parecem estar enfrentando problemas.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
@@ -3533,7 +3533,7 @@ Diretório de blocos especificados "%s" não existe.</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation>Não há file descriptors suficientes disponíveis.</translation>
+        <translation>Não há descritores de arquivos suficientes disponíveis.</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3597,7 +3597,7 @@ Diretório de blocos especificados "%s" não existe.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation>A quantia da transação é muito pequena para mandar depois de deduzida a taxa</translation>
+        <translation>O montante da transação é muito pequeno para mandar após a taxa ser deduzida</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -3633,7 +3633,7 @@ Diretório de blocos especificados "%s" não existe.</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation>Necessário informar uma porta com -whitebind: '%s'</translation>
+        <translation>É necessário informar uma porta com -whitebind: '%s'</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -blockfilterindex.</source>
@@ -3671,7 +3671,7 @@ Diretório de blocos especificados "%s" não existe.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
-        <translation>A quantidade da transação é pequena demais para  pagar a taxa</translation>
+        <translation>O montante da transação é pequeno demais para pagar a taxa</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3679,7 +3679,7 @@ Diretório de blocos especificados "%s" não existe.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation>Quantidade da transação muito pequena</translation>
+        <translation>Montante da transação muito pequena</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -3727,7 +3727,7 @@ Diretório de blocos especificados "%s" não existe.</translation>
     </message>
     <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Atenção: Arquivo da carteira corrompido, dados recuperados! Original %s salvo como %s em %s; se seu saldo ou transações estiverem incorretos, você deve restaurar o backup.</translation>
+        <translation>Atenção: Arquivo da carteira corrompido, dados recuperados! Originalmente %s salvo como %s em %s; se seu saldo ou transações estiverem incorretos, você deve restaurar o backup.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3735,7 +3735,7 @@ Diretório de blocos especificados "%s" não existe.</translation>
     </message>
     <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Erro ao carregar carteira %s. Duplicado o nome do arquivo de -wallet.</translation>
+        <translation>Erro ao carregar carteira %s. Nome do arquivo -wallet Duplicado.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
