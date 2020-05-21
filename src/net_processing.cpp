@@ -1510,8 +1510,11 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
     const CNetMsgMaker msgMaker(pfrom.GetSendVersion());
     // disconnect node in case we have reached the outbound limit for serving historical blocks
     // never disconnect whitelisted nodes
-    if (send && connman->OutboundTargetReached(true) && ( ((pindexBestHeader != nullptr) && (pindexBestHeader->GetBlockTime() - pindex->GetBlockTime() > HISTORICAL_BLOCK_AGE)) || inv.type == MSG_FILTERED_BLOCK) && !pfrom.HasPermission(PF_NOBAN))
-    {
+    if (send &&
+        connman->OutboundTargetReached(true) &&
+        (((pindexBestHeader != nullptr) && (pindexBestHeader->GetBlockTime() - pindex->GetBlockTime() > HISTORICAL_BLOCK_AGE)) || inv.type == MSG_FILTERED_BLOCK) &&
+        !pfrom.HasPermission(PF_NOBAN)
+    ) {
         LogPrint(BCLog::NET, "historical block serving limit reached, disconnect peer=%d\n", pfrom.GetId());
 
         //disconnect node
