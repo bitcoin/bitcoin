@@ -51,7 +51,7 @@ jobs:
         run: sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev
       - name: install veriblock-pop-cpp
         env:
-          BUILD_TYPE: Debug
+          BUILD_TYPE: Release
         run: |
           (
           cd /opt;
@@ -146,7 +146,7 @@ jobs:
         run: PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g')
       - name: set variables and build dependencies for x86_64-w64
         env:
-          BUILD_TYPE: Debug
+          BUILD_TYPE: Release
           HOST: x86_64-w64-mingw32
           BASE_CACHE: ~/.depends_cache
         run: cd depends && make -j2
@@ -223,7 +223,7 @@ jobs:
           tar -xf depends/sdk-sources/MacOSX10.14.sdk.tar.xz -C depends/SDKs
       - name: set variables and build dependencies for x86_64-apple-darwin16
         env:
-          BUILD_TYPE: Debug
+          BUILD_TYPE: Release
           HOST: x86_64-apple-darwin16
           BASE_CACHE: ~/.depends_cache
         run: cd depends && make -j2
@@ -292,7 +292,7 @@ jobs:
         run: brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python3 libevent librsvg ccache qrencode qt zeromq
       - name: install veriblock-pop-cpp
         env:
-          BUILD_TYPE: Debug
+          BUILD_TYPE: Release
         run: |
           (
           cd /tmp;
