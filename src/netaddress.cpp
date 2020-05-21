@@ -3,11 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <netaddress.h>
 #include <hash.h>
-#include <util/strencodings.h>
-#include <util/asmap.h>
+#include <netaddress.h>
+#include <prevector.h>
 #include <tinyformat.h>
+#include <util/asmap.h>
+#include <util/strencodings.h>
 
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
@@ -723,14 +724,14 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
 /**
  * @returns An identifier unique to this service's address and port number.
  */
-std::vector<unsigned char> CService::GetKey() const
+ServiceKey CService::GetKey() const
 {
-     std::vector<unsigned char> vKey;
-     vKey.resize(18);
-     memcpy(vKey.data(), ip, 16);
-     vKey[16] = port / 0x100; // most significant byte of our port
-     vKey[17] = port & 0x0FF; // least significant byte of our port
-     return vKey;
+    ServiceKey vKey;
+    vKey.resize(18);
+    memcpy(vKey.data(), ip, 16);
+    vKey[16] = port / 0x100; // most significant byte of our port
+    vKey[17] = port & 0x0FF; // least significant byte of our port
+    return vKey;
 }
 
 std::string CService::ToStringPort() const

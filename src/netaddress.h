@@ -134,6 +134,8 @@ class CSubNet
         SERIALIZE_METHODS(CSubNet, obj) { READWRITE(obj.network, obj.netmask, obj.valid); }
 };
 
+using ServiceKey = prevector<18, unsigned char>;
+
 /** A combination of a network address (CNetAddr) and a (TCP) port */
 class CService : public CNetAddr
 {
@@ -151,7 +153,7 @@ class CService : public CNetAddr
         friend bool operator==(const CService& a, const CService& b);
         friend bool operator!=(const CService& a, const CService& b) { return !(a == b); }
         friend bool operator<(const CService& a, const CService& b);
-        std::vector<unsigned char> GetKey() const;
+        ServiceKey GetKey() const;
         std::string ToString() const;
         std::string ToStringPort() const;
         std::string ToStringIPPort() const;
