@@ -256,6 +256,24 @@ AC_ARG_ENABLE([zmq],
   [use_zmq=$enableval],
   [use_zmq=yes])
 
+AC_ARG_WITH([libmultiprocess],
+  [AS_HELP_STRING([--with-libmultiprocess=yes|no|auto],
+  [Build with libmultiprocess library. (default: auto, i.e. detect with pkg-config)])],
+  [with_libmultiprocess=$withval],
+  [with_libmultiprocess=auto])
+
+AC_ARG_WITH([mpgen],
+  [AS_HELP_STRING([--with-mpgen=yes|no|auto|PREFIX],
+  [Build with libmultiprocess codegen tool. Useful to specify different libmultiprocess host system library and build system codegen tool prefixes when cross-compiling (default is host system libmultiprocess prefix)])],
+  [with_mpgen=$withval],
+  [with_mpgen=auto])
+
+AC_ARG_ENABLE([multiprocess],
+  [AS_HELP_STRING([--enable-multiprocess],
+  [build multiprocess dash-node, dash-wallet, and dash-gui executables in addition to monolithic dashd and dash-qt executables. Requires libmultiprocess library. Experimental (default is no)])],
+  [enable_multiprocess=$enableval],
+  [enable_multiprocess=no])
+
 AC_ARG_ENABLE(man,
     [AS_HELP_STRING([--disable-man],
                     [do not install man pages (default is to install)])],,
@@ -1530,6 +1548,50 @@ dnl check if libgmp is present
 AC_CHECK_HEADER([gmp.h],, AC_MSG_ERROR(libgmp headers missing))
 AC_CHECK_LIB([gmp],  [__gmpz_init],GMP_LIBS=-lgmp, AC_MSG_ERROR(libgmp missing))
 
+dnl libmultiprocess library check
+
+libmultiprocess_found=no
+if test "x$with_libmultiprocess" = xyes || test "x$with_libmultiprocess" = xauto; then
+  if test "x$use_pkgconfig" = xyes; then
+    m4_ifdef([PKG_CHECK_MODULES], [PKG_CHECK_MODULES([LIBMULTIPROCESS], [libmultiprocess], [
+       libmultiprocess_found=yes;
+       libmultiprocess_prefix=`$PKG_CONFIG --variable=prefix libmultiprocess`;
+    ], [true])])
+  fi
+elif test "x$with_libmultiprocess" != xno; then
+  AC_MSG_ERROR([--with-libmultiprocess=$with_libmultiprocess value is not yes, auto, or no])
+fi
+AC_SUBST(LIBMULTIPROCESS_CFLAGS)
+AC_SUBST(LIBMULTIPROCESS_LIBS)
+
+dnl Enable multiprocess check
+
+if test "x$enable_multiprocess" = xyes; then
+  if test "x$libmultiprocess_found" != xyes; then
+    AC_MSG_ERROR([--enable-multiprocess=yes option specified but libmultiprocess library was not found. May need to install libmultiprocess library, or specify install path with PKG_CONFIG_PATH environment variable. Running 'pkg-config --debug libmultiprocess' may be helpful for debugging.])
+  fi
+  build_multiprocess=yes
+elif test "x$enable_multiprocess" = xauto; then
+  build_multiprocess=$libmultiprocess_found
+else
+  build_multiprocess=no
+fi
+
+AM_CONDITIONAL([BUILD_MULTIPROCESS],[test "x$build_multiprocess" = xyes])
+AM_CONDITIONAL([BUILD_BITCOIN_NODE], [test "x$build_multiprocess" = xyes])
+AM_CONDITIONAL([BUILD_BITCOIN_GUI], [test "x$build_multiprocess" = xyes])
+
+dnl codegen tools check
+
+if test x$build_multiprocess != xno; then
+  if test "x$with_mpgen" = xyes || test "x$with_mpgen" = xauto; then
+    MPGEN_PREFIX="$libmultiprocess_prefix"
+  elif test "x$with_mpgen" != xno; then
+    MPGEN_PREFIX="$with_mpgen";
+  fi
+  AC_SUBST(MPGEN_PREFIX)
+fi
+
 AC_MSG_CHECKING([whether to build dashd])
 AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
 AC_MSG_RESULT($build_bitcoind)
@@ -1853,6 +1915,7 @@ esac
 
 echo
 echo "Options used to compile and link:"
+echo "  multiprocess  = $build_multiprocess"
 echo "  with wallet         = $enable_wallet"
 echo "  with gui / qt       = $bitcoin_enable_qt"
 if test "x$enable_wallet" != "xno"; then
