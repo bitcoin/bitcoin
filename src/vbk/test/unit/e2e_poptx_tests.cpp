@@ -9,10 +9,10 @@
 #include <chain.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
+#include <vbk/test/util/e2e_fixture.hpp>
 #include <vbk/util.hpp>
 #include <veriblock/alt-util.hpp>
 #include <veriblock/mock_miner.hpp>
-#include <vbk/test/util/e2e_fixture.hpp>
 
 using altintegration::AltPayloads;
 using altintegration::BtcBlock;
@@ -31,23 +31,25 @@ BOOST_FIXTURE_TEST_CASE(ValidBlockIsAccepted, E2eFixture)
 
     // endorse tip
     CBlock block = endorseAltBlockAndMine(tip->GetBlockHash(), 10);
+    BOOST_REQUIRE(block.vtx.size() == 2);
+
     {
-        BOOST_CHECK(ChainActive().Tip()->GetBlockHash() == block.GetHash());
+        BOOST_REQUIRE(ChainActive().Tip()->GetBlockHash() == block.GetHash());
         auto btc = pop->getLastKnownBTCBlocks(1)[0];
-        BOOST_CHECK(btc == popminer.btc().getBestChain().tip()->getHash());
+        BOOST_REQUIRE(btc == popminer.btc().getBestChain().tip()->getHash());
         auto vbk = pop->getLastKnownVBKBlocks(1)[0];
-        BOOST_CHECK(vbk == popminer.vbk().getBestChain().tip()->getHash());
+        BOOST_REQUIRE(vbk == popminer.vbk().getBestChain().tip()->getHash());
     }
 
     // endorse another tip
     block = endorseAltBlockAndMine(tip->GetBlockHash(), 1);
     auto lastHash = ChainActive().Tip()->GetBlockHash();
     {
-        BOOST_CHECK(lastHash == block.GetHash());
+        BOOST_REQUIRE(lastHash == block.GetHash());
         auto btc = pop->getLastKnownBTCBlocks(1)[0];
-        BOOST_CHECK(btc == popminer.btc().getBestChain().tip()->getHash());
+        BOOST_REQUIRE(btc == popminer.btc().getBestChain().tip()->getHash());
         auto vbk = pop->getLastKnownVBKBlocks(1)[0];
-        BOOST_CHECK(vbk == popminer.vbk().getBestChain().tip()->getHash());
+        BOOST_REQUIRE(vbk == popminer.vbk().getBestChain().tip()->getHash());
     }
 
     // create block that is not on main chain
