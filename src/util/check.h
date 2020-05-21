@@ -5,6 +5,10 @@
 #ifndef SYSCOIN_UTIL_CHECK_H
 #define SYSCOIN_UTIL_CHECK_H
 
+#if defined(HAVE_CONFIG_H)
+#include <config/syscoin-config.h>
+#endif
+
 #include <tinyformat.h>
 
 #include <stdexcept>
