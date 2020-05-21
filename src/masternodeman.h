@@ -193,8 +193,8 @@ public:
     void PrepareVerifyRequest(const CAddress& addr, CConnman& connman);
     void ProcessPendingMnvRequests(CConnman& connman);
     void SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv, CConnman& connman);
-    void ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv);
-    void ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv);
+    void ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv, CConnman& connman);
+    void ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv, CConnman& connman);
 
     /// Return the number of (unique) Masternodes
     int size() { return mapMasternodes.size(); }

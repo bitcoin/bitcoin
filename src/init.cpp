@@ -1601,7 +1601,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     }
 #endif
     // SYSCOIN
-    pdsNotificationInterface = new CDSNotificationInterface(*g_rpc_node->connman);
+    pdsNotificationInterface = new CDSNotificationInterface(*node.connman);
     RegisterValidationInterface(pdsNotificationInterface);
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
     uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
@@ -2055,12 +2055,12 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
 
     if (!fLiteMode) {
         node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(netfulfilledman)), std::chrono::minutes{1});
-        node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(masternodeSync), std::ref(*g_rpc_node->connman)), std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
-        node.scheduler->scheduleEvery(std::bind(&CMasternodeMan::DoMaintenance, std::ref(mnodeman), std::ref(*g_rpc_node->connman)), std::chrono::minutes{1});
-        node.scheduler->scheduleEvery(std::bind(&CActiveMasternode::DoMaintenance, std::ref(activeMasternode), std::ref(*g_rpc_node->connman)), std::chrono::seconds{MASTERNODE_MIN_MNP_SECONDS});
+        node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(masternodeSync), std::ref(*node.connman)), std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
+        node.scheduler->scheduleEvery(std::bind(&CMasternodeMan::DoMaintenance, std::ref(mnodeman), std::ref(*node.connman)), std::chrono::minutes{1});
+        node.scheduler->scheduleEvery(std::bind(&CActiveMasternode::DoMaintenance, std::ref(activeMasternode), std::ref(*node.connman)), std::chrono::seconds{MASTERNODE_MIN_MNP_SECONDS});
 
         node.scheduler->scheduleEvery(std::bind(&CMasternodePayments::DoMaintenance, std::ref(mnpayments)), std::chrono::minutes{1});
-        node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(governance), std::ref(*g_rpc_node->connman)), std::chrono::minutes{5});
+        node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(governance), std::ref(*node.connman)), std::chrono::minutes{5});
     }
     // ********************************************************* Step 12: start node
 

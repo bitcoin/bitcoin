@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <util/ref.h>
 
 namespace auxpow_tests
 {
@@ -79,7 +80,7 @@ public:
    * to work on with the given address for the block reward and return the
    * necessary information for the miner to construct an auxpow for it.
    */
-  UniValue createAuxBlock (const CScript& scriptPubKey);
+  UniValue createAuxBlock (const CScript& scriptPubKey, const util::Ref& context);
 
   /**
    * Performs the main work for the "submitauxblock" RPC:  Look up the block
@@ -88,7 +89,7 @@ public:
    * was accepted.
    */
   bool submitAuxBlock (const std::string& hashHex,
-                       const std::string& auxpowHex) const;
+                       const std::string& auxpowHex, const util::Ref& context) const;
 
   /**
    * Returns the singleton instance of AuxpowMiner that is used for RPCs.

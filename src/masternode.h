@@ -413,7 +413,7 @@ public:
         return ss.GetHash();
     }
 
-    void Relay() const;
+    void Relay(CConnman& connman) const;
 };
 
 #endif // SYSCOIN_MASTERNODE_H

@@ -1227,7 +1227,6 @@ UniValue createauxblock(const JSONRPCRequest& request)
                   + HelpExampleRpc("createauxblock", "\"address\"")
                 },
             }.ToString());
-
      // Check coinbase payout address
     const CTxDestination coinbaseScript
       = DecodeDestination(request.params[0].get_str());
@@ -1237,7 +1236,7 @@ UniValue createauxblock(const JSONRPCRequest& request)
     }
     const CScript scriptPubKey = GetScriptForDestination(coinbaseScript);
 
-    return AuxpowMiner::get ().createAuxBlock(scriptPubKey);
+    return AuxpowMiner::get ().createAuxBlock(scriptPubKey, request.context);
 }
 
 UniValue submitauxblock(const JSONRPCRequest& request)
@@ -1259,7 +1258,7 @@ UniValue submitauxblock(const JSONRPCRequest& request)
                 },
             }.ToString());
      return AuxpowMiner::get ().submitAuxBlock(request.params[0].get_str(),
-                                          request.params[1].get_str());
+                                          request.params[1].get_str(), request.context);
 }
 
  /* ************************************************************************** */

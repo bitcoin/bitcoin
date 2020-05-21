@@ -1090,8 +1090,8 @@ void CMasternode::FlagGovernanceItemsAsDirty()
         mnodeman.AddDirtyGovernanceObjectHash(vecDirty[i]);
     }
 }
-void CMasternodeVerification::Relay() const
+void CMasternodeVerification::Relay(CConnman& connman) const
 {
     CInv inv(MSG_MASTERNODE_VERIFY, GetHash());
-    g_rpc_node->connman->RelayInv(inv);
+    connman.RelayInv(inv);
 }

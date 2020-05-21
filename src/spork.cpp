@@ -278,5 +278,5 @@ bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId) const
 void CSporkMessage::Relay(CConnman& connman)
 {
     CInv inv(MSG_SPORK, GetHash());
-    g_rpc_node->connman->RelayInv(inv);
+    connman.RelayInv(inv);
 }

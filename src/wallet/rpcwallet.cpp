@@ -4471,12 +4471,11 @@ UniValue getauxblock(const JSONRPCRequest& request)
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
     }
-
     /* Create a new block */
     if (request.params.size() == 0)
     {
         const CScript coinbaseScript = g_mining_keys.GetCoinbaseScript(pwallet);
-        const UniValue res = AuxpowMiner::get().createAuxBlock(coinbaseScript);
+        const UniValue res = AuxpowMiner::get().createAuxBlock(coinbaseScript, request.context);
         g_mining_keys.AddBlockHash(pwallet, res["hash"].get_str ());
         return res;
     }
@@ -4486,7 +4485,7 @@ UniValue getauxblock(const JSONRPCRequest& request)
     const std::string& hash = request.params[0].get_str();
 
     const bool fAccepted
-        = AuxpowMiner::get().submitAuxBlock(hash, request.params[1].get_str());
+        = AuxpowMiner::get().submitAuxBlock(hash, request.params[1].get_str(), request.context);
     if (fAccepted)
         g_mining_keys.MarkBlockSubmitted(pwallet, hash);
 

@@ -19,6 +19,7 @@
 #include <key_io.h>
 #include <node/context.h>
 #include <rpc/blockchain.h>
+#include <interfaces/node.h>
 int GetOffsetFromUtc()
 {
 #if QT_VERSION < 0x050200
@@ -116,14 +117,14 @@ void MasternodeList::StartAlias(interfaces::Wallet& wallet, std::string strAlias
             bool fSuccess = CMasternodeBroadcast::Create(wallet, mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
             int nDoS;
-            if (fSuccess && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_rpc_node->connman)) {
+            if (fSuccess && (!clientModel->node().context()->connman || !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *clientModel->node().context()->connman))) {
                 strError = "Failed to verify MNB";
                 fSuccess = false;
             }
 
-            if(fSuccess) {
+            if(fSuccess && clientModel->node().context()->connman) {
                 strStatusHtml += "<br>Successfully started masternode.";
-                mnodeman.NotifyMasternodeUpdates(*g_rpc_node->connman);
+                mnodeman.NotifyMasternodeUpdates(*clientModel->node().context()->connman);
             } else {
                 strStatusHtml += "<br>Failed to start masternode.<br>Error: " + strError;
             }
@@ -161,14 +162,14 @@ void MasternodeList::StartAll(interfaces::Wallet& wallet, std::string strCommand
         bool fSuccess = CMasternodeBroadcast::Create(wallet, mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
         int nDoS;
-        if (fSuccess && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_rpc_node->connman)) {
+        if (fSuccess && (!clientModel->node().context()->connman || !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *clientModel->node().context()->connman))) {
             strError = "Failed to verify MNB";
             fSuccess = false;
         }
 
-        if(fSuccess) {
+        if(fSuccess && clientModel->node().context()->connman) {
             nCountSuccessful++;
-            mnodeman.NotifyMasternodeUpdates(*g_rpc_node->connman);
+            mnodeman.NotifyMasternodeUpdates(*clientModel->node().context()->connman);
         } else {
             nCountFailed++;
             strFailedHtml += "\nFailed to start " + mne.getAlias() + ". Error: " + strError;
