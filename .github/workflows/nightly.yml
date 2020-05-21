@@ -52,7 +52,7 @@ jobs:
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF;
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF;
           make -j2;
           sudo make install
           )
@@ -234,7 +234,7 @@ jobs:
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_ROCKSDB=OFF;
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF;
           make -j2;
           sudo make install
           )

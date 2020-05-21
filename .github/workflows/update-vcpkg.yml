@@ -1,0 +1,17 @@
+name: vcpkg
+
+on:
+  push:
+    paths:
+      - 'depends/packages/veriblock-pop-cpp.mk'
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.VCPKG_REPO_SECRET }}
+          repository: VeriBlock/alt-integration-cpp-vcpkg
+          event-type: update
