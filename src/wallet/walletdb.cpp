@@ -115,8 +115,19 @@ bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
         return false;
     }
 
-    if (!WriteIC(std::make_pair(DBKeys::CRYPTED_KEY, vchPubKey), vchCryptedSecret, false)) {
-        return false;
+    // Compute a checksum of the encrypted key
+    uint256 checksum = Hash(vchCryptedSecret.begin(), vchCryptedSecret.end());
+
+    const auto key = std::make_pair(DBKeys::CRYPTED_KEY, vchPubKey);
+    if (!WriteIC(key, std::make_pair(vchCryptedSecret, checksum), false)) {
+        // It may already exist, so try writing just the checksum
+        std::vector<unsigned char> val;
+        if (!m_batch.Read(key, val)) {
+            return false;
+        }
+        if (!WriteIC(key, std::make_pair(val, checksum), true)) {
+            return false;
+        }
     }
     EraseIC(std::make_pair(DBKeys::KEY, vchPubKey));
     return true;
@@ -397,9 +408,21 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             }
             std::vector<unsigned char> vchPrivKey;
             ssValue >> vchPrivKey;
+
+            // Get the checksum and check it
+            bool checksum_valid = false;
+            if (!ssValue.eof()) {
+                uint256 checksum;
+                ssValue >> checksum;
+                if ((checksum_valid = Hash(vchPrivKey.begin(), vchPrivKey.end()) != checksum)) {
+                    strErr = "Error reading wallet database: Crypted key corrupt";
+                    return false;
+                }
+            }
+
             wss.nCKeys++;
 
-            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadCryptedKey(vchPubKey, vchPrivKey))
+            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadCryptedKey(vchPubKey, vchPrivKey, checksum_valid))
             {
                 strErr = "Error reading wallet database: LegacyScriptPubKeyMan::LoadCryptedKey failed";
                 return false;
