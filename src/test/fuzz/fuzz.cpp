@@ -19,8 +19,6 @@ static bool read_stdin(std::vector<uint8_t>& data)
     ssize_t length = 0;
     while ((length = read(STDIN_FILENO, buffer, 1024)) > 0) {
         data.insert(data.end(), buffer, buffer + length);
-
-        if (data.size() > (1 << 20)) return false;
     }
     return length == 0;
 }
