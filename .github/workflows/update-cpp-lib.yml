@@ -16,8 +16,8 @@ jobs:
           echo "::set-env name=SHA256::$(cut -d " " -f1 <<< "$(sha256sum "${{ github.event.client_payload.sha }}.tar.gz")")"
       - name: Get current version and SHA256 hash of veriblock-pop-cpp.
         run: |
-          echo "::set-env name=CURRENT_VERSION::$(< ./depends/packages/veriblock-pop-cpp.mk head -n 2 | tail -n 1 | cut -f2 -d "=")
-          echo "::set-env name=CURRENT_SHA256::$(< ./depends/packages/veriblock-pop-cpp.mk head -n 5 | tail -n 1 | cut -f2 -d "=")
+          echo "::set-env name=CURRENT_VERSION::$(< ./depends/packages/veriblock-pop-cpp.mk head -n 2 | tail -n 1 | cut -f2 -d "=")"
+          echo "::set-env name=CURRENT_SHA256::$(< ./depends/packages/veriblock-pop-cpp.mk head -n 5 | tail -n 1 | cut -f2 -d "=")"
       - name: update veriblock-pop-cpp
         run: |
           sed -i -r "s/${CURRENT_VERSION}$/${{ github.event.client_payload.sha }}/" ./depends/packages/veriblock-pop-cpp.mk
