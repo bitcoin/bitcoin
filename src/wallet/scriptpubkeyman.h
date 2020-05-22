@@ -237,7 +237,7 @@ public:
 
     virtual uint256 GetID() const { return uint256(); }
 
-    virtual void SetType(OutputType type, bool internal) {}
+    virtual void SetInternal(bool internal) {}
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
     template<typename... Params>
@@ -396,7 +396,7 @@ public:
 
     uint256 GetID() const override;
 
-    void SetType(OutputType type, bool internal) override;
+    void SetInternal(bool internal) override;
 
     // Map from Key ID to key metadata.
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata GUARDED_BY(cs_KeyStore);
@@ -524,13 +524,10 @@ private:
     PubKeyMap m_map_pubkeys GUARDED_BY(cs_desc_man);
     int32_t m_max_cached_index = -1;
 
-    OutputType m_address_type;
     bool m_internal = false;
 
     KeyMap m_map_keys GUARDED_BY(cs_desc_man);
     CryptedKeyMap m_map_crypted_keys GUARDED_BY(cs_desc_man);
-
-    bool SetCrypted();
 
     //! keeps track of whether Unlock has run a thorough check before
     bool m_decryption_thoroughly_checked = false;
@@ -551,9 +548,9 @@ public:
         :   ScriptPubKeyMan(storage),
             m_wallet_descriptor(descriptor)
         {}
-    DescriptorScriptPubKeyMan(WalletStorage& storage, OutputType address_type, bool internal)
+    DescriptorScriptPubKeyMan(WalletStorage& storage, bool internal)
         :   ScriptPubKeyMan(storage),
-            m_address_type(address_type), m_internal(internal)
+            m_internal(internal)
         {}
 
     mutable RecursiveMutex cs_desc_man;
@@ -578,7 +575,7 @@ public:
     bool IsHDEnabled() const override;
 
     //! Setup descriptors based on the given CExtkey
-    bool SetupDescriptorGeneration(const CExtKey& master_key);
+    bool SetupDescriptorGeneration(const CExtKey& master_key, OutputType addr_type);
 
     bool HavePrivateKeys() const override;
 
@@ -602,7 +599,7 @@ public:
 
     uint256 GetID() const override;
 
-    void SetType(OutputType type, bool internal) override;
+    void SetInternal(bool internal) override;
 
     void SetCache(const DescriptorCache& cache);
 
