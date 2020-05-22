@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
 # Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 Xenios SEZC
+# https://www.veriblock.org
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""An example functional test
-
-The module-level docstring should include a high-level description of
-what the test is doing. It's the first thing people see when they open
-the file and should give the reader information about *what* the test
-is testing and *how* it's being tested
-"""
-# Imports should be in PEP8 ordering (std library first, then third party
-# libraries then local imports).
+"""Test VeriBlock PoP merkle root calculation"""
 from collections import defaultdict
 
 # Avoid wildcard * imports
@@ -31,11 +25,7 @@ from test_framework.util import (
 )
 
 
-class ExampleTest(BitcoinTestFramework):
-    # Each functional test is a subclass of the BitcoinTestFramework class.
-
-    # Override the set_test_params(), skip_test_if_missing_module(), add_options(), setup_chain(), setup_network()
-    # and setup_nodes() methods to customize the test setup as required.
+class PoPMerkleRootTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -67,4 +57,4 @@ class ExampleTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    ExampleTest().main()
+    PoPMerkleRootTest().main()
