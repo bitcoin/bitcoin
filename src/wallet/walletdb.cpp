@@ -540,7 +540,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         } else if (strType == DBKeys::HDCHAIN) {
             CHDChain chain;
             ssValue >> chain;
-            pwallet->GetOrCreateLegacyScriptPubKeyMan()->SetHDChain(chain, true);
+            pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadHDChain(chain);
         } else if (strType == DBKeys::FLAGS) {
             uint64_t flags;
             ssValue >> flags;
