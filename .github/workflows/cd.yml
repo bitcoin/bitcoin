@@ -9,6 +9,7 @@ on:
   pull_request:
     branches:
     - master
+    - test/auto-pr
 
 jobs:
   ubuntu-base-asan:

@@ -10,6 +10,28 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: veriblock-pop-cpp
+      - name: Download and get SHA256 hash of latest veriblock-pop-cpp commit.
         run: |
-          echo ${{ github.event.client_payload.sha }}
+          wget -q https://github.com/VeriBlock/alt-integration-cpp/archive/${{ github.event.client_payload.sha }}.tar.gz
+          echo "::set-env name=SHA256::$(cut -d " " -f1 <<< "$(sha256sum "${{ github.event.client_payload.sha }}.tar.gz")")"
+      - name: update veriblock-pop-cpp
+        run: |
+          sed -i -r "s/^$(package)_version=.*$/$(package)_version=${{ github.event.client_payload.sha }}/" ./depends/packages/veriblock-pop-cpp.mk
+          sed -i -r "s/^$(package)_sha256_hash=.*$/$(package)_sha256_hash=${SHA256}/" ./depends/packages/veriblock-pop-cpp.mk
+      - name: Create PR
+        id: cpr
+        uses: peter-evans/create-pull-request@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update veriblock-pop-cpp
+          committer: GitHub <noreply@github.com>
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          title: "[Test] Update veriblock-pop-cpp to ${{ github.event.client_payload.sha }}"
+          reviewers: overcookedpanda
+          draft: true
+          branch: test/auto-pr
+          request-to-parent: false
+      - name: Check outputs
+        run: |
+          echo "Pull Request Number - ${{ env.PULL_REQUEST_NUMBER }}"
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
