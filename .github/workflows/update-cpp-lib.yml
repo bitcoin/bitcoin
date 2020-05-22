@@ -14,11 +14,16 @@ jobs:
         run: |
           wget -q https://github.com/VeriBlock/alt-integration-cpp/archive/${{ github.event.client_payload.sha }}.tar.gz
           echo "::set-env name=SHA256::$(cut -d " " -f1 <<< "$(sha256sum "${{ github.event.client_payload.sha }}.tar.gz")")"
+      - name: Get current version and SHA256 hash of veriblock-pop-cpp.
+        run: |
+          echo "::set-env name=CURRENT_VERSION::$(< ./depends/packages/veriblock-pop-cpp.mk head -n 2 | tail -n 1 | cut -f2 -d "=")
+          echo "::set-env name=CURRENT_SHA256::$(< ./depends/packages/veriblock-pop-cpp.mk head -n 5 | tail -n 1 | cut -f2 -d "=")
       - name: update veriblock-pop-cpp
         run: |
-          sed -i -r "s/^$(package)_version=.*$/$(package)_version=${{ github.event.client_payload.sha }}/" ./depends/packages/veriblock-pop-cpp.mk
-          sed -i -r "s/^$(package)_sha256_hash=.*$/$(package)_sha256_hash=${SHA256}/" ./depends/packages/veriblock-pop-cpp.mk
+          sed -i -r "s/${CURRENT_VERSION}$/${{ github.event.client_payload.sha }}/" ./depends/packages/veriblock-pop-cpp.mk
+          sed -i -r "s/${CURRENT_SHA256}$/${SHA256}/" ./depends/packages/veriblock-pop-cpp.mk
       - name: Create PR
+        if: success()
         id: cpr
         uses: peter-evans/create-pull-request@v2
         with:
