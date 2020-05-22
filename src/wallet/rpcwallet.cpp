@@ -4335,8 +4335,8 @@ static RPCHelpMan sethdseed()
         if (!newHdChain.SetSeed(SecureVector(key.begin(), key.end()), true)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key: SetSeed failed");
         }
-        if (!spk_man.SetHDChainSingle(newHdChain, false)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key: SetHDChainSingle failed");
+        if (!spk_man.AddHDChainSingle(newHdChain)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key: AddHDChainSingle failed");
         }
         // add default account
         newHdChain.AddAccount();

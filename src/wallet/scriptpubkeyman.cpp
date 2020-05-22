@@ -268,7 +268,7 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
 
     if (!hdChainCurrent.IsNull()) {
         assert(EncryptHDChain(master_key, m_hd_chain));
-        assert(SetHDChain(m_hd_chain));
+        assert(LoadHDChain(m_hd_chain));
 
         CHDChain hdChainCrypted;
         assert(GetHDChain(hdChainCrypted));
@@ -277,7 +277,7 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
         assert(hdChainCurrent.GetID() == hdChainCrypted.GetID());
         assert(hdChainCurrent.GetSeedHash() != hdChainCrypted.GetSeedHash());
 
-        assert(SetHDChain(*encrypted_batch, hdChainCrypted, false));
+        assert(AddHDChain(*encrypted_batch, hdChainCrypted));
     }
 
     encrypted_batch = nullptr;
@@ -396,7 +396,7 @@ void LegacyScriptPubKeyMan::GenerateNewCryptedHDChain(const SecureString& secure
     CHDChain hdChainPrev = hdChainTmp;
     bool res = EncryptHDChain(vMasterKey, hdChainTmp);
     assert(res);
-    res = SetHDChain(hdChainTmp);
+    res = LoadHDChain(hdChainTmp);
     assert(res);
 
     CHDChain hdChainCrypted;
@@ -407,8 +407,8 @@ void LegacyScriptPubKeyMan::GenerateNewCryptedHDChain(const SecureString& secure
     assert(hdChainPrev.GetID() == hdChainCrypted.GetID());
     assert(hdChainPrev.GetSeedHash() != hdChainCrypted.GetSeedHash());
 
-    if (!SetHDChainSingle(hdChainCrypted, false)) {
-        throw std::runtime_error(std::string(__func__) + ": SetHDChainSingle failed");
+    if (!AddHDChainSingle(hdChainCrypted)) {
+        throw std::runtime_error(std::string(__func__) + ": AddHDChainSingle failed");
     }
 }
 
@@ -426,8 +426,8 @@ void LegacyScriptPubKeyMan::GenerateNewHDChain(const SecureString& secureMnemoni
     // add default account
     newHdChain.AddAccount();
 
-    if (!SetHDChainSingle(newHdChain, false)) {
-        throw std::runtime_error(std::string(__func__) + ": SetHDChainSingle failed");
+    if (!AddHDChainSingle(newHdChain)) {
+        throw std::runtime_error(std::string(__func__) + ": AddHDChainSingle failed");
     }
 
     if (!NewKeyPool()) {
@@ -435,14 +435,24 @@ void LegacyScriptPubKeyMan::GenerateNewHDChain(const SecureString& secureMnemoni
     }
 }
 
-bool LegacyScriptPubKeyMan::SetHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly)
+bool LegacyScriptPubKeyMan::LoadHDChain(const CHDChain& chain)
 {
     LOCK(cs_KeyStore);
 
-    if (!SetHDChain(chain))
+    if (m_storage.HasEncryptionKeys() != chain.IsCrypted()) return false;
+
+    m_hd_chain = chain;
+    return true;
+}
+
+bool LegacyScriptPubKeyMan::AddHDChain(WalletBatch &batch, const CHDChain& chain)
+{
+    LOCK(cs_KeyStore);
+
+    if (!LoadHDChain(chain))
         return false;
 
-    if (!memonly) {
+    {
         if (chain.IsCrypted() && encrypted_batch) {
             if (!encrypted_batch->WriteHDChain(chain))
                 throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed for encrypted batch");
@@ -458,10 +468,10 @@ bool LegacyScriptPubKeyMan::SetHDChain(WalletBatch &batch, const CHDChain& chain
     return true;
 }
 
-bool LegacyScriptPubKeyMan::SetHDChainSingle(const CHDChain& chain, bool memonly)
+bool LegacyScriptPubKeyMan::AddHDChainSingle(const CHDChain& chain)
 {
     WalletBatch batch(m_storage.GetDatabase());
-    return SetHDChain(batch, chain, memonly);
+    return AddHDChain(batch, chain);
 }
 
 bool LegacyScriptPubKeyMan::GetDecryptedHDChain(CHDChain& hdChainRet)
@@ -1090,16 +1100,6 @@ bool LegacyScriptPubKeyMan::AddWatchOnly(const CScript& dest, int64_t nCreateTim
     return AddWatchOnly(dest);
 }
 
-bool LegacyScriptPubKeyMan::SetHDChain(const CHDChain& chain)
-{
-    LOCK(cs_KeyStore);
-
-    if (m_storage.HasEncryptionKeys() != chain.IsCrypted()) return false;
-
-    m_hd_chain = chain;
-    return true;
-}
-
 bool LegacyScriptPubKeyMan::HaveHDKey(const CKeyID &address, CHDChain& hdChainCurrent) const
 {
     LOCK(cs_KeyStore);
@@ -1322,8 +1322,8 @@ void LegacyScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& 
     if (!hdChainCurrent.SetAccount(nAccountIndex, acc))
         throw std::runtime_error(std::string(__func__) + ": SetAccount failed");
 
-    if (!SetHDChain(batch, hdChainCurrent, false)) {
-        throw std::runtime_error(std::string(__func__) + ": SetHDChain failed");
+    if (!AddHDChain(batch, hdChainCurrent)) {
+        throw std::runtime_error(std::string(__func__) + ": AddHDChain failed");
     }
 
     if (!AddHDPubKey(batch, childKey.Neuter(), fInternal))

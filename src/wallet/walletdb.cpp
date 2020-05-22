@@ -516,7 +516,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             CHDChain chain;
             ssValue >> chain;
             assert ((strType == DBKeys::CRYPTED_HDCHAIN) == chain.IsCrypted());
-            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->SetHDChainSingle(chain, true))
+            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadHDChain(chain))
             {
                 strErr = "Error reading wallet database: SetHDChain failed";
                 return false;
@@ -557,7 +557,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         } else if (strType == DBKeys::FLAGS) {
             uint64_t flags;
             ssValue >> flags;
-            if (!pwallet->SetWalletFlags(flags, true)) {
+            if (!pwallet->LoadWalletFlags(flags)) {
                 strErr = "Error reading wallet database: Unknown non-tolerable wallet flags found";
                 return false;
             }
@@ -768,10 +768,10 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     // Set the active ScriptPubKeyMans
     for (auto spk_man : wss.m_active_external_spks) {
-        pwallet->SetActiveScriptPubKeyMan(spk_man.second, /* internal */ false, /* memonly */ true);
+        pwallet->LoadActiveScriptPubKeyMan(spk_man.second, /* internal */ false);
     }
     for (auto spk_man : wss.m_active_internal_spks) {
-        pwallet->SetActiveScriptPubKeyMan(spk_man.second, /* internal */ true, /* memonly */ true);
+        pwallet->LoadActiveScriptPubKeyMan(spk_man.second, /* internal */ true);
     }
 
     // Set the descriptor caches
