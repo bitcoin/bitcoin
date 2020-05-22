@@ -149,7 +149,7 @@ PoPRewards PopServiceImpl::getPopRewards(const CBlockIndex& pindexPrev, const Co
         rewardValue >>= halvings;
         if ((rewardValue != 0) && (halvings < 64)) {
             CScript key = CScript(r.first.begin(), r.first.end());
-            btcRewards[key] = rewardValue;
+            btcRewards[key] = config.POP_REWARD_COEFFICIENT * rewardValue;
         }
     }
 
