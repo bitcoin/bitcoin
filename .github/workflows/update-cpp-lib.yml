@@ -33,8 +33,8 @@ jobs:
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
           title: "Update veriblock-pop-cpp to ${{ github.event.client_payload.sha }}"
           reviewers: Warchant,overcookedpanda
-          draft: true
-          branch: master
+          draft: false
+          branch: veriblock-pop-cpp
           request-to-parent: false
       - name: Check outputs
         run: |
