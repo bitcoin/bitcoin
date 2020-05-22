@@ -21,6 +21,9 @@ $(package)_config_opts_x86_64_android=address-model=64
 $(package)_config_opts_armv7a_android=address-model=32
 $(package)_toolset_$(host_os)=gcc
 $(package)_toolset_darwin=clang
+ifneq (,$(findstring clang,$($(package)_cxx)))
+   $(package)_toolset_$(host_os)=clang
+endif
 $(package)_archiver_$(host_os)=$($(package)_ar)
 $(package)_config_libraries=filesystem,system,thread,test
 $(package)_cxxflags=-std=c++11 -fvisibility=hidden
