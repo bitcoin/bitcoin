@@ -9,6 +9,7 @@ from .messages import ser_uint256, hash256, uint256_from_str
 from .test_node import TestNode
 
 KEYSTONE_INTERVAL = 5
+POP_PAYOUT_DELAY = 50
 
 
 def isKeystone(height):
