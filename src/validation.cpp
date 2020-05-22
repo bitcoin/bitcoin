@@ -1411,6 +1411,7 @@ void CChainState::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationSt
 {
     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
         pindex->nStatus |= BLOCK_FAILED_VALID;
+        VeriBlock::getService<VeriBlock::PopService>().invalidateBlockByHash(pindex->GetBlockHash());
         m_blockman.m_failed_blocks.insert(pindex);
         setDirtyBlockIndex.insert(pindex);
         setBlockIndexCandidates.erase(pindex);
@@ -2989,6 +2990,8 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, const CChainParam
     // blocks.
     LOCK(m_cs_chainstate);
 
+    VeriBlock::getService<VeriBlock::PopService>().invalidateBlockByHash(pindex->GetBlockHash());
+
     // We'll be acquiring and releasing cs_main below, to allow the validation
     // callbacks to run. However, we should keep the block index in a
     // consistent state as we disconnect blocks -- in particular we need to
@@ -3125,6 +3128,9 @@ void CChainState::ResetBlockFailureFlags(CBlockIndex* pindex)
     AssertLockHeld(cs_main);
 
     int nHeight = pindex->nHeight;
+
+    auto& pop = VeriBlock::getService<VeriBlock::PopService>();
+    pop.getAltTree().revalidateSubtree(pindex->GetBlockHash().asVector(), altintegration::BLOCK_FAILED_MASK, true);
 
     // Remove the invalidity flag from this block and all its descendants.
     BlockMap::iterator it = m_blockman.m_block_index.begin();
@@ -3787,6 +3793,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
         if (state.IsInvalid() && state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
+            VeriBlock::getService<VeriBlock::PopService>().invalidateBlockByHash(pindex->GetBlockHash());
             setDirtyBlockIndex.insert(pindex);
         }
         return error("%s: %s", __func__, FormatStateMessage(state));

@@ -23,11 +23,11 @@ namespace VeriBlock {
 class PopServiceImpl : public PopService
 {
 private:
-    std::mutex mutex;
     std::shared_ptr<altintegration::AltTree> altTree;
 
 public:
-    std::string toPrettyString() const override {
+    std::string toPrettyString() const override
+    {
         return altTree->toPrettyString();
     };
 
@@ -42,7 +42,6 @@ public:
     ~PopServiceImpl() override = default;
 
     bool validatePopTxInput(const CTxIn& in, TxValidationState& state) override;
-
     bool validatePopTxOutput(const CTxOut& out, TxValidationState& state) override;
     PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) override;
     void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) override;
@@ -53,8 +52,6 @@ public:
 
     std::vector<BlockBytes> getLastKnownVBKBlocks(size_t blocks) override;
     std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks) override;
-
-    void rewardsCalculateOutputs(const int& blockHeight, const CBlockIndex& endorsedBlock, const CBlockIndex& contaningBlocksTip, const CBlockIndex* difficulty_start_interval, const CBlockIndex* difficulty_end_interval, std::map<CScript, int64_t>& outputs) override;
 
     bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state) override;
     bool addAllBlockPayloads(const CBlockIndex& indexPrev, const CBlock& fullBlock, BlockValidationState& state) override;
