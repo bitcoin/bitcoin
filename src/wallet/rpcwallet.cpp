@@ -2726,6 +2726,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
     }
     if (!request.params[5].isNull() && request.params[5].get_bool()) {
         flags |= WALLET_FLAG_DESCRIPTORS;
+        warnings.emplace_back(Untranslated("Wallet is an experimental descriptor wallet"));
     }
 
     bilingual_str error;
