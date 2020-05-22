@@ -358,7 +358,7 @@ class TestNode():
         return True
 
     def wait_until_stopped(self, timeout=BITCOIND_PROC_WAIT_TIMEOUT):
-        wait_until(self.is_node_stopped, timeout=timeout, timeout_factor=self.timeout_factor)
+        wait_until(self.is_node_stopped, timeout=timeout * self.timeout_factor)
 
     @contextlib.contextmanager
     def assert_debug_log(self, expected_msgs, unexpected_msgs=None, timeout=2):

@@ -226,7 +226,7 @@ Note: gdb attach step may require ptrace_scope to be modified, or `sudo` precedi
 See this link for considerations: https://www.kernel.org/doc/Documentation/security/Yama.txt
 
 Often while debugging rpc calls from functional tests, the test might reach timeout before
-process can return a response. Use `--timeout-factor 0` to disable all rpc timeouts for that partcular
+process can return a response. Use `--timeout-factor 0` to disable all rpc timeouts for that particular
 functional test. Ex: `test/functional/wallet_hd.py --timeout-factor 0`.
 
 ##### Profiling
