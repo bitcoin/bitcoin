@@ -544,7 +544,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         } else if (strType == DBKeys::FLAGS) {
             uint64_t flags;
             ssValue >> flags;
-            if (!pwallet->SetWalletFlags(flags, true)) {
+            if (!pwallet->LoadWalletFlags(flags)) {
                 strErr = "Error reading wallet database: Unknown non-tolerable wallet flags found";
                 return false;
             }
