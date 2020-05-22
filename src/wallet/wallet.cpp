@@ -5559,7 +5559,7 @@ void CWallet::SetActiveScriptPubKeyMan(uint256 id, bool internal, bool memonly)
     WalletLogPrintf("Setting spkMan to active: id = %s, type = %d, internal = %d\n", id.ToString(), static_cast<int>(OutputType::LEGACY), static_cast<int>(internal));
     auto& spk_mans = internal ? m_internal_spk_managers : m_external_spk_managers;
     auto spk_man = m_spk_managers.at(id).get();
-    spk_man->SetType(internal);
+    spk_man->SetInternal(internal);
     spk_mans = spk_man;
 
     if (!memonly) {
