@@ -31,10 +31,10 @@ jobs:
           commit-message: Update veriblock-pop-cpp
           committer: GitHub <noreply@github.com>
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
-          title: "[Test] Update veriblock-pop-cpp to ${{ github.event.client_payload.sha }}"
-          reviewers: overcookedpanda
+          title: "Update veriblock-pop-cpp to ${{ github.event.client_payload.sha }}"
+          reviewers: Warchant,overcookedpanda
           draft: true
-          branch: test/auto-pr
+          branch: master
           request-to-parent: false
       - name: Check outputs
         run: |

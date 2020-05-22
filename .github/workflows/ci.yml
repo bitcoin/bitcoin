@@ -10,7 +10,6 @@ on:
     branches:
       - develop
       - master
-      - test/auto-pr
 
 jobs:
   linux-native:
