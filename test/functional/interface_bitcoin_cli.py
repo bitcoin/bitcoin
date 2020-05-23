@@ -67,6 +67,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         if self.is_wallet_compiled():
             self.log.info("Test -getinfo and bitcoin-cli getwalletinfo return expected wallet info")
             assert_equal(cli_get_info['balance'], BALANCE)
+            assert 'balances' not in cli_get_info.keys()
             wallet_info = self.nodes[0].getwalletinfo()
             assert_equal(cli_get_info['keypoolsize'], wallet_info['keypoolsize'])
             assert_equal(cli_get_info['unlocked_until'], wallet_info['unlocked_until'])
@@ -76,42 +77,60 @@ class TestBitcoinCli(BitcoinTestFramework):
 
             # Setup to test -getinfo and -rpcwallet= with multiple wallets.
             wallets = ['', 'Encrypted', 'secret']
-            amounts = [Decimal('59.999928'), Decimal(9), Decimal(31)]
+            amounts = [BALANCE + Decimal('9.999928'), Decimal(9), Decimal(31)]
             self.nodes[0].createwallet(wallet_name=wallets[1])
             self.nodes[0].createwallet(wallet_name=wallets[2])
             w1 = self.nodes[0].get_wallet_rpc(wallets[0])
             w2 = self.nodes[0].get_wallet_rpc(wallets[1])
             w3 = self.nodes[0].get_wallet_rpc(wallets[2])
             w1.walletpassphrase(password, self.rpc_timeout)
+            w2.encryptwallet(password)
             w1.sendtoaddress(w2.getnewaddress(), amounts[1])
             w1.sendtoaddress(w3.getnewaddress(), amounts[2])
 
             # Mine a block to confirm; adds a block reward (50 BTC) to the default wallet.
             self.nodes[0].generate(1)
 
-            self.log.info("Test -getinfo with multiple wallets loaded returns no balance")
-            assert_equal(set(self.nodes[0].listwallets()), set(wallets))
-            assert 'balance' not in self.nodes[0].cli('-getinfo').send_cli().keys()
-
             self.log.info("Test -getinfo with multiple wallets and -rpcwallet returns specified wallet balance")
             for i in range(len(wallets)):
-                cli_get_info = self.nodes[0].cli('-getinfo').send_cli('-rpcwallet={}'.format(wallets[i]))
+                cli_get_info = self.nodes[0].cli('-getinfo', '-rpcwallet={}'.format(wallets[i])).send_cli()
+                assert 'balances' not in cli_get_info.keys()
                 assert_equal(cli_get_info['balance'], amounts[i])
 
-            self.log.info("Test -getinfo with multiple wallets and -rpcwallet=non-existing-wallet returns no balance")
-            assert 'balance' not in self.nodes[0].cli('-getinfo').send_cli('-rpcwallet=does-not-exist').keys()
+            self.log.info("Test -getinfo with multiple wallets and -rpcwallet=non-existing-wallet returns no balances")
+            cli_get_info_keys = self.nodes[0].cli('-getinfo', '-rpcwallet=does-not-exist').send_cli().keys()
+            assert 'balance' not in cli_get_info_keys
+            assert 'balances' not in cli_get_info_keys
+
+            self.log.info("Test -getinfo with multiple wallets returns all loaded wallet names and balances")
+            assert_equal(set(self.nodes[0].listwallets()), set(wallets))
+            cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
+            assert 'balance' not in cli_get_info.keys()
+            assert_equal(cli_get_info['balances'], {k: v for k, v in zip(wallets, amounts)})
+
+            # Unload the default wallet and re-verify.
+            self.nodes[0].unloadwallet(wallets[0])
+            assert wallets[0] not in self.nodes[0].listwallets()
+            cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
+            assert 'balance' not in cli_get_info.keys()
+            assert_equal(cli_get_info['balances'], {k: v for k, v in zip(wallets[1:], amounts[1:])})
 
             self.log.info("Test -getinfo after unloading all wallets except a non-default one returns its balance")
-            self.nodes[0].unloadwallet(wallets[0])
             self.nodes[0].unloadwallet(wallets[2])
             assert_equal(self.nodes[0].listwallets(), [wallets[1]])
-            assert_equal(self.nodes[0].cli('-getinfo').send_cli()['balance'], amounts[1])
+            cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
+            assert 'balances' not in cli_get_info.keys()
+            assert_equal(cli_get_info['balance'], amounts[1])
 
-            self.log.info("Test -getinfo -rpcwallet=remaining-non-default-wallet returns its balance")
-            assert_equal(self.nodes[0].cli('-getinfo').send_cli('-rpcwallet={}'.format(wallets[1]))['balance'], amounts[1])
+            self.log.info("Test -getinfo with -rpcwallet=remaining-non-default-wallet returns only its balance")
+            cli_get_info = self.nodes[0].cli('-getinfo', '-rpcwallet={}'.format(wallets[1])).send_cli()
+            assert 'balances' not in cli_get_info.keys()
+            assert_equal(cli_get_info['balance'], amounts[1])
 
-            self.log.info("Test -getinfo with -rpcwallet=unloaded wallet returns no balance")
-            assert 'balance' not in self.nodes[0].cli('-getinfo').send_cli('-rpcwallet={}'.format(wallets[2])).keys()
+            self.log.info("Test -getinfo with -rpcwallet=unloaded wallet returns no balances")
+            cli_get_info = self.nodes[0].cli('-getinfo', '-rpcwallet={}'.format(wallets[2])).send_cli()
+            assert 'balance' not in cli_get_info_keys
+            assert 'balances' not in cli_get_info_keys
         else:
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
             self.nodes[0].generate(1)  # maintain block parity with the wallet_compiled conditional branch
