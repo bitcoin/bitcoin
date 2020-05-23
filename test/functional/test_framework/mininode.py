@@ -371,7 +371,7 @@ class P2PInterface(P2PConnection):
 
     # Connection helper methods
 
-    def wait_until(self, test_function, timeout):
+    def wait_until(self, test_function, timeout=60):
         wait_until(test_function, timeout=timeout, lock=mininode_lock, timeout_factor=self.timeout_factor)
 
     def wait_for_disconnect(self, timeout=60):
