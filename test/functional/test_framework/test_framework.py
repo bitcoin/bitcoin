@@ -596,7 +596,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             raise SkipTest("python3-zmq module not available.")
 
     def skip_if_no_pypopminer(self):
-        """Attempt to import the zmq package and skip the test if the import fails."""
+        """Attempt to import the pypopminer package and skip the test if the import fails."""
         try:
             import pypopminer  # noqa
         except ImportError:

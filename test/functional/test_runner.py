@@ -113,6 +113,7 @@ BASE_SCRIPTS = [
     # vv Tests less than 30s vv
     'feature_pop_merkleroot.py',
     'feature_pop_payout.py',
+    'feature_pop_sync.py',
     'wallet_keypool_topup.py',
     'feature_fee_estimation.py',
     'interface_zmq.py',

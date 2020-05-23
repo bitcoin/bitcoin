@@ -6,7 +6,9 @@
 """Test framework addition to include VeriBlock PoP functions"""
 import struct
 from .messages import ser_uint256, hash256, uint256_from_str
+from .script import hash160, CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG
 from .test_node import TestNode
+from .util import hex_str_to_bytes
 
 KEYSTONE_INTERVAL = 5
 POP_PAYOUT_DELAY = 50
@@ -40,6 +42,27 @@ def getKeystones(node, height):
     b = node.getblockhash(prev2)
 
     return [a, b]
+
+
+def endorse_block(node, apm, height: int, addr: str):
+    from pypopminer import PublicationData
+
+    # get pubkey for that address
+    pubkey = node.getaddressinfo(addr)['pubkey']
+    pkh = hash160(hex_str_to_bytes(pubkey))
+    script = CScript([OP_DUP, OP_HASH160, pkh, OP_EQUALVERIFY, OP_CHECKSIG])
+    payoutInfo = script.hex()
+
+    popdata = node.getpopdata(height)
+    last_vbk = popdata['last_known_veriblock_blocks'][0]
+    header = popdata['block_header']
+    pub = PublicationData()
+    pub.header = header
+    pub.payoutInfo = payoutInfo
+    pub.identifier = 0x3ae6ca
+    payloads = apm.endorseAltBlock(pub, last_vbk)
+    txid = node.submitpop(payloads.atv, payloads.vtbs)
+    return txid
 
 
 class ContextInfoContainer:

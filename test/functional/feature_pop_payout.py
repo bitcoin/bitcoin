@@ -17,25 +17,12 @@ Expected balance is POW_PAYOUT * 10 + pop payout. (node0 has only 10 mature coin
 
 """
 
-from collections import defaultdict
-
-# Avoid wildcard * imports
-from test_framework.blocktools import (create_block, create_coinbase)
-from test_framework.messages import CInv
-from test_framework.mininode import (
-    P2PInterface,
-    mininode_lock,
-    msg_block,
-    msg_getdata,
-)
 from test_framework.payout import POW_PAYOUT
-from test_framework.pop import POP_PAYOUT_DELAY
-from test_framework.script import hash160, CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG
+from test_framework.pop import POP_PAYOUT_DELAY, endorse_block
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_equal,
     connect_nodes,
-    wait_until, sync_mempools, hex_str_to_bytes,
+    sync_mempools,
 )
 
 
@@ -50,48 +37,17 @@ class PopPayouts(BitcoinTestFramework):
         self.skip_if_no_pypopminer()
 
     def setup_network(self):
-        """Setup the test network topology
-
-        Often you won't need to override this, since the standard network topology
-        (linear: node0 <-> node1 <-> node2 <-> ...) is fine for most tests.
-
-        If you do override this method, remember to start the nodes, assign
-        them to self.nodes, connect them and then sync."""
-
         self.setup_nodes()
 
-        # In this test, we're not connecting node2 to node0 or node1. Calls to
-        # sync_all() should not include node2, since we're not expecting it to
-        # sync.
         connect_nodes(self.nodes[0], 1)
         self.sync_all(self.nodes)
-
-    def _endorse_block(self, node, height, payout):
-        from pypopminer import PublicationData
-
-        popdata = node.getpopdata(height)
-        last_vbk = popdata['last_known_veriblock_blocks'][0]
-        header = popdata['block_header']
-        pub = PublicationData()
-        pub.header = header
-        pub.payoutInfo = payout
-        pub.identifier = 0x3ae6ca
-        payloads = self.apm.endorseAltBlock(pub, last_vbk)
-        txid = node.submitpop(payloads.atv, payloads.vtbs)
-        return txid
 
     def _case1_endorse_keystone_get_paid(self):
         self.log.warning("running _case1_endorse_keystone_get_paid()")
         # endorse block 5
         addr = self.nodes[0].getnewaddress()
         self.log.info("endorsing block 5 on node0 by miner {}".format(addr))
-
-        # get pubkey for that address
-        pubkey = self.nodes[0].getaddressinfo(addr)['pubkey']
-        pkh = hash160(hex_str_to_bytes(pubkey))
-        script = CScript([OP_DUP, OP_HASH160, pkh, OP_EQUALVERIFY, OP_CHECKSIG])
-        payoutInfo = script.hex()
-        txid = self._endorse_block(self.nodes[0], 5, payoutInfo)
+        txid = endorse_block(self.nodes[0], self.apm, 5, addr)
 
         # wait until node[1] gets relayed pop tx
         sync_mempools(self.nodes)
