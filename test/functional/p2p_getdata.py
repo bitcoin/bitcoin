@@ -9,12 +9,8 @@ from test_framework.messages import (
     CInv,
     msg_getdata,
 )
-from test_framework.mininode import (
-    mininode_lock,
-    P2PInterface,
-)
+from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import wait_until
 
 
 class P2PStoreBlock(P2PInterface):
@@ -32,21 +28,21 @@ class GetdataTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def run_test(self):
-        self.nodes[0].add_p2p_connection(P2PStoreBlock())
+        p2p_block_store = self.nodes[0].add_p2p_connection(P2PStoreBlock())
 
         self.log.info("test that an invalid GETDATA doesn't prevent processing of future messages")
 
         # Send invalid message and verify that node responds to later ping
         invalid_getdata = msg_getdata()
         invalid_getdata.inv.append(CInv(t=0, h=0))  # INV type 0 is invalid.
-        self.nodes[0].p2ps[0].send_and_ping(invalid_getdata)
+        p2p_block_store.send_and_ping(invalid_getdata)
 
         # Check getdata still works by fetching tip block
         best_block = int(self.nodes[0].getbestblockhash(), 16)
         good_getdata = msg_getdata()
         good_getdata.inv.append(CInv(t=2, h=best_block))
-        self.nodes[0].p2ps[0].send_and_ping(good_getdata)
-        wait_until(lambda: self.nodes[0].p2ps[0].blocks[best_block] == 1, timeout=30, lock=mininode_lock)
+        p2p_block_store.send_and_ping(good_getdata)
+        p2p_block_store.wait_until(lambda: self.nodes[0].p2ps[0].blocks[best_block] == 1)
 
 
 if __name__ == '__main__':
