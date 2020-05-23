@@ -10,6 +10,7 @@
 #include <init.h>
 
 #include <addrman.h>
+#include <altnet.h>
 #include <amount.h>
 #include <banman.h>
 #include <blockfilter.h>
@@ -53,6 +54,8 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <watchdog.h>
+#include <watchdoginterface.h>
 #include <hash.h>
 
 
@@ -168,6 +171,8 @@ void Interrupt(NodeContext& node)
     if (g_txindex) {
         g_txindex->Interrupt();
     }
+    if (node.altstack)
+        node.altstack->Interrupt();
     ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Interrupt(); });
 }
 
@@ -212,6 +217,9 @@ void Shutdown(NodeContext& node)
         LOCK2(::cs_main, ::g_cs_orphans);
         node.connman->StopNodes();
     }
+    if (node.altstack) {
+        node.altstack->Stop();
+    }
 
     StopTorControl();
 
@@ -226,6 +234,7 @@ void Shutdown(NodeContext& node)
     node.peer_logic.reset();
     node.connman.reset();
     node.banman.reset();
+    node.altstack.reset();
 
     if (::mempool.IsLoaded() && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(::mempool);
@@ -256,6 +265,7 @@ void Shutdown(NodeContext& node)
     // After there are no more peers/RPC left to give us new data which may generate
     // CValidationInterface callbacks, flush them...
     GetMainSignals().FlushBackgroundCallbacks();
+    GetWatchSignals().FlushBackgroundCallbacks();
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
@@ -296,6 +306,7 @@ void Shutdown(NodeContext& node)
     node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
+    GetWatchSignals().UnregisterBackgroundSignalScheduler();
     globalVerifyHandle.reset();
     ECC_Stop();
     node.args = nullptr;
@@ -1326,6 +1337,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     }, std::chrono::minutes{1});
 
     GetMainSignals().RegisterBackgroundSignalScheduler(*node.scheduler);
+    GetWatchSignals().RegisterBackgroundSignalScheduler(*node.scheduler);
 
     // Create client interfaces for wallets that are supposed to be loaded
     // according to -wallet and -disablewallet options. This only constructs
@@ -1378,8 +1390,17 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     assert(!node.mempool);
     node.mempool = &::mempool;
 
+    assert(!node.watchdog);
+    node.watchdog = MakeUnique<CWatchdog>();
+
+    assert(!node.altstack);
+    node.altstack = MakeUnique<CAltstack>();
+
     node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, *node.mempool));
     RegisterValidationInterface(node.peer_logic.get());
+
+    node.alt_logic.reset(new AltLogicValidation(node.altstack.get()));
+    RegisterWatchdogInterface(node.alt_logic.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
@@ -1891,6 +1912,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     connOptions.nBestHeight = chain_active_height;
     connOptions.uiInterface = &uiInterface;
     connOptions.m_banman = node.banman.get();
+    connOptions.m_watchdog = node.watchdog.get();
     connOptions.m_msgproc = node.peer_logic.get();
     connOptions.nSendBufferMaxSize = 1000*gArgs.GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
     connOptions.nReceiveFloodSize = 1000*gArgs.GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
@@ -1934,6 +1956,9 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     if (!node.connman->Start(*node.scheduler, connOptions)) {
         return false;
     }
+    if (!node.altstack->Start(node.alt_logic.get())) {
+        return false;
+    }
 
     // ********************************************************* Step 13: finished
 
@@ -1949,5 +1974,9 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL);
 
+    CWatchdog* watchdog = node.watchdog.get();
+    node.scheduler->scheduleEvery([watchdog]{
+            watchdog->ScanAnomalies();
+    }, SCAN_ANOMALIES_INTERVAL);
     return true;
 }

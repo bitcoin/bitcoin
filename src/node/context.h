@@ -14,6 +14,9 @@ class CConnman;
 class CScheduler;
 class CTxMemPool;
 class PeerLogicValidation;
+class CWatchdog;
+class CAltstack;
+class AltLogicValidation;
 namespace interfaces {
 class Chain;
 class ChainClient;
@@ -38,6 +41,9 @@ struct NodeContext {
     std::unique_ptr<interfaces::Chain> chain;
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
     std::unique_ptr<CScheduler> scheduler;
+    std::unique_ptr<CWatchdog> watchdog;
+    std::unique_ptr<CAltstack> altstack;
+    std::unique_ptr<AltLogicValidation> alt_logic;
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class

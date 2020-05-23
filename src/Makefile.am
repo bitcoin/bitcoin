@@ -106,6 +106,8 @@ endif
 BITCOIN_CORE_H = \
   addrdb.h \
   addrman.h \
+  altnet.h \
+  alt_processing.h\
   attributes.h \
   banman.h \
   base58.h \
@@ -133,6 +135,8 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
+  drivers.h \
+  drivers/clightning.h \
   flatfile.h \
   fs.h \
   httprpc.h \
@@ -255,6 +259,8 @@ BITCOIN_CORE_H = \
   wallet/walletutil.h \
   wallet/coinselection.h \
   warnings.h \
+  watchdog.h \
+  watchdoginterface.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
   zmq/zmqnotificationinterface.h \
@@ -277,11 +283,14 @@ libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
+  altnet.cpp \
+  alt_processing.cpp \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
   chain.cpp \
   consensus/tx_verify.cpp \
+  drivers/clightning.cpp \
   flatfile.cpp \
   httprpc.cpp \
   httpserver.cpp \
@@ -322,6 +331,8 @@ libbitcoin_server_a_SOURCES = \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
+  watchdog.cpp \
+  watchdoginterface.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_WALLET

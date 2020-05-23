@@ -4,11 +4,14 @@
 
 #include <node/context.h>
 
+#include <altnet.h>
+#include <alt_processing.h>
 #include <banman.h>
 #include <interfaces/chain.h>
 #include <net.h>
 #include <net_processing.h>
 #include <scheduler.h>
+#include <watchdog.h>
 
 NodeContext::NodeContext() {}
 NodeContext::~NodeContext() {}
