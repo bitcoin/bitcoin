@@ -71,6 +71,12 @@ CTxMemPool& EnsureMemPool(const util::Ref& context)
     return *node.mempool;
 }
 
+ChainstateManager& EnsureChainman(const util::Ref& context)
+{
+    NodeContext& node = EnsureNodeContext(context);
+    return EnsureChainman(node);
+}
+
 /* Calculate the difficulty for a given block index.
  */
 double GetDifficulty(const CBlockIndex* blockindex)

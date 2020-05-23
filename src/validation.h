@@ -43,6 +43,7 @@ class CConnman;
 class CScriptCheck;
 class CBlockPolicyEstimator;
 class CTxMemPool;
+class ChainstateManager;
 class TxValidationState;
 struct ChainTxData;
 
@@ -149,41 +150,6 @@ extern bool fPruneMode;
 /** Number of MiB of block files that we're trying to stay below. */
 extern uint64_t nPruneTarget;
 
-/**
- * Process an incoming block. This only returns after the best known valid
- * block is made active. Note that it does not, however, guarantee that the
- * specific block passed to it has been checked for validity!
- *
- * If you want to *possibly* get feedback on whether pblock is valid, you must
- * install a CValidationInterface (see validationinterface.h) - this will have
- * its BlockChecked method called whenever *any* block completes validation.
- *
- * Note that we guarantee that either the proof-of-work is valid on pblock, or
- * (and possibly also) BlockChecked will have been called.
- *
- * May not be called in a
- * validationinterface callback.
- *
- * @param[in]   pblock  The block we want to process.
- * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
- * @param[out]  fNewBlock A boolean which is set to indicate if the block was first received via this call
- * @returns     If the block was processed, independently of block validity
- */
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock) LOCKS_EXCLUDED(cs_main);
-
-/**
- * Process incoming block headers.
- *
- * May not be called in a
- * validationinterface callback.
- *
- * @param[in]  block The block headers themselves
- * @param[out] state This may be set to an Error state if any error occurred processing them
- * @param[in]  chainparams The params for the chain we want to connect to
- * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
- */
-bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, BlockValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
-
 /** Open a block file (blk?????.dat) */
 FILE* OpenBlockFile(const FlatFilePos &pos, bool fReadOnly = false);
 /** Translation to a filesystem path */
@@ -192,9 +158,6 @@ fs::path GetBlockPosFilename(const FlatFilePos &pos);
 void LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFilePos* dbp = nullptr);
 /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
 bool LoadGenesisBlock(const CChainParams& chainparams);
-/** Load the block tree and coins database from disk,
- * initializing state if we're running with -reindex. */
-bool LoadBlockIndex(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 /** Unload database information */
 void UnloadBlockIndex();
 /** Run an instance of the script checking thread */
@@ -215,11 +178,6 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pin
 
 /** Calculate the amount of disk space the block & undo files currently use */
 uint64_t CalculateCurrentUsage();
-
-/**
- *  Mark one block file as pruned.
- */
-void PruneOneBlockFile(const int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
  *  Actually unlink the specified files
@@ -492,9 +450,6 @@ enum class CoinsCacheSizeState
     LARGE = 1,
     OK = 0
 };
-
-// Defined below, but needed for `friend` usage in CChainState.
-class ChainstateManager;
 
 /**
  * CChainState stores and provides an API to update our local knowledge of the
@@ -870,6 +825,47 @@ public:
     CChain& ValidatedChain() const { return ValidatedChainstate().m_chain; }
     CBlockIndex* ValidatedTip() const { return ValidatedChain().Tip(); }
 
+    /**
+     * Process an incoming block. This only returns after the best known valid
+     * block is made active. Note that it does not, however, guarantee that the
+     * specific block passed to it has been checked for validity!
+     *
+     * If you want to *possibly* get feedback on whether pblock is valid, you must
+     * install a CValidationInterface (see validationinterface.h) - this will have
+     * its BlockChecked method called whenever *any* block completes validation.
+     *
+     * Note that we guarantee that either the proof-of-work is valid on pblock, or
+     * (and possibly also) BlockChecked will have been called.
+     *
+     * May not be called in a
+     * validationinterface callback.
+     *
+     * @param[in]   pblock  The block we want to process.
+     * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
+     * @param[out]  fNewBlock A boolean which is set to indicate if the block was first received via this call
+     * @returns     If the block was processed, independently of block validity
+     */
+    bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock) LOCKS_EXCLUDED(cs_main);
+
+    /**
+     * Process incoming block headers.
+     *
+     * May not be called in a
+     * validationinterface callback.
+     *
+     * @param[in]  block The block headers themselves
+     * @param[out] state This may be set to an Error state if any error occurred processing them
+     * @param[in]  chainparams The params for the chain we want to connect to
+     * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
+     */
+    bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, BlockValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
+
+    //! Mark one block file as pruned (modify associated database entries)
+    void PruneOneBlockFile(const int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    //! Load the block tree and coins database from disk, initializing state if we're running with -reindex
+    bool LoadBlockIndex(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
     //! Unload block index and chain data before shutdown.
     void Unload() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
@@ -877,6 +873,7 @@ public:
     void Reset();
 };
 
+/** DEPRECATED! Please use node.chainman instead. May only be used in validation.cpp internally */
 extern ChainstateManager g_chainman GUARDED_BY(::cs_main);
 
 /** @returns the most-work valid chainstate. */

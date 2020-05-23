@@ -12,6 +12,7 @@
 #include <validationinterface.h>
 
 class CTxMemPool;
+class ChainstateManager;
 
 extern RecursiveMutex cs_main;
 extern RecursiveMutex g_cs_orphans;
@@ -27,12 +28,13 @@ class PeerLogicValidation final : public CValidationInterface, public NetEventsI
 private:
     CConnman* const connman;
     BanMan* const m_banman;
+    ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
 
     bool CheckIfBanned(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 public:
-    PeerLogicValidation(CConnman* connman, BanMan* banman, CScheduler& scheduler, CTxMemPool& pool);
+    PeerLogicValidation(CConnman* connman, BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool);
 
     /**
      * Overridden from CValidationInterface.
