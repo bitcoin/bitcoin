@@ -178,7 +178,7 @@ AuxpowMiner::submitAuxBlock (const std::string& hashHex,
   shared_block->SetAuxpow (std::move (pow));
   CHECK_NONFATAL(shared_block->GetHash ().GetHex () == hashHex);
 
-  return ProcessNewBlock (Params (), shared_block, true, nullptr);
+  return EnsureChainman(node).ProcessNewBlock (Params (), shared_block, true, nullptr);
 }
 
 AuxpowMiner&
