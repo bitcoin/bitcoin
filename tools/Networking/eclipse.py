@@ -310,16 +310,19 @@ def temp_sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port
 		except: time.sleep(1)
 
 def sniff(thread, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface):
+	global closingApplication
 	while not thread.stopped():
 		try:
 			packet, address = socket.recvfrom(65565)
 			create_task(True, 'Process packet ' + src_ip, packet_received, thread, packet, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
 		except: time.sleep(1)
 	#reconnect(socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
-	create_task(False, 'Reconnecting ' + victim_ip, reconnect, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
+	if not closingApplication:
+		create_task(False, 'Reconnecting ' + victim_ip, reconnect, socket, mirror_socket, src_ip, src_port, dst_ip, dst_port, interface, sniff)
 	#close_connection(socket, dst_ip, dst_port, interface)
 
 def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface):
+	global closingApplication
 	while not thread.stopped():
 		try:
 			packet, address = socket.recvfrom(65565)
@@ -329,7 +332,8 @@ def mirror_sniff(thread, socket, orig_socket, src_ip, src_port, dst_ip, dst_port
 				pass # Dropped packet
 		except: time.sleep(1)
 	#reconnect(socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
-	create_task(False, 'Reconnecting ' + victim_ip, reconnect, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
+	if not closingApplication:
+		create_task(False, 'Reconnecting ' + victim_ip, reconnect, socket, orig_socket, src_ip, src_port, dst_ip, dst_port, interface, mirror_sniff)
 	#close_connection(socket, src_ip, src_port, interface)
 
 # Called when a packet is sniffed from the network
@@ -600,6 +604,8 @@ def purge_stopped_threads():
 
 # This function is ran when the script is stopped
 def on_close():
+	global closingApplication
+	closingApplication = True
 	print('Stopping active threads')
 	for thread in threads:
 		thread.stop()
@@ -612,7 +618,8 @@ def on_close():
 
 # This is the first code to run
 if __name__ == '__main__':
-	global alias_num
+	global alias_num, closingApplication
+	closingApplication = False
 	alias_num = 0 # Increments each alias
 
 	initialize_network_info()
