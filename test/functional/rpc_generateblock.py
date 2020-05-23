@@ -22,8 +22,13 @@ class GenerateBlockTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
 
-        self.log.info('Generate an empty block to address')
+        self.log.info('Mine an empty block to address and return the hex')
         address = node.getnewaddress()
+        generated_block = node.generateblock(output=address, transactions=[], submit=False)
+        node.submitblock(hexdata=generated_block['hex'])
+        assert_equal(generated_block['hash'], node.getbestblockhash())
+
+        self.log.info('Generate an empty block to address')
         hash = node.generateblock(output=address, transactions=[])['hash']
         block = node.getblock(blockhash=hash, verbose=2)
         assert_equal(len(block['tx']), 1)

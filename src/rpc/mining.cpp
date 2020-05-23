@@ -101,9 +101,9 @@ static UniValue getnetworkhashps(const JSONRPCRequest& request)
     return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1);
 }
 
-static bool GenerateBlock(CBlock& block, uint64_t& max_tries, unsigned int& extra_nonce, uint256& block_hash)
+static bool GenerateBlock(CBlock& block, uint64_t& max_tries, unsigned int& extra_nonce, std::shared_ptr<const CBlock>& block_out, bool process_new_block)
 {
-    block_hash.SetNull();
+    block_out.reset();
 
     {
         LOCK(cs_main);
@@ -123,11 +123,14 @@ static bool GenerateBlock(CBlock& block, uint64_t& max_tries, unsigned int& extr
         return true;
     }
 
-    std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    if (!ProcessNewBlock(chainparams, shared_pblock, true, nullptr))
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+    block_out = std::make_shared<const CBlock>(block);
 
-    block_hash = block.GetHash();
+    if (!process_new_block) return true;
+
+    if (!ProcessNewBlock(chainparams, block_out, true, nullptr)) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+    }
+
     return true;
 }
 
@@ -148,16 +151,15 @@ static UniValue generateBlocks(const CTxMemPool& mempool, const CScript& coinbas
         std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(mempool, Params()).CreateNewBlock(coinbase_script));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
-        CBlock *pblock = &pblocktemplate->block;
 
-        uint256 block_hash;
-        if (!GenerateBlock(*pblock, nMaxTries, nExtraNonce, block_hash)) {
+        std::shared_ptr<const CBlock> block_out;
+        if (!GenerateBlock(pblocktemplate->block, nMaxTries, nExtraNonce, block_out, /* process_new_block */ true)) {
             break;
         }
 
-        if (!block_hash.IsNull()) {
+        if (block_out) {
             ++nHeight;
-            blockHashes.push_back(block_hash.GetHex());
+            blockHashes.push_back(block_out->GetHash().GetHex());
         }
     }
     return blockHashes;
@@ -275,7 +277,8 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
 static UniValue generateblock(const JSONRPCRequest& request)
 {
     RPCHelpMan{"generateblock",
-        "\nMine a block with a set of ordered transactions immediately to a specified address or descriptor (before the RPC call returns)\n",
+        "Mine a block with a set of ordered transactions to a specified address or descriptor.\n"
+        "Warning! This RPC is used for testing, and the interface might change arbitrarily or might be removed entirely without an -rpcdeprecated cycle.",
         {
             {"output", RPCArg::Type::STR, RPCArg::Optional::NO, "The address or descriptor to send the newly generated bitcoin to."},
             {"transactions", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings which are either txids or raw transactions.\n"
@@ -285,11 +288,13 @@ static UniValue generateblock(const JSONRPCRequest& request)
                     {"rawtx/txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                 },
             },
+            {"submit", RPCArg::Type::BOOL, /* default */ "true", "Whether to submit the block before the RPC call returns or to return it as hex."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::STR_HEX, "hash", "hash of generated block"},
+                {RPCResult::Type::STR_HEX, "hex", "hex of generated block, only present when submit=false"},
             }
         },
         RPCExamples{
@@ -337,6 +342,8 @@ static UniValue generateblock(const JSONRPCRequest& request)
         }
     }
 
+    const bool process_new_block{request.params[2].isNull() ? true : request.params[2].get_bool()};
+
     CChainParams chainparams(Params());
     CBlock block;
 
@@ -366,16 +373,21 @@ static UniValue generateblock(const JSONRPCRequest& request)
         }
     }
 
-    uint256 block_hash;
+    std::shared_ptr<const CBlock> block_out;
     uint64_t max_tries{1000000};
     unsigned int extra_nonce{0};
 
-    if (!GenerateBlock(block, max_tries, extra_nonce, block_hash) || block_hash.IsNull()) {
+    if (!GenerateBlock(block, max_tries, extra_nonce, block_out, process_new_block) || !block_out) {
         throw JSONRPCError(RPC_MISC_ERROR, "Failed to make block.");
     }
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("hash", block_hash.GetHex());
+    obj.pushKV("hash", block_out->GetHash().GetHex());
+    if (!process_new_block) {
+        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        ssBlock << *block_out;
+        obj.pushKV("hex", HexStr(ssBlock.begin(), ssBlock.end()));
+    }
     return obj;
 }
 
@@ -1191,7 +1203,7 @@ static const CRPCCommand commands[] =
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
     { "generating",         "generatetodescriptor",   &generatetodescriptor,   {"num_blocks","descriptor","maxtries"} },
-    { "generating",         "generateblock",          &generateblock,          {"output","transactions"} },
+    { "generating",         "generateblock",          &generateblock,          {"output","transactions","submit"} },
 
     { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
