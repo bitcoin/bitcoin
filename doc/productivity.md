@@ -12,7 +12,7 @@ Table of Contents
    * [Multiple working directories with `git worktrees`](#multiple-working-directories-with-git-worktrees)
    * [Interactive "dummy rebases" for fixups and execs with `git merge-base`](#interactive-dummy-rebases-for-fixups-and-execs-with-git-merge-base)
 * [Writing code](#writing-code)
-   * [Format C/C++/Protobuf diffs with `clang-format-diff.py`](#format-ccprotobuf-diffs-with-clang-format-diffpy)
+   * [Format C/C++ diffs with `clang-format-diff.py`](#format-cc-diffs-with-clang-format-diffpy)
    * [Format Python diffs with `yapf-diff.py`](#format-python-diffs-with-yapf-diffpy)
 * [Rebasing/Merging code](#rebasingmerging-code)
    * [More conflict context with `merge.conflictstyle diff3`](#more-conflict-context-with-mergeconflictstyle-diff3)
@@ -118,13 +118,13 @@ You can also set up [upstream refspecs](#reference-prs-easily-with-refspecs) to 
 Writing code
 ------------
 
-### Format C/C++/Protobuf diffs with `clang-format-diff.py`
+### Format C/C++ diffs with `clang-format-diff.py`
 
 See [contrib/devtools/README.md](/contrib/devtools/README.md#clang-format-diff.py).
 
 ### Format Python diffs with `yapf-diff.py`
 
-Usage is exactly the same as [`clang-format-diff.py`](#format-ccprotobuf-diffs-with-clang-format-diffpy). You can get it [here](https://github.com/MarcoFalke/yapf-diff).
+Usage is exactly the same as [`clang-format-diff.py`](#format-cc-diffs-with-clang-format-diffpy). You can get it [here](https://github.com/MarcoFalke/yapf-diff).
 
 Rebasing/Merging code
 -------------
