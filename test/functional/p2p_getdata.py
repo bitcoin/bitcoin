@@ -16,8 +16,8 @@ from test_framework.mininode import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import wait_until
 
-class P2PStoreBlock(P2PInterface):
 
+class P2PStoreBlock(P2PInterface):
     def __init__(self):
         super().__init__()
         self.blocks = defaultdict(int)
@@ -25,6 +25,7 @@ class P2PStoreBlock(P2PInterface):
     def on_block(self, message):
         message.block.calc_sha256()
         self.blocks[message.block.sha256] += 1
+
 
 class GetdataTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -46,6 +47,7 @@ class GetdataTest(BitcoinTestFramework):
         good_getdata.inv.append(CInv(t=2, h=best_block))
         self.nodes[0].p2ps[0].send_and_ping(good_getdata)
         wait_until(lambda: self.nodes[0].p2ps[0].blocks[best_block] == 1, timeout=30, lock=mininode_lock)
+
 
 if __name__ == '__main__':
     GetdataTest().main()
