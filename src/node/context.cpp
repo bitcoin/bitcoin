@@ -9,6 +9,7 @@
 #include <net.h>
 #include <net_processing.h>
 #include <scheduler.h>
+#include <watchdog.h>
 
 NodeContext::NodeContext() {}
 NodeContext::~NodeContext() {}

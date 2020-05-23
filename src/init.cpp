@@ -53,6 +53,8 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <watchdog.h>
+#include <watchdoginterface.h>
 #include <hash.h>
 
 
@@ -256,6 +258,7 @@ void Shutdown(NodeContext& node)
     // After there are no more peers/RPC left to give us new data which may generate
     // CValidationInterface callbacks, flush them...
     GetMainSignals().FlushBackgroundCallbacks();
+    GetWatchSignals().FlushBackgroundCallbacks();
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
@@ -296,6 +299,7 @@ void Shutdown(NodeContext& node)
     node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
+    GetWatchSignals().UnregisterBackgroundSignalScheduler();
     globalVerifyHandle.reset();
     ECC_Stop();
     node.args = nullptr;
@@ -1326,6 +1330,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     }, std::chrono::minutes{1});
 
     GetMainSignals().RegisterBackgroundSignalScheduler(*node.scheduler);
+    GetWatchSignals().RegisterBackgroundSignalScheduler(*node.scheduler);
 
     // Create client interfaces for wallets that are supposed to be loaded
     // according to -wallet and -disablewallet options. This only constructs
@@ -1377,6 +1382,9 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     // which are all started after this, may use it from the node context.
     assert(!node.mempool);
     node.mempool = &::mempool;
+
+    assert(!node.watchdog);
+    node.watchdog = MakeUnique<CWatchdog>();
 
     node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, *node.mempool));
     RegisterValidationInterface(node.peer_logic.get());
@@ -1891,6 +1899,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     connOptions.nBestHeight = chain_active_height;
     connOptions.uiInterface = &uiInterface;
     connOptions.m_banman = node.banman.get();
+    connOptions.m_watchdog = node.watchdog.get();
     connOptions.m_msgproc = node.peer_logic.get();
     connOptions.nSendBufferMaxSize = 1000*gArgs.GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
     connOptions.nReceiveFloodSize = 1000*gArgs.GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
@@ -1949,5 +1958,9 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL);
 
+    CWatchdog* watchdog = node.watchdog.get();
+    node.scheduler->scheduleEvery([watchdog]{
+            watchdog->ScanAnomalies();
+    }, SCAN_ANOMALIES_INTERVAL);
     return true;
 }
