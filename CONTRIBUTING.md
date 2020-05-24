@@ -17,9 +17,27 @@ release cycle, overall merging, moderation and appointment of maintainers.
 Getting Started
 ---------------
 
+New contributors are very welcome and needed.
+
+Reviewing and testing is the most effective way you can contribute as a new
+contributor, and it also will teach you much more about the code and process
+than opening PRs. Please refer to the section [peer review](#peer-review) later
+in this document.
+
+Before you start contributing, familiarize yourself with the Bitcoin Core build
+system and tests. Refer to the documentation in the repository on how to build
+Bitcoin Core and how to run the unit and functional tests.
+
+There are many open issues of varying difficulty waiting to be fixed.
 If you're looking for somewhere to start contributing, check out the
 [good first issue](https://github.com/bitcoin/bitcoin/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-list or participate in a weekly [Bitcoin Core PR Review Club](https://bitcoincore.reviews/) meeting.
+list or changes that are
+[up for grabs](https://github.com/bitcoin/bitcoin/issues?utf8=%E2%9C%93&q=label%3A%22Up+for+grabs%22).
+Some of them might no longer be applicable. So if you are interested, but
+unsure, you might want to leave a comment on the issue first.
+
+You may also participate in the weekly
+[Bitcoin Core PR Review Club](https://bitcoincore.reviews/) meeting.
 
 Communication Channels
 ----------------------
