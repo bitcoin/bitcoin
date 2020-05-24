@@ -91,7 +91,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
         txid_0 = tx.rehash()
         self.check_mempool_result(
-            result_expected=[{'txid': txid_0, 'allowed': True}],
+            result_expected=[{'txid': txid_0, 'allowed': True, 'fee': fee * COIN}],
             rawtxs=[raw_tx_0],
         )
 
@@ -104,7 +104,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         ))['hex']
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_final)))
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': True}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'fee': (int(coin['amount']) - (0.025)) * COIN}],
             rawtxs=[tx.serialize().hex()],
             maxfeerate=0,
         )
@@ -127,7 +127,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
         txid_0 = tx.rehash()
         self.check_mempool_result(
-            result_expected=[{'txid': txid_0, 'allowed': True}],
+            result_expected=[{'txid': txid_0, 'allowed': True, 'fee': (2 * fee * COIN)}],
             rawtxs=[raw_tx_0],
         )
 
@@ -187,7 +187,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
         # Reference tx should be valid on itself
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': True}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'fee': (0.1 - 0.05) * COIN}],
             rawtxs=[tx.serialize().hex()],
             maxfeerate=0,
         )
