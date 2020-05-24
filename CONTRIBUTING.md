@@ -39,6 +39,19 @@ unsure, you might want to leave a comment on the issue first.
 You may also participate in the weekly
 [Bitcoin Core PR Review Club](https://bitcoincore.reviews/) meeting.
 
+### Good First Issue Label
+
+The purpose of the `good first issue` label is to highlight which issues are
+suitable for a new contributor without a deep understanding of the codebase.
+
+However, good first issues can be solved by anyone. If they remain unsolved
+for a longer time, a frequent contributor might address them.
+
+You do not need to request permission to start working on an issue. However,
+you are encouraged to leave a comment if you are planning to work on it. This
+will help other contributors monitor which issues are actively being addressed
+and is also an effective way to request assistance if and when you need it.
+
 Communication Channels
 ----------------------
 
