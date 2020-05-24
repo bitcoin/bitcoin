@@ -11,6 +11,7 @@
 #include <chainparamsbase.h>
 #include <coins.h>
 #include <consensus/consensus.h>
+#include <merkleblock.h>
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -24,6 +25,7 @@
 #include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/time.h>
 #include <version.h>
 
 #include <algorithm>
@@ -37,6 +39,11 @@ NODISCARD inline std::vector<uint8_t> ConsumeRandomLengthByteVector(FuzzedDataPr
 {
     const std::string s = fuzzed_data_provider.ConsumeRandomLengthString(max_length);
     return {s.begin(), s.end()};
+}
+
+NODISCARD inline std::vector<bool> ConsumeRandomLengthBitVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+{
+    return BytesToBits(ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length));
 }
 
 NODISCARD inline CDataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
@@ -87,6 +94,13 @@ NODISCARD inline opcodetype ConsumeOpcodeType(FuzzedDataProvider& fuzzed_data_pr
 NODISCARD inline CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, MAX_MONEY);
+}
+
+NODISCARD inline int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    static const int64_t time_min = ParseISO8601DateTime("1970-01-01T00:00:00Z");
+    static const int64_t time_max = ParseISO8601DateTime("9999-12-31T23:59:59Z");
+    return fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(time_min, time_max);
 }
 
 NODISCARD inline CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider) noexcept
