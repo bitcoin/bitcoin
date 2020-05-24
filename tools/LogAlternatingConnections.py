@@ -780,7 +780,10 @@ def log(file, targetDateTime, count):
 	except Exception as e:
 		print('\nLOGGER PAUSED. Hold on...')
 		print(e)
-		if not bitcoinUp():
+		try:
+			if not bitcoinUp():
+				resetNode()
+		except:
 			resetNode()
 		#print(traceback.format_exc())
 
