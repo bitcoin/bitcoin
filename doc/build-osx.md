@@ -25,11 +25,6 @@ brew install automake berkeley-db4 libtool boost miniupnpc pkg-config python qt 
 If you run into issues, check [Homebrew's troubleshooting page](https://docs.brew.sh/Troubleshooting).
 See [dependencies.md](dependencies.md) for a complete overview.
 
-If you want to build the disk image with `make deploy` (.dmg / optional), you need RSVG:
-```shell
-brew install librsvg
-```
-
 ## Berkeley DB
 It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
 you can use [this](/contrib/install_db4.sh) script to install it

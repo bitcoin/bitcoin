@@ -8,7 +8,7 @@ export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_macos_cross
 export HOST=x86_64-apple-darwin16
-export PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python3-dev python3-setuptools"
+export PACKAGES="cmake libcap-dev libz-dev libbz2-dev python3-dev python3-setuptools"
 export OSX_SDK=10.14
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
