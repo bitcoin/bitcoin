@@ -70,6 +70,7 @@ FUZZ_TARGETS = \
   test/fuzz/message \
   test/fuzz/messageheader_deserialize \
   test/fuzz/multiplication_overflow \
+  test/fuzz/net \
   test/fuzz/net_permissions \
   test/fuzz/netaddr_deserialize \
   test/fuzz/netaddress \
@@ -721,6 +722,12 @@ test_fuzz_multiplication_overflow_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_multiplication_overflow_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_multiplication_overflow_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_multiplication_overflow_SOURCES = test/fuzz/multiplication_overflow.cpp
+
+test_fuzz_net_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_net_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_net_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_net_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_net_SOURCES = test/fuzz/net.cpp
 
 test_fuzz_net_permissions_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_net_permissions_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
