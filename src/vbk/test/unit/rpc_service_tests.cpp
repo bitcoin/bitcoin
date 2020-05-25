@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <boost/test/unit_test.hpp>
+#include <fstream>
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <rpc/request.h>
@@ -19,6 +20,8 @@
 #include <string>
 #include <vbk/init.hpp>
 #include <vbk/merkle.hpp>
+
+#include "veriblock/entities/test_case_entity.hpp"
 
 UniValue CallRPC(std::string args);
 
@@ -77,11 +80,13 @@ BOOST_AUTO_TEST_CASE(submitpop_test)
 
 BOOST_AUTO_TEST_CASE(savepopstate_test)
 {
+    std::string file_name = "vbtc_state_test";
+
     JSONRPCRequest request;
     request.strMethod = "savepopstate";
     request.fHelp = false;
     request.params = UniValue(UniValue::VARR);
-    request.params.push_back("vbtc_state_test");
+    request.params.push_back(file_name);
 
     if (RPCIsInWarmup(nullptr)) {
         SetRPCWarmupFinished();
@@ -89,6 +94,20 @@ BOOST_AUTO_TEST_CASE(savepopstate_test)
 
     UniValue result;
     BOOST_CHECK_NO_THROW(result = tableRPC.execute(request));
+    
+    std::ifstream file(file_name, std::ios::binary | std::ios::ate);
+    size_t fsize = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    std::vector<uint8_t> bytes(fsize);
+    file.read((char*)bytes.data(), bytes.size());
+
+    altintegration::TestCase vbtc_state = altintegration::TestCase::fromRaw(bytes);
+
+    altintegration::AltBlock tip = VeriBlock::blockToAltBlock(*ChainActive().Tip());
+    BOOST_CHECK(tip == vbtc_state.alt_tree.back().first);
+
+    file.close();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

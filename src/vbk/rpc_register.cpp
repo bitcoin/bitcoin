@@ -122,7 +122,7 @@ void SaveState(std::string file_name)
         }
     }
 
-    std::ofstream file(file_name);
+    std::ofstream file(file_name, std::ios::binary);
 
     altintegration::WriteStream stream;
     vbtc_state.toRaw(stream);
