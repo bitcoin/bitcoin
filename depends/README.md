@@ -44,7 +44,7 @@ The paths are automatically configured and no other options are needed unless ta
 
 #### For macOS cross compilation
 
-    sudo apt-get install curl bsdmainutils cmake libcap-dev libz-dev libbz2-dev python3-setuptools
+    sudo apt-get install curl bsdmainutils libcap-dev libz-dev libbz2-dev
 
 #### For Win64 cross compilation
 
