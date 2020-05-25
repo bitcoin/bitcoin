@@ -170,6 +170,22 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.log.info("Test -getinfo with invalid value for -color option")
         assert_raises_process_error(1, "Invalid value for -color option. Valid values: always, auto, never.", self.nodes[0].cli('-getinfo', '-color=foo').send_cli)
 
+        self.log.info("Test -getinfo command parsing")
+
+        self.log.debug("Test -getinfo=1 and -getinfo=-1 both succeed")
+        for cmd in ['-getinfo=1', '-getinfo=-1']:
+            assert_equal(str(blockchain_info['blocks']), cli_get_info_string_to_dict(self.nodes[0].cli(cmd).send_cli())['Blocks'])
+
+        self.log.debug("Test -getinfo=0 and -nogetinfo both raise 'too few parameters'")
+        err_msg = "error: too few parameters (need at least command)"
+        for cmd in ['-getinfo=0', '-nogetinfo']:
+            assert_raises_process_error(1, err_msg, self.nodes[0].cli(cmd).send_cli)
+
+        self.log.debug("Test -igetinfo and -getinfos both raise 'Invalid parameter'")
+        err_msg = "Error parsing command line arguments: Invalid parameter"
+        for cmd in ['-igetinfo', '-getinfos']:
+            assert_raises_process_error(1, "{} {}".format(err_msg, cmd), self.nodes[0].cli(cmd).send_cli)
+
         self.log.info("Test -getinfo returns expected network and blockchain info")
         if self.is_specified_wallet_compiled():
             self.import_deterministic_coinbase_privkeys()
