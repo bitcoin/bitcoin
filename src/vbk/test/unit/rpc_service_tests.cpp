@@ -5,6 +5,8 @@
 
 #include <boost/test/unit_test.hpp>
 #include <fstream>
+#include <thread>
+#include <chrono>
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <rpc/request.h>
@@ -78,9 +80,44 @@ BOOST_AUTO_TEST_CASE(submitpop_test)
     //    BOOST_CHECK(mempool.exists(popTxHash));
 }
 
+static void InvalidateTestBlock(CBlockIndex* pblock)
+{
+    BlockValidationState state;
+
+    InvalidateBlock(state, Params(), pblock);
+    ActivateBestChain(state, Params());
+}
+
+static void ReconsiderTestBlock(CBlockIndex* pblock)
+{
+    BlockValidationState state;
+
+    {
+        LOCK(cs_main);
+        ResetBlockFailureFlags(pblock);
+    }
+    ActivateBestChain(state, Params(), std::shared_ptr<const CBlock>());
+}
+
 BOOST_AUTO_TEST_CASE(savepopstate_test)
 {
+    CScript cbKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     std::string file_name = "vbtc_state_test";
+
+    auto* oldTip = ChainActive().Tip();
+    InvalidateTestBlock(oldTip);
+    BOOST_CHECK(oldTip->GetBlockHash() != ChainActive().Tip()->GetBlockHash());
+
+    CBlock block;
+    block = this->CreateAndProcessBlock({}, cbKey);
+    BOOST_CHECK(block.GetHash() == ChainActive().Tip()->GetBlockHash());
+    block = this->CreateAndProcessBlock({}, cbKey);
+    BOOST_CHECK(block.GetHash() == ChainActive().Tip()->GetBlockHash());
+    block = this->CreateAndProcessBlock({}, cbKey);
+    BOOST_CHECK(block.GetHash() == ChainActive().Tip()->GetBlockHash());
+    auto* newTip = ChainActive().Tip();
+
+    ReconsiderTestBlock(oldTip);
 
     JSONRPCRequest request;
     request.strMethod = "savepopstate";
@@ -103,6 +140,8 @@ BOOST_AUTO_TEST_CASE(savepopstate_test)
     file.read((char*)bytes.data(), bytes.size());
 
     altintegration::TestCase vbtc_state = altintegration::TestCase::fromRaw(bytes);
+
+    BOOST_CHECK_EQUAL(vbtc_state.alt_tree.size(), 104);
 
     altintegration::AltBlock tip = VeriBlock::blockToAltBlock(*ChainActive().Tip());
     BOOST_CHECK(tip == vbtc_state.alt_tree.back().first);

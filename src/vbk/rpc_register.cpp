@@ -101,25 +101,26 @@ void SaveState(std::string file_name)
     auto cmp = [](CBlockIndex* a, CBlockIndex* b) -> bool {
         return a->nHeight < b->nHeight;
     };
-    std::set<CBlockIndex*, decltype(cmp)> block_index(cmp);
-
+    std::vector<CBlockIndex*> block_index;
+    block_index.reserve(vbtc_tree.size());
     for (const auto& el : vbtc_tree) {
-        block_index.insert(el.second);
+        block_index.push_back(el.second);
     }
+    std::sort(block_index.begin(), block_index.end(), cmp);
 
     BlockValidationState state;
 
     for (const auto& index : block_index) {
         auto alt_block = blockToAltBlock(*index);
+        std::vector<altintegration::AltPayloads> payloads;
         if (index->pprev) {
             CBlock block;
             bool res = ReadBlockFromDisk(block, index, Params().GetConsensus());
             assert(res);
-            std::vector<altintegration::AltPayloads> payloads;
             res = parseBlockPopPayloadsImpl(block, *index->pprev, Params().GetConsensus(), state, &payloads);
             assert(res);
-            vbtc_state.alt_tree.push_back(std::make_pair(alt_block, payloads));
         }
+        vbtc_state.alt_tree.push_back(std::make_pair(alt_block, payloads));
     }
 
     std::ofstream file(file_name, std::ios::binary);
