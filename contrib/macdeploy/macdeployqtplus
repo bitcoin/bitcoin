@@ -522,8 +522,7 @@ ap.add_argument("-no-strip", dest="strip", action="store_false", default=True, h
 ap.add_argument("-add-qt-tr", nargs=1, metavar="languages", default=[], help="add Qt translation files to the bundle's resources; the language list must be separated with commas, not with whitespace")
 ap.add_argument("-translations-dir", nargs=1, metavar="path", default=None, help="Path to Qt's translation files")
 ap.add_argument("-add-resources", nargs="+", metavar="path", default=[], help="list of additional files or folders to be copied into the bundle's resources; must be the last argument")
-ap.add_argument("-volname", nargs=1, metavar="volname", default=[], help="custom volume name for zip")
-ap.add_argument("-zip", nargs="?", const="", metavar="zip", help="create a .zip containing the app bundle")
+ap.add_argument("-zip", nargs=1, metavar="zip", default=[], help="create a .zip containing the app bundle")
 
 config = ap.parse_args()
 
@@ -566,13 +565,6 @@ if os.path.exists("dist"):
         print("+ Removing old dist folder +")
     
     shutil.rmtree("dist")
-
-# ------------------------------------------------
-
-if len(config.volname) == 1:
-    volname = config.volname[0]
-else:
-    volname = app_bundle_name
 
 # ------------------------------------------------
 
@@ -677,7 +669,13 @@ for p in config.add_resources:
 # ------------------------------------------------
 
 if config.zip is not None:
-    shutil.make_archive('dist/{}'.format(volname), format='zip', root_dir='dist', base_dir='Bitcoin-Qt.app')
+
+    if len(config.zip) == 1:
+        name = config.zip[0]
+    else:
+        name = app_bundle_name
+
+    shutil.make_archive('dist/{}'.format(name), format='zip', root_dir='dist', base_dir='Bitcoin-Qt.app')
 
 # ------------------------------------------------
 
