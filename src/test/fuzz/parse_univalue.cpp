@@ -7,6 +7,8 @@
 #include <rpc/client.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
 #include <util/memory.h>
 
@@ -20,11 +22,11 @@ void initialize()
 
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
-    const std::string random_string(buffer.begin(), buffer.end());
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     bool valid = true;
     const UniValue univalue = [&] {
         try {
-            return ParseNonRFCJSONValue(random_string);
+            return ParseNonRFCJSONValue(fuzzed_data_provider.ConsumeRandomLengthString(1024));
         } catch (const std::runtime_error&) {
             valid = false;
             return NullUniValue;
@@ -33,18 +35,9 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     if (!valid) {
         return;
     }
-    try {
-        (void)ParseHashO(univalue, "A");
-    } catch (const UniValue&) {
-    } catch (const std::runtime_error&) {
-    }
+    const std::string random_string = fuzzed_data_provider.ConsumeRandomLengthString(1024);
     try {
         (void)ParseHashO(univalue, random_string);
-    } catch (const UniValue&) {
-    } catch (const std::runtime_error&) {
-    }
-    try {
-        (void)ParseHashV(univalue, "A");
     } catch (const UniValue&) {
     } catch (const std::runtime_error&) {
     }
@@ -54,28 +47,16 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     } catch (const std::runtime_error&) {
     }
     try {
-        (void)ParseHexO(univalue, "A");
-    } catch (const UniValue&) {
-    }
-    try {
         (void)ParseHexO(univalue, random_string);
     } catch (const UniValue&) {
     }
     try {
-        (void)ParseHexUV(univalue, "A");
         (void)ParseHexUV(univalue, random_string);
-    } catch (const UniValue&) {
-    } catch (const std::runtime_error&) {
-    }
-    try {
-        (void)ParseHexV(univalue, "A");
-    } catch (const UniValue&) {
     } catch (const std::runtime_error&) {
     }
     try {
         (void)ParseHexV(univalue, random_string);
     } catch (const UniValue&) {
-    } catch (const std::runtime_error&) {
     }
     try {
         (void)ParseSighashString(univalue);
@@ -84,7 +65,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     try {
         (void)AmountFromValue(univalue);
     } catch (const UniValue&) {
-    } catch (const std::runtime_error&) {
     }
     try {
         FlatSigningProvider provider;

@@ -59,7 +59,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         {
             (void)GetBlockProof(current_block);
             (void)CalculateNextWorkRequired(&current_block, fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, std::numeric_limits<int64_t>::max()), consensus_params);
-            if (current_block.nHeight != std::numeric_limits<int>::max() && current_block.nHeight - (consensus_params.DifficultyAdjustmentInterval() - 1) >= 0) {
+            if (current_block.nHeight != std::numeric_limits<int>::max()) {
                 (void)GetNextWorkRequired(&current_block, &(*block_header), consensus_params);
             }
         }
