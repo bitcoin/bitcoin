@@ -17,6 +17,7 @@ from test_framework.messages import (
     msg_filterload,
     msg_getdata,
     msg_mempool,
+    msg_version,
 )
 from test_framework.mininode import P2PInterface
 from test_framework.script import MAX_SCRIPT_ELEMENT_SIZE
@@ -108,13 +109,23 @@ class FilterTest(BitcoinTestFramework):
         self.nodes[0].p2p.send_message(msg_mempool())
         filter_peer.wait_for_tx(txid)
 
-    def run_test(self):
-        filter_node = self.nodes[0].add_p2p_connection(FilterNode())
+    def test_frelay_false(self, filter_peer):
+        self.log.info("Check that a node with fRelay set to false does not receive invs until the filter is set")
+        filter_peer.tx_received = False
+        filter_address = self.nodes[0].decodescript(filter_peer.watch_script_pubkey)['addresses'][0]
+        self.nodes[0].sendtoaddress(filter_address, 90)
+        # Sync to make sure the reason filter_peer doesn't receive the tx is not p2p delays
+        filter_peer.sync_with_ping()
+        assert not filter_peer.tx_received
 
-        self.test_size_limits(filter_node)
+        # Clear the mempool so that this transaction does not impact subsequent tests
+        self.nodes[0].generate(1)
 
-        self.log.info('Add filtered P2P connection to the node')
+    def test_filter(self, filter_node):
+        # Set the bloomfilter using filterload
         filter_node.send_and_ping(filter_node.watch_filter_init)
+        # If fRelay is not already True, sending filterload sets it to True
+        assert self.nodes[0].getpeerinfo()[0]['relaytxes']
         filter_address = self.nodes[0].decodescript(filter_node.watch_script_pubkey)['addresses'][0]
 
         self.log.info('Check that we receive merkleblock and tx if the filter matches a tx in a block')
@@ -169,6 +180,29 @@ class FilterTest(BitcoinTestFramework):
         filter_node.send_and_ping(msg_filteradd(data=b'letstrytocrashthisnode'))
         self.nodes[0].disconnect_p2ps()
 
+    def run_test(self):
+        filter_peer = self.nodes[0].add_p2p_connection(FilterNode())
+        self.log.info('Test filter size limits')
+        self.test_size_limits(filter_peer)
+
+        self.log.info('Test BIP 37 for a node with fRelay = True (default)')
+        self.test_filter(filter_peer)
+        self.nodes[0].disconnect_p2ps()
+
+        self.log.info('Test BIP 37 for a node with fRelay = False')
+        # Add peer but do not send version yet
+        filter_peer_without_nrelay = self.nodes[0].add_p2p_connection(FilterNode(), send_version=False, wait_for_verack=False)
+        # Send version with fRelay=False
+        filter_peer_without_nrelay.wait_until(lambda: filter_peer_without_nrelay.is_connected, timeout=10)
+        version_without_fRelay = msg_version()
+        version_without_fRelay.nRelay = 0
+        filter_peer_without_nrelay.send_message(version_without_fRelay)
+        filter_peer_without_nrelay.wait_for_verack()
+        assert not self.nodes[0].getpeerinfo()[0]['relaytxes']
+        self.test_frelay_false(filter_peer_without_nrelay)
+        self.test_filter(filter_peer_without_nrelay)
+
+        self.log.info('Test msg_mempool')
         self.test_msg_mempool()
 
 if __name__ == '__main__':
