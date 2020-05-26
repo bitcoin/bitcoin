@@ -510,7 +510,7 @@ Plugins=PlugIns
 
 ap = ArgumentParser(description="""Improved version of macdeployqt.
 
-Outputs a ready-to-deploy app in a folder "dist" and optionally wraps it in a .dmg file.
+Outputs a ready-to-deploy app in a folder "dist".
 Note, that the "dist" folder will be deleted before deploying on each run.
 
 Optionally, Qt translation files (.qm) and additional resources can be added to the bundle.
@@ -524,12 +524,10 @@ ap.add_argument("-verbose", type=int, nargs=1, default=[1], metavar="<0-3>", hel
 ap.add_argument("-no-plugins", dest="plugins", action="store_false", default=True, help="skip plugin deployment")
 ap.add_argument("-no-strip", dest="strip", action="store_false", default=True, help="don't run 'strip' on the binaries")
 ap.add_argument("-sign", dest="sign", action="store_true", default=False, help="sign .app bundle with codesign tool")
-ap.add_argument("-dmg", nargs="?", const="", metavar="basename", help="create a .dmg disk image; if basename is not specified, a camel-cased version of the app name is used")
-ap.add_argument("-fancy", nargs=1, metavar="plist", default=[], help="make a fancy looking disk image using the given plist file with instructions; requires -dmg to work")
 ap.add_argument("-add-qt-tr", nargs=1, metavar="languages", default=[], help="add Qt translation files to the bundle's resources; the language list must be separated with commas, not with whitespace")
 ap.add_argument("-translations-dir", nargs=1, metavar="path", default=None, help="Path to Qt's translation files")
 ap.add_argument("-add-resources", nargs="+", metavar="path", default=[], help="list of additional files or folders to be copied into the bundle's resources; must be the last argument")
-ap.add_argument("-volname", nargs=1, metavar="volname", default=[], help="custom volume name for dmg")
+ap.add_argument("-volname", nargs=1, metavar="volname", default=[], help="custom volume name for zip")
 ap.add_argument("-zip", nargs="?", const="", metavar="zip", help="create a .zip containing the app bundle")
 
 config = ap.parse_args()
@@ -565,62 +563,6 @@ for p in config.add_resources:
         if verbose >= 1:
             sys.stderr.write("Error: Could not find additional resource file \"{}\"\n".format(p))
         sys.exit(1)
-
-# ------------------------------------------------
-
-if len(config.fancy) == 1:
-    if verbose >= 3:
-        print("Fancy: Importing plistlib...")
-    try:
-        import plistlib
-    except ImportError:
-        if verbose >= 1:
-            sys.stderr.write("Error: Could not import plistlib which is required for fancy disk images.\n")
-        sys.exit(1)
-    
-    p = config.fancy[0]
-    if verbose >= 3:
-        print("Fancy: Loading \"{}\"...".format(p))
-    if not os.path.exists(p):
-        if verbose >= 1:
-            sys.stderr.write("Error: Could not find fancy disk image plist at \"{}\"\n".format(p))
-        sys.exit(1)
-    
-    try:
-        fancy = plistlib.readPlist(p)
-    except:
-        if verbose >= 1:
-            sys.stderr.write("Error: Could not parse fancy disk image plist at \"{}\"\n".format(p))
-        sys.exit(1)
-    
-    try:
-        assert "window_bounds" not in fancy or (isinstance(fancy["window_bounds"], list) and len(fancy["window_bounds"]) == 4)
-        assert "background_picture" not in fancy or isinstance(fancy["background_picture"], str)
-        assert "icon_size" not in fancy or isinstance(fancy["icon_size"], int)
-        assert "applications_symlink" not in fancy or isinstance(fancy["applications_symlink"], bool)
-        if "items_position" in fancy:
-            assert isinstance(fancy["items_position"], dict)
-            for key, value in fancy["items_position"].items():
-                assert isinstance(value, list) and len(value) == 2 and isinstance(value[0], int) and isinstance(value[1], int)
-    except:
-        if verbose >= 1:
-            sys.stderr.write("Error: Bad format of fancy disk image plist at \"{}\"\n".format(p))
-        sys.exit(1)
-    
-    if "background_picture" in fancy:
-        bp = fancy["background_picture"]
-        if verbose >= 3:
-            print("Fancy: Resolving background picture \"{}\"...".format(bp))
-        if not os.path.exists(bp):
-            bp = os.path.join(os.path.dirname(p), bp)
-            if not os.path.exists(bp):
-                if verbose >= 1:
-                    sys.stderr.write("Error: Could not find background picture at \"{}\" or \"{}\"\n".format(fancy["background_picture"], bp))
-                sys.exit(1)
-            else:
-                fancy["background_picture"] = bp
-else:
-    fancy = None
 
 # ------------------------------------------------
 
@@ -747,162 +689,6 @@ elif config.sign:
     subprocess.check_call("codesign --force {} {}".format(os.environ['CODESIGNARGS'], target), shell=True)
 
 # ------------------------------------------------
-
-if config.dmg is not None:
-
-    def runHDIUtil(verb: str, image_basename: str, **kwargs) -> int:
-        hdiutil_args = ["hdiutil", verb, image_basename + ".dmg"]
-        if "capture_stdout" in kwargs:
-            del kwargs["capture_stdout"]
-            run = subprocess.check_output
-        else:
-            if verbose < 2:
-                hdiutil_args.append("-quiet")
-            elif verbose >= 3:
-                hdiutil_args.append("-verbose")
-            run = subprocess.check_call
-        
-        for key, value in kwargs.items():
-            hdiutil_args.append("-" + key)
-            if value is not True:
-                hdiutil_args.append(str(value))
-        
-        return run(hdiutil_args, universal_newlines=True)
-    
-    if verbose >= 2:
-        if fancy is None:
-            print("+ Creating .dmg disk image +")
-        else:
-            print("+ Preparing .dmg disk image +")
-    
-    if config.dmg != "":
-        dmg_name = config.dmg
-    else:
-        spl = app_bundle_name.split(" ")
-        dmg_name = spl[0] + "".join(p.capitalize() for p in spl[1:])
-    
-    if fancy is None:
-        try:
-            runHDIUtil("create", dmg_name, srcfolder="dist", format="UDBZ", volname=volname, ov=True)
-        except subprocess.CalledProcessError as e:
-            sys.exit(e.returncode)
-    else:
-        if verbose >= 3:
-            print("Determining size of \"dist\"...")
-        size = 0
-        for path, dirs, files in os.walk("dist"):
-            for file in files:
-                size += os.path.getsize(os.path.join(path, file))
-        size += int(size * 0.15)
-        
-        if verbose >= 3:
-            print("Creating temp image for modification...")
-        try:
-            runHDIUtil("create", dmg_name + ".temp", srcfolder="dist", format="UDRW", size=size, volname=volname, ov=True)
-        except subprocess.CalledProcessError as e:
-            sys.exit(e.returncode)
-        
-        if verbose >= 3:
-            print("Attaching temp image...")
-        try:
-            output = runHDIUtil("attach", dmg_name + ".temp", readwrite=True, noverify=True, noautoopen=True, capture_stdout=True)
-        except subprocess.CalledProcessError as e:
-            sys.exit(e.returncode)
-
-        m = re.search(r"/Volumes/(.+$)", output)
-        disk_root = m.group(0)
-        disk_name = m.group(1)
-        
-        if verbose >= 2:
-            print("+ Applying fancy settings +")
-        
-        if "background_picture" in fancy:
-            bg_path = os.path.join(disk_root, ".background", os.path.basename(fancy["background_picture"]))
-            os.mkdir(os.path.dirname(bg_path))
-            if verbose >= 3:
-                print(fancy["background_picture"], "->", bg_path)
-            shutil.copy2(fancy["background_picture"], bg_path)
-        else:
-            bg_path = None
-        
-        if fancy.get("applications_symlink", False):
-            os.symlink("/Applications", os.path.join(disk_root, "Applications"))
-        
-        # The Python appscript package broke with OSX 10.8 and isn't being fixed.
-        # So we now build up an AppleScript string and use the osascript command
-        # to make the .dmg file pretty:
-        appscript = Template( """
-        on run argv
-           tell application "Finder"
-             tell disk "$disk"
-                   open
-                   set current view of container window to icon view
-                   set toolbar visible of container window to false
-                   set statusbar visible of container window to false
-                   set the bounds of container window to {$window_bounds}
-                   set theViewOptions to the icon view options of container window
-                   set arrangement of theViewOptions to not arranged
-                   set icon size of theViewOptions to $icon_size
-                   $background_commands
-                   $items_positions
-                   close -- close/reopen works around a bug...
-                   open
-                   update without registering applications
-                   delay 5
-                   eject
-             end tell
-           end tell
-        end run
-        """)
-
-        itemscript = Template('set position of item "${item}" of container window to {${position}}')
-        items_positions = []
-        if "items_position" in fancy:
-            for name, position in fancy["items_position"].items():
-                params = { "item" : name, "position" : ",".join([str(p) for p in position]) }
-                items_positions.append(itemscript.substitute(params))
-
-        params = {
-            "disk" : volname,
-            "window_bounds" : "300,300,800,620",
-            "icon_size" : "96",
-            "background_commands" : "",
-            "items_positions" : "\n                   ".join(items_positions)
-            }
-        if "window_bounds" in fancy:
-            params["window_bounds"] = ",".join([str(p) for p in fancy["window_bounds"]])
-        if "icon_size" in fancy:
-            params["icon_size"] = str(fancy["icon_size"])
-        if bg_path is not None:
-            # Set background file, then call SetFile to make it invisible.
-            # (note: making it invisible first makes set background picture fail)
-            bgscript = Template("""set background picture of theViewOptions to file ".background:$bgpic"
-                   do shell script "SetFile -a V /Volumes/$disk/.background/$bgpic" """)
-            params["background_commands"] = bgscript.substitute({"bgpic" : os.path.basename(bg_path), "disk" : params["disk"]})
-
-        s = appscript.substitute(params)
-        if verbose >= 2:
-            print("Running AppleScript:")
-            print(s)
-
-        p = subprocess.Popen(['osascript', '-'], stdin=subprocess.PIPE)
-        p.communicate(input=s.encode('utf-8'))
-        if p.returncode:
-            print("Error running osascript.")
-
-        if verbose >= 2:
-            print("+ Finalizing .dmg disk image +")
-            time.sleep(5)
-        
-        try:
-            runHDIUtil("convert", dmg_name + ".temp", format="UDBZ", o=dmg_name + ".dmg", ov=True)
-        except subprocess.CalledProcessError as e:
-            sys.exit(e.returncode)
-        
-        os.unlink(dmg_name + ".temp.dmg")
-
-# ------------------------------------------------
-
 if config.zip is not None:
     shutil.make_archive('dist/{}'.format(volname), format='zip', root_dir='dist', base_dir='Bitcoin-Qt.app')
 
