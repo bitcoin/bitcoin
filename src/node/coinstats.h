@@ -7,6 +7,8 @@
 #define BITCOIN_NODE_COINSTATS_H
 
 #include <amount.h>
+#include <coins.h>
+#include <chain.h>
 #include <uint256.h>
 
 #include <cstdint>
@@ -17,7 +19,6 @@ struct CCoinsStats
 {
     int nHeight{0};
     uint256 hashBlock{};
-    uint64_t nTransactions{0};
     uint64_t nTransactionOutputs{0};
     uint64_t nBogoSize{0};
     uint256 hashSerialized{};
@@ -29,6 +30,10 @@ struct CCoinsStats
 };
 
 //! Calculate statistics about the unspent transaction output set
+bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, const CBlockIndex* pindex);
 bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats);
+
+//! Calculate a TruncatedSHA512 hash for a specific UTXO
+uint256 GetTruncatedSHA512Hash(const COutPoint&, const Coin&);
 
 #endif // BITCOIN_NODE_COINSTATS_H

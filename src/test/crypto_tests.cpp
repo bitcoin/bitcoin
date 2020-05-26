@@ -13,6 +13,7 @@
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
 #include <crypto/sha512.h>
+#include <crypto/muhash.h>
 #include <random.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
@@ -748,6 +749,60 @@ BOOST_AUTO_TEST_CASE(sha256d64)
         SHA256D64(out2, in, i);
         BOOST_CHECK(memcmp(out1, out2, 32 * i) == 0);
     }
+}
+
+static MuHash3072 FromInt(unsigned char i) {
+    unsigned char tmp[32] = {i, 0};
+    return MuHash3072(tmp);
+}
+
+BOOST_AUTO_TEST_CASE(muhash_tests)
+{
+    unsigned char out[384];
+
+    for (int iter = 0; iter < 10; ++iter) {
+        unsigned char res[384];
+        int table[4];
+        for (int i = 0; i < 4; ++i) {
+            table[i] = g_insecure_rand_ctx.randbits(3);
+        }
+        for (int order = 0; order < 4; ++order) {
+            MuHash3072 acc;
+            for (int i = 0; i < 4; ++i) {
+                int t = table[i ^ order];
+                if (t & 4) {
+                    acc /= FromInt(t & 3);
+                } else {
+                    acc *= FromInt(t & 3);
+                }
+            }
+            acc.Finalize(out);
+            if (order == 0) {
+                memcpy(res, out, 384);
+            } else {
+                BOOST_CHECK(memcmp(res, out, 384) == 0);
+            }
+        }
+
+        MuHash3072 x = FromInt(g_insecure_rand_ctx.randbits(4)); // x=X
+        MuHash3072 y = FromInt(g_insecure_rand_ctx.randbits(4)); // x=X, y=Y
+        MuHash3072 z; // x=X, y=Y, z=1
+        z *= x; // x=X, y=Y, z=X
+        z /= y; // x=X, y=Y, z=X/Y
+        y /= x; // x=X, y=Y/X, z=X/Y
+        z *= y; // x=X, y=Y/X, z=1
+        z.Finalize(out);
+        for (int i = 0; i < 384; ++i) {
+            BOOST_CHECK_EQUAL(out[i], i == 0);
+        }
+    }
+
+    MuHash3072 acc = FromInt(0);
+    acc *= FromInt(1);
+    acc /= FromInt(2);
+    acc.Finalize(out);
+    uint256 x = (TruncatedSHA512Writer(SER_DISK, 0) << out).GetHash();
+    BOOST_CHECK(x == uint256S("0e94c56c180f27fd6b182f091c5b007e2d6eba5ae28daa5aa92d2af8c26ea9a6"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -5,47 +5,71 @@
 
 #include <node/coinstats.h>
 
-#include <coins.h>
+#include <crypto/muhash.h>
 #include <hash.h>
+#include <index/coinstatsindex.h>
 #include <serialize.h>
-#include <validation.h>
 #include <uint256.h>
 #include <util/system.h>
+#include <validation.h>
 
 #include <map>
 
-static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
+static void ApplyStats(CCoinsStats &stats, MuHash3072& muhash, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
 {
     assert(!outputs.empty());
-    ss << hash;
-    ss << VARINT(outputs.begin()->second.nHeight * 2 + outputs.begin()->second.fCoinBase ? 1u : 0u);
-    stats.nTransactions++;
     for (const auto& output : outputs) {
-        ss << VARINT(output.first + 1);
-        ss << output.second.out.scriptPubKey;
-        ss << VARINT_MODE(output.second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
+        COutPoint outpoint = COutPoint(hash, output.first);
+        Coin coin = output.second;
+
+        muhash *= MuHash3072(GetTruncatedSHA512Hash(outpoint, coin).begin());
+
         stats.nTransactionOutputs++;
         stats.nTotalAmount += output.second.out.nValue;
         stats.nBogoSize += 32 /* txid */ + 4 /* vout index */ + 4 /* height + coinbase */ + 8 /* amount */ +
                            2 /* scriptPubKey len */ + output.second.out.scriptPubKey.size() /* scriptPubKey */;
     }
-    ss << VARINT(0u);
 }
 
+uint256 GetTruncatedSHA512Hash(const COutPoint& outpoint, const Coin& coin) {
+    TruncatedSHA512Writer ss(SER_DISK, 0);
+    ss << outpoint;
+    ss << (uint32_t)(coin.nHeight * 2 + coin.fCoinBase);
+    ss << coin.out;
+    return ss.GetHash();
+}
+
+bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats) {
+    return GetUTXOStats(view, stats, nullptr);
+};
+
 //! Calculate statistics about the unspent transaction output set
-bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
+bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats, const CBlockIndex* pindex)
 {
     stats = CCoinsStats();
     std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
     assert(pcursor);
 
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    stats.hashBlock = pcursor->GetBestBlock();
-    {
-        LOCK(cs_main);
-        stats.nHeight = LookupBlockIndex(stats.hashBlock)->nHeight;
+    if (pindex == nullptr) {
+        {
+            LOCK(cs_main);
+            pindex = LookupBlockIndex(pcursor->GetBestBlock());
+        }
     }
-    ss << stats.hashBlock;
+
+    stats.hashBlock = pindex->GetBlockHash();
+    stats.nHeight = pindex->nHeight;
+
+    // Use CoinStatsIndex if it is available
+    if (g_coin_stats_index) {
+        if (g_coin_stats_index->LookupStats(pindex, stats)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    MuHash3072 muhash;
     uint256 prevkey;
     std::map<uint32_t, Coin> outputs;
     while (pcursor->Valid()) {
@@ -53,7 +77,7 @@ bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
         Coin coin;
         if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
             if (!outputs.empty() && key.hash != prevkey) {
-                ApplyStats(stats, ss, prevkey, outputs);
+                ApplyStats(stats, muhash, prevkey, outputs);
                 outputs.clear();
             }
             prevkey = key.hash;
@@ -65,9 +89,13 @@ bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
         pcursor->Next();
     }
     if (!outputs.empty()) {
-        ApplyStats(stats, ss, prevkey, outputs);
+        ApplyStats(stats, muhash, prevkey, outputs);
     }
-    stats.hashSerialized = ss.GetHash();
+
+    unsigned char out[384];
+    muhash.Finalize(out);
+    stats.hashSerialized = (TruncatedSHA512Writer(SER_DISK, 0) << out).GetHash();
+
     stats.nDiskSize = view->EstimateSize();
     return true;
 }

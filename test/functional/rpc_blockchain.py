@@ -31,6 +31,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     assert_is_hex_string,
     assert_is_hash_string,
+    wait_until,
 )
 from test_framework.blocktools import (
     create_block,
@@ -63,6 +64,7 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getnetworkhashps()
         self._test_stopatheight()
         self._test_waitforblockheight()
+        self._test_utxo_set_hash()
         assert self.nodes[0].verifychain(4, 0)
 
     def mine_chain(self):
@@ -73,6 +75,10 @@ class BlockchainTest(BitcoinTestFramework):
             self.nodes[0].setmocktime(t)
             self.nodes[0].generatetoaddress(1, address)
         assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 200)
+
+    def mine_block(self):
+        address = self.nodes[0].get_deterministic_priv_key().address
+        self.nodes[0].generatetoaddress(1, address)
 
     def _test_getblockchaininfo(self):
         self.log.info("Test getblockchaininfo")
@@ -205,10 +211,11 @@ class BlockchainTest(BitcoinTestFramework):
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]
+
+        wait_until(lambda: self.nodes[0].getblockcount() == 200)
         res = node.gettxoutsetinfo()
 
         assert_equal(res['total_amount'], Decimal('8725.00000000'))
-        assert_equal(res['transactions'], 200)
         assert_equal(res['height'], 200)
         assert_equal(res['txouts'], 200)
         assert_equal(res['bogosize'], 15000),
@@ -217,20 +224,19 @@ class BlockchainTest(BitcoinTestFramework):
         assert size > 6400
         assert size < 64000
         assert_equal(len(res['bestblock']), 64)
-        assert_equal(len(res['hash_serialized_2']), 64)
+        assert_equal(len(res['utxo_set_hash']), 64)
 
         self.log.info("Test that gettxoutsetinfo() works for blockchain with just the genesis block")
         b1hash = node.getblockhash(1)
         node.invalidateblock(b1hash)
 
         res2 = node.gettxoutsetinfo()
-        assert_equal(res2['transactions'], 0)
         assert_equal(res2['total_amount'], Decimal('0'))
         assert_equal(res2['height'], 0)
         assert_equal(res2['txouts'], 0)
         assert_equal(res2['bogosize'], 0),
         assert_equal(res2['bestblock'], node.getblockhash(0))
-        assert_equal(len(res2['hash_serialized_2']), 64)
+        assert_equal(len(res2['utxo_set_hash']), 64)
 
         self.log.info("Test that gettxoutsetinfo() returns the same result after invalidate/reconsider block")
         node.reconsiderblock(b1hash)
@@ -332,6 +338,30 @@ class BlockchainTest(BitcoinTestFramework):
         assert_waitforheight(current_height - 1)
         assert_waitforheight(current_height)
         assert_waitforheight(current_height + 1)
+
+    def _test_utxo_set_hash(self):
+        node = self.nodes[0]
+
+        self.log.info("Test that gettxoutsetinfo() utxo set hash is unchanged when rolling back a new block")
+
+        # Test consistency of hashing
+        res = node.gettxoutsetinfo()
+        hash_at_207 = res['utxo_set_hash']
+        assert(node.gettxoutsetinfo()['utxo_set_hash'] == hash_at_207)
+
+        # Hash is updated with new block
+        self.mine_block()
+        assert(node.gettxoutsetinfo()['utxo_set_hash'] != hash_at_207)
+
+        # Hash is rolled back to previous block if invalidated
+        b208hash = node.getblockhash(208)
+        node.invalidateblock(b208hash)
+        assert(node.gettxoutsetinfo()['utxo_set_hash'] == hash_at_207)
+
+        # Hash persists restart
+        self.stop_node(0)
+        self.start_node(0)
+        assert(node.gettxoutsetinfo()['utxo_set_hash'] == hash_at_207)
 
 
 if __name__ == '__main__':

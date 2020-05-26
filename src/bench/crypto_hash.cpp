@@ -4,6 +4,7 @@
 
 
 #include <bench/bench.h>
+#include <crypto/muhash.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
@@ -91,6 +92,70 @@ static void FastRandom_1bit(benchmark::State& state)
     }
 }
 
+static void MuHash(benchmark::State& state)
+{
+    FastRandomContext rng(true);
+    MuHash3072 acc;
+    unsigned char key[32] = {0};
+    int i = 0;
+    while (state.KeepRunning()) {
+        key[0] = ++i;
+        acc *= MuHash3072(key);
+    }
+}
+
+static void MuHashPrecompute(benchmark::State& state)
+{
+    FastRandomContext rng(true);
+    MuHash3072 acc;
+    unsigned char key[32];
+    std::vector<unsigned char> randkey = rng.randbytes(32);
+    for (size_t i = 0; i < randkey.size(); i++) {
+        key[i] = randkey[i];
+    }
+
+    while (state.KeepRunning()) {
+        MuHash3072{key};
+    }
+}
+
+static void MuHashAdd(benchmark::State& state)
+{
+    FastRandomContext rng(true);
+    MuHash3072 acc;
+    unsigned char key[32];
+    std::vector<unsigned char> randkey = rng.randbytes(32);
+    for (size_t i = 0; i < randkey.size(); i++) {
+        key[i] = randkey[i];
+    }
+
+    MuHash3072 muhash = MuHash3072(key);
+    while (state.KeepRunning()) {
+        acc *= muhash;
+    }
+}
+
+static void MuHashDiv(benchmark::State& state)
+{
+    FastRandomContext rng(true);
+    MuHash3072 acc;
+    unsigned char key[32];
+    std::vector<unsigned char> randkey = rng.randbytes(32);
+    for (size_t i = 0; i < randkey.size(); i++) {
+        key[i] = randkey[i];
+    }
+
+    MuHash3072 muhash = MuHash3072(key);
+
+    for (size_t i = 0; i < state.m_num_iters; i++) {
+        acc *= muhash;
+    }
+
+    while (state.KeepRunning()) {
+        acc /= muhash;
+    }
+}
+
 BENCHMARK(RIPEMD160, 440);
 BENCHMARK(SHA1, 570);
 BENCHMARK(SHA256, 340);
@@ -101,3 +166,8 @@ BENCHMARK(SipHash_32b, 40 * 1000 * 1000);
 BENCHMARK(SHA256D64_1024, 7400);
 BENCHMARK(FastRandom_32bit, 110 * 1000 * 1000);
 BENCHMARK(FastRandom_1bit, 440 * 1000 * 1000);
+
+BENCHMARK(MuHash, 5000);
+BENCHMARK(MuHashPrecompute, 5000);
+BENCHMARK(MuHashAdd, 5000);
+BENCHMARK(MuHashDiv, 100);
