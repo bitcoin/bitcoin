@@ -706,10 +706,8 @@ class CNetMessage {
 public:
     CDataStream m_recv;                  //!< received message data
     std::chrono::microseconds m_time{0}; //!< time of message receipt
-    bool m_valid_netmagic = false;
-    bool m_valid_header = false;
-    uint32_t m_message_size{0};     //!< size of the payload
-    uint32_t m_raw_message_size{0}; //!< used wire size of the message (including header/checksum)
+    uint32_t m_message_size{0};          //!< size of the payload
+    uint32_t m_raw_message_size{0};      //!< used wire size of the message (including header/checksum)
     std::string m_command;
 
     CNetMessage(CDataStream&& recv_in) : m_recv(std::move(recv_in)) {}
