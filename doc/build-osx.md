@@ -62,10 +62,16 @@ from the root of the repository.
     make check
     ```
 
-4.  You can also create a  `.dmg` that contains the `.app` bundle (optional):
+4.  You can create a locally usable app bundle using:
+    ```shell
+    make appbundle
+    ```
+
+5.  If you'd like a distributable app bundle, run:
     ```shell
     make deploy
     ```
+    and a statically linked bundle will be available in the `dist/` folder.
 
 ## `disable-wallet` mode
 When the intention is to run only a P2P node without a wallet, Bitcoin Core may be
