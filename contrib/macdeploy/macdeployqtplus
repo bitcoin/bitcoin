@@ -530,6 +530,7 @@ ap.add_argument("-add-qt-tr", nargs=1, metavar="languages", default=[], help="ad
 ap.add_argument("-translations-dir", nargs=1, metavar="path", default=None, help="Path to Qt's translation files")
 ap.add_argument("-add-resources", nargs="+", metavar="path", default=[], help="list of additional files or folders to be copied into the bundle's resources; must be the last argument")
 ap.add_argument("-volname", nargs=1, metavar="volname", default=[], help="custom volume name for dmg")
+ap.add_argument("-zip", nargs="?", const="", metavar="zip", help="create a .zip containing the app bundle")
 
 config = ap.parse_args()
 
@@ -899,6 +900,11 @@ if config.dmg is not None:
             sys.exit(e.returncode)
         
         os.unlink(dmg_name + ".temp.dmg")
+
+# ------------------------------------------------
+
+if config.zip is not None:
+    shutil.make_archive('dist/{}'.format(volname), format='zip', root_dir='dist', base_dir='Bitcoin-Qt.app')
 
 # ------------------------------------------------
 
