@@ -4258,16 +4258,15 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     int nGoodTransactions = 0;
     BlockValidationState state;
     int reportDone = 0;
-    int logStep;
     const int log_step{nCheckDepth > 1000 ? 1 : 10};
     LogPrintf("[0%%]..."); /* Continued */
     for (pindex = ::ChainActive().Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
         boost::this_thread::interruption_point();
         const int percentageDone = std::max(1, std::min(99, (int)(((double)(::ChainActive().Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
-        if (reportDone < percentageDone/logStep) {
+        if (reportDone < percentageDone/log_step) {
             // report every 10% step if nCheckDepth is <= 1000 blocks else report every 1% step.
             LogPrintf("[%d%%]...", percentageDone); /* Continued */
-            reportDone = percentageDone/logStep;
+            reportDone = percentageDone/log_step;
         }
         uiInterface.ShowProgress(_("Verifying blocks...").translated, percentageDone, false);
         if (pindex->nHeight <= ::ChainActive().Height()-nCheckDepth)
@@ -4322,10 +4321,10 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
         while (pindex != ::ChainActive().Tip()) {
             boost::this_thread::interruption_point();
             const int percentageDone = std::max(1, std::min(99, 100 - (int)(((double)(::ChainActive().Height() - pindex->nHeight)) / (double)nCheckDepth * 50)));
-            if (reportDone < percentageDone/logStep) {
+            if (reportDone < percentageDone/log_step) {
                 // report every 10% step if nCheckDepth is <= 1000 blocks else report every 1% step.
                 LogPrintf("[%d%%]...", percentageDone); /* Continued */
-                reportDone = percentageDone/logStep;
+                reportDone = percentageDone/log_step;
             }
             uiInterface.ShowProgress(_("Verifying blocks...").translated, percentageDone, false);
             pindex = ::ChainActive().Next(pindex);
