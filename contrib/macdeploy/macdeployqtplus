@@ -513,17 +513,12 @@ ap = ArgumentParser(description="""Improved version of macdeployqt.
 Outputs a ready-to-deploy app in a folder "dist".
 Note, that the "dist" folder will be deleted before deploying on each run.
 
-Optionally, Qt translation files (.qm) and additional resources can be added to the bundle.
-
-Also optionally signs the .app bundle; set the CODESIGNARGS environment variable to pass arguments
-to the codesign tool.
-E.g. CODESIGNARGS='--sign "Developer ID Application: ..." --keychain /encrypted/foo.keychain'""")
+Optionally, Qt translation files (.qm) and additional resources can be added to the bundle.""")
 
 ap.add_argument("app_bundle", nargs=1, metavar="app-bundle", help="application bundle to be deployed")
 ap.add_argument("-verbose", type=int, nargs=1, default=[1], metavar="<0-3>", help="0 = no output, 1 = error/warning (default), 2 = normal, 3 = debug")
 ap.add_argument("-no-plugins", dest="plugins", action="store_false", default=True, help="skip plugin deployment")
 ap.add_argument("-no-strip", dest="strip", action="store_false", default=True, help="don't run 'strip' on the binaries")
-ap.add_argument("-sign", dest="sign", action="store_true", default=False, help="sign .app bundle with codesign tool")
 ap.add_argument("-add-qt-tr", nargs=1, metavar="languages", default=[], help="add Qt translation files to the bundle's resources; the language list must be separated with commas, not with whitespace")
 ap.add_argument("-translations-dir", nargs=1, metavar="path", default=None, help="Path to Qt's translation files")
 ap.add_argument("-add-resources", nargs="+", metavar="path", default=[], help="list of additional files or folders to be copied into the bundle's resources; must be the last argument")
@@ -681,14 +676,6 @@ for p in config.add_resources:
 
 # ------------------------------------------------
 
-if config.sign and 'CODESIGNARGS' not in os.environ:
-    print("You must set the CODESIGNARGS environment variable. Skipping signing.")
-elif config.sign:
-    if verbose >= 1:
-        print("Code-signing app bundle {}".format(target))
-    subprocess.check_call("codesign --force {} {}".format(os.environ['CODESIGNARGS'], target), shell=True)
-
-# ------------------------------------------------
 if config.zip is not None:
     shutil.make_archive('dist/{}'.format(volname), format='zip', root_dir='dist', base_dir='Bitcoin-Qt.app')
 
