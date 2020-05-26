@@ -115,10 +115,10 @@ void SaveState(std::string file_name)
         std::vector<altintegration::AltPayloads> payloads;
         if (index->pprev) {
             CBlock block;
-            bool res = ReadBlockFromDisk(block, index, Params().GetConsensus());
-            assert(res);
-            res = parseBlockPopPayloadsImpl(block, *index->pprev, Params().GetConsensus(), state, &payloads);
-            assert(res);
+            if (ReadBlockFromDisk(block, index, Params().GetConsensus())) { 
+                bool res = parseBlockPopPayloadsImpl(block, *index->pprev, Params().GetConsensus(), state, &payloads);
+                assert(res);
+            }
         }
         vbtc_state.alt_tree.push_back(std::make_pair(alt_block, payloads));
     }
