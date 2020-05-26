@@ -226,6 +226,19 @@ extern const char* GETBLOCKTXN;
  */
 extern const char* BLOCKTXN;
 /**
+ * getcfheaders requests a compact filter header and the filter hashes for a
+ * range of blocks, which can then be used to reconstruct the filter headers
+ * for those blocks.
+ * Only available with service bit NODE_COMPACT_FILTERS as described by
+ * BIP 157 & 158.
+ */
+extern const char* GETCFHEADERS;
+/**
+ * cfheaders is a response to a getcfheaders request containing a filter header
+ * and a vector of filter hashes for each subsequent block in the requested range.
+ */
+extern const char* CFHEADERS;
+/**
  * getcfcheckpt requests evenly spaced compact filter headers, enabling
  * parallelized download and validation of the headers between them.
  * Only available with service bit NODE_COMPACT_FILTERS as described by
@@ -235,8 +248,6 @@ extern const char* GETCFCHECKPT;
 /**
  * cfcheckpt is a response to a getcfcheckpt request containing a vector of
  * evenly spaced filter headers for blocks on the requested chain.
- * Only available with service bit NODE_COMPACT_FILTERS as described by
- * BIP 157 & 158.
  */
 extern const char* CFCHECKPT;
 }; // namespace NetMsgType
