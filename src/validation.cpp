@@ -4259,7 +4259,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     BlockValidationState state;
     int reportDone = 0;
     int logStep;
-    logStep = nCheckDepth > 1000 ? 1 : 10;
+    const int log_step{nCheckDepth > 1000 ? 1 : 10};
     LogPrintf("[0%%]..."); /* Continued */
     for (pindex = ::ChainActive().Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
         boost::this_thread::interruption_point();
