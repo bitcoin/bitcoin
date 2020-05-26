@@ -7,6 +7,7 @@
 #include <pubkey.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
+#include <test/util/setup_common.h>
 #include <uint256.h>
 #include <univalue.h>
 #include <util/strencodings.h>
@@ -18,7 +19,7 @@
 
 void initialize()
 {
-    static const ECCVerifyHandle verify_handle;
+    static const BasicTestingSetup basic_testing_setup;
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

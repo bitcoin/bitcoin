@@ -9,6 +9,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/setup_common.h>
 
 #include <cstdint>
 #include <optional>
@@ -17,7 +18,7 @@
 
 void initialize()
 {
-    SelectParams(CBaseChainParams::MAIN);
+    static const BasicTestingSetup basic_testing_setup;
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

@@ -8,6 +8,7 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <test/fuzz/fuzz.h>
+#include <test/util/setup_common.h>
 
 #include <cassert>
 #include <cstdint>
@@ -16,9 +17,7 @@
 
 void initialize()
 {
-    static const ECCVerifyHandle verify_handle;
-    ECC_Start();
-    SelectParams(CBaseChainParams::MAIN);
+    static const BasicTestingSetup basic_testing_setup;
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

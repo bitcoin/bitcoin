@@ -6,6 +6,7 @@
 #include <script/interpreter.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/util/setup_common.h>
 #include <util/memory.h>
 
 #include <cstdint>
@@ -15,7 +16,7 @@
 
 void initialize()
 {
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const BasicTestingSetup basic_testing_setup;
 }
 
 namespace {

@@ -10,6 +10,7 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <streams.h>
+#include <test/util/setup_common.h>
 #include <util/memory.h>
 #include <version.h>
 
@@ -19,7 +20,7 @@
 
 void initialize()
 {
-    static const ECCVerifyHandle verify_handle;
+    static const BasicTestingSetup basic_testing_setup;
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

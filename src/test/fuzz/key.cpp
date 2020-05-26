@@ -17,6 +17,7 @@
 #include <script/standard.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <test/util/setup_common.h>
 #include <util/memory.h>
 #include <util/strencodings.h>
 
@@ -28,9 +29,7 @@
 
 void initialize()
 {
-    static const ECCVerifyHandle ecc_verify_handle;
-    ECC_Start();
-    SelectParams(CBaseChainParams::REGTEST);
+    static const BasicTestingSetup basic_testing_setup{CBaseChainParams::REGTEST};
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

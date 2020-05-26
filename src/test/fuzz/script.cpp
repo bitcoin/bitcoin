@@ -19,6 +19,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/setup_common.h>
 #include <univalue.h>
 #include <util/memory.h>
 
@@ -31,10 +32,7 @@
 
 void initialize()
 {
-    // Fuzzers using pubkey must hold an ECCVerifyHandle.
-    static const ECCVerifyHandle verify_handle;
-
-    SelectParams(CBaseChainParams::REGTEST);
+    static const BasicTestingSetup basic_testing_setup{CBaseChainParams::REGTEST};
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

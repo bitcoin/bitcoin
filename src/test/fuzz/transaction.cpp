@@ -14,6 +14,7 @@
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <test/util/setup_common.h>
 #include <univalue.h>
 #include <util/rbf.h>
 #include <validation.h>
@@ -23,7 +24,7 @@
 
 void initialize()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    static const BasicTestingSetup basic_testing_setup{CBaseChainParams::REGTEST};
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

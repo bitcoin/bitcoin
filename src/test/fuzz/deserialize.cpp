@@ -20,6 +20,7 @@
 #include <pubkey.h>
 #include <script/keyorigin.h>
 #include <streams.h>
+#include <test/util/setup_common.h>
 #include <undo.h>
 #include <version.h>
 
@@ -34,8 +35,7 @@
 
 void initialize()
 {
-    // Fuzzers using pubkey must hold an ECCVerifyHandle.
-    static const ECCVerifyHandle verify_handle;
+    static const BasicTestingSetup basic_testing_setup;
 }
 
 namespace {

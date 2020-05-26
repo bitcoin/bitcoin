@@ -6,6 +6,7 @@
 #include <net.h>
 #include <protocol.h>
 #include <test/fuzz/fuzz.h>
+#include <test/util/setup_common.h>
 
 #include <cassert>
 #include <cstdint>
@@ -14,7 +15,7 @@
 
 void initialize()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    static const BasicTestingSetup basic_testing_setup{CBaseChainParams::REGTEST};
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)
