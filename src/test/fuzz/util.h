@@ -8,6 +8,7 @@
 #include <amount.h>
 #include <arith_uint256.h>
 #include <attributes.h>
+#include <coins.h>
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -149,4 +150,19 @@ NODISCARD bool AdditionOverflow(const T i, const T j) noexcept
     return std::numeric_limits<T>::max() - i < j;
 }
 
+<<<<<<< HEAD
 #endif // SYSCOIN_TEST_FUZZ_UTIL_H
+=======
+NODISCARD inline bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept
+{
+    for (const CTxIn& tx_in : tx.vin) {
+        const Coin& coin = inputs.AccessCoin(tx_in.prevout);
+        if (coin.IsSpent()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+#endif // BITCOIN_TEST_FUZZ_UTIL_H
+>>>>>>> d3b0ef80f... Merge #18867: tests: Add fuzzing harness for CCoinsViewCache
