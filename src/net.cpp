@@ -585,6 +585,16 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
 }
 #undef X
 
+/**
+ * Receive bytes from the buffer and deserialize them into messages.
+ *
+ * @param[in]   pch         A pointer to the raw data
+ * @param[in]   nBytes      Size of the data
+ * @param[out]  complete    Set True if at least one message has been
+ *                          deserialized and is ready to be processed
+ * @return  True if the peer should stay connected,
+ *          False if the peer should be disconnected from.
+ */
 bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete)
 {
     complete = false;
