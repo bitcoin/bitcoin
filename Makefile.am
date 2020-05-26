@@ -97,6 +97,8 @@ $(OSX_APP)/Contents/MacOS/Bitcoin-Qt: all-recursive
 	$(MKDIR_P) $(@D)
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIN_QT_BIN) $@
 
+# Set CFBundleDisplayName and CFBundleName to make the app and bundle appear as
+# "PACKAGE_NAME" everywhere
 $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings:
 	$(MKDIR_P) $(@D)
 	echo '{	CFBundleDisplayName = "$(PACKAGE_NAME)"; CFBundleName = "$(PACKAGE_NAME)"; }' > $@
