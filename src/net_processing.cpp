@@ -1998,7 +1998,7 @@ void static ProcessOrphanTx(CConnman* connman, CTxMemPool& mempool, std::set<uin
  * @param[out]  filter_index    The filter index, if the request can be serviced.
  * @return                      True if the request can be serviced.
  */
-static bool PrepareBlockFilterRequest(CNode* pfrom, const CChainParams& chain_params,
+static bool PrepareBlockFilterRequest(CNode& pfrom, const CChainParams& chain_params,
                                       BlockFilterType filter_type, uint32_t start_height,
                                       const uint256& stop_hash, uint32_t max_height_diff,
                                       const CBlockIndex*& stop_index,
@@ -2009,8 +2009,8 @@ static bool PrepareBlockFilterRequest(CNode* pfrom, const CChainParams& chain_pa
          gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS));
     if (!supported_filter_type) {
         LogPrint(BCLog::NET, "peer %d requested unsupported block filter type: %d\n",
-                 pfrom->GetId(), static_cast<uint8_t>(filter_type));
-        pfrom->fDisconnect = true;
+                 pfrom.GetId(), static_cast<uint8_t>(filter_type));
+        pfrom.fDisconnect = true;
         return false;
     }
 
@@ -2021,8 +2021,8 @@ static bool PrepareBlockFilterRequest(CNode* pfrom, const CChainParams& chain_pa
         // Check that the stop block exists and the peer would be allowed to fetch it.
         if (!stop_index || !BlockRequestAllowed(stop_index, chain_params.GetConsensus())) {
             LogPrint(BCLog::NET, "peer %d requested invalid block hash: %s\n",
-                     pfrom->GetId(), stop_hash.ToString());
-            pfrom->fDisconnect = true;
+                     pfrom.GetId(), stop_hash.ToString());
+            pfrom.fDisconnect = true;
             return false;
         }
     }
@@ -2031,14 +2031,14 @@ static bool PrepareBlockFilterRequest(CNode* pfrom, const CChainParams& chain_pa
     if (start_height > stop_height) {
         LogPrint(BCLog::NET, "peer %d sent invalid getcfilters/getcfheaders with " /* Continued */
                  "start height %d and stop height %d\n",
-                 pfrom->GetId(), start_height, stop_height);
-        pfrom->fDisconnect = true;
+                 pfrom.GetId(), start_height, stop_height);
+        pfrom.fDisconnect = true;
         return false;
     }
     if (stop_height - start_height >= max_height_diff) {
         LogPrint(BCLog::NET, "peer %d requested too many cfilters/cfheaders: %d / %d\n",
-                 pfrom->GetId(), stop_height - start_height + 1, max_height_diff);
-        pfrom->fDisconnect = true;
+                 pfrom.GetId(), stop_height - start_height + 1, max_height_diff);
+        pfrom.fDisconnect = true;
         return false;
     }
 
@@ -2061,8 +2061,8 @@ static bool PrepareBlockFilterRequest(CNode* pfrom, const CChainParams& chain_pa
  * @param[in]   chain_params    Chain parameters
  * @param[in]   connman         Pointer to the connection manager
  */
-static void ProcessGetCFHeaders(CNode* pfrom, CDataStream& vRecv, const CChainParams& chain_params,
-                                CConnman* connman)
+static void ProcessGetCFHeaders(CNode& pfrom, CDataStream& vRecv, const CChainParams& chain_params,
+                                CConnman& connman)
 {
     uint8_t filter_type_ser;
     uint32_t start_height;
@@ -2097,13 +2097,13 @@ static void ProcessGetCFHeaders(CNode* pfrom, CDataStream& vRecv, const CChainPa
         return;
     }
 
-    CSerializedNetMsg msg = CNetMsgMaker(pfrom->GetSendVersion())
+    CSerializedNetMsg msg = CNetMsgMaker(pfrom.GetSendVersion())
         .Make(NetMsgType::CFHEADERS,
               filter_type_ser,
               stop_index->GetBlockHash(),
               prev_header,
               filter_hashes);
-    connman->PushMessage(pfrom, std::move(msg));
+    connman.PushMessage(&pfrom, std::move(msg));
 }
 
 /**
@@ -2116,8 +2116,8 @@ static void ProcessGetCFHeaders(CNode* pfrom, CDataStream& vRecv, const CChainPa
  * @param[in]   chain_params    Chain parameters
  * @param[in]   connman         Pointer to the connection manager
  */
-static void ProcessGetCFCheckPt(CNode* pfrom, CDataStream& vRecv, const CChainParams& chain_params,
-                                CConnman* connman)
+static void ProcessGetCFCheckPt(CNode& pfrom, CDataStream& vRecv, const CChainParams& chain_params,
+                                CConnman& connman)
 {
     uint8_t filter_type_ser;
     uint256 stop_hash;
@@ -2149,12 +2149,12 @@ static void ProcessGetCFCheckPt(CNode* pfrom, CDataStream& vRecv, const CChainPa
         }
     }
 
-    CSerializedNetMsg msg = CNetMsgMaker(pfrom->GetSendVersion())
+    CSerializedNetMsg msg = CNetMsgMaker(pfrom.GetSendVersion())
         .Make(NetMsgType::CFCHECKPT,
               filter_type_ser,
               stop_index->GetBlockHash(),
               headers);
-    connman->PushMessage(pfrom, std::move(msg));
+    connman.PushMessage(&pfrom, std::move(msg));
 }
 
 bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, ChainstateManager& chainman, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
@@ -3467,12 +3467,12 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
     }
 
     if (msg_type == NetMsgType::GETCFHEADERS) {
-        ProcessGetCFHeaders(pfrom, vRecv, chainparams, connman);
+        ProcessGetCFHeaders(*pfrom, vRecv, chainparams, *connman);
         return true;
     }
 
     if (msg_type == NetMsgType::GETCFCHECKPT) {
-        ProcessGetCFCheckPt(pfrom, vRecv, chainparams, connman);
+        ProcessGetCFCheckPt(*pfrom, vRecv, chainparams, *connman);
         return true;
     }
 
