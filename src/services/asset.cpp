@@ -78,12 +78,7 @@ bool CAsset::UnserializeFromTx(const CTransaction &tx) {
 
 uint32_t GenerateSyscoinGuid(const COutPoint& outPoint) {
     const arith_uint256 &txidArith = UintToArith256(outPoint.hash);
-    uint32_t low32 = (uint32_t)txidArith.GetLow64();
-    low32 += outPoint.n;
-    if(low32 <= SYSCOIN_TX_VERSION_ALLOCATION_SEND*10){
-        low32 = SYSCOIN_TX_VERSION_ALLOCATION_SEND*10;
-    }
-    return low32;
+    return txidArith.GetLow32();
 }
 
 void CAsset::SerializeData( std::vector<unsigned char> &vchData) {
