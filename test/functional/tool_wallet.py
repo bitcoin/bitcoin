@@ -6,6 +6,7 @@
 
 import hashlib
 import os
+import random
 import stat
 import subprocess
 import textwrap
@@ -34,7 +35,10 @@ class ToolWalletTest(BitcoinTestFramework):
         if not self.options.descriptors and 'create' in args:
             default_args.append('-legacy')
 
-        return subprocess.Popen([binary] + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        process_args = default_args + list(args)
+        self.log.debug('Running wallet tool with args "{}"'.format('" "'.join(process_args)))
+
+        return subprocess.Popen([binary] + process_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
     def assert_raises_tool_error(self, error, *args):
         p = self.bitcoin_wallet_process(*args)
@@ -308,13 +312,27 @@ class ToolWalletTest(BitcoinTestFramework):
         self.log.debug('Wallet file shasum unchanged\n')
 
     def test_salvage(self):
-        # TODO: Check salvage actually salvages and doesn't break things. https://github.com/bitcoin/bitcoin/issues/7463
         self.log.info('Check salvage')
-        self.start_node(0)
+        self.start_node(0, ['-nowallet'])
         self.nodes[0].createwallet("salvage")
+        address_gen_rand = random.Random(123)
+
+        def gna():
+            return self.nodes[0].getnewaddress(address_type=address_gen_rand.choice(["legacy", "p2sh-segwit", "bech32"]))
+
+        for _ in range(101):
+            # Generate to fresh address each time
+            self.generatetoaddress(self.nodes[0], 1, gna())
+        self.nodes[0].sendmany(amounts={gna(): 0.05 for _ in range(50)})
+        self.nodes[0].sendmany(amounts={gna(): 0.05 for _ in range(50)})
+        balances_before = self.nodes[0].getbalances()
         self.stop_node(0)
 
         self.assert_tool_output('', '-wallet=salvage', 'salvage')
+
+        self.start_node(0, ['-nowallet', '-wallet=salvage'])
+        assert_equal(balances_before, self.nodes[0].getbalances())
+        self.stop_node(0)
 
     def test_dump_createfromdump(self):
         self.start_node(0)
