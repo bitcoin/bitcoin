@@ -51,6 +51,8 @@ private:
 
     const std::string m_file_path;
 
+    void Cleanup() noexcept;
+
 public:
     SQLiteDatabase() = delete;
 
