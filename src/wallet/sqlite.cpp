@@ -8,6 +8,7 @@
 #include <sync.h>
 #include <util/memory.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 #include <util/translation.h>
 #include <wallet/db.h>
 
@@ -80,6 +81,72 @@ void SQLiteDatabase::Cleanup() noexcept
 
 void SQLiteDatabase::Open()
 {
+    int flags = SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    if (m_mock) {
+        flags |= SQLITE_OPEN_MEMORY; // In memory database for mock db
+    }
+
+    if (m_db == nullptr) {
+        TryCreateDirectories(m_dir_path);
+        int ret = sqlite3_open_v2(m_file_path.c_str(), &m_db, flags, nullptr);
+        if (ret != SQLITE_OK) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to open database: %s\n", sqlite3_errstr(ret)));
+        }
+    }
+
+    if (sqlite3_db_readonly(m_db, "main") != 0) {
+        throw std::runtime_error("SQLiteDatabase: Database opened in readonly mode but read-write permissions are needed");
+    }
+
+    // Acquire an exclusive lock on the database
+    // First change the locking mode to exclusive
+    int ret = sqlite3_exec(m_db, "PRAGMA locking_mode = exclusive", nullptr, nullptr, nullptr);
+    if (ret != SQLITE_OK) {
+        throw std::runtime_error(strprintf("SQLiteDatabase: Unable to change database locking mode to exclusive: %s\n", sqlite3_errstr(ret)));
+    }
+    // Now begin a transaction to acquire the exclusive lock. This lock won't be released until we close because of the exclusive locking mode.
+    ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
+    if (ret != SQLITE_OK) {
+        throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another bitcoind?\n");
+    }
+    ret = sqlite3_exec(m_db, "COMMIT", nullptr, nullptr, nullptr);
+    if (ret != SQLITE_OK) {
+        throw std::runtime_error(strprintf("SQLiteDatabase: Unable to end exclusive lock transaction: %s\n", sqlite3_errstr(ret)));
+    }
+
+    // Enable fullfsync for the platforms that use it
+    ret = sqlite3_exec(m_db, "PRAGMA fullfsync = true", nullptr, nullptr, nullptr);
+    if (ret != SQLITE_OK) {
+        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to enable fullfsync: %s\n", sqlite3_errstr(ret)));
+    }
+
+    // Make the table for our key-value pairs
+    // First check that the main table exists
+    sqlite3_stmt* check_main_stmt{nullptr};
+    ret = sqlite3_prepare_v2(m_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='main'", -1, &check_main_stmt, nullptr);
+    if (ret != SQLITE_OK) {
+        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to prepare statement to check table existence: %s\n", sqlite3_errstr(ret)));
+    }
+    ret = sqlite3_step(check_main_stmt);
+    if (sqlite3_finalize(check_main_stmt) != SQLITE_OK) {
+        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to finalize statement checking table existence: %s\n", sqlite3_errstr(ret)));
+    }
+    bool table_exists;
+    if (ret == SQLITE_DONE) {
+        table_exists = false;
+    } else if (ret == SQLITE_ROW) {
+        table_exists = true;
+    } else {
+        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to execute statement to check table existence: %s\n", sqlite3_errstr(ret)));
+    }
+
+    // Do the db setup things because the table doesn't exist only when we are creating a new wallet
+    if (!table_exists) {
+        ret = sqlite3_exec(m_db, "CREATE TABLE main(key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)", nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to create new database: %s\n", sqlite3_errstr(ret)));
+        }
+    }
 }
 
 bool SQLiteDatabase::Rewrite(const char* skip)
@@ -104,6 +171,8 @@ std::unique_ptr<DatabaseBatch> SQLiteDatabase::MakeBatch(bool flush_on_close)
 SQLiteBatch::SQLiteBatch(SQLiteDatabase& database)
     : m_database(database)
 {
+    // Make sure we have a db handle
+    assert(m_database.m_db);
 }
 
 void SQLiteBatch::Close()
