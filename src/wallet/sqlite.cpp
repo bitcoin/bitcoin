@@ -4,6 +4,7 @@
 
 #include <wallet/sqlite.h>
 
+#include <logging.h>
 #include <util/memory.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
@@ -17,10 +18,15 @@ static const char* const DATABASE_FILENAME = "wallet.dat";
 SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, bool mock)
     : WalletDatabase(), m_mock(mock), m_dir_path(dir_path.string()), m_file_path(file_path.string())
 {
+    LogPrintf("Using SQLite Version %s\n", SQLiteDatabaseVersion());
+    LogPrintf("Using wallet %s\n", m_dir_path);
+
+    Open();
 }
 
 SQLiteDatabase::~SQLiteDatabase()
 {
+    Close();
 }
 
 void SQLiteDatabase::Open()
@@ -44,6 +50,11 @@ void SQLiteDatabase::Close()
 std::unique_ptr<DatabaseBatch> SQLiteDatabase::MakeBatch(bool flush_on_close)
 {
     return nullptr;
+}
+
+SQLiteBatch::SQLiteBatch(SQLiteDatabase& database)
+    : m_database(database)
+{
 }
 
 void SQLiteBatch::Close()
