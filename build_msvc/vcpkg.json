@@ -9,6 +9,7 @@
     "boost-signals2",
     "boost-test",
     "boost-thread",
+    "sqlite3",
     "double-conversion",
     {
       "name": "libevent",
