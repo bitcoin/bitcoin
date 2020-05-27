@@ -870,6 +870,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
                             {RPCResult::Type::BOOL, "allowed", "If the mempool allows this tx to be inserted"},
+                            {RPCResult::Type::NUM, "fee", "Fee provided in this transaction (only present when 'allowed' is true)"},
                             {RPCResult::Type::STR, "reject-reason", "Rejection string (only present when 'allowed' is false)"},
                         }},
                     }
@@ -916,10 +917,11 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
 
     TxValidationState state;
     bool test_accept_res;
+    CAmount fee = 0;
     {
         LOCK(cs_main);
         test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx),
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
+            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true, &fee);
     }
     result_0.pushKV("allowed", test_accept_res);
     if (!test_accept_res) {
@@ -932,6 +934,10 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
         } else {
             result_0.pushKV("reject-reason", state.GetRejectReason());
         }
+    }
+    // Push tx fee, only if test_accept_res == true
+    else {
+        result_0.pushKV("fee", fee);
     }
 
     result.push_back(std::move(result_0));
