@@ -179,7 +179,7 @@ static bool getScriptFromDescriptor(const std::string& descriptor, CScript& scri
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys"));
         }
 
-        // Combo desriptors can have 2 or 4 scripts, so we can't just check scripts.size() == 1
+        // Combo descriptors can have 2 or 4 scripts, so we can't just check scripts.size() == 1
         CHECK_NONFATAL(scripts.size() > 0 && scripts.size() <= 4);
 
         if (scripts.size() == 1) {
