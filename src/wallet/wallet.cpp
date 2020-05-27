@@ -153,7 +153,7 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     try {
-        if (!CWallet::Verify(chain, location, false, error, warnings)) {
+        if (!CWallet::Verify(chain, location, error, warnings)) {
             error = Untranslated("Wallet file verification failed.") + Untranslated(" ") + error;
             return nullptr;
         }
@@ -195,7 +195,7 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
     }
 
     // Wallet::Verify will check if we're trying to create a wallet with a duplicate name.
-    if (!CWallet::Verify(chain, location, false, error, warnings)) {
+    if (!CWallet::Verify(chain, location, error, warnings)) {
         error = Untranslated("Wallet file verification failed.") + Untranslated(" ") + error;
         return WalletCreationStatus::CREATION_FAILED;
     }
@@ -3650,7 +3650,7 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
     return values;
 }
 
-bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, bool salvage_wallet, bilingual_str& error_string, std::vector<bilingual_str>& warnings)
+bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error_string, std::vector<bilingual_str>& warnings)
 {
     // Do some checking on wallet path. It should be either a:
     //
@@ -3690,16 +3690,7 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
         return false;
     }
 
-    if (salvage_wallet) {
-        // Recover readable keypairs:
-        CWallet dummyWallet(&chain, WalletLocation(), WalletDatabase::CreateDummy());
-        std::string backup_filename;
-        if (!WalletBatch::Recover(wallet_path, (void *)&dummyWallet, WalletBatch::RecoverKeysOnlyFilter, backup_filename)) {
-            return false;
-        }
-    }
-
-    return WalletBatch::VerifyDatabaseFile(wallet_path, warnings, error_string);
+    return WalletBatch::VerifyDatabaseFile(wallet_path, error_string);
 }
 
 std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error, std::vector<bilingual_str>& warnings, uint64_t wallet_creation_flags)

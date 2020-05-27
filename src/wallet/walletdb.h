@@ -261,18 +261,12 @@ public:
     DBErrors FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWalletTx>& vWtx);
     DBErrors ZapWalletTx(std::list<CWalletTx>& vWtx);
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
-    /* Try to (very carefully!) recover wallet database (with a possible key type filter) */
-    static bool Recover(const fs::path& wallet_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
-    /* Recover convenience-function to bypass the key filter callback, called when verify fails, recovers everything */
-    static bool Recover(const fs::path& wallet_path, std::string& out_backup_filename);
-    /* Recover filter (used as callback), will only let keys (cryptographical keys) as KV/key-type pass through */
-    static bool RecoverKeysOnlyFilter(void *callbackData, CDataStream ssKey, CDataStream ssValue);
     /* Function to determine if a certain KV/key-type is a key (cryptographical key) type */
     static bool IsKeyType(const std::string& strType);
     /* verifies the database environment */
     static bool VerifyEnvironment(const fs::path& wallet_path, bilingual_str& errorStr);
     /* verifies the database file */
-    static bool VerifyDatabaseFile(const fs::path& wallet_path, std::vector<bilingual_str>& warnings, bilingual_str& errorStr);
+    static bool VerifyDatabaseFile(const fs::path& wallet_path, bilingual_str& errorStr);
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
@@ -291,5 +285,8 @@ private:
 
 //! Compacts BDB state so that wallet.dat is self-contained (if there are changes)
 void MaybeCompactWalletDB();
+
+//! Unserialize a given Key-Value pair and load it into the wallet
+bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr);
 
 #endif // BITCOIN_WALLET_WALLETDB_H

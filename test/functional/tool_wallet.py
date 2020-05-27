@@ -203,6 +203,14 @@ class ToolWalletTest(BitcoinTestFramework):
         assert_equal(shasum_after, shasum_before)
         self.log.debug('Wallet file shasum unchanged\n')
 
+    def test_salvage(self):
+        # TODO: Check salvage actually salvages and doesn't break things. https://github.com/bitcoin/bitcoin/issues/7463
+        self.log.info('Check salvage')
+        self.start_node(0, ['-wallet=salvage'])
+        self.stop_node(0)
+
+        self.assert_tool_output('', '-wallet=salvage', 'salvage')
+
     def run_test(self):
         self.wallet_path = os.path.join(self.nodes[0].datadir, self.chain, 'wallets', 'wallet.dat')
         self.test_invalid_tool_commands_and_args()
@@ -211,7 +219,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.test_tool_wallet_info_after_transaction()
         self.test_tool_wallet_create_on_existing_wallet()
         self.test_getwalletinfo_on_different_wallet()
-
+        self.test_salvage()
 
 if __name__ == '__main__':
     ToolWalletTest().main()

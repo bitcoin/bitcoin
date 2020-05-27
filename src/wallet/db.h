@@ -66,26 +66,7 @@ public:
     bool IsDatabaseLoaded(const std::string& db_filename) const { return m_databases.find(db_filename) != m_databases.end(); }
     fs::path Directory() const { return strPath; }
 
-    /**
-     * Verify that database file strFile is OK. If it is not,
-     * call the callback to try to recover.
-     * This must be called BEFORE strFile is opened.
-     * Returns true if strFile is OK.
-     */
-    enum class VerifyResult { VERIFY_OK,
-                        RECOVER_OK,
-                        RECOVER_FAIL };
-    typedef bool (*recoverFunc_type)(const fs::path& file_path, std::string& out_backup_filename);
-    VerifyResult Verify(const std::string& strFile, recoverFunc_type recoverFunc, std::string& out_backup_filename);
-    /**
-     * Salvage data from a file that Verify says is bad.
-     * fAggressive sets the DB_AGGRESSIVE flag (see berkeley DB->verify() method documentation).
-     * Appends binary key/value pairs to vResult, returns true if successful.
-     * NOTE: reads the entire database into memory, so cannot be used
-     * for huge databases.
-     */
-    typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char> > KeyValPair;
-    bool Salvage(const std::string& strFile, bool fAggressive, std::vector<KeyValPair>& vResult);
+    bool Verify(const std::string& strFile);
 
     bool Open(bool retry);
     void Close();
@@ -245,7 +226,6 @@ public:
 
     void Flush();
     void Close();
-    static bool Recover(const fs::path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
 
     /* flush the wallet passively (TRY_LOCK)
        ideal to be called periodically */
@@ -253,7 +233,7 @@ public:
     /* verifies the database environment */
     static bool VerifyEnvironment(const fs::path& file_path, bilingual_str& errorStr);
     /* verifies the database file */
-    static bool VerifyDatabaseFile(const fs::path& file_path, std::vector<bilingual_str>& warnings, bilingual_str& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc);
+    static bool VerifyDatabaseFile(const fs::path& file_path, bilingual_str& errorStr);
 
     template <typename K, typename T>
     bool Read(const K& key, T& value)
