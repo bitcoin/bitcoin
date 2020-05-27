@@ -6,6 +6,8 @@
 #ifndef SYSCOIN_SCRIPT_SCRIPT_ERROR_H
 #define SYSCOIN_SCRIPT_SCRIPT_ERROR_H
 
+#include <string>
+
 typedef enum ScriptError_t
 {
     SCRIPT_ERR_OK = 0,
@@ -73,6 +75,6 @@ typedef enum ScriptError_t
 
 #define SCRIPT_ERR_LAST SCRIPT_ERR_ERROR_COUNT
 
-const char* ScriptErrorString(const ScriptError error);
+std::string ScriptErrorString(const ScriptError error);
 
 #endif // SYSCOIN_SCRIPT_SCRIPT_ERROR_H

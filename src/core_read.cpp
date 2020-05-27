@@ -19,6 +19,7 @@
 #include <boost/algorithm/string/split.hpp>
 
 #include <algorithm>
+#include <string>
 
 CScript ParseScript(const std::string& s)
 {
@@ -34,10 +35,9 @@ CScript ParseScript(const std::string& s)
             if (op < OP_NOP && op != OP_RESERVED)
                 continue;
 
-            const char* name = GetOpName(static_cast<opcodetype>(op));
-            if (strcmp(name, "OP_UNKNOWN") == 0)
+            std::string strName = GetOpName(static_cast<opcodetype>(op));
+            if (strName == "OP_UNKNOWN")
                 continue;
-            std::string strName(name);
             mapOpNames[strName] = static_cast<opcodetype>(op);
             // Convenience: OP_ADD and just ADD are both recognized:
             boost::algorithm::replace_first(strName, "OP_", "");
