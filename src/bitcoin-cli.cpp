@@ -21,6 +21,7 @@
 #include <functional>
 #include <memory>
 #include <stdio.h>
+#include <string>
 #include <tuple>
 
 #include <event2/buffer.h>
@@ -158,7 +159,7 @@ struct HTTPReply
     std::string body;
 };
 
-static const char *http_errorstring(int code)
+static std::string http_errorstring(int code)
 {
     switch(code) {
 #if LIBEVENT_VERSION_NUMBER >= 0x02010300
