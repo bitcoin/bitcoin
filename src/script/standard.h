@@ -44,8 +44,7 @@ extern unsigned nMaxDatacarrierBytes;
 /**
  * Mandatory script verification flags that all new blocks must comply with for
  * them to be valid. (but old blocks may not comply with) Currently just P2SH,
- * but in the future other flags may be added, such as a soft-fork to enforce
- * strict DER encoding.
+ * but in the future other flags may be added.
  *
  * Failing one of these tests may trigger a DoS ban - see CheckInputScripts() for
  * details.
