@@ -242,6 +242,10 @@ void Shutdown(NodeContext& node)
         fFeeEstimatesInitialized = false;
     }
 
+    if (gArgs.GetArg("-persistcoinscache", DEFAULT_PERSIST_COINS_CACHE)) {
+        DumpCoinsCache();
+    }
+
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     {
         LOCK(cs_main);
@@ -397,6 +401,7 @@ void SetupServerArgs(NodeContext& node)
     gArgs.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-dbbatchsize", strprintf("Maximum database write batch size in bytes (default: %u)", nDefaultDbBatchSize), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-dbcache=<n>", strprintf("Maximum database cache size <n> MiB (%d to %d, default: %d). In addition, unused mempool memory is shared for this cache (see -maxmempool).", nMinDbCache, nMaxDbCache, nDefaultDbCache), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-persistcoinscache", strprintf("Whether to save the coins cache on shutdown and load on restart (default: %u)", DEFAULT_PERSIST_COINS_CACHE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (-nodebuglogfile to disable; default: %s)", DEFAULT_DEBUGLOGFILE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-feefilter", strprintf("Tell other nodes to filter invs to us by our mempool min fee (default: %u)", DEFAULT_FEEFILTER), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-includeconf=<file>", "Specify additional configuration file, relative to the -datadir path (only useable from configuration file, not command line)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -755,6 +760,13 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
         StartShutdown();
         return;
     }
+
+    // -persistcoinscache
+    // Start a thread to warm the coins cache if we're not reindexing
+    if (!fReindex && gArgs.GetArg("-persistcoinscache", DEFAULT_PERSIST_COINS_CACHE)) {
+        threadGroup.create_thread(std::bind(&ThreadWarmCoinsCache));
+    }
+
     } // End scope of CImportingNow
     if (gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         LoadMempool(::mempool);

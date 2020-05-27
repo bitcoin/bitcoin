@@ -75,6 +75,8 @@ static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 /** Default for -persistmempool */
 static const bool DEFAULT_PERSIST_MEMPOOL = true;
+/** Default for -persistcoinscache */
+static const bool DEFAULT_PERSIST_COINS_CACHE = true;
 /** Default for using fee filter */
 static const bool DEFAULT_FEEFILTER = true;
 /** Default for -stopatheight */
@@ -860,6 +862,8 @@ public:
     //! background validation has completed, this is the snapshot chain.
     CChainState& ValidatedChainstate() const;
 
+    bool HasValidatedChainstate() const;
+
     CChain& ValidatedChain() const { return ValidatedChainstate().m_chain; }
     CBlockIndex* ValidatedTip() const { return ValidatedChain().Tip(); }
 
@@ -906,6 +910,12 @@ bool DumpMempool(const CTxMemPool& pool);
 
 /** Load the mempool from disk. */
 bool LoadMempool(CTxMemPool& pool);
+
+/** Dump the coins cache to disk. */
+bool DumpCoinsCache();
+
+/** Thread to warm the coins cache from disk. */
+void ThreadWarmCoinsCache();
 
 //! Check whether the block associated with this index entry is pruned or not.
 inline bool IsBlockPruned(const CBlockIndex* pblockindex)
