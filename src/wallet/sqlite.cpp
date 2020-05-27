@@ -253,22 +253,118 @@ void SQLiteBatch::Close()
 
 bool SQLiteBatch::ReadKey(CDataStream&& key, CDataStream& value)
 {
-    return false;
+    if (!m_database.m_db) return false;
+    assert(m_read_stmt);
+
+    // Bind: leftmost parameter in statement is index 1
+    int res = sqlite3_bind_blob(m_read_stmt, 1, key.data(), key.size(), SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        LogPrintf("%s: Unable to bind statement: %s\n", __func__, sqlite3_errstr(res));
+        sqlite3_clear_bindings(m_read_stmt);
+        sqlite3_reset(m_read_stmt);
+        return false;
+    }
+    res = sqlite3_step(m_read_stmt);
+    if (res != SQLITE_ROW) {
+        if (res != SQLITE_DONE) {
+            // SQLITE_DONE means "not found", don't log an error in that case.
+            LogPrintf("%s: Unable to execute statement: %s\n", __func__, sqlite3_errstr(res));
+        }
+        sqlite3_clear_bindings(m_read_stmt);
+        sqlite3_reset(m_read_stmt);
+        return false;
+    }
+    // Leftmost column in result is index 0
+    const char* data = reinterpret_cast<const char*>(sqlite3_column_blob(m_read_stmt, 0));
+    int data_size = sqlite3_column_bytes(m_read_stmt, 0);
+    value.write(data, data_size);
+
+    sqlite3_clear_bindings(m_read_stmt);
+    sqlite3_reset(m_read_stmt);
+    return true;
 }
 
 bool SQLiteBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite)
 {
-    return false;
+    if (!m_database.m_db) return false;
+    assert(m_insert_stmt && m_overwrite_stmt);
+
+    sqlite3_stmt* stmt;
+    if (overwrite) {
+        stmt = m_overwrite_stmt;
+    } else {
+        stmt = m_insert_stmt;
+    }
+
+    // Bind: leftmost parameter in statement is index 1
+    // Insert index 1 is key, 2 is value
+    int res = sqlite3_bind_blob(stmt, 1, key.data(), key.size(), SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        LogPrintf("%s: Unable to bind key to statement: %s\n", __func__, sqlite3_errstr(res));
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
+        return false;
+    }
+    res = sqlite3_bind_blob(stmt, 2, value.data(), value.size(), SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        LogPrintf("%s: Unable to bind value to statement: %s\n", __func__, sqlite3_errstr(res));
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
+        return false;
+    }
+
+    // Execute
+    res = sqlite3_step(stmt);
+    sqlite3_clear_bindings(stmt);
+    sqlite3_reset(stmt);
+    if (res != SQLITE_DONE) {
+        LogPrintf("%s: Unable to execute statement: %s\n", __func__, sqlite3_errstr(res));
+    }
+    return res == SQLITE_DONE;
 }
 
 bool SQLiteBatch::EraseKey(CDataStream&& key)
 {
-    return false;
+    if (!m_database.m_db) return false;
+    assert(m_delete_stmt);
+
+    // Bind: leftmost parameter in statement is index 1
+    int res = sqlite3_bind_blob(m_delete_stmt, 1, key.data(), key.size(), SQLITE_STATIC);
+    if (res != SQLITE_OK) {
+        LogPrintf("%s: Unable to bind statement: %s\n", __func__, sqlite3_errstr(res));
+        sqlite3_clear_bindings(m_delete_stmt);
+        sqlite3_reset(m_delete_stmt);
+        return false;
+    }
+
+    // Execute
+    res = sqlite3_step(m_delete_stmt);
+    sqlite3_clear_bindings(m_delete_stmt);
+    sqlite3_reset(m_delete_stmt);
+    if (res != SQLITE_DONE) {
+        LogPrintf("%s: Unable to execute statement: %s\n", __func__, sqlite3_errstr(res));
+    }
+    return res == SQLITE_DONE;
 }
 
 bool SQLiteBatch::HasKey(CDataStream&& key)
 {
-    return false;
+    if (!m_database.m_db) return false;
+    assert(m_read_stmt);
+
+    // Bind: leftmost parameter in statement is index 1
+    bool ret = false;
+    int res = sqlite3_bind_blob(m_read_stmt, 1, key.data(), key.size(), SQLITE_STATIC);
+    if (res == SQLITE_OK) {
+        res = sqlite3_step(m_read_stmt);
+        if (res == SQLITE_ROW) {
+            ret = true;
+        }
+    }
+
+    sqlite3_clear_bindings(m_read_stmt);
+    sqlite3_reset(m_read_stmt);
+    return ret;
 }
 
 bool SQLiteBatch::StartCursor()
