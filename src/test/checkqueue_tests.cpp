@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <checkqueue.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
 #include <util/memory.h>
 #include <util/system.h>
@@ -57,14 +58,14 @@ struct FailingCheck {
 };
 
 struct UniqueCheck {
-    static std::mutex m;
-    static std::unordered_multiset<size_t> results;
+    static Mutex m;
+    static std::unordered_multiset<size_t> results GUARDED_BY(m);
     size_t check_id;
     UniqueCheck(size_t check_id_in) : check_id(check_id_in){};
     UniqueCheck() : check_id(0){};
     bool operator()()
     {
-        std::lock_guard<std::mutex> l(m);
+        LOCK(m);
         results.insert(check_id);
         return true;
     }
@@ -127,7 +128,7 @@ struct FrozenCleanupCheck {
 std::mutex FrozenCleanupCheck::m{};
 std::atomic<uint64_t> FrozenCleanupCheck::nFrozen{0};
 std::condition_variable FrozenCleanupCheck::cv{};
-std::mutex UniqueCheck::m;
+Mutex UniqueCheck::m;
 std::unordered_multiset<size_t> UniqueCheck::results;
 std::atomic<size_t> FakeCheckCheckCompletion::n_calls{0};
 std::atomic<size_t> MemoryCheck::fake_allocated_memory{0};
@@ -290,11 +291,15 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueCheck)
             control.Add(vChecks);
         }
     }
-    bool r = true;
-    BOOST_REQUIRE_EQUAL(UniqueCheck::results.size(), COUNT);
-    for (size_t i = 0; i < COUNT; ++i)
-        r = r && UniqueCheck::results.count(i) == 1;
-    BOOST_REQUIRE(r);
+    {
+        LOCK(UniqueCheck::m);
+        bool r = true;
+        BOOST_REQUIRE_EQUAL(UniqueCheck::results.size(), COUNT);
+        for (size_t i = 0; i < COUNT; ++i) {
+            r = r && UniqueCheck::results.count(i) == 1;
+        }
+        BOOST_REQUIRE(r);
+    }
     tg.interrupt_all();
     tg.join_all();
 }
