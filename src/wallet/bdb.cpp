@@ -615,42 +615,33 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
 
 bool BerkeleyDatabase::PeriodicFlush()
 {
-    if (IsDummy()) {
-        return true;
-    }
-    bool ret = false;
+    // There's nothing to do for dummy databases. Return true.
+    if (IsDummy()) return true;
+
+    // Don't flush if we can't acquire the lock.
     TRY_LOCK(cs_db, lockDb);
-    if (lockDb)
-    {
-        // Don't do this if any databases are in use
-        int nRefCount = 0;
-        std::map<std::string, int>::iterator mit = env->mapFileUseCount.begin();
-        while (mit != env->mapFileUseCount.end())
-        {
-            nRefCount += (*mit).second;
-            mit++;
-        }
+    if (!lockDb) return false;
 
-        if (nRefCount == 0)
-        {
-            std::map<std::string, int>::iterator mi = env->mapFileUseCount.find(strFile);
-            if (mi != env->mapFileUseCount.end())
-            {
-                LogPrint(BCLog::WALLETDB, "Flushing %s\n", strFile);
-                int64_t nStart = GetTimeMillis();
-
-                // Flush wallet file so it's self contained
-                env->CloseDb(strFile);
-                env->CheckpointLSN(strFile);
-
-                env->mapFileUseCount.erase(mi++);
-                LogPrint(BCLog::WALLETDB, "Flushed %s %dms\n", strFile, GetTimeMillis() - nStart);
-                ret = true;
-            }
-        }
+    // Don't flush if any databases are in use
+    for (auto it = env->mapFileUseCount.begin() ; it != env->mapFileUseCount.end(); it++) {
+        if ((*it).second > 0) return false;
     }
 
-    return ret;
+    // Don't flush if there haven't been any batch writes for this database.
+    auto it = env->mapFileUseCount.find(strFile);
+    if (it == env->mapFileUseCount.end()) return false;
+
+    LogPrint(BCLog::WALLETDB, "Flushing %s\n", strFile);
+    int64_t nStart = GetTimeMillis();
+
+    // Flush wallet file so it's self contained
+    env->CloseDb(strFile);
+    env->CheckpointLSN(strFile);
+    env->mapFileUseCount.erase(it);
+
+    LogPrint(BCLog::WALLETDB, "Flushed %s %dms\n", strFile, GetTimeMillis() - nStart);
+
+    return true;
 }
 
 bool BerkeleyDatabase::Backup(const std::string& strDest) const
