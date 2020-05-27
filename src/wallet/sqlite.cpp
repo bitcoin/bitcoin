@@ -431,17 +431,32 @@ void SQLiteBatch::CloseCursor()
 
 bool SQLiteBatch::TxnBegin()
 {
-    return false;
+    if (!m_database.m_db || sqlite3_get_autocommit(m_database.m_db) == 0) return false;
+    int res = sqlite3_exec(m_database.m_db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
+    if (res != SQLITE_OK) {
+        LogPrintf("SQLiteBatch: Failed to begin the transaction\n");
+    }
+    return res == SQLITE_OK;
 }
 
 bool SQLiteBatch::TxnCommit()
 {
-    return false;
+    if (!m_database.m_db || sqlite3_get_autocommit(m_database.m_db) != 0) return false;
+    int res = sqlite3_exec(m_database.m_db, "COMMIT TRANSACTION", nullptr, nullptr, nullptr);
+    if (res != SQLITE_OK) {
+        LogPrintf("SQLiteBatch: Failed to commit the transaction\n");
+    }
+    return res == SQLITE_OK;
 }
 
 bool SQLiteBatch::TxnAbort()
 {
-    return false;
+    if (!m_database.m_db || sqlite3_get_autocommit(m_database.m_db) != 0) return false;
+    int res = sqlite3_exec(m_database.m_db, "ROLLBACK TRANSACTION", nullptr, nullptr, nullptr);
+    if (res != SQLITE_OK) {
+        LogPrintf("SQLiteBatch: Failed to abort the transaction\n");
+    }
+    return res == SQLITE_OK;
 }
 
 bool ExistsSQLiteDatabase(const fs::path& path)
