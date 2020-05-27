@@ -64,7 +64,7 @@ public:
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
         READWRITE(obj.nPrecision, obj.vchContract, obj.vchPubData, obj.strSymbol, obj.nUpdateFlags, obj.vchPrevContract, obj.vchPrevPubData, obj.nPrevUpdateFlags,
-        Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nTotalSupply), Using<AmountCompression>(obj.nMaxSupply));
+        Using<AmountCompression>(obj.nBalance), Using<AmountCompression>(obj.nMaxSupply));
     }
 
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
@@ -77,8 +77,8 @@ public:
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-    inline void SetNull() { ClearAsset(); nPrecision = 8; nMaxSupply = -1; nTotalSupply = -1; nBalance = -1; }
-    inline bool IsNull() const { return (nBalance == -1 && nTotalSupply == -1 && nMaxSupply == -1); }
+    inline void SetNull() { ClearAsset(); nPrecision = 8; }
+    inline bool IsNull() const { return (nMaxSupply == 0); }
     bool UnserializeFromTx(const CTransaction &tx);
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     void SerializeData(std::vector<unsigned char>& vchData);

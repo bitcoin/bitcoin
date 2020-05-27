@@ -120,7 +120,6 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
             entry.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
 
         if (wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-            entry.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
             entry.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
             entry.__pushKV("precision", asset.nPrecision);
         } 
@@ -393,7 +392,6 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.vchPubData = vchFromString(publicData.write());
     newAsset.vchContract = ParseHex(strContract);
     newAsset.nBalance = nBalance;
-    newAsset.nTotalSupply = nBalance;
     newAsset.nMaxSupply = nMaxSupply;
     newAsset.nPrecision = precision;
     newAsset.nUpdateFlags = nUpdateFlags;
