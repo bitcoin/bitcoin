@@ -102,14 +102,14 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 	CAsset asset(tx);
 	if(asset.IsNull())
 		return false;
-    CAsset dbAsset;
     const uint32_t &nAsset = asset.voutAssets.begin()->first;
-    GetAsset(nAsset, dbAsset);
     entry.__pushKV("txtype", stringFromSyscoinTx(tx.nVersion));
     entry.__pushKV("txid", tx.GetHash().GetHex());  
     entry.__pushKV("blockhash", hashBlock.GetHex());  
 	entry.__pushKV("asset_guid", nAsset);
-    entry.__pushKV("symbol", dbAsset.strSymbol);
+    if (!asset.strSymbol.empty())
+		entry.__pushKV("symbol", asset.strSymbol);
+
 	if (!asset.vchPubData.empty())
 		entry.__pushKV("public_value", stringFromVch(asset.vchPubData));
 
@@ -120,10 +120,9 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 		entry.__pushKV("update_flags", asset.nUpdateFlags);
 
 	if (asset.nBalance > 0)
-		entry.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, dbAsset.nPrecision));
+		entry.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
 
 	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-		entry.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
         entry.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
 		entry.__pushKV("precision", asset.nPrecision);
 	}
