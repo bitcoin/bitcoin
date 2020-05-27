@@ -8,6 +8,7 @@
 
 #include <fs.h>
 #include <tinyformat.h>
+#include <threadsafety.h>
 #include <util/string.h>
 
 #include <atomic>
@@ -62,9 +63,10 @@ namespace BCLog {
     {
     private:
         mutable std::mutex m_cs;                   // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
-        FILE* m_fileout = nullptr;                 // GUARDED_BY(m_cs)
-        std::list<std::string> m_msgs_before_open; // GUARDED_BY(m_cs)
-        bool m_buffering{true};                    //!< Buffer messages before logging can be started. GUARDED_BY(m_cs)
+
+        FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
+        std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs);
+        bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
 
         /**
          * m_started_new_line is a state variable that will suppress printing of
@@ -79,7 +81,7 @@ namespace BCLog {
         std::string LogTimestampStr(const std::string& str);
 
         /** Slots that connect to the print signal */
-        std::list<std::function<void(const std::string&)>> m_print_callbacks /* GUARDED_BY(m_cs) */ {};
+        std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
 
     public:
         bool m_print_to_console = false;
@@ -98,14 +100,14 @@ namespace BCLog {
         /** Returns whether logs will be written to any output */
         bool Enabled() const
         {
-            std::lock_guard<std::mutex> scoped_lock(m_cs);
+            LockGuard scoped_lock(m_cs);
             return m_buffering || m_print_to_console || m_print_to_file || !m_print_callbacks.empty();
         }
 
         /** Connect a slot to the print signal and return the connection */
         std::list<std::function<void(const std::string&)>>::iterator PushBackCallback(std::function<void(const std::string&)> fun)
         {
-            std::lock_guard<std::mutex> scoped_lock(m_cs);
+            LockGuard scoped_lock(m_cs);
             m_print_callbacks.push_back(std::move(fun));
             return --m_print_callbacks.end();
         }
@@ -113,7 +115,7 @@ namespace BCLog {
         /** Delete a connection */
         void DeleteCallback(std::list<std::function<void(const std::string&)>>::iterator it)
         {
-            std::lock_guard<std::mutex> scoped_lock(m_cs);
+            LockGuard scoped_lock(m_cs);
             m_print_callbacks.erase(it);
         }
 
