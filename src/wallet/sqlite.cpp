@@ -369,16 +369,42 @@ bool SQLiteBatch::HasKey(CDataStream&& key)
 
 bool SQLiteBatch::StartCursor()
 {
-    return false;
+    assert(!m_cursor_init);
+    if (!m_database.m_db) return false;
+    m_cursor_init = true;
+    return true;
 }
 
 bool SQLiteBatch::ReadAtCursor(CDataStream& key, CDataStream& value, bool& complete)
 {
-    return false;
+    complete = false;
+
+    if (!m_cursor_init) return false;
+
+    int res = sqlite3_step(m_cursor_stmt);
+    if (res == SQLITE_DONE) {
+        complete = true;
+        return true;
+    }
+    if (res != SQLITE_ROW) {
+        LogPrintf("SQLiteBatch::ReadAtCursor: Unable to execute cursor step: %s\n", sqlite3_errstr(res));
+        return false;
+    }
+
+    // Leftmost column in result is index 0
+    const char* key_data = reinterpret_cast<const char*>(sqlite3_column_blob(m_cursor_stmt, 0));
+    int key_data_size = sqlite3_column_bytes(m_cursor_stmt, 0);
+    key.write(key_data, key_data_size);
+    const char* value_data = reinterpret_cast<const char*>(sqlite3_column_blob(m_cursor_stmt, 1));
+    int value_data_size = sqlite3_column_bytes(m_cursor_stmt, 1);
+    value.write(value_data, value_data_size);
+    return true;
 }
 
 void SQLiteBatch::CloseCursor()
 {
+    sqlite3_reset(m_cursor_stmt);
+    m_cursor_init = false;
 }
 
 bool SQLiteBatch::TxnBegin()
