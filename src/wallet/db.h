@@ -9,6 +9,7 @@
 #include <clientversion.h>
 #include <fs.h>
 #include <streams.h>
+#include <util/memory.h>
 
 #include <atomic>
 #include <memory>
@@ -152,6 +153,46 @@ public:
 
     /** Make a DatabaseBatch connected to this database */
     virtual std::unique_ptr<DatabaseBatch> MakeBatch(const char* mode = "r+", bool flush_on_close = true) = 0;
+};
+
+/** RAII class that provides access to a DummyDatabase. Never fails. */
+class DummyBatch : public DatabaseBatch
+{
+private:
+    bool ReadKey(CDataStream&& key, CDataStream& value) override { return true; }
+    bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite=true) override { return true; }
+    bool EraseKey(CDataStream&& key) override { return true; }
+    bool HasKey(CDataStream&& key) override { return true; }
+
+public:
+    void Flush() override {}
+    void Close() override {}
+
+    bool StartCursor() override { return true; }
+    bool ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete) override { return true; }
+    void CloseCursor() override {}
+    bool TxnBegin() override { return true; }
+    bool TxnCommit() override { return true; }
+    bool TxnAbort() override { return true; }
+};
+
+/** A dummy WalletDatabase that does nothing and never fails. Only used by unit tests.
+ **/
+class DummyDatabase : public WalletDatabase
+{
+public:
+    void Open(const char* mode) override {};
+    void AddRef() override {}
+    void RemoveRef() override {}
+    bool Rewrite(const char* pszSkip=nullptr) override { return true; }
+    bool Backup(const std::string& strDest) const override { return true; }
+    void Close() override {}
+    void Flush() override {}
+    bool PeriodicFlush() override { return true; }
+    void IncrementUpdateCounter() override { ++nUpdateCounter; }
+    void ReloadDbEnv() override {}
+    bool Verify(bilingual_str& errorStr) override { return true; }
+    std::unique_ptr<DatabaseBatch> MakeBatch(const char* mode = "r+", bool flush_on_close = true) override { return MakeUnique<DummyBatch>(); }
 };
 
 #endif // BITCOIN_WALLET_DB_H
