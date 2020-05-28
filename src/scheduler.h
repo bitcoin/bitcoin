@@ -29,7 +29,6 @@
 // delete t;
 // delete s; // Must be done after thread is interrupted/joined.
 //
-
 class CScheduler
 {
 public:
@@ -61,8 +60,6 @@ public:
      * to be delta_seconds sooner.
      */
     void MockForward(std::chrono::seconds delta_seconds);
-
-    // To keep things as simple as possible, there is no unschedule.
 
     // Services the queue 'forever'. Should be run in a thread,
     // and interrupted using boost::interrupt_thread
