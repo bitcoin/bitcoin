@@ -30,9 +30,6 @@ void CScheduler::serviceQueue()
     // is called.
     while (!shouldStop()) {
         try {
-            if (!shouldStop() && taskQueue.empty()) {
-                REVERSE_LOCK(lock);
-            }
             while (!shouldStop() && taskQueue.empty()) {
                 // Wait until there is something to do.
                 newTaskScheduled.wait(lock);
