@@ -62,7 +62,7 @@ namespace BCLog {
     class Logger
     {
     private:
-        mutable std::mutex m_cs;                   // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
+        mutable StdMutex m_cs; // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
 
         FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
         std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs);
