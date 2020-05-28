@@ -302,10 +302,35 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
                     if ((ch == ')' || ch == '\n') && stack.size() > 0)
                     {
                         if (fExecute) {
+                            assert(node);
+
                             // Convert argument list to JSON objects in method-dependent way,
                             // and pass it along with the method name to the dispatcher.
-                            UniValue params = RPCConvertValues(stack.back()[0], std::vector<std::string>(stack.back().begin() + 1, stack.back().end()));
                             std::string method = stack.back()[0];
+                            std::vector<std::string> args{stack.back().begin() + 1, stack.back().end()};
+
+                            // Convert block heights "@123" or "@best" to block hash when appropriate
+                            for (size_t i = 0; i < args.size(); i++) {
+                                if (!RPCConvertBlockhash(method, i) || args[i].size() <= 1 || args[i][0] != '@') continue;
+
+                                std::string gbh_method;
+                                UniValue gbh_args(UniValue::VARR);
+                                if (args[i] == "@best") {
+                                    gbh_method = "getbestblockhash";
+                                } else {
+                                    gbh_method = "getblockhash";
+                                    UniValue gbh_height;
+                                    gbh_height.read(args[i].substr(1));
+                                    if (!gbh_height.isNum()) continue;
+                                    gbh_args.push_back(gbh_height);
+                                }
+                                std::string gbh_uri;
+                                UniValue gbh_res = node->executeRpc(gbh_method, gbh_args, gbh_uri);
+                                if (gbh_res.isStr()) {
+                                    args[i] = gbh_res.get_str();
+                                }
+                            }
+                            UniValue params = RPCConvertValues(method, args);
                             std::string uri;
 #ifdef ENABLE_WALLET
                             if (wallet_model) {
@@ -313,7 +338,6 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
                                 uri = "/wallet/"+std::string(encodedName.constData(), encodedName.length());
                             }
 #endif
-                            assert(node);
                             lastResult = node->executeRpc(method, params, uri);
                         }
 
