@@ -113,6 +113,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             self.log.info("Test -getinfo and bitcoin-cli getwalletinfo return expected wallet info")
             assert_equal(cli_get_info['balance'], BALANCE)
             assert 'balances' not in cli_get_info.keys()
+            assert 'total_balance' not in cli_get_info.keys()
             wallet_info = self.nodes[0].getwalletinfo()
             assert_equal(cli_get_info['keypoolsize'], wallet_info['keypoolsize'])
             assert_equal(cli_get_info['unlocked_until'], wallet_info['unlocked_until'])
@@ -146,6 +147,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             for i in range(len(wallets)):
                 cli_get_info = self.nodes[0].cli('-getinfo', '-rpcwallet={}'.format(wallets[i])).send_cli()
                 assert 'balances' not in cli_get_info.keys()
+                assert 'total_balance' not in cli_get_info.keys()
                 assert_equal(cli_get_info['balance'], amounts[i])
                 assert_scale(cli_get_info['balance'])
 
@@ -153,6 +155,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             cli_get_info_keys = self.nodes[0].cli('-getinfo', '-rpcwallet=does-not-exist').send_cli().keys()
             assert 'balance' not in cli_get_info_keys
             assert 'balances' not in cli_get_info_keys
+            assert 'total_balance' not in cli_get_info.keys()
 
             self.log.info("Test -getinfo with multiple wallets returns all loaded wallet names and balances")
             assert_equal(set(self.nodes[0].listwallets()), set(wallets))
@@ -161,6 +164,8 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_equal(cli_get_info['balances'], {k: v for k, v in zip(wallets, amounts)})
             for wallet_name in wallets:
                 assert_scale(cli_get_info['balances'][wallet_name])
+            assert_equal(cli_get_info['total_balance'], sum(amounts))
+            assert_scale(cli_get_info['total_balance'])
 
             # Unload the default wallet and re-verify.
             self.nodes[0].unloadwallet(wallets[0])
@@ -168,24 +173,29 @@ class TestBitcoinCli(BitcoinTestFramework):
             cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
             assert 'balance' not in cli_get_info.keys()
             assert_equal(cli_get_info['balances'], {k: v for k, v in zip(wallets[1:], amounts[1:])})
+            assert_equal(cli_get_info['total_balance'], sum(amounts[1:]))
+            assert_scale(cli_get_info['total_balance'])
 
             self.log.info("Test -getinfo after unloading all wallets except a non-default one returns its balance")
             self.nodes[0].unloadwallet(wallets[2])
             assert_equal(self.nodes[0].listwallets(), [wallets[1]])
             cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
             assert 'balances' not in cli_get_info.keys()
+            assert 'total_balance' not in cli_get_info.keys()
             assert_equal(cli_get_info['balance'], amounts[1])
             assert_scale(cli_get_info['balance'])
 
             self.log.info("Test -getinfo with -rpcwallet=remaining-non-default-wallet returns only its balance")
             cli_get_info = self.nodes[0].cli('-getinfo', rpcwallet2).send_cli()
             assert 'balances' not in cli_get_info.keys()
+            assert 'total_balance' not in cli_get_info.keys()
             assert_equal(cli_get_info['balance'], amounts[1])
 
             self.log.info("Test -getinfo with -rpcwallet=unloaded wallet returns no balances")
             cli_get_info_keys = self.nodes[0].cli('-getinfo', rpcwallet3).send_cli().keys()
             assert 'balance' not in cli_get_info_keys
             assert 'balances' not in cli_get_info_keys
+            assert 'total_balance' not in cli_get_info.keys()
 
             # Test bitcoin-cli -generate.
             n1 = 3
