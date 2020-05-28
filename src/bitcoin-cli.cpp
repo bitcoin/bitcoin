@@ -14,6 +14,7 @@
 #include <rpc/mining.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
+#include <span.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/system.h>
@@ -224,6 +225,7 @@ class BaseRequestHandler
 {
 public:
     virtual ~BaseRequestHandler() {}
+    virtual void PrepareArguments(const std::string& method, std::vector<std::string>& args) {}
     virtual UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) = 0;
     virtual UniValue ProcessReply(const UniValue &batch_in) = 0;
 };
@@ -566,9 +568,16 @@ protected:
     std::string address_str;
 };
 
+static void ReplaceAtHeightByBlockHash(const std::string& method, std::vector<std::string>& args, bool named);
+
 /** Process default single requests */
 class DefaultRequestHandler: public BaseRequestHandler {
 public:
+    void PrepareArguments(const std::string& method, std::vector<std::string>& args) override
+    {
+        ReplaceAtHeightByBlockHash(method, args, gArgs.GetBoolArg("-named", DEFAULT_NAMED));
+    }
+
     UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
     {
         UniValue params;
@@ -734,6 +743,60 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     return response;
 }
 
+/**
+ * ReplaceAtHeightByBlockHash
+ *
+ * @param method  Name of the method to be called
+ * @param args    Vector of arguments to be modified
+ */
+static void ReplaceAtHeightByBlockHash(const std::string& method, std::vector<std::string>& args, bool named)
+{
+    // avoid any recursion risk
+    if (method == "getblockhash" || method == "getbestblockhash") return;
+
+    for (size_t i = 0; i < args.size(); ++i) {
+        std::string name;
+        Span<const char> value = args[i];
+
+        if (named) {
+            size_t pos = args[i].find('=');
+            if (pos == std::string::npos) continue;
+            auto namespan = value.subspan(0, pos);
+            name = std::string(namespan.data(), namespan.size());
+            if (!RPCConvertNamedBlockhash(method, name)) continue;
+            value = value.subspan(pos + 1);
+        } else {
+            if (!RPCConvertBlockhash(method, i)) continue;
+        }
+        if (value.size() <= 1 || value[0] != '@') continue;
+
+        std::string bh_method;
+        std::vector<std::string> bh_args;
+        if (value == Span<const char>("@best", 5)) {
+            bh_method = "getbestblockhash";
+        } else {
+            bh_method = "getblockhash";
+            std::string bh_arg(value.data()+1, value.size()-1);
+            if (named) {
+                bh_arg = "height=" + bh_arg;
+            }
+            bh_args.push_back(bh_arg);
+        }
+
+        DefaultRequestHandler rh;
+        const UniValue reply = ConnectAndCallRPC(&rh, bh_method, bh_args);
+        const UniValue& result = find_value(reply, "result");
+        const UniValue& error = find_value(reply, "error");
+        if (error.isNull() && result.isStr()) {
+            if (named) {
+                args[i] = name + "=" + result.get_str();
+            } else {
+                args[i] = result.get_str();
+            }
+        }
+    }
+}
+
 /** Parse UniValue result to update the message to print to std::cout. */
 static void ParseResult(const UniValue& result, std::string& strPrint)
 {
@@ -895,6 +958,7 @@ static int CommandLineRPC(int argc, char *argv[])
             // Perform RPC call
             Optional<std::string> wallet_name{};
             if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
+            rh->PrepareArguments(method, args);
             const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
 
             // Parse reply
