@@ -225,6 +225,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             self.restart_node(0, extra_args=["-addresstype=bech32", "-changetype=bech32"])
             assert_equal(Decimal(cli_get_info['Balance']), BALANCE)
             assert 'Balances' not in cli_get_info_string
+            assert 'Total balance' not in cli_get_info.keys()
             wallet_info = self.nodes[0].getwalletinfo()
             assert_equal(int(cli_get_info['Keypool size']), wallet_info['keypoolsize'])
             assert_equal(int(cli_get_info['Unlocked until']), wallet_info['unlocked_until'])
@@ -259,6 +260,7 @@ class TestBitcoinCli(BitcoinTestFramework):
                 cli_get_info_string = self.nodes[0].cli('-getinfo', f'-rpcwallet={wallets[i]}').send_cli()
                 cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
                 assert 'Balances' not in cli_get_info_string
+                assert 'Total balance' not in cli_get_info.keys()
                 assert_equal(cli_get_info["Wallet"], wallets[i])
                 assert_equal(Decimal(cli_get_info['Balance']), amounts[i])
                 assert_scale(Decimal(cli_get_info['Balance']))
@@ -267,6 +269,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             cli_get_info_string = self.nodes[0].cli('-getinfo', '-rpcwallet=does-not-exist').send_cli()
             assert 'Balance' not in cli_get_info_string
             assert 'Balances' not in cli_get_info_string
+            assert 'Total balance' not in cli_get_info.keys()
 
             self.log.info("Test -getinfo with multiple wallets returns all loaded wallet names and balances")
             assert_equal(set(self.nodes[0].listwallets()), set(wallets))
@@ -276,6 +279,8 @@ class TestBitcoinCli(BitcoinTestFramework):
             for k, v in zip(wallets, amounts):
                 assert_equal(Decimal(cli_get_info['Balances'][k]), v)
                 assert_scale(Decimal(cli_get_info['Balances'][k]))
+            assert_equal(Decimal(cli_get_info['Total balance']), sum(amounts))
+            assert_scale(cli_get_info['Total balance'])
 
             # Unload the default wallet and re-verify.
             self.nodes[0].unloadwallet(wallets[0])
@@ -287,6 +292,8 @@ class TestBitcoinCli(BitcoinTestFramework):
             for k, v in zip(wallets[1:], amounts[1:]):
                 assert_equal(Decimal(cli_get_info['Balances'][k]), v)
             assert wallets[0] not in cli_get_info
+            assert_equal(Decimal(cli_get_info['Total balance']), sum(amounts[1:]))
+            assert_scale(cli_get_info['Total balance'])
 
             self.log.info("Test -getinfo after unloading all wallets except a non-default one returns its balance")
             self.nodes[0].unloadwallet(wallets[2])
@@ -294,6 +301,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             cli_get_info_string = self.nodes[0].cli('-getinfo').send_cli()
             cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
             assert 'Balances' not in cli_get_info_string
+            assert 'Total balance' not in cli_get_info.keys()
             assert_equal(cli_get_info['Wallet'], wallets[1])
             assert_equal(Decimal(cli_get_info['Balance']), amounts[1])
             assert_scale(Decimal(cli_get_info['Balance']))
@@ -302,6 +310,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             cli_get_info_string = self.nodes[0].cli('-getinfo', rpcwallet2).send_cli()
             cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
             assert 'Balances' not in cli_get_info_string
+            assert 'Total balance' not in cli_get_info.keys()
             assert_equal(cli_get_info['Wallet'], wallets[1])
             assert_equal(Decimal(cli_get_info['Balance']), amounts[1])
 
@@ -310,6 +319,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             cli_get_info_keys = cli_get_info_string_to_dict(cli_get_info_string)
             assert 'Balance' not in cli_get_info_keys
             assert 'Balances' not in cli_get_info_string
+            assert 'Total balance' not in cli_get_info.keys()
 
             # Test bitcoin-cli -generate.
             n1 = 3
