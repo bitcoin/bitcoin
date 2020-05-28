@@ -71,10 +71,10 @@ static const unsigned int MAX_DISCONNECTED_TX_POOL_SIZE = 20000;
 static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
 static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
-/** Time to wait (in seconds) between writing blocks/block index to disk. */
-static const unsigned int DATABASE_WRITE_INTERVAL = 60 * 60;
-/** Time to wait (in seconds) between flushing chainstate to disk. */
-static const unsigned int DATABASE_FLUSH_INTERVAL = 24 * 60 * 60;
+/** Time to wait between writing blocks/block index to disk. */
+static constexpr std::chrono::hours DATABASE_WRITE_INTERVAL{1};
+/** Time to wait between flushing chainstate to disk. */
+static constexpr std::chrono::hours DATABASE_FLUSH_INTERVAL{24};
 /** Maximum age of our tip in seconds for us to be considered current for fee estimation */
 static const int64_t MAX_FEE_ESTIMATION_TIP_AGE = 3 * 60 * 60;
 
@@ -2264,8 +2264,8 @@ bool CChainState::FlushStateToDisk(
 {
     LOCK(cs_main);
     assert(this->CanFlushToDisk());
-    static int64_t nLastWrite = 0;
-    static int64_t nLastFlush = 0;
+    static std::chrono::microseconds nLastWrite{0};
+    static std::chrono::microseconds nLastFlush{0};
     std::set<int> setFilesToPrune;
     bool full_flush_completed = false;
 
@@ -2297,12 +2297,12 @@ bool CChainState::FlushStateToDisk(
                 }
             }
         }
-        int64_t nNow = GetTimeMicros();
+        const auto nNow = GetTime<std::chrono::microseconds>();
         // Avoid writing/flushing immediately after startup.
-        if (nLastWrite == 0) {
+        if (nLastWrite.count() == 0) {
             nLastWrite = nNow;
         }
-        if (nLastFlush == 0) {
+        if (nLastFlush.count() == 0) {
             nLastFlush = nNow;
         }
         // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
@@ -2310,9 +2310,9 @@ bool CChainState::FlushStateToDisk(
         // The cache is over the limit, we have to write now.
         bool fCacheCritical = mode == FlushStateMode::IF_NEEDED && cache_state >= CoinsCacheSizeState::CRITICAL;
         // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload after a crash.
-        bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow > nLastWrite + (int64_t)DATABASE_WRITE_INTERVAL * 1000000;
+        bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow > nLastWrite + DATABASE_WRITE_INTERVAL;
         // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
-        bool fPeriodicFlush = mode == FlushStateMode::PERIODIC && nNow > nLastFlush + (int64_t)DATABASE_FLUSH_INTERVAL * 1000000;
+        bool fPeriodicFlush = mode == FlushStateMode::PERIODIC && nNow > nLastFlush + DATABASE_FLUSH_INTERVAL;
         // Combine all conditions that result in a full cache flush.
         fDoFullFlush = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
         // Write blocks and block index to disk.
