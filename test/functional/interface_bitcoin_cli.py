@@ -42,6 +42,19 @@ class TestBitcoinCli(BitcoinTestFramework):
         rpc_response = self.nodes[0].getblockchaininfo()
         assert_equal(cli_response, rpc_response)
 
+        header_tests = [ ("@50", self.nodes[0].getblockhash(50)),
+                         ("@best", self.nodes[0].getbestblockhash()),
+                       ]
+        for at,hash in header_tests:
+            self.log.info("Compare response from getblockheader RPC %s/%s" % (at,hash))
+            rpc_response = self.nodes[0].getblockheader(hash)
+            cli_response = self.nodes[0].cli.getblockheader(hash)
+            cli_response_at = self.nodes[0].cli.getblockheader(at)
+            cli_response_at_named = self.nodes[0].cli.getblockheader(blockhash=at)
+            assert_equal(cli_response, rpc_response)
+            assert_equal(cli_response_at, rpc_response)
+            assert_equal(cli_response_at_named, rpc_response)
+
         user, password = get_auth_cookie(self.nodes[0].datadir, self.chain)
 
         self.log.info("Test -stdinrpcpass option")
