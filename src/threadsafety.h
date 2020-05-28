@@ -62,13 +62,13 @@ class LOCKABLE StdMutex : public std::mutex
 {
 };
 
-// LockGuard provides an annotated version of lock_guard for us
-// should only be used when sync.h Mutex/LOCK/etc aren't usable
-class SCOPED_LOCKABLE LockGuard : public std::lock_guard<StdMutex>
+// StdLockGuard provides an annotated version of std::lock_guard for us,
+// and should only be used when sync.h Mutex/LOCK/etc are not usable.
+class SCOPED_LOCKABLE StdLockGuard : public std::lock_guard<StdMutex>
 {
 public:
-    explicit LockGuard(StdMutex& cs) EXCLUSIVE_LOCK_FUNCTION(cs) : std::lock_guard<StdMutex>(cs) {}
-    ~LockGuard() UNLOCK_FUNCTION() {};
+    explicit StdLockGuard(StdMutex& cs) EXCLUSIVE_LOCK_FUNCTION(cs) : std::lock_guard<StdMutex>(cs) {}
+    ~StdLockGuard() UNLOCK_FUNCTION() {}
 };
 
 #endif // BITCOIN_THREADSAFETY_H
