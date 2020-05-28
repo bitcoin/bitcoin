@@ -318,6 +318,7 @@ BITCOIN_CORE_H = \
   walletinitinterface.h \
   wallet/bdb.h \
   wallet/coincontrol.h \
+  wallet/context.h \
   wallet/crypter.h \
   wallet/db.h \
   wallet/fees.h \
@@ -481,6 +482,7 @@ libdash_wallet_a_SOURCES = \
   interfaces/wallet.cpp \
   wallet/bdb.cpp \
   wallet/coincontrol.cpp \
+  wallet/context.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/fees.cpp \
