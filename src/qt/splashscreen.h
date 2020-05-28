@@ -43,6 +43,9 @@ public Q_SLOTS:
     /** Show message and progress */
     void showMessage(const QString &message, int alignment, const QColor &color);
 
+    /** Handle wallet load notifications. */
+    void handleLoadWallet();
+
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;
 

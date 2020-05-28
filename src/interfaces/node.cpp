@@ -27,6 +27,7 @@
 #include <support/allocators/secure.h>
 #include <sync.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <util/ref.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -41,16 +42,7 @@
 
 #include <boost/signals2/signal.hpp>
 
-class CWallet;
-fs::path GetWalletDir();
-std::vector<fs::path> ListWalletDir();
-std::vector<std::shared_ptr<CWallet>> GetWallets();
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings);
-WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings, std::shared_ptr<CWallet>& result);
-std::unique_ptr<interfaces::Handler> HandleLoadWallet(interfaces::Node::LoadWalletFn load_wallet);
-
 namespace interfaces {
-
 namespace {
 
 class NodeImpl : public Node
@@ -239,36 +231,9 @@ public:
         LOCK(::cs_main);
         return ::ChainstateActive().CoinsTip().GetCoin(output, coin);
     }
-    std::string getWalletDir() override
+    WalletClient& walletClient() override
     {
-        return GetWalletDir().string();
-    }
-    std::vector<std::string> listWalletDir() override
-    {
-        std::vector<std::string> paths;
-        for (auto& path : ListWalletDir()) {
-            paths.push_back(path.string());
-        }
-        return paths;
-    }
-    std::vector<std::unique_ptr<Wallet>> getWallets() override
-    {
-        std::vector<std::unique_ptr<Wallet>> wallets;
-        for (auto& client : m_context->chain_clients) {
-            auto client_wallets = client->getWallets();
-            std::move(client_wallets.begin(), client_wallets.end(), std::back_inserter(wallets));
-        }
-        return wallets;
-    }
-    std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
-    {
-        return MakeWallet(LoadWallet(*m_context->chain, name, error, warnings));
-    }
-    std::unique_ptr<Wallet> createWallet(const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings, WalletCreationStatus& status) override
-    {
-        std::shared_ptr<CWallet> wallet;
-        status = CreateWallet(*m_context->chain, passphrase, wallet_creation_flags, name, error, warnings, wallet);
-        return MakeWallet(wallet);
+        return *Assert(m_context->wallet_client);
     }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
@@ -285,10 +250,6 @@ public:
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
         return MakeHandler(::uiInterface.ShowProgress_connect(fn));
-    }
-    std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) override
-    {
-        return HandleLoadWallet(std::move(fn));
     }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {
