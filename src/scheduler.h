@@ -84,8 +84,8 @@ public:
      * Returns number of tasks waiting to be serviced,
      * and first and last task times
      */
-    size_t getQueueInfo(std::chrono::system_clock::time_point &first,
-                        std::chrono::system_clock::time_point &last) const;
+    size_t getQueueInfo(std::chrono::system_clock::time_point& first,
+                        std::chrono::system_clock::time_point& last) const;
 
     /** Returns true if there are threads actively running in serviceQueue() */
     bool AreThreadsServicingQueue() const;
@@ -110,19 +110,20 @@ private:
  * B() will be able to observe all of the effects of callback A() which executed
  * before it.
  */
-class SingleThreadedSchedulerClient {
+class SingleThreadedSchedulerClient
+{
 private:
-    CScheduler *m_pscheduler;
+    CScheduler* m_pscheduler;
 
     RecursiveMutex m_cs_callbacks_pending;
-    std::list<std::function<void ()>> m_callbacks_pending GUARDED_BY(m_cs_callbacks_pending);
+    std::list<std::function<void()>> m_callbacks_pending GUARDED_BY(m_cs_callbacks_pending);
     bool m_are_callbacks_running GUARDED_BY(m_cs_callbacks_pending) = false;
 
     void MaybeScheduleProcessQueue();
     void ProcessQueue();
 
 public:
-    explicit SingleThreadedSchedulerClient(CScheduler *pschedulerIn) : m_pscheduler(pschedulerIn) {}
+    explicit SingleThreadedSchedulerClient(CScheduler* pschedulerIn) : m_pscheduler(pschedulerIn) {}
 
     /**
      * Add a callback to be executed. Callbacks are executed serially
@@ -130,7 +131,7 @@ public:
      * Practically, this means that callbacks can behave as if they are executed
      * in order by a single thread.
      */
-    void AddToProcessQueue(std::function<void ()> func);
+    void AddToProcessQueue(std::function<void()> func);
 
     /**
      * Processes all remaining queue members on the calling thread, blocking until queue is empty
