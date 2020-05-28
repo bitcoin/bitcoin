@@ -62,7 +62,7 @@ namespace BCLog {
     class Logger
     {
     private:
-        mutable std::mutex m_cs;                   // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
+        mutable StdMutex m_cs; // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
 
         FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
         std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs);
@@ -100,14 +100,14 @@ namespace BCLog {
         /** Returns whether logs will be written to any output */
         bool Enabled() const
         {
-            LockGuard scoped_lock(m_cs);
+            StdLockGuard scoped_lock(m_cs);
             return m_buffering || m_print_to_console || m_print_to_file || !m_print_callbacks.empty();
         }
 
         /** Connect a slot to the print signal and return the connection */
         std::list<std::function<void(const std::string&)>>::iterator PushBackCallback(std::function<void(const std::string&)> fun)
         {
-            LockGuard scoped_lock(m_cs);
+            StdLockGuard scoped_lock(m_cs);
             m_print_callbacks.push_back(std::move(fun));
             return --m_print_callbacks.end();
         }
@@ -115,7 +115,7 @@ namespace BCLog {
         /** Delete a connection */
         void DeleteCallback(std::list<std::function<void(const std::string&)>>::iterator it)
         {
-            LockGuard scoped_lock(m_cs);
+            StdLockGuard scoped_lock(m_cs);
             m_print_callbacks.erase(it);
         }
 
