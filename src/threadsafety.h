@@ -56,12 +56,18 @@
 #define ASSERT_EXCLUSIVE_LOCK(...)
 #endif // __GNUC__
 
+// StdMutex provides an annotated version of std::mutex for us,
+// and should only be used when sync.h Mutex/LOCK/etc are not usable.
+class LOCKABLE StdMutex : public std::mutex
+{
+};
+
 // LockGuard provides an annotated version of lock_guard for us
 // should only be used when sync.h Mutex/LOCK/etc aren't usable
-class SCOPED_LOCKABLE LockGuard : public std::lock_guard<std::mutex>
+class SCOPED_LOCKABLE LockGuard : public std::lock_guard<StdMutex>
 {
 public:
-    explicit LockGuard(std::mutex& cs) EXCLUSIVE_LOCK_FUNCTION(cs) : std::lock_guard<std::mutex>(cs) { }
+    explicit LockGuard(StdMutex& cs) EXCLUSIVE_LOCK_FUNCTION(cs) : std::lock_guard<StdMutex>(cs) {}
     ~LockGuard() UNLOCK_FUNCTION() {};
 };
 
