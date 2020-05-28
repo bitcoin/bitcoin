@@ -176,11 +176,11 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
 
         loop.exec();
         QString dataLine = "";
-
+        bool err = false;
+        
         if (reply->error()) {            
-            QMessageBox msgBoxErrorE;
-            msgBoxErrorE.setText("Error:" + reply->errorString());
-            msgBoxErrorE.exec();
+            err = true;
+            vbkMessage = "BFI not setup yet, specify url in vbitcoin.conf";
         } else {
             QByteArray buffer = reply->readAll();
             dataLine = buffer.constData();
@@ -199,11 +199,13 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
         if(isAttackInProgress == true ) { 
             vbkMessage = "Alternate Chain Detected, wait for Bitcoin Finality";
         }
-        else { 
-            if( spFinality > 0 ) { 
-                vbkMessage = "" + QString::number(spFinality) + tr(" blocks of Bitcoin Finality") ;
-            } else if( spFinality <= 0 ) { 
-                vbkMessage = "" + QString::number(spFinality) + tr(" blocks until Bitcoin Finality") ;
+        else {
+            if( !err ) { 
+                if( spFinality > 0 ) { 
+                    vbkMessage = "" + QString::number(spFinality) + tr(" blocks of Bitcoin Finality") ;
+                } else if( spFinality <= 0 ) { 
+                    vbkMessage = "" + QString::number(spFinality) + tr(" blocks until Bitcoin Finality") ;
+                }
             }
         }
     } catch(...) { 

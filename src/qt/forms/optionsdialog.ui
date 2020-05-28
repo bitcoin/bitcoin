@@ -724,7 +724,11 @@
             <string>........ This is the data tool tip </string>
            </property>
            <property name="text">
-            <string>&amp;this is the explanation</string>
+            <string>Bitcoin Finality Indicator (BFI) indicates when a transaction on an altchain network has as much
+            security as a transaction on Bitcoin itself. See here for more details:
+            https://wiki.veriblock.org/index.php/How_VeriBlock_PoP_BFI_Protects_Altchains.
+            The BFI service can be run locally, or for convenience, directly pulled from a hosted website (like
+            looking up transactions in an altchain web explorer).</string>
            </property>
            
           </widget>
