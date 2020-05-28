@@ -11,7 +11,6 @@
 #include <node/context.h>
 #include <pubkey.h>
 #include <random.h>
-#include <scheduler.h>
 #include <txmempool.h>
 #include <util/string.h>
 
