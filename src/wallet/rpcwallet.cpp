@@ -56,6 +56,13 @@ bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string&
     return false;
 }
 
+std::string HelpRequiringPassphrase(CWallet * const pwallet)
+{
+    return pwallet && pwallet->IsCrypted()
+        ? "\nRequires wallet passphrase to be set with walletpassphrase call."
+        : "";
+}
+
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
 {
     std::string wallet_name;
@@ -66,20 +73,12 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
     }
 
     std::vector<std::shared_ptr<CWallet>> wallets = GetWallets();
-    return wallets.size() == 1 || (request.fHelp && wallets.size() > 0) ? wallets[0] : nullptr;
-}
+    if (wallets.size() == 1 || (request.fHelp && wallets.size() > 0)) {
+        return wallets[0];
+    }
 
-std::string HelpRequiringPassphrase(CWallet * const pwallet)
-{
-    return pwallet && pwallet->IsCrypted()
-        ? "\nRequires wallet passphrase to be set with walletpassphrase call."
-        : "";
-}
+    if (request.fHelp) return nullptr;
 
-bool EnsureWalletIsAvailable(CWallet * const pwallet, bool avoidException)
-{
-    if (pwallet) return true;
-    if (avoidException) return false;
     if (!HasWallets()) {
         throw JSONRPCError(
             RPC_WALLET_NOT_FOUND, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)");
@@ -2680,12 +2679,7 @@ static UniValue listwallets(const JSONRPCRequest& request)
     UniValue obj(UniValue::VARR);
 
     for (const std::shared_ptr<CWallet>& wallet : GetWallets()) {
-        if (!EnsureWalletIsAvailable(wallet.get(), request.fHelp)) {
-            return NullUniValue;
-        }
-
         LOCK(wallet->cs_wallet);
-
         obj.push_back(wallet->GetName());
     }
 
