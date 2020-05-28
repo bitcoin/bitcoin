@@ -5,11 +5,6 @@
 #ifndef BITCOIN_SCHEDULER_H
 #define BITCOIN_SCHEDULER_H
 
-//
-// NOTE:
-// boost::thread should be ported to std::thread
-// when we support C++11.
-//
 #include <condition_variable>
 #include <functional>
 #include <list>
@@ -26,7 +21,7 @@
 // CScheduler* s = new CScheduler();
 // s->scheduleFromNow(doSomething, std::chrono::milliseconds{11}); // Assuming a: void doSomething() { }
 // s->scheduleFromNow([=] { this->func(argument); }, std::chrono::milliseconds{3});
-// boost::thread* t = new boost::thread(std::bind(CScheduler::serviceQueue, s));
+// std::thread* t = new std::thread([&] { s->serviceQueue(); });
 //
 // ... then at program shutdown, make sure to call stop() to clean up the thread(s) running serviceQueue:
 // s->stop();
