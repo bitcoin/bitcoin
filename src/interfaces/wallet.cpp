@@ -16,7 +16,9 @@
 #include <ui_interface.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/ref.h>
 #include <util/system.h>
+#include <wallet/context.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
 #include <wallet/ismine.h>
@@ -482,18 +484,21 @@ class WalletClientImpl : public ChainClient
 {
 public:
     WalletClientImpl(Chain& chain, std::vector<std::string> wallet_filenames)
-        : m_chain(chain), m_wallet_filenames(std::move(wallet_filenames))
+        : m_wallet_filenames(std::move(wallet_filenames))
     {
+        m_context.chain = &chain;
     }
     void registerRpcs() override
     {
-        g_rpc_chain = &m_chain;
         for (const CRPCCommand& command : GetWalletRPCCommands()) {
-            m_rpc_handlers.emplace_back(m_chain.handleRpc(command));
+            m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
+                return command.actor({request, m_context}, result, last_handler);
+            }, command.argNames, command.unique_id);
+            m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
     }
-    bool verify() override { return VerifyWallets(m_chain, m_wallet_filenames); }
-    bool load() override { return LoadWallets(m_chain, m_wallet_filenames); }
+    bool verify() override { return VerifyWallets(*m_context.chain, m_wallet_filenames); }
+    bool load() override { return LoadWallets(*m_context.chain, m_wallet_filenames); }
     void start(CScheduler& scheduler) override { return StartWallets(scheduler); }
     void flush() override { return FlushWallets(); }
     void stop() override { return StopWallets(); }
@@ -508,9 +513,10 @@ public:
     }
     ~WalletClientImpl() override { UnloadWallets(); }
 
-    Chain& m_chain;
+    WalletContext m_context;
     std::vector<std::string> m_wallet_filenames;
     std::vector<std::unique_ptr<Handler>> m_rpc_handlers;
+    std::list<CRPCCommand> m_rpc_commands;
 };
 
 } // namespace
