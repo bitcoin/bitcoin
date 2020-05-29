@@ -213,8 +213,6 @@ SyscoinApplication::~SyscoinApplication()
 
     delete window;
     window = nullptr;
-    delete optionsModel;
-    optionsModel = nullptr;
     delete platformStyle;
     platformStyle = nullptr;
 }
@@ -228,7 +226,7 @@ void SyscoinApplication::createPaymentServer()
 
 void SyscoinApplication::createOptionsModel(bool resetSettings)
 {
-    optionsModel = new OptionsModel(m_node, nullptr, resetSettings);
+    optionsModel = new OptionsModel(m_node, this, resetSettings);
 }
 
 void SyscoinApplication::createWindow(const NetworkStyle *networkStyle)
