@@ -17,6 +17,7 @@
 
 #include <QAbstractItemDelegate>
 #include <QApplication>
+#include <QMetaType>
 #include <QPainter>
 #include <QStatusTipEvent>
 

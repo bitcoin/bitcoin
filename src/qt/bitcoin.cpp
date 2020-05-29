@@ -43,6 +43,7 @@
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
+#include <QMetaType>
 #include <QSettings>
 #include <QThread>
 #include <QTimer>
@@ -59,9 +60,10 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 #endif
 
-// Declare meta types used for QMetaObject::invokeMethod
+// Make types (not aliases) available to QVariant and other template-based Qt functions.
+// Additionally qRegisterMetaType() calls are required to make them available to
+// non-template based Qt functions, including those that use Qt::QueuedConnection.
 Q_DECLARE_METATYPE(bool*)
-Q_DECLARE_METATYPE(CAmount)
 Q_DECLARE_METATYPE(SynchronizationState)
 Q_DECLARE_METATYPE(uint256)
 
