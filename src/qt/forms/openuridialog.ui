@@ -30,6 +30,23 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QPushButton" name="pasteButton">
+       <property name="toolTip">
+        <string>Paste address from clipboard</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
+        </property>
+        <property name="shortcut">
+         <string>Alt+P</string>
+        </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

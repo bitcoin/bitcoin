@@ -9,13 +9,15 @@
 #include <qt/sendcoinsrecipient.h>
 
 #include <QUrl>
+#include <QClipboard>
 
-OpenURIDialog::OpenURIDialog(QWidget *parent) :
+OpenURIDialog::OpenURIDialog(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::OpenURIDialog)
 {
     ui->setupUi(this);
-
+    ui->pasteButton->setIcon(platformStyle->SingleColorIcon(":/icons/editpaste"));
+    QObject::connect(ui->pasteButton, &QPushButton::clicked, [=] { ui->uriEdit->setText(QApplication::clipboard()->text()); });
     GUIUtil::handleCloseWindowShortcut(this);
 }
 

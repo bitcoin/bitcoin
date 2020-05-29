@@ -7,6 +7,8 @@
 
 #include <QDialog>
 
+#include <qt/platformstyle.h>
+
 namespace Ui {
     class OpenURIDialog;
 }
@@ -16,7 +18,7 @@ class OpenURIDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit OpenURIDialog(QWidget *parent);
+    explicit OpenURIDialog(const PlatformStyle* platformStyle, QWidget *parent);
     ~OpenURIDialog();
 
     QString getURI();
