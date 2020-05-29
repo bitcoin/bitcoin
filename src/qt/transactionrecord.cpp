@@ -162,7 +162,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     return parts;
 }
 
-void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t block_time)
+void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, const uint256& block_hash, int numBlocks, int64_t block_time)
 {
     // Determine transaction status
 
@@ -174,7 +174,7 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
         idx);
     status.countsForBalance = wtx.is_trusted && !(wtx.blocks_to_maturity > 0);
     status.depth = wtx.depth_in_main_chain;
-    status.cur_num_blocks = numBlocks;
+    status.m_cur_block_hash = block_hash;
 
     const bool up_to_date = ((int64_t)QDateTime::currentMSecsSinceEpoch() / 1000 - block_time < MAX_BLOCK_TIME_GAP);
     if (up_to_date && !wtx.is_final) {
@@ -233,9 +233,9 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
     status.needsUpdate = false;
 }
 
-bool TransactionRecord::statusUpdateNeeded(int numBlocks) const
+bool TransactionRecord::statusUpdateNeeded(const uint256& block_hash) const
 {
-    return status.cur_num_blocks != numBlocks || status.needsUpdate;
+    return status.m_cur_block_hash != block_hash || status.needsUpdate;
 }
 
 QString TransactionRecord::getTxHash() const

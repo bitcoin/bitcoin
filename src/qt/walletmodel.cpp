@@ -46,7 +46,6 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel
     transactionTableModel(nullptr),
     recentRequestsTableModel(nullptr),
     cachedEncryptionStatus(Unencrypted),
-    cachedNumBlocks(0),
     timer(new QTimer(this))
 {
     fHaveWatchOnly = m_wallet->haveWatchOnly();
@@ -88,24 +87,23 @@ void WalletModel::pollBalanceChanged()
 {
     // Avoid recomputing wallet balances unless a TransactionChanged or
     // BlockTip notification was received.
-    if (!fForceCheckBalanceChanged && cachedNumBlocks == m_client_model->getNumBlocks()) return;
+    if (!fForceCheckBalanceChanged && m_cached_last_update_tip == m_client_model->getBestBlockHash()) return;
 
     // Try to get balances and return early if locks can't be acquired. This
     // avoids the GUI from getting stuck on periodical polls if the core is
     // holding the locks for a longer time - for example, during a wallet
     // rescan.
     interfaces::WalletBalances new_balances;
-    int numBlocks = -1;
-    if (!m_wallet->tryGetBalances(new_balances, numBlocks)) {
+    uint256 block_hash;
+    if (!m_wallet->tryGetBalances(new_balances, block_hash)) {
         return;
     }
 
-    if(fForceCheckBalanceChanged || numBlocks != cachedNumBlocks)
-    {
+    if (fForceCheckBalanceChanged || block_hash != m_cached_last_update_tip) {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
-        cachedNumBlocks = numBlocks;
+        m_cached_last_update_tip = block_hash;
 
         checkBalanceChanged(new_balances);
         if(transactionTableModel)
