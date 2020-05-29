@@ -5,6 +5,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test framework addition to include VeriBlock PoP functions"""
 import struct
+from typing import List
+
 from .messages import ser_uint256, hash256, uint256_from_str
 from .script import hash160, CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG
 from .test_node import TestNode
@@ -42,6 +44,26 @@ def getKeystones(node, height):
     b = node.getblockhash(prev2)
 
     return [a, b]
+
+
+# size = size of chain to be created
+def create_endorsed_chain(node, apm, size: int, addr: str) -> None:
+    hash = node.getbestblockhash()
+    block = node.getblock(hash)
+    height = block['height']
+
+    for i in range(size):
+        txid = endorse_block(node, apm, height, addr)
+        containinghash = node.generate(nblocks=1)[0]
+        # endorsing prev tip
+        node.waitforblockheight(height + 1)
+        containing = node.getblock(containinghash)
+        assert txid in containing['tx'], \
+            "iteration {}: containing block at height {}" \
+            "does not contain pop tx {}".format(i, containing['height'], txid)
+
+        # we advanced 1 block further
+        height += 1
 
 
 def endorse_block(node, apm, height: int, addr: str) -> str:
