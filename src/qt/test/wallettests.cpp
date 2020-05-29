@@ -164,10 +164,10 @@ void TestGUI(interfaces::Node& node)
     overviewPage.setClientModel(&clientModel);
     overviewPage.setWalletModel(&walletModel);
     QLabel* balanceLabel = overviewPage.findChild<QLabel*>("labelBalance");
-    QString balanceText = balanceLabel->text();
+    QString balanceText = balanceLabel->text().trimmed();
     int unit = walletModel.getOptionsModel()->getDisplayUnit();
     CAmount balance = walletModel.wallet().getBalance();
-    QString balanceComparison = BitcoinUnits::floorHtmlWithUnit(unit, balance, false, BitcoinUnits::separatorAlways);
+    QString balanceComparison = BitcoinUnits::floorHtmlWithPrivacy(unit, balance, BitcoinUnits::separatorAlways, false);
     QCOMPARE(balanceText, balanceComparison);
 
     // Check Request Payment button

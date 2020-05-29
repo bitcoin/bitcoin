@@ -131,6 +131,7 @@ public Q_SLOTS:
     /** Update selected DASH amount from transactionview */
     void trxAmount(QString amount);
 Q_SIGNALS:
+    void setPrivacy(bool privacy);
     void transactionClicked();
     void coinsSent();
     /**  Fired when a message should be reported to the user */

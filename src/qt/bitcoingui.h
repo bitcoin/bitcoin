@@ -103,6 +103,8 @@ public:
     /** Disconnect core signals from GUI client */
     void unsubscribeFromCoreSignals();
 
+    bool isPrivacyModeActivated() const;
+
 protected:
     void changeEvent(QEvent *e) override;
     void closeEvent(QCloseEvent *event) override;
@@ -173,6 +175,7 @@ private:
     QAction* showCoinJoinHelpAction = nullptr;
     QAction* m_close_all_wallets_action{nullptr};
     QAction* m_wallet_selector_action = nullptr;
+    QAction* m_mask_values_action{nullptr};
 
     QComboBox* m_wallet_selector = nullptr;
 
@@ -253,6 +256,7 @@ Q_SIGNALS:
     void consoleShown(RPCConsole* console);
     /** Restart handling */
     void requestedRestart(QStringList args);
+    void setPrivacy(bool privacy);
 
 public Q_SLOTS:
     /** Set number of connections shown in the UI */
