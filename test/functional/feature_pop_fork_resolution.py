@@ -12,9 +12,10 @@ node[2] mines 97 blocks, total height is 200 (fork B)
 node[0] mines 10 blocks, total height is 113 (fork A)
 node[0] endorses block 113 (fork A tip).
 node[0] mines pop tx in block 114 (fork A tip)
+node[0] mines 9 more blocks
 node[2] is connected to nodes[0,1]
 
-After sync has been completed, expect all nodes to be on same height (fork A, block 114)
+After sync has been completed, expect all nodes to be on same height (fork A, block 123)
 """
 
 from test_framework.pop import endorse_block
@@ -88,11 +89,15 @@ class PopFr(BitcoinTestFramework):
         txid = endorse_block(self.nodes[0], self.apm, 113, addr0)
         self.log.info("node0 endorsed block 113 (fork A tip)")
         # mine pop tx on node0
-        containinghash = self.nodes[0].generate(nblocks=1)
+        containinghash = self.nodes[0].generate(nblocks=10)
+        self.log.info("node0 mines 10 more blocks")
         self.sync_all(self.nodes[0:1])
         containingblock = self.nodes[0].getblock(containinghash[0])
+        tip = self.get_best_block(self.nodes[0])
         assert txid in containingblock['tx'], "pop tx is not in containing block"
-        self.log.info("nodes[0,1] are in sync, pop tx containing block is 114 on fork A")
+        self.sync_blocks(self.nodes[0:1])
+        self.log.info("nodes[0,1] are in sync, pop tx containing block is {}".format(containingblock['height']))
+        self.log.info("node0 tip is {}".format(tip['height']))
 
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[1], 2)
@@ -107,9 +112,10 @@ class PopFr(BitcoinTestFramework):
         assert_equal(bestblocks[0], bestblocks[2])
         self.log.info("all nodes switched to common block")
 
-        assert bestblocks[0]['height'] == containingblock['height'], \
-            "nodes[0,1] expected to select shorter chain (114) with higher pop score\n" \
-            "but selected longer chain (200)"
+        for i in range(3):
+            assert bestblocks[i]['height'] == tip['height'], \
+                "nodes[{}] expected to select shorter chain ({}) with higher pop score\n" \
+                "but selected longer chain ({})".format(i, tip['height'], bestblocks[i]['height'])
 
         self.log.info("all nodes selected fork A as best chain")
 
