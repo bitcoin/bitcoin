@@ -16,6 +16,7 @@
 #include <protocol.h>
 #include <script/script.h>
 #include <script/standard.h>
+#include <ui_interface.h>
 #include <util.h>
 
 #ifdef WIN32
@@ -42,6 +43,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDateTime>
+#include <QDebug>
 #include <QDesktopServices>
 #include <QDesktopWidget>
 #include <QDoubleValidator>
@@ -84,6 +86,26 @@ static const QString traditionalTheme = "Traditional";
 static const QString defaultTheme = "Light";
 // The prefix a theme name should have if we want to apply dark colors and styles to it
 static const QString darkThemePrefix = "Dark";
+
+/** Font related default values. */
+static const QString defaultFontFamily = "Montserrat";
+#ifdef Q_OS_MAC
+static const QFont::Weight defaultFontWeightNormal = QFont::ExtraLight;
+static const QFont::Weight defaultFontWeightBold = QFont::Medium;
+static const int defaultFontSize = 12;
+#else
+static const QFont::Weight defaultFontWeightNormal = QFont::Light;
+static const QFont::Weight defaultFontWeightBold = QFont::Medium;
+static const int defaultFontSize = 12;
+#endif
+
+/** Font related variables. */
+// Weight for normal text
+QFont::Weight fontWeightNormal = defaultFontWeightNormal;
+// Weight for bold text
+QFont::Weight fontWeightBold = defaultFontWeightBold;
+// Weight for bold text
+int fontSize = defaultFontSize;
 
 static const std::map<ThemedColor, QColor> themedColors = {
     { ThemedColor::DEFAULT, QColor(0, 0, 0) },
@@ -976,6 +998,184 @@ QString loadStyleSheet()
     }
 
     return *stylesheet.get();
+}
+
+QFont::Weight getFontWeightNormal()
+{
+    return fontWeightNormal;
+}
+
+QFont::Weight getFontWeightBold()
+{
+    return fontWeightBold;
+}
+
+int getFontSize()
+{
+    return fontSize;
+}
+
+bool loadFonts()
+{
+    QString family = defaultFontFamily;
+    QString italic = "Italic";
+
+    std::map<QString, bool> mapStyles{
+        {"Thin", true},
+        {"ExtraLight", true},
+        {"Light", true},
+        {"Italic", false},
+        {"Regular", false},
+        {"Medium", true},
+        {"SemiBold", true},
+        {"Bold", true},
+        {"ExtraBold", true},
+        {"Black", true},
+    };
+
+    QFontDatabase database;
+    std::vector<int> vecFontIds;
+
+    for (const auto& it : mapStyles) {
+        QString font = ":fonts/" + family + "-" + it.first;
+        vecFontIds.push_back(QFontDatabase::addApplicationFont(font));
+        qDebug() << __func__ << ": " << font << " loaded with id " << vecFontIds.back();
+        if (it.second) {
+            vecFontIds.push_back(QFontDatabase::addApplicationFont(font + italic));
+            qDebug() << __func__ << ": " << font + italic << " loaded with id " << vecFontIds.back();
+        }
+    }
+
+    // Fail if an added id is -1 which means QFontDatabase::addApplicationFont failed.
+    if (std::find(vecFontIds.begin(), vecFontIds.end(), -1) != vecFontIds.end()) {
+        return InitError("Font loading failed.");
+    }
+
+    // Print debug logs for added fonts fetched by the added ids
+    for (const auto& i : vecFontIds) {
+        auto families = QFontDatabase::applicationFontFamilies(i);
+        for (const QString& f : families) {
+            qDebug() << __func__ << ": - Font id " << i << " is family: " << f;
+            const QStringList fontStyles = database.styles(f);
+            for (const QString& style : fontStyles) {
+                qDebug() << __func__ << ": Style for family " << f << " with id: " << i << ": " << style;
+            }
+        }
+    }
+    // Print debug logs for added fonts fetched by the family name
+    const QStringList fontFamilies = database.families();
+    for (const QString& f : fontFamilies) {
+        if (f.contains(family)) {
+            const QStringList fontStyles = database.styles(f);
+            for (const QString& style : fontStyles) {
+                qDebug() << __func__ << ": Family: " << f << ", Style: " << style;
+            }
+        }
+    }
+
+    setApplicationFont();
+
+    return true;
+}
+
+void setApplicationFont()
+{
+    static QFont osDefaultFont = QApplication::font();
+
+    if (dashThemeActive()) {
+        QString family = defaultFontFamily;
+        QFont appFont = QFont(family);
+#ifdef Q_OS_MAC
+        if (getFontWeightNormal() != defaultFontWeightNormal) {
+            appFont = getFontNormal();
+        } else {
+            appFont.setWeight(defaultFontWeightNormal);
+        }
+        appFont.setPointSize(getFontSize());
+#else
+        appFont.setWeight(getFontWeightNormal());
+        appFont.setPointSize(getFontSize());
+#endif
+        qApp->setFont(appFont);
+    } else {
+        qApp->setFont(osDefaultFont);
+    }
+
+    qDebug() << __func__ << ": " << qApp->font().toString() <<
+                " family: " << qApp->font().family() <<
+                ", style: " << qApp->font().styleName() <<
+                " match: " << qApp->font().exactMatch();
+}
+
+void setFont(const std::vector<QWidget*> &vecWidgets, QFont::Weight weight, bool fItalic)
+{
+    QFont font = getFont(weight, fItalic);
+
+    for (auto it : vecWidgets) {
+        it->setFont(font);
+    }
+}
+
+QFont getFont(QFont::Weight weight, bool fItalic)
+{
+    QFont font;
+    if (dashThemeActive()) {
+
+        static std::map<QFont::Weight, QString> mapMontserratMapping{
+            {QFont::Thin, "Thin"},
+            {QFont::ExtraLight, "ExtraLight"},
+            {QFont::Light, "Light"},
+            {QFont::Medium, "Medium"},
+            {QFont::DemiBold, "SemiBold"},
+            {QFont::ExtraBold, "ExtraBold"},
+            {QFont::Black, "Black"},
+#ifdef Q_OS_MAC
+            {QFont::Normal, "Regular"},
+            {QFont::Bold, "Bold"},
+#else
+            {QFont::Normal, ""},
+            {QFont::Bold, ""},
+#endif
+        };
+
+        assert(mapMontserratMapping.count(weight));
+
+#ifdef Q_OS_MAC
+
+        QString styleName = mapMontserratMapping[weight];
+
+        if (fItalic) {
+            if (styleName == "Regular") {
+                styleName = "Italic";
+            } else {
+                styleName += " Italic";
+            }
+        }
+
+        font.setFamily(defaultFontFamily);
+        font.setStyleName(styleName);
+#else
+        font.setFamily(defaultFontFamily + " " + mapMontserratMapping[weight]);
+        font.setWeight(weight);
+        font.setStyle(fItalic ? QFont::StyleItalic : QFont::StyleNormal);
+#endif
+    } else {
+        font.setFamily(QApplication::font().family());
+        font.setWeight(weight > QFont::Normal ? QFont::Bold : QFont::Normal);
+        font.setStyle(fItalic ? QFont::StyleItalic : QFont::StyleNormal);
+    }
+    qDebug() << "GUIUtil::getFont() - " << font.toString() << " family: " << font.family() << ", style: " << font.styleName() << " match: " << font.exactMatch();
+    return font;
+}
+
+QFont getFontNormal()
+{
+    return getFont(getFontWeightNormal());
+}
+
+QFont getFontBold()
+{
+    return getFont(getFontWeightBold());
 }
 
 bool dashThemeActive()

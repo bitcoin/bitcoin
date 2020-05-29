@@ -233,6 +233,40 @@ namespace GUIUtil
     /** Load global CSS theme */
     QString loadStyleSheet();
 
+    /** Application font weight for normal text. */
+    extern QFont::Weight fontWeightNormal;
+    /** Application font weight for bold text. */
+    extern QFont::Weight fontWeightBold;
+    /** Application base font size. */
+    extern int fontSize;
+
+    /** get normal font weight */
+    QFont::Weight getFontWeightNormal();
+    /** get bold font weight */
+    QFont::Weight getFontWeightBold();
+    /** get font size */
+    int getFontSize();
+
+    /** Load dash specific appliciation fonts */
+    bool loadFonts();
+
+    /** Set an application wide default font, depends on the selected theme */
+    void setApplicationFont();
+
+    /** Workaround to set correct font styles in all themes since there is a bug in macOS which leads to
+        issues loading variations of montserrat in css */
+    void setFont(const std::vector<QWidget*>& vecWidgets, QFont::Weight weight, bool fItalic = false);
+
+    /** Get a properly weighted QFont object with the font Montserrat
+        Use ExtraLight as default as this lines up with the default in css. */
+    QFont getFont(QFont::Weight weight, bool fItalic = false);
+
+    /** Get the default normal QFont */
+    QFont getFontNormal();
+
+    /** Get the default bold QFont */
+    QFont getFontBold();
+
     /** Check if a dash specific theme is activated (light/dark) */
     bool dashThemeActive();
 

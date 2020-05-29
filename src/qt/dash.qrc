@@ -58,6 +58,26 @@
         <file alias="general">res/css/general.css</file>
         <file alias="scrollbars">res/css/scrollbars.css</file>
     </qresource>
+    <qresource prefix="/fonts">
+        <file alias="Montserrat-Black">res/fonts/Montserrat/Montserrat-Black.otf</file>
+        <file alias="Montserrat-BlackItalic">res/fonts/Montserrat/Montserrat-BlackItalic.otf</file>
+        <file alias="Montserrat-Bold">res/fonts/Montserrat/Montserrat-Bold.otf</file>
+        <file alias="Montserrat-BoldItalic">res/fonts/Montserrat/Montserrat-BoldItalic.otf</file>
+        <file alias="Montserrat-ExtraBold">res/fonts/Montserrat/Montserrat-ExtraBold.otf</file>
+        <file alias="Montserrat-ExtraBoldItalic">res/fonts/Montserrat/Montserrat-ExtraBoldItalic.otf</file>
+        <file alias="Montserrat-ExtraLight">res/fonts/Montserrat/Montserrat-ExtraLight.otf</file>
+        <file alias="Montserrat-ExtraLightItalic">res/fonts/Montserrat/Montserrat-ExtraLightItalic.otf</file>
+        <file alias="Montserrat-Italic">res/fonts/Montserrat/Montserrat-Italic.otf</file>
+        <file alias="Montserrat-Light">res/fonts/Montserrat/Montserrat-Light.otf</file>
+        <file alias="Montserrat-LightItalic">res/fonts/Montserrat/Montserrat-LightItalic.otf</file>
+        <file alias="Montserrat-Medium">res/fonts/Montserrat/Montserrat-Medium.otf</file>
+        <file alias="Montserrat-MediumItalic">res/fonts/Montserrat/Montserrat-MediumItalic.otf</file>
+        <file alias="Montserrat-Regular">res/fonts/Montserrat/Montserrat-Regular.otf</file>
+        <file alias="Montserrat-SemiBold">res/fonts/Montserrat/Montserrat-SemiBold.otf</file>
+        <file alias="Montserrat-SemiBoldItalic">res/fonts/Montserrat/Montserrat-SemiBoldItalic.otf</file>
+        <file alias="Montserrat-Thin">res/fonts/Montserrat/Montserrat-Thin.otf</file>
+        <file alias="Montserrat-ThinItalic">res/fonts/Montserrat/Montserrat-ThinItalic.otf</file>
+    </qresource>
     <qresource prefix="/themes">
         <file alias="Dark">res/css/dark.css</file>
         <file alias="Light">res/css/light.css</file>
