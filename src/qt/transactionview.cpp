@@ -8,6 +8,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/csvmodelwriter.h>
 #include <qt/editaddressdialog.h>
+#include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/qrdialog.h>
 #include <qt/transactiondescdialog.h>
@@ -426,9 +427,8 @@ void TransactionView::contextualMenu(const QPoint &point)
     abandonAction->setEnabled(model->wallet().transactionCanBeAbandoned(hash));
     resendAction->setEnabled(selection.size() == 1 && model->wallet().transactionCanBeResent(hash));
 
-    if(index.isValid())
-    {
-        contextMenu->popup(transactionView->viewport()->mapToGlobal(point));
+    if (index.isValid()) {
+        GUIUtil::PopupMenu(contextMenu, transactionView->viewport()->mapToGlobal(point));
     }
 }
 

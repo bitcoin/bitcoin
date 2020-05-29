@@ -32,10 +32,13 @@ class Node;
 QT_BEGIN_NAMESPACE
 class QAbstractButton;
 class QAbstractItemView;
+class QAction;
 class QButtonGroup;
 class QDateTime;
 class QFont;
 class QLineEdit;
+class QMenu;
+class QPoint;
 class QProgressDialog;
 class QUrl;
 class QWidget;
@@ -491,6 +494,11 @@ namespace GUIUtil
     void LogQtInfo();
 
     /**
+     * Call QMenu::popup() only on supported QT_QPA_PLATFORM.
+     */
+    void PopupMenu(QMenu* menu, const QPoint& point, QAction* at_action = nullptr);
+
+    /**
      * Returns the start-moment of the day in local time.
      *
      * QDateTime::QDateTime(const QDate& date) is deprecated since Qt 5.15.
@@ -525,8 +533,6 @@ namespace GUIUtil
         return string.split(separator, QString::SkipEmptyParts);
     #endif
     }
-
-
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H
