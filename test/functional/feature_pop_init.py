@@ -8,8 +8,10 @@
 """
 Start 3 nodes. Node0 has no -txindex, Nodes[1,2] have -txindex
 Create a chain of 20 blocks, where every next block contains 1 pop tx that endorses previous block.
-Restart both nodes without -reindex.
-Expect that state is same as before shutdown.
+Restart nodes[0,1] without -reindex.
+Node[2] is a control node.
+
+Expect that BTC/VBK tree state on nodes[0,1] is same as before shutdown (test against control node).
 """
 
 from test_framework.pop import endorse_block, create_endorsed_chain
