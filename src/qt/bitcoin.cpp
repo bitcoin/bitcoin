@@ -228,8 +228,6 @@ BitcoinApplication::~BitcoinApplication()
         settings.clear();
         settings.sync();
     }
-    delete optionsModel;
-    optionsModel = nullptr;
 }
 
 #ifdef ENABLE_WALLET
@@ -241,7 +239,7 @@ void BitcoinApplication::createPaymentServer()
 
 void BitcoinApplication::createOptionsModel(bool resetSettings)
 {
-    optionsModel = new OptionsModel(m_node, nullptr, resetSettings);
+    optionsModel = new OptionsModel(m_node, this, resetSettings);
 }
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
