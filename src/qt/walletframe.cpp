@@ -53,6 +53,7 @@ bool WalletFrame::addWallet(WalletModel *walletModel)
     walletView->setClientModel(clientModel);
     walletView->setWalletModel(walletModel);
     walletView->showOutOfSyncWarning(bOutOfSync);
+    walletView->setPrivacy(gui->isPrivacyModeActivated());
 
     WalletView* current_wallet_view = currentWalletView();
     if (current_wallet_view) {
@@ -73,6 +74,7 @@ bool WalletFrame::addWallet(WalletModel *walletModel)
     connect(walletView, &WalletView::encryptionStatusChanged, gui, &SyscoinGUI::updateWalletStatus);
     connect(walletView, &WalletView::incomingTransaction, gui, &SyscoinGUI::incomingTransaction);
     connect(walletView, &WalletView::hdEnabledStatusChanged, gui, &SyscoinGUI::updateWalletStatus);
+    connect(gui, &SyscoinGUI::setPrivacy, walletView, &WalletView::setPrivacy);
 
     return true;
 }
