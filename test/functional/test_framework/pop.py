@@ -44,7 +44,7 @@ def getKeystones(node, height):
     return [a, b]
 
 
-def endorse_block(node, apm, height: int, addr: str):
+def endorse_block(node, apm, height: int, addr: str) -> str:
     from pypopminer import PublicationData
 
     # get pubkey for that address
