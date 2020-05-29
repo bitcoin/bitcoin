@@ -114,7 +114,7 @@ class PopFr(BitcoinTestFramework):
 
         for i in range(3):
             assert bestblocks[i]['height'] == tip['height'], \
-                "nodes[{}] expected to select shorter chain ({}) with higher pop score\n" \
+                "node[{}] expected to select shorter chain ({}) with higher pop score\n" \
                 "but selected longer chain ({})".format(i, tip['height'], bestblocks[i]['height'])
 
         self.log.info("all nodes selected fork A as best chain")
