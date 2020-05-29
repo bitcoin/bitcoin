@@ -841,14 +841,10 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
 
 UniValue GetServicesNames(ServiceFlags services)
 {
-    const uint64_t services_n = services;
     UniValue servicesNames(UniValue::VARR);
 
-    for (int i = 0; i < 64; ++i) {
-        const uint64_t mask = 1ull << i;
-        if (services_n & mask) {
-            servicesNames.push_back(serviceFlagToStr(mask, i));
-        }
+    for (const auto& flag : serviceFlagsToStr(services)) {
+        servicesNames.push_back(flag);
     }
 
     return servicesNames;

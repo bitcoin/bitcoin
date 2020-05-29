@@ -195,9 +195,15 @@ const std::vector<std::string> &getAllNetMessageTypes()
     return allNetMessageTypesVec;
 }
 
-std::string serviceFlagToStr(const uint64_t mask, const int bit)
+/**
+ * Convert a service flag (NODE_*) to a human readable string.
+ * It supports unknown service flags which will be returned as "UNKNOWN[...]".
+ * @param[in] bit the service flag is calculated as (1 << bit)
+ */
+static std::string serviceFlagToStr(size_t bit)
 {
-    switch (ServiceFlags(mask)) {
+    const uint64_t service_flag = 1ULL << bit;
+    switch ((ServiceFlags)service_flag) {
     case NODE_NONE: abort();  // impossible
     case NODE_NETWORK:         return "NETWORK";
     case NODE_GETUTXO:         return "GETUTXO";
@@ -211,10 +217,23 @@ std::string serviceFlagToStr(const uint64_t mask, const int bit)
     stream.imbue(std::locale::classic());
     stream << "UNKNOWN[";
     if (bit < 8) {
-        stream << mask;
+        stream << service_flag;
     } else {
         stream << "2^" << bit;
     }
     stream << "]";
     return stream.str();
+}
+
+std::vector<std::string> serviceFlagsToStr(uint64_t flags)
+{
+    std::vector<std::string> str_flags;
+
+    for (size_t i = 0; i < sizeof(flags) * 8; ++i) {
+        if (flags & (1ULL << i)) {
+            str_flags.emplace_back(serviceFlagToStr(i));
+        }
+    }
+
+    return str_flags;
 }
