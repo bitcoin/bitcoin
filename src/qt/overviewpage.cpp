@@ -16,7 +16,9 @@
 #include <qt/walletmodel.h>
 
 #include <QAbstractItemDelegate>
+#include <QApplication>
 #include <QPainter>
+#include <QStatusTipEvent>
 
 #define DECORATION_SIZE 54
 #define NUM_ITEMS 5
@@ -152,6 +154,21 @@ void OverviewPage::handleOutOfSyncWarningClicks()
     Q_EMIT outOfSyncWarningClicked();
 }
 
+void OverviewPage::setPrivacy(bool privacy)
+{
+    m_privacy = privacy;
+    if (m_balances.balance != -1) {
+        setBalance(m_balances);
+    }
+
+    ui->listTransactions->setVisible(!m_privacy);
+
+    const QString status_tip = m_privacy ? tr("Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings->Mask values.") : "";
+    setStatusTip(status_tip);
+    QStatusTipEvent event(status_tip);
+    QApplication::sendEvent(this, &event);
+}
+
 OverviewPage::~OverviewPage()
 {
     delete ui;
@@ -163,25 +180,25 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
     m_balances = balances;
     if (walletModel->wallet().isLegacy()) {
         if (walletModel->wallet().privateKeysDisabled()) {
-            ui->labelBalance->setText(SyscoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, SyscoinUnits::separatorAlways));
-            ui->labelUnconfirmed->setText(SyscoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, SyscoinUnits::separatorAlways));
-            ui->labelImmature->setText(SyscoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, SyscoinUnits::separatorAlways));
-            ui->labelTotal->setText(SyscoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, false, SyscoinUnits::separatorAlways));
+            ui->labelBalance->setText(SyscoinUnits::formatWithPrivacy(unit, balances.watch_only_balance, SyscoinUnits::separatorAlways, m_privacy));
+            ui->labelUnconfirmed->setText(SyscoinUnits::formatWithPrivacy(unit, balances.unconfirmed_watch_only_balance, SyscoinUnits::separatorAlways, m_privacy));
+            ui->labelImmature->setText(SyscoinUnits::formatWithPrivacy(unit, balances.immature_watch_only_balance, SyscoinUnits::separatorAlways, m_privacy));
+            ui->labelTotal->setText(SyscoinUnits::formatWithPrivacy(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, SyscoinUnits::separatorAlways, m_privacy));
         } else {
-            ui->labelBalance->setText(SyscoinUnits::formatWithUnit(unit, balances.balance, false, SyscoinUnits::separatorAlways));
-            ui->labelUnconfirmed->setText(SyscoinUnits::formatWithUnit(unit, balances.unconfirmed_balance, false, SyscoinUnits::separatorAlways));
-            ui->labelImmature->setText(SyscoinUnits::formatWithUnit(unit, balances.immature_balance, false, SyscoinUnits::separatorAlways));
-            ui->labelTotal->setText(SyscoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance, false, SyscoinUnits::separatorAlways));
-            ui->labelWatchAvailable->setText(SyscoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, SyscoinUnits::separatorAlways));
-            ui->labelWatchPending->setText(SyscoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, SyscoinUnits::separatorAlways));
-            ui->labelWatchImmature->setText(SyscoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, SyscoinUnits::separatorAlways));
-            ui->labelWatchTotal->setText(SyscoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, false, SyscoinUnits::separatorAlways));
+            ui->labelBalance->setText(SyscoinUnits::formatWithPrivacy(unit, balances.balance, SyscoinUnits::separatorAlways, m_privacy));
+            ui->labelUnconfirmed->setText(SyscoinUnits::formatWithPrivacy(unit, balances.unconfirmed_balance, SyscoinUnits::separatorAlways, m_privacy));
+            ui->labelImmature->setText(SyscoinUnits::formatWithPrivacy(unit, balances.immature_balance, SyscoinUnits::separatorAlways, m_privacy));
+            ui->labelTotal->setText(SyscoinUnits::formatWithPrivacy(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance, SyscoinUnits::separatorAlways, m_privacy));
+            ui->labelWatchAvailable->setText(SyscoinUnits::formatWithPrivacy(unit, balances.watch_only_balance, SyscoinUnits::separatorAlways, m_privacy));
+            ui->labelWatchPending->setText(SyscoinUnits::formatWithPrivacy(unit, balances.unconfirmed_watch_only_balance, SyscoinUnits::separatorAlways, m_privacy));
+            ui->labelWatchImmature->setText(SyscoinUnits::formatWithPrivacy(unit, balances.immature_watch_only_balance, SyscoinUnits::separatorAlways, m_privacy));
+            ui->labelWatchTotal->setText(SyscoinUnits::formatWithPrivacy(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, SyscoinUnits::separatorAlways, m_privacy));
         }
     } else {
-        ui->labelBalance->setText(SyscoinUnits::formatWithUnit(unit, balances.balance, false, SyscoinUnits::separatorAlways));
-        ui->labelUnconfirmed->setText(SyscoinUnits::formatWithUnit(unit, balances.unconfirmed_balance, false, SyscoinUnits::separatorAlways));
-        ui->labelImmature->setText(SyscoinUnits::formatWithUnit(unit, balances.immature_balance, false, SyscoinUnits::separatorAlways));
-        ui->labelTotal->setText(SyscoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance, false, SyscoinUnits::separatorAlways));
+        ui->labelBalance->setText(SyscoinUnits::formatWithPrivacy(unit, balances.balance, SyscoinUnits::separatorAlways, m_privacy));
+        ui->labelUnconfirmed->setText(SyscoinUnits::formatWithPrivacy(unit, balances.unconfirmed_balance, SyscoinUnits::separatorAlways, m_privacy));
+        ui->labelImmature->setText(SyscoinUnits::formatWithPrivacy(unit, balances.immature_balance, SyscoinUnits::separatorAlways, m_privacy));
+        ui->labelTotal->setText(SyscoinUnits::formatWithPrivacy(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance, SyscoinUnits::separatorAlways, m_privacy));
     }
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users

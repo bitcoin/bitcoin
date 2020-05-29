@@ -99,6 +99,8 @@ public:
     /** Disconnect core signals from GUI client */
     void unsubscribeFromCoreSignals();
 
+    bool isPrivacyModeActivated() const;
+
 protected:
     void changeEvent(QEvent *e) override;
     void closeEvent(QCloseEvent *event) override;
@@ -157,6 +159,7 @@ private:
     QAction* m_wallet_selector_action = nullptr;
     // SYSCOIN
     QAction *masternodeAction = nullptr;
+    QAction* m_mask_values_action{nullptr};
     QLabel *m_wallet_selector_label = nullptr;
     QComboBox* m_wallet_selector = nullptr;
 
@@ -208,6 +211,7 @@ Q_SIGNALS:
     void receivedURI(const QString &uri);
     /** Signal raised when RPC console shown */
     void consoleShown(RPCConsole* console);
+    void setPrivacy(bool privacy);
 
 public Q_SLOTS:
     /** Set number of connections shown in the UI */
