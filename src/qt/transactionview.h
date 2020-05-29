@@ -60,9 +60,9 @@ public:
     };
 
 private:
-    WalletModel *model;
-    TransactionFilterProxy *transactionProxyModel;
-    QTableView *transactionView;
+    WalletModel *model{nullptr};
+    TransactionFilterProxy *transactionProxyModel{nullptr};
+    QTableView *transactionView{nullptr};
     QComboBox *dateWidget;
     QComboBox *typeWidget;
     QComboBox *watchOnlyWidget;
@@ -74,13 +74,15 @@ private:
     QFrame *dateRangeWidget;
     QDateTimeEdit *dateFrom;
     QDateTimeEdit *dateTo;
-    QAction *abandonAction;
+    QAction *abandonAction{nullptr};
     QAction *resendAction;
+    QAction *copyAddressAction{nullptr};
+    QAction *copyLabelAction{nullptr};
 
     QWidget *createDateRangeWidget();
     void updateCalendarWidgets();
 
-    GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
+    GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer{nullptr};
 
     virtual void resizeEvent(QResizeEvent* event) override;
     void changeEvent(QEvent* e) override;
