@@ -195,9 +195,10 @@ const std::vector<std::string> &getAllNetMessageTypes()
     return allNetMessageTypesVec;
 }
 
-std::string serviceFlagToStr(const uint64_t mask, const int bit)
+std::string serviceFlagToStr(size_t bit)
 {
-    switch (ServiceFlags(mask)) {
+    const uint64_t service_flag = 1ULL << bit;
+    switch ((ServiceFlags)service_flag) {
     case NODE_NONE: abort();  // impossible
     case NODE_NETWORK:         return "NETWORK";
     case NODE_GETUTXO:         return "GETUTXO";
@@ -211,7 +212,7 @@ std::string serviceFlagToStr(const uint64_t mask, const int bit)
     stream.imbue(std::locale::classic());
     stream << "UNKNOWN[";
     if (bit < 8) {
-        stream << mask;
+        stream << service_flag;
     } else {
         stream << "2^" << bit;
     }

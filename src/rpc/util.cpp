@@ -847,7 +847,7 @@ UniValue GetServicesNames(ServiceFlags services)
     for (int i = 0; i < 64; ++i) {
         const uint64_t mask = 1ull << i;
         if (services_n & mask) {
-            servicesNames.push_back(serviceFlagToStr(mask, i));
+            servicesNames.push_back(serviceFlagToStr(i));
         }
     }
 

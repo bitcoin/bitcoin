@@ -759,7 +759,7 @@ QString formatServicesStr(quint64 mask)
         uint64_t check = 1ull << i;
         if (mask & check)
         {
-            strList.append(QString::fromStdString(serviceFlagToStr(mask, i)));
+            strList.append(QString::fromStdString(serviceFlagToStr(i)));
         }
     }
 
