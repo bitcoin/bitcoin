@@ -115,6 +115,7 @@ public Q_SLOTS:
     void requestedSyncWarningInfo();
 
 Q_SIGNALS:
+    void setPrivacy(bool privacy);
     void transactionClicked();
     void coinsSent();
     /**  Fired when a message should be reported to the user */
