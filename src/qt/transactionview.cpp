@@ -37,8 +37,7 @@
 #include <QVBoxLayout>
 
 TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *parent) :
-    QWidget(parent), model(nullptr), transactionProxyModel(nullptr),
-    transactionView(nullptr), abandonAction(nullptr), bumpFeeAction(nullptr), columnResizingFixer(nullptr)
+    QWidget(parent)
 {
     // Build filter row
     setContentsMargins(0,0,0,0);
@@ -153,8 +152,8 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     abandonAction = new QAction(tr("Abandon transaction"), this);
     bumpFeeAction = new QAction(tr("Increase transaction fee"), this);
     bumpFeeAction->setObjectName("bumpFeeAction");
-    QAction *copyAddressAction = new QAction(tr("Copy address"), this);
-    QAction *copyLabelAction = new QAction(tr("Copy label"), this);
+    copyAddressAction = new QAction(tr("Copy address"), this);
+    copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID"), this);
     QAction *copyTxHexAction = new QAction(tr("Copy raw transaction"), this);
@@ -396,6 +395,8 @@ void TransactionView::contextualMenu(const QPoint &point)
     hash.SetHex(selection.at(0).data(TransactionTableModel::TxHashRole).toString().toStdString());
     abandonAction->setEnabled(model->wallet().transactionCanBeAbandoned(hash));
     bumpFeeAction->setEnabled(model->wallet().transactionCanBeBumped(hash));
+    copyAddressAction->setEnabled(GUIUtil::hasEntryData(transactionView, 0, TransactionTableModel::AddressRole));
+    copyLabelAction->setEnabled(GUIUtil::hasEntryData(transactionView, 0, TransactionTableModel::LabelRole));
 
     if (index.isValid()) {
         GUIUtil::PopupMenu(contextMenu, transactionView->viewport()->mapToGlobal(point));
