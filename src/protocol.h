@@ -289,11 +289,11 @@ enum ServiceFlags : uint64_t {
 };
 
 /**
- * Convert a service flag (NODE_*) to a human readable string.
+ * Convert service flags (a bitmask of NODE_*) to human readable strings.
  * It supports unknown service flags which will be returned as "UNKNOWN[...]".
- * @param[in] bit the service flag is calculated as (1 << bit)
+ * @param[in] flags multiple NODE_* bitwise-OR-ed together
  */
-std::string serviceFlagToStr(size_t bit);
+std::vector<std::string> serviceFlagsToStr(uint64_t flags);
 
 /**
  * Gets the set of service flags which are "desirable" for a given peer.
