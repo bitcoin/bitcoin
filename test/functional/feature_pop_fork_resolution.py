@@ -6,14 +6,22 @@
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 """
-Test with multiple nodes, and multiple PoP endorsements, checking to make sure nodes stay in sync.
+Start 3 nodes, mine 103 blocks.
+Disconnect node[2].
+node[2] mines 97 blocks, total height is 200 (fork B)
+node[0] mines 10 blocks, total height is 113 (fork A)
+node[0] endorses block 113 (fork A tip).
+node[0] mines pop tx in block 114 (fork A tip)
+node[2] is connected to nodes[0,1]
+
+After sync has been completed, expect all nodes to be on same height (fork A, block 114)
 """
 
-from test_framework.pop import KEYSTONE_INTERVAL, endorse_block
+from test_framework.pop import endorse_block
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
-    sync_mempools, disconnect_nodes, assert_equal,
+    disconnect_nodes, assert_equal,
 )
 
 
@@ -99,8 +107,8 @@ class PopFr(BitcoinTestFramework):
         assert_equal(bestblocks[0], bestblocks[2])
         self.log.info("all nodes switched to common block")
 
-        assert bestblocks[0]['height'] == 113, \
-            "nodes[0,1] expected to select shorter chain (113) with higher pop score\n" \
+        assert bestblocks[0]['height'] == containingblock['height'], \
+            "nodes[0,1] expected to select shorter chain (114) with higher pop score\n" \
             "but selected longer chain (200)"
 
         self.log.info("all nodes selected fork A as best chain")
