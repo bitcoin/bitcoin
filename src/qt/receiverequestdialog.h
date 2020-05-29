@@ -29,8 +29,7 @@ public:
 private Q_SLOTS:
     void on_btnCopyURI_clicked();
     void on_btnCopyAddress_clicked();
-
-    void update();
+    void updateDisplayUnit();
 
 private:
     Ui::ReceiveRequestDialog *ui;
