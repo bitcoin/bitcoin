@@ -99,6 +99,7 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     result.pushKV("nonce", (uint64_t)blockindex->nNonce);
     result.pushKV("generationSignature", HexStr(blockindex->GetGenerationSignature()));
     if (blockindex->pprev) {
+        LOCK(cs_main);
         result.pushKV("deadline", (uint64_t)poc::CalculateDeadline(*(blockindex->pprev), blockindex->GetBlockHeader(), Params().GetConsensus()));
     } else {
         result.pushKV("deadline", (uint64_t)0);
@@ -156,6 +157,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     result.pushKV("nonce", (uint64_t)blockindex->nNonce);
     result.pushKV("generationSignature", HexStr(blockindex->GetGenerationSignature()));
     if (blockindex->pprev) {
+        LOCK(cs_main);
         result.pushKV("deadline", (uint64_t)poc::CalculateDeadline(*(blockindex->pprev), blockindex->GetBlockHeader(), Params().GetConsensus()));
     } else {
         result.pushKV("deadline", (uint64_t)0);
