@@ -49,6 +49,9 @@
          <height>22</height>
         </size>
        </property>
+       <property name="shortcut">
+        <string>Alt+P</string>
+       </property>
       </widget>
      </item>
     </layout>
