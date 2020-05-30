@@ -827,7 +827,8 @@ void PeerLogicValidation::ReattemptInitialBroadcast(CScheduler& scheduler) const
         }
     }
 
-    // schedule next run for 10-15 minutes in the future
+    // Schedule next run for 10-15 minutes in the future.
+    // We add randomness on every cycle to avoid the possibility of P2P fingerprinting.
     const std::chrono::milliseconds delta = std::chrono::minutes{10} + GetRandMillis(std::chrono::minutes{5});
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }

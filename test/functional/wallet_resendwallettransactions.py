@@ -49,16 +49,21 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         block.solve()
         node.submitblock(ToHex(block))
 
-        # Transaction should not be rebroadcast
         node.syncwithvalidationinterfacequeue()
-        node.p2ps[1].sync_with_ping()
-        assert_equal(node.p2ps[1].tx_invs_received[txid], 0)
+        now = int(time.time())
+
+        # Transaction should not be rebroadcast within first 12 hours
+        # Leave 2 mins for buffer
+        twelve_hrs = 12 * 60 * 60
+        two_min = 2 * 60
+        node.setmocktime(now + twelve_hrs - two_min)
+        time.sleep(2) # ensure enough time has passed for rebroadcast attempt to occur
+        assert_equal(txid in node.p2ps[1].get_invs(), False)
 
         self.log.info("Bump time & check that transaction is rebroadcast")
         # Transaction should be rebroadcast approximately 24 hours in the future,
         # but can range from 12-36. So bump 36 hours to be sure.
-        rebroadcast_time = int(time.time()) + 36 * 60 * 60
-        node.setmocktime(rebroadcast_time)
+        node.setmocktime(now + 36 * 60 * 60)
         wait_until(lambda: node.p2ps[1].tx_invs_received[txid] >= 1, lock=mininode_lock)
 
 
