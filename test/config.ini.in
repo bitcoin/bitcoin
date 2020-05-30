@@ -7,6 +7,7 @@
 
 [environment]
 PACKAGE_NAME=@PACKAGE_NAME@
+PACKAGE_BUGREPORT=@PACKAGE_BUGREPORT@
 SRCDIR=@abs_top_srcdir@
 BUILDDIR=@abs_top_builddir@
 EXEEXT=@EXEEXT@
