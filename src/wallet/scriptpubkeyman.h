@@ -251,6 +251,8 @@ public:
 
     /** Keypool has new keys */
     boost::signals2::signal<void ()> NotifyCanGetAddressesChanged;
+
+    virtual const std::vector<CScript> GetScriptPubKeys() const { return std::vector<CScript>(); };
 };
 
 class LegacyScriptPubKeyMan : public ScriptPubKeyMan, public FillableSigningProvider
@@ -493,6 +495,8 @@ public:
     const std::map<CKeyID, int64_t>& GetAllReserveKeys() const { return m_pool_key_to_index; }
 
     std::set<CKeyID> GetKeys() const override;
+
+    const std::vector<CScript> GetScriptPubKeys() const override;
 };
 
 /** Wraps a LegacyScriptPubKeyMan so that it can be returned in a new unique_ptr. Does not provide privkeys */
@@ -612,7 +616,7 @@ public:
     void WriteDescriptor();
 
     const WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
-    const std::vector<CScript> GetScriptPubKeys() const;
+    const std::vector<CScript> GetScriptPubKeys() const override;
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
