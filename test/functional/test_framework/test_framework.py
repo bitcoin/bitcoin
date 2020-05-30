@@ -290,7 +290,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             exit_code = TEST_EXIT_SKIPPED
         else:
             self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
+            self.log.error("")
             self.log.error("Hint: Call {} '{}' to consolidate all logs".format(os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../combine_logs.py"), self.options.tmpdir))
+            self.log.error("")
+            self.log.error("If this failure happened unexpectedly or intermittently, please file a bug and provide a link or upload of the combined log.")
+            self.log.error(self.config['environment']['PACKAGE_BUGREPORT'])
+            self.log.error("")
             exit_code = TEST_EXIT_FAILED
         # Logging.shutdown will not remove stream- and filehandlers, so we must
         # do it explicitly. Handlers are removed so the next test run can apply
