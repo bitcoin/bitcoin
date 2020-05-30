@@ -48,16 +48,14 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --env-file /tmp/env \
                   --name $CONTAINER_NAME \
                   $DOCKER_NAME_TAG)
-
-  DOCKER_EXEC () {
-    docker exec $DOCKER_ID bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $P_CI_DIR && $*"
-  }
+  export DOCKER_CI_CMD_PREFIX="docker exec $DOCKER_ID"
 else
   echo "Running on host system without docker wrapper"
-  DOCKER_EXEC () {
-    bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $P_CI_DIR && $*"
-  }
 fi
+
+DOCKER_EXEC () {
+  $DOCKER_CI_CMD_PREFIX bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $P_CI_DIR && $*"
+}
 export -f DOCKER_EXEC
 
 if [ -n "$DPKG_ADD_ARCH" ]; then
