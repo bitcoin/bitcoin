@@ -113,6 +113,9 @@ Wallet
   introduced unbroadcast set. See the "P2P and network changes" section for
   more information on the unbroadcast set. (#18038)
 
+- The wallet can create a transaction without change even when the keypool is
+  empty. Previously it failed. (#17219)
+
 #### Wallet RPC changes
 
 - The `upgradewallet` RPC replaces the `-upgradewallet` command line option.
