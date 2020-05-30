@@ -116,8 +116,7 @@ extern unsigned nMaxDatacarrierBytes;
  */
 static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 
-enum txnouttype
-{
+enum txnouttype {
     TX_NONSTANDARD,
     // 'standard' transaction types:
     TX_PUBKEY,
@@ -212,7 +211,7 @@ typedef boost::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, 
 /** Check whether a CTxDestination is a CNoDestination. */
 bool IsValidDestination(const CTxDestination& dest);
 
-/** Get the name of a txnouttype as a C string, or nullptr if unknown. */
+/** Get the name of a txnouttype as a string */
 std::string GetTxnOutputType(txnouttype t);
 
 /**

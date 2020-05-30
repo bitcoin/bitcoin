@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
     s << OP_RETURN << std::vector<unsigned char>({75}) << OP_ADD;
     BOOST_CHECK_EQUAL(Solver(s, solutions), TX_NONSTANDARD);
 
-    // TX_WITNESS with incorrect program size
+    // TX_WITNESS_UNKNOWN with incorrect program size
     s.clear();
     s << OP_0 << std::vector<unsigned char>(19, 0x01);
     BOOST_CHECK_EQUAL(Solver(s, solutions), TX_NONSTANDARD);
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     BOOST_CHECK(ExtractDestination(s, address));
     BOOST_CHECK(boost::get<WitnessV0ScriptHash>(&address) && *boost::get<WitnessV0ScriptHash>(&address) == scripthash);
 
-    // TX_WITNESS with unknown version
+    // TX_WITNESS_UNKNOWN with unknown version
     s.clear();
     s << OP_1 << ToByteVector(pubkey);
     BOOST_CHECK(ExtractDestination(s, address));
