@@ -511,12 +511,11 @@ static UniValue decoderawtransaction(const JSONRPCRequest& request)
 
 static std::string GetAllOutputTypes()
 {
-    std::string ret;
+    std::vector<std::string> ret;
     for (int i = TX_NONSTANDARD; i <= TX_WITNESS_UNKNOWN; ++i) {
-        if (i != TX_NONSTANDARD) ret += ", ";
-        ret += GetTxnOutputType(static_cast<txnouttype>(i));
+        ret.emplace_back(GetTxnOutputType(static_cast<txnouttype>(i)));
     }
-    return ret;
+    return Join(ret, ", ");
 }
 
 static UniValue decodescript(const JSONRPCRequest& request)
