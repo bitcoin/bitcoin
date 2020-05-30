@@ -5,11 +5,14 @@
 """Encode and decode BASE58, P2PKH and P2SH addresses."""
 
 import enum
+import unittest
 
 from .script import hash256, hash160, sha256, CScript, OP_0
 from .util import hex_str_to_bytes
 
 from . import segwit_addr
+
+from test_framework.util import assert_equal
 
 ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
 ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj)#juyq9d97'
@@ -41,7 +44,32 @@ def byte_to_base58(b, version):
         str = str[2:]
     return result
 
-# TODO: def base58_decode
+
+def base58_to_byte(s, verify_checksum=True):
+    if not s:
+        return b''
+    n = 0
+    for c in s:
+        n *= 58
+        assert c in chars
+        digit = chars.index(c)
+        n += digit
+    h = '%x' % n
+    if len(h) % 2:
+        h = '0' + h
+    res = n.to_bytes((n.bit_length() + 7) // 8, 'big')
+    pad = 0
+    for c in s:
+        if c == chars[0]:
+            pad += 1
+        else:
+            break
+    res = b'\x00' * pad + res
+    if verify_checksum:
+        assert_equal(hash256(res[:-4])[:4], res[-4:])
+
+    return res[1:-4], int(res[0])
+
 
 def keyhash_to_p2pkh(hash, main = False):
     assert len(hash) == 20
@@ -100,3 +128,22 @@ def check_script(script):
     if (type(script) is bytes or type(script) is CScript):
         return script
     assert False
+
+
+class TestFrameworkScript(unittest.TestCase):
+    def test_base58encodedecode(self):
+        def check_base58(data, version):
+            self.assertEqual(base58_to_byte(byte_to_base58(data, version)), (data, version))
+
+        check_base58(b'\x1f\x8e\xa1p*{\xd4\x94\x1b\xca\tA\xb8R\xc4\xbb\xfe\xdb.\x05', 111)
+        check_base58(b':\x0b\x05\xf4\xd7\xf6l;\xa7\x00\x9fE50)l\x84\\\xc9\xcf', 111)
+        check_base58(b'A\xc1\xea\xf1\x11\x80%Y\xba\xd6\x1b`\xd6+\x1f\x89|c\x92\x8a', 111)
+        check_base58(b'\0A\xc1\xea\xf1\x11\x80%Y\xba\xd6\x1b`\xd6+\x1f\x89|c\x92\x8a', 111)
+        check_base58(b'\0\0A\xc1\xea\xf1\x11\x80%Y\xba\xd6\x1b`\xd6+\x1f\x89|c\x92\x8a', 111)
+        check_base58(b'\0\0\0A\xc1\xea\xf1\x11\x80%Y\xba\xd6\x1b`\xd6+\x1f\x89|c\x92\x8a', 111)
+        check_base58(b'\x1f\x8e\xa1p*{\xd4\x94\x1b\xca\tA\xb8R\xc4\xbb\xfe\xdb.\x05', 0)
+        check_base58(b':\x0b\x05\xf4\xd7\xf6l;\xa7\x00\x9fE50)l\x84\\\xc9\xcf', 0)
+        check_base58(b'A\xc1\xea\xf1\x11\x80%Y\xba\xd6\x1b`\xd6+\x1f\x89|c\x92\x8a', 0)
+        check_base58(b'\0A\xc1\xea\xf1\x11\x80%Y\xba\xd6\x1b`\xd6+\x1f\x89|c\x92\x8a', 0)
+        check_base58(b'\0\0A\xc1\xea\xf1\x11\x80%Y\xba\xd6\x1b`\xd6+\x1f\x89|c\x92\x8a', 0)
+        check_base58(b'\0\0\0A\xc1\xea\xf1\x11\x80%Y\xba\xd6\x1b`\xd6+\x1f\x89|c\x92\x8a', 0)
