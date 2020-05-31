@@ -723,6 +723,10 @@ private:
     // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
     std::map<uint256, std::unique_ptr<ScriptPubKeyMan>> m_spk_managers;
 
+    std::atomic<bool> m_regenerate_script_pub_key_list;
+
+    GCSFilter::ElementSet script_pub_key_filter_set;
+    GCSFilter::ElementSet& GetScriptPubKeyFilterSet();
 public:
     /*
      * Main wallet lock.
@@ -761,8 +765,10 @@ public:
     CWallet(interfaces::Chain* chain, const WalletLocation& location, std::unique_ptr<WalletDatabase> database)
         : m_chain(chain),
           m_location(location),
-          database(std::move(database))
+          database(std::move(database)),
+          m_regenerate_script_pub_key_list(true)
     {
+        NotifyCanGetAddressesChanged.connect([&]{this->m_regenerate_script_pub_key_list = true;});
     }
 
     ~CWallet()

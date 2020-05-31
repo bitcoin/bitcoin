@@ -5,6 +5,7 @@
 
 #include <wallet/wallet.h>
 
+#include <blockfilter.h>
 #include <chain.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
@@ -1616,6 +1617,20 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
     return startTime;
 }
 
+
+GCSFilter::ElementSet& CWallet::GetScriptPubKeyFilterSet() {
+    if (!m_regenerate_script_pub_key_list) return script_pub_key_filter_set;
+    script_pub_key_filter_set.clear();
+    for (ScriptPubKeyMan* spk_man : GetAllScriptPubKeyMans()) {
+        for (const CScript& script_pub_key : spk_man->GetScriptPubKeys()) {
+            script_pub_key_filter_set.emplace(script_pub_key.begin(), script_pub_key.end());
+        }
+    }
+    m_regenerate_script_pub_key_list = false;
+    WalletLogPrintf("script_pub_key_filter_set.size() %d\n", script_pub_key_filter_set.size());
+    return script_pub_key_filter_set;
+}
+
 /**
  * Scan the block chain (starting in start_block) for transactions
  * from or to us. If fUpdate is true, found transactions that already
@@ -1684,9 +1699,12 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                 result.status = ScanResult::FAILURE;
                 break;
             }
-            for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
-                CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, block_height, block_hash, posInBlock);
-                SyncTransaction(block.vtx[posInBlock], confirm, fUpdate);
+            Optional<bool> filter_matches = chain().filterMatchesAny(block_hash, GetScriptPubKeyFilterSet());
+            if (filter_matches.value_or(true)) {
+                for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
+                    CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, block_height, block_hash, posInBlock);
+                    SyncTransaction(block.vtx[posInBlock], confirm, fUpdate);
+                }
             }
             // scan succeeded, record block as most recent successfully scanned
             result.last_scanned_block = block_hash;
