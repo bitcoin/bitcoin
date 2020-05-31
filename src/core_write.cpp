@@ -152,13 +152,13 @@ UniValue ValueFromAmount(const CAmount& amount)
             strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
 }
 // SYSCOIN
-UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
+UniValue ValueFromAssetAmount(const uint64_t& amount,int precision)
 {
     bool sign = amount < 0;
-    int64_t n_abs = (sign ? -amount : amount);
-    int64_t quotient = n_abs;
-    int64_t divByAmount = 1;
-    int64_t remainder = 0;
+    uint64_t n_abs = (sign ? -amount : amount);
+    uint64_t quotient = n_abs;
+    uint64_t divByAmount = 1;
+    uint64_t remainder = 0;
     std::string strPrecision = "0";
     if (precision > 0 && precision <= 8) {
         divByAmount = pow(10, precision);

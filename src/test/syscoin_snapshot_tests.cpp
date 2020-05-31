@@ -119,7 +119,7 @@ void GenerateAssetAllocationSnapshots(const std::string &guid, const UniValue &a
 		const UniValue& assetAllocationObj = assetAllocations[i].get_obj();
 		const std::string &address = find_value(assetAllocationObj, "address").get_str();
 		UniValue amountValue = find_value(assetAllocationObj, "balance");
-		const CAmount &nBalance = AssetAmountFromValue(amountValue, precision);
+		const uint64_t &nBalance = AssetAmountFromValue(amountValue, precision);
 		const std::string &balance = ValueFromAssetAmount(nBalance, precision).write();
 		BOOST_CHECK_NO_THROW(r = CallExtRPC("mainnet1", "convertaddress " + address, false));
 		const std::string &witnessaddress = find_value(r.get_obj(), "v4address").get_str();

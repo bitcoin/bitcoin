@@ -87,19 +87,17 @@ CAmount AmountFromValue(const UniValue& value)
     return amount;
 }
 // SYSCOIN
-CAmount AssetAmountFromValue(UniValue& value, int precision) {
+uint64_t AssetAmountFromValue(UniValue& value, int precision) {
     if(precision < 0 || precision > 8)
         throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
     if (!value.isNum() && !value.isStr())
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
     if (value.isStr() && value.get_str() == "-1") {
-        value.setInt((int64_t)(MAX_ASSET / ((int)pow(10, precision))));
+        value.setInt((uint64_t)(MAX_ASSET / ((int)pow(10, precision))));
     }
-    CAmount amount;
+    uint64_t amount;
     if (!ParseFixedPoint(value.getValStr(), precision, &amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    if (amount > 0 && !AssetRange(amount))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
     return amount;
 }
 uint256 ParseHashV(const UniValue& v, std::string strName)

@@ -35,9 +35,9 @@ public:
     std::string strSymbol;
     std::vector<unsigned char> vchPubData;
     std::vector<unsigned char> vchPrevPubData;
-    CAmount nBalance;
-    CAmount nTotalSupply;
-    CAmount nMaxSupply;
+    uint64_t nBalance;
+    uint64_t nTotalSupply;
+    uint64_t nMaxSupply;
     unsigned char nPrecision;
     unsigned char nUpdateFlags;
     unsigned char nPrevUpdateFlags;
@@ -87,5 +87,5 @@ public:
 };
 static CAsset emptyAsset;
 bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
-bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<uint32_t, CAmount> &mapAssetIn, const std::unordered_map<uint32_t, CAmount> &mapAssetOut);
+bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<uint32_t, uint64_t> &mapAssetIn, const std::unordered_map<uint32_t, uint64_t> &mapAssetOut);
 #endif // SYSCOIN_SERVICES_ASSET_H
