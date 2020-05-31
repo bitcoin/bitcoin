@@ -257,11 +257,8 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    int nGenerate = request.params[0].get_int();
-    uint64_t nMaxTries{DEFAULT_MAX_TRIES};
-    if (!request.params[2].isNull()) {
-        nMaxTries = request.params[2].get_int();
-    }
+    const int num_blocks{request.params[0].get_int()};
+    const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].get_int()};
 
     CTxDestination destination = DecodeDestination(request.params[1].get_str());
     if (!IsValidDestination(destination)) {
@@ -273,7 +270,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
 
     CScript coinbase_script = GetScriptForDestination(destination);
 
-    return generateBlocks(chainman, mempool, coinbase_script, nGenerate, nMaxTries);
+    return generateBlocks(chainman, mempool, coinbase_script, num_blocks, max_tries);
 }
 
 static UniValue generateblock(const JSONRPCRequest& request)
