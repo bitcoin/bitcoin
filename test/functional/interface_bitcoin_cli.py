@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoin-cli"""
+
 from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_process_error, get_auth_cookie
@@ -12,6 +13,10 @@ from test_framework.util import assert_equal, assert_raises_process_error, get_a
 # node 0 to have a balance of (BLOCKS - COINBASE_MATURITY) * 50 BTC/block.
 BLOCKS = 101
 BALANCE = (BLOCKS - 100) * 50
+
+JSON_PARSING_ERROR = 'error: Error parsing JSON:foo'
+BLOCKS_VALUE_OF_ZERO = 'error: the first argument (number of blocks to generate, default: 1) must be an integer value greater than zero'
+TOO_MANY_ARGS = 'error: too many arguments (maximum 2 for nblocks and maxtries)'
 
 class TestBitcoinCli(BitcoinTestFramework):
     def set_test_params(self):
@@ -75,7 +80,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_equal(cli_get_info['relayfee'], network_info['relayfee'])
             assert_equal(self.nodes[0].cli.getwalletinfo(), wallet_info)
 
-            # Setup to test -getinfo and -rpcwallet= with multiple wallets.
+            # Setup to test -getinfo, -generate, and -rpcwallet= with multiple wallets.
             wallets = ['', 'Encrypted', 'secret']
             amounts = [BALANCE + Decimal('9.999928'), Decimal(9), Decimal(31)]
             self.nodes[0].createwallet(wallet_name=wallets[1])
@@ -131,9 +136,38 @@ class TestBitcoinCli(BitcoinTestFramework):
             cli_get_info = self.nodes[0].cli('-getinfo', '-rpcwallet={}'.format(wallets[2])).send_cli()
             assert 'balance' not in cli_get_info_keys
             assert 'balances' not in cli_get_info_keys
+
+            # Test bitcoin-cli -generate.
+            n1 = 3
+            n2 = 5
+            w2.walletpassphrase(password, self.rpc_timeout)
+            blocks = self.nodes[0].getblockcount()
+
+            self.log.info('Test -generate with no args')
+            generate = self.nodes[0].cli('-generate').send_cli()
+            assert_equal(set(generate.keys()), {'address', 'blocks'})
+            assert_equal(len(generate["blocks"]), 1)
+            assert_equal(self.nodes[0].getblockcount(), blocks + 1)
+
+            self.log.info('Test -generate with bad args')
+            assert_raises_process_error(1, JSON_PARSING_ERROR, self.nodes[0].cli('-generate', 'foo').echo)
+            assert_raises_process_error(1, BLOCKS_VALUE_OF_ZERO, self.nodes[0].cli('-generate', 0).echo)
+            assert_raises_process_error(1, TOO_MANY_ARGS, self.nodes[0].cli('-generate', 1, 2, 3).echo)
+
+            self.log.info('Test -generate with nblocks')
+            generate = self.nodes[0].cli('-generate', n1).send_cli()
+            assert_equal(set(generate.keys()), {'address', 'blocks'})
+            assert_equal(len(generate["blocks"]), n1)
+            assert_equal(self.nodes[0].getblockcount(), blocks + 1 + n1)
+
+            self.log.info('Test -generate with nblocks and maxtries')
+            generate = self.nodes[0].cli('-generate', n2, 1000000).send_cli()
+            assert_equal(set(generate.keys()), {'address', 'blocks'})
+            assert_equal(len(generate["blocks"]), n2)
+            assert_equal(self.nodes[0].getblockcount(), blocks + 1 + n1 + n2)
         else:
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
-            self.nodes[0].generate(1)  # maintain block parity with the wallet_compiled conditional branch
+            self.nodes[0].generate(10)  # maintain block parity with the wallet_compiled conditional branch
 
         self.log.info("Test -version with node stopped")
         self.stop_node(0)
@@ -145,7 +179,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.nodes[0].wait_for_cookie_credentials()  # ensure cookie file is available to avoid race condition
         blocks = self.nodes[0].cli('-rpcwait').send_cli('getblockcount')
         self.nodes[0].wait_for_rpc_connection()
-        assert_equal(blocks, BLOCKS + 1)
+        assert_equal(blocks, BLOCKS + 10)
 
 
 if __name__ == '__main__':
