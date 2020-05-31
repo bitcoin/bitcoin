@@ -16,11 +16,17 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <sync.h>
+#include <util/any.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
 #include <validation.h>
+
+#ifdef ENABLE_WALLET
+#include <interfaces/wallet.h>
+#include <wallet/wallet.h>
+#endif
 
 #include <cassert>
 #include <chrono>
@@ -268,8 +274,31 @@ static RPCHelpMan getrpcwhitelist()
         whitelisted_rpcs.pushKV(rpc, NullUniValue);
     }
 
+    UniValue whitelisted_wallets(UniValue::VOBJ);
+#ifdef ENABLE_WALLET
+    std::string authorized_wallet_name;
+    const bool have_wallet_restriction = GetWalletRestrictionFromJSONRPCRequest(request, authorized_wallet_name);
+    if (have_wallet_restriction) {
+        if (authorized_wallet_name != "-") {
+            whitelisted_wallets.pushKV(authorized_wallet_name, NullUniValue);
+        }
+    } else {
+        // All wallets are allowed
+        auto node_context = util::AnyPtr<node::NodeContext>(request.context);
+        if (node_context && node_context->wallet_loader && node_context->wallet_loader->context()) {
+            for (const std::shared_ptr<wallet::CWallet>& wallet : wallet::GetWallets(*node_context->wallet_loader->context())) {
+                if (!wallet.get()) continue;
+
+                LOCK(wallet->cs_wallet);
+                whitelisted_wallets.pushKV(wallet->GetName(), NullUniValue);
+            }
+        }
+    }
+#endif
+
     UniValue result(UniValue::VOBJ);
     result.pushKV("methods", whitelisted_rpcs);
+    result.pushKV("wallets", whitelisted_wallets);
 
     return result;
 }
