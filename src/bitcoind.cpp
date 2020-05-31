@@ -85,13 +85,6 @@ static bool AppInit(int argc, char* argv[])
 
     util::Ref context{node};
 
-#ifndef WIN32
-    // set umask before any filesystem writes occur
-    if (!gArgs.GetBoolArg("-sysperms", false)) {
-        umask(077);
-    }
-#endif
-
     try
     {
         if (!CheckDataDirOption()) {
@@ -116,6 +109,13 @@ static bool AppInit(int argc, char* argv[])
 
         // -server defaults to true for bitcoind but not for the GUI so do this here
         gArgs.SoftSetBoolArg("-server", true);
+
+#ifndef WIN32
+    // set umask before any filesystem writes occur
+    if (!gArgs.GetBoolArg("-sysperms", false)) {
+        umask(077);
+    }
+#endif
         // Set this early so that parameter interactions go to console
         InitLogging();
         InitParameterInteraction();

@@ -491,13 +491,6 @@ int GuiMain(int argc, char* argv[])
         return EXIT_SUCCESS;
     }
 
-#ifndef WIN32
-    // set umask before any filesystem writes occur
-    if (!gArgs.GetBoolArg("-sysperms", false)) {
-        umask(077);
-    }
-#endif
-
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
     bool did_show_intro = false;
@@ -519,6 +512,13 @@ int GuiMain(int argc, char* argv[])
             QObject::tr("Error: Cannot parse configuration file: %1.").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
     }
+
+#ifndef WIN32
+    // set umask before any filesystem writes occur
+    if (!gArgs.GetBoolArg("-sysperms", false)) {
+        umask(077);
+    }
+#endif
 
     /// 7. Determine network (and switch to network specific options)
     // - Do not call Params() before this step
