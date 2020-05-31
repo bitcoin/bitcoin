@@ -12,6 +12,7 @@
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
+#include <script/standard.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -20,6 +21,7 @@
 #include <uint256.h>
 #include <version.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -29,6 +31,11 @@ NODISCARD inline std::vector<uint8_t> ConsumeRandomLengthByteVector(FuzzedDataPr
 {
     const std::string s = fuzzed_data_provider.ConsumeRandomLengthString(max_length);
     return {s.begin(), s.end()};
+}
+
+NODISCARD inline CDataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+{
+    return {ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length), SER_NETWORK, INIT_PROTO_VERSION};
 }
 
 NODISCARD inline std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_vector_size = 16, const size_t max_string_length = 16) noexcept
@@ -87,10 +94,19 @@ NODISCARD inline CScriptNum ConsumeScriptNum(FuzzedDataProvider& fuzzed_data_pro
     return CScriptNum{fuzzed_data_provider.ConsumeIntegral<int64_t>()};
 }
 
+NODISCARD inline uint160 ConsumeUInt160(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    const std::vector<uint8_t> v160 = fuzzed_data_provider.ConsumeBytes<uint8_t>(160 / 8);
+    if (v160.size() != 160 / 8) {
+        return {};
+    }
+    return uint160{v160};
+}
+
 NODISCARD inline uint256 ConsumeUInt256(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
-    const std::vector<unsigned char> v256 = fuzzed_data_provider.ConsumeBytes<unsigned char>(sizeof(uint256));
-    if (v256.size() != sizeof(uint256)) {
+    const std::vector<uint8_t> v256 = fuzzed_data_provider.ConsumeBytes<uint8_t>(256 / 8);
+    if (v256.size() != 256 / 8) {
         return {};
     }
     return uint256{v256};
@@ -114,6 +130,43 @@ NODISCARD inline CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzze
     const bool spends_coinbase = fuzzed_data_provider.ConsumeBool();
     const unsigned int sig_op_cost = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, MAX_BLOCK_SIGOPS_COST);
     return CTxMemPoolEntry{MakeTransactionRef(tx), fee, time, entry_height, spends_coinbase, sig_op_cost, {}};
+}
+
+NODISCARD inline CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    CTxDestination tx_destination;
+    switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 5)) {
+    case 0: {
+        tx_destination = CNoDestination{};
+        break;
+    }
+    case 1: {
+        tx_destination = PKHash{ConsumeUInt160(fuzzed_data_provider)};
+        break;
+    }
+    case 2: {
+        tx_destination = ScriptHash{ConsumeUInt160(fuzzed_data_provider)};
+        break;
+    }
+    case 3: {
+        tx_destination = WitnessV0ScriptHash{ConsumeUInt256(fuzzed_data_provider)};
+        break;
+    }
+    case 4: {
+        tx_destination = WitnessV0KeyHash{ConsumeUInt160(fuzzed_data_provider)};
+        break;
+    }
+    case 5: {
+        WitnessUnknown witness_unknown{};
+        witness_unknown.version = fuzzed_data_provider.ConsumeIntegral<int>();
+        const std::vector<uint8_t> witness_unknown_program_1 = fuzzed_data_provider.ConsumeBytes<uint8_t>(40);
+        witness_unknown.length = witness_unknown_program_1.size();
+        std::copy(witness_unknown_program_1.begin(), witness_unknown_program_1.end(), witness_unknown.program);
+        tx_destination = witness_unknown;
+        break;
+    }
+    }
+    return tx_destination;
 }
 
 template <typename T>
