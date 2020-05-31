@@ -1202,6 +1202,33 @@ static UniValue list(const JSONRPCRequest& request)
 }
 
 // Cybersecurity Lab
+static UniValue count(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            RPCHelpMan{"count",
+                "\nCount the number of peers.\n",
+                {},
+                RPCResults{},
+                RPCExamples{
+                    HelpExampleCli("count", "")
+            + HelpExampleRpc("count", "")
+                },
+            }.ToString());
+
+    if(!g_rpc_node->connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    std::vector<CNodeStats> vstats;
+    g_rpc_node->connman->GetNodeStats(vstats);
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("Number of peer connections", vstats.size());
+
+    return result;
+}
+
+// Cybersecurity Lab
 static UniValue forcerealfake(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
@@ -1368,6 +1395,8 @@ static const CRPCCommand commands[] =
     { "z Researcher",       "send",                   &send,                   {"msg", "args"} },
     { "z Researcher",       "DoS",                    &DoS,                    {"duration", "times/seconds/clocks", "msg", "args"} },
     { "z Researcher",       "list",                   &list,                   {} },
+    { "z Researcher",       "ls",                     &list,                   {} },
+    { "z Researcher",       "count",                  &count,                  {} },
     { "z Researcher",       "log",                    &toggleLog,              {"category"} },
     { "z Researcher",       "forcerealfake",          &forcerealfake,          {"numReal", "numFake"} },
 };
