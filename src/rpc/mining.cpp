@@ -17,6 +17,7 @@
 #include <policy/fees.h>
 #include <pow.h>
 #include <rpc/blockchain.h>
+#include <rpc/mining.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
@@ -206,7 +207,7 @@ static UniValue generatetodescriptor(const JSONRPCRequest& request)
         {
             {"num_blocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor to send the newly generated bitcoin to."},
-            {"maxtries", RPCArg::Type::NUM, /* default */ "1000000", "How many iterations to try."},
+            {"maxtries", RPCArg::Type::NUM, /* default */ ToString(DEFAULT_MAX_TRIES), "How many iterations to try."},
         },
         RPCResult{
             RPCResult::Type::ARR, "", "hashes of blocks generated",
@@ -220,7 +221,7 @@ static UniValue generatetodescriptor(const JSONRPCRequest& request)
         .Check(request);
 
     const int num_blocks{request.params[0].get_int()};
-    const int64_t max_tries{request.params[2].isNull() ? 1000000 : request.params[2].get_int()};
+    const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].get_int()};
 
     CScript coinbase_script;
     std::string error;
@@ -241,7 +242,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
                 {
                     {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated bitcoin to."},
-                    {"maxtries", RPCArg::Type::NUM, /* default */ "1000000", "How many iterations to try."},
+                    {"maxtries", RPCArg::Type::NUM, /* default */ ToString(DEFAULT_MAX_TRIES), "How many iterations to try."},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "hashes of blocks generated",
@@ -257,7 +258,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
             }.Check(request);
 
     int nGenerate = request.params[0].get_int();
-    uint64_t nMaxTries = 1000000;
+    uint64_t nMaxTries{DEFAULT_MAX_TRIES};
     if (!request.params[2].isNull()) {
         nMaxTries = request.params[2].get_int();
     }
@@ -370,7 +371,7 @@ static UniValue generateblock(const JSONRPCRequest& request)
     }
 
     uint256 block_hash;
-    uint64_t max_tries{1000000};
+    uint64_t max_tries{DEFAULT_MAX_TRIES};
     unsigned int extra_nonce{0};
 
     if (!GenerateBlock(EnsureChainman(request.context), block, max_tries, extra_nonce, block_hash) || block_hash.IsNull()) {
