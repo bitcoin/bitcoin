@@ -3,16 +3,22 @@
 
 # double locks (TODO fix)
 mutex:g_genesis_wait_mutex
+mutex:Interrupt
 mutex:CThreadInterrupt
 mutex:CConnman::Interrupt
 mutex:CConnman::WakeMessageHandler
+mutex:CConnman::ThreadOpenConnections
+mutex:CConnman::ThreadOpenAddedConnections
+mutex:CConnman::SocketHandler
 mutex:UpdateTip
+mutex:PeerLogicValidation::UpdatedBlockTip
 # race (TODO fix)
 race:CConnman::WakeMessageHandler
 race:CConnman::ThreadMessageHandler
 race:fHaveGenesis
 race:ProcessNewBlock
 race:ThreadImport
+race:zmq::*
 race:bitcoin-qt
 # deadlock (TODO fix)
 deadlock:CConnman::ForNode
