@@ -266,6 +266,7 @@ or building and depending on a local version of Berkeley DB 4.8. The readily ava
 `--with-incompatible-bdb` according to the [PKGBUILD](https://projects.archlinux.org/svntogit/community.git/tree/bitcoin/trunk/PKGBUILD).
 As mentioned above, when maintaining portability of the wallet between the standard Bitcoin Core distributions and independently built
 node software is desired, Berkeley DB 4.8 must be used.
+By default, the `/tmp` directory is half the size of the RAM which can cause the test suites to fail. If the case be, the `/etc/fstab` file can be updated to increase the `/tmp` size: https://wiki.archlinux.org/index.php/Tmpfs
 
 
 ARM Cross-compilation
