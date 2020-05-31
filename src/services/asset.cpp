@@ -94,7 +94,7 @@ bool GetAsset(const uint32_t &nAsset,
     return true;
 }
 
-bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<uint32_t, CAmount> &mapAssetIn, const std::unordered_map<uint32_t, CAmount> &mapAssetOut) {
+bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<uint32_t, uint64_t> &mapAssetIn, const std::unordered_map<uint32_t, uint64_t> &mapAssetOut) {
     if(!IsSyscoinWithNoInputTx(tx.nVersion)) {
         if(mapAssetIn != mapAssetOut) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-io-mismatch");

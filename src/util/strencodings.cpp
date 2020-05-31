@@ -13,7 +13,8 @@
 #include <cstring>
 #include <errno.h>
 #include <limits>
-
+// SYSCOIN
+#include <math.h>
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 static const std::string SAFE_CHARS[] =
@@ -550,6 +551,15 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
     if (amount_out)
         *amount_out = mantissa;
 
+    return true;
+}
+
+
+bool ParseFixedPoint(const std::string &val, int decimals, uint64_t *amount_out)
+{
+    const uint64_t &vali = std::stoull(val.c_str());
+    if(amount_out)
+        *amount_out = vali * ((uint64_t)powl(10, decimals));
     return true;
 }
 

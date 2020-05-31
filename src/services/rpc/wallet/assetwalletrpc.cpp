@@ -24,7 +24,7 @@
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 
-CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const uint8_t &nPrecision, CTxDestination & address) {
+uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, const uint8_t &nPrecision, CTxDestination & address) {
     UniValue publicObj;
     if(!publicObj.read(public_data))
         return -1;
@@ -42,9 +42,9 @@ CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const 
     if(feeStructArray.size() == 0)
         return -1;
      
-    CAmount nAccumulatedFee = 0;
-    CAmount nBoundAmount = 0;
-    CAmount nNextBoundAmount = 0;
+    uint64_t nAccumulatedFee = 0;
+    uint64_t nBoundAmount = 0;
+    uint64_t nNextBoundAmount = 0;
     double nRate = 0;
     for(unsigned int i =0;i<feeStructArray.size();i++){
         if(!feeStructArray[i].isArray())
@@ -168,11 +168,8 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
     entry.__pushKV("txtype", stringFromSyscoinTx(wtx.tx->nVersion));
     entry.__pushKV("asset_guid", assetInfo.nAsset);
     if(IsAssetAllocationTx(wtx.tx->nVersion)) {
-        if(strCategory == "send") {
-            entry.__pushKV("amount", -assetInfo.nValue);
-        } else if (strCategory == "receive") {
-            entry.__pushKV("amount", assetInfo.nValue);
-        }
+        entry.__pushKV("amount", assetInfo.nValue);
+        entry.__pushKV("action", strCategory);
     }
     return true;
 }
@@ -256,7 +253,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 
     CMutableTransaction mtx;
     UniValue amountObj = params[1];
-	CAmount nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
+	uint64_t nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
     theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(1, nAmount));
 
 
@@ -359,14 +356,14 @@ UniValue assetnew(const JSONRPCRequest& request) {
     UniValue param4 = params[5];
     UniValue param5 = params[6];
     
-    CAmount nBalance;
+    uint64_t nBalance;
     try{
         nBalance = AssetAmountFromValue(param4, precision);
     }
     catch(...){
         nBalance = 0;
     }
-    CAmount nMaxSupply;
+    uint64_t nMaxSupply;
     try{
         nMaxSupply = AssetAmountFromValue(param5, precision);
     }
@@ -472,9 +469,9 @@ UniValue assetnew(const JSONRPCRequest& request) {
 UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) {
     AssertLockHeld(pwallet->cs_wallet);
     CCoinControl coin_control;
-    CAmount nMinimumAmountAsset = 0;
-    CAmount nMaximumAmountAsset = 0;
-    CAmount nMinimumSumAmountAsset = 0;
+    uint64_t nMinimumAmountAsset = 0;
+    uint64_t nMaximumAmountAsset = 0;
+    uint64_t nMinimumSumAmountAsset = 0;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
     std::vector<COutput> vecOutputs;
     pwallet->AvailableCoins(vecOutputs, true, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset);
@@ -819,7 +816,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
     UniValue amountValue = request.params[2];
-    CAmount nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
+    uint64_t nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetsend");
     UniValue output(UniValue::VARR);
@@ -905,10 +902,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     CAssetAllocation theAssetAllocation;
     CMutableTransaction mtx;
 	UniValue receivers = valueTo.get_array();
-    std::map<uint32_t, CAmount> mapAssetTotals;
+    std::map<uint32_t, uint64_t> mapAssetTotals;
     unsigned int idx;
 	for (idx = 0; idx < receivers.size(); idx++) {
-        CAmount nTotalSending = 0;
+        uint64_t nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];
 		if (!receiver.isObject())
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address\" or \"amount\"}");
@@ -924,7 +921,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         CTxOut change_prototype_txout(0, scriptPubKey);
 		UniValue amountObj = find_value(receiverObj, "amount");
 		if (amountObj.isNum() || amountObj.isStr()) {
-			const CAmount &nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
+			const uint64_t &nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
 			if (nAmount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
             theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(idx, nAmount));
@@ -941,7 +938,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
         
         CTxDestination auxFeeAddress;
-        const CAmount &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, theAsset.nPrecision, auxFeeAddress);
+        const uint64_t &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, theAsset.nPrecision, auxFeeAddress);
         if(nAuxFee > 0){
             theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(idx, nAuxFee));
             const CScript& scriptPubKey = GetScriptForDestination(auxFeeAddress);
@@ -1029,7 +1026,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
     UniValue amountObj = params[1];
-	CAmount nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
+	uint64_t nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
     if (nAmount <= 0) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
     }
@@ -1039,7 +1036,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     int32_t nVersionIn = 0;
 
     CBurnSyscoin burnSyscoin;
-    burnSyscoin.voutAssets[nAsset].push_back(CAssetOut(1, nAmount)); // burn has to be in index 1, sys is output in index 0, any change in index 2
+    burnSyscoin.voutAssets[nAsset].push_back(CAssetOut(1, (CAmount)nAmount)); // burn has to be in index 1, sys is output in index 0, any change in index 2
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''") {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
@@ -1057,7 +1054,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     }
 
     const CScript& scriptPubKey = GetScriptForDestination(dest);
-    CRecipient recp = {scriptPubKey, nAmount, false };
+    CRecipient recp = {scriptPubKey, (CAmount)nAmount, false };
 
 
     std::vector<unsigned char> data;
@@ -1074,7 +1071,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     bilingual_str error;
     mtx.nVersion = nVersionIn;
     CCoinControl coin_control;
-    coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
+    coin_control.assetInfo = CAssetCoinInfo(nAsset, (CAmount)nAmount);
     coin_control.fAllowOtherInputs = true; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
@@ -1140,7 +1137,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
     UniValue amountValue = request.params[2];
-    const CAmount &nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
+    const uint64_t &nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationmint");  
 
@@ -1245,7 +1242,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
     UniValue amountValue = request.params[2];
-    CAmount nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
+    uint64_t nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationsend");  
     bool m_signal_bip125_rbf = false;

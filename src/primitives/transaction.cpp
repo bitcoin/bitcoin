@@ -364,14 +364,14 @@ void CMutableTransaction::LoadAssets()
         }       
     }
 }
-bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<uint32_t, CAmount> &mapAssetOut, TxValidationState& state) const
+bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<uint32_t, uint64_t> &mapAssetOut, TxValidationState& state) const
 {
     std::unordered_set<uint32_t> setUsedIndex;
     for(const auto &it: voutAssets) {
         if(it.second.empty()) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-empty");
         }
-        CAmount nTotal = 0;
+        uint64_t nTotal = 0;
         const uint32_t &nAsset = it.first;
         const size_t &nVoutSize = vout.size();
         for(const auto& voutAsset: it.second) {
@@ -379,7 +379,7 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<ui
             if(nOut >= nVoutSize) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outofrange");
             }
-            const CAmount& nAmount = voutAsset.nValue;
+            const uint64_t& nAmount = voutAsset.nValue;
             if(nAmount < 0) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-value-negative");
             }
@@ -394,16 +394,14 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<ui
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-zero-out-non-asset");
                 }
             }
-            else if(!AssetRange(nAmount) || !AssetRange(nTotal)) {
+            // overflow
+            else if(nTotal <= nAmount) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-outofrange");
             }
             auto itSet = setUsedIndex.emplace(nOut);
             if(!itSet.second) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-not-unique");
             }
-        }
-        if(nTotal > 0 && !AssetRange(nTotal)) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-total-outofrange");
         }
         auto itRes = mapAssetOut.emplace(nAsset, nTotal);
         if(!itRes.second) {

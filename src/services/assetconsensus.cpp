@@ -615,9 +615,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (storedAssetRef.strSymbol.size() > 8 || storedAssetRef.strSymbol.size() < 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
-            if (!AssetRange(storedAssetRef.nMaxSupply)) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
-            }
             if (storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bSanityCheck);
             }
@@ -642,9 +639,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if(tx.vout[vecVout[0].n].assetInfo.nValue != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
             }
-            if (theAsset.nBalance < 0) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-balance", bSanityCheck);
-            }
             if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }  
@@ -660,10 +654,12 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             // increase total supply
             storedAssetRef.nTotalSupply += theAsset.nBalance;
             storedAssetRef.nBalance += theAsset.nBalance;
-            if (theAsset.nBalance < 0 || (theAsset.nBalance > 0 && !AssetRange(theAsset.nBalance))) {
+            // overflow
+            if (theAsset.nBalance > 0 && storedAssetRef.nBalance <= theAsset.nBalance) {
                 return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
             }
-            if (storedAssetRef.nTotalSupply > 0 && !AssetRange(storedAssetRef.nTotalSupply)) {
+            // overflow
+            if (theAsset.nBalance > 0 && storedAssetRef.nTotalSupply <= theAsset.nBalance) {
                 return FormatSyscoinErrorMessage(state, "asset-amount-out-of-range", bSanityCheck);
             }
             if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {
@@ -719,7 +715,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!theAsset.vchContract.empty()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
             }
-            CAmount nTotal = 0;
+            uint64_t nTotal = 0;
             for(const auto& voutAsset: vecVout){
                 nTotal += voutAsset.nValue;
             }

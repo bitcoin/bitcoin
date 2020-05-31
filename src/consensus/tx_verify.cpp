@@ -165,8 +165,8 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     }
     const bool &isAssetTx = IsAssetTx(tx.nVersion);
     CAmount nValueIn = 0;
-    std::unordered_map<uint32_t, CAmount> mapAssetIn;
-    std::unordered_map<uint32_t, CAmount> mapAssetOut;
+    std::unordered_map<uint32_t, uint64_t> mapAssetIn;
+    std::unordered_map<uint32_t, uint64_t> mapAssetOut;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
@@ -187,7 +187,8 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalue-zero-change-non-asset");
                 }
             }
-            else if(!AssetRange(coin.out.assetInfo.nValue) || !AssetRange(inRes.first->second)) {
+            // overflow
+            else if(inRes.first->second <= coin.out.assetInfo.nValue) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-outofrange");
             }
         }
