@@ -56,7 +56,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Test getrpcwhitelist")
-        whitelisted = self.settings[3].split(',')
+        whitelisted = {method: None for method in self.settings[3].split(',')}
 
         # should return allowed rpcs
         result = call_rpc(self.nodes[0], self.settings, 'getrpcwhitelist')
