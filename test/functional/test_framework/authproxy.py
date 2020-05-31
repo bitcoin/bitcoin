@@ -179,11 +179,11 @@ class AuthServiceProxy(object):
                 'code': -342, 'message': 'missing HTTP response from server'})
 
         content_type = http_response.getheader('Content-Type')
+        responsedata = http_response.read().decode('utf8')
         if content_type != 'application/json':
             raise JSONRPCException({
                 'code': -342, 'message': 'non-JSON HTTP response with \'%i %s\' from server' % (http_response.status, http_response.reason)})
 
-        responsedata = http_response.read().decode('utf8')
         response = json.loads(responsedata, parse_float=decimal.Decimal)
         elapsed = time.time() - req_start_time
         if "error" in response and response["error"] is None:
