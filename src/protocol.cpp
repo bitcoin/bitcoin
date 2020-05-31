@@ -40,6 +40,8 @@ const char *SENDCMPCT="sendcmpct";
 const char *CMPCTBLOCK="cmpctblock";
 const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
+const char *GETCFILTERS="getcfilters";
+const char *CFILTER="cfilter";
 const char *GETCFHEADERS="getcfheaders";
 const char *CFHEADERS="cfheaders";
 const char *GETCFCHECKPT="getcfcheckpt";
@@ -103,6 +105,10 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::MNGOVERNANCESYNC,
     NetMsgType::MNGOVERNANCEOBJECTVOTE,
     NetMsgType::MNVERIFY,   
+    NetMsgType::GETCFILTERS,
+    NetMsgType::CFILTER,
+    NetMsgType::GETCFHEADERS,
+    NetMsgType::CFHEADERS,
     NetMsgType::GETCFCHECKPT,
     NetMsgType::CFCHECKPT,
     NetMsgType::GETCFHEADERS,
