@@ -259,6 +259,11 @@ class TestNodeCLI():
             if match:
                 code, message = match.groups()
                 raise JSONRPCException(dict(code=int(code), message=message))
+            match = re.match(r'^error: server returned HTTP error (\d+)\n', cli_stderr)
+            if match:
+                http_response_status = int(match.group(1))
+                http_response_reason = 'Forbidden' if http_response_status == 403 else 'Unknown'
+                raise JSONRPCException({'code': -342, 'message': 'non-JSON HTTP response with \'%i %s\' from server' % (http_response_status, http_response_reason)}, http_response_status)
             # Ignore cli_stdout, raise with cli_stderr
             raise subprocess.CalledProcessError(returncode, self.binary, output=cli_stderr)
         try:
