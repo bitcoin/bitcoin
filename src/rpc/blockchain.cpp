@@ -2220,13 +2220,8 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             unspent.pushKV("height", (int32_t)coin.nHeight);
             // SYSCOIN
             if(!coin.out.assetInfo.IsNull()) {
-                CAsset dbAsset;
-                int precision = 8;
-                if(GetAsset(coin.out.assetInfo.nAsset, dbAsset))
-                    precision = dbAsset.nPrecision;
-
                 unspent.pushKV("asset_guid", coin.out.assetInfo.nAsset);
-                unspent.pushKV("asset_amount", ValueFromAssetAmount(coin.out.assetInfo.nValue, precision));
+                unspent.pushKV("asset_amount", coin.out.assetInfo.nValue);
             }
 
             unspents.push_back(unspent);

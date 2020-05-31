@@ -117,10 +117,10 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
             entry.__pushKV("update_flags", asset.nUpdateFlags);
 
         if (asset.nBalance > 0)
-            entry.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
+            entry.__pushKV("balance", asset.nBalance);
 
         if (wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-            entry.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
+            entry.__pushKV("max_supply", asset.nMaxSupply);
             entry.__pushKV("precision", asset.nPrecision);
         } 
     }
@@ -165,15 +165,14 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
 }
 
 bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const std::string &strCategory, UniValue &entry) {
-    CAsset dbAsset;
     entry.__pushKV("txtype", stringFromSyscoinTx(wtx.tx->nVersion));
-    GetAsset(assetInfo.nAsset, dbAsset);
     entry.__pushKV("asset_guid", assetInfo.nAsset);
-    entry.__pushKV("symbol", dbAsset.strSymbol);
-    if(strCategory == "send") {
-        entry.__pushKV("amount", ValueFromAssetAmount(-assetInfo.nValue, dbAsset.nPrecision));
-    } else if (strCategory == "receive") {
-        entry.__pushKV("amount", ValueFromAssetAmount(assetInfo.nValue, dbAsset.nPrecision));
+    if(IsAssetAllocationTx(wtx.tx->nVersion)) {
+        if(strCategory == "send") {
+            entry.__pushKV("amount", -assetInfo.nValue);
+        } else if (strCategory == "receive") {
+            entry.__pushKV("amount", assetInfo.nValue);
+        }
     }
     return true;
 }
@@ -633,7 +632,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     }
 
     if(vchContract != oldContract) {
-        theAsset.vchPrevPubData = oldContract;
+        theAsset.vchPrevContract = oldContract;
         theAsset.vchContract = vchContract;
     }
 

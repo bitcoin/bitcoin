@@ -55,6 +55,7 @@ public:
         vchPrevPubData.clear();
         vchPrevContract.clear();
         voutAssets.clear();
+        strSymbol.clear();
         nPrevUpdateFlags = nUpdateFlags;
         nBalance = 0;
         nTotalSupply = 0;
@@ -77,8 +78,9 @@ public:
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-    inline void SetNull() { ClearAsset(); nPrecision = 8; }
-    inline bool IsNull() const { return (nMaxSupply == 0); }
+    // set precision to an invalid amount so isnull will identity this asset as invalid state
+    inline void SetNull() { ClearAsset(); nPrecision = 9; }
+    inline bool IsNull() const { return (nPrecision == 9); }
     bool UnserializeFromTx(const CTransaction &tx);
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     void SerializeData(std::vector<unsigned char>& vchData);
