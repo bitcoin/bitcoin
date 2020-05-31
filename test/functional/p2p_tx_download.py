@@ -23,7 +23,6 @@ from test_framework.mininode import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    wait_until,
 )
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 
@@ -80,7 +79,7 @@ class TxDownloadTest(BitcoinTestFramework):
         while outstanding_peer_index:
             node_0_mocktime += MAX_GETDATA_INBOUND_WAIT
             self.nodes[0].setmocktime(node_0_mocktime)
-            wait_until(lambda: any(getdata_found(i) for i in outstanding_peer_index))
+            p.wait_until(lambda: any(getdata_found(i) for i in outstanding_peer_index))
             for i in outstanding_peer_index:
                 if getdata_found(i):
                     outstanding_peer_index.remove(i)
@@ -137,21 +136,21 @@ class TxDownloadTest(BitcoinTestFramework):
         with mininode_lock:
             p.tx_getdata_count = 0
 
-        p.send_message(msg_inv([CInv(t=MSG_WTX, h=i) for i in txids]))
-        wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT, lock=mininode_lock)
+        p.send_message(msg_inv([CInv(t=MSG_TX, h=i) for i in txids]))
+        p.wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT)
         with mininode_lock:
             assert_equal(p.tx_getdata_count, MAX_GETDATA_IN_FLIGHT)
 
         self.log.info("Now check that if we send a NOTFOUND for a transaction, we'll get one more request")
-        p.send_message(msg_notfound(vec=[CInv(t=MSG_WTX, h=txids[0])]))
-        wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT + 1, timeout=10, lock=mininode_lock)
+        p.send_message(msg_notfound(vec=[CInv(t=MSG_TX, h=txids[0])]))
+        p.wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT + 1, timeout=10)
         with mininode_lock:
             assert_equal(p.tx_getdata_count, MAX_GETDATA_IN_FLIGHT + 1)
 
         WAIT_TIME = TX_EXPIRY_INTERVAL // 2 + TX_EXPIRY_INTERVAL
         self.log.info("if we wait about {} minutes, we should eventually get more requests".format(WAIT_TIME / 60))
         self.nodes[0].setmocktime(int(time.time() + WAIT_TIME))
-        wait_until(lambda: p.tx_getdata_count == MAX_GETDATA_IN_FLIGHT + 2)
+        p.wait_until(lambda: p.tx_getdata_count == MAX_GETDATA_IN_FLIGHT + 2)
         self.nodes[0].setmocktime(0)
 
     def test_spurious_notfound(self):
