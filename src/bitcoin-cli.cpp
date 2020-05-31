@@ -11,6 +11,7 @@
 #include <clientversion.h>
 #include <optional.h>
 #include <rpc/client.h>
+#include <rpc/mining.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <util/strencodings.h>
@@ -39,6 +40,9 @@ static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
 
+/** Default number of blocks to generate for RPC generatetoaddress. */
+static const std::string DEFAULT_NBLOCKS = "1";
+
 static void SetupCliArgs()
 {
     SetupHelpOptions(gArgs);
@@ -50,6 +54,7 @@ static void SetupCliArgs()
     gArgs.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-conf=<file>", strprintf("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-generate", strprintf("Generate blocks immediately, equivalent to RPC generatenewaddress followed by RPC generatetoaddress. Optional positional integer arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000", DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     SetupChainParamsBaseOptions();
     gArgs.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -537,6 +542,22 @@ static UniValue GetNewAddress()
     return ConnectAndCallRPC(rh.get(), "getnewaddress", /* args=*/{});
 }
 
+/**
+ * Check bounds and set up args for RPC generatetoaddress params: nblocks, address, maxtries.
+ * @param[in] address  Reference to const string address to insert into the args.
+ * @param     args     Reference to vector of string args to modify.
+ */
+static void SetGenerateToAddressArgs(const std::string& address, std::vector<std::string>& args)
+{
+    if (args.size() > 2) throw std::runtime_error("too many arguments (maximum 2 for nblocks and maxtries)");
+    if (args.size() == 0) {
+        args.emplace_back(DEFAULT_NBLOCKS);
+    } else if (args.at(0) == "0") {
+        throw std::runtime_error("the first argument (number of blocks to generate, default: " + DEFAULT_NBLOCKS + ") must be an integer value greater than zero");
+    }
+    args.emplace(args.begin() + 1, address);
+}
+
 static int CommandLineRPC(int argc, char *argv[])
 {
     std::string strPrint;
@@ -595,6 +616,15 @@ static int CommandLineRPC(int argc, char *argv[])
         std::string method;
         if (gArgs.IsArgSet("-getinfo")) {
             rh.reset(new GetinfoRequestHandler());
+        } else if (gArgs.GetBoolArg("-generate", false)) {
+            const UniValue getnewaddress{GetNewAddress()};
+            const UniValue& error{find_value(getnewaddress, "error")};
+            if (error.isNull()) {
+                SetGenerateToAddressArgs(find_value(getnewaddress, "result").get_str(), args);
+                rh.reset(new GenerateToAddressRequestHandler());
+            } else {
+                ParseError(error, strPrint, nRet);
+            }
         } else {
             rh.reset(new DefaultRequestHandler());
             if (args.size() < 1) {
