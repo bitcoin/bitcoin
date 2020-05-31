@@ -12,6 +12,11 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 
+#ifdef ENABLE_WALLET
+#include <wallet/rpcwallet.h>
+#include <wallet/wallet.h>
+#endif
+
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/signals2/signal.hpp>
@@ -274,8 +279,28 @@ static RPCHelpMan getrpcwhitelist()
         whitelisted_rpcs.pushKV(rpc, NullUniValue);
     }
 
+    UniValue whitelisted_wallets(UniValue::VOBJ);
+#ifdef ENABLE_WALLET
+    std::string authorized_wallet_name;
+    const bool have_wallet_restriction = GetWalletRestrictionFromJSONRPCRequest(request, authorized_wallet_name);
+    if (have_wallet_restriction) {
+        if (authorized_wallet_name != "-") {
+            whitelisted_wallets.pushKV(authorized_wallet_name, NullUniValue);
+        }
+    } else {
+        // All wallets are allowed
+        for (const std::shared_ptr<CWallet>& wallet : GetWallets()) {
+            if (!wallet.get()) continue;
+
+            LOCK(wallet->cs_wallet);
+            whitelisted_wallets.pushKV(wallet->GetName(), NullUniValue);
+        }
+    }
+#endif
+
     UniValue result(UniValue::VOBJ);
     result.pushKV("methods", whitelisted_rpcs);
+    result.pushKV("wallets", whitelisted_wallets);
 
     return result;
 }
