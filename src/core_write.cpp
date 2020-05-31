@@ -23,24 +23,21 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
     entry.__pushKV("blockhash", hashBlock.GetHex());  
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
    
-    CAsset dbAsset;
     for(const auto &it: tx.voutAssets) {
         CAmount nTotal = 0;
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
         const uint32_t &nAsset = it.first;
-        GetAsset(nAsset, dbAsset);
         oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
-        oAssetAllocationReceiversObj.__pushKV("symbol", dbAsset.strSymbol);
         UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
         for(const auto& voutAsset: it.second){
             nTotal += voutAsset.nValue;
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
             oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-            oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAssetAmount(voutAsset.nValue, dbAsset.nPrecision));
+            oAssetAllocationReceiverOutputObj.__pushKV("amount", voutAsset.nValue);
             oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
         }
         oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-        oAssetAllocationReceiversObj.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
+        oAssetAllocationReceiversObj.__pushKV("total", nTotal);
         oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
     }
 
@@ -48,7 +45,6 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
          CBurnSyscoin burnSyscoin(tx);
          entry.__pushKV("ethereum_destination", "0x" + HexStr(burnSyscoin.vchEthAddress));
-         entry.__pushKV("ethereum_contract", "0x" + HexStr(dbAsset.vchContract));
     }
     return true;
 }
@@ -65,20 +61,17 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
             CAmount nTotal = 0;
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
             const uint32_t &nAsset = it.first;
-            CAsset dbAsset;
-            GetAsset(nAsset, dbAsset);
             oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
-            oAssetAllocationReceiversObj.__pushKV("symbol", dbAsset.strSymbol);
             UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
             for(const auto& voutAsset: it.second){
                 nTotal += voutAsset.nValue;
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
                 oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-                oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAssetAmount(voutAsset.nValue, dbAsset.nPrecision));
+                oAssetAllocationReceiverOutputObj.__pushKV("amount", voutAsset.nValue);
                 oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
             }
             oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-            oAssetAllocationReceiversObj.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
+            oAssetAllocationReceiversObj.__pushKV("total", nTotal);
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
         }
     
@@ -120,10 +113,10 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 		entry.__pushKV("update_flags", asset.nUpdateFlags);
 
 	if (asset.nBalance > 0)
-		entry.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
+		entry.__pushKV("balance", asset.nBalance);
 
 	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-        entry.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
+        entry.__pushKV("max_supply", asset.nMaxSupply);
 		entry.__pushKV("precision", asset.nPrecision);
 	}
     return true;

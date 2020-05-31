@@ -3033,11 +3033,7 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
         entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
         if(!out.tx->tx->vout[out.i].assetInfo.IsNull()) {
-            CAsset dbAsset;
-            int precision = 8;
-            if(GetAsset( out.tx->tx->vout[out.i].assetInfo.nAsset, dbAsset))
-                precision = dbAsset.nPrecision;
-            entry.pushKV("asset_amount", ValueFromAssetAmount(out.tx->tx->vout[out.i].assetInfo.nValue, precision));
+            entry.pushKV("asset_amount", out.tx->tx->vout[out.i].assetInfo.nValue);
             entry.pushKV("asset_guid", out.tx->tx->vout[out.i].assetInfo.nAsset);
         }
         entry.pushKV("confirmations", out.nDepth);
