@@ -4,6 +4,7 @@
 """Native Python MuHash3072 implementation."""
 
 import hashlib
+import unittest
 
 from .util import modinv
 
@@ -88,3 +89,13 @@ class MuHash3072:
         val = (self.numerator * modinv(self.denominator, self.MODULUS)) % self.MODULUS
         bytes384 = val.to_bytes(384, 'little')
         return hashlib.sha256(bytes384).digest()
+
+class TestFrameworkMuhash(unittest.TestCase):
+    def test_muhash(self):
+        muhash = MuHash3072()
+        muhash.insert([0]*32)
+        muhash.insert([1] + [0]*31)
+        muhash.remove([2] + [0]*31)
+        finalized = muhash.digest()
+        # This mirrors the result in the C++ MuHash3072 unit test
+        self.assertEqual(finalized[::-1].hex(), "a44e16d5e34d259b349af21c06e65d653915d2e208e4e03f389af750dc0bfdc3")
