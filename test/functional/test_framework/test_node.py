@@ -522,10 +522,15 @@ class TestNodeCLI():
         self.input = None
         self.log = logging.getLogger('TestFramework.bitcoincli')
 
+    def with_auth(self, user, password):
+        cli = TestNodeCLI(self.binary, self.datadir)
+        cli.options = ['-rpcuser=%s' % (user,), '-rpcpassword=%s' % (password,)]
+        return cli
+
     def __call__(self, *options, input=None):
         # TestNodeCLI is callable with bitcoin-cli command-line options
         cli = TestNodeCLI(self.binary, self.datadir)
-        cli.options = [str(o) for o in options]
+        cli.options += [str(o) for o in options]
         cli.input = input
         return cli
 
