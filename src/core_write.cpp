@@ -154,9 +154,8 @@ UniValue ValueFromAmount(const CAmount& amount)
 // SYSCOIN
 UniValue ValueFromAssetAmount(const uint64_t& amount,int precision)
 {
-    bool sign = amount < 0;
-    uint64_t n_abs = (sign ? -amount : amount);
-    uint64_t quotient = n_abs;
+    uint64_t n_abs = amount;
+    uint64_t quotient = amount;
     uint64_t divByAmount = 1;
     uint64_t remainder = 0;
     std::string strPrecision = "0";
@@ -167,7 +166,7 @@ UniValue ValueFromAssetAmount(const uint64_t& amount,int precision)
         strPrecision = itostr(precision);
     }
     return UniValue(UniValue::VNUM,
-        strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
+        strprintf("%d.%0" + strPrecision + "d", quotient, remainder));
 }
 std::string FormatScript(const CScript& script)
 {
