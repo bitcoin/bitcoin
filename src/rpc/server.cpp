@@ -260,10 +260,10 @@ static UniValue getrpcwhitelist(const JSONRPCRequest& request)
                 + HelpExampleRpc("getrpcwhitelist", "")},
             }.Check(request);
 
-    UniValue whitelisted_rpcs(UniValue::VARR);
+    UniValue whitelisted_rpcs(UniValue::VOBJ);
     const std::set<std::string>& whitelist = GetWhitelistedRpcs(request.authUser);
     for (const auto& rpc : whitelist) {
-        whitelisted_rpcs.push_back(rpc);
+        whitelisted_rpcs.pushKV(rpc, NullUniValue);
     }
 
     UniValue result(UniValue::VOBJ);
