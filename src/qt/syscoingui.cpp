@@ -440,7 +440,7 @@ void SyscoinGUI::createActions()
             activity->create();
         });
 
-        connect(m_mask_values_action, &QAction::toggled, this, &BitcoinGUI::setPrivacy);
+        connect(m_mask_values_action, &QAction::toggled, this, &SyscoinGUI::setPrivacy);
     }
 #endif // ENABLE_WALLET
 
@@ -1510,7 +1510,7 @@ void SyscoinGUI::unsubscribeFromCoreSignals()
     m_handler_question->disconnect();
 }
 
-bool BitcoinGUI::isPrivacyModeActivated() const
+bool SyscoinGUI::isPrivacyModeActivated() const
 {
     assert(m_mask_values_action);
     return m_mask_values_action->isChecked();
