@@ -39,6 +39,7 @@ import http.client
 import json
 import logging
 import os
+import re
 import socket
 import time
 import urllib.parse
@@ -78,6 +79,14 @@ class AuthServiceProxy():
         self.__auth_header = b'Basic ' + base64.b64encode(authpair)
         self.timeout = timeout
         self._set_conn(connection)
+
+    def with_auth(self, user, password):
+        authpair = user + ':' + password
+        authpair.replace('\\', '\\\\')
+        new_url = '%s' % (self.__service_url,)
+        # Based on RFC 3986 (I can't believe there isn't a better way to do this!)
+        new_url = re.compile(r'^([a-z][a-z\d.+-]*\://)[a-z\d._~%!$&\'()*+,;=:-]*(@)', re.IGNORECASE).sub(r'\1' + authpair + r'\2', new_url)
+        return AuthServiceProxy('%s' % (new_url,), self._service_name, connection=self.__conn)
 
     def __getattr__(self, name):
         if name.startswith('__') and name.endswith('__'):
