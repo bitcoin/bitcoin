@@ -475,6 +475,34 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     return response;
 }
 
+/** Parse UniValue result to update the message to print to std::cout. */
+static void ParseResult(const UniValue& result, std::string& strPrint)
+{
+    if (result.isNull()) return;
+    strPrint = result.isStr() ? result.get_str() : result.write(2);
+}
+
+/** Parse UniValue error to update the message to print to std::cerr and the code to return. */
+static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
+{
+    if (error.isObject()) {
+        const UniValue& err_code = find_value(error, "code");
+        const UniValue& err_msg = find_value(error, "message");
+        if (!err_code.isNull()) {
+            strPrint = "error code: " + err_code.getValStr() + "\n";
+        }
+        if (err_msg.isStr()) {
+            strPrint += ("error message:\n" + err_msg.get_str());
+        }
+        if (err_code.isNum() && err_code.get_int() == RPC_WALLET_NOT_SPECIFIED) {
+            strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to bitcoin-cli command line.";
+        }
+    } else {
+        strPrint = "error: " + error.write();
+    }
+    nRet = abs(error["code"].get_int());
+}
+
 /**
  * GetWalletBalances calls listwallets; if more than one wallet is loaded, it then
  * fetches mine.trusted balances for each loaded wallet and pushes them to `result`.
@@ -575,40 +603,22 @@ static int CommandLineRPC(int argc, char *argv[])
             method = args[0];
             args.erase(args.begin()); // Remove trailing method name from arguments vector
         }
-        Optional<std::string> wallet_name{};
-        if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
-        const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
+        if (nRet == 0) {
+            // Perform RPC call
+            Optional<std::string> wallet_name{};
+            if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
+            const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
 
-        // Parse reply
-        UniValue result = find_value(reply, "result");
-        const UniValue& error = find_value(reply, "error");
-        if (!error.isNull()) {
-            // Error
-            strPrint = "error: " + error.write();
-            nRet = abs(error["code"].get_int());
-            if (error.isObject()) {
-                const UniValue& errCode = find_value(error, "code");
-                const UniValue& errMsg = find_value(error, "message");
-                strPrint = errCode.isNull() ? "" : ("error code: " + errCode.getValStr() + "\n");
-
-                if (errMsg.isStr()) {
-                    strPrint += ("error message:\n" + errMsg.get_str());
+            // Parse reply
+            UniValue result = find_value(reply, "result");
+            const UniValue& error = find_value(reply, "error");
+            if (error.isNull()) {
+                if (gArgs.IsArgSet("-getinfo") && !gArgs.IsArgSet("-rpcwallet")) {
+                    GetWalletBalances(result); // fetch multiwallet balances and append to result
                 }
-                if (errCode.isNum() && errCode.get_int() == RPC_WALLET_NOT_SPECIFIED) {
-                    strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to bitcoin-cli command line.";
-                }
-            }
-        } else {
-            if (gArgs.IsArgSet("-getinfo") && !gArgs.IsArgSet("-rpcwallet")) {
-                GetWalletBalances(result); // fetch multiwallet balances and append to result
-            }
-            // Result
-            if (result.isNull()) {
-                strPrint = "";
-            } else if (result.isStr()) {
-                strPrint = result.get_str();
+                ParseResult(result, strPrint);
             } else {
-                strPrint = result.write(2);
+                ParseError(error, strPrint, nRet);
             }
         }
     } catch (const std::exception& e) {
