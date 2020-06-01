@@ -151,7 +151,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
         ///////////////////////////////////////////////
         // VBK NETWORK
 
-        std::string stdVbkEndPoint = gArgs.GetArg("bfiendpoint", "");// read from conf.
+        std::string stdVbkEndPoint = gArgs.GetArg("-bfiendpoint", "");// read from conf.
         
         QString vbkEndPoint = QString::fromStdString(stdVbkEndPoint);
         QString url = vbkEndPoint;  
@@ -180,7 +180,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
         
         if (reply->error()) {            
             err = true;
-            vbkMessage = "BFI not setup yet, specify url in vbitcoin.conf";
+            vbkMessage = "BFI not setup yet, specify -bfiendpoint=url in vbitcoin.conf";
         } else {
             QByteArray buffer = reply->readAll();
             dataLine = buffer.constData();

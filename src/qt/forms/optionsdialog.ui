@@ -716,12 +716,11 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_BFI">
        
-	    <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_BFI">
-         <item>
+	<item>
           <widget class="QLabel" name="bfiInfoLabel">
            <property name="toolTip">
-            <string>........ This is the data tool tip </string>
+            <string>Bitcoin Finality Indicator (BFI) indicates when a transaction on an altchain network has as much
+            security as a transaction on Bitcoin itself.</string>
            </property>
            <property name="text">
             <string>Bitcoin Finality Indicator (BFI) indicates when a transaction on an altchain network has as much
@@ -758,8 +757,6 @@
         </spacer>
        </item>
       </layout>
-	  </item>
-	  </layout>
      </widget>
      
     </widget>
