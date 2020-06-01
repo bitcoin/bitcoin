@@ -24,6 +24,11 @@ struct bilingual_str {
         translated += rhs.translated;
         return *this;
     }
+
+    bool empty() const
+    {
+        return original.empty();
+    }
 };
 
 inline bilingual_str operator+(bilingual_str lhs, const bilingual_str& rhs)
