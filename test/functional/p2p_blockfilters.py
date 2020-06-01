@@ -4,12 +4,13 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests NODE_COMPACT_FILTERS (BIP 157/158).
 
-Tests that a node configured with -blockfilterindex and -peerblockfilters can serve
-cfheaders and cfcheckpts.
+Tests that a node configured with -blockfilterindex and -peerblockfilters signals
+NODE_COMPACT_FILTERS and can serve cfilters, cfheaders and cfcheckpts.
 """
 
 from test_framework.messages import (
     FILTER_TYPE_BASIC,
+    NODE_COMPACT_FILTERS,
     hash256,
     msg_getcfcheckpt,
     msg_getcfheaders,
@@ -69,6 +70,14 @@ class CompactFiltersTest(BitcoinTestFramework):
 
         self.nodes[1].generate(1001)
         wait_until(lambda: self.nodes[1].getblockcount() == 2000)
+
+        # Check that nodes have signalled NODE_COMPACT_FILTERS correctly.
+        assert node0.nServices & NODE_COMPACT_FILTERS != 0
+        assert node1.nServices & NODE_COMPACT_FILTERS == 0
+
+        # Check that the localservices is as expected.
+        assert int(self.nodes[0].getnetworkinfo()['localservices'], 16) & NODE_COMPACT_FILTERS != 0
+        assert int(self.nodes[1].getnetworkinfo()['localservices'], 16) & NODE_COMPACT_FILTERS == 0
 
         self.log.info("get cfcheckpt on chain to be re-orged out.")
         request = msg_getcfcheckpt(
