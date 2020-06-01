@@ -116,9 +116,23 @@ int ClientModel::getNumBlocks() const
 
 uint256 ClientModel::getBestBlockHash()
 {
+    uint256 tip{WITH_LOCK(m_cached_tip_mutex, return m_cached_tip_blocks)};
+
+    if (!tip.IsNull()) {
+        return tip;
+    }
+
+    // Lock order must be: first `cs_main`, then `m_cached_tip_mutex`.
+    // The following will lock `cs_main` (and release it), so we must not
+    // own `m_cached_tip_mutex` here.
+    tip = m_node.getBestBlockHash();
+
     LOCK(m_cached_tip_mutex);
+    // We checked that `m_cached_tip_blocks` is not null above, but then we
+    // released the mutex `m_cached_tip_mutex`, so it could have changed in the
+    // meantime. Thus, check again.
     if (m_cached_tip_blocks.IsNull()) {
-        m_cached_tip_blocks = m_node.getBestBlockHash();
+        m_cached_tip_blocks = tip;
     }
     return m_cached_tip_blocks;
 }
