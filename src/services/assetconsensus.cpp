@@ -92,7 +92,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(ethTxRootShouldExist){
         // time must be between 1 week and 1 hour old to be accepted
         if(nTime < txRootDB.nTimestamp) {
-            return FormatSyscoinErrorMessage(state, "invalid-timestamp", bSanityCheck);
+            return FormatSyscoinErrorMessage(state, "mint-invalid-timestamp", bSanityCheck);
         }
         // 3 hr on testnet and 1 week on mainnet
         else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? TESTNET_MAX_MINT_AGE: MAINNET_MAX_MINT_AGE)) {
@@ -598,7 +598,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
             if (nAsset <= (SYSCOIN_TX_VERSION_ALLOCATION_SEND*10)) {
-                return FormatSyscoinErrorMessage(state, "asset-guid-invalid", bSanityCheck);
+                return FormatSyscoinErrorMessage(state, "asset-guid-too-low", bSanityCheck);
             }
             if (!storedAssetRef.vchContract.empty() && storedAssetRef.vchContract.size() != MAX_GUID_LENGTH) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
@@ -622,7 +622,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-invalid-flags", bSanityCheck);
             } 
             if (nAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-guid", bSanityCheck);
+                return FormatSyscoinErrorMessage(state, "asset-guid-not-deterministic", bSanityCheck);
             }         
             // starting supply is the supplied balance upon init
             storedAssetRef.nTotalSupply = storedAssetRef.nBalance;
@@ -649,18 +649,18 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             }      
             if (theAsset.nBalance > 0 && !(storedAssetRef.nUpdateFlags & ASSET_UPDATE_SUPPLY)) {
-                return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
+                return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
             }          
             // increase total supply
             storedAssetRef.nTotalSupply += theAsset.nBalance;
             storedAssetRef.nBalance += theAsset.nBalance;
             // overflow
             if (theAsset.nBalance > 0 && storedAssetRef.nBalance <= theAsset.nBalance) {
-                return FormatSyscoinErrorMessage(state, "amount-out-of-range", bSanityCheck);
+                return FormatSyscoinErrorMessage(state, "asset-amount-overflow", bSanityCheck);
             }
             // overflow
             if (theAsset.nBalance > 0 && storedAssetRef.nTotalSupply <= theAsset.nBalance) {
-                return FormatSyscoinErrorMessage(state, "asset-amount-out-of-range", bSanityCheck);
+                return FormatSyscoinErrorMessage(state, "asset-supply-overflow", bSanityCheck);
             }
             if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
@@ -668,7 +668,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
    
             if (!theAsset.vchPubData.empty()) {
                 if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_DATA)) {
-                    return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-pubdata-privileges", bSanityCheck);
                 }
                 // ensure prevdata is set to what db is now to be able to undo in disconnectblock
                 if(theAsset.vchPrevPubData != storedAssetRef.vchPubData) {
@@ -680,7 +680,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                                         
             if (!theAsset.vchContract.empty()) {
                 if (!(storedAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT)) {
-                    return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-contract-privileges", bSanityCheck);
                 }
                 if(theAsset.vchPrevContract != storedAssetRef.vchContract) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
@@ -689,7 +689,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             }
             if (theAsset.nUpdateFlags != storedAssetRef.nUpdateFlags) {
                 if (theAsset.nUpdateFlags > 0 && !(storedAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN))) {
-                    return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bSanityCheck);
+                    return FormatSyscoinErrorMessage(state, "asset-insufficient-flags-privileges", bSanityCheck);
                 }
                 if(theAsset.nPrevUpdateFlags != storedAssetRef.nUpdateFlags) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
@@ -710,7 +710,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
             }
             if (!theAsset.vchPubData.empty()) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-data", bSanityCheck);
+                return FormatSyscoinErrorMessage(state, "asset-invalid-pubdata", bSanityCheck);
             }
             if (!theAsset.vchContract.empty()) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);

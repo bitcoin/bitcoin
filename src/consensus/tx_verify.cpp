@@ -189,7 +189,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             }
             // overflow
             else if(inRes.first->second <= coin.out.assetInfo.nValue) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-outofrange");
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-overflow");
             }
         }
         // Check for negative or overflow input values
