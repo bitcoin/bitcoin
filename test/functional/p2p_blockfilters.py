@@ -5,7 +5,7 @@
 """Tests NODE_COMPACT_FILTERS (BIP 157/158).
 
 Tests that a node configured with -blockfilterindex and -peerblockfilters can serve
-cfheaders and cfcheckpts.
+cfilters, cfheaders and cfcheckpts.
 """
 
 from test_framework.messages import (
