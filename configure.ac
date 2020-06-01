@@ -811,7 +811,7 @@ if test x$use_hardening != xno; then
 fi
 
 dnl These flags are specific to ld64, and may cause issues with other linkers.
-dnl For example: GNU ld will intepret -dead_strip as -de and then try and use
+dnl For example: GNU ld will interpret -dead_strip as -de and then try and use
 dnl "ad_strip" as the symbol for the entry point.
 if test x$TARGET_OS = xdarwin; then
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"],, [[$LDFLAG_WERROR]])
