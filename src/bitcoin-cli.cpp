@@ -477,6 +477,16 @@ static void GetWalletBalances(UniValue& result)
     result.pushKV("balances", balances);
 }
 
+/**
+ * Call RPC getnewaddress.
+ * @returns getnewaddress response as a UniValue object.
+ */
+static UniValue GetNewAddress()
+{
+    std::unique_ptr<BaseRequestHandler> rh{MakeUnique<DefaultRequestHandler>()};
+    return ConnectAndCallRPC(rh.get(), "getnewaddress", /* args=*/{});
+}
+
 static int CommandLineRPC(int argc, char *argv[])
 {
     std::string strPrint;
