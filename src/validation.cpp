@@ -786,7 +786,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (isZDAGNoRBF) {
         const size_t& txTotalSize = tx.GetTotalSize();
         if(txTotalSize > MAX_STANDARD_ZDAG_TX_SIZE) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool zdag tx too large", strprintf("%d > %d", txTotalSize, MAX_STANDARD_ZDAG_TX_SIZE));
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool-zdag-too-large", strprintf("%d > %d", txTotalSize, MAX_STANDARD_ZDAG_TX_SIZE));
         }
     }
     if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state, isZDAGNoRBF)) return false;
