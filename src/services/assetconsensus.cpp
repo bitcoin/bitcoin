@@ -657,6 +657,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (theAsset.nTotalSupply != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bSanityCheck);
             }
+            if (theAsset.nMaxSupply != 0) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
+            }
             // increase total supply
             storedAssetRef.nTotalSupply += theAsset.nBalance;
             storedAssetRef.nBalance += theAsset.nBalance;
