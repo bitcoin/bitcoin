@@ -244,3 +244,39 @@ CAmount BitcoinUnits::maxMoney()
 {
     return MAX_MONEY;
 }
+
+namespace {
+qint8 ToQuint8(BitcoinUnit unit)
+{
+    switch (unit) {
+    case BitcoinUnits::BTC: return 0;
+    case BitcoinUnits::mBTC: return 1;
+    case BitcoinUnits::uBTC: return 2;
+    case BitcoinUnits::SAT: return 3;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
+BitcoinUnit FromQuint8(qint8 num)
+{
+    switch (num) {
+    case 3: return BitcoinUnits::SAT;
+    case 2: return BitcoinUnits::uBTC;
+    case 1: return BitcoinUnits::mBTC;
+    default: return BitcoinUnits::BTC;
+    }
+}
+} // namespace
+
+QDataStream& operator<<(QDataStream& out, const BitcoinUnit& unit)
+{
+    return out << ToQuint8(unit);
+}
+
+QDataStream& operator>>(QDataStream& in, BitcoinUnit& unit)
+{
+    quint8 input;
+    in >> input;
+    unit = FromQuint8(input);
+    return in;
+}

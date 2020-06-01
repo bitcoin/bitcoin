@@ -22,6 +22,7 @@
 #include <QDebug>
 #include <QSettings>
 #include <QStringList>
+#include <QVariant>
 
 const char *DEFAULT_GUI_PROXY_HOST = "127.0.0.1";
 
@@ -68,9 +69,15 @@ void OptionsModel::Init(bool resetSettings)
     fMinimizeOnClose = settings.value("fMinimizeOnClose").toBool();
 
     // Display
-    if (!settings.contains("nDisplayUnit"))
-        settings.setValue("nDisplayUnit", BitcoinUnits::BTC);
-    nDisplayUnit = settings.value("nDisplayUnit").toInt();
+    if (!settings.contains("display_unit")) {
+        settings.setValue("display_unit", QVariant::fromValue(BitcoinUnit::BTC));
+    }
+    QVariant unit = settings.value("display_unit");
+    if (unit.isValid()) {
+        m_display_unit = unit.value<BitcoinUnit>();
+    } else {
+        m_display_unit = BitcoinUnit::BTC;
+    }
 
     if (!settings.contains("strThirdPartyTxUrls"))
         settings.setValue("strThirdPartyTxUrls", "");
@@ -306,7 +313,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("bSpendZeroConfChange");
 #endif
         case DisplayUnit:
-            return nDisplayUnit;
+            return QVariant::fromValue(m_display_unit);
         case ThirdPartyTxUrls:
             return strThirdPartyTxUrls;
         case Language:
@@ -484,12 +491,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
 /** Updates current unit in memory, settings and emits displayUnitChanged(newUnit) signal */
 void OptionsModel::setDisplayUnit(const QVariant &value)
 {
-    if (!value.isNull())
-    {
+    if (!value.isNull()) {
         QSettings settings;
-        nDisplayUnit = value.toInt();
-        settings.setValue("nDisplayUnit", nDisplayUnit);
-        Q_EMIT displayUnitChanged(nDisplayUnit);
+        m_display_unit = value.value<BitcoinUnit>();
+        settings.setValue("display_unit", QVariant::fromValue(m_display_unit));
+        Q_EMIT displayUnitChanged(static_cast<int>(m_display_unit));
     }
 }
 
