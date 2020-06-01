@@ -1627,13 +1627,6 @@ CTransactionRef static FindTxForGetData(CNode& peer, const uint256& txid, const 
         if (peer.m_tx_relay->setInventoryTxToSend.count(txid)) return {};
     }
 
-    {
-        LOCK(cs_main);
-        // Look up transaction in relay pool
-        auto mi = mapRelay.find(txid);
-        if (mi != mapRelay.end()) return mi->second;
-    }
-
     auto txinfo = mempool.info(txid);
     if (txinfo.tx) {
         // To protect privacy, do not answer getdata using the mempool when
@@ -1642,6 +1635,13 @@ CTransactionRef static FindTxForGetData(CNode& peer, const uint256& txid, const 
         if ((mempool_req.count() && txinfo.m_time <= mempool_req) || txinfo.m_time <= longlived_mempool_time) {
             return txinfo.tx;
         }
+    }
+
+    {
+        LOCK(cs_main);
+        // Look up transaction in relay pool
+        auto mi = mapRelay.find(txid);
+        if (mi != mapRelay.end()) return mi->second;
     }
 
     return {};
