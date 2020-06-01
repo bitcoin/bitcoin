@@ -19,7 +19,7 @@ from test_framework.util import (
 BLOCKS = 101
 BALANCE = (BLOCKS - 100) * 50
 
-JSON_PARSING_ERROR = 'error: Error parsing JSON:foo'
+JSON_PARSING_ERROR = 'error: Error parsing JSON: foo'
 BLOCKS_VALUE_OF_ZERO = 'error: the first argument (number of blocks to generate, default: 1) must be an integer value greater than zero'
 TOO_MANY_ARGS = 'error: too many arguments (maximum 2 for nblocks and maxtries)'
 WALLET_NOT_LOADED = 'Requested wallet does not exist or is not loaded'
