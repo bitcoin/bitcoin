@@ -97,7 +97,8 @@ RUN apk --no-cache add \
   boost-program_options \
   libevent \
   libzmq \
-  su-exec
+  su-exec \
+  valgrind
 
 ENV DATA_DIR=/home/vbitcoin/.vbitcoin
 ENV VBITCOIN_PREFIX=/opt/vbitcoin
