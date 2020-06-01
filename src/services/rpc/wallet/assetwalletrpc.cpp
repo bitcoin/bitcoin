@@ -602,7 +602,6 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     if(!strContract.empty())
         boost::erase_all(strContract, "0x");  // strip 0x if exist
     std::vector<unsigned char> vchContract = ParseHex(strContract);
-
     uint32_t nUpdateFlags = params[4].get_uint();
     
     CAsset theAsset;
@@ -614,7 +613,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     const std::vector<unsigned char> oldContract(theAsset.vchContract);
     theAsset.ClearAsset();
     UniValue params3 = params[3];
-    CAmount nBalance = 0;
+    uint64_t nBalance = 0;
     if((params3.isStr() && params3.get_str() != "0") || (params3.isNum() && params3.get_real() != 0))
         nBalance = AssetAmountFromValue(params3, theAsset.nPrecision);
     UniValue publicData(UniValue::VOBJ);
@@ -761,7 +760,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         const std::string &toStr = find_value(receiverObj, "address").get_str(); 
         const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));             
         UniValue amountObj = find_value(receiverObj, "amount");
-        CAmount nAmount;
+        uint64_t nAmount;
         if (amountObj.isNum() || amountObj.isStr()) {
             nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
             if (nAmount <= 0)
