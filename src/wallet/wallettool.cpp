@@ -107,6 +107,11 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
 {
     fs::path path = fs::absolute(name, GetWalletDir());
 
+    // -format is only allowed with createfromdump. Disallow it for all other commands.
+    if (gArgs.IsArgSet("-format") && command != "createfromdump") {
+        tfm::format(std::cerr, "The -format option can only be used with the \"createfromdump\" command.\n");
+        return false;
+    }
     // -dumpfile is only allowed with dump and createfromdump. Disallow it for all other commands.
     if (gArgs.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
         tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
@@ -163,6 +168,17 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
             return ret;
         }
         tfm::format(std::cout, "The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n");
+        return ret;
+    } else if (command == "createfromdump") {
+        bilingual_str error;
+        std::vector<bilingual_str> warnings;
+        bool ret = CreateFromDump(name, path, error, warnings);
+        for (const auto& warning : warnings) {
+            tfm::format(std::cout, "%s\n", warning.original);
+        }
+        if (!ret && !error.empty()) {
+            tfm::format(std::cerr, "%s\n", error.original);
+        }
         return ret;
     } else {
         tfm::format(std::cerr, "Invalid command: %s\n", command);
