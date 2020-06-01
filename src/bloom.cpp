@@ -192,7 +192,18 @@ CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const dou
      * bit is treated as unset. If the bits are (01), (10), or (11), the bit is
      * treated as set in generation 1, 2, or 3 respectively.
      * These bits are stored in separate integers: position P corresponds to bit
-     * (P & 63) of the integers data[(P >> 6) * 2] and data[(P >> 6) * 2 + 1]. */
+     * (P & 63) of the integers data[(P >> 6) * 2] and data[(P >> 6) * 2 + 1].
+     *
+     * Python code to calculate the filter size in bytes:
+
+       def filterbytes(nel, fprate):
+           logfp = math.log(fprate)
+           nhash = max(1, min(round(logfp/math.log(0.5)), 50))
+           nfilbits = math.ceil(-1.0*nhash*(3*int((nel+1)/2)) / math.log(1.0 - math.exp(logfp / nhash)))
+           return (nfilbits+63)/64*2*8
+
+     */
+
     data.resize(((nFilterBits + 63) / 64) << 1);
     reset();
 }
