@@ -616,6 +616,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
             if (storedAssetRef.nBalance > storedAssetRef.nMaxSupply || (storedAssetRef.nBalance <= 0)) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-supply", bSanityCheck);
+            }
+            if (storedAssetRef.nTotalSupply != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bSanityCheck);
             }
             if (storedAssetRef.nUpdateFlags > ASSET_UPDATE_ALL) {
@@ -651,6 +654,9 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (theAsset.nBalance > 0 && !(storedAssetRef.nUpdateFlags & ASSET_UPDATE_SUPPLY)) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
             }          
+            if (theAsset.nTotalSupply != 0) {
+                return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bSanityCheck);
+            }
             // increase total supply
             storedAssetRef.nTotalSupply += theAsset.nBalance;
             storedAssetRef.nBalance += theAsset.nBalance;
@@ -703,18 +709,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             
         case SYSCOIN_TX_VERSION_ASSET_SEND:
         {
-            if (!theAsset.vchPrevPubData.empty()) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-prevdata", bSanityCheck);
-            }
-            if (!theAsset.vchPrevContract.empty()) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
-            }
-            if (!theAsset.vchPubData.empty()) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-pubdata", bSanityCheck);
-            }
-            if (!theAsset.vchContract.empty()) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
-            }
             uint64_t nTotal = 0;
             for(const auto& voutAsset: vecVout){
                 nTotal += voutAsset.nValue;
