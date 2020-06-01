@@ -90,6 +90,15 @@ export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
 
 DOCKER_EXEC mkdir -p "${BASE_SCRATCH_DIR}/sanitizer-output/"
 
+if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
+  DOCKER_EXEC "update-alternatives --install /usr/bin/clang++ clang++ \$(which clang++-9) 100"
+  DOCKER_EXEC "update-alternatives --install /usr/bin/clang clang \$(which clang-9) 100"
+  DOCKER_EXEC "mkdir -p ${BASE_SCRATCH_DIR}/msan/build/"
+  DOCKER_EXEC "git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-10.0.0 ${BASE_SCRATCH_DIR}/msan/llvm-project"
+  DOCKER_EXEC "cd ${BASE_SCRATCH_DIR}/msan/build/ && cmake -DLLVM_ENABLE_PROJECTS='libcxx;libcxxabi' -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=Memory -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_TARGETS_TO_BUILD=X86 ../llvm-project/llvm/"
+  DOCKER_EXEC "cd ${BASE_SCRATCH_DIR}/msan/build/ && make $MAKEJOBS cxx"
+fi
+
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Create $BASE_ROOT_DIR"
   DOCKER_EXEC rsync -a /ro_base/ $BASE_ROOT_DIR

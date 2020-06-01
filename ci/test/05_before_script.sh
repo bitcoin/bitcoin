@@ -21,6 +21,14 @@ OSX_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OSX_SDK_BASENAME}"
 if [ -n "$XCODE_VERSION" ] && [ ! -f "$OSX_SDK_PATH" ]; then
   curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
 fi
+
+if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
+  # Use BDB compiled using install_db4.sh script to work around linking issue when using BDB
+  # from depends. See https://github.com/bitcoin/bitcoin/pull/18288#discussion_r433189350 for
+  # details.
+  DOCKER_EXEC "contrib/install_db4.sh \$(pwd) --enable-umrw CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
+fi
+
 if [ -n "$XCODE_VERSION" ] && [ -f "$OSX_SDK_PATH" ]; then
   DOCKER_EXEC tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
 fi
