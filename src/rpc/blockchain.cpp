@@ -973,7 +973,7 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
                 "\nReturns statistics about the unspent transaction output set.\n"
                 "Note this call may take some time.\n",
                 {
-                    {"hash_type", RPCArg::Type::STR, /* default */ "hash_serialized_2", "Which UTXO set hash should be calculated. Options: 'hash_serialized_2' (the legacy algorithm)."},
+                    {"hash_type", RPCArg::Type::STR, /* default */ "hash_serialized_2", "Which UTXO set hash should be calculated. Options: 'hash_serialized_2' (the legacy algorithm), 'none'."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -2322,7 +2322,7 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
 
         ::ChainstateActive().ForceFlushStateToDisk();
 
-        if (!GetUTXOStats(&::ChainstateActive().CoinsDB(), stats, CoinStatsHashType::HASH_SERIALIZED, RpcInterruptionPoint)) {
+        if (!GetUTXOStats(&::ChainstateActive().CoinsDB(), stats, CoinStatsHashType::NONE, RpcInterruptionPoint)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
         }
 
