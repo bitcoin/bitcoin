@@ -20,7 +20,7 @@ for item in data:
 
 file.close()
 
-for i, address in enumerate(addresses)
+for i, address in enumerate(addresses):
 	print(f'{i}: Connecting to {address}')
 	bitcoin(f'addnode {address} add')
 	
