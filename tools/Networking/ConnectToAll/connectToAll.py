@@ -23,5 +23,5 @@ file.close()
 
 for i, address in enumerate(addresses):
 	print(f'{i}: Connecting to {address}')
-	bitcoin(f'addnode {address} add')
-	time.sleep(0.1)
+	bitcoin(f'addnode {address} onetry')
+	time.sleep(0.01)
