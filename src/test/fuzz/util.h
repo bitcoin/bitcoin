@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstdio>
 #include <optional>
 #include <string>
 #include <vector>
@@ -262,6 +263,124 @@ CSubNet ConsumeSubNet(FuzzedDataProvider& fuzzed_data_provider) noexcept
 void InitializeFuzzingContext(const std::string& chain_name = CBaseChainParams::REGTEST)
 {
     static const BasicTestingSetup basic_testing_setup{chain_name, {"-nodebuglogfile"}};
+}
+
+class FuzzedFileProvider
+{
+    FuzzedDataProvider& m_fuzzed_data_provider;
+    int64_t m_offset = 0;
+
+public:
+    FuzzedFileProvider(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_data_provider{fuzzed_data_provider}
+    {
+    }
+
+    FILE* open()
+    {
+        if (m_fuzzed_data_provider.ConsumeBool()) {
+            return nullptr;
+        }
+        std::string mode;
+        switch (m_fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 5)) {
+        case 0: {
+            mode = "r";
+            break;
+        }
+        case 1: {
+            mode = "r+";
+            break;
+        }
+        case 2: {
+            mode = "w";
+            break;
+        }
+        case 3: {
+            mode = "w+";
+            break;
+        }
+        case 4: {
+            mode = "a";
+            break;
+        }
+        case 5: {
+            mode = "a+";
+            break;
+        }
+        }
+#ifdef _GNU_SOURCE
+        const cookie_io_functions_t io_hooks = {
+            FuzzedFileProvider::read,
+            FuzzedFileProvider::write,
+            FuzzedFileProvider::seek,
+            FuzzedFileProvider::close,
+        };
+        return fopencookie(this, mode.c_str(), io_hooks);
+#else
+        (void)mode;
+        return nullptr;
+#endif
+    }
+
+    static ssize_t read(void* cookie, char* buf, size_t size)
+    {
+        FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
+        if (buf == nullptr || size == 0 || fuzzed_file->m_fuzzed_data_provider.ConsumeBool()) {
+            return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
+        }
+        const std::vector<uint8_t> random_bytes = fuzzed_file->m_fuzzed_data_provider.ConsumeBytes<uint8_t>(size);
+        if (random_bytes.empty()) {
+            return 0;
+        }
+        std::memcpy(buf, random_bytes.data(), random_bytes.size());
+        if (AdditionOverflow((uint64_t)fuzzed_file->m_offset, random_bytes.size())) {
+            return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
+        }
+        fuzzed_file->m_offset += random_bytes.size();
+        return random_bytes.size();
+    }
+
+    static ssize_t write(void* cookie, const char* buf, size_t size)
+    {
+        FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
+        const ssize_t n = fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<ssize_t>(0, size);
+        if (AdditionOverflow(fuzzed_file->m_offset, n)) {
+            return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
+        }
+        fuzzed_file->m_offset += n;
+        return n;
+    }
+
+    static int seek(void* cookie, int64_t* offset, int whence)
+    {
+        assert(whence == SEEK_SET || whence == SEEK_CUR); // SEEK_END not implemented yet.
+        FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
+        int64_t new_offset = 0;
+        if (whence == SEEK_SET) {
+            new_offset = *offset;
+        } else if (whence == SEEK_CUR) {
+            if (AdditionOverflow(fuzzed_file->m_offset, *offset)) {
+                return -1;
+            }
+            new_offset = fuzzed_file->m_offset + *offset;
+        }
+        if (new_offset < 0) {
+            return -1;
+        }
+        fuzzed_file->m_offset = new_offset;
+        *offset = new_offset;
+        return fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<int>(-1, 0);
+    }
+
+    static int close(void* cookie)
+    {
+        FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
+        return fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<int>(-1, 0);
+    }
+};
+
+NODISCARD inline FuzzedFileProvider ConsumeFile(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    return {fuzzed_data_provider};
 }
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_H
