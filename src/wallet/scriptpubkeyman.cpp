@@ -1577,6 +1577,19 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
     return set_address;
 }
 
+const std::vector<CScript> LegacyScriptPubKeyMan::GetScriptPubKeys() const
+{
+    LOCK(cs_KeyStore);
+    std::set<CKeyID> key_ids = GetKeys();
+    std::vector<CScript> script_pub_keys;
+    script_pub_keys.reserve(key_ids.size());
+    for (const CKeyID& key_id : key_ids)
+    {
+        script_pub_keys.push_back(GetScriptForDestination(PKHash(key_id)));
+    }
+    return script_pub_keys;
+}
+
 void LegacyScriptPubKeyMan::SetInternal(bool internal) {}
 
 bool DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error)

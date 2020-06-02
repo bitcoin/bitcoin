@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INTERFACES_CHAIN_H
 #define BITCOIN_INTERFACES_CHAIN_H
 
+#include <blockfilter.h>            // For GCSFilter::ElementSet
 #include <optional.h>               // For Optional and nullopt
 #include <primitives/transaction.h> // For CTransactionRef
 
@@ -125,6 +126,10 @@ public:
     //! with a high enough timestamp and height. Optionally return block
     //! information.
     virtual bool findFirstBlockWithTimeAndHeight(int64_t min_time, int min_height, const FoundBlock& block={}) = 0;
+
+    //! Returns whether any of the elements match the block via a BIP 157 block filter or nothing if the block filter
+    //! for this block could be found.
+    virtual Optional<bool> filterMatchesAny(const uint256& hash, const GCSFilter::ElementSet& filter_set) = 0;
 
     //! Find next block if block is part of current chain. Also flag if
     //! there was a reorg and the specified block hash is no longer in the
