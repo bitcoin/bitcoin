@@ -92,6 +92,9 @@ static bool AppInit(int argc, char* argv[])
         }
         // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
+            if(gArgs.GetChainName() == CBaseChainParams::MAIN) {
+                throw std::runtime_error("Mainnet is disabled. Use testnet.");
+            }
             SelectParams(gArgs.GetChainName());
             selectPopConfig(gArgs);
         } catch (const std::exception& e) {
