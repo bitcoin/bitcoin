@@ -12,6 +12,7 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <streams.h>
+#include <util/golombrice.h>
 
 /// SerType used to serialize parameters in GCS filter encoding.
 static constexpr int GCS_SER_TYPE = SER_NETWORK;
@@ -22,37 +23,6 @@ static constexpr int GCS_SER_VERSION = 0;
 static const std::map<BlockFilterType, std::string> g_filter_types = {
     {BlockFilterType::BASIC, "basic"},
 };
-
-template <typename OStream>
-static void GolombRiceEncode(BitStreamWriter<OStream>& bitwriter, uint8_t P, uint64_t x)
-{
-    // Write quotient as unary-encoded: q 1's followed by one 0.
-    uint64_t q = x >> P;
-    while (q > 0) {
-        int nbits = q <= 64 ? static_cast<int>(q) : 64;
-        bitwriter.Write(~0ULL, nbits);
-        q -= nbits;
-    }
-    bitwriter.Write(0, 1);
-
-    // Write the remainder in P bits. Since the remainder is just the bottom
-    // P bits of x, there is no need to mask first.
-    bitwriter.Write(x, P);
-}
-
-template <typename IStream>
-static uint64_t GolombRiceDecode(BitStreamReader<IStream>& bitreader, uint8_t P)
-{
-    // Read unary-encoded quotient: q 1's followed by one 0.
-    uint64_t q = 0;
-    while (bitreader.Read(1) == 1) {
-        ++q;
-    }
-
-    uint64_t r = bitreader.Read(P);
-
-    return (q << P) + r;
-}
 
 // Map a value x that is uniformly distributed in the range [0, 2^64) to a
 // value uniformly distributed in [0, n) by returning the upper 64 bits of

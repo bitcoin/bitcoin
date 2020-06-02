@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@ class CWalletTx;
 class uint256;
 class CCoinControl;
 enum class FeeEstimateMode;
+struct bilingual_str;
 
 namespace feebumper {
 
@@ -28,24 +29,14 @@ enum class Result
 //! Return whether transaction can be bumped.
 bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid);
 
-//! Create bumpfee transaction based on total amount.
-Result CreateTotalBumpTransaction(const CWallet* wallet,
-                         const uint256& txid,
-                         const CCoinControl& coin_control,
-                         CAmount total_fee,
-                         std::vector<std::string>& errors,
-                         CAmount& old_fee,
-                         CAmount& new_fee,
-                         CMutableTransaction& mtx);
-
 //! Create bumpfee transaction based on feerate estimates.
 Result CreateRateBumpTransaction(CWallet& wallet,
-                         const uint256& txid,
-                         const CCoinControl& coin_control,
-                         std::vector<std::string>& errors,
-                         CAmount& old_fee,
-                         CAmount& new_fee,
-                         CMutableTransaction& mtx);
+    const uint256& txid,
+    const CCoinControl& coin_control,
+    std::vector<bilingual_str>& errors,
+    CAmount& old_fee,
+    CAmount& new_fee,
+    CMutableTransaction& mtx);
 
 //! Sign the new transaction,
 //! @return false if the tx couldn't be found or if it was
@@ -57,10 +48,10 @@ bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx);
 //! but sets errors if the tx could not be added to the mempool (will try later)
 //! or if the old transaction could not be marked as replaced.
 Result CommitTransaction(CWallet& wallet,
-                         const uint256& txid,
-                         CMutableTransaction&& mtx,
-                         std::vector<std::string>& errors,
-                         uint256& bumped_txid);
+    const uint256& txid,
+    CMutableTransaction&& mtx,
+    std::vector<bilingual_str>& errors,
+    uint256& bumped_txid);
 
 } // namespace feebumper
 

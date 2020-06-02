@@ -221,7 +221,8 @@ public:
     /** Return the current instance, or create it once */
     static LockedPoolManager& Instance()
     {
-        std::call_once(LockedPoolManager::init_flag, LockedPoolManager::CreateInstance);
+        static std::once_flag init_flag;
+        std::call_once(init_flag, LockedPoolManager::CreateInstance);
         return *LockedPoolManager::_instance;
     }
 
@@ -234,7 +235,6 @@ private:
     static bool LockingFailed();
 
     static LockedPoolManager* _instance;
-    static std::once_flag init_flag;
 };
 
 #endif // BITCOIN_SUPPORT_LOCKEDPOOL_H

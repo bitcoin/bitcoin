@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018-2019 The Bitcoin Core developers
+# Copyright (c) 2018-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,8 +35,8 @@ if [ -z "$NO_DEPENDS" ]; then
   fi
   DOCKER_EXEC $SHELL_OPTS make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
 fi
-if [ "$TEST_PREVIOUS_RELEASES" = "true" ]; then
+if [ -n "$PREVIOUS_RELEASES_TO_DOWNLOAD" ]; then
   BEGIN_FOLD previous-versions
-  DOCKER_EXEC contrib/devtools/previous_release.sh -b -t "$PREVIOUS_RELEASES_DIR" v0.17.1 v0.18.1 v0.19.0.1
+  DOCKER_EXEC contrib/devtools/previous_release.sh -b -t "$PREVIOUS_RELEASES_DIR" "${PREVIOUS_RELEASES_TO_DOWNLOAD}"
   END_FOLD
 fi

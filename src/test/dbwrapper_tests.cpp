@@ -1,10 +1,10 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <dbwrapper.h>
-#include <uint256.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
 #include <util/memory.h>
 
 #include <memory>
@@ -331,24 +331,26 @@ struct StringContentsSerializer {
     }
     StringContentsSerializer& operator+=(const StringContentsSerializer& s) { return *this += s.str; }
 
-    ADD_SERIALIZE_METHODS;
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        for (size_t i = 0; i < str.size(); i++) {
+            s << str[i];
+        }
+    }
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        if (ser_action.ForRead()) {
-            str.clear();
-            char c = 0;
-            while (true) {
-                try {
-                    READWRITE(c);
-                    str.push_back(c);
-                } catch (const std::ios_base::failure&) {
-                    break;
-                }
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        str.clear();
+        char c = 0;
+        while (true) {
+            try {
+                s >> c;
+                str.push_back(c);
+            } catch (const std::ios_base::failure&) {
+                break;
             }
-        } else {
-            for (size_t i = 0; i < str.size(); i++)
-                READWRITE(str[i]);
         }
     }
 };
@@ -399,15 +401,15 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
 
 BOOST_AUTO_TEST_CASE(unicodepath)
 {
-    // Attempt to create a database with a utf8 character in the path.
+    // Attempt to create a database with a UTF8 character in the path.
     // On Windows this test will fail if the directory is created using
-    // the ANSI CreateDirectoryA  call and the code page isn't UTF8.
-    // It will succeed if the created with  CreateDirectoryW.
+    // the ANSI CreateDirectoryA call and the code page isn't UTF8.
+    // It will succeed if created with CreateDirectoryW.
     fs::path ph = GetDataDir() / "test_runner_₿_🏃_20191128_104644";
     CDBWrapper dbw(ph, (1 << 20));
 
     fs::path lockPath = ph / "LOCK";
-    BOOST_CHECK(boost::filesystem::exists(lockPath));
+    BOOST_CHECK(fs::exists(lockPath));
 }
 
 

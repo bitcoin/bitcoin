@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2013-2019 The Bitcoin Core developers
+# Copyright (c) 2013-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -33,7 +33,8 @@ PATTERN_AGENT = re.compile(
     r"0.16.(0|1|2|3|99)|"
     r"0.17.(0|0.1|1|2|99)|"
     r"0.18.(0|1|99)|"
-    r"0.19.99"
+    r"0.19.(0|1|99)|"
+    r"0.20.99"
     r")")
 
 def parseline(line):

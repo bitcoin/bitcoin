@@ -1,5 +1,5 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -643,6 +643,10 @@ std::vector<bool> CAddrMan::DecodeAsmap(fs::path path)
         for (int bit = 0; bit < 8; ++bit) {
             bits.push_back((cur_byte >> bit) & 1);
         }
+    }
+    if (!SanityCheckASMap(bits)) {
+        LogPrintf("Sanity check of asmap file %s failed\n", path);
+        return {};
     }
     return bits;
 }

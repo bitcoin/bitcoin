@@ -31,6 +31,12 @@ constexpr char DB_FILTER_POS = 'P';
 constexpr unsigned int MAX_FLTR_FILE_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for fltr?????.dat files */
 constexpr unsigned int FLTR_FILE_CHUNK_SIZE = 0x100000; // 1 MiB
+/** Maximum size of the cfheaders cache
+ *  We have a limit to prevent a bug in filling this cache
+ *  potentially turning into an OOM. At 2000 entries, this cache
+ *  is big enough for a 2,000,000 length block chain, which
+ *  we should be enough until ~2047. */
+constexpr size_t CF_HEADERS_CACHE_MAX_SZ{2000};
 
 namespace {
 
@@ -39,14 +45,7 @@ struct DBVal {
     uint256 header;
     FlatFilePos pos;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(hash);
-        READWRITE(header);
-        READWRITE(pos);
-    }
+    SERIALIZE_METHODS(DBVal, obj) { READWRITE(obj.hash, obj.header, obj.pos); }
 };
 
 struct DBHeightKey {
@@ -78,17 +77,14 @@ struct DBHashKey {
 
     explicit DBHashKey(const uint256& hash_in) : hash(hash_in) {}
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    SERIALIZE_METHODS(DBHashKey, obj) {
         char prefix = DB_BLOCK_HASH;
         READWRITE(prefix);
         if (prefix != DB_BLOCK_HASH) {
             throw std::ios_base::failure("Invalid format for block filter index DB hash key");
         }
 
-        READWRITE(hash);
+        READWRITE(obj.hash);
     }
 };
 
@@ -387,11 +383,30 @@ bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter&
     return ReadFilterFromDisk(entry.pos, filter_out);
 }
 
-bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out) const
+bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out)
 {
+    LOCK(m_cs_headers_cache);
+
+    bool is_checkpoint{block_index->nHeight % CFCHECKPT_INTERVAL == 0};
+
+    if (is_checkpoint) {
+        // Try to find the block in the headers cache if this is a checkpoint height.
+        auto header = m_headers_cache.find(block_index->GetBlockHash());
+        if (header != m_headers_cache.end()) {
+            header_out = header->second;
+            return true;
+        }
+    }
+
     DBVal entry;
     if (!LookupOne(*m_db, block_index, entry)) {
         return false;
+    }
+
+    if (is_checkpoint &&
+        m_headers_cache.size() < CF_HEADERS_CACHE_MAX_SZ) {
+        // Add to the headers cache if this is a checkpoint height.
+        m_headers_cache.emplace(block_index->GetBlockHash(), entry.header);
     }
 
     header_out = entry.header;

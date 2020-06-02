@@ -4,16 +4,40 @@
 print-%:
 	@echo $* = $($*)
 
+# When invoking a sub-make, keep only the command line variable definitions
+# matching the pattern in the filter function.
+#
+# e.g. invoking:
+#   $ make A=1 C=1 print-MAKEOVERRIDES print-MAKEFLAGS
+#
+# with the following in the Makefile:
+#   MAKEOVERRIDES := $(filter A=% B=%,$(MAKEOVERRIDES))
+#
+# will print:
+#   MAKEOVERRIDES = A=1
+#   MAKEFLAGS = -- A=1
+#
+# this is because as the GNU make manual says:
+#   The command line variable definitions really appear in the variable
+#   MAKEOVERRIDES, and MAKEFLAGS contains a reference to this variable.
+#
+# and since the GNU make manual also says:
+#   variables defined on the command line are passed to the sub-make through
+#   MAKEFLAGS
+#
+# this means that sub-makes will be invoked as if:
+#   $(MAKE) A=1 blah blah
+MAKEOVERRIDES := $(filter V=%,$(MAKEOVERRIDES))
 SOURCES_PATH ?= $(BASEDIR)/sources
 WORK_PATH = $(BASEDIR)/work
 BASE_CACHE ?= $(BASEDIR)/built
 SDK_PATH ?= $(BASEDIR)/SDKs
 NO_QT ?=
 NO_QR ?=
-RAPIDCHECK ?=
 NO_WALLET ?=
 NO_ZMQ ?=
 NO_UPNP ?=
+MULTIPROCESS ?=
 FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
 
 BUILD = $(shell ./config.guess)
@@ -108,8 +132,7 @@ qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch
 wallet_packages_$(NO_WALLET) = $(wallet_packages)
 upnp_packages_$(NO_UPNP) = $(upnp_packages)
 zmq_packages_$(NO_ZMQ) = $(zmq_packages)
-
-rapidcheck_packages_$(RAPIDCHECK) = $(rapidcheck_packages)
+multiprocess_packages_$(MULTIPROCESS) = $(multiprocess_packages)
 
 packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(qt_packages_) $(wallet_packages_) $(upnp_packages_)
 native_packages += $($(host_arch)_$(host_os)_native_packages) $($(host_os)_native_packages)
@@ -118,8 +141,9 @@ ifneq ($(zmq_packages_),)
 packages += $(zmq_packages)
 endif
 
-ifeq ($(rapidcheck_packages_),)
-packages += $(rapidcheck_packages)
+ifeq ($(multiprocess_packages_),)
+packages += $(multiprocess_packages)
+native_packages += $(multiprocess_native_packages)
 endif
 
 all_packages = $(packages) $(native_packages)
@@ -162,6 +186,7 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             -e 's|@no_zmq@|$(NO_ZMQ)|' \
             -e 's|@no_wallet@|$(NO_WALLET)|' \
             -e 's|@no_upnp@|$(NO_UPNP)|' \
+            -e 's|@multiprocess@|$(MULTIPROCESS)|' \
             -e 's|@debug@|$(DEBUG)|' \
             $< > $@
 	$(AT)touch $@

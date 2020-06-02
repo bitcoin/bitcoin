@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoind aborts if can't disconnect a block.
@@ -14,11 +14,12 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import wait_until, get_datadir_path, connect_nodes
 import os
 
-class AbortNodeTest(BitcoinTestFramework):
 
+class AbortNodeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
+        self.rpc_timeout = 240
 
     def setup_network(self):
         self.setup_nodes()
@@ -43,6 +44,7 @@ class AbortNodeTest(BitcoinTestFramework):
             wait_until(lambda: self.nodes[0].is_node_stopped(), timeout=200)
         self.log.info("Node crashed - now verifying restart fails")
         self.nodes[0].assert_start_raises_init_error()
+
 
 if __name__ == '__main__':
     AbortNodeTest().main()

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Bitcoin Core developers
+# Copyright (c) 2017-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that we don't leak txs to inbound peers that we haven't yet announced to"""
 
-from test_framework.messages import msg_getdata, CInv
+from test_framework.messages import msg_getdata, CInv, MSG_TX
 from test_framework.mininode import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -37,10 +37,9 @@ class P2PLeakTxTest(BitcoinTestFramework):
             txid = gen_node.sendtoaddress(gen_node.getnewaddress(), 0.01)
 
             want_tx = msg_getdata()
-            want_tx.inv.append(CInv(t=1, h=int(txid, 16)))
+            want_tx.inv.append(CInv(t=MSG_TX, h=int(txid, 16)))
             inbound_peer.last_message.pop('notfound', None)
-            inbound_peer.send_message(want_tx)
-            inbound_peer.sync_with_ping()
+            inbound_peer.send_and_ping(want_tx)
 
             if inbound_peer.last_message.get('notfound'):
                 self.log.debug('tx {} was not yet announced to us.'.format(txid))

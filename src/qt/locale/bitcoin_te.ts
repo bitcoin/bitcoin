@@ -31,11 +31,11 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>చిరునామా లేదా ఏదైనా పేరును వెతకండి </translation>
+        <translation>చిరునామా లేదా ఏదైనా పేరును వెతకండి</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>ప్రస్తుతం ఉన్న సమాచారాన్ని ఫైల్ లోనికి ఎగుమతి చేసుకోండి </translation>
+        <translation>ప్రస్తుతం ఉన్న సమాచారాన్ని ఫైల్ లోనికి ఎగుమతి చేసుకోండి</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -51,7 +51,7 @@
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>నాణెం అందుకోవటానికి చిరునామాను ఎంచుకోండి </translation>
+        <translation>నాణెం అందుకోవటానికి చిరునామాను ఎంచుకోండి</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -325,9 +325,6 @@
     <name>SendCoinsEntry</name>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
-    </context>
-<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
@@ -432,7 +429,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>ప్రస్తుతం ఉన్న సమాచారాన్ని ఫైల్ లోనికి ఎగుమతి చేసుకోండి </translation>
+        <translation>ప్రస్తుతం ఉన్న సమాచారాన్ని ఫైల్ లోనికి ఎగుమతి చేసుకోండి</translation>
     </message>
     </context>
 <context>

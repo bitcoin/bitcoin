@@ -1,16 +1,16 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <node/context.h>
-#include <wallet/wallet.h>
-#include <wallet/coinselection.h>
-#include <wallet/coincontrol.h>
 #include <amount.h>
+#include <node/context.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <test/util/setup_common.h>
+#include <wallet/coincontrol.h>
+#include <wallet/coinselection.h>
 #include <wallet/test/wallet_test_fixture.h>
+#include <wallet/wallet.h>
 
 #include <boost/test/unit_test.hpp>
 #include <random>
@@ -23,8 +23,6 @@ BOOST_FIXTURE_TEST_SUITE(coinselector_tests, WalletTestingSetup)
 // some tests fail 1% of the time due to bad luck.
 // we repeat those tests this many times and only complain if all iterations of the test fail
 #define RANDOM_REPEATS 5
-
-std::vector<std::unique_ptr<CWalletTx>> wtxn;
 
 typedef std::set<CInputCoin> CoinSet;
 
@@ -74,16 +72,14 @@ static void add_coin(CWallet& wallet, const CAmount& nValue, int nAge = 6*24, bo
         // so stop vin being empty, and cache a non-zero Debit to fake out IsFromMe()
         tx.vin.resize(1);
     }
-    std::unique_ptr<CWalletTx> wtx = MakeUnique<CWalletTx>(&wallet, MakeTransactionRef(std::move(tx)));
+    CWalletTx* wtx = wallet.AddToWallet(MakeTransactionRef(std::move(tx)), /* confirm= */ {});
     if (fIsFromMe)
     {
         wtx->m_amounts[CWalletTx::DEBIT].Set(ISMINE_SPENDABLE, 1);
         wtx->m_is_cache_empty = false;
     }
-    COutput output(wtx.get(), nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
-    wallet.AddToWallet(*wtx.get());
-    wtxn.emplace_back(std::move(wtx));
 }
 static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0, bool spendable = false)
 {
@@ -93,7 +89,6 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
 static void empty_wallet(void)
 {
     vCoins.clear();
-    wtxn.clear();
     balance = 0;
 }
 
@@ -176,8 +171,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     selection.clear();
 
     // Select 5 Cent
-    add_coin(3 * CENT, 3, actual_selection);
-    add_coin(2 * CENT, 2, actual_selection);
+    add_coin(4 * CENT, 4, actual_selection);
+    add_coin(1 * CENT, 1, actual_selection);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 5 * CENT, 0.5 * CENT, selection, value_ret, not_input_fees));
     BOOST_CHECK(equal_sets(selection, actual_selection));
     BOOST_CHECK_EQUAL(value_ret, 5 * CENT);
@@ -204,9 +199,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
     // Select 10 Cent
     add_coin(5 * CENT, 5, utxo_pool);
+    add_coin(5 * CENT, 5, actual_selection);
     add_coin(4 * CENT, 4, actual_selection);
-    add_coin(3 * CENT, 3, actual_selection);
-    add_coin(2 * CENT, 2, actual_selection);
     add_coin(1 * CENT, 1, actual_selection);
     BOOST_CHECK(SelectCoinsBnB(GroupCoins(utxo_pool), 10 * CENT, 0.5 * CENT, selection, value_ret, not_input_fees));
     BOOST_CHECK(equal_sets(selection, actual_selection));

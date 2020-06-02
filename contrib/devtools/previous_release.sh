@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018-2019 The Bitcoin Core developers
+# Copyright (c) 2018-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -139,7 +139,10 @@ pushd "$TARGET" || exit 1
         fi
         URL="https://bitcoin.org/$BIN_PATH/bitcoin-${tag:1}-$PLATFORM.tar.gz"
         echo "Fetching: $URL"
-        curl -O $URL
+        if ! curl -O -f $URL; then
+            echo "Download failed."
+            exit 1
+        fi
         tar -zxf "bitcoin-${tag:1}-$PLATFORM.tar.gz" -C "$tag" --strip-components=1 "bitcoin-${tag:1}"
         rm "bitcoin-${tag:1}-$PLATFORM.tar.gz"
       fi

@@ -1,22 +1,24 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addrdb.h>
 #include <addrman.h>
+#include <chainparams.h>
 #include <clientversion.h>
-#include <test/util/setup_common.h>
-#include <string>
-#include <boost/test/unit_test.hpp>
-#include <serialize.h>
-#include <streams.h>
 #include <net.h>
 #include <netbase.h>
-#include <chainparams.h>
+#include <serialize.h>
+#include <streams.h>
+#include <test/util/setup_common.h>
 #include <util/memory.h>
+#include <util/string.h>
 #include <util/system.h>
 
+#include <boost/test/unit_test.hpp>
+
 #include <memory>
+#include <string>
 
 class CAddrManSerializationMock : public CAddrMan
 {
@@ -85,7 +87,7 @@ BOOST_AUTO_TEST_CASE(cnode_listen_port)
     BOOST_CHECK(port == Params().GetDefaultPort());
     // test set port
     unsigned short altPort = 12345;
-    BOOST_CHECK(gArgs.SoftSetArg("-port", std::to_string(altPort)));
+    BOOST_CHECK(gArgs.SoftSetArg("-port", ToString(altPort)));
     port = GetListenPort();
     BOOST_CHECK(port == altPort);
 }

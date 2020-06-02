@@ -17,6 +17,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
+#include <util/string.h>
 
 #include <QDebug>
 #include <QSettings>
@@ -241,7 +242,7 @@ void OptionsModel::SetPruneEnabled(bool prune, bool force)
     QSettings settings;
     settings.setValue("bPrune", prune);
     const int64_t prune_target_mib = PruneGBtoMiB(settings.value("nPruneSize").toInt());
-    std::string prune_val = prune ? std::to_string(prune_target_mib) : "0";
+    std::string prune_val = prune ? ToString(prune_target_mib) : "0";
     if (force) {
         m_node.forceSetArg("-prune", prune_val);
         return;

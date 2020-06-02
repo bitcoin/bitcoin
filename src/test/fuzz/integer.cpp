@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,15 +23,21 @@
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/util.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <version.h>
 
 #include <cassert>
+#include <chrono>
+#include <ctime>
 #include <limits>
+#include <set>
 #include <vector>
 
 void initialize()
@@ -87,15 +93,18 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
     (void)GetSizeOfCompactSize(u64);
     (void)GetSpecialScriptSize(u32);
-    // (void)GetVirtualTransactionSize(i64, i64); // function defined only for a subset of int64_t inputs
-    // (void)GetVirtualTransactionSize(i64, i64, u32); // function defined only for a subset of int64_t/uint32_t inputs
+    if (!MultiplicationOverflow(i64, static_cast<int64_t>(::nBytesPerSigOp)) && !AdditionOverflow(i64 * ::nBytesPerSigOp, static_cast<int64_t>(4))) {
+        (void)GetVirtualTransactionSize(i64, i64);
+    }
+    if (!MultiplicationOverflow(i64, static_cast<int64_t>(u32)) && !AdditionOverflow(i64, static_cast<int64_t>(4)) && !AdditionOverflow(i64 * u32, static_cast<int64_t>(4))) {
+        (void)GetVirtualTransactionSize(i64, i64, u32);
+    }
     (void)HexDigit(ch);
     (void)MoneyRange(i64);
-    (void)i64tostr(i64);
+    (void)ToString(i64);
     (void)IsDigit(ch);
     (void)IsSpace(ch);
     (void)IsSwitchChar(ch);
-    (void)itostr(i32);
     (void)memusage::DynamicUsage(ch);
     (void)memusage::DynamicUsage(i16);
     (void)memusage::DynamicUsage(i32);
@@ -107,6 +116,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)memusage::DynamicUsage(u8);
     const unsigned char uch = static_cast<unsigned char>(u8);
     (void)memusage::DynamicUsage(uch);
+    {
+        const std::set<int64_t> i64s{i64, static_cast<int64_t>(u64)};
+        const size_t dynamic_usage = memusage::DynamicUsage(i64s);
+        const size_t incremental_dynamic_usage = memusage::IncrementalDynamicUsage(i64s);
+        assert(dynamic_usage == incremental_dynamic_usage * i64s.size());
+    }
     (void)MillisToTimeval(i64);
     const double d = ser_uint64_to_double(u64);
     assert(ser_double_to_uint64(d) == u64);
@@ -124,6 +139,16 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             assert(parsed_money == i64);
         }
     }
+    if (i32 >= 0 && i32 <= 16) {
+        assert(i32 == CScript::DecodeOP_N(CScript::EncodeOP_N(i32)));
+    }
+
+    const std::chrono::seconds seconds{i64};
+    assert(count_seconds(seconds) == i64);
+
+    const CScriptNum script_num{i64};
+    (void)script_num.getint();
+    (void)script_num.getvch();
 
     const arith_uint256 au256 = UintToArith256(u256);
     assert(ArithToUint256(au256) == u256);
@@ -222,5 +247,49 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         const ServiceFlags service_flags = (ServiceFlags)u64;
         (void)HasAllDesirableServiceFlags(service_flags);
         (void)MayHaveUsefulAddressDB(service_flags);
+    }
+
+    {
+        CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
+
+        ser_writedata64(stream, u64);
+        const uint64_t deserialized_u64 = ser_readdata64(stream);
+        assert(u64 == deserialized_u64 && stream.empty());
+
+        ser_writedata32(stream, u32);
+        const uint32_t deserialized_u32 = ser_readdata32(stream);
+        assert(u32 == deserialized_u32 && stream.empty());
+
+        ser_writedata32be(stream, u32);
+        const uint32_t deserialized_u32be = ser_readdata32be(stream);
+        assert(u32 == deserialized_u32be && stream.empty());
+
+        ser_writedata16(stream, u16);
+        const uint16_t deserialized_u16 = ser_readdata16(stream);
+        assert(u16 == deserialized_u16 && stream.empty());
+
+        ser_writedata16be(stream, u16);
+        const uint16_t deserialized_u16be = ser_readdata16be(stream);
+        assert(u16 == deserialized_u16be && stream.empty());
+
+        ser_writedata8(stream, u8);
+        const uint8_t deserialized_u8 = ser_readdata8(stream);
+        assert(u8 == deserialized_u8 && stream.empty());
+    }
+
+    {
+        CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
+
+        WriteCompactSize(stream, u64);
+        try {
+            const uint64_t deserialized_u64 = ReadCompactSize(stream);
+            assert(u64 == deserialized_u64 && stream.empty());
+        } catch (const std::ios_base::failure&) {
+        }
+    }
+
+    try {
+        CHECK_NONFATAL(b);
+    } catch (const NonFatalCheckError&) {
     }
 }

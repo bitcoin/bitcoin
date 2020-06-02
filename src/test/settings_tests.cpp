@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(settings_tests, BasicTestingSetup)
@@ -114,7 +115,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
                                std::vector<util::SettingsValue>& dest) {
             if (action == SET || action == SECTION_SET) {
                 for (int i = 0; i < 2; ++i) {
-                    dest.push_back(value_prefix + std::to_string(++value_suffix));
+                    dest.push_back(value_prefix + ToString(++value_suffix));
                     desc += " " + name_prefix + name + "=" + dest.back().get_str();
                 }
             } else if (action == NEGATE || action == SECTION_NEGATE) {

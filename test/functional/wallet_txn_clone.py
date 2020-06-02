@@ -29,7 +29,7 @@ class TxnMallTest(BitcoinTestFramework):
 
     def setup_network(self):
         # Start with split network:
-        super(TxnMallTest, self).setup_network()
+        super().setup_network()
         disconnect_nodes(self.nodes[1], 2)
         disconnect_nodes(self.nodes[2], 1)
 

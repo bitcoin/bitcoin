@@ -14,6 +14,10 @@ When complete, it will have produced `Bitcoin-Qt.dmg`.
 
 ## SDK Extraction
 
+Our current macOS SDK (`macOSX10.14.sdk`) can be extracted from
+[Xcode_10.2.1.xip](https://download.developer.apple.com/Developer_Tools/Xcode_10.2.1/Xcode_10.2.1.xip).
+An Apple ID is needed to download this.
+
 `Xcode.app` is packaged in a `.xip` archive.
 This makes the SDK less-trivial to extract on non-macOS machines.
 One approach (tested on Debian Buster) is outlined below:
@@ -38,14 +42,14 @@ xar -xf Xcode_10.2.1.xip -C .
 
 ./pbzx/pbzx -n Content | cpio -i
 
-find Xcode.app -type d -name MacOSX.sdk -execdir sh -c 'tar -c MacOSX.sdk/ | gzip -9n > /MacOSX10.14.sdk.tar.gz' \;
+find Xcode.app -type d -name MacOSX.sdk -exec sh -c 'tar --transform="s/MacOSX.sdk/MacOSX10.14.sdk/" -c -C$(dirname {}) MacOSX.sdk/ | gzip -9n > MacOSX10.14.sdk.tar.gz' \;
 ```
 
 on macOS the process is more straightforward:
 
 ```bash
 xip -x Xcode_10.2.1.xip
-tar -C Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.14.sdk.tar.gz MacOSX.sdk
+tar -s "/MacOSX.sdk/MacOSX10.14.sdk/" -C Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.14.sdk.tar.gz MacOSX.sdk
 ```
 
 Our previously used macOS SDK (`MacOSX10.11.sdk`) can be extracted from

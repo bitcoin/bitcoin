@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -42,26 +42,6 @@ static const unsigned int MAX_VECTOR_ALLOCATE = 5000000;
  */
 struct deserialize_type {};
 constexpr deserialize_type deserialize {};
-
-/**
- * Used to bypass the rule against non-const reference to temporary
- * where it makes sense with wrappers.
- */
-template<typename T>
-inline T& REF(const T& val)
-{
-    return const_cast<T&>(val);
-}
-
-/**
- * Used to acquire a non-const pointer "this" to generate bodies
- * of const serialization operations from a template
- */
-template<typename T>
-inline T* NCONST_PTR(const T* val)
-{
-    return const_cast<T*>(val);
-}
 
 //! Safely convert odd char pointer types to standard ones.
 inline char* CharCast(char* c) { return c; }
@@ -190,22 +170,8 @@ template<typename X> const X& ReadWriteAsHelper(const X& x) { return x; }
 
 #define READWRITE(...) (::SerReadWriteMany(s, ser_action, __VA_ARGS__))
 #define READWRITEAS(type, obj) (::SerReadWriteMany(s, ser_action, ReadWriteAsHelper<type>(obj)))
-
-/**
- * Implement three methods for serializable objects. These are actually wrappers over
- * "SerializationOp" template, which implements the body of each class' serialization
- * code. Adding "ADD_SERIALIZE_METHODS" in the body of the class causes these wrappers to be
- * added as members.
- */
-#define ADD_SERIALIZE_METHODS                                         \
-    template<typename Stream>                                         \
-    void Serialize(Stream& s) const {                                 \
-        NCONST_PTR(this)->SerializationOp(s, CSerActionSerialize());  \
-    }                                                                 \
-    template<typename Stream>                                         \
-    void Unserialize(Stream& s) {                                     \
-        SerializationOp(s, CSerActionUnserialize());                  \
-    }
+#define SER_READ(obj, code) ::SerRead(s, ser_action, obj, [&](Stream& s, typename std::remove_const<Type>::type& obj) { code; })
+#define SER_WRITE(obj, code) ::SerWrite(s, ser_action, obj, [&](Stream& s, const Type& obj) { code; })
 
 /**
  * Implement the Ser and Unser methods needed for implementing a formatter (see Using below).
@@ -501,7 +467,7 @@ static inline Wrapper<Formatter, T&> Using(T&& t) { return Wrapper<Formatter, T&
 #define VARINT_MODE(obj, mode) Using<VarIntFormatter<mode>>(obj)
 #define VARINT(obj) Using<VarIntFormatter<VarIntMode::DEFAULT>>(obj)
 #define COMPACTSIZE(obj) Using<CompactSizeFormatter>(obj)
-#define LIMITED_STRING(obj,n) LimitedString< n >(REF(obj))
+#define LIMITED_STRING(obj,n) Using<LimitedStringFormatter<n>>(obj)
 
 /** Serialization wrapper class for integers in VarInt format. */
 template<VarIntMode Mode>
@@ -518,7 +484,16 @@ struct VarIntFormatter
     }
 };
 
-template<int Bytes>
+/** Serialization wrapper class for custom integers and enums.
+ *
+ * It permits specifying the serialized size (1 to 8 bytes) and endianness.
+ *
+ * Use the big endian mode for values that are stored in memory in native
+ * byte order, but serialized in big endian notation. This is only intended
+ * to implement serializers that are compatible with existing formats, and
+ * its use is not recommended for new data structures.
+ */
+template<int Bytes, bool BigEndian = false>
 struct CustomUintFormatter
 {
     static_assert(Bytes > 0 && Bytes <= 8, "CustomUintFormatter Bytes out of range");
@@ -527,52 +502,31 @@ struct CustomUintFormatter
     template <typename Stream, typename I> void Ser(Stream& s, I v)
     {
         if (v < 0 || v > MAX) throw std::ios_base::failure("CustomUintFormatter value out of range");
-        uint64_t raw = htole64(v);
-        s.write((const char*)&raw, Bytes);
+        if (BigEndian) {
+            uint64_t raw = htobe64(v);
+            s.write(((const char*)&raw) + 8 - Bytes, Bytes);
+        } else {
+            uint64_t raw = htole64(v);
+            s.write((const char*)&raw, Bytes);
+        }
     }
 
     template <typename Stream, typename I> void Unser(Stream& s, I& v)
     {
-        static_assert(std::numeric_limits<I>::max() >= MAX && std::numeric_limits<I>::min() <= 0, "CustomUintFormatter type too small");
+        using U = typename std::conditional<std::is_enum<I>::value, std::underlying_type<I>, std::common_type<I>>::type::type;
+        static_assert(std::numeric_limits<U>::max() >= MAX && std::numeric_limits<U>::min() <= 0, "Assigned type too small");
         uint64_t raw = 0;
-        s.read((char*)&raw, Bytes);
-        v = le64toh(raw);
+        if (BigEndian) {
+            s.read(((char*)&raw) + 8 - Bytes, Bytes);
+            v = static_cast<I>(be64toh(raw));
+        } else {
+            s.read((char*)&raw, Bytes);
+            v = static_cast<I>(le64toh(raw));
+        }
     }
 };
 
-/** Serialization wrapper class for big-endian integers.
- *
- * Use this wrapper around integer types that are stored in memory in native
- * byte order, but serialized in big endian notation. This is only intended
- * to implement serializers that are compatible with existing formats, and
- * its use is not recommended for new data structures.
- *
- * Only 16-bit types are supported for now.
- */
-template<typename I>
-class BigEndian
-{
-protected:
-    I& m_val;
-public:
-    explicit BigEndian(I& val) : m_val(val)
-    {
-        static_assert(std::is_unsigned<I>::value, "BigEndian type must be unsigned integer");
-        static_assert(sizeof(I) == 2 && std::numeric_limits<I>::min() == 0 && std::numeric_limits<I>::max() == std::numeric_limits<uint16_t>::max(), "Unsupported BigEndian size");
-    }
-
-    template<typename Stream>
-    void Serialize(Stream& s) const
-    {
-        ser_writedata16be(s, m_val);
-    }
-
-    template<typename Stream>
-    void Unserialize(Stream& s)
-    {
-        m_val = ser_readdata16be(s);
-    }
-};
+template<int Bytes> using BigEndianFormatter = CustomUintFormatter<Bytes, true>;
 
 /** Formatter for integers in CompactSize format. */
 struct CompactSizeFormatter
@@ -598,36 +552,25 @@ struct CompactSizeFormatter
 };
 
 template<size_t Limit>
-class LimitedString
+struct LimitedStringFormatter
 {
-protected:
-    std::string& string;
-public:
-    explicit LimitedString(std::string& _string) : string(_string) {}
-
     template<typename Stream>
-    void Unserialize(Stream& s)
+    void Unser(Stream& s, std::string& v)
     {
         size_t size = ReadCompactSize(s);
         if (size > Limit) {
             throw std::ios_base::failure("String length limit exceeded");
         }
-        string.resize(size);
-        if (size != 0)
-            s.read((char*)string.data(), size);
+        v.resize(size);
+        if (size != 0) s.read((char*)v.data(), size);
     }
 
     template<typename Stream>
-    void Serialize(Stream& s) const
+    void Ser(Stream& s, const std::string& v)
     {
-        WriteCompactSize(s, string.size());
-        if (!string.empty())
-            s.write((char*)string.data(), string.size());
+        s << v;
     }
 };
-
-template<typename I>
-BigEndian<I> WrapBigEndian(I& n) { return BigEndian<I>(n); }
 
 /** Formatter to serialize/deserialize vector elements using another formatter
  *
@@ -1025,7 +968,7 @@ void Unserialize(Stream& is, std::shared_ptr<const T>& p)
 
 
 /**
- * Support for ADD_SERIALIZE_METHODS and READWRITE macro
+ * Support for SERIALIZE_METHODS and READWRITE macro.
  */
 struct CSerActionSerialize
 {
@@ -1122,6 +1065,28 @@ template<typename Stream, typename... Args>
 inline void SerReadWriteMany(Stream& s, CSerActionUnserialize ser_action, Args&&... args)
 {
     ::UnserializeMany(s, args...);
+}
+
+template<typename Stream, typename Type, typename Fn>
+inline void SerRead(Stream& s, CSerActionSerialize ser_action, Type&&, Fn&&)
+{
+}
+
+template<typename Stream, typename Type, typename Fn>
+inline void SerRead(Stream& s, CSerActionUnserialize ser_action, Type&& obj, Fn&& fn)
+{
+    fn(s, std::forward<Type>(obj));
+}
+
+template<typename Stream, typename Type, typename Fn>
+inline void SerWrite(Stream& s, CSerActionSerialize ser_action, Type&& obj, Fn&& fn)
+{
+    fn(s, std::forward<Type>(obj));
+}
+
+template<typename Stream, typename Type, typename Fn>
+inline void SerWrite(Stream& s, CSerActionUnserialize ser_action, Type&&, Fn&&)
+{
 }
 
 template<typename I>

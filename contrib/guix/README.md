@@ -13,7 +13,6 @@ We achieve bootstrappability by using Guix as a functional package manager.
 
 Conservatively, a x86_64 machine with:
 
-- 2 or more logical cores
 - 4GB of free disk space on the partition that /gnu/store will reside in
 - 24GB of free disk space on the partition that the Bitcoin Core git repository
   resides in
@@ -143,6 +142,11 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
   If non-empty, will pass `V=1` to all `make` invocations, making `make` output
   verbose.
 
+  Note that any given value is ignored. The variable is only checked for
+  emptiness. More concretely, this means that `V=` (setting `V` to the empty
+  string) is interpreted the same way as not setting `V` at all, and that `V=0`
+  has the same effect as `V=1`.
+
 * _**ADDITIONAL_GUIX_ENVIRONMENT_FLAGS**_
 
   Additional flags to be passed to `guix environment`. For a fully-bootstrapped
@@ -220,8 +224,6 @@ repository and will likely put one up soon.
 [guix/env-setup]: https://www.gnu.org/software/guix/manual/en/html_node/Build-Environment-Setup.html
 [guix/substitutes]: https://www.gnu.org/software/guix/manual/en/html_node/Substitutes.html
 [guix/substitute-server-auth]: https://www.gnu.org/software/guix/manual/en/html_node/Substitute-Server-Authorization.html
-[guix/inferiors]: https://www.gnu.org/software/guix/manual/en/html_node/Inferiors.html
-[guix/channels]: https://www.gnu.org/software/guix/manual/en/html_node/Channels.html
 [guix/time-machine]: https://guix.gnu.org/manual/en/html_node/Invoking-guix-time_002dmachine.html
 
 [debian/guix-package]: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=850644

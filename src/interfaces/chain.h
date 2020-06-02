@@ -21,6 +21,7 @@ class CScheduler;
 class Coin;
 class uint256;
 enum class RBFTransactionState;
+struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
 struct NodeContext;
@@ -30,6 +31,27 @@ namespace interfaces {
 class Handler;
 class Wallet;
 
+//! Helper for findBlock to selectively return pieces of block data.
+class FoundBlock
+{
+public:
+    FoundBlock& hash(uint256& hash) { m_hash = &hash; return *this; }
+    FoundBlock& height(int& height) { m_height = &height; return *this; }
+    FoundBlock& time(int64_t& time) { m_time = &time; return *this; }
+    FoundBlock& maxTime(int64_t& max_time) { m_max_time = &max_time; return *this; }
+    FoundBlock& mtpTime(int64_t& mtp_time) { m_mtp_time = &mtp_time; return *this; }
+    //! Read block data from disk. If the block exists but doesn't have data
+    //! (for example due to pruning), the CBlock variable will be set to null.
+    FoundBlock& data(CBlock& data) { m_data = &data; return *this; }
+
+    uint256* m_hash = nullptr;
+    int* m_height = nullptr;
+    int64_t* m_time = nullptr;
+    int64_t* m_max_time = nullptr;
+    int64_t* m_mtp_time = nullptr;
+    CBlock* m_data = nullptr;
+};
+
 //! Interface giving clients (wallet processes, maybe other analysis tools in
 //! the future) ability to access to the chain state, receive notifications,
 //! estimate fees, and submit transactions.
@@ -38,12 +60,7 @@ class Wallet;
 //! internal workings of the bitcoin node, and not being very convenient to use.
 //! Chain methods should be cleaned up and simplified over time. Examples:
 //!
-//! * The Chain::lock() method, which lets clients delay chain tip updates
-//!   should be removed when clients are able to respond to updates
-//!   asynchronously
-//!   (https://github.com/bitcoin/bitcoin/pull/10973#issuecomment-380101269).
-//!
-//! * The initMessage() and showProgress() methods which the wallet uses to send
+//! * The initMessages() and showProgress() methods which the wallet uses to send
 //!   notifications to the GUI should go away when GUI and wallet can directly
 //!   communicate with each other without going through the node
 //!   (https://github.com/bitcoin/bitcoin/pull/15288#discussion_r253321096).
@@ -51,90 +68,86 @@ class Wallet;
 //! * The handleRpc, registerRpcs, rpcEnableDeprecated methods and other RPC
 //!   methods can go away if wallets listen for HTTP requests on their own
 //!   ports instead of registering to handle requests on the node HTTP port.
+//!
+//! * Move fee estimation queries to an asynchronous interface and let the
+//!   wallet cache it, fee estimation being driven by node mempool, wallet
+//!   should be the consumer.
+//!
+//! * The `guessVerificationProgress`, `getBlockHeight`, `getBlockHash`, etc
+//!   methods can go away if rescan logic is moved on the node side, and wallet
+//!   only register rescan request.
 class Chain
 {
 public:
     virtual ~Chain() {}
 
-    //! Interface for querying locked chain state, used by legacy code that
-    //! assumes state won't change between calls. New code should avoid using
-    //! the Lock interface and instead call higher-level Chain methods
-    //! that return more information so the chain doesn't need to stay locked
-    //! between calls.
-    class Lock
-    {
-    public:
-        virtual ~Lock() {}
+    //! Get current chain height, not including genesis block (returns 0 if
+    //! chain only contains genesis block, nullopt if chain does not contain
+    //! any blocks)
+    virtual Optional<int> getHeight() = 0;
 
-        //! Get current chain height, not including genesis block (returns 0 if
-        //! chain only contains genesis block, nullopt if chain does not contain
-        //! any blocks).
-        virtual Optional<int> getHeight() = 0;
+    //! Get block height above genesis block. Returns 0 for genesis block,
+    //! 1 for following block, and so on. Returns nullopt for a block not
+    //! included in the current chain.
+    virtual Optional<int> getBlockHeight(const uint256& hash) = 0;
 
-        //! Get block height above genesis block. Returns 0 for genesis block,
-        //! 1 for following block, and so on. Returns nullopt for a block not
-        //! included in the current chain.
-        virtual Optional<int> getBlockHeight(const uint256& hash) = 0;
+    //! Get block hash. Height must be valid or this function will abort.
+    virtual uint256 getBlockHash(int height) = 0;
 
-        //! Get block hash. Height must be valid or this function will abort.
-        virtual uint256 getBlockHash(int height) = 0;
+    //! Check that the block is available on disk (i.e. has not been
+    //! pruned), and contains transactions.
+    virtual bool haveBlockOnDisk(int height) = 0;
 
-        //! Get block time. Height must be valid or this function will abort.
-        virtual int64_t getBlockTime(int height) = 0;
+    //! Return height of the first block in the chain with timestamp equal
+    //! or greater than the given time and height equal or greater than the
+    //! given height, or nullopt if there is no block with a high enough
+    //! timestamp and height. Also return the block hash as an optional output parameter
+    //! (to avoid the cost of a second lookup in case this information is needed.)
+    virtual Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) = 0;
 
-        //! Get block median time past. Height must be valid or this function
-        //! will abort.
-        virtual int64_t getBlockMedianTimePast(int height) = 0;
+    //! Get locator for the current chain tip.
+    virtual CBlockLocator getTipLocator() = 0;
 
-        //! Check that the block is available on disk (i.e. has not been
-        //! pruned), and contains transactions.
-        virtual bool haveBlockOnDisk(int height) = 0;
+    //! Return height of the highest block on chain in common with the locator,
+    //! which will either be the original block used to create the locator,
+    //! or one of its ancestors.
+    virtual Optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
 
-        //! Return height of the first block in the chain with timestamp equal
-        //! or greater than the given time and height equal or greater than the
-        //! given height, or nullopt if there is no block with a high enough
-        //! timestamp and height. Also return the block hash as an optional output parameter
-        //! (to avoid the cost of a second lookup in case this information is needed.)
-        virtual Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) = 0;
-
-        //! Return height of last block in the specified range which is pruned, or
-        //! nullopt if no block in the range is pruned. Range is inclusive.
-        virtual Optional<int> findPruned(int start_height = 0, Optional<int> stop_height = nullopt) = 0;
-
-        //! Return height of the specified block if it is on the chain, otherwise
-        //! return the height of the highest block on chain that's an ancestor
-        //! of the specified block, or nullopt if there is no common ancestor.
-        //! Also return the height of the specified block as an optional output
-        //! parameter (to avoid the cost of a second hash lookup in case this
-        //! information is desired).
-        virtual Optional<int> findFork(const uint256& hash, Optional<int>* height) = 0;
-
-        //! Get locator for the current chain tip.
-        virtual CBlockLocator getTipLocator() = 0;
-
-        //! Return height of the highest block on chain in common with the locator,
-        //! which will either be the original block used to create the locator,
-        //! or one of its ancestors.
-        virtual Optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
-
-        //! Check if transaction will be final given chain height current time.
-        virtual bool checkFinalTx(const CTransaction& tx) = 0;
-    };
-
-    //! Return Lock interface. Chain is locked when this is called, and
-    //! unlocked when the returned interface is freed.
-    virtual std::unique_ptr<Lock> lock(bool try_lock = false) = 0;
+    //! Check if transaction will be final given chain height current time.
+    virtual bool checkFinalTx(const CTransaction& tx) = 0;
 
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
-    //!
-    //! If a block pointer is provided to retrieve the block contents, and the
-    //! block exists but doesn't have data (for example due to pruning), the
-    //! block will be empty and all fields set to null.
-    virtual bool findBlock(const uint256& hash,
-        CBlock* block = nullptr,
-        int64_t* time = nullptr,
-        int64_t* max_time = nullptr) = 0;
+    virtual bool findBlock(const uint256& hash, const FoundBlock& block={}) = 0;
+
+    //! Find first block in the chain with timestamp >= the given time
+    //! and height >= than the given height, return false if there is no block
+    //! with a high enough timestamp and height. Optionally return block
+    //! information.
+    virtual bool findFirstBlockWithTimeAndHeight(int64_t min_time, int min_height, const FoundBlock& block={}) = 0;
+
+    //! Find next block if block is part of current chain. Also flag if
+    //! there was a reorg and the specified block hash is no longer in the
+    //! current chain, and optionally return block information.
+    virtual bool findNextBlock(const uint256& block_hash, int block_height, const FoundBlock& next={}, bool* reorg=nullptr) = 0;
+
+    //! Find ancestor of block at specified height and optionally return
+    //! ancestor information.
+    virtual bool findAncestorByHeight(const uint256& block_hash, int ancestor_height, const FoundBlock& ancestor_out={}) = 0;
+
+    //! Return whether block descends from a specified ancestor, and
+    //! optionally return ancestor information.
+    virtual bool findAncestorByHash(const uint256& block_hash,
+        const uint256& ancestor_hash,
+        const FoundBlock& ancestor_out={}) = 0;
+
+    //! Find most recent common ancestor between two blocks and optionally
+    //! return block information.
+    virtual bool findCommonAncestor(const uint256& block_hash1,
+        const uint256& block_hash2,
+        const FoundBlock& ancestor_out={},
+        const FoundBlock& block1_out={},
+        const FoundBlock& block2_out={}) = 0;
 
     //! Look up unspent output information. Returns coins in the mempool and in
     //! the current chain UTXO set. Iterates through all the keys in the map and
@@ -145,6 +158,11 @@ public:
     //! the specified block hash are verified.
     virtual double guessVerificationProgress(const uint256& block_hash) = 0;
 
+    //! Return true if data is available for all blocks in the specified range
+    //! of blocks. This checks all blocks that are ancestors of block_hash in
+    //! the height range from min_height to max_height, inclusive.
+    virtual bool hasBlocks(const uint256& block_hash, int min_height = 0, Optional<int> max_height = {}) = 0;
+
     //! Check if transaction is RBF opt in.
     virtual RBFTransactionState isRBFOptIn(const CTransaction& tx) = 0;
 
@@ -154,7 +172,10 @@ public:
     //! Transaction is added to memory pool, if the transaction fee is below the
     //! amount specified by max_tx_fee, and broadcast to all peers if relay is set to true.
     //! Return false if the transaction could not be added due to the fee or for another reason.
-    virtual bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) = 0;
+    virtual bool broadcastTransaction(const CTransactionRef& tx,
+        const CAmount& max_tx_fee,
+        bool relay,
+        std::string& err_string) = 0;
 
     //! Calculate mempool ancestor and descendant counts for the given transaction.
     virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) = 0;
@@ -204,10 +225,10 @@ public:
     virtual void initMessage(const std::string& message) = 0;
 
     //! Send init warning.
-    virtual void initWarning(const std::string& message) = 0;
+    virtual void initWarning(const bilingual_str& message) = 0;
 
     //! Send init error.
-    virtual void initError(const std::string& message) = 0;
+    virtual void initError(const bilingual_str& message) = 0;
 
     //! Send progress indicator.
     virtual void showProgress(const std::string& title, int progress, bool resume_possible) = 0;
@@ -217,16 +238,16 @@ public:
     {
     public:
         virtual ~Notifications() {}
-        virtual void TransactionAddedToMempool(const CTransactionRef& tx) {}
-        virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx) {}
-        virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted, int height) {}
-        virtual void BlockDisconnected(const CBlock& block, int height) {}
-        virtual void UpdatedBlockTip() {}
-        virtual void ChainStateFlushed(const CBlockLocator& locator) {}
+        virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
+        virtual void transactionRemovedFromMempool(const CTransactionRef& ptx) {}
+        virtual void blockConnected(const CBlock& block, int height) {}
+        virtual void blockDisconnected(const CBlock& block, int height) {}
+        virtual void updatedBlockTip() {}
+        virtual void chainStateFlushed(const CBlockLocator& locator) {}
     };
 
     //! Register handler for notifications.
-    virtual std::unique_ptr<Handler> handleNotifications(Notifications& notifications) = 0;
+    virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) = 0;
 
     //! Wait for pending notifications to be processed unless block hash points to the current
     //! chain tip.
@@ -245,7 +266,7 @@ public:
     //! Current RPC serialization flags.
     virtual int rpcSerializationFlags() = 0;
 
-    //! Synchronously send TransactionAddedToMempool notifications about all
+    //! Synchronously send transactionAddedToMempool notifications about all
     //! current mempool transactions to the specified handler and return after
     //! the last one is sent. These notifications aren't coordinated with async
     //! notifications sent by handleNotifications, so out of date async
@@ -280,6 +301,12 @@ public:
 
     //! Shut down client.
     virtual void stop() = 0;
+
+    //! Set mock time.
+    virtual void setMockTime(int64_t time) = 0;
+
+    //! Return interfaces for accessing wallets (if any).
+    virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
 };
 
 //! Return implementation of Chain interface.
