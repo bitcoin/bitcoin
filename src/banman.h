@@ -53,6 +53,14 @@ class CSubNet;
 // transaction that fails a policy check and a future version changes the
 // policy check so the transaction is accepted, then that transaction could
 // cause the network to split between old nodes and new nodes.
+//
+// Discouragement logic can be exploited by an on-path attacker: not necessarily
+// the user's hosting ISP, but any "critical" ISP between peers. An attacker may
+// spoof packets with invalid data to trigger honest nodes discouraging outbound
+// connections to each other. This may be used to influence the network topology
+// in a way that is favorable to the attacker to carrying out single-node eclipsing
+// or network partitions. An "impersonation" like this would benefit from mitigation
+// implemented for other infrastructure attack scenario (e.g Erebus).
 
 class BanMan
 {
