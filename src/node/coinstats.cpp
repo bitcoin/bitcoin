@@ -8,11 +8,21 @@
 #include <coins.h>
 #include <hash.h>
 #include <serialize.h>
-#include <validation.h>
 #include <uint256.h>
 #include <util/system.h>
+#include <validation.h>
 
 #include <map>
+
+static uint64_t GetBogoSize(const CScript& scriptPubKey)
+{
+    return 32 /* txid */ +
+           4 /* vout index */ +
+           4 /* height + coinbase */ +
+           8 /* amount */ +
+           2 /* scriptPubKey len */ +
+           scriptPubKey.size() /* scriptPubKey */;
+}
 
 static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
 {
@@ -26,8 +36,7 @@ static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash,
         ss << VARINT_MODE(output.second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
         stats.nTransactionOutputs++;
         stats.nTotalAmount += output.second.out.nValue;
-        stats.nBogoSize += 32 /* txid */ + 4 /* vout index */ + 4 /* height + coinbase */ + 8 /* amount */ +
-                           2 /* scriptPubKey len */ + output.second.out.scriptPubKey.size() /* scriptPubKey */;
+        stats.nBogoSize += GetBogoSize(output.second.out.scriptPubKey);
     }
     ss << VARINT(0u);
 }
