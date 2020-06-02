@@ -25,8 +25,6 @@
 
 static Mutex g_rpc_warmup_mutex;
 static std::atomic<bool> g_rpc_running{false};
-static std::once_flag g_rpc_interrupt_flag;
-static std::once_flag g_rpc_stop_flag;
 static bool fRPCInWarmup GUARDED_BY(g_rpc_warmup_mutex) = true;
 static std::string rpcWarmupStatus GUARDED_BY(g_rpc_warmup_mutex) = "RPC server started";
 /* Timer-creating functions */
@@ -329,6 +327,7 @@ void StartRPC()
 
 void InterruptRPC()
 {
+    static std::once_flag g_rpc_interrupt_flag;
     // This function could be called twice if the GUI has been started with -server=1.
     std::call_once(g_rpc_interrupt_flag, []() {
         LogPrint(BCLog::RPC, "Interrupting RPC\n");
@@ -339,6 +338,7 @@ void InterruptRPC()
 
 void StopRPC()
 {
+    static std::once_flag g_rpc_stop_flag;
     // This function could be called twice if the GUI has been started with -server=1.
     assert(!g_rpc_running);
     std::call_once(g_rpc_stop_flag, []() {
