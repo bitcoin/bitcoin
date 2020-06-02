@@ -2,8 +2,8 @@ name: CI (nightly)
 
 on:
   schedule:
-    # create nightly full builds at 02:40 utc
-    - cron:  '40 2 * * *'
+    # create nightly full builds at 03:20 utc
+    - cron:  '20 3 * * *'
 
 jobs:
   linux:
@@ -102,7 +102,7 @@ jobs:
         timeout-minutes: 60
         run: python3 test/functional/test_runner.py --combinedlogslen=4000
 
-  linux (ASAN-UBSAN):
+  ASAN-UBSAN:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -168,7 +168,7 @@ jobs:
         timeout-minutes: 60
         run: python3 test/functional/test_runner.py --combinedlogslen=4000
 
-  linux (TSAN):
+  TSAN:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
