@@ -24,7 +24,7 @@ static uint64_t GetBogoSize(const CScript& scriptPubKey)
            scriptPubKey.size() /* scriptPubKey */;
 }
 
-static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
+static void ApplyStats(CCoinsStats& stats, CHashWriter& ss, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
 {
     assert(!outputs.empty());
     ss << hash;
@@ -104,9 +104,6 @@ bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, CoinStatsHashType hash_t
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         return GetUTXOStats(view, stats, ss, interruption_point);
     }
-    case(CoinStatsHashType::NONE): {
-        return GetUTXOStats(view, stats, nullptr, interruption_point);
-    }
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -116,10 +113,8 @@ static void PrepareHash(CHashWriter& ss, CCoinsStats& stats)
 {
     ss << stats.hashBlock;
 }
-static void PrepareHash(std::nullptr_t, CCoinsStats& stats) {}
 
 static void FinalizeHash(CHashWriter& ss, CCoinsStats& stats)
 {
     stats.hashSerialized = ss.GetHash();
 }
-static void FinalizeHash(std::nullptr_t, CCoinsStats& stats) {}
