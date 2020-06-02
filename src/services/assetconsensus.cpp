@@ -179,8 +179,8 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
                 nBridgeTransferID |= static_cast<uint32_t>(bridgeIdValue[29]) << 16;
                 nBridgeTransferID |= static_cast<uint32_t>(bridgeIdValue[28]) << 24;
                 // get precision
-                nERC20Precision = static_cast<uint8_t>(bridgeIdValue[27]) << 32;
-                nSPTPrecision = static_cast<uint8_t>(bridgeIdValue[26]) << 40;
+                nERC20Precision = static_cast<uint8_t>(bridgeIdValue[27]);
+                nSPTPrecision = static_cast<uint8_t>(bridgeIdValue[26]);
             }
         }
     }
