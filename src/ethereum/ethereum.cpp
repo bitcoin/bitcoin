@@ -97,13 +97,15 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
  * expected, or the length of the expected string is not what we expect then return false.
  *
  * @param vchInputExpectedMethodHash The expected method hash
+ * @param nERC20Precision The erc20 precision to know how to convert ethereum's uint256 to a uint64 with truncation of insignifficant bits
+ * @param nLocalPrecision The local precision to know how to convert ethereum's uint256 to a uint64 with truncation of insignifficant bits
  * @param vchInputData The input to parse
  * @param outputAmount The amount burned
  * @param nAsset The asset burned
  * @param witnessAddress The destination witness address for the minting
  * @return true if everything is valid
  */
-bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, CAmount& nAmount, uint32_t& nAsset, CWitnessAddress& witnessAddress) {
+bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const &uint8_t nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, uint64_t& outputAmount, uint32_t& nAsset, CWitnessAddress& witnessAddress) {
     // total 5 or 6 fields are expected @ 32 bytes each field, 6 fields if witness > 32 bytes + 4 byte method hash
     if(vchInputData.size() < 164 || vchInputData.size() > 196) {
       return false;  
@@ -121,7 +123,15 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     // reverse endian
     std::reverse(vchAmount.begin(), vchAmount.end());
     arith_uint256 outputAmountArith = UintToArith256(uint256(vchAmount));
-    nAmount = outputAmountArith.GetLow64();
+    // local precision can range between 0 and 8 decimal places, so it should fit within a CAmount
+    // we pad zero's if erc20's precision is less than ours so we can accurately get the whole value of the amount transferred
+    if(nLocalPrecision > nERC20Precision){
+      outputAmountArith *= pow(10, nLocalPrecision-nERC20Precision);
+    // ensure we truncate decimals to fit within int64 if erc20's precision is more than our asset precision
+    } else if(nLocalPrecision < nERC20Precision){
+      outputAmountArith /= pow(10, nERC20Precision-nLocalPrecision);
+    }
+    outputAmount = outputAmountArith.GetLow64();
     
     // convert the vch into a uint32_t (nAsset)
     // should be in position 68 walking backwards
