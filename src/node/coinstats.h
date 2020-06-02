@@ -16,6 +16,7 @@ class CCoinsView;
 
 enum class CoinStatsHashType {
     HASH_SERIALIZED,
+    NONE,
 };
 
 struct CCoinsStats
