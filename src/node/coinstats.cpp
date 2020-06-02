@@ -6,6 +6,7 @@
 #include <node/coinstats.h>
 
 #include <coins.h>
+#include <crypto/muhash.h>
 #include <hash.h>
 #include <serialize.h>
 #include <uint256.h>
@@ -42,8 +43,20 @@ static void ApplyHash(CCoinsStats& stats, CHashWriter& ss, const uint256& hash, 
 
 static void ApplyHash(CCoinsStats& stats, std::nullptr_t, const uint256& hash, const std::map<uint32_t, Coin>& outputs, std::map<uint32_t, Coin>::const_iterator it) {}
 
+static void ApplyHash(CCoinsStats& stats, MuHash3072& muhash, const uint256& hash, const std::map<uint32_t, Coin>& outputs, std::map<uint32_t, Coin>::const_iterator it)
+{
+    COutPoint outpoint = COutPoint(hash, it->first);
+    Coin coin = it->second;
+
+    CDataStream ss(SER_DISK, PROTOCOL_VERSION);
+    ss << outpoint;
+    ss << static_cast<uint32_t>(coin.nHeight * 2 + coin.fCoinBase);
+    ss << coin.out;
+    muhash.Insert(MakeUCharSpan(ss));
+}
+
 template <typename T>
-static void ApplyStats(CCoinsStats &stats, T& hash_obj, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
+static void ApplyStats(CCoinsStats& stats, T& hash_obj, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
 {
     assert(!outputs.empty());
     stats.nTransactions++;
@@ -108,6 +121,10 @@ bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, CoinStatsHashType hash_t
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         return GetUTXOStats(view, stats, ss, interruption_point);
     }
+    case(CoinStatsHashType::MUHASH): {
+        MuHash3072 muhash;
+        return GetUTXOStats(view, stats, muhash, interruption_point);
+    }
     case(CoinStatsHashType::NONE): {
         return GetUTXOStats(view, stats, nullptr, interruption_point);
     }
@@ -120,10 +137,18 @@ static void PrepareHash(CHashWriter& ss, const CCoinsStats& stats)
 {
     ss << stats.hashBlock;
 }
+// MuHash does not need the prepare step
+static void PrepareHash(MuHash3072& muhash, CCoinsStats& stats) {}
 static void PrepareHash(std::nullptr_t, CCoinsStats& stats) {}
 
 static void FinalizeHash(CHashWriter& ss, CCoinsStats& stats)
 {
     stats.hashSerialized = ss.GetHash();
+}
+static void FinalizeHash(MuHash3072& muhash, CCoinsStats& stats)
+{
+    uint256 out;
+    muhash.Finalize(out);
+    stats.hashSerialized = out;
 }
 static void FinalizeHash(std::nullptr_t, CCoinsStats& stats) {}
