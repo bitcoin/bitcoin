@@ -65,12 +65,13 @@ RUN export VERIBLOCK_POP_CPP_VERSION=$(awk -F '=' '/\$\(package\)_version/{print
      cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION}; \
      mkdir build; \
      cd build; \
-     cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF; \
+     cmake .. -DCMAKE_BUILD_TYPE=Debug -DTESTING=OFF; \
      make -j$(nproc) install \
     )
 
 RUN ./autogen.sh
 RUN ./configure LDFLAGS=-L`ls -d /opt/db*`/lib/ CPPFLAGS=-I`ls -d /opt/db*`/include/ \
+    --enable-debug \
     --disable-tests \
     --disable-bench \
     --disable-gmock \
@@ -83,11 +84,6 @@ RUN ./configure LDFLAGS=-L`ls -d /opt/db*`/lib/ CPPFLAGS=-I`ls -d /opt/db*`/incl
 
 RUN make -j$(nproc) install
 
-RUN strip ${VBITCOIN_PREFIX}/bin/vbitcoin-cli
-RUN strip ${VBITCOIN_PREFIX}/bin/vbitcoind
-RUN strip ${VBITCOIN_PREFIX}/bin/vbitcoin-tx
-RUN strip ${VBITCOIN_PREFIX}/bin/vbitcoin-wallet
-
 # Build stage for compiled artifacts
 FROM alpine
 
@@ -96,7 +92,8 @@ RUN apk --no-cache add \
   boost-program_options \
   libevent \
   libzmq \
-  su-exec
+  su-exec \
+  valgrind
 
 ENV DATA_DIR=/home/vbitcoin/.vbitcoin
 ENV VBITCOIN_PREFIX=/opt/vbitcoin

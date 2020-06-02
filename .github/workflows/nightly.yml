@@ -2,8 +2,8 @@ name: CI (nightly)
 
 on:
   schedule:
-    # create nightly full builds at 03:20 utc
-    - cron:  '20 3 * * *'
+    # create nightly full builds at 02:00 utc
+    - cron:  '0 2 * * *'
 
 jobs:
   linux:
@@ -29,7 +29,7 @@ jobs:
       - name: install build requirements
         run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
       - name: install dependencies
-        run: sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libqrencode-dev lcov gcovr
+        run: sudo apt-get install libevent-dev python3-zmq python3-dev libboost-python-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libqrencode-dev lcov gcovr
       - name: install sonar
         env:
           SONAR_CLI_VERSION: 4.2.0.1873
@@ -52,7 +52,7 @@ jobs:
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF;
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_PYPOPMINER=ON;
           make -j2;
           sudo make install
           )
@@ -125,7 +125,7 @@ jobs:
       - name: install build requirements
         run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
       - name: install dependencies
-        run: sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libqrencode-dev libubsan0 libubsan1 libtsan0 libasan4
+        run: sudo apt-get install libevent-dev python3-zmq python3-dev libboost-python-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libqrencode-dev libubsan0 libubsan1 libtsan0 libasan4
       - name: install veriblock-pop-cpp
         run: |
           (
@@ -135,10 +135,14 @@ jobs:
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF;
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_PYPOPMINER=ON;
           make -j2;
           sudo make install
           )
+      - name: set LSAN and UBSAN options
+        run: |
+          echo "::set-env name=LSAN_OPTIONS::suppressions=${PWD}/test/sanitizer_suppressions/lsan"
+          echo "::set-env name=UBSAN_OPTIONS::suppressions=${PWD}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
       - name: autogen
         run: ./autogen.sh
       - name: configure
@@ -165,7 +169,7 @@ jobs:
           path: src/test-suite.log
       - name: run functional tests
         if: always()
-        timeout-minutes: 60
+        timeout-minutes: 180
         run: python3 test/functional/test_runner.py --combinedlogslen=4000
 
   TSAN:
@@ -191,7 +195,7 @@ jobs:
       - name: install build requirements
         run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
       - name: install dependencies
-        run: sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libqrencode-dev libubsan0 libubsan1 libtsan0 libasan4
+        run: sudo apt-get install libevent-dev python3-zmq python3-dev libboost-python-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libqrencode-dev libubsan0 libubsan1 libtsan0 libasan4
       - name: install veriblock-pop-cpp
         run: |
           (
@@ -201,10 +205,13 @@ jobs:
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF;
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=OFF -DWITH_PYPOPMINER=ON;
           make -j2;
           sudo make install
           )
+      - name: set TSAN options
+        run: |
+          echo "::set-env name=TSAN_OPTIONS::suppressions=${PWD}/test/sanitizer_suppressions/tsan"
       - name: autogen
         run: ./autogen.sh
       - name: configure
@@ -230,7 +237,7 @@ jobs:
           path: src/test-suite.log
       - name: run functional tests
         if: always()
-        timeout-minutes: 60
+        timeout-minutes: 180
         run: python3 test/functional/test_runner.py --combinedlogslen=4000
 
 #  windows:
