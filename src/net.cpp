@@ -539,7 +539,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
         X(cleanSubVer);
     }
     X(fInbound);
-    X(m_manual_connection);
+    stats.m_manual_connection = IsManualConn();
     X(nStartingHeight);
     {
         LOCK(cs_vSend);
@@ -1648,7 +1648,7 @@ void CConnman::ThreadDNSAddressSeed()
                     {
                         LOCK(cs_vNodes);
                         for (const CNode* pnode : vNodes) {
-                            nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->m_addr_fetch && !pnode->m_manual_connection && !pnode->fInbound;
+                            nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->m_addr_fetch && !pnode->IsManualConn() && !pnode->fInbound;
                         }
                     }
                     if (nRelevant >= 2) {
@@ -1758,7 +1758,7 @@ int CConnman::GetExtraOutboundCount()
     {
         LOCK(cs_vNodes);
         for (const CNode* pnode : vNodes) {
-            if (!pnode->fInbound && !pnode->m_manual_connection && !pnode->fFeeler && !pnode->fDisconnect && !pnode->m_addr_fetch && pnode->fSuccessfullyConnected) {
+            if (!pnode->fInbound && !pnode->IsManualConn() && !pnode->fFeeler && !pnode->fDisconnect && !pnode->m_addr_fetch && pnode->fSuccessfullyConnected) {
                 ++nOutbound;
             }
         }
@@ -1832,7 +1832,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         {
             LOCK(cs_vNodes);
             for (const CNode* pnode : vNodes) {
-                if (!pnode->fInbound && !pnode->m_manual_connection) {
+                if (!pnode->fInbound && (pnode->m_conn_type != ConnectionType::MANUAL)) {
                     // Netgroups for inbound and addnode peers are not excluded because our goal here
                     // is to not use multiple of our limited outbound slots on a single netgroup
                     // but inbound and addnode peers do not use our outbound slots.  Inbound peers
@@ -2741,7 +2741,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     addrBind(addrBindIn),
     fFeeler(conn_type_in == ConnectionType::FEELER),
     m_addr_fetch(conn_type_in == ConnectionType::ADDR_FETCH),
-    m_manual_connection(conn_type_in == ConnectionType::MANUAL),
     fInbound(conn_type_in == ConnectionType::INBOUND),
     nKeyedNetGroup(nKeyedNetGroupIn),
     // Don't relay addr messages to peers that we connect to as block-relay-only
