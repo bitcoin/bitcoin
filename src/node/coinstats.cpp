@@ -24,7 +24,7 @@ static uint64_t GetBogoSize(const CScript& scriptPubKey)
            scriptPubKey.size() /* scriptPubKey */;
 }
 
-static void ApplyStats(CCoinsStats& stats, CHashWriter& ss, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
+static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
 {
     assert(!outputs.empty());
     ss << hash;
