@@ -141,6 +141,8 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     // look for TokenFreeze event and get the last parameter which should be the BridgeTransferID
     uint32_t nBridgeTransferID = 0;
+    uint8_t nERC20Precision = 0;
+    uint8_t nSPTPrecision = 0;
     for(uint32_t i = 0;i<itemCount;i++) {
         dev::RLP rlpReceiptLogValue(rlpReceiptLogsValue[i]);
         if (!rlpReceiptLogValue.isList()) {
@@ -170,14 +172,20 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
                 if(dataValue.size() < 96) {
                      return FormatSyscoinErrorMessage(state, "mint-receipt-log-data-invalid-size", bSanityCheck);
                 }
-                // get last data field which should be our BridgeTransferID
+                // get last data field which should be our BridgeTransferID + precisions
                 const std::vector<unsigned char> bridgeIdValue(dataValue.begin()+64, dataValue.end());
                 nBridgeTransferID = static_cast<uint32_t>(bridgeIdValue[31]);
                 nBridgeTransferID |= static_cast<uint32_t>(bridgeIdValue[30]) << 8;
                 nBridgeTransferID |= static_cast<uint32_t>(bridgeIdValue[29]) << 16;
                 nBridgeTransferID |= static_cast<uint32_t>(bridgeIdValue[28]) << 24;
+                // get precision
+                nERC20Precision = static_cast<uint8_t>(bridgeIdValue[27]) << 32;
+                nSPTPrecision = static_cast<uint8_t>(bridgeIdValue[26]) << 40;
             }
         }
+    }
+    if(nERC20Precision == 0 || nSPTPrecision == 0) {
+        return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-precision", bSanityCheck);
     }
     if(nBridgeTransferID == 0) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-bridge-id", bSanityCheck);
@@ -248,13 +256,13 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         return FormatSyscoinErrorMessage(state, "mint-invalid-contract-manager", bSanityCheck);
     }
     
-    CAmount outputAmount;
+    uint64_t outputAmount;
     uint32_t nAssetEth = 0;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     std::vector<unsigned char> vchERC20ContractAddress;
     CWitnessAddress witnessAddress;
     CTxDestination dest;
-    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, outputAmount, nAssetEth, witnessAddress)) {
+    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, nERC20Precision, nSPTPrecision, rlpBytes, outputAmount, nAssetEth, witnessAddress)) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-data", bSanityCheck);
     }
     if(!ExtractDestination(tx.vout[0].scriptPubKey, dest)) {
@@ -271,7 +279,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(outputAmount <= 0) {
         return FormatSyscoinErrorMessage(state, "mint-value-negative", bSanityCheck);
     }
-    const CAmount &nTotal = vecVout[0].nValue;
+    const uint64_t &nTotal = vecVout[0].nValue;
     if(outputAmount != nTotal) {
         return FormatSyscoinErrorMessage(state, "mint-mismatch-value", bSanityCheck);  
     }
