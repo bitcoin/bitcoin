@@ -16,7 +16,10 @@ class CCoinsView;
 
 enum class CoinStatsHashType {
     HASH_SERIALIZED,
+<<<<<<< HEAD
     NONE,
+=======
+>>>>>>> rpc: gettxoutsetinfo can specify hash_type (only legacy option for now)
 };
 
 struct CCoinsStats
