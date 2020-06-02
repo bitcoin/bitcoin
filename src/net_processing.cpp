@@ -1634,14 +1634,6 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
 //! Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed).
 CTransactionRef static FindTxForGetData(const CNode& peer, const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main)
 {
-    // Check if the requested transaction is so recent that we're just
-    // about to announce it to the peer; if so, they certainly shouldn't
-    // know we already have it.
-    {
-        LOCK(peer.m_tx_relay->cs_tx_inventory);
-        if (peer.m_tx_relay->setInventoryTxToSend.count(txid)) return {};
-    }
-
     auto txinfo = mempool.info(txid);
     if (txinfo.tx) {
         // If a TX could have been INVed in reply to a MEMPOOL request,
