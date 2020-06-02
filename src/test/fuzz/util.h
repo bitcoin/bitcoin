@@ -404,4 +404,70 @@ NODISCARD inline FuzzedAutoFileProvider ConsumeAutoFile(FuzzedDataProvider& fuzz
     return {fuzzed_data_provider};
 }
 
+#define WRITE_TO_STREAM_CASE(id, type, consume) \
+    case id: {                                  \
+        type o = consume;                       \
+        stream << o;                            \
+        break;                                  \
+    }
+template <typename Stream>
+void WriteToStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) noexcept
+{
+    while (fuzzed_data_provider.ConsumeBool()) {
+        try {
+            switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 13)) {
+                WRITE_TO_STREAM_CASE(0, bool, fuzzed_data_provider.ConsumeBool())
+                WRITE_TO_STREAM_CASE(1, char, fuzzed_data_provider.ConsumeIntegral<char>())
+                WRITE_TO_STREAM_CASE(2, int8_t, fuzzed_data_provider.ConsumeIntegral<int8_t>())
+                WRITE_TO_STREAM_CASE(3, uint8_t, fuzzed_data_provider.ConsumeIntegral<uint8_t>())
+                WRITE_TO_STREAM_CASE(4, int16_t, fuzzed_data_provider.ConsumeIntegral<int16_t>())
+                WRITE_TO_STREAM_CASE(5, uint16_t, fuzzed_data_provider.ConsumeIntegral<uint16_t>())
+                WRITE_TO_STREAM_CASE(6, int32_t, fuzzed_data_provider.ConsumeIntegral<int32_t>())
+                WRITE_TO_STREAM_CASE(7, uint32_t, fuzzed_data_provider.ConsumeIntegral<uint32_t>())
+                WRITE_TO_STREAM_CASE(8, int64_t, fuzzed_data_provider.ConsumeIntegral<int64_t>())
+                WRITE_TO_STREAM_CASE(9, uint64_t, fuzzed_data_provider.ConsumeIntegral<uint64_t>())
+                WRITE_TO_STREAM_CASE(10, float, fuzzed_data_provider.ConsumeFloatingPoint<float>())
+                WRITE_TO_STREAM_CASE(11, double, fuzzed_data_provider.ConsumeFloatingPoint<double>())
+                WRITE_TO_STREAM_CASE(12, std::string, fuzzed_data_provider.ConsumeRandomLengthString(32))
+                WRITE_TO_STREAM_CASE(13, std::vector<char>, ConsumeRandomLengthIntegralVector<char>(fuzzed_data_provider))
+            }
+        } catch (const std::ios_base::failure&) {
+            break;
+        }
+    }
+}
+
+#define READ_FROM_STREAM_CASE(id, type) \
+    case id: {                          \
+        type o;                         \
+        stream >> o;                    \
+        break;                          \
+    }
+template <typename Stream>
+void ReadFromStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) noexcept
+{
+    while (fuzzed_data_provider.ConsumeBool()) {
+        try {
+            switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 13)) {
+                READ_FROM_STREAM_CASE(0, bool)
+                READ_FROM_STREAM_CASE(1, char)
+                READ_FROM_STREAM_CASE(2, int8_t)
+                READ_FROM_STREAM_CASE(3, uint8_t)
+                READ_FROM_STREAM_CASE(4, int16_t)
+                READ_FROM_STREAM_CASE(5, uint16_t)
+                READ_FROM_STREAM_CASE(6, int32_t)
+                READ_FROM_STREAM_CASE(7, uint32_t)
+                READ_FROM_STREAM_CASE(8, int64_t)
+                READ_FROM_STREAM_CASE(9, uint64_t)
+                READ_FROM_STREAM_CASE(10, float)
+                READ_FROM_STREAM_CASE(11, double)
+                READ_FROM_STREAM_CASE(12, std::string)
+                READ_FROM_STREAM_CASE(13, std::vector<char>)
+            }
+        } catch (const std::ios_base::failure&) {
+            break;
+        }
+    }
+}
+
 #endif // BITCOIN_TEST_FUZZ_UTIL_H
