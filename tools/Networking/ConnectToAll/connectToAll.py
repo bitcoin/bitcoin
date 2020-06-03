@@ -1,5 +1,6 @@
-import os
 import json
+import os
+import random
 import time
 
 # Send commands to the Bitcoin Core Console
@@ -20,6 +21,7 @@ for item in data:
 		print(f'{item.capitalize()}: {data[item]}')
 
 file.close()
+random.shuffle(addresses)
 
 for i, address in enumerate(addresses):
 	print(f'{i}: Connecting to {address}')
