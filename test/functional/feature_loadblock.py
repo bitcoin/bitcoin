@@ -18,6 +18,7 @@ import sys
 import tempfile
 import urllib
 
+from test_framework.mininode import calculate_network_magic
 from test_framework.test_framework import (
     BitcoinTestFramework,
 )
@@ -55,7 +56,7 @@ class LoadblockTest(BitcoinTestFramework):
             cfg.write("host={}\n".format(node_url.hostname))
             cfg.write("output_file={}\n".format(bootstrap_file))
             cfg.write("max_height=100\n")
-            cfg.write("netmagic=03030307\n")
+            cfg.write("netmagic={}\n".format(calculate_network_magic(3).hex()))
             cfg.write("input={}\n".format(blocks_dir))
             cfg.write("genesis={}\n".format(genesis_block))
             cfg.write("hashlist={}\n".format(hash_list.name))
