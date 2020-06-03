@@ -367,11 +367,12 @@ void CMutableTransaction::LoadAssets()
 bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<uint32_t, uint64_t> &mapAssetOut, TxValidationState& state) const
 {
     std::unordered_set<uint32_t> setUsedIndex;
+    uint64_t nTotal = 0;
+    uint64_t nPrevTotal;
     for(const auto &it: voutAssets) {
         if(it.second.empty()) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-empty");
         }
-        uint64_t nTotal = 0;
         const uint32_t &nAsset = it.first;
         const size_t &nVoutSize = vout.size();
         for(const auto& voutAsset: it.second) {
@@ -380,13 +381,11 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<ui
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outofrange");
             }
             const uint64_t& nAmount = voutAsset.nValue;
-            if(nAmount < 0) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-value-negative");
-            }
             // make sure the vout assetinfo matches the asset commitment in OP_RETURN
             if(vout[nOut].assetInfo.nAsset != nAsset || vout[nOut].assetInfo.nValue != nAmount) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-assetinfo-mismatch");
             }
+            nPrevTotal = nTotal;
             nTotal += nAmount;
             if(nAmount == 0) {
                 // 0 amount output not possible for anything except asset tx (new/update/send)
@@ -395,7 +394,7 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<ui
                 }
             }
             // overflow
-            else if(nTotal <= nAmount) {
+            else if(nTotal <= nPrevTotal) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-outofrange");
             }
             auto itSet = setUsedIndex.emplace(nOut);

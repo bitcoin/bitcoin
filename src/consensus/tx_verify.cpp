@@ -167,6 +167,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     CAmount nValueIn = 0;
     std::unordered_map<uint32_t, uint64_t> mapAssetIn;
     std::unordered_map<uint32_t, uint64_t> mapAssetOut;
+    uint64_t nPrevTotal;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
@@ -178,18 +179,20 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
         if(!coin.out.assetInfo.IsNull()) {
+            const bool &zeroVal = coin.out.assetInfo.nValue == 0;
             auto inRes = mapAssetIn.emplace(coin.out.assetInfo.nAsset, coin.out.assetInfo.nValue);
             if(!inRes.second) {
+                nPrevTotal = inRes.first->second;
                 inRes.first->second += coin.out.assetInfo.nValue;
+                // overflow
+                if(!zeroVal && inRes.first->second <= nPrevTotal) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-overflow");
+                }
             }
-            if(coin.out.assetInfo.nValue == 0) {
+            if(zeroVal) {
                 if(!isAssetTx) {
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalue-zero-change-non-asset");
                 }
-            }
-            // overflow
-            else if(inRes.first->second <= coin.out.assetInfo.nValue) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-overflow");
             }
         }
         // Check for negative or overflow input values
