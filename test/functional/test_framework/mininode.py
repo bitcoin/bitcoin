@@ -83,8 +83,8 @@ MESSAGEMAP = {
 }
 
 # Edit these parameters to match src/chainparams.cpp
-VBK_ALPHA = 0x100
-VBK_BETA  = 0x200
+VBK_ALPHA = 0x50
+VBK_BETA  = 0xa0
 VBK_NETWORK = (VBK_ALPHA + 0x1)
 
 
