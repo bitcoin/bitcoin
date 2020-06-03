@@ -789,8 +789,16 @@ public:
     std::atomic_bool fPauseRecv{false};
     std::atomic_bool fPauseSend{false};
 
+    bool IsFullOutboundConn() const {
+        return m_conn_type == ConnectionType::OUTBOUND;
+    }
+
     bool IsManualConn() const {
         return m_conn_type == ConnectionType::MANUAL;
+    }
+
+    bool IsBlockOnlyConn() const {
+        return m_conn_type == ConnectionType::BLOCK_RELAY;
     }
 
     bool IsFeelerConn() const {
@@ -803,6 +811,21 @@ public:
 
     bool IsInboundConn() const {
         return m_conn_type == ConnectionType::INBOUND;
+    }
+
+    bool ExpectServicesFromConn() const {
+        switch(m_conn_type) {
+            case ConnectionType::INBOUND:
+            case ConnectionType::MANUAL:
+            case ConnectionType::FEELER:
+                return false;
+            case ConnectionType::OUTBOUND:
+            case ConnectionType::BLOCK_RELAY:
+            case ConnectionType::ADDR_FETCH:
+                return true;
+        }
+
+        assert(false);
     }
 
 protected:
