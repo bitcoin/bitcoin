@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2017-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that the wallet can send and receive using all combinations of address types.
@@ -97,12 +97,9 @@ class AddressTypeTest(BitcoinTestFramework):
                 connect_nodes(self.nodes[i], j)
         self.sync_all()
 
-    def get_balances(self, confirmed=True):
-        """Return a list of confirmed or unconfirmed balances."""
-        if confirmed:
-            return [self.nodes[i].getbalance() for i in range(4)]
-        else:
-            return [self.nodes[i].getunconfirmedbalance() for i in range(4)]
+    def get_balances(self, key='trusted'):
+        """Return a list of balances."""
+        return [self.nodes[i].getbalances()['mine'][key] for i in range(4)]
 
     # Quick test of python bech32 implementation
     def test_python_bech32(self, addr):
@@ -307,7 +304,7 @@ class AddressTypeTest(BitcoinTestFramework):
             self.nodes[from_node].sendmany("", sends)
             self.sync_mempools()
 
-            unconf_balances = self.get_balances(False)
+            unconf_balances = self.get_balances('untrusted_pending')
             self.log.debug("Check unconfirmed balances: {}".format(unconf_balances))
             assert_equal(unconf_balances[from_node], 0)
             for n, to_node in enumerate(range(from_node + 1, from_node + 4)):

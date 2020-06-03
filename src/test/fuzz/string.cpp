@@ -12,6 +12,7 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -89,11 +90,15 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)urlDecode(random_string_1);
     (void)ValidAsCString(random_string_1);
     (void)_(random_string_1.c_str());
+    try {
+        throw scriptnum_error{random_string_1};
+    } catch (const std::runtime_error&) {
+    }
 
     {
         CDataStream data_stream{SER_NETWORK, INIT_PROTO_VERSION};
         std::string s;
-        LimitedString<10> limited_string = LIMITED_STRING(s, 10);
+        auto limited_string = LIMITED_STRING(s, 10);
         data_stream << random_string_1;
         try {
             data_stream >> limited_string;
@@ -108,11 +113,21 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
     {
         CDataStream data_stream{SER_NETWORK, INIT_PROTO_VERSION};
-        const LimitedString<10> limited_string = LIMITED_STRING(random_string_1, 10);
+        const auto limited_string = LIMITED_STRING(random_string_1, 10);
         data_stream << limited_string;
         std::string deserialized_string;
         data_stream >> deserialized_string;
         assert(data_stream.empty());
         assert(deserialized_string == random_string_1);
+    }
+    {
+        int64_t amount_out;
+        (void)ParseFixedPoint(random_string_1, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 1024), &amount_out);
+    }
+    {
+        (void)Untranslated(random_string_1);
+        const bilingual_str bs1{random_string_1, random_string_2};
+        const bilingual_str bs2{random_string_2, random_string_1};
+        (void)(bs1 + bs2);
     }
 }

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,15 +14,13 @@
 #include <wincrypt.h>
 #endif
 #include <logging.h>  // for LogPrintf()
+#include <randomenv.h>
+#include <support/allocators/secure.h>
 #include <sync.h>     // for Mutex
 #include <util/time.h> // for GetTimeMicros()
 
 #include <stdlib.h>
 #include <thread>
-
-#include <randomenv.h>
-
-#include <support/allocators/secure.h>
 
 #ifndef WIN32
 #include <fcntl.h>
@@ -116,7 +114,10 @@ static uint64_t GetRdRand() noexcept
     // RdRand may very rarely fail. Invoke it up to 10 times in a loop to reduce this risk.
 #ifdef __i386__
     uint8_t ok;
-    uint32_t r1, r2;
+    // Initialize to 0 to silence a compiler warning that r1 or r2 may be used
+    // uninitialized. Even if rdrand fails (!ok) it will set the output to 0,
+    // but there is no way that the compiler could know that.
+    uint32_t r1 = 0, r2 = 0;
     for (int i = 0; i < 10; ++i) {
         __asm__ volatile (".byte 0x0f, 0xc7, 0xf0; setc %1" : "=a"(r1), "=q"(ok) :: "cc"); // rdrand %eax
         if (ok) break;
@@ -128,7 +129,7 @@ static uint64_t GetRdRand() noexcept
     return (((uint64_t)r2) << 32) | r1;
 #elif defined(__x86_64__) || defined(__amd64__)
     uint8_t ok;
-    uint64_t r1;
+    uint64_t r1 = 0; // See above why we initialize to 0.
     for (int i = 0; i < 10; ++i) {
         __asm__ volatile (".byte 0x48, 0x0f, 0xc7, 0xf0; setc %1" : "=a"(r1), "=q"(ok) :: "cc"); // rdrand %rax
         if (ok) break;
@@ -585,11 +586,6 @@ bool g_mock_deterministic_tests{false};
 uint64_t GetRand(uint64_t nMax) noexcept
 {
     return FastRandomContext(g_mock_deterministic_tests).randrange(nMax);
-}
-
-std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) noexcept
-{
-    return std::chrono::microseconds{GetRand(duration_max.count())};
 }
 
 int GetRandInt(int nMax) noexcept

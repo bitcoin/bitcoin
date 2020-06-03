@@ -23,7 +23,7 @@ class CSignatureCache
 {
 private:
      //! Entries are SHA256(nonce || signature hash || public key || signature):
-    uint256 nonce;
+    CSHA256 m_salted_hasher;
     typedef CuckooCache::cache<uint256, SignatureCacheHasher> map_type;
     map_type setValid;
     boost::shared_mutex cs_sigcache;
@@ -31,13 +31,19 @@ private:
 public:
     CSignatureCache()
     {
-        GetRandBytes(nonce.begin(), 32);
+        uint256 nonce = GetRandHash();
+        // We want the nonce to be 64 bytes long to force the hasher to process
+        // this chunk, which makes later hash computations more efficient. We
+        // just write our 32-byte entropy twice to fill the 64 bytes.
+        m_salted_hasher.Write(nonce.begin(), 32);
+        m_salted_hasher.Write(nonce.begin(), 32);
     }
 
     void
     ComputeEntry(uint256& entry, const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey)
     {
-        CSHA256().Write(nonce.begin(), 32).Write(hash.begin(), 32).Write(&pubkey[0], pubkey.size()).Write(&vchSig[0], vchSig.size()).Finalize(entry.begin());
+        CSHA256 hasher = m_salted_hasher;
+        hasher.Write(hash.begin(), 32).Write(&pubkey[0], pubkey.size()).Write(&vchSig[0], vchSig.size()).Finalize(entry.begin());
     }
 
     bool

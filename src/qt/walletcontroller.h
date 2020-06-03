@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 #include <qt/sendcoinsrecipient.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
+#include <util/translation.h>
 
 #include <map>
 #include <memory>
@@ -21,6 +22,7 @@
 #include <QTimer>
 #include <QString>
 
+class ClientModel;
 class OptionsModel;
 class PlatformStyle;
 class WalletModel;
@@ -47,7 +49,7 @@ class WalletController : public QObject
     void removeAndDeleteWallet(WalletModel* wallet_model);
 
 public:
-    WalletController(interfaces::Node& node, const PlatformStyle* platform_style, OptionsModel* options_model, QObject* parent);
+    WalletController(ClientModel& client_model, const PlatformStyle* platform_style, QObject* parent);
     ~WalletController();
 
     //! Returns wallet models currently open.
@@ -70,6 +72,7 @@ Q_SIGNALS:
 private:
     QThread* const m_activity_thread;
     QObject* const m_activity_worker;
+    ClientModel& m_client_model;
     interfaces::Node& m_node;
     const PlatformStyle* const m_platform_style;
     OptionsModel* const m_options_model;
@@ -102,8 +105,8 @@ protected:
     QWidget* const m_parent_widget;
     QProgressDialog* m_progress_dialog{nullptr};
     WalletModel* m_wallet_model{nullptr};
-    std::string m_error_message;
-    std::vector<std::string> m_warning_message;
+    bilingual_str m_error_message;
+    std::vector<bilingual_str> m_warning_message;
 };
 
 

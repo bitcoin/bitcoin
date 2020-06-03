@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -86,6 +86,9 @@ struct Descriptor {
 
     /** Convert the descriptor back to a string, undoing parsing. */
     virtual std::string ToString() const = 0;
+
+    /** Whether this descriptor will return one scriptPubKey or multiple (aka is or is not combo) */
+    virtual bool IsSingleType() const = 0;
 
     /** Convert the descriptor to a private string. This fails if the provided provider does not have the relevant private keys. */
     virtual bool ToPrivateString(const SigningProvider& provider, std::string& out) const = 0;

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcoin Core developers
+# Copyright (c) 2015-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test transaction signing using the signrawtransaction* RPCs."""
 
+from test_framework.address import check_script, script_to_p2sh
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes
+from test_framework.util import assert_equal, assert_raises_rpc_error, find_vout_for_address, hex_str_to_bytes
 from test_framework.messages import sha256
-from test_framework.script import CScript, OP_0
+from test_framework.script import CScript, OP_0, OP_CHECKSIG
 
 from decimal import Decimal
 
@@ -26,6 +27,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
 
         1) The transaction has a complete set of signatures
         2) No script verification error occurred"""
+        self.log.info("Test valid raw transaction with one input")
         privKeys = ['cUeKHd5orzT3mz8P9pxyREHfsWtVfgsfDjiZZBcjUBAaGk1BTj7N', 'cVKpPfVKSJxKqVpE9awvXNWuLHCa5j5tiE7K6zbUSptFpTEtiFrA']
 
         inputs = [
@@ -48,7 +50,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert 'errors' not in rawTxSigned
 
     def test_with_lock_outputs(self):
-        """Test correct error reporting when trying to sign a locked output"""
+        self.log.info("Test correct error reporting when trying to sign a locked output")
         self.nodes[0].encryptwallet("password")
 
         rawTx = '020000000156b958f78e3f24e0b2f4e4db1255426b0902027cb37e3ddadb52e37c3557dddb0000000000ffffffff01c0a6b929010000001600149a2ee8c77140a053f36018ac8124a6ececc1668a00000000'
@@ -64,6 +66,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         4) Two script verification errors occurred
         5) Script verification errors have certain properties ("txid", "vout", "scriptSig", "sequence", "error")
         6) The verification errors refer to the invalid (vin 1) and missing input (vin 2)"""
+        self.log.info("Test script verification errors")
         privKeys = ['cUeKHd5orzT3mz8P9pxyREHfsWtVfgsfDjiZZBcjUBAaGk1BTj7N']
 
         inputs = [
@@ -146,7 +149,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert not rawTxSigned['errors'][0]['witness']
 
     def witness_script_test(self):
-        # Now test signing transaction to P2SH-P2WSH addresses without wallet
+        self.log.info("Test signing transaction to P2SH-P2WSH addresses without wallet")
         # Create a new P2SH-P2WSH 1-of-1 multisig address:
         embedded_address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())
         embedded_privkey = self.nodes[1].dumpprivkey(embedded_address["address"])
@@ -167,6 +170,33 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         # Check the signing completed successfully
         assert 'complete' in spending_tx_signed
         assert_equal(spending_tx_signed['complete'], True)
+
+        # Now test with P2PKH and P2PK scripts as the witnessScript
+        for tx_type in ['P2PKH', 'P2PK']:  # these tests are order-independent
+            self.verify_txn_with_witness_script(tx_type)
+
+    def verify_txn_with_witness_script(self, tx_type):
+        self.log.info("Test with a {} script as the witnessScript".format(tx_type))
+        embedded_addr_info = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress('', 'legacy'))
+        embedded_privkey = self.nodes[1].dumpprivkey(embedded_addr_info['address'])
+        witness_script = {
+            'P2PKH': embedded_addr_info['scriptPubKey'],
+            'P2PK': CScript([hex_str_to_bytes(embedded_addr_info['pubkey']), OP_CHECKSIG]).hex()
+        }.get(tx_type, "Invalid tx_type")
+        redeem_script = CScript([OP_0, sha256(check_script(witness_script))]).hex()
+        addr = script_to_p2sh(redeem_script)
+        script_pub_key = self.nodes[1].validateaddress(addr)['scriptPubKey']
+        # Fund that address
+        txid = self.nodes[0].sendtoaddress(addr, 10)
+        vout = find_vout_for_address(self.nodes[0], txid, addr)
+        self.nodes[0].generate(1)
+        # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
+        spending_tx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): Decimal("9.999")})
+        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10}])
+        # Check the signing completed successfully
+        assert 'complete' in spending_tx_signed
+        assert_equal(spending_tx_signed['complete'], True)
+        self.nodes[0].sendrawtransaction(spending_tx_signed['hex'])
 
     def run_test(self):
         self.successful_signing_test()
