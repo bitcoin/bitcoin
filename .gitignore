@@ -138,6 +138,7 @@ src/qt/node1
 *.tmp
 *.ipch
 *.bin
+test/.mypy_cache/
 
 !src/leveldb*/Makefile
 

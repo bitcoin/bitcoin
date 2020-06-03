@@ -42,7 +42,7 @@ except UnicodeDecodeError:
 if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
     if os.name == 'nt':
         import ctypes
-        kernel32 = ctypes.windll.kernel32
+        kernel32 = ctypes.windll.kernel32  # type: ignore
         ENABLE_VIRTUAL_TERMINAL_PROCESSING = 4
         STD_OUTPUT_HANDLE = -11
         STD_ERROR_HANDLE = -12
