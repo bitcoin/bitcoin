@@ -25,9 +25,11 @@ RUN apt-get update && apt-get install $APT_ARGS \
     ccache \
     clang \
     cmake \
-    git \
     g++ \
     gettext \
+    git \
+    libc++-dev \
+    libc++abi-dev \
     libtool \
     libxcb-icccm4 \
     libxcb-image0 \
