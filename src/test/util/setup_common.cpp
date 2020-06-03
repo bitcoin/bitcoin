@@ -185,6 +185,7 @@ TestChain100Setup::TestChain100Setup(): RegTestingSetup()
 
 CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, uint256 prevBlock,
                              const CScript& scriptPubKey, bool* isBlockValid) {
+
     CBlockIndex* pPrev = nullptr;
     {
         LOCK(cs_main);
@@ -206,6 +207,8 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
         unsigned int extraNonce = 0;
         IncrementExtraNonce(&block, pPrev, extraNonce);
     }
+
+    block.nTime = pPrev->nTime + (rand() % 100 + 1);
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 

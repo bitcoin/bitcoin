@@ -111,6 +111,7 @@ BASE_SCRIPTS = [
     'feature_reindex.py',
     'feature_abortnode.py',
     # vv Tests less than 30s vv
+    'feature_pop_fork_resolution.py',
     'feature_pop_merkleroot.py',
     'feature_pop_payout.py',
     'feature_pop_sync.py',

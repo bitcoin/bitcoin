@@ -43,8 +43,27 @@ struct E2eFixture : public TestChain100Setup {
     E2eFixture()
     {
         altintegration::SetLogger<TestLogger>();
-        altintegration::GetLogger().level = altintegration::LogLevel::debug;
+        altintegration::GetLogger().level = altintegration::LogLevel::off;
         pop = &VeriBlock::getService<VeriBlock::PopService>();
+    }
+
+    void InvalidateTestBlock(CBlockIndex* pblock)
+    {
+        BlockValidationState state;
+        InvalidateBlock(state, Params(), pblock);
+        ActivateBestChain(state, Params());
+        mempool.clear();
+    }
+
+    void ReconsiderTestBlock(CBlockIndex* pblock)
+    {
+        BlockValidationState state;
+
+        {
+            LOCK(cs_main);
+            ResetBlockFailureFlags(pblock);
+        }
+        ActivateBestChain(state, Params(), std::shared_ptr<const CBlock>());
     }
 
     ATV endorseAltBlock(uint256 hash, const std::vector<VTB>& vtbs, const std::vector<uint8_t>& payoutInfo)

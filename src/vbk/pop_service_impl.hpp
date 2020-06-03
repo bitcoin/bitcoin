@@ -54,7 +54,7 @@ public:
     std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks) override;
 
     bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state) override;
-    bool addAllBlockPayloads(const CBlockIndex& indexPrev, const CBlock& fullBlock, BlockValidationState& state) override;
+    bool addAllBlockPayloads(const CBlockIndex* indexPrev, const CBlock& fullBlock, BlockValidationState& state) override;
     void invalidateBlockByHash(const uint256& block) override;
     bool setState(const uint256& block, altintegration::ValidationState& state) override;
 
@@ -65,7 +65,7 @@ public:
 bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& params, TxValidationState& state, altintegration::AltPayloads& payloads);
 bool parseBlockPopPayloadsImpl(const CBlock& block, const CBlockIndex& indexPrev, const Consensus::Params& params, BlockValidationState& state, std::vector<altintegration::AltPayloads>* payloads);
 bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks);
-bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex& indexPrev, const CBlock& block, BlockValidationState& state);
+bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex* indexPrev, const CBlock& block, BlockValidationState& state);
 
 } // namespace VeriBlock
 #endif //BITCOIN_SRC_VBK_POP_SERVICE_POP_SERVICE_IMPL_HPP

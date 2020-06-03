@@ -119,7 +119,8 @@ VBK_TESTS = \
 	vbk/test/unit/e2e_poptx_tests.cpp \
 	vbk/test/unit/pop_tx_tests.cpp \
 	vbk/test/unit/pop_reward_tests.cpp \
-    vbk/test/unit/vbk_merkle_tests.cpp
+    vbk/test/unit/vbk_merkle_tests.cpp \
+    vbk/test/unit/forkresolution_tests.cpp
 
 
 if USE_GMOCK
