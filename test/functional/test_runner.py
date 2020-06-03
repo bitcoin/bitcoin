@@ -232,6 +232,7 @@ BASE_SCRIPTS = [
     'feature_includeconf.py',
     'feature_asmap.py',
     'mempool_unbroadcast.py',
+    'mempool_compatibility.py',
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
     'rpc_scantxoutset.py',
