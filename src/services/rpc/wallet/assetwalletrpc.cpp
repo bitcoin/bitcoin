@@ -521,6 +521,8 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
         // if adding other outputs would make this output not have enough to pay the fee, don't sub fee from amount
         if(nTotalOther >= (nGas - (MIN_CHANGE + pwallet->m_default_max_tx_fee)))
             recp.fSubtractFeeFromAmount = false;
+        else
+            recp.nAmount -= nTotalOther;
     }
 
     // order matters here as vecSend is in sync with asset commitment, it may change later when
