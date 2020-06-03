@@ -7,6 +7,7 @@
 # Check for specified flake8 warnings in python files.
 
 export LC_ALL=C
+export MYPY_CACHE_DIR="${BASE_ROOT_DIR}/test/.mypy_cache"
 
 enabled=(
     E101 # indentation contains mixed spaces and tabs
@@ -103,3 +104,5 @@ PYTHONWARNINGS="ignore" $FLAKECMD --ignore=B,C,E,F,I,N,W --select=$(IFS=","; ech
         echo "$@"
     fi
 )
+
+mypy --ignore-missing-imports $(git ls-files "test/functional/*.py")

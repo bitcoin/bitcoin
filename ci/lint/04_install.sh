@@ -14,6 +14,7 @@ travis_retry pip3 install codespell==1.17.1
 travis_retry pip3 install flake8==3.8.3
 travis_retry pip3 install vulture==2.3
 travis_retry pip3 install yq
+travis_retry pip3 install mypy==0.700
 
 SHELLCHECK_VERSION=v0.6.0
 curl -s "https://storage.googleapis.com/shellcheck/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar --xz -xf - --directory /tmp/
