@@ -15,6 +15,7 @@ const std::vector<std::string> NET_PERMISSIONS_DOC{
     "relay (relay even in -blocksonly mode)",
     "mempool (allow requesting BIP35 mempool contents)",
     "download (allow getheaders during IBD, no disconnect after maxuploadtarget limit)",
+    "addr (responses to GETADDR avoid hitting the cache and contain random records with the most up-to-date info)"
 };
 
 namespace {
@@ -50,6 +51,7 @@ bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, 
             else if (permission == "download") NetPermissions::AddFlag(flags, PF_DOWNLOAD);
             else if (permission == "all") NetPermissions::AddFlag(flags, PF_ALL);
             else if (permission == "relay") NetPermissions::AddFlag(flags, PF_RELAY);
+            else if (permission == "addr") NetPermissions::AddFlag(flags, PF_ADDR);
             else if (permission.length() == 0); // Allow empty entries
             else {
                 error = strprintf(_("Invalid P2P permission: '%s'"), permission);
@@ -75,6 +77,7 @@ std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
     if (NetPermissions::HasFlag(flags, PF_RELAY)) strings.push_back("relay");
     if (NetPermissions::HasFlag(flags, PF_MEMPOOL)) strings.push_back("mempool");
     if (NetPermissions::HasFlag(flags, PF_DOWNLOAD)) strings.push_back("download");
+    if (NetPermissions::HasFlag(flags, PF_ADDR)) strings.push_back("addr");
     return strings;
 }
 

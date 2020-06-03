@@ -258,7 +258,7 @@ public:
     /**
      * Cache is used to minimize topology leaks, so it should
      * be used for all non-trusted calls, for example, p2p.
-     * A non-malicious call (from RPC) should
+     * A non-malicious call (from RPC or a peer with addr permission) should
      * call the function without a parameter to avoid using the cache.
      */
     std::vector<CAddress> GetAddresses(Network requestor_network);

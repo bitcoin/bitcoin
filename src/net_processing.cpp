@@ -3477,7 +3477,12 @@ void ProcessMessage(
         pfrom.fSentAddr = true;
 
         pfrom.vAddrToSend.clear();
-        std::vector<CAddress> vAddr = connman.GetAddresses(pfrom.addr.GetNetwork());
+        std::vector<CAddress> vAddr;
+        if (pfrom.HasPermission(PF_ADDR)) {
+            vAddr = connman.GetAddresses();
+        } else {
+            vAddr = connman.GetAddresses(pfrom.addr.GetNetwork());
+        }
         FastRandomContext insecure_rand;
         for (const CAddress &addr : vAddr) {
             pfrom.PushAddress(addr, insecure_rand);

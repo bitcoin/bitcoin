@@ -29,10 +29,12 @@ enum NetPermissionFlags {
     PF_NOBAN = (1U << 4) | PF_DOWNLOAD,
     // Can query the mempool
     PF_MEMPOOL = (1U << 5),
+    // Can request addrs without hitting a privacy-preserving cache
+    PF_ADDR = (1U << 7),
 
     // True if the user did not specifically set fine grained permissions
     PF_ISIMPLICIT = (1U << 31),
-    PF_ALL = PF_BLOOMFILTER | PF_FORCERELAY | PF_RELAY | PF_NOBAN | PF_MEMPOOL | PF_DOWNLOAD,
+    PF_ALL = PF_BLOOMFILTER | PF_FORCERELAY | PF_RELAY | PF_NOBAN | PF_MEMPOOL | PF_DOWNLOAD | PF_ADDR,
 };
 
 class NetPermissions
