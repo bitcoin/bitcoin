@@ -116,6 +116,10 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
     mapper->setOrientation(Qt::Vertical);
+	    
+    /* VBK */
+    QString bfiendpoint = QString::fromStdString(gArgs.GetArg("-bfiendpoint",""));
+    ui->bfiDataSourceUrls->setText(bfiendpoint);
 
     GUIUtil::ItemDelegate* delegate = new GUIUtil::ItemDelegate(mapper);
     connect(delegate, &GUIUtil::ItemDelegate::keyEscapePressed, this, &OptionsDialog::reject);
