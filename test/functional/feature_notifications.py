@@ -125,12 +125,7 @@ class NotificationsTest(BitcoinTestFramework):
 
             # Bump tx2 as bump2 and generate a block on node 0 while
             # disconnected, then reconnect and check for notifications on node 1
-            # about newly confirmed bump2 and newly conflicted tx2. Currently
-            # only the bump2 notification is sent. Ideally, notifications would
-            # be sent both for bump2 and tx2, which was the previous behavior
-            # before being broken by an accidental change in PR
-            # https://github.com/bitcoin/bitcoin/pull/16624. The bug is reported
-            # in issue https://github.com/bitcoin/bitcoin/issues/18325.
+            # about newly confirmed bump2 and newly conflicted tx2.
             disconnect_nodes(self.nodes[0], 1)
             bump2 = self.nodes[0].bumpfee(tx2)["txid"]
             self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)
@@ -138,7 +133,7 @@ class NotificationsTest(BitcoinTestFramework):
             assert_equal(tx2 in self.nodes[1].getrawmempool(), True)
             connect_nodes(self.nodes[0], 1)
             self.sync_blocks()
-            self.expect_wallet_notify([bump2])
+            self.expect_wallet_notify([bump2, tx2])
             assert_equal(self.nodes[1].gettransaction(bump2)["confirmations"], 1)
 
         # TODO: add test for `-alertnotify` large fork notifications
