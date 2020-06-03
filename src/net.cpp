@@ -53,10 +53,17 @@ static constexpr std::chrono::minutes DUMP_PEERS_INTERVAL{15};
 static constexpr int DNSSEEDS_TO_QUERY_AT_ONCE = 3;
 
 /** How long to delay before querying DNS seeds
+ *
+ * If we have more than THRESHOLD entries in addrman, then it's likely
+ * that we got those addresses from having previously connected to the P2P
+ * network, and that we'll be able to successfully reconnect to the P2P
+ * network via contacting one of them. So if that's the case, spend a
+ * little longer trying to connect to known peers before querying the
+ * DNS seeds.
  */
-static constexpr std::chrono::seconds DNSSEEDS_DELAY_FEW_PEERS{11}; // 11sec
-static constexpr std::chrono::seconds DNSSEEDS_DELAY_MANY_PEERS{300}; // 5min
-static constexpr int DNSSEEDS_DELAY_PEER_THRESHOLD = 1000; // "many" vs "few" peers -- you should only get this many if you've been on the live network
+static constexpr std::chrono::seconds DNSSEEDS_DELAY_FEW_PEERS{11};
+static constexpr std::chrono::minutes DNSSEEDS_DELAY_MANY_PEERS{5};
+static constexpr int DNSSEEDS_DELAY_PEER_THRESHOLD = 1000; // "many" vs "few" peers
 
 // We add a random period time (0 to 1 seconds) to feeler connections to prevent synchronization.
 #define FEELER_SLEEP_WINDOW 1
@@ -1595,6 +1602,8 @@ void CConnman::ThreadDNSAddressSeed()
         seeds_right_now = seeds.size();
     } else if (addrman.size() == 0) {
         // If we have no known peers, query all.
+        // This will occur on the first run, or if peers.dat has been
+        // deleted.
         seeds_right_now = seeds.size();
     }
 
@@ -1620,6 +1629,9 @@ void CConnman::ThreadDNSAddressSeed()
                 LogPrintf("Waiting %d seconds before querying DNS seeds.\n", seeds_wait_time.count());
                 std::chrono::seconds to_wait = seeds_wait_time;
                 while (to_wait.count() > 0) {
+                    // if sleeping for the MANY_PEERS interval, wake up
+                    // early to see if we have enough peers and can stop
+                    // this thread entirely freeing up its resources
                     std::chrono::seconds w = std::min(DNSSEEDS_DELAY_FEW_PEERS, to_wait);
                     if (!interruptNet.sleep_for(w)) return;
                     to_wait -= w;
@@ -1646,7 +1658,7 @@ void CConnman::ThreadDNSAddressSeed()
 
         if (interruptNet) return;
 
-        // hold off on querying seeds if p2p network deactivated
+        // hold off on querying seeds if P2P network deactivated
         if (!fNetworkActive) {
             LogPrintf("Waiting for network to be reactivated before querying DNS seeds.\n");
             do {
@@ -1797,6 +1809,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             return;
 
         // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
+        // Note that we only do this if we started with an empty peers.dat,
+        // (in which case we will query DNS seeds immediately) *and* the DNS
+        // seeds have not returned any results.
         if (addrman.size() == 0 && (GetTime() - nStart > 60)) {
             static bool done = false;
             if (!done) {
