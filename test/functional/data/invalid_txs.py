@@ -21,6 +21,7 @@ Invalid tx cases not covered here can be found by running:
 """
 import abc
 
+from typing import Optional
 from test_framework.messages import (
     COutPoint,
     CTransaction,
@@ -56,7 +57,7 @@ class BadTxTemplate:
     __metaclass__ = abc.ABCMeta
 
     # The expected error code given by bitcoind upon submission of the tx.
-    reject_reason = ""
+    reject_reason = ""  # type: Optional[str]
 
     # Only specified if it differs from mempool acceptance error.
     block_reject_reason = ""
