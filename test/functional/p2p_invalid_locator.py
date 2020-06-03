@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The Bitcoin Core developers
+# Copyright (c) 2015-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid locators.
@@ -34,7 +34,7 @@ class InvalidLocatorTest(BitcoinTestFramework):
             msg.locator.vHave = [int(node.getblockhash(i - 1), 16) for i in range(block_count, block_count - (MAX_LOCATOR_SZ), -1)]
             node.p2p.send_message(msg)
             if type(msg) == msg_getheaders:
-                node.p2p.wait_for_header(int(node.getbestblockhash(), 16))
+                node.p2p.wait_for_header(node.getbestblockhash())
             else:
                 node.p2p.wait_for_block(int(node.getbestblockhash(), 16))
 

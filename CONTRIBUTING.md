@@ -14,15 +14,49 @@ purposes. As such there are repository "maintainers" who are responsible for
 merging pull requests as well as a "lead maintainer" who is responsible for the
 release cycle, overall merging, moderation and appointment of maintainers.
 
+Getting Started
+---------------
+
+New contributors are very welcome and needed.
+
+Reviewing and testing is the most effective way you can contribute as a new
+contributor, and it also will teach you much more about the code and process
+than opening PRs. Please refer to the section [peer review](#peer-review) later
+in this document.
+
+Before you start contributing, familiarize yourself with the Bitcoin Core build
+system and tests. Refer to the documentation in the repository on how to build
+Bitcoin Core and how to run the unit and functional tests.
+
+There are many open issues of varying difficulty waiting to be fixed.
 If you're looking for somewhere to start contributing, check out the
 [good first issue](https://github.com/bitcoin/bitcoin/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-list or participate in a weekly [Bitcoin Core PR Review Club](https://bitcoincore.reviews/) meeting.
+list or changes that are
+[up for grabs](https://github.com/bitcoin/bitcoin/issues?utf8=%E2%9C%93&q=label%3A%22Up+for+grabs%22).
+Some of them might no longer be applicable. So if you are interested, but
+unsure, you might want to leave a comment on the issue first.
+
+You may also participate in the weekly
+[Bitcoin Core PR Review Club](https://bitcoincore.reviews/) meeting.
+
+### Good First Issue Label
+
+The purpose of the `good first issue` label is to highlight which issues are
+suitable for a new contributor without a deep understanding of the codebase.
+
+However, good first issues can be solved by anyone. If they remain unsolved
+for a longer time, a frequent contributor might address them.
+
+You do not need to request permission to start working on an issue. However,
+you are encouraged to leave a comment if you are planning to work on it. This
+will help other contributors monitor which issues are actively being addressed
+and is also an effective way to request assistance if and when you need it.
 
 Communication Channels
 ----------------------
 
 Most communication about Bitcoin Core development happens on IRC, in the
-#bitcoin-core-dev channel on Freenode. The easiest way to participate on IRC is
+`#bitcoin-core-dev` channel on Freenode. The easiest way to participate on IRC is
 with the web client, [webchat.freenode.net](https://webchat.freenode.net/). Chat
 history logs can be found
 on [http://www.erisian.com.au/bitcoin-core-dev/](http://www.erisian.com.au/bitcoin-core-dev/)
@@ -33,7 +67,7 @@ requests.
 
 The developer
 [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
-should be used to discuss complicated or controversial changes before working on
+should be used to discuss complicated or controversial consensus or P2P protocol changes before working on
 a patch set.
 
 
@@ -52,6 +86,8 @@ To contribute a patch, the workflow is as follows:
 
 The project coding conventions in the [developer notes](doc/developer-notes.md)
 must be followed.
+
+### Committing Patches
 
 In general, [commits should be atomic](https://en.wikipedia.org/wiki/Atomic_commit#Atomic_commit_convention)
 and diffs should be easy to read. For this reason, do not mix any formatting
@@ -75,6 +111,8 @@ about Git.
 
   - Push changes to your fork
   - Create pull request
+
+### Creating the Pull Request
 
 The title of the pull request should be prefixed by the component or area that
 the pull request affects. Valid areas as:
@@ -100,18 +138,24 @@ Examples:
     qt: Add feed bump button
     log: Fix typo in log message
 
+The body of the pull request should contain enough description about what the
+patch does together with any justification/reasoning. You should include
+references to any discussions (for example other tickets or mailing list
+discussions).
+
+### Translation changes
+
 Note that translations should not be submitted as pull requests. Please see
 [Translation Process](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md)
 for more information on helping with translations.
+
+### Work in Progress Changes and Requests for Comments
 
 If a pull request is not to be considered for merging (yet), please
 prefix the title with [WIP] or use [Tasks Lists](https://help.github.com/articles/basic-writing-and-formatting-syntax/#task-lists)
 in the body of the pull request to indicate tasks are pending.
 
-The body of the pull request should contain enough description about what the
-patch does together with any justification/reasoning. You should include
-references to any discussions (for example other tickets or mailing list
-discussions).
+### Address Feedback
 
 At this stage, one should expect comments and review from other contributors. You
 can add more commits to your pull request by committing them locally and pushing

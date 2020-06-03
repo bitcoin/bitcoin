@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,12 +27,15 @@
 #include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <util/url.h>
+#include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
 
 #include <functional>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+UrlDecodeFn* const URL_DECODE = nullptr;
 
 FastRandomContext g_insecure_rand_ctx;
 /** Random context to get unique temp data dirs. Separate from g_insecure_rand_ctx, which can be seeded from a const env var */
@@ -63,17 +66,34 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
     return os;
 }
 
-BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
+BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
     : m_path_root{fs::temp_directory_path() / "test_common_" PACKAGE_NAME / g_insecure_rand_ctx_temp_path.rand256().ToString()}
 {
+    const std::vector<const char*> arguments = Cat(
+        {
+            "dummy",
+            "-printtoconsole=0",
+            "-logtimemicros",
+            "-debug",
+            "-debugexclude=libevent",
+            "-debugexclude=leveldb",
+        },
+        extra_args);
     fs::create_directories(m_path_root);
     gArgs.ForceSetArg("-datadir", m_path_root.string());
     ClearDatadirCache();
+    {
+        SetupServerArgs(m_node);
+        std::string error;
+        const bool success{m_node.args->ParseParameters(arguments.size(), arguments.data(), error)};
+        assert(success);
+        assert(error.empty());
+    }
     SelectParams(chainName);
     SeedInsecureRand();
-    gArgs.ForceSetArg("-printtoconsole", "0");
     if (G_TEST_LOG_FUN) LogInstance().PushBackCallback(G_TEST_LOG_FUN);
     InitLogging();
+    AppInitParameterInteraction();
     LogInstance().StartLogging();
     SHA256AutoDetect();
     ECC_Start();
@@ -93,15 +113,16 @@ BasicTestingSetup::~BasicTestingSetup()
 {
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);
+    gArgs.ClearArgs();
     ECC_Stop();
 }
 
-TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
+TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
+    : BasicTestingSetup(chainName, extra_args)
 {
     const CChainParams& chainparams = Params();
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
-    g_rpc_node = &m_node;
     RegisterAllCoreRPCCommands(tableRPC);
 
     m_node.scheduler = MakeUnique<CScheduler>();
@@ -109,10 +130,12 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     // We have to run a scheduler thread to prevent ActivateBestChain
     // from blocking due to queue overrun.
     threadGroup.create_thread([&]{ m_node.scheduler->serviceQueue(); });
-    GetMainSignals().RegisterBackgroundSignalScheduler(*g_rpc_node->scheduler);
+    GetMainSignals().RegisterBackgroundSignalScheduler(*m_node.scheduler);
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
-    g_chainstate = MakeUnique<CChainState>();
+
+    m_node.chainman = &::g_chainman;
+    m_node.chainman->InitializeChainstate();
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
@@ -138,7 +161,12 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     m_node.mempool->setSanityCheck(1.0);
     m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
-    m_node.peer_logic = MakeUnique<PeerLogicValidation>(m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.mempool);
+    m_node.peer_logic = MakeUnique<PeerLogicValidation>(m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool);
+    {
+        CConnman::Options options;
+        options.m_msgproc = m_node.peer_logic.get();
+        m_node.connman->Init(options);
+    }
 }
 
 TestingSetup::~TestingSetup()
@@ -148,13 +176,14 @@ TestingSetup::~TestingSetup()
     threadGroup.join_all();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    g_rpc_node = nullptr;
     m_node.connman.reset();
     m_node.banman.reset();
+    m_node.args = nullptr;
     m_node.mempool = nullptr;
     m_node.scheduler.reset();
     UnloadBlockIndex();
-    g_chainstate.reset();
+    m_node.chainman->Reset();
+    m_node.chainman = nullptr;
     pblocktree.reset();
 }
 
@@ -199,7 +228,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
+    EnsureChainman(m_node).ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
 
     CBlock result = block;
     return result;

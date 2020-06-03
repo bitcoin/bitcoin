@@ -38,9 +38,6 @@ cache:
     - $TRAVIS_BUILD_DIR/depends/sdk-sources
     - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
     - $TRAVIS_BUILD_DIR/releases/$HOST
-    # macOS
-    - $HOME/Library/Caches/Homebrew
-    - /usr/local/Homebrew
 before_cache:
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 stages:
@@ -49,7 +46,6 @@ stages:
 env:
   global:
     - CI_RETRY_EXE="travis_retry"
-    - CI_WAIT="while sleep 500; do echo .; done"
     - CACHE_ERR_MSG="Error! Initial build successful, but not enough time remains to run later build stages and tests. See https://docs.travis-ci.com/user/customizing-the-build#build-timeouts . Please manually re-run this job by using the travis restart button. The next run should not time out because the build cache has been saved."
 before_install:
   - set -o errexit; source ./ci/test/00_setup_env.sh
@@ -74,7 +70,7 @@ jobs:
     - stage: lint
       name: 'lint'
       env:
-      cache: false
+      cache: pip
       language: python
       python: '3.5' # Oldest supported version according to doc/dependencies.md
       install:
@@ -111,15 +107,16 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_i686_centos.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [C++17, previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
+      # Not enough memory on travis machines, so feature_block is excluded for now
       env: >-
+        TEST_RUNNER_EXTRA="--exclude feature_block"
         FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
-        TEST_RUNNER_EXTRA="--exclude feature_block"  # Not enough memory on travis machines
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
@@ -127,19 +124,15 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_asan.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, valgrind]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_valgrind.sh"
-
-    - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, fuzzers under valgrind]'
+      name: 'x86_64 Linux [GOAL: install]  [bionic]  [multiprocess]'
+      if: type != pull_request OR commit_message =~ /depends:|multiprocess:/ # Skip on non-depends, non-multiprocess PRs
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_fuzz_with_valgrind.sh"
+        FILE_ENV="./ci/test/00_setup_env_native_multiprocess.sh"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
@@ -158,6 +151,12 @@ jobs:
       # Xcode 11.3.1, macOS 10.14, SDK 10.15
       # https://docs.travis-ci.com/user/reference/osx/#macos-version
       osx_image: xcode11.3
+      cache:
+        directories:
+          - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
+          - $TRAVIS_BUILD_DIR/releases/$HOST
+          - $HOME/Library/Caches/Homebrew
+          - /usr/local/Homebrew
       addons:
         homebrew:
           packages:
@@ -171,4 +170,6 @@ jobs:
           - ccache
           - zeromq
       env: >-
+        DANGER_RUN_CI_ON_HOST=true
+        CI_USE_APT_INSTALL=no
         FILE_ENV="./ci/test/00_setup_env_mac_host.sh"

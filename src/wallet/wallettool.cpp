@@ -1,9 +1,11 @@
-// Copyright (c) 2016-2019 The Bitcoin Core developers
+// Copyright (c) 2016-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <fs.h>
 #include <util/system.h>
+#include <util/translation.h>
+#include <wallet/salvage.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
@@ -99,7 +101,28 @@ static void WalletShowInfo(CWallet* wallet_instance)
     tfm::format(std::cout, "HD (hd seed available): %s\n", wallet_instance->IsHDEnabled() ? "yes" : "no");
     tfm::format(std::cout, "Keypool Size: %u\n", wallet_instance->GetKeyPoolSize());
     tfm::format(std::cout, "Transactions: %zu\n", wallet_instance->mapWallet.size());
-    tfm::format(std::cout, "Address Book: %zu\n", wallet_instance->mapAddressBook.size());
+    tfm::format(std::cout, "Address Book: %zu\n", wallet_instance->m_address_book.size());
+}
+
+static bool SalvageWallet(const fs::path& path)
+{
+    // Create a Database handle to allow for the db to be initialized before recovery
+    std::unique_ptr<WalletDatabase> database = WalletDatabase::Create(path);
+
+    // Initialize the environment before recovery
+    bilingual_str error_string;
+    try {
+        WalletBatch::VerifyEnvironment(path, error_string);
+    } catch (const fs::filesystem_error& e) {
+        error_string = Untranslated(strprintf("Error loading wallet. %s", fsbridge::get_filesystem_error_message(e)));
+    }
+    if (!error_string.original.empty()) {
+        tfm::format(std::cerr, "Failed to open wallet for salvage :%s\n", error_string.original);
+        return false;
+    }
+
+    // Perform the recovery
+    return RecoverDatabaseFile(path);
 }
 
 bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
@@ -112,20 +135,25 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
             WalletShowInfo(wallet_instance.get());
             wallet_instance->Flush(true);
         }
-    } else if (command == "info") {
+    } else if (command == "info" || command == "salvage") {
         if (!fs::exists(path)) {
             tfm::format(std::cerr, "Error: no wallet file at %s\n", name);
             return false;
         }
-        std::string error;
+        bilingual_str error;
         if (!WalletBatch::VerifyEnvironment(path, error)) {
-            tfm::format(std::cerr, "Error loading %s. Is wallet being used by other process?\n", name);
+            tfm::format(std::cerr, "%s\nError loading %s. Is wallet being used by other process?\n", error.original, name);
             return false;
         }
-        std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
-        if (!wallet_instance) return false;
-        WalletShowInfo(wallet_instance.get());
-        wallet_instance->Flush(true);
+
+        if (command == "info") {
+            std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
+            if (!wallet_instance) return false;
+            WalletShowInfo(wallet_instance.get());
+            wallet_instance->Flush(true);
+        } else if (command == "salvage") {
+            return SalvageWallet(path);
+        }
     } else {
         tfm::format(std::cerr, "Invalid command: %s\n", command);
         return false;

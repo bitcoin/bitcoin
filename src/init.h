@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,9 @@ struct NodeContext;
 namespace boost {
 class thread_group;
 } // namespace boost
+namespace util {
+class Ref;
+} // namespace util
 
 /** Interrupt threads */
 void Interrupt(NodeContext& node);
@@ -51,12 +54,12 @@ bool AppInitLockDataDirectory();
  * @note This should only be done after daemonization. Call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitLockDataDirectory should have been called.
  */
-bool AppInitMain(NodeContext& node);
+bool AppInitMain(const util::Ref& context, NodeContext& node);
 
 /**
- * Setup the arguments for gArgs
+ * Register all arguments with the ArgsManager
  */
-void SetupServerArgs();
+void SetupServerArgs(NodeContext& node);
 
 /** Returns licensing information (for -version) */
 std::string LicenseInfo();

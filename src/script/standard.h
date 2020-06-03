@@ -11,6 +11,8 @@
 
 #include <boost/variant.hpp>
 
+#include <string>
+
 
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 
@@ -44,8 +46,7 @@ extern unsigned nMaxDatacarrierBytes;
 /**
  * Mandatory script verification flags that all new blocks must comply with for
  * them to be valid. (but old blocks may not comply with) Currently just P2SH,
- * but in the future other flags may be added, such as a soft-fork to enforce
- * strict DER encoding.
+ * but in the future other flags may be added.
  *
  * Failing one of these tests may trigger a DoS ban - see CheckInputScripts() for
  * details.
@@ -146,7 +147,7 @@ typedef boost::variant<CNoDestination, PKHash, ScriptHash, WitnessV0ScriptHash, 
 bool IsValidDestination(const CTxDestination& dest);
 
 /** Get the name of a txnouttype as a C string, or nullptr if unknown. */
-const char* GetTxnOutputType(txnouttype t);
+std::string GetTxnOutputType(txnouttype t);
 
 /**
  * Parse a scriptPubKey and identify script type for standard scripts. If

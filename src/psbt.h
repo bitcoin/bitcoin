@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,6 +39,10 @@ static constexpr uint8_t PSBT_OUT_BIP32_DERIVATION = 0x02;
 // The separator is 0x00. Reading this in means that the unserializer can interpret it
 // as a 0 length key which indicates that this is the separator. The separator has no value.
 static constexpr uint8_t PSBT_SEPARATOR = 0x00;
+
+// BIP 174 does not specify a maximum file size, but we set a limit anyway
+// to prevent reading a stream indefinitely and running out of memory.
+const std::streamsize MAX_FILE_SIZE_PSBT = 100000000; // 100 MiB
 
 /** A structure for PSBTs which contain per-input information */
 struct PSBTInput

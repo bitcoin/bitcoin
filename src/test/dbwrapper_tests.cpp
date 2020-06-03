@@ -1,10 +1,10 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <dbwrapper.h>
-#include <uint256.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
 #include <util/memory.h>
 
 #include <memory>
@@ -331,24 +331,26 @@ struct StringContentsSerializer {
     }
     StringContentsSerializer& operator+=(const StringContentsSerializer& s) { return *this += s.str; }
 
-    ADD_SERIALIZE_METHODS;
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        for (size_t i = 0; i < str.size(); i++) {
+            s << str[i];
+        }
+    }
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        if (ser_action.ForRead()) {
-            str.clear();
-            char c = 0;
-            while (true) {
-                try {
-                    READWRITE(c);
-                    str.push_back(c);
-                } catch (const std::ios_base::failure&) {
-                    break;
-                }
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        str.clear();
+        char c = 0;
+        while (true) {
+            try {
+                s >> c;
+                str.push_back(c);
+            } catch (const std::ios_base::failure&) {
+                break;
             }
-        } else {
-            for (size_t i = 0; i < str.size(); i++)
-                READWRITE(str[i]);
         }
     }
 };

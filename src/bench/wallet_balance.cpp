@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,14 @@
 
 static void WalletBalance(benchmark::State& state, const bool set_dirty, const bool add_watchonly, const bool add_mine)
 {
+    TestingSetup test_setup{
+        CBaseChainParams::REGTEST,
+        /* extra_args */ {
+            "-nodebuglogfile",
+            "-nodebug",
+        },
+    };
+
     const auto& ADDRESS_WATCHONLY = ADDRESS_BCRT1_UNSPENDABLE;
 
     NodeContext node;
@@ -24,14 +32,14 @@ static void WalletBalance(benchmark::State& state, const bool set_dirty, const b
         bool first_run;
         if (wallet.LoadWallet(first_run) != DBErrors::LOAD_OK) assert(false);
     }
-    auto handler = chain->handleNotifications({ &wallet, [](CWallet*) {} });
+    auto handler = chain->handleNotifications({&wallet, [](CWallet*) {}});
 
     const Optional<std::string> address_mine{add_mine ? Optional<std::string>{getnewaddress(wallet)} : nullopt};
     if (add_watchonly) importaddress(wallet, ADDRESS_WATCHONLY);
 
     for (int i = 0; i < 100; ++i) {
-        generatetoaddress(g_testing_setup->m_node, address_mine.get_value_or(ADDRESS_WATCHONLY));
-        generatetoaddress(g_testing_setup->m_node, ADDRESS_WATCHONLY);
+        generatetoaddress(test_setup.m_node, address_mine.get_value_or(ADDRESS_WATCHONLY));
+        generatetoaddress(test_setup.m_node, ADDRESS_WATCHONLY);
     }
     SyncWithValidationInterfaceQueue();
 

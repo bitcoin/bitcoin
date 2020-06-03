@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcoin Core developers
+# Copyright (c) 2015-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Functionality to build scripts, as well as signature hash functions.
@@ -8,6 +8,7 @@ This file is modified from python-bitcoinlib.
 """
 import hashlib
 import struct
+import unittest
 
 from .messages import (
     CTransaction,
@@ -97,7 +98,7 @@ class CScriptOp(int):
             return _opcode_instances[n]
         except IndexError:
             assert len(_opcode_instances) == n
-            _opcode_instances.append(super(CScriptOp, cls).__new__(cls, n))
+            _opcode_instances.append(super().__new__(cls, n))
             return _opcode_instances[n]
 
 # Populate opcode instance table
@@ -372,7 +373,7 @@ class CScriptTruncatedPushDataError(CScriptInvalidError):
     """Invalid pushdata due to truncation"""
     def __init__(self, msg, data):
         self.data = data
-        super(CScriptTruncatedPushDataError, self).__init__(msg)
+        super().__init__(msg)
 
 
 # This is used, eg, for blockchain heights in coinbase scripts (bip34)
@@ -449,15 +450,8 @@ class CScript(bytes):
         return other
 
     def __add__(self, other):
-        # Do the coercion outside of the try block so that errors in it are
-        # noticed.
-        other = self.__coerce_instance(other)
-
-        try:
-            # bytes.__add__ always returns bytes instances unfortunately
-            return CScript(super(CScript, self).__add__(other))
-        except TypeError:
-            raise TypeError('Can not add a %r instance to a CScript' % other.__class__)
+        # add makes no sense for a CScript()
+        raise NotImplementedError
 
     def join(self, iterable):
         # join makes no sense for a CScript()
@@ -465,14 +459,14 @@ class CScript(bytes):
 
     def __new__(cls, value=b''):
         if isinstance(value, bytes) or isinstance(value, bytearray):
-            return super(CScript, cls).__new__(cls, value)
+            return super().__new__(cls, value)
         else:
             def coerce_iterable(iterable):
                 for instance in iterable:
                     yield cls.__coerce_instance(instance)
             # Annoyingly on both python2 and python3 bytes.join() always
             # returns a bytes instance even when subclassed.
-            return super(CScript, cls).__new__(cls, b''.join(coerce_iterable(value)))
+            return super().__new__(cls, b''.join(coerce_iterable(value)))
 
     def raw_iter(self):
         """Raw iteration
@@ -715,3 +709,25 @@ def SegwitV0SignatureHash(script, txTo, inIdx, hashtype, amount):
     ss += struct.pack("<I", hashtype)
 
     return hash256(ss)
+
+class TestFrameworkScript(unittest.TestCase):
+    def test_bn2vch(self):
+        self.assertEqual(bn2vch(0), bytes([]))
+        self.assertEqual(bn2vch(1), bytes([0x01]))
+        self.assertEqual(bn2vch(-1), bytes([0x81]))
+        self.assertEqual(bn2vch(0x7F), bytes([0x7F]))
+        self.assertEqual(bn2vch(-0x7F), bytes([0xFF]))
+        self.assertEqual(bn2vch(0x80), bytes([0x80, 0x00]))
+        self.assertEqual(bn2vch(-0x80), bytes([0x80, 0x80]))
+        self.assertEqual(bn2vch(0xFF), bytes([0xFF, 0x00]))
+        self.assertEqual(bn2vch(-0xFF), bytes([0xFF, 0x80]))
+        self.assertEqual(bn2vch(0x100), bytes([0x00, 0x01]))
+        self.assertEqual(bn2vch(-0x100), bytes([0x00, 0x81]))
+        self.assertEqual(bn2vch(0x7FFF), bytes([0xFF, 0x7F]))
+        self.assertEqual(bn2vch(-0x8000), bytes([0x00, 0x80, 0x80]))
+        self.assertEqual(bn2vch(-0x7FFFFF), bytes([0xFF, 0xFF, 0xFF]))
+        self.assertEqual(bn2vch(0x80000000), bytes([0x00, 0x00, 0x00, 0x80, 0x00]))
+        self.assertEqual(bn2vch(-0x80000000), bytes([0x00, 0x00, 0x00, 0x80, 0x80]))
+        self.assertEqual(bn2vch(0xFFFFFFFF), bytes([0xFF, 0xFF, 0xFF, 0xFF, 0x00]))
+        self.assertEqual(bn2vch(123456789), bytes([0x15, 0xCD, 0x5B, 0x07]))
+        self.assertEqual(bn2vch(-54321), bytes([0x31, 0xD4, 0x80]))

@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +20,11 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     FlatSigningProvider signing_provider;
     std::string error;
     for (const bool require_checksum : {true, false}) {
-        Parse(descriptor, signing_provider, error, require_checksum);
+        const auto desc = Parse(descriptor, signing_provider, error, require_checksum);
+        if (desc) {
+            (void)desc->ToString();
+            (void)desc->IsRange();
+            (void)desc->IsSolvable();
+        }
     }
 }

@@ -12,6 +12,7 @@ GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
 
 bench_bench_bitcoin_SOURCES = \
   $(RAW_BENCH_FILES) \
+  bench/addrman.cpp \
   bench/bench_bitcoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
@@ -28,6 +29,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/crypto_hash.cpp \
   bench/ccoins_caching.cpp \
   bench/gcs_filter.cpp \
+  bench/hashpadding.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
   bench/mempool_stress.cpp \

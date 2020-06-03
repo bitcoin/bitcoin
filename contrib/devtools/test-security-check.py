@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcoin Core developers
+# Copyright (c) 2015-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
@@ -49,13 +49,15 @@ class TestSecurityChecks(unittest.TestCase):
         cc = 'x86_64-w64-mingw32-gcc'
         write_testcode(source)
 
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--no-nxcompat','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va']),
-            (1, executable+': failed DYNAMIC_BASE HIGH_ENTROPY_VA NX'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va']),
-            (1, executable+': failed DYNAMIC_BASE HIGH_ENTROPY_VA'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--no-high-entropy-va']),
-            (1, executable+': failed HIGH_ENTROPY_VA'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--high-entropy-va']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--no-nxcompat','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va','-no-pie','-fno-PIE']),
+            (1, executable+': failed DYNAMIC_BASE HIGH_ENTROPY_VA NX RELOC_SECTION'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va','-no-pie','-fno-PIE']),
+            (1, executable+': failed DYNAMIC_BASE HIGH_ENTROPY_VA RELOC_SECTION'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--no-high-entropy-va','-no-pie','-fno-PIE']),
+            (1, executable+': failed HIGH_ENTROPY_VA RELOC_SECTION'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--high-entropy-va','-no-pie','-fno-PIE']),
+            (1, executable+': failed RELOC_SECTION'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--high-entropy-va','-pie','-fPIE']),
             (0, ''))
 
     def test_MACHO(self):
@@ -64,13 +66,17 @@ class TestSecurityChecks(unittest.TestCase):
         cc = 'clang'
         write_testcode(source)
 
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace', '-Wl,-allow_stack_execute']),
-            (1, executable+': failed PIE NOUNDEFS NX'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace']),
-            (1, executable+': failed PIE NOUNDEFS'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fno-stack-protector']),
+            (1, executable+': failed PIE NOUNDEFS NX LAZY_BINDINGS Canary'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fstack-protector-all']),
+            (1, executable+': failed PIE NOUNDEFS NX LAZY_BINDINGS'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-fstack-protector-all']),
+            (1, executable+': failed PIE NOUNDEFS LAZY_BINDINGS'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-fstack-protector-all']),
+            (1, executable+': failed PIE LAZY_BINDINGS'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-bind_at_load','-fstack-protector-all']),
             (1, executable+': failed PIE'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie','-Wl,-bind_at_load','-fstack-protector-all']),
             (0, ''))
 
 if __name__ == '__main__':

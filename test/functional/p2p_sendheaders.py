@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test behavior of headers messages to announce blocks.
@@ -92,6 +92,7 @@ from test_framework.mininode import (
     NODE_WITNESS,
     P2PInterface,
     mininode_lock,
+    MSG_BLOCK,
     msg_block,
     msg_getblocks,
     msg_getdata,
@@ -120,7 +121,7 @@ class BaseNode(P2PInterface):
         """Request data for a list of block hashes."""
         msg = msg_getdata()
         for x in block_hashes:
-            msg.inv.append(CInv(2, x))
+            msg.inv.append(CInv(MSG_BLOCK, x))
         self.send_message(msg)
 
     def send_get_headers(self, locator, hashstop):
@@ -131,7 +132,7 @@ class BaseNode(P2PInterface):
 
     def send_block_inv(self, blockhash):
         msg = msg_inv()
-        msg.inv = [CInv(2, blockhash)]
+        msg.inv = [CInv(MSG_BLOCK, blockhash)]
         self.send_message(msg)
 
     def send_header_for_blocks(self, new_blocks):
@@ -143,13 +144,6 @@ class BaseNode(P2PInterface):
         getblocks_message = msg_getblocks()
         getblocks_message.locator.vHave = locator
         self.send_message(getblocks_message)
-
-    def wait_for_getdata(self, hash_list, timeout=60):
-        if hash_list == []:
-            return
-
-        test_function = lambda: "getdata" in self.last_message and [x.hash for x in self.last_message["getdata"].inv] == hash_list
-        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_block_announcement(self, block_hash, timeout=60):
         test_function = lambda: self.last_blockhash_announced == block_hash
@@ -242,10 +236,6 @@ class SendHeadersTest(BitcoinTestFramework):
         # Make sure NODE_NETWORK is not set for test_node, so no block download
         # will occur outside of direct fetching
         test_node = self.nodes[0].add_p2p_connection(BaseNode(), services=NODE_WITNESS)
-
-        # Ensure verack's have been processed by our peer
-        inv_node.sync_with_ping()
-        test_node.sync_with_ping()
 
         self.test_null_locators(test_node, inv_node)
         self.test_nonnull_locators(test_node, inv_node)

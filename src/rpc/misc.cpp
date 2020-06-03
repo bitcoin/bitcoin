@@ -1,9 +1,10 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <httpserver.h>
+#include <interfaces/chain.h>
 #include <key_io.h>
 #include <node/context.h>
 #include <outputtype.h>
@@ -14,6 +15,7 @@
 #include <script/descriptor.h>
 #include <util/check.h>
 #include <util/message.h> // For MessageSign(), MessageVerify()
+#include <util/ref.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 
@@ -363,7 +365,13 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     LOCK(cs_main);
 
     RPCTypeCheck(request.params, {UniValue::VNUM});
-    SetMockTime(request.params[0].get_int64());
+    int64_t time = request.params[0].get_int64();
+    SetMockTime(time);
+    if (request.context.Has<NodeContext>()) {
+        for (const auto& chain_client : request.context.Get<NodeContext>().chain_clients) {
+            chain_client->setMockTime(time);
+        }
+    }
 
     return NullUniValue;
 }
@@ -391,9 +399,10 @@ static UniValue mockscheduler(const JSONRPCRequest& request)
     }
 
     // protect against null pointer dereference
-    CHECK_NONFATAL(g_rpc_node);
-    CHECK_NONFATAL(g_rpc_node->scheduler);
-    g_rpc_node->scheduler->MockForward(std::chrono::seconds(delta_seconds));
+    CHECK_NONFATAL(request.context.Has<NodeContext>());
+    NodeContext& node = request.context.Get<NodeContext>();
+    CHECK_NONFATAL(node.scheduler);
+    node.scheduler->MockForward(std::chrono::seconds(delta_seconds));
 
     return NullUniValue;
 }
@@ -509,7 +518,7 @@ UniValue logging(const JSONRPCRequest& request)
             "When called with arguments, adds or removes categories from debug logging and return the lists above.\n"
             "The arguments are evaluated in order \"include\", \"exclude\".\n"
             "If an item is both included and excluded, it will thus end up being excluded.\n"
-            "The valid logging categories are: " + ListLogCategories() + "\n"
+            "The valid logging categories are: " + LogInstance().LogCategoriesString() + "\n"
             "In addition, the following are available as category names with special meanings:\n"
             "  - \"all\",  \"1\" : represent all logging categories.\n"
             "  - \"none\", \"0\" : even if other logging categories are specified, ignore all of them.\n"
@@ -561,8 +570,7 @@ UniValue logging(const JSONRPCRequest& request)
     }
 
     UniValue result(UniValue::VOBJ);
-    std::vector<CLogCategoryActive> vLogCatActive = ListActiveLogCategories();
-    for (const auto& logCatActive : vLogCatActive) {
+    for (const auto& logCatActive : LogInstance().LogCategoriesList()) {
         result.pushKV(logCatActive.category, logCatActive.active);
     }
 
@@ -589,6 +597,8 @@ static UniValue echo(const JSONRPCRequest& request)
     return request.params;
 }
 
+void RegisterMiscRPCCommands(CRPCTable &t)
+{
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -610,8 +620,6 @@ static const CRPCCommand commands[] =
 };
 // clang-format on
 
-void RegisterMiscRPCCommands(CRPCTable &t)
-{
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }

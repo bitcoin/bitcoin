@@ -1,5 +1,5 @@
-build_darwin_CC:=$(shell xcrun -f clang)
-build_darwin_CXX:=$(shell xcrun -f clang++)
+build_darwin_CC:=$(shell xcrun -f clang) --sysroot $(shell xcrun --show-sdk-path)
+build_darwin_CXX:=$(shell xcrun -f clang++) --sysroot $(shell xcrun --show-sdk-path)
 build_darwin_AR:=$(shell xcrun -f ar)
 build_darwin_RANLIB:=$(shell xcrun -f ranlib)
 build_darwin_STRIP:=$(shell xcrun -f strip)

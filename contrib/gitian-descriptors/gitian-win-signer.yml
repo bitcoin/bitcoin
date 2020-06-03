@@ -8,6 +8,7 @@ architectures:
 packages:
 - "libssl-dev"
 - "autoconf"
+- "automake"
 - "libtool"
 - "pkg-config"
 remotes:

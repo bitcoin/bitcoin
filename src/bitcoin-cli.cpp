@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,16 +9,19 @@
 
 #include <chainparamsbase.h>
 #include <clientversion.h>
+#include <optional.h>
 #include <rpc/client.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <util/url.h>
 
 #include <functional>
 #include <memory>
 #include <stdio.h>
+#include <string>
 #include <tuple>
 
 #include <event2/buffer.h>
@@ -29,6 +32,7 @@
 #include <compat/stdin.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+UrlDecodeFn* const URL_DECODE = urlDecode;
 
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
@@ -155,7 +159,7 @@ struct HTTPReply
     std::string body;
 };
 
-static const char *http_errorstring(int code)
+static std::string http_errorstring(int code)
 {
     switch(code) {
 #if LIBEVENT_VERSION_NUMBER >= 0x02010300
@@ -228,6 +232,7 @@ public:
     const int ID_NETWORKINFO = 0;
     const int ID_BLOCKCHAININFO = 1;
     const int ID_WALLETINFO = 2;
+    const int ID_BALANCES = 3;
 
     /** Create a simulated `getinfo` request. */
     UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
@@ -239,6 +244,7 @@ public:
         result.push_back(JSONRPCRequestObj("getnetworkinfo", NullUniValue, ID_NETWORKINFO));
         result.push_back(JSONRPCRequestObj("getblockchaininfo", NullUniValue, ID_BLOCKCHAININFO));
         result.push_back(JSONRPCRequestObj("getwalletinfo", NullUniValue, ID_WALLETINFO));
+        result.push_back(JSONRPCRequestObj("getbalances", NullUniValue, ID_BALANCES));
         return result;
     }
 
@@ -246,9 +252,9 @@ public:
     UniValue ProcessReply(const UniValue &batch_in) override
     {
         UniValue result(UniValue::VOBJ);
-        std::vector<UniValue> batch = JSONRPCProcessBatchReply(batch_in, 3);
-        // Errors in getnetworkinfo() and getblockchaininfo() are fatal, pass them on
-        // getwalletinfo() is allowed to fail in case there is no wallet.
+        const std::vector<UniValue> batch = JSONRPCProcessBatchReply(batch_in);
+        // Errors in getnetworkinfo() and getblockchaininfo() are fatal, pass them on;
+        // getwalletinfo() and getbalances() are allowed to fail if there is no wallet.
         if (!batch[ID_NETWORKINFO]["error"].isNull()) {
             return batch[ID_NETWORKINFO];
         }
@@ -265,12 +271,14 @@ public:
         result.pushKV("difficulty", batch[ID_BLOCKCHAININFO]["result"]["difficulty"]);
         result.pushKV("chain", UniValue(batch[ID_BLOCKCHAININFO]["result"]["chain"]));
         if (!batch[ID_WALLETINFO]["result"].isNull()) {
-            result.pushKV("balance", batch[ID_WALLETINFO]["result"]["balance"]);
             result.pushKV("keypoolsize", batch[ID_WALLETINFO]["result"]["keypoolsize"]);
             if (!batch[ID_WALLETINFO]["result"]["unlocked_until"].isNull()) {
                 result.pushKV("unlocked_until", batch[ID_WALLETINFO]["result"]["unlocked_until"]);
             }
             result.pushKV("paytxfee", batch[ID_WALLETINFO]["result"]["paytxfee"]);
+        }
+        if (!batch[ID_BALANCES]["result"].isNull()) {
+            result.pushKV("balance", batch[ID_BALANCES]["result"]["mine"]["trusted"]);
         }
         result.pushKV("relayfee", batch[ID_NETWORKINFO]["result"]["relayfee"]);
         result.pushKV("warnings", batch[ID_NETWORKINFO]["result"]["warnings"]);
@@ -298,7 +306,7 @@ public:
     }
 };
 
-static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, const std::vector<std::string>& args)
+static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const Optional<std::string>& rpcwallet = {})
 {
     std::string host;
     // In preference order, we choose the following for the port:
@@ -363,14 +371,12 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
 
     // check if we should use a special wallet endpoint
     std::string endpoint = "/";
-    if (!gArgs.GetArgs("-rpcwallet").empty()) {
-        std::string walletName = gArgs.GetArg("-rpcwallet", "");
-        char *encodedURI = evhttp_uriencode(walletName.data(), walletName.size(), false);
+    if (rpcwallet) {
+        char* encodedURI = evhttp_uriencode(rpcwallet->data(), rpcwallet->size(), false);
         if (encodedURI) {
-            endpoint = "/wallet/"+ std::string(encodedURI);
+            endpoint = "/wallet/" + std::string(encodedURI);
             free(encodedURI);
-        }
-        else {
+        } else {
             throw CConnectionFailed("uri-encode failed");
         }
     }
@@ -410,6 +416,65 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
         throw std::runtime_error("expected reply to have result, error and id properties");
 
     return reply;
+}
+
+/**
+ * ConnectAndCallRPC wraps CallRPC with -rpcwait and an exception handler.
+ *
+ * @param[in] rh         Pointer to RequestHandler.
+ * @param[in] strMethod  Reference to const string method to forward to CallRPC.
+ * @param[in] rpcwallet  Reference to const optional string wallet name to forward to CallRPC.
+ * @returns the RPC response as a UniValue object.
+ * @throws a CConnectionFailed std::runtime_error if connection failed or RPC server still in warmup.
+ */
+static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const Optional<std::string>& rpcwallet = {})
+{
+    UniValue response(UniValue::VOBJ);
+    // Execute and handle connection failures with -rpcwait.
+    const bool fWait = gArgs.GetBoolArg("-rpcwait", false);
+    do {
+        try {
+            response = CallRPC(rh, strMethod, args, rpcwallet);
+            if (fWait) {
+                const UniValue& error = find_value(response, "error");
+                if (!error.isNull() && error["code"].get_int() == RPC_IN_WARMUP) {
+                    throw CConnectionFailed("server in warmup");
+                }
+            }
+            break; // Connection succeeded, no need to retry.
+        } catch (const CConnectionFailed&) {
+            if (fWait) {
+                UninterruptibleSleep(std::chrono::milliseconds{1000});
+            } else {
+                throw;
+            }
+        }
+    } while (fWait);
+    return response;
+}
+
+/**
+ * GetWalletBalances calls listwallets; if more than one wallet is loaded, it then
+ * fetches mine.trusted balances for each loaded wallet and pushes them to `result`.
+ *
+ * @param result  Reference to UniValue object the wallet names and balances are pushed to.
+ */
+static void GetWalletBalances(UniValue& result)
+{
+    std::unique_ptr<BaseRequestHandler> rh{MakeUnique<DefaultRequestHandler>()};
+    const UniValue listwallets = ConnectAndCallRPC(rh.get(), "listwallets", /* args=*/{});
+    if (!find_value(listwallets, "error").isNull()) return;
+    const UniValue& wallets = find_value(listwallets, "result");
+    if (wallets.size() <= 1) return;
+
+    UniValue balances(UniValue::VOBJ);
+    for (const UniValue& wallet : wallets.getValues()) {
+        const std::string wallet_name = wallet.get_str();
+        const UniValue getbalances = ConnectAndCallRPC(rh.get(), "getbalances", /* args=*/{}, wallet_name);
+        const UniValue& balance = find_value(getbalances, "result")["mine"]["trusted"];
+        balances.pushKV(wallet_name, balance);
+    }
+    result.pushKV("balances", balances);
 }
 
 static int CommandLineRPC(int argc, char *argv[])
@@ -468,9 +533,8 @@ static int CommandLineRPC(int argc, char *argv[])
         }
         std::unique_ptr<BaseRequestHandler> rh;
         std::string method;
-        if (gArgs.GetBoolArg("-getinfo", false)) {
+        if (gArgs.IsArgSet("-getinfo")) {
             rh.reset(new GetinfoRequestHandler());
-            method = "";
         } else {
             rh.reset(new DefaultRequestHandler());
             if (args.size() < 1) {
@@ -479,62 +543,46 @@ static int CommandLineRPC(int argc, char *argv[])
             method = args[0];
             args.erase(args.begin()); // Remove trailing method name from arguments vector
         }
+        Optional<std::string> wallet_name{};
+        if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
+        const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
 
-        // Execute and handle connection failures with -rpcwait
-        const bool fWait = gArgs.GetBoolArg("-rpcwait", false);
-        do {
-            try {
-                const UniValue reply = CallRPC(rh.get(), method, args);
+        // Parse reply
+        UniValue result = find_value(reply, "result");
+        const UniValue& error = find_value(reply, "error");
+        if (!error.isNull()) {
+            // Error
+            strPrint = "error: " + error.write();
+            nRet = abs(error["code"].get_int());
+            if (error.isObject()) {
+                const UniValue& errCode = find_value(error, "code");
+                const UniValue& errMsg = find_value(error, "message");
+                strPrint = errCode.isNull() ? "" : ("error code: " + errCode.getValStr() + "\n");
 
-                // Parse reply
-                const UniValue& result = find_value(reply, "result");
-                const UniValue& error  = find_value(reply, "error");
-
-                if (!error.isNull()) {
-                    // Error
-                    int code = error["code"].get_int();
-                    if (fWait && code == RPC_IN_WARMUP)
-                        throw CConnectionFailed("server in warmup");
-                    strPrint = "error: " + error.write();
-                    nRet = abs(code);
-                    if (error.isObject())
-                    {
-                        UniValue errCode = find_value(error, "code");
-                        UniValue errMsg  = find_value(error, "message");
-                        strPrint = errCode.isNull() ? "" : "error code: "+errCode.getValStr()+"\n";
-
-                        if (errMsg.isStr())
-                            strPrint += "error message:\n"+errMsg.get_str();
-
-                        if (errCode.isNum() && errCode.get_int() == RPC_WALLET_NOT_SPECIFIED) {
-                            strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to bitcoin-cli command line.";
-                        }
-                    }
-                } else {
-                    // Result
-                    if (result.isNull())
-                        strPrint = "";
-                    else if (result.isStr())
-                        strPrint = result.get_str();
-                    else
-                        strPrint = result.write(2);
+                if (errMsg.isStr()) {
+                    strPrint += ("error message:\n" + errMsg.get_str());
                 }
-                // Connection succeeded, no need to retry.
-                break;
+                if (errCode.isNum() && errCode.get_int() == RPC_WALLET_NOT_SPECIFIED) {
+                    strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to bitcoin-cli command line.";
+                }
             }
-            catch (const CConnectionFailed&) {
-                if (fWait)
-                    UninterruptibleSleep(std::chrono::milliseconds{1000});
-                else
-                    throw;
+        } else {
+            if (gArgs.IsArgSet("-getinfo") && !gArgs.IsArgSet("-rpcwallet")) {
+                GetWalletBalances(result); // fetch multiwallet balances and append to result
             }
-        } while (fWait);
-    }
-    catch (const std::exception& e) {
+            // Result
+            if (result.isNull()) {
+                strPrint = "";
+            } else if (result.isStr()) {
+                strPrint = result.get_str();
+            } else {
+                strPrint = result.write(2);
+            }
+        }
+    } catch (const std::exception& e) {
         strPrint = std::string("error: ") + e.what();
         nRet = EXIT_FAILURE;
-    }
-    catch (...) {
+    } catch (...) {
         PrintExceptionContinue(nullptr, "CommandLineRPC()");
         throw;
     }
@@ -545,11 +593,19 @@ static int CommandLineRPC(int argc, char *argv[])
     return nRet;
 }
 
-int main(int argc, char* argv[])
-{
 #ifdef WIN32
+// Export main() and ensure working ASLR on Windows.
+// Exporting a symbol will prevent the linker from stripping
+// the .reloc section from the binary, which is a requirement
+// for ASLR. This is a temporary workaround until a fixed
+// version of binutils is used for releases.
+__declspec(dllexport) int main(int argc, char* argv[])
+{
     util::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
+#else
+int main(int argc, char* argv[])
+{
 #endif
     SetupEnvironment();
     if (!SetupNetworking()) {

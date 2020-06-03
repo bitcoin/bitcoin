@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,7 +32,7 @@ struct MinerTestingSetup : public RegTestingSetup {
 
 BOOST_FIXTURE_TEST_SUITE(validation_block_tests, MinerTestingSetup)
 
-struct TestSubscriber : public CValidationInterface {
+struct TestSubscriber final : public CValidationInterface {
     uint256 m_expected_tip;
 
     explicit TestSubscriber(uint256 tip) : m_expected_tip(tip) {}
@@ -163,10 +163,10 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     std::transform(blocks.begin(), blocks.end(), std::back_inserter(headers), [](std::shared_ptr<const CBlock> b) { return b->GetBlockHeader(); });
 
     // Process all the headers so we understand the toplogy of the chain
-    BOOST_CHECK(ProcessNewBlockHeaders(headers, state, Params()));
+    BOOST_CHECK(EnsureChainman(m_node).ProcessNewBlockHeaders(headers, state, Params()));
 
     // Connect the genesis block and drain any outstanding events
-    BOOST_CHECK(ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), true, &ignored));
+    BOOST_CHECK(EnsureChainman(m_node).ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), true, &ignored));
     SyncWithValidationInterfaceQueue();
 
     // subscribe to events (this subscriber will validate event ordering)
@@ -175,26 +175,26 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
         LOCK(cs_main);
         initial_tip = ::ChainActive().Tip();
     }
-    TestSubscriber sub(initial_tip->GetBlockHash());
-    RegisterValidationInterface(&sub);
+    auto sub = std::make_shared<TestSubscriber>(initial_tip->GetBlockHash());
+    RegisterSharedValidationInterface(sub);
 
     // create a bunch of threads that repeatedly process a block generated above at random
     // this will create parallelism and randomness inside validation - the ValidationInterface
     // will subscribe to events generated during block validation and assert on ordering invariance
     std::vector<std::thread> threads;
     for (int i = 0; i < 10; i++) {
-        threads.emplace_back([&blocks]() {
+        threads.emplace_back([&]() {
             bool ignored;
             FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
                 auto block = blocks[insecure.randrange(blocks.size() - 1)];
-                ProcessNewBlock(Params(), block, true, &ignored);
+                EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, &ignored);
             }
 
             // to make sure that eventually we process the full chain - do it here
             for (auto block : blocks) {
                 if (block->vtx.size() == 1) {
-                    bool processed = ProcessNewBlock(Params(), block, true, &ignored);
+                    bool processed = EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, &ignored);
                     assert(processed);
                 }
             }
@@ -204,14 +204,12 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     for (auto& t : threads) {
         t.join();
     }
-    while (GetMainSignals().CallbacksPending() > 0) {
-        UninterruptibleSleep(std::chrono::milliseconds{100});
-    }
+    SyncWithValidationInterfaceQueue();
 
-    UnregisterValidationInterface(&sub);
+    UnregisterSharedValidationInterface(sub);
 
     LOCK(cs_main);
-    BOOST_CHECK_EQUAL(sub.m_expected_tip, ::ChainActive().Tip()->GetBlockHash());
+    BOOST_CHECK_EQUAL(sub->m_expected_tip, ::ChainActive().Tip()->GetBlockHash());
 }
 
 /**
@@ -234,8 +232,8 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
 BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 {
     bool ignored;
-    auto ProcessBlock = [&ignored](std::shared_ptr<const CBlock> block) -> bool {
-        return ProcessNewBlock(Params(), block, /* fForceProcessing */ true, /* fNewBlock */ &ignored);
+    auto ProcessBlock = [&](std::shared_ptr<const CBlock> block) -> bool {
+        return EnsureChainman(m_node).ProcessNewBlock(Params(), block, /* fForceProcessing */ true, /* fNewBlock */ &ignored);
     };
 
     // Process all mined blocks
@@ -339,5 +337,39 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         // We can join the other thread, which returns when the reorg was successful
         rpc_thread.join();
     }
+}
+
+BOOST_AUTO_TEST_CASE(witness_commitment_index)
+{
+    CScript pubKey;
+    pubKey << 1 << OP_TRUE;
+    auto ptemplate = BlockAssembler(*m_node.mempool, Params()).CreateNewBlock(pubKey);
+    CBlock pblock = ptemplate->block;
+
+    CTxOut witness;
+    witness.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
+    witness.scriptPubKey[0] = OP_RETURN;
+    witness.scriptPubKey[1] = 0x24;
+    witness.scriptPubKey[2] = 0xaa;
+    witness.scriptPubKey[3] = 0x21;
+    witness.scriptPubKey[4] = 0xa9;
+    witness.scriptPubKey[5] = 0xed;
+
+    // A witness larger than the minimum size is still valid
+    CTxOut min_plus_one = witness;
+    min_plus_one.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT + 1);
+
+    CTxOut invalid = witness;
+    invalid.scriptPubKey[0] = OP_VERIFY;
+
+    CMutableTransaction txCoinbase(*pblock.vtx[0]);
+    txCoinbase.vout.resize(4);
+    txCoinbase.vout[0] = witness;
+    txCoinbase.vout[1] = witness;
+    txCoinbase.vout[2] = min_plus_one;
+    txCoinbase.vout[3] = invalid;
+    pblock.vtx[0] = MakeTransactionRef(std::move(txCoinbase));
+
+    BOOST_CHECK_EQUAL(GetWitnessCommitmentIndex(pblock), 2);
 }
 BOOST_AUTO_TEST_SUITE_END()

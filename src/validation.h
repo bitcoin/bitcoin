@@ -14,6 +14,7 @@
 #include <coins.h>
 #include <crypto/common.h> // for ReadLE64
 #include <fs.h>
+#include <optional.h>
 #include <policy/feerate.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <script/script_error.h>
@@ -42,6 +43,7 @@ class CConnman;
 class CScriptCheck;
 class CBlockPolicyEstimator;
 class CTxMemPool;
+class ChainstateManager;
 class TxValidationState;
 struct ChainTxData;
 
@@ -59,57 +61,15 @@ static const unsigned int DEFAULT_ANCESTOR_SIZE_LIMIT = 101;
 static const unsigned int DEFAULT_DESCENDANT_LIMIT = 25;
 /** Default for -limitdescendantsize, maximum kilobytes of in-mempool descendants */
 static const unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT = 101;
-/**
- * An extra transaction can be added to a package, as long as it only has one
- * ancestor and is no larger than this. Not really any reason to make this
- * configurable as it doesn't materially change DoS parameters.
- */
-static const unsigned int EXTRA_DESCENDANT_TX_SIZE_LIMIT = 10000;
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
 static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 336;
-/** Maximum kilobytes for transactions to store for processing during reorg */
-static const unsigned int MAX_DISCONNECTED_TX_POOL_SIZE = 20000;
 /** The maximum size of a blk?????.dat file (since 0.8) */
 static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
-/** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
-static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
-/** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
-static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
-
 /** Maximum number of dedicated script-checking threads allowed */
 static const int MAX_SCRIPTCHECK_THREADS = 15;
 /** -par default (number of script-checking threads, 0 = auto) */
 static const int DEFAULT_SCRIPTCHECK_THREADS = 0;
-/** Number of blocks that can be requested at any given time from a single peer. */
-static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
-/** Timeout in seconds during which a peer must stall block download progress before being disconnected. */
-static const unsigned int BLOCK_STALLING_TIMEOUT = 2;
-/** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
- *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
-static const unsigned int MAX_HEADERS_RESULTS = 2000;
-/** Maximum depth of blocks we're willing to serve as compact blocks to peers
- *  when requested. For older blocks, a regular BLOCK response will be sent. */
-static const int MAX_CMPCTBLOCK_DEPTH = 5;
-/** Maximum depth of blocks we're willing to respond to GETBLOCKTXN requests for. */
-static const int MAX_BLOCKTXN_DEPTH = 10;
-/** Size of the "block download window": how far ahead of our current height do we fetch?
- *  Larger windows tolerate larger download speed differences between peer, but increase the potential
- *  degree of disordering of blocks on disk (which make reindexing and pruning harder). We'll probably
- *  want to make this a per-peer adaptive value at some point. */
-static const unsigned int BLOCK_DOWNLOAD_WINDOW = 1024;
-/** Time to wait (in seconds) between writing blocks/block index to disk. */
-static const unsigned int DATABASE_WRITE_INTERVAL = 60 * 60;
-/** Time to wait (in seconds) between flushing chainstate to disk. */
-static const unsigned int DATABASE_FLUSH_INTERVAL = 24 * 60 * 60;
-/** Block download timeout base, expressed in millionths of the block interval (i.e. 10 min) */
-static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 1000000;
-/** Additional block download timeout per parallel downloading peer (i.e. 5 min) */
-static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 500000;
-
 static const int64_t DEFAULT_MAX_TIP_AGE = 24 * 60 * 60;
-/** Maximum age of our tip in seconds for us to be considered current for fee estimation */
-static const int64_t MAX_FEE_ESTIMATION_TIP_AGE = 3 * 60 * 60;
-
 static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 static const bool DEFAULT_TXINDEX = false;
 static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
@@ -118,15 +78,23 @@ static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 static const bool DEFAULT_PERSIST_MEMPOOL = true;
 /** Default for using fee filter */
 static const bool DEFAULT_FEEFILTER = true;
-
-/** Maximum number of headers to announce when relaying blocks with headers message.*/
-static const unsigned int MAX_BLOCKS_TO_ANNOUNCE = 8;
-
-/** Maximum number of unconnecting headers announcements before DoS score */
-static const int MAX_UNCONNECTING_HEADERS = 10;
-
 /** Default for -stopatheight */
 static const int DEFAULT_STOPATHEIGHT = 0;
+/** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ::ChainActive().Tip() will not be pruned. */
+static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
+static const signed int DEFAULT_CHECKBLOCKS = 6;
+static const unsigned int DEFAULT_CHECKLEVEL = 3;
+// Require that user allocate at least 550 MiB for block & undo files (blk???.dat and rev???.dat)
+// At 1MB per block, 288 blocks = 288MB.
+// Add 15% for Undo data = 331MB
+// Add 20% for Orphan block rate = 397MB
+// We want the low water mark after pruning to be at least 397 MB and since we prune in
+// full block file chunks, we need the high water mark which triggers the prune to be
+// one 128MB block file + added 15% undo data = 147MB greater for a total of 545MB
+// Setting the target to >= 550 MiB will make it likely we can respect the target.
+static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
+/** Minimum size of a witness commitment structure. Defined in BIP 141. **/
+static constexpr size_t MINIMUM_WITNESS_COMMITMENT{38};
 
 struct BlockHasher
 {
@@ -134,6 +102,13 @@ struct BlockHasher
     // cheap hash function simply calls ReadLE64() however, so the end result is
     // identical
     size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
+};
+
+/** Current sync state passed to tip changed callbacks. */
+enum class SynchronizationState {
+    INIT_REINDEX,
+    INIT_DOWNLOAD,
+    POST_INIT
 };
 
 extern RecursiveMutex cs_main;
@@ -174,70 +149,15 @@ extern bool fHavePruned;
 extern bool fPruneMode;
 /** Number of MiB of block files that we're trying to stay below. */
 extern uint64_t nPruneTarget;
-/** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ::ChainActive().Tip() will not be pruned. */
-static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
-/** Minimum blocks required to signal NODE_NETWORK_LIMITED */
-static const unsigned int NODE_NETWORK_LIMITED_MIN_BLOCKS = 288;
-
-static const signed int DEFAULT_CHECKBLOCKS = 6;
-static const unsigned int DEFAULT_CHECKLEVEL = 3;
-
-// Require that user allocate at least 550 MiB for block & undo files (blk???.dat and rev???.dat)
-// At 1MB per block, 288 blocks = 288MB.
-// Add 15% for Undo data = 331MB
-// Add 20% for Orphan block rate = 397MB
-// We want the low water mark after pruning to be at least 397 MB and since we prune in
-// full block file chunks, we need the high water mark which triggers the prune to be
-// one 128MB block file + added 15% undo data = 147MB greater for a total of 545MB
-// Setting the target to >= 550 MiB will make it likely we can respect the target.
-static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
-
-/**
- * Process an incoming block. This only returns after the best known valid
- * block is made active. Note that it does not, however, guarantee that the
- * specific block passed to it has been checked for validity!
- *
- * If you want to *possibly* get feedback on whether pblock is valid, you must
- * install a CValidationInterface (see validationinterface.h) - this will have
- * its BlockChecked method called whenever *any* block completes validation.
- *
- * Note that we guarantee that either the proof-of-work is valid on pblock, or
- * (and possibly also) BlockChecked will have been called.
- *
- * May not be called in a
- * validationinterface callback.
- *
- * @param[in]   pblock  The block we want to process.
- * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
- * @param[out]  fNewBlock A boolean which is set to indicate if the block was first received via this call
- * @returns     If the block was processed, independently of block validity
- */
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock) LOCKS_EXCLUDED(cs_main);
-
-/**
- * Process incoming block headers.
- *
- * May not be called in a
- * validationinterface callback.
- *
- * @param[in]  block The block headers themselves
- * @param[out] state This may be set to an Error state if any error occurred processing them
- * @param[in]  chainparams The params for the chain we want to connect to
- * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
- */
-bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, BlockValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
 
 /** Open a block file (blk?????.dat) */
 FILE* OpenBlockFile(const FlatFilePos &pos, bool fReadOnly = false);
 /** Translation to a filesystem path */
 fs::path GetBlockPosFilename(const FlatFilePos &pos);
 /** Import blocks from an external file */
-bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFilePos *dbp = nullptr);
+void LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFilePos* dbp = nullptr);
 /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
 bool LoadGenesisBlock(const CChainParams& chainparams);
-/** Load the block tree and coins database from disk,
- * initializing state if we're running with -reindex. */
-bool LoadBlockIndex(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 /** Unload database information */
 void UnloadBlockIndex();
 /** Run an instance of the script checking thread */
@@ -258,11 +178,6 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pin
 
 /** Calculate the amount of disk space the block & undo files currently use */
 uint64_t CalculateCurrentUsage();
-
-/**
- *  Mark one block file as pruned.
- */
-void PruneOneBlockFile(const int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
  *  Actually unlink the specified files
@@ -378,9 +293,6 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
 /** Check whether witness commitments are required for a block, and whether to enforce NULLDUMMY (BIP 147) rules.
  *  Note that transaction witness validation rules are always enforced when P2SH is enforced. */
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params);
-
-/** When there are blocks in the active chain with missing data, rewind the chainstate and remove them from the block index */
-bool RewindBlockIndex(const CChainParams& params) LOCKS_EXCLUDED(cs_main);
 
 /** Compute at which vout of the block's coinbase transaction the witness commitment occurs, or -1 if not found */
 int GetWitnessCommitmentIndex(const CBlock& block);
@@ -591,8 +503,7 @@ private:
     std::unique_ptr<CoinsViews> m_coins_views;
 
 public:
-    CChainState(BlockManager& blockman) : m_blockman(blockman) {}
-    CChainState();
+    explicit CChainState(BlockManager& blockman, uint256 from_snapshot_blockhash = uint256());
 
     /**
      * Initialize the CoinsViews UTXO set database management data structures. The in-memory
@@ -619,6 +530,13 @@ public:
     //! The current chain of blockheaders we consult and build on.
     //! @see CChain, CBlockIndex.
     CChain m_chain;
+
+    /**
+     * The blockhash which is the base of the snapshot this chainstate was created from.
+     *
+     * IsNull() if this chainstate was not created from a snapshot.
+     */
+    const uint256 m_from_snapshot_blockhash{};
 
     /**
      * The set of all CBlockIndex entries with BLOCK_VALID_TRANSACTIONS (for itself and all ancestors) and
@@ -741,6 +659,8 @@ public:
         size_t max_coins_cache_size_bytes,
         size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
 private:
     bool ActivateBestChainStep(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, ::mempool.cs);
     bool ConnectTip(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, ::mempool.cs);
@@ -753,6 +673,8 @@ private:
 
     //! Mark a block as not having block data
     void EraseBlockData(CBlockIndex* index) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    friend ChainstateManager;
 };
 
 /** Mark a block as precious and reorganize.
@@ -768,6 +690,192 @@ bool InvalidateBlock(BlockValidationState& state, const CChainParams& chainparam
 /** Remove invalidity status from a block and its descendants. */
 void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+/**
+ * Provides an interface for creating and interacting with one or two
+ * chainstates: an IBD chainstate generated by downloading blocks, and
+ * an optional snapshot chainstate loaded from a UTXO snapshot. Managed
+ * chainstates can be maintained at different heights simultaneously.
+ *
+ * This class provides abstractions that allow the retrieval of the current
+ * most-work chainstate ("Active") as well as chainstates which may be in
+ * background use to validate UTXO snapshots.
+ *
+ * Definitions:
+ *
+ * *IBD chainstate*: a chainstate whose current state has been "fully"
+ *   validated by the initial block download process.
+ *
+ * *Snapshot chainstate*: a chainstate populated by loading in an
+ *    assumeutxo UTXO snapshot.
+ *
+ * *Active chainstate*: the chainstate containing the current most-work
+ *    chain. Consulted by most parts of the system (net_processing,
+ *    wallet) as a reflection of the current chain and UTXO set.
+ *    This may either be an IBD chainstate or a snapshot chainstate.
+ *
+ * *Background IBD chainstate*: an IBD chainstate for which the
+ *    IBD process is happening in the background while use of the
+ *    active (snapshot) chainstate allows the rest of the system to function.
+ *
+ * *Validated chainstate*: the most-work chainstate which has been validated
+ *   locally via initial block download. This will be the snapshot chainstate
+ *   if a snapshot was loaded and all blocks up to the snapshot starting point
+ *   have been downloaded and validated (via background validation), otherwise
+ *   it will be the IBD chainstate.
+ */
+class ChainstateManager
+{
+private:
+    //! The chainstate used under normal operation (i.e. "regular" IBD) or, if
+    //! a snapshot is in use, for background validation.
+    //!
+    //! Its contents (including on-disk data) will be deleted *upon shutdown*
+    //! after background validation of the snapshot has completed. We do not
+    //! free the chainstate contents immediately after it finishes validation
+    //! to cautiously avoid a case where some other part of the system is still
+    //! using this pointer (e.g. net_processing).
+    //!
+    //! Once this pointer is set to a corresponding chainstate, it will not
+    //! be reset until init.cpp:Shutdown(). This means it is safe to acquire
+    //! the contents of this pointer with ::cs_main held, release the lock,
+    //! and then use the reference without concern of it being deconstructed.
+    //!
+    //! This is especially important when, e.g., calling ActivateBestChain()
+    //! on all chainstates because we are not able to hold ::cs_main going into
+    //! that call.
+    std::unique_ptr<CChainState> m_ibd_chainstate;
+
+    //! A chainstate initialized on the basis of a UTXO snapshot. If this is
+    //! non-null, it is always our active chainstate.
+    //!
+    //! Once this pointer is set to a corresponding chainstate, it will not
+    //! be reset until init.cpp:Shutdown(). This means it is safe to acquire
+    //! the contents of this pointer with ::cs_main held, release the lock,
+    //! and then use the reference without concern of it being deconstructed.
+    //!
+    //! This is especially important when, e.g., calling ActivateBestChain()
+    //! on all chainstates because we are not able to hold ::cs_main going into
+    //! that call.
+    std::unique_ptr<CChainState> m_snapshot_chainstate;
+
+    //! Points to either the ibd or snapshot chainstate; indicates our
+    //! most-work chain.
+    //!
+    //! Once this pointer is set to a corresponding chainstate, it will not
+    //! be reset until init.cpp:Shutdown(). This means it is safe to acquire
+    //! the contents of this pointer with ::cs_main held, release the lock,
+    //! and then use the reference without concern of it being deconstructed.
+    //!
+    //! This is especially important when, e.g., calling ActivateBestChain()
+    //! on all chainstates because we are not able to hold ::cs_main going into
+    //! that call.
+    CChainState* m_active_chainstate{nullptr};
+
+    //! If true, the assumed-valid chainstate has been fully validated
+    //! by the background validation chainstate.
+    bool m_snapshot_validated{false};
+
+    // For access to m_active_chainstate.
+    friend CChainState& ChainstateActive();
+    friend CChain& ChainActive();
+
+public:
+    //! A single BlockManager instance is shared across each constructed
+    //! chainstate to avoid duplicating block metadata.
+    BlockManager m_blockman GUARDED_BY(::cs_main);
+
+    //! Instantiate a new chainstate and assign it based upon whether it is
+    //! from a snapshot.
+    //!
+    //! @param[in] snapshot_blockhash   If given, signify that this chainstate
+    //!                                 is based on a snapshot.
+    CChainState& InitializeChainstate(const uint256& snapshot_blockhash = uint256())
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Get all chainstates currently being used.
+    std::vector<CChainState*> GetAll();
+
+    //! The most-work chain.
+    CChain& ActiveChain() const;
+    int ActiveHeight() const { return ActiveChain().Height(); }
+    CBlockIndex* ActiveTip() const { return ActiveChain().Tip(); }
+
+    BlockMap& BlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        return m_blockman.m_block_index;
+    }
+
+    bool IsSnapshotActive() const;
+
+    Optional<uint256> SnapshotBlockhash() const;
+
+    //! Is there a snapshot in use and has it been fully validated?
+    bool IsSnapshotValidated() const { return m_snapshot_validated; }
+
+    //! @returns true if this chainstate is being used to validate an active
+    //!          snapshot in the background.
+    bool IsBackgroundIBD(CChainState* chainstate) const;
+
+    //! Return the most-work chainstate that has been fully validated.
+    //!
+    //! During background validation of a snapshot, this is the IBD chain. After
+    //! background validation has completed, this is the snapshot chain.
+    CChainState& ValidatedChainstate() const;
+
+    CChain& ValidatedChain() const { return ValidatedChainstate().m_chain; }
+    CBlockIndex* ValidatedTip() const { return ValidatedChain().Tip(); }
+
+    /**
+     * Process an incoming block. This only returns after the best known valid
+     * block is made active. Note that it does not, however, guarantee that the
+     * specific block passed to it has been checked for validity!
+     *
+     * If you want to *possibly* get feedback on whether pblock is valid, you must
+     * install a CValidationInterface (see validationinterface.h) - this will have
+     * its BlockChecked method called whenever *any* block completes validation.
+     *
+     * Note that we guarantee that either the proof-of-work is valid on pblock, or
+     * (and possibly also) BlockChecked will have been called.
+     *
+     * May not be called in a
+     * validationinterface callback.
+     *
+     * @param[in]   pblock  The block we want to process.
+     * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
+     * @param[out]  fNewBlock A boolean which is set to indicate if the block was first received via this call
+     * @returns     If the block was processed, independently of block validity
+     */
+    bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock) LOCKS_EXCLUDED(cs_main);
+
+    /**
+     * Process incoming block headers.
+     *
+     * May not be called in a
+     * validationinterface callback.
+     *
+     * @param[in]  block The block headers themselves
+     * @param[out] state This may be set to an Error state if any error occurred processing them
+     * @param[in]  chainparams The params for the chain we want to connect to
+     * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
+     */
+    bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, BlockValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
+
+    //! Mark one block file as pruned (modify associated database entries)
+    void PruneOneBlockFile(const int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    //! Load the block tree and coins database from disk, initializing state if we're running with -reindex
+    bool LoadBlockIndex(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    //! Unload block index and chain data before shutdown.
+    void Unload() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Clear (deconstruct) chainstate data.
+    void Reset();
+};
+
+/** DEPRECATED! Please use node.chainman instead. May only be used in validation.cpp internally */
+extern ChainstateManager g_chainman GUARDED_BY(::cs_main);
+
 /** @returns the most-work valid chainstate. */
 CChainState& ChainstateActive();
 
@@ -776,11 +884,6 @@ CChain& ChainActive();
 
 /** @returns the global block index map. */
 BlockMap& BlockIndex();
-
-// Most often ::ChainstateActive() should be used instead of this, but some code
-// may not be able to assume that this has been initialized yet and so must use it
-// directly, e.g. init.cpp.
-extern std::unique_ptr<CChainState> g_chainstate;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;
