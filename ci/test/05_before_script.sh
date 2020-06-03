@@ -33,7 +33,9 @@ if [ -z "$NO_DEPENDS" ]; then
   else
     SHELL_OPTS="CONFIG_SHELL="
   fi
-  DOCKER_EXEC $SHELL_OPTS make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
+  # Temporary workaround for https://github.com/bitcoin/bitcoin/issues/16368
+  python3 -c 'import time; [print(".") or time.sleep(500) for _ in range(4)]' &
+  ( DOCKER_EXEC $SHELL_OPTS make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS ) &> /dev/null
 fi
 if [ -n "$PREVIOUS_RELEASES_TO_DOWNLOAD" ]; then
   BEGIN_FOLD previous-versions
