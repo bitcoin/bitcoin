@@ -83,12 +83,10 @@ using LockStacks = std::unordered_map<std::thread::id, LockStack>;
 
 using LockPair = std::pair<void*, void*>;
 using LockOrders = std::map<LockPair, LockStack>;
-using InvLockOrders = std::set<LockPair>;
 
 struct LockData {
     LockStacks m_lock_stacks;
     LockOrders lockorders;
-    InvLockOrders invlockorders;
     std::mutex dd_mutex;
 };
 
@@ -148,7 +146,6 @@ static void push_lock(void* c, const CLockLocation& locklocation)
         lockdata.lockorders.emplace(p1, lock_stack);
 
         const LockPair p2 = std::make_pair(c, i.first);
-        lockdata.invlockorders.insert(p2);
         if (lockdata.lockorders.count(p2))
             potential_deadlock_detected(p1, lockdata.lockorders[p2], lockdata.lockorders[p1]);
     }
@@ -243,15 +240,7 @@ void DeleteLock(void* cs)
     const LockPair item = std::make_pair(cs, nullptr);
     LockOrders::iterator it = lockdata.lockorders.lower_bound(item);
     while (it != lockdata.lockorders.end() && it->first.first == cs) {
-        const LockPair invitem = std::make_pair(it->first.second, it->first.first);
-        lockdata.invlockorders.erase(invitem);
         lockdata.lockorders.erase(it++);
-    }
-    InvLockOrders::iterator invit = lockdata.invlockorders.lower_bound(item);
-    while (invit != lockdata.invlockorders.end() && invit->first == cs) {
-        const LockPair invinvitem = std::make_pair(invit->second, invit->first);
-        lockdata.lockorders.erase(invinvitem);
-        lockdata.invlockorders.erase(invit++);
     }
 }
 
