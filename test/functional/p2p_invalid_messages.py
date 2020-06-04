@@ -5,7 +5,6 @@
 """Test node responses to invalid network messages."""
 import asyncio
 import struct
-import sys
 
 from test_framework.messages import (
     CBlockHeader,
@@ -50,11 +49,6 @@ class InvalidMessagesTest(BitcoinTestFramework):
          . Test msg header
         0. Send a bunch of large (4MB) messages of an unrecognized type. Check to see
            that it isn't an effective DoS against the node.
-
-        1. Send an oversized (4MB+) message and check that we're disconnected.
-
-        2. Send a few messages with an incorrect data size in the header, ensure the
-           messages are ignored.
         """
         self.test_magic_bytes()
         self.test_checksum()
@@ -94,66 +88,6 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.log.info("Waiting for node to drop junk messages.")
         node.p2p.sync_with_ping(timeout=400)
         assert node.p2p.is_connected
-
-        #
-        # 1.
-        #
-        # Send an oversized message, ensure we're disconnected.
-        #
-        # Under macOS this test is skipped due to an unexpected error code
-        # returned from the closing socket which python/asyncio does not
-        # yet know how to handle.
-        #
-        if sys.platform != 'darwin':
-            msg_over_size = msg_unrecognized(str_data="b" * (valid_data_limit + 1))
-            assert len(msg_over_size.serialize()) == (msg_limit + 1)
-
-            # An unknown message type (or *any* message type) over
-            # MAX_PROTOCOL_MESSAGE_LENGTH should result in a disconnect.
-            node.p2p.send_message(msg_over_size)
-            node.p2p.wait_for_disconnect(timeout=4)
-
-            node.disconnect_p2ps()
-            conn = node.add_p2p_connection(P2PDataStore())
-            conn.wait_for_verack()
-        else:
-            self.log.info("Skipping test p2p_invalid_messages/1 (oversized message) under macOS")
-
-        #
-        # 2.
-        #
-        # Send messages with an incorrect data size in the header.
-        #
-        actual_size = 100
-        msg = msg_unrecognized(str_data="b" * actual_size)
-
-        # TODO: handle larger-than cases. I haven't been able to pin down what behavior to expect.
-        for wrong_size in (2, 77, 78, 79):
-            self.log.info("Sending a message with incorrect size of {}".format(wrong_size))
-
-            # Unmodified message should submit okay.
-            node.p2p.send_and_ping(msg)
-
-            # A message lying about its data size results in a disconnect when the incorrect
-            # data size is less than the actual size.
-            #
-            # TODO: why does behavior change at 78 bytes?
-            #
-            node.p2p.send_raw_message(self._tweak_msg_data_size(msg, wrong_size))
-
-            # For some reason unknown to me, we sometimes have to push additional data to the
-            # peer in order for it to realize a disconnect.
-            try:
-                node.p2p.send_message(msg_ping(nonce=123123))
-            except IOError:
-                pass
-
-            node.p2p.wait_for_disconnect(timeout=10)
-            node.disconnect_p2ps()
-            node.add_p2p_connection(P2PDataStore())
-
-        # Node is still up.
-        conn = node.add_p2p_connection(P2PDataStore())
 
     def test_magic_bytes(self):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
@@ -224,26 +158,6 @@ class InvalidMessagesTest(BitcoinTestFramework):
             msg = msg_headers([CBlockHeader()] * 2001)
             conn.send_and_ping(msg)
         self.nodes[0].disconnect_p2ps()
-
-    def _tweak_msg_data_size(self, message, wrong_size):
-        """
-        Return a raw message based on another message but with an incorrect data size in
-        the message header.
-        """
-        raw_msg = self.node.p2p.build_message(message)
-
-        bad_size_bytes = struct.pack("<I", wrong_size)
-        num_header_bytes_before_size = 4 + 12
-
-        # Replace the correct data size in the message with an incorrect one.
-        raw_msg_with_wrong_size = (
-            raw_msg[:num_header_bytes_before_size] +
-            bad_size_bytes +
-            raw_msg[(num_header_bytes_before_size + len(bad_size_bytes)):]
-        )
-        assert len(raw_msg) == len(raw_msg_with_wrong_size)
-
-        return raw_msg_with_wrong_size
 
 
 if __name__ == '__main__':
