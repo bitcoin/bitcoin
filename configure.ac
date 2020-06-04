@@ -1752,7 +1752,7 @@ echo "  gprof enabled = $enable_gprof"
 echo "  werror        = $enable_werror"
 echo
 echo "  target os     = $TARGET_OS"
-echo "  build os      = $BUILD_OS"
+echo "  build os      = $build_os"
 echo
 echo "  CC            = $CC"
 echo "  CFLAGS        = $CFLAGS"
