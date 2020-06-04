@@ -1001,7 +1001,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
-            {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 byte (40 character) hex string of the ethereum destination address. Leave empty to burn to Syscoin."}
+            {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 byte (40 character) hex string of the ethereum destination address. Set to '' to burn to Syscoin."}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1037,14 +1037,17 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     int32_t nVersionIn = 0;
 
     CBurnSyscoin burnSyscoin;
-    burnSyscoin.voutAssets[nAsset].push_back(CAssetOut(1, (CAmount)nAmount)); // burn has to be in index 1, sys is output in index 0, any change in index 2
+    int nChangePosRet = 1; 
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''") {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
+        burnSyscoin.voutAssets[nAsset].push_back(CAssetOut(1, (CAmount)nAmount)); // burn has to be in index 1, sys is output in index 0, any change in index 2
+        nChangePosRet++;
     }
     else {
         burnSyscoin.vchEthAddress = ParseHex(ethAddress);
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
+        burnSyscoin.voutAssets[nAsset].push_back(CAssetOut(0, (CAmount)nAmount)); // burn has to be in index 0, any change in index 1
     }
 
     std::string label = "";
@@ -1065,10 +1068,12 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
     CMutableTransaction mtx;
     std::vector<CRecipient> vecSend;
-    vecSend.push_back(recp);
+    // output to new sys output
+    if(nVersionIn == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
+        vecSend.push_back(recp);
+    // burn output
     vecSend.push_back(fee);
     CAmount nFeeRequired = 0;
-    int nChangePosRet = 2; // cannot have random change, because output 0 is reserved to output coins from sysx
     bilingual_str error;
     mtx.nVersion = nVersionIn;
     CCoinControl coin_control;
