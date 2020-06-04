@@ -341,10 +341,15 @@ void BitcoinGUI::createActions()
 
     openAction = new QAction(tr("Open &URI..."), this);
     openAction->setStatusTip(tr("Open a litecoin: URI"));
+
     m_open_wallet_action = new QAction(tr("Open Wallet"), this);
     m_open_wallet_action->setEnabled(false);
-    m_close_wallet_action->setStatusTip(tr("Close wallet"));
+    m_open_wallet_action->setStatusTip(tr("Open a wallet"));
+    m_open_wallet_menu = new QMenu(this);
 
+    m_close_wallet_action = new QAction(tr("Close Wallet..."), this);
+    m_close_wallet_action->setStatusTip(tr("Close wallet"));
+    
     m_create_wallet_action = new QAction(tr("Create Wallet..."), this);
     m_create_wallet_action->setEnabled(false);
     m_create_wallet_action->setStatusTip(tr("Create a new wallet"));
