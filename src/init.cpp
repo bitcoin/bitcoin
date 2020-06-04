@@ -964,17 +964,27 @@ bool AppInitParameterInteraction()
 
     // also see: InitParameterInteraction()
 
-    // Warn if network-specific options (-addnode, -connect, etc) are
+    // Error if network-specific options (-addnode, -connect, etc) are
     // specified in default section of config file, but not overridden
     // on the command line or in this network's section of the config file.
     std::string network = gArgs.GetChainName();
+    bilingual_str errors;
     for (const auto& arg : gArgs.GetUnsuitableSectionOnlyArgs()) {
-        return InitError(strprintf(_("Config setting for %s only applied on %s network when in [%s] section."), arg, network, network));
+        errors += strprintf(_("Config setting for %s only applied on %s network when in [%s] section.") + Untranslated("\n"), arg, network, network);
+    }
+
+    if (!errors.empty()) {
+        return InitError(errors);
     }
 
     // Warn if unrecognized section name are present in the config file.
+    bilingual_str warnings;
     for (const auto& section : gArgs.GetUnrecognizedSections()) {
-        InitWarning(strprintf(Untranslated("%s:%i ") + _("Section [%s] is not recognized."), section.m_file, section.m_line, section.m_name));
+        warnings += strprintf(Untranslated("%s:%i ") + _("Section [%s] is not recognized.") + Untranslated("\n"), section.m_file, section.m_line, section.m_name);
+    }
+
+    if (!warnings.empty()) {
+        InitWarning(warnings);
     }
 
     if (!fs::is_directory(GetBlocksDir())) {
