@@ -2368,10 +2368,12 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     if (semOutbound == nullptr) {
         // initialize semaphore
         semOutbound = MakeUnique<CSemaphore>(std::min(m_max_outbound, nMaxConnections));
+        LogPrintf("\n!!! CONNECTIONS min(%i, %i)", m_max_outbound, nMaxConnections);
     }
     if (semAddnode == nullptr) {
         // initialize semaphore
         semAddnode = MakeUnique<CSemaphore>(nMaxAddnode);
+        LogPrintf("\n!!! CONNECTIONS %i", nMaxAddnode);
     }
 
     //
