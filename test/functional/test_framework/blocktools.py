@@ -4,6 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Utilities for manipulating blocks and transactions."""
 
+import unittest
+
 from .messages import (
     CBlock,
     CCbTx,
@@ -185,3 +187,9 @@ def get_masternode_payment(nHeight, blockValue, nReallocActivationHeight):
     nCurrentPeriod = min(int((nHeight - nReallocStart) / nReallocCycle), len(vecPeriods) - 1)
 
     return int(blockValue * vecPeriods[nCurrentPeriod] / 1000)
+
+class TestFrameworkBlockTools(unittest.TestCase):
+    def test_create_coinbase(self):
+        height = 20
+        coinbase_tx = create_coinbase(height=height)
+        assert_equal(CScriptNum.decode(coinbase_tx.vin[0].scriptSig), height)
