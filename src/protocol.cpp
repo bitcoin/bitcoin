@@ -5,8 +5,8 @@
 
 #include <protocol.h>
 
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 
 #ifndef WIN32
 # include <arpa/inet.h>
@@ -259,11 +259,7 @@ static std::string serviceFlagToStr(size_t bit)
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
     stream << "UNKNOWN[";
-    if (bit < 8) {
-        stream << service_flag;
-    } else {
-        stream << "2^" << bit;
-    }
+    stream << "2^" << bit;
     stream << "]";
     return stream.str();
 }
