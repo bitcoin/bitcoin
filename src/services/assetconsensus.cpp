@@ -388,9 +388,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if(nBurnAmount <= 0) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-amount", bSanityCheck);
             }
-            const CAmount &nAmountAsset = vecVout[0].nValue;
+            const uint64_t &nAmountAsset = vecVout[0].nValue;
             // the burn amount in opreturn (SYS) should match the first asset output (SYSX)
-            if(nAmountAsset != nBurnAmount) {
+            if(((CAmount)nAmountAsset) != nBurnAmount) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-mismatch-amount", bSanityCheck);
             }
             if(nAsset != Params().GetConsensus().nSYSXAsset) {
@@ -414,13 +414,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             if(voutSize < 1 || voutSize > 2) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-burn-invalid-vout-size", bSanityCheck);
             }
-            const CAmount &nBurnAmount = tx.vout[nOut].assetInfo.nValue;
-            if(nBurnAmount <= 0) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
-            }
             if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
+                const uint64_t &nBurnAmount = tx.vout[nOut].assetInfo.nValue;
                 // the burn of asset in opreturn should match the output value of index 0 (sys)
-                if(nBurnAmount != tx.vout[0].nValue) {
+                if(((CAmount)nBurnAmount) != tx.vout[0].nValue) {
                     return FormatSyscoinErrorMessage(state, "assetallocation-mismatch-burn-amount", bSanityCheck);
                 }  
                 if(tx.vout[nOut].assetInfo.nAsset != Params().GetConsensus().nSYSXAsset) {
@@ -472,7 +469,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
         mapAsset->second = std::move(dbAsset);                        
     }
     CAsset& storedAssetRef = mapAsset->second;
-    CAmount nTotal = 0;
+    uint64_t nTotal = 0;
     for(const auto& voutAsset: vecVout){
         nTotal += voutAsset.nValue;
     }
