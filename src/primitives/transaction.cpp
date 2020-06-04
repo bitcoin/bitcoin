@@ -554,8 +554,6 @@ bool CBurnSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData
 }
 
 bool CBurnSyscoin::UnserializeFromTx(const CTransaction &tx) {
-    if(tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM)
-        return false;
     std::vector<unsigned char> vchData;
     int nOut;
     if (!GetSyscoinData(tx, vchData, nOut))
