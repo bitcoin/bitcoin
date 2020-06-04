@@ -46,47 +46,12 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.setup_clean_chain = True
 
     def run_test(self):
-        """
-         . Test msg header
-        0. Send a bunch of large (4MB) messages of an unrecognized type. Check to see
-           that it isn't an effective DoS against the node.
-        """
         self.test_magic_bytes()
         self.test_checksum()
         self.test_size()
         self.test_msgtype()
         self.test_large_inv()
-
-        node = self.nodes[0]
-        self.node = node
-        node.add_p2p_connection(P2PDataStore())
-        conn2 = node.add_p2p_connection(P2PDataStore())
-
-
-        #
-        # 0.
-        #
-        # Send as large a message as is valid, ensure we aren't disconnected but
-        # also can't exhaust resources.
-        #
-        msg_at_size = msg_unrecognized(str_data="b" * VALID_DATA_LIMIT)
-        assert len(msg_at_size.serialize()) == MSG_LIMIT
-
-        self.log.info("Sending a bunch of large, junk messages to test memory exhaustion. May take a bit...")
-
-        # Run a bunch of times to test for memory exhaustion.
-        for _ in range(80):
-            node.p2p.send_message(msg_at_size)
-
-        # Check that, even though the node is being hammered by nonsense from one
-        # connection, it can still service other peers in a timely way.
-        for _ in range(20):
-            conn2.sync_with_ping(timeout=2)
-
-        # Peer 1, despite serving up a bunch of nonsense, should still be connected.
-        self.log.info("Waiting for node to drop junk messages.")
-        node.p2p.sync_with_ping(timeout=400)
-        assert node.p2p.is_connected
+        self.test_resource_exhaustion()
 
     def test_magic_bytes(self):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
@@ -152,6 +117,29 @@ class InvalidMessagesTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(['Misbehaving', 'peer=4 (40 -> 60): headers message size = 2001']):
             msg = msg_headers([CBlockHeader()] * 2001)
             conn.send_and_ping(msg)
+        self.nodes[0].disconnect_p2ps()
+
+    def test_resource_exhaustion(self):
+        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
+        conn2 = self.nodes[0].add_p2p_connection(P2PDataStore())
+        msg_at_size = msg_unrecognized(str_data="b" * VALID_DATA_LIMIT)
+        assert len(msg_at_size.serialize()) == MSG_LIMIT
+
+        self.log.info("Sending a bunch of large, junk messages to test memory exhaustion. May take a bit...")
+
+        # Run a bunch of times to test for memory exhaustion.
+        for _ in range(80):
+            conn.send_message(msg_at_size)
+
+        # Check that, even though the node is being hammered by nonsense from one
+        # connection, it can still service other peers in a timely way.
+        for _ in range(20):
+            conn2.sync_with_ping(timeout=2)
+
+        # Peer 1, despite being served up a bunch of nonsense, should still be connected.
+        self.log.info("Waiting for node to drop junk messages.")
+        conn.sync_with_ping(timeout=400)
+        assert conn.is_connected
         self.nodes[0].disconnect_p2ps()
 
 
