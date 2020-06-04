@@ -3101,6 +3101,21 @@ UniValue listunspent(const JSONRPCRequest& request)
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
 
+        // Note: Keep this vector up to date with the options processed below
+        const std::vector<std::string> vecOptions {
+            "minimumAmount",
+            "maximumAmount",
+            "minimumSumAmount",
+            "maximumCount",
+            "coinType"
+        };
+
+        for (const auto& key : options.getKeys()) {
+            if (std::find(vecOptions.begin(), vecOptions.end(), key) == vecOptions.end()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid key used in query_options JSON object: ") + key);
+            }
+        }
+
         if (options.exists("minimumAmount"))
             nMinimumAmount = AmountFromValue(options["minimumAmount"]);
 
