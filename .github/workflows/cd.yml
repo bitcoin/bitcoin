@@ -5,11 +5,13 @@ on:
     branches:
     - master
     - develop
+    - releases/*
 
   pull_request:
     branches:
     - master
-    - test/auto-pr
+    - releases/*
+
 
 jobs:
   ubuntu:

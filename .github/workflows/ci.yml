@@ -5,11 +5,13 @@ on:
     branches:
       - develop
       - master
+      - releases/*
 
   pull_request:
     branches:
       - develop
       - master
+      - releases/*
 
 jobs:
   linux-native:
