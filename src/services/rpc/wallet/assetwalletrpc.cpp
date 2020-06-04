@@ -27,20 +27,20 @@ extern CTxDestination DecodeDestination(const std::string& str);
 uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, const uint8_t &nPrecision, CTxDestination & address) {
     UniValue publicObj;
     if(!publicObj.read(public_data))
-        return -1;
+        return 0;
     const UniValue &auxFeesObj = find_value(publicObj, "aux_fees");
     if(!auxFeesObj.isObject())
-        return -1;
+        return 0;
     const UniValue &addressObj = find_value(auxFeesObj, "address");
     if(!addressObj.isStr())
-        return -1;
+        return 0;
     address = DecodeDestination(addressObj.get_str());
     const UniValue &feeStructObj = find_value(auxFeesObj, "fee_struct");
     if(!feeStructObj.isArray())
-        return -1;
+        return 0;
     const UniValue &feeStructArray = feeStructObj.get_array();
     if(feeStructArray.size() == 0)
-        return -1;
+        return 0;
      
     uint64_t nAccumulatedFee = 0;
     uint64_t nBoundAmount = 0;
@@ -48,21 +48,21 @@ uint64_t getAuxFee(const std::string &public_data, const uint64_t& nAmount, cons
     double nRate = 0;
     for(unsigned int i =0;i<feeStructArray.size();i++){
         if(!feeStructArray[i].isArray())
-            return -1;
+            return 0;
         const UniValue &feeStruct = feeStructArray[i].get_array();
         const UniValue &feeStructNext = feeStructArray[i < feeStructArray.size()-1? i+1:i].get_array();
         if(!feeStruct[0].isStr() && !feeStruct[0].isNum())
-            return -1;
+            return 0;
         if(!feeStructNext[0].isStr() && !feeStructNext[0].isNum())
-                return -1;   
+                return 0;   
         UniValue boundValue = feeStruct[0]; 
         UniValue nextBoundValue = feeStructNext[0]; 
         nBoundAmount = AssetAmountFromValue(boundValue, nPrecision);
         nNextBoundAmount = AssetAmountFromValue(nextBoundValue, nPrecision);
         if(!feeStruct[1].isStr())
-            return -1;
+            return 0;
         if(!ParseDouble(feeStruct[1].get_str(), &nRate))
-            return -1;
+            return 0;
         // case where amount is in between the bounds
         if(nAmount >= nBoundAmount && nAmount < nNextBoundAmount){
             break;    

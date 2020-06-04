@@ -333,7 +333,7 @@ public:
         READWRITE(Using<AssetCoinInfoCompression>(obj));
     }
 
-	inline void SetNull() { nAsset = 0; }
+	inline void SetNull() { nAsset = 0;}
     inline bool IsNull() const { return nAsset == 0;}
 };
 
@@ -441,7 +441,7 @@ public:
         READWRITE(VARINT(obj.n), Using<AmountCompression>(obj.nValue));
     }
 
-    CAssetOut(const uint32_t &nIn, const CAmount& nAmountIn): n(nIn), nValue(nAmountIn) {}
+    CAssetOut(const uint32_t &nIn, const uint64_t& nAmountIn): n(nIn), nValue(nAmountIn) {}
 	CAssetOut() {
 		nValue = 0;
         n = 0;
