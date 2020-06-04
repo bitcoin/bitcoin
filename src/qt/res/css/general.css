@@ -292,7 +292,6 @@ QHeaderView { /* Table Header */
 QHeaderView::section { /* Table Header Sections */
     qproperty-alignment: center;
     min-height: 25px;
-    font-weight: bold;
     font-size: 11px;
     outline: 0;
     border: 0px solid;
@@ -404,7 +403,6 @@ QPushButton { /* Global Button Style */
     border-radius: 8px;
     color: #ffffff;
     font-size: 12px;
-    font-weight: normal;
     height: 26px;
     padding-left: 25px;
     padding-right: 25px;
@@ -739,7 +737,6 @@ QWidget { /* Remove Annoying Focus Rectangle */
     outline: 0;
 }
 
-
 /******************************************************
 *******************************************************
 STYLING OF SPECIFIC CUSTOM UI PARTS
@@ -895,7 +892,6 @@ QDialog#EditAddressDialog {
 QDialog#EditAddressDialog QLabel {
     qproperty-alignment: 'AlignVCenter | AlignRight';
     min-height: 27px;
-    font-weight: normal;
     padding-right: 5px;
 }
 
@@ -958,7 +954,6 @@ QDialog#OpenURIDialog {
 }
 
 QDialog#OpenURIDialog QLabel#label { /* URI Label */
-    font-weight: bold;
 }
 
 /******************************************************
@@ -1004,7 +999,6 @@ QWidget .QFrame#frame { /* Wallet Balance */
 
 QWidget .QFrame#frame > .QLabel {
     min-width: 100px;
-    font-weight: normal;
     min-height: 30px;
 }
 
@@ -1014,7 +1008,6 @@ QWidget .QFrame#frame .QLabel#label_5 { /* Wallet Label */
     margin-top: 0;
     margin-right: 5px;
     padding-right: 5px;
-    font-weight: bold;
     font-size: 18px;
     min-height: 30px;
 }
@@ -1043,7 +1036,6 @@ QWidget .QFrame#frame .QLabel#labelBalanceText { /* Available Balance Label */
     margin-right: 5px;
     padding-right: 5px;
     font-size: 14px;
-    font-weight: bold;
     min-height: 35px;
 }
 
@@ -1051,7 +1043,6 @@ QWidget .QFrame#frame .QLabel#labelBalance { /* Available Balance */
     qproperty-alignment: 'AlignVCenter | AlignLeft';
     color: #008de4;
     font-size: 16px;
-    font-weight: bold;
     margin-left: 0px;
 }
 
@@ -1145,7 +1136,6 @@ QWidget .QFrame#framePrivateSend .QLabel#labelPrivateSendHeader { /* PrivateSend
     margin-top: 0;
     margin-right: 5px;
     padding-right: 5px;
-    font-weight: bold;
     font-size: 18px;
     min-height: 30px;
 }
@@ -1164,7 +1154,6 @@ QWidget .QFrame#framePrivateSend #privateSendFormLayoutWidget {
 
 QWidget .QFrame#framePrivateSend #privateSendFormLayoutWidget > .QLabel {
     min-width: 175px;
-    font-weight: normal;
     min-height: 25px;
 }
 
@@ -1251,7 +1240,6 @@ QWidget .QFrame#framePrivateSend QPushButton:focus {
 QWidget .QFrame#framePrivateSend .QPushButton#togglePrivateSend { /* Start PrivateSend Mixing */
     min-height: 40px;
     font-size: 15px;
-    font-weight: normal;
     padding-left: 10px;
     padding-right: 10px;
     padding-top: 5px;
@@ -1280,7 +1268,6 @@ QWidget .QFrame#frame_2 .QLabel#label_4 { /* Recent Transactions Label */
     margin-top: 0;
     margin-right: 5px;
     padding-right: 5px;
-    font-weight: bold;
     font-size: 18px;
     min-height: 30px;
 }
@@ -1296,7 +1283,6 @@ QWidget .QFrame#frame_2 .QLabel#labelTransactionsStatus { /* Recent Transactions
 }
 
 QWidget .QFrame#frame_2 QListView { /* Transaction List */
-    font-weight: normal;
     font-size: 12px;
     max-width: 369px;
     margin-top: 12px;
@@ -1387,7 +1373,6 @@ QDialog#SendCoinsDialog .QFrame#frameCoinControl .QPushButton#pushButtonCoinCont
 
 QDialog#SendCoinsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlFeatures { /* Coin Control Header */
     color: #999;
-    font-weight: normal;
     font-size: 14px;
 }
 
@@ -1402,7 +1387,6 @@ QDialog#SendCoinsDialog .QFrame#frameCoinControl .QValidatedLineEdit#lineEditCoi
 }
 
 QDialog#SendCoinsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlChangeLabel { /* Custom Change Address Validation Label */
-    font-weight: normal;
     qproperty-margin: -6;
     margin-right: 112px;
 }
@@ -1439,7 +1423,6 @@ SendCoinsEntry
 QStackedWidget#SendCoinsEntry .QFrame#SendCoins > .QLabel { /* Send Coin Entry Labels */
     background-color: transparent;
     min-width: 50px;
-    font-weight: normal;
     font-size: 15px;
     min-height: 25px;
     margin-right: 5px;
