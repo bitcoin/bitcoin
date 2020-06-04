@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid network messages."""
 import asyncio
-import struct
 
 from test_framework.messages import (
     CBlockHeader,
@@ -123,13 +122,9 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_size(self):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         with self.nodes[0].assert_debug_log(['']):
-            msg = conn.build_message(msg_unrecognized(str_data="d"))
-            cut_len = (
-                4 +  # magic
-                12  # msgtype
-            )
-            # modify len to MAX_SIZE + 1
-            msg = msg[:cut_len] + struct.pack("<I", 0x02000000 + 1) + msg[cut_len + 4:]
+            # Create a message with oversized payload
+            msg = msg_unrecognized(str_data="d"*(VALID_DATA_LIMIT + 1))
+            msg = conn.build_message(msg)
             self.nodes[0].p2p.send_raw_message(msg)
             conn.wait_for_disconnect(timeout=1)
             self.nodes[0].disconnect_p2ps()
