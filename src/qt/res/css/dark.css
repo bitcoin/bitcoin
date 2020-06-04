@@ -82,18 +82,11 @@ background-color: #555;
 
 /*******************************************************/
 
-QLabel { /* Base Text Size & Color */
+QLabel,
+QCheckBox,
+QRadioButton { /* Base Text Size & Color */
 font-size:12px;
 color: #ccc;
-}
-
-.QCheckBox { /* Checkbox Labels */
-color: #ccc;
-background-color:transparent;
-}
-
-.QCheckBox:hover {
-background-color:transparent;
 }
 
 .QValidatedLineEdit, .QLineEdit { /* Text Entry Fields */
@@ -112,16 +105,6 @@ font-size:12px;
 
 .QValidatedLineEdit:disabled, .QLineEdit:disabled {
 background-color: #3e3e3e;
-}
-
-.QRadioButton {
-color: #aaa;
-background-color:transparent;
-}
-
-.QRadioButton:checked {
-color: #ccc;
-background-color:transparent;
 }
 
 QWidget { /* override text selection background color for all text widgets */
@@ -184,10 +167,6 @@ width:25px;
 border:0px;
 }
 
-QComboBox::down-arrow {
-border-image: url(':/images/arrow_down') 0 0 0 0 stretch stretch;
-}
-
 QComboBox QListView {
 color: #aaa;
 background: #555;
@@ -239,10 +218,6 @@ padding-left:5px;
 padding-top:2px;
 }
 
-QAbstractSpinBox::up-arrow {
-image:url(':/images/arrow_up_small');
-}
-
 QAbstractSpinBox::down-button {
 subcontrol-origin: border;
 subcontrol-position: bottom right;
@@ -255,51 +230,6 @@ border-bottom: 1px solid #1c75bc;
 padding-right:1px;
 padding-left:5px;
 padding-bottom:2px;
-}
-
-QAbstractSpinBox::down-arrow {
-image:url(':/images/arrow_down_small');
-}
-
-QCheckBox {
-spacing: 5px;
-}
-
-QCheckBox::indicator {
-width: 16px;
-height: 16px;
-}
-
-QCheckBox::indicator:unchecked {
-image:url(':/images/unchecked');
-}
-
-QCheckBox::indicator:unchecked:hover {
-image:url(':/images/unchecked');
-}
-
-QCheckBox::indicator:unchecked:pressed {
-image:url(':/images/checked');
-}
-
-QCheckBox::indicator:checked {
-image:url(':/images/checked');
-}
-
-QCheckBox::indicator:checked:hover {
-image:url(':/images/checked');
-}
-
-QCheckBox::indicator:checked:pressed {
-image:url(':/images/unchecked');
-}
-
-QCheckBox::indicator:indeterminate:hover {
-image:url(':/images/unchecked');
-}
-
-QCheckBox::indicator:indeterminate:pressed {
-image:url(':/images/checked');
 }
 
 /*******************************************************/
@@ -654,15 +584,6 @@ QDialog#OptionsDialog QLabel#label_3 { /* Translations Missing? Label */
 qproperty-alignment: 'AlignVCenter | AlignCenter';
 color: #aaa;
 padding-bottom:8px;
-}
-
-QDialog#OptionsDialog QCheckBox {
-min-height:20px;
-}
-
-QDialog#OptionsDialog QCheckBox#displayAddresses {
-min-height:33px;
-
 }
 
 QDialog#OptionsDialog QGroupBox {
@@ -1142,9 +1063,6 @@ QDialog#SendCoinsDialog .QFrame#frameCoinControl .QWidget#widgetCoinControl > .Q
 padding:2px;
 }
 
-QDialog#SendCoinsDialog .QFrame#frameCoinControl .QCheckBox#checkBoxCoinControlChange { /* Custom Change Label */
-}
-
 QDialog#SendCoinsDialog .QFrame#frameCoinControl .QValidatedLineEdit#lineEditCoinControlChange { /* Custom Change Address */
 }
 
@@ -1199,15 +1117,6 @@ color: #333;
 
 QDialog#SendCoinsDialog .QPushButton#addButton:pressed {
 border:1px solid #9e9e9e;
-}
-
-QDialog#SendCoinsDialog .QCheckBox#checkUsePrivateSend { /* PrivateSend Checkbox */
-color: #ccc;
-font-weight:bold;
-border-radius:5px;
-padding-top:20px;
-padding-bottom:18px;
-margin-right:20px;
 }
 
 /* This QLabel uses name = "label" which conflicts with Address Book -> New Address */
@@ -1399,7 +1308,6 @@ color: #ccc;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:selected { /* Coin Control Branch Icon */
-background-image: url(':/images/qtreeview_selected');
 background-repeat:no-repeat;
 background-position:center;
 background-color: #666;
@@ -1407,7 +1315,6 @@ color: #ccc;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:checked { /* Coin Control Branch Icon */
-background-image: url(':/images/qtreeview_selected');
 background-repeat:no-repeat;
 background-position:center;
 background-color: #333;
@@ -1581,7 +1488,7 @@ QLabel#transactionSumLabel { /* Example of setObjectName for widgets without nam
 color: #ccc;
 font-weight:bold;
 }
- 
+
 QLabel#transactionSum { /* Example of setObjectName for widgets without name */
 color: #ccc;
 }

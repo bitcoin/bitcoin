@@ -55,6 +55,7 @@
         <file alias="network_disabled">res/icons/network_disabled.png</file>
     </qresource>
     <qresource prefix="/css">
+        <file alias="general">res/css/general.css</file>
         <file alias="scrollbars">res/css/scrollbars.css</file>
     </qresource>
     <qresource prefix="/themes">
@@ -63,18 +64,50 @@
         <file alias="Traditional">res/css/trad.css</file>
     </qresource>
     <qresource prefix="/images">
-        <file alias="arrow_down">res/images/arrow_down.png</file>
-        <file alias="arrow_down_small">res/images/arrow_down_small.png</file>
-        <file alias="arrow_left_small">res/images/arrow_left_small.png</file>
-        <file alias="arrow_right_small">res/images/arrow_right_small.png</file>
-        <file alias="arrow_up_small">res/images/arrow_up_small.png</file>
-        <file alias="checked">res/images/checked.png</file>
+        <file alias="arrow_down_normal">res/images/arrow_down_normal.png</file>
+        <file alias="arrow_down_hover">res/images/arrow_down_hover.png</file>
+        <file alias="arrow_down_pressed">res/images/arrow_down_pressed.png</file>
+        <file alias="arrow_left_normal">res/images/arrow_left_normal.png</file>
+        <file alias="arrow_left_hover">res/images/arrow_left_hover.png</file>
+        <file alias="arrow_left_pressed">res/images/arrow_left_pressed.png</file>
+        <file alias="arrow_right_normal">res/images/arrow_right_normal.png</file>
+        <file alias="arrow_right_hover">res/images/arrow_right_hover.png</file>
+        <file alias="arrow_right_pressed">res/images/arrow_right_pressed.png</file>
+        <file alias="arrow_up_normal">res/images/arrow_up_normal.png</file>
+        <file alias="arrow_up_hover">res/images/arrow_up_hover.png</file>
+        <file alias="arrow_up_pressed">res/images/arrow_up_pressed.png</file>
+        <file alias="arrow_light_down_normal">res/images/arrow_light_down_normal.png</file>
+        <file alias="arrow_light_down_hover">res/images/arrow_light_down_hover.png</file>
+        <file alias="arrow_light_left_normal">res/images/arrow_light_left_normal.png</file>
+        <file alias="arrow_light_left_hover">res/images/arrow_light_left_hover.png</file>
+        <file alias="arrow_light_right_normal">res/images/arrow_light_right_normal.png</file>
+        <file alias="arrow_light_right_hover">res/images/arrow_light_right_hover.png</file>
+        <file alias="arrow_light_up_normal">res/images/arrow_light_up_normal.png</file>
+        <file alias="arrow_light_up_hover">res/images/arrow_light_up_hover.png</file>
+        <file alias="checkbox_normal">res/images/checkbox_normal.png</file>
+        <file alias="checkbox_normal_hover">res/images/checkbox_normal_hover.png</file>
+        <file alias="checkbox_normal_pressed">res/images/checkbox_normal_pressed.png</file>
+        <file alias="checkbox_normal_disabled">res/images/checkbox_normal_disabled.png</file>
+        <file alias="checkbox_checked">res/images/checkbox_checked.png</file>
+        <file alias="checkbox_checked_hover">res/images/checkbox_checked_hover.png</file>
+        <file alias="checkbox_checked_pressed">res/images/checkbox_checked_pressed.png</file>
+        <file alias="checkbox_checked_disabled">res/images/checkbox_checked_disabled.png</file>
+        <file alias="checkbox_partly_checked">res/images/checkbox_partly_checked.png</file>
+        <file alias="checkbox_partly_checked_hover">res/images/checkbox_partly_checked_hover.png</file>
+        <file alias="checkbox_partly_checked_pressed">res/images/checkbox_partly_checked_pressed.png</file>
+        <file alias="checkbox_partly_checked_disabled">res/images/checkbox_partly_checked_disabled.png</file>
         <file alias="dash_logo_horizontal">res/images/dash_logo_horizontal.png</file>
         <file alias="dash_logo_toolbar">res/images/dash_logo_toolbar.png</file>
         <file alias="dash_logo_toolbar_blue">res/images/dash_logo_toolbar_blue.png</file>
-        <file alias="qtreeview_selected">res/images/qtreeview_selected.png</file>
+        <file alias="radio_normal">res/images/radio_normal.png</file>
+        <file alias="radio_normal_hover">res/images/radio_normal_hover.png</file>
+        <file alias="radio_normal_pressed">res/images/radio_normal_pressed.png</file>
+        <file alias="radio_checked">res/images/radio_checked.png</file>
+        <file alias="radio_checked_hover">res/images/radio_checked_hover.png</file>
+        <file alias="radio_checked_pressed">res/images/radio_checked_pressed.png</file>
+        <file alias="radio_normal_disabled">res/images/radio_normal_disabled.png</file>
+        <file alias="radio_checked_disabled">res/images/radio_checked_disabled.png</file>
         <file alias="splash">res/images/splash.png</file>
-        <file alias="unchecked">res/images/unchecked.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>

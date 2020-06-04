@@ -303,21 +303,54 @@ BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
 endif
 
 RES_IMAGES = \
-  qt/res/images/arrow_down.png \
-  qt/res/images/arrow_down_small.png \
-  qt/res/images/arrow_left_small.png \
-  qt/res/images/arrow_right_small.png \
-  qt/res/images/arrow_up_small.png \
-  qt/res/images/checked.png \
+  qt/res/images/arrow_down_normal.png \
+  qt/res/images/arrow_down_hover.png \
+  qt/res/images/arrow_down_pressed.png \
+  qt/res/images/arrow_left_normal.png \
+  qt/res/images/arrow_left_hover.png \
+  qt/res/images/arrow_left_pressed.png \
+  qt/res/images/arrow_right_normal.png \
+  qt/res/images/arrow_right_hover.png \
+  qt/res/images/arrow_right_pressed.png \
+  qt/res/images/arrow_up_normal.png \
+  qt/res/images/arrow_up_hover.png \
+  qt/res/images/arrow_up_pressed.png \
+  qt/res/images/arrow_light_down_normal.png \
+  qt/res/images/arrow_light_down_hover.png \
+  qt/res/images/arrow_light_left_normal.png \
+  qt/res/images/arrow_light_left_hover.png \
+  qt/res/images/arrow_light_right_normal.png \
+  qt/res/images/arrow_light_right_hover.png \
+  qt/res/images/arrow_light_up_normal.png \
+  qt/res/images/arrow_light_up_hover.png \
+  qt/res/images/checkbox_normal.png \
+  qt/res/images/checkbox_normal_hover.png \
+  qt/res/images/checkbox_normal_pressed.png \
+  qt/res/images/checkbox_normal_disabled.png \
+  qt/res/images/checkbox_checked.png \
+  qt/res/images/checkbox_checked_hover.png \
+  qt/res/images/checkbox_checked_pressed.png \
+  qt/res/images/checkbox_checked_disabled.png \
+  qt/res/images/checkbox_partly_checked.png \
+  qt/res/images/checkbox_partly_checked_hover.png \
+  qt/res/images/checkbox_partly_checked_pressed.png \
+  qt/res/images/checkbox_partly_checked_disabled.png \
   qt/res/images/dash_logo_horizontal.png \
   qt/res/images/dash_logo_toolbar.png \
   qt/res/images/dash_logo_toolbar_blue.png \
-  qt/res/images/qtreeview_selected.png \
-  qt/res/images/splash.png \
-  qt/res/images/unchecked.png
+  qt/res/images/radio_normal.png \
+  qt/res/images/radio_normal_hover.png \
+  qt/res/images/radio_normal_pressed.png \
+  qt/res/images/radio_checked.png \
+  qt/res/images/radio_checked_hover.png \
+  qt/res/images/radio_checked_pressed.png \
+  qt/res/images/radio_normal_disabled.png \
+  qt/res/images/radio_checked_disabled.png \
+  qt/res/images/splash.png
 
 RES_CSS = \
   qt/res/css/dark.css \
+  qt/res/css/general.css \
   qt/res/css/light.css \
   qt/res/css/scrollbars.css \
   qt/res/css/trad.css

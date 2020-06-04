@@ -80,18 +80,11 @@ background-color:#F8F6F6;
 
 /*******************************************************/
 
-QLabel { /* Base Text Size & Color */
+QLabel,
+QCheckBox,
+QRadioButton { /* Base Text Size & Color */
 font-size:12px;
 color:#333333;
-}
-
-.QCheckBox { /* Checkbox Labels */
-color:#333333;
-background-color:transparent;
-}
-
-.QCheckBox:hover {
-background-color:transparent;
 }
 
 .QValidatedLineEdit, .QLineEdit { /* Text Entry Fields */
@@ -171,10 +164,6 @@ width:25px;
 border:0px;
 }
 
-QComboBox::down-arrow {
-border-image: url(':/images/arrow_down') 0 0 0 0 stretch stretch;
-}
-
 QComboBox QListView {
 background:#fff;
 padding: 3px;
@@ -224,10 +213,6 @@ padding-left:5px;
 padding-top:2px;
 }
 
-QAbstractSpinBox::up-arrow {
-image:url(':/images/arrow_up_small');
-}
-
 QAbstractSpinBox::down-button {
 subcontrol-origin: border;
 subcontrol-position: bottom right;
@@ -240,51 +225,6 @@ border-bottom:1px solid #82C3E6;
 padding-right:1px;
 padding-left:5px;
 padding-bottom:2px;
-}
-
-QAbstractSpinBox::down-arrow {
-image:url(':/images/arrow_down_small');
-}
-
-QCheckBox {
-spacing: 5px;
-}
-
-QCheckBox::indicator {
-width: 16px;
-height: 16px;
-}
-
-QCheckBox::indicator:unchecked {
-image:url(':/images/unchecked');
-}
-
-QCheckBox::indicator:unchecked:hover {
-image:url(':/images/unchecked');
-}
-
-QCheckBox::indicator:unchecked:pressed {
-image:url(':/images/checked');
-}
-
-QCheckBox::indicator:checked {
-image:url(':/images/checked');
-}
-
-QCheckBox::indicator:checked:hover {
-image:url(':/images/checked');
-}
-
-QCheckBox::indicator:checked:pressed {
-image:url(':/images/unchecked');
-}
-
-QCheckBox::indicator:indeterminate:hover {
-image:url(':/images/unchecked');
-}
-
-QCheckBox::indicator:indeterminate:pressed {
-image:url(':/images/checked');
 }
 
 /*******************************************************/
@@ -621,15 +561,6 @@ QDialog#OptionsDialog QLabel#label_3 { /* Translations Missing? Label */
 qproperty-alignment: 'AlignVCenter | AlignCenter';
 color:#818181;
 padding-bottom:8px;
-}
-
-QDialog#OptionsDialog QCheckBox {
-min-height:20px;
-}
-
-QDialog#OptionsDialog QCheckBox#displayAddresses {
-min-height:33px;
-
 }
 
 /* TOOLS MENU */
@@ -1092,9 +1023,6 @@ QDialog#SendCoinsDialog .QFrame#frameCoinControl .QWidget#widgetCoinControl > .Q
 padding:2px;
 }
 
-QDialog#SendCoinsDialog .QFrame#frameCoinControl .QCheckBox#checkBoxCoinControlChange { /* Custom Change Label */
-}
-
 QDialog#SendCoinsDialog .QFrame#frameCoinControl .QValidatedLineEdit#lineEditCoinControlChange { /* Custom Change Address */
 }
 
@@ -1149,16 +1077,6 @@ color:#333;
 
 QDialog#SendCoinsDialog .QPushButton#addButton:pressed {
 border:1px solid #9e9e9e;
-}
-
-QDialog#SendCoinsDialog .QCheckBox#checkUsePrivateSend { /* PrivateSend Checkbox */
-color:#616161;
-font-weight:bold;
-background: qradialgradient(cx:0.5, cy:0.5, radius: 0.5, fx:0.5, fy:0.5, stop:0 rgba(248, 246, 246, 128), stop: 1 rgba(0, 0, 0, 0));
-border-radius:5px;
-padding-top:20px;
-padding-bottom:18px;
-margin-right:20px;
 }
 
 /* This QLabel uses name = "label" which conflicts with Address Book -> New Address */
@@ -1324,16 +1242,6 @@ min-height:25px;
 QDialog#CoinControlDialog .QDialogButtonBox#buttonBox QPushButton { /* Coin Control 'OK' button */
 }
 
-QDialog#CoinControlDialog .QFrame#frame .QRadioButton#radioTreeMode { /* Coin Control Tree Mode Selector */
-color:#818181;
-background-color:transparent;
-}
-
-QDialog#CoinControlDialog .QFrame#frame .QRadioButton#radioListMode { /* Coin Control List Mode Selector */
-color:#818181;
-background-color:transparent;
-}
-
 QDialog#CoinControlDialog QHeaderView::section:first { /* Bug Fix: the number "1" displays in this table for some reason... */
 color:transparent;
 }
@@ -1358,7 +1266,6 @@ color:#333;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:selected { /* Coin Control Branch Icon */
-background-image: url(':/images/qtreeview_selected');
 background-repeat:no-repeat;
 background-position:center;
 background-color:#f7f7f7;
@@ -1366,7 +1273,6 @@ color:#333;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:checked { /* Coin Control Branch Icon */
-background-image: url(':/images/qtreeview_selected');
 background-repeat:no-repeat;
 background-position:center;
 background-color:#f7f7f7;
@@ -1522,7 +1428,7 @@ QLabel#transactionSumLabel { /* Example of setObjectName for widgets without nam
 color:#333333;
 font-weight:bold;
 }
- 
+
 QLabel#transactionSum { /* Example of setObjectName for widgets without name */
 color:#333333;
 }
@@ -1536,5 +1442,3 @@ background-color:#F8F6F6;
 QDialog#TransactionDescDialog QTextEdit { /* Contents of Receive Coin Dialog */
 border:1px solid #d7d7d7;
 }
-
-

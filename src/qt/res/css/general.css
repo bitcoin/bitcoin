@@ -1,0 +1,242 @@
+/**
+    Copyright (c) 2020 The Dash Core developers
+    Distributed under the MIT/X11 software license, see the accompanying
+    file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+    This file contains style changes used by both dash themes:  "Light" and "Dark"
+**/
+
+
+/******************************************************
+QAbstractSpinBox
+******************************************************/
+
+QAbstractSpinBox::up-arrow {
+    width: 20px;
+    height: 20px;
+    image:url(':/images/arrow_up_normal');
+}
+QAbstractSpinBox::up-arrow:hover {
+    width: 20px;
+    height: 20px;
+    image:url(':/images/arrow_up_hover');
+}
+QAbstractSpinBox::up-arrow:pressed {
+    width: 20px;
+    height: 20px;
+    image:url(':/images/arrow_up_pressed');
+}
+QAbstractSpinBox::up-arrow:disabled {
+    width: 20px;
+    height: 20px;
+    image:url(':/images/arrow_light_up_hover');
+}
+
+QAbstractSpinBox::down-arrow {
+    width: 20px;
+    height: 20px;
+    image:url(':/images/arrow_down_normal');
+}
+QAbstractSpinBox::down-arrow:hover {
+    width: 20px;
+    height: 20px;
+    image:url(':/images/arrow_down_hover');
+}
+QAbstractSpinBox::down-arrow:pressed {
+    width: 20px;
+    height: 20px;
+    image:url(':/images/arrow_down_pressed');
+}
+QAbstractSpinBox::down-arrow:disabled {
+    width: 20px;
+    height: 20px;
+    image:url(':/images/arrow_light_down_hover');
+}
+
+/******************************************************
+QComboBox
+******************************************************/
+
+QComboBox::down-arrow {
+    width: 20px;
+    height: 20px;
+    border-image: url(':/images/arrow_down_normal') 0 0 0 0 stretch stretch;
+}
+QComboBox::down-arrow:hover {
+    width: 20px;
+    height: 20px;
+    border-image: url(':/images/arrow_down_hover') 0 0 0 0 stretch stretch;
+}
+QComboBox::down-arrow:pressed {
+    width: 20px;
+    height: 20px;
+    border-image: url(':/images/arrow_down_pressed') 0 0 0 0 stretch stretch;
+}
+QComboBox::down-arrow:disabled {
+    width: 20px;
+    height: 20px;
+    border-image: url(':/images/arrow_light_down_hover') 0 0 0 0 stretch stretch;
+}
+
+/******************************************************
+QRadioButton
+******************************************************/
+
+QRadioButton {
+    background-color: transparent;
+}
+QRadioButton::indicator {
+    width: 15px;
+    height: 15px;
+    margin-right: 5px;
+}
+QRadioButton::indicator:unchecked {
+    image: url(':/images/radio_normal');
+}
+QRadioButton::indicator:hover:unchecked {
+    image: url(':/images/radio_normal_hover');
+}
+QRadioButton::indicator:unchecked:pressed {
+    image: url(':/images/radio_normal_pressed');
+}
+QRadioButton::indicator:checked {
+    image: url(':/images/radio_checked');
+}
+QRadioButton::indicator:checked:hover {
+    image: url(':/images/radio_checked_hover');
+}
+QRadioButton::indicator:checked:pressed {
+    image: url(':/images/radio_checked_pressed');
+}
+QRadioButton::indicator:checked:disabled {
+    image: url(':/images/radio_checked_disabled');
+}
+QRadioButton::indicator:unchecked:disabled {
+    image: url(':/images/radio_normal_disabled');
+}
+
+/******************************************************
+QCheckBox & QTreeWidget::indicator checkboxes
+******************************************************/
+
+QCheckBox{
+    background-color: transparent;
+    min-height:20px;
+}
+QTreeWidget::indicator,
+QCheckBox::indicator {
+    width: 15px;
+    height: 15px;
+    margin-right: 5px;
+}
+
+QTreeWidget::indicator:unchecked,
+QCheckBox::indicator:unchecked {
+    image: url(':/images/checkbox_normal');
+}
+QTreeWidget::indicator:hover:unchecked,
+QCheckBox::indicator:hover:unchecked {
+    image: url(':/images/checkbox_normal_hover');
+}
+QTreeWidget::indicator:unchecked:pressed,
+QCheckBox::indicator:unchecked:pressed {
+    image: url(':/images/checkbox_normal_pressed');
+}
+QTreeWidget::indicator:unchecked:disabled,
+QCheckBox::indicator:unchecked:disabled {
+    image: url(':/images/checkbox_normal_disabled');
+}
+QTreeWidget::indicator:checked,
+QCheckBox::indicator:checked {
+    image: url(':/images/checkbox_checked');
+}
+QTreeWidget::indicator:checked:hover,
+QCheckBox::indicator:checked:hover {
+    image: url(':/images/checkbox_checked_hover');
+}
+QTreeWidget::indicator:checked:pressed,
+QCheckBox::indicator:checked:pressed {
+    image: url(':/images/checkbox_checked_pressed');
+}
+QTreeWidget::indicator:checked:disabled,
+QCheckBox::indicator:checked:disabled {
+    image: url(':/images/checkbox_checked_disabled');
+}
+QTreeWidget::indicator:indeterminate,
+QCheckBox::indicator:indeterminate {
+    image: url(':/images/checkbox_partly_checked');
+}
+QTreeWidget::indicator:indeterminate:hover,
+QCheckBox::indicator:indeterminate:hover {
+    image: url(':/images/checkbox_partly_checked_hover');
+}
+QTreeWidget::indicator:indeterminate:pressed,
+QCheckBox::indicator:indeterminate:pressed {
+    image: url(':/images/checkbox_partly_checked_pressed');
+}
+QTreeWidget::indicator:indeterminate:disabled,
+QCheckBox::indicator:indeterminate:disabled {
+    image: url(':/images/checkbox_partly_checked_disabled');
+}
+
+/******************************************************
+QHeaderView
+******************************************************/
+
+QHeaderView::down-arrow {
+    width: 20px;
+    height: 20px;
+    image: url(':/images/arrow_light_down_normal');
+    subcontrol-position: right center;
+    subcontrol-origin: margin;
+    margin-right: 5px;
+}
+QHeaderView::down-arrow:hover {
+    width: 20px;
+    height: 20px;
+    image: url(':/images/arrow_light_down_hover');
+    subcontrol-position: right center;
+    subcontrol-origin: margin;
+    margin-right: 5px;
+}
+
+QHeaderView::up-arrow {
+    width: 20px;
+    height: 20px;
+    image: url(':/images/arrow_light_up_normal');
+    subcontrol-position: right center;
+    subcontrol-origin: margin;
+    margin-right: 5px;
+}
+QHeaderView::up-arrow:hover {
+    width: 20px;
+    height: 20px;
+    image: url(':/images/arrow_light_up_hover');
+    subcontrol-position: right center;
+    subcontrol-origin: margin;
+    margin-right: 5px;
+}
+
+/******************************************************
+QTreeWidget
+******************************************************/
+
+QTreeWidget {
+    background-color: transparent;
+}
+QTreeWidget::branch::closed:has-children {
+    padding: 0 -2px 0 2px;
+    image: url(':/images/arrow_right_normal');
+}
+QTreeWidget::branch::closed:has-children:hover {
+    padding: 0 -2px 0 2px;
+    image: url(':/images/arrow_right_hover');
+}
+QTreeWidget::branch::open {
+    padding: 0 -2px 0 2px;
+    image: url(':/images/arrow_down_normal');
+}
+QTreeWidget::branch::open:hover {
+    padding: 0 -2px 0 2px;
+    image: url(':/images/arrow_down_hover');
+}

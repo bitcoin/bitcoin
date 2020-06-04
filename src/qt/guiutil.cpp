@@ -85,6 +85,8 @@ void ForceActivation();
 
 namespace GUIUtil {
 
+// The name of the traditional theme
+static const QString traditionalTheme = "Traditional";
 // The theme to set by default if settings are missing or incorrect
 static const QString defaultTheme = "Light";
 // The prefix a theme name should have if we want to apply dark colors and styles to it
@@ -974,22 +976,52 @@ void migrateQtSettings()
 // Open CSS when configured
 QString loadStyleSheet()
 {
+    static std::unique_ptr<QString> stylesheet;
+
+    if (stylesheet.get() == nullptr) {
+
+        stylesheet = std::make_unique<QString>();
+
+        QSettings settings;
+        QDir themes(":themes");
+        QString theme = settings.value("theme", "").toString();
+
+        // Make sure settings are pointing to an existent theme
+        if (theme.isEmpty() || !themes.exists(theme)) {
+            theme = defaultTheme;
+            settings.setValue("theme", theme);
+        }
+
+        // If light/dark theme is used load general styles first
+        if (dashThemeActive()) {
+            QFile qFileGeneral(":css/general");
+            if (qFileGeneral.open(QFile::ReadOnly)) {
+                stylesheet.get()->append(QLatin1String(qFileGeneral.readAll()));
+            }
+
+#ifndef Q_OS_MAC
+            // Apply some styling to scrollbars
+            QFile qFileScrollbars(QString(":/css/scrollbars"));
+            if (qFileScrollbars.open(QFile::ReadOnly)) {
+                stylesheet.get()->append(QLatin1String(qFileScrollbars.readAll()));
+            }
+#endif
+        }
+
+        QFile qFileTheme(":themes/" + theme);
+        if (qFileTheme.open(QFile::ReadOnly)) {
+            stylesheet.get()->append(QLatin1String(qFileTheme.readAll()));
+        }
+    }
+
+    return *stylesheet.get();
+}
+
+bool dashThemeActive()
+{
     QSettings settings;
     QString theme = settings.value("theme", "").toString();
-
-    QDir themes(":themes");
-    // Make sure settings are pointing to an existent theme
-    if (theme.isEmpty() || !themes.exists(theme)) {
-        theme = defaultTheme;
-        settings.setValue("theme", theme);
-    }
-
-    QFile qFile(":themes/" + theme);
-    if (qFile.open(QFile::ReadOnly)) {
-        return QLatin1String(qFile.readAll());
-    }
-
-    return QString();
+    return theme != traditionalTheme;
 }
 
 void setClipboard(const QString& str)

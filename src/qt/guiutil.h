@@ -233,6 +233,9 @@ namespace GUIUtil
     /** Load global CSS theme */
     QString loadStyleSheet();
 
+    /** Check if a dash specific theme is activated (light/dark) */
+    bool dashThemeActive();
+
     /* Convert QString to OS specific boost path through UTF-8 */
     fs::path qstringToBoostPath(const QString &path);
 
