@@ -23,6 +23,8 @@ from test_framework.mininode import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 
+MSG_LIMIT = 4 * 1000 * 1000  # 4MB, per MAX_PROTOCOL_MESSAGE_LENGTH
+VALID_DATA_LIMIT = MSG_LIMIT - 5  # Account for the 5-byte length prefix
 
 class msg_unrecognized:
     """Nonsensical message. Modeled after similar types in test_framework.messages."""
@@ -61,8 +63,6 @@ class InvalidMessagesTest(BitcoinTestFramework):
         node.add_p2p_connection(P2PDataStore())
         conn2 = node.add_p2p_connection(P2PDataStore())
 
-        msg_limit = 4 * 1000 * 1000  # 4MB, per MAX_PROTOCOL_MESSAGE_LENGTH
-        valid_data_limit = msg_limit - 5  # Account for the 4-byte length prefix
 
         #
         # 0.
@@ -70,8 +70,8 @@ class InvalidMessagesTest(BitcoinTestFramework):
         # Send as large a message as is valid, ensure we aren't disconnected but
         # also can't exhaust resources.
         #
-        msg_at_size = msg_unrecognized(str_data="b" * valid_data_limit)
-        assert len(msg_at_size.serialize()) == msg_limit
+        msg_at_size = msg_unrecognized(str_data="b" * VALID_DATA_LIMIT)
+        assert len(msg_at_size.serialize()) == MSG_LIMIT
 
         self.log.info("Sending a bunch of large, junk messages to test memory exhaustion. May take a bit...")
 
