@@ -5,7 +5,7 @@
 """Tests NODE_COMPACT_FILTERS (BIP 157/158).
 
 Tests that a node configured with -blockfilterindex and -peerblockfilters signals
-NODE_COMPACT_FILTERS and can serve cfilters, cfheaders and cfcheckpts.
+NODE_COMPACT_FILTERS and can serve cfilter, cfheaders, and cfcheckpt network messages.
 """
 
 from test_framework.messages import (
@@ -47,11 +47,25 @@ class CompactFiltersTest(BitcoinTestFramework):
         self.rpc_timeout = 480
         self.num_nodes = 2
         self.extra_args = [
-            ["-blockfilterindex", "-peerblockfilters"],
-            ["-blockfilterindex"],
+            ["-blockfilterindex=basic", "-peerblockfilters"],
+            ["-blockfilterindex=basic", "-peerblockfilters=0"],
         ]
 
     def run_test(self):
+        self.stop_node(0)
+
+        self.log.info('Check that -peerblockfilters without -blockfilterindex raises init error')
+        err_msg = 'Error: Cannot set -peerblockfilters without -blockfilterindex.'
+        self.nodes[0].assert_start_raises_init_error(['-blockfilterindex=0', '-peerblockfilters'], err_msg)
+
+        self.log.info('Check that passing unknown -blockfilterindex type raises init error')
+        err_msg = 'Error: Unknown -blockfilterindex value foo.'
+        self.nodes[0].assert_start_raises_init_error(['-blockfilterindex=foo', '-peerblockfilters'], err_msg)
+
+        # Restart and restore default "chain" topology
+        self.start_node(0, extra_args=self.extra_args[0])
+        self.connect_nodes(1, 0)
+
         # Node 0 supports COMPACT_FILTERS, node 1 does not.
         node0 = self.nodes[0].add_p2p_connection(CFiltersClient())
         node1 = self.nodes[1].add_p2p_connection(CFiltersClient())
@@ -78,7 +92,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         assert int(self.nodes[0].getnetworkinfo()['localservices'], 16) & NODE_COMPACT_FILTERS != 0
         assert int(self.nodes[1].getnetworkinfo()['localservices'], 16) & NODE_COMPACT_FILTERS == 0
 
-        self.log.info("get cfcheckpt on chain to be re-orged out.")
+        self.log.debug("get cfcheckpt on chain to be re-orged out.")
         request = msg_getcfcheckpt(
             filter_type=FILTER_TYPE_BASIC,
             stop_hash=int(stale_block_hash, 16)
@@ -89,7 +103,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         assert_equal(response.stop_hash, request.stop_hash)
         assert_equal(len(response.headers), 1)
 
-        self.log.info("Reorg node 0 to a new chain.")
+        self.log.debug("Reorg node 0 to a new chain.")
         connect_nodes(self.nodes[0], 1)
         self.sync_blocks(timeout=600)
 
@@ -195,7 +209,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         computed_cfhash = uint256_from_str(hash256(cfilter.filter_data))
         assert_equal(computed_cfhash, stale_cfhashes[999])
 
-        self.log.info("Requests to node 1 without NODE_COMPACT_FILTERS results in disconnection.")
+        self.log.info("Check that requests without NODE_COMPACT_FILTERS results in disconnection.")
         requests = [
             msg_getcfcheckpt(
                 filter_type=FILTER_TYPE_BASIC,
