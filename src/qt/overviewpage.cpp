@@ -135,6 +135,20 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
 {
     ui->setupUi(this);
 
+    GUIUtil::setFont({ui->label_4,
+                      ui->label_5,
+                      ui->labelWatchPending,
+                      ui->labelUnconfirmed,
+                      ui->labelWatchImmature,
+                      ui->labelImmature,
+                      ui->labelTotal,
+                      ui->labelWatchTotal,
+                      ui->labelWatchAvailable,
+                      ui->labelBalance,
+                      ui->labelPrivateSendHeader,
+                      ui->labelAnonymized
+                     }, GUIUtil::getFontWeightBold());
+
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
     ui->listTransactions->setIconSize(QSize(DECORATION_SIZE, DECORATION_SIZE));

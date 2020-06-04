@@ -61,6 +61,9 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformS
     ui->signatureIn_VM->installEventFilter(this);
 
     GUIUtil::setFixedPitchFont({ui->signatureOut_SM, ui->signatureIn_VM});
+    
+    GUIUtil::setFont({ui->signatureOut_SM}, QFont::Light, true);
+    GUIUtil::setFont({ui->statusLabel_SM, ui->statusLabel_VM}, GUIUtil::getFontWeightBold());
 }
 
 SignVerifyMessageDialog::~SignVerifyMessageDialog()

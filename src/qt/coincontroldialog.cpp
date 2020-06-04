@@ -54,6 +54,15 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
     /* Open CSS when configured */
     this->setStyleSheet(GUIUtil::loadStyleSheet());
 
+    GUIUtil::setFont({ui->labelCoinControlQuantityText,
+                      ui->labelCoinControlBytesText,
+                      ui->labelCoinControlAmountText,
+                      ui->labelCoinControlLowOutputText,
+                      ui->labelCoinControlFeeText,
+                      ui->labelCoinControlAfterFeeText,
+                      ui->labelCoinControlChangeText
+                     }, GUIUtil::getFontWeightBold());
+
     // context menu actions
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);

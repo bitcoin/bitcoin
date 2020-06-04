@@ -63,6 +63,11 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     transactionSum->setObjectName("transactionSum"); // Label ID as CSS-reference
     transactionSum->setMinimumSize(200, 8);
     transactionSum->setTextInteractionFlags(Qt::TextSelectableByMouse);
+
+    GUIUtil::setFont({transactionSumLabel,
+                      transactionSum,
+                     }, GUIUtil::getFontWeightBold());
+
     hbox_buttons->addWidget(transactionSum);
 
     hbox_buttons->addWidget(exportButton);

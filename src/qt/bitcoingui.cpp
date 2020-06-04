@@ -925,9 +925,7 @@ void BitcoinGUI::openClicked()
 
 void BitcoinGUI::highlightTabButton(QAbstractButton *button, bool checked)
 {
-    QFont font = button->font();
-    font.setBold(checked);
-    button->setFont(font);
+    GUIUtil::setFont({button}, checked ? GUIUtil::getFontWeightBold() : GUIUtil::getFontWeightNormal());
 }
 
 void BitcoinGUI::gotoOverviewPage()

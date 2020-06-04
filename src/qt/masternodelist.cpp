@@ -43,6 +43,10 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
 {
     ui->setupUi(this);
 
+    GUIUtil::setFont({ui->label_count_2,
+                      ui->countLabelDIP3
+                     }, GUIUtil::getFontWeightBold());
+
     int columnAddressWidth = 200;
     int columnStatusWidth = 80;
     int columnPoSeScoreWidth = 80;
