@@ -1416,9 +1416,13 @@ UniValue listunspentasset(const JSONRPCRequest& request) {
     requestSpent.URI = request.URI;
     return listunspent(requestSpent);  
 }
+
+Span<const CRPCCommand> GetAssetWalletRPCCommands()
+{
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                                actor (function)                argNames
+{ 
+    //  category              name                                actor (function)                argNames
     //  --------------------- ------------------------          -----------------------         ----------
 
    /* assets using the blockchain, coins/points/service backed tokens*/
@@ -1436,9 +1440,5 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "listunspentasset",                 &listunspentasset,              {"asset_guid","minconf"}},
 };
 // clang-format on
-
-void RegisterAssetWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique_ptr<interfaces::Handler>>& handlers)
-{
-    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
-        handlers.emplace_back(chain.handleRpc(commands[vcidx]));
+    return MakeSpan(commands);
 }
