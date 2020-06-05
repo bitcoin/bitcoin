@@ -7,6 +7,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/error.h>
+#include <util/translation.h>
 
 #include <cstdint>
 #include <vector>
