@@ -746,7 +746,6 @@ void CWallet::SetSpentKeyState(WalletBatch& batch, const uint256& hash, unsigned
 bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
 {
     AssertLockHeld(cs_wallet);
-    CTxDestination dst;
     const CWalletTx* srctx = GetWalletTx(hash);
     if (srctx) {
         assert(srctx->tx->vout.size() > n);
