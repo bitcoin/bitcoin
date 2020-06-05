@@ -535,7 +535,6 @@ public:
         return it->second;
     }
 
-    NodeContext m_node;
     std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain(m_node);
     std::unique_ptr<CWallet> wallet;
 };
