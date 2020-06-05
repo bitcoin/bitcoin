@@ -124,7 +124,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
             // we need this because if it is a sys tx then we allow 100x maxcarrier bytes.
             if (!isSysTx && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
             {
-                reason = "nulldata-size";
+                reason = "scriptpubkey";
                 return false;
             }
             nDataOut++;
