@@ -8,6 +8,7 @@
 #include <optional.h>               // For Optional and nullopt
 #include <primitives/transaction.h> // For CTransactionRef
 
+#include <functional>
 #include <memory>
 #include <stddef.h>
 #include <stdint.h>
