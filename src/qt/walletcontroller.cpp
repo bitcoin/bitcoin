@@ -92,6 +92,23 @@ void WalletController::closeWallet(WalletModel* wallet_model, QWidget* parent)
     removeAndDeleteWallet(wallet_model);
 }
 
+void WalletController::closeAllWallets(QWidget* parent)
+{
+    QMessageBox::StandardButton button = QMessageBox::question(parent, tr("Close all wallets"),
+        tr("Are you sure you wish to close all wallets?"),
+        QMessageBox::Yes|QMessageBox::Cancel,
+        QMessageBox::Yes);
+    if (button != QMessageBox::Yes) return;
+
+    QMutexLocker locker(&m_mutex);
+    for (WalletModel* wallet_model : m_wallets) {
+        wallet_model->wallet().remove();
+        Q_EMIT walletRemoved(wallet_model);
+        delete wallet_model;
+    }
+    m_wallets.clear();
+}
+
 WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wallet> wallet)
 {
     QMutexLocker locker(&m_mutex);
