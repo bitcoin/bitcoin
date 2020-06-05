@@ -1118,7 +1118,7 @@ bool CSigSharesManager::SendMessages()
     bool didSend = false;
 
     for (auto& pnode : vNodesCopy) {
-        CNetMsgMaker msgMaker(pnode->GetSendVersion());
+        CNetMsgMaker msgMaker(pnode->GetCommonVersion());
 
         if (const auto it1 = sigSessionAnnouncements.find(pnode->GetId()); it1 != sigSessionAnnouncements.end()) {
             std::vector<CSigSesAnn> msgs;

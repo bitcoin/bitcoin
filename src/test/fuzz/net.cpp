@@ -43,7 +43,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
                 node.MaybeSetAddrName(fuzzed_data_provider.ConsumeRandomLengthString(32));
             },
             [&] {
-                node.SetSendVersion(fuzzed_data_provider.ConsumeIntegral<int>());
+                node.SetCommonVersion(fuzzed_data_provider.ConsumeIntegral<int>());
             },
             [&] {
                 const std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
@@ -52,9 +52,6 @@ FUZZ_TARGET_INIT(net, initialize_net)
                 }
                 CNodeStats stats;
                 node.copyStats(stats, asmap);
-            },
-            [&] {
-                node.SetRecvVersion(fuzzed_data_provider.ConsumeIntegral<int>());
             },
             [&] {
                 const CNode* add_ref_node = node.AddRef();
@@ -119,10 +116,9 @@ FUZZ_TARGET_INIT(net, initialize_net)
     (void)node.GetId();
     (void)node.GetLocalNonce();
     (void)node.GetLocalServices();
-    (void)node.GetRecvVersion();
     const int ref_count = node.GetRefCount();
     assert(ref_count >= 0);
-    (void)node.GetSendVersion();
+    (void)node.GetCommonVersion();
     (void)node.RelayAddrsWithConn();
 
     const NetPermissionFlags net_permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);

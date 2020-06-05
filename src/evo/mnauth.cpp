@@ -55,7 +55,7 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
 
     LogPrint(BCLog::NET_NETCONN, "CMNAuth::%s -- Sending MNAUTH, peer=%d\n", __func__, peer.GetId());
 
-    connman.PushMessage(&peer, CNetMsgMaker(peer.GetSendVersion()).Make(NetMsgType::MNAUTH, mnauth));
+    connman.PushMessage(&peer, CNetMsgMaker(peer.GetCommonVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
 
 PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
@@ -180,7 +180,7 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, std::string_v
         // Otherwise, the peer would only announce/send messages resulting from QRECSIG,
         // e.g. InstantSend locks or ChainLocks. SPV and regular full nodes should not send
         // this message as they are usually only interested in the higher level messages.
-        const CNetMsgMaker msgMaker(peer.GetSendVersion());
+        const CNetMsgMaker msgMaker(peer.GetCommonVersion());
         connman.PushMessage(&peer, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
         peer.m_masternode_iqr_connection = true;
     }

@@ -1129,7 +1129,6 @@ public:
     RecursiveMutex cs_sendProcessing;
 
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
-    std::atomic<int> nRecvVersion{INIT_PROTO_VERSION};
 
     std::atomic<int64_t> nLastSend{0};
     std::atomic<int64_t> nLastRecv{0};
@@ -1358,6 +1357,7 @@ private:
     const NodeId id;
     const uint64_t nLocalHostNonce;
     const ConnectionType m_conn_type;
+    std::atomic<int> m_greatest_common_version{INIT_PROTO_VERSION};
 
     //! Services offered to this peer.
     //!
@@ -1376,7 +1376,6 @@ private:
     //! service advertisements.
     const ServiceFlags nLocalServices;
 
-    int nSendVersion {0};
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
 
     mutable RecursiveMutex cs_addrName;
@@ -1423,16 +1422,14 @@ public:
      */
     bool ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete);
 
-    void SetRecvVersion(int nVersionIn)
+    void SetCommonVersion(int greatest_common_version)
     {
-        nRecvVersion = nVersionIn;
+        m_greatest_common_version = greatest_common_version;
     }
-    int GetRecvVersion() const
+    int GetCommonVersion() const
     {
-        return nRecvVersion;
+        return m_greatest_common_version;
     }
-    void SetSendVersion(int nVersionIn);
-    int GetSendVersion() const;
 
     CService GetAddrLocal() const;
     //! May not be called more than once

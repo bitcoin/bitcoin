@@ -152,7 +152,7 @@ void CMasternodeSync::ProcessTick()
 
     for (auto& pnode : vNodesCopy)
     {
-        CNetMsgMaker msgMaker(pnode->GetSendVersion());
+        CNetMsgMaker msgMaker(pnode->GetCommonVersion());
 
         // Don't try to sync any data from outbound non-relay "masternode" connections.
         // Inbound connection this early is most likely a "masternode" connection
@@ -301,7 +301,7 @@ void CMasternodeSync::ProcessTick()
 
 void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode) const
 {
-    CNetMsgMaker msgMaker(pnode->GetSendVersion());
+    CNetMsgMaker msgMaker(pnode->GetCommonVersion());
 
     CBloomFilter filter;
 

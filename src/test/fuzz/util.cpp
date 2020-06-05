@@ -208,7 +208,7 @@ void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, bool init_v
     node.m_permissionFlags = permission_flags;
     if (init_version) {
         node.nVersion = version;
-        node.SetSendVersion(std::min(version, PROTOCOL_VERSION));
+        node.SetCommonVersion(std::min(version, PROTOCOL_VERSION));
     }
     if (node.m_tx_relay != nullptr) {
         LOCK(node.m_tx_relay->cs_filter);

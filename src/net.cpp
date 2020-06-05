@@ -753,32 +753,6 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
     return true;
 }
 
-void CNode::SetSendVersion(int nVersionIn)
-{
-    // Send version may only be changed in the version message, and
-    // only one version message is allowed per session. We can therefore
-    // treat this value as const and even atomic as long as it's only used
-    // once a version message has been successfully processed. Any attempt to
-    // set this twice is an error.
-    if (nSendVersion != 0) {
-        error("Send version already set for node: %i. Refusing to change from %i to %i", id, nSendVersion, nVersionIn);
-    } else {
-        nSendVersion = nVersionIn;
-    }
-}
-
-int CNode::GetSendVersion() const
-{
-    // The send version should always be explicitly set to
-    // INIT_PROTO_VERSION rather than using this value until SetSendVersion
-    // has been called.
-    if (nSendVersion == 0) {
-        error("Requesting unset send version for node: %i. Using %i", id, INIT_PROTO_VERSION);
-        return INIT_PROTO_VERSION;
-    }
-    return nSendVersion;
-}
-
 int V1TransportDeserializer::readHeader(Span<const uint8_t> msg_bytes)
 {
     // copy data to temporary parsing buffer
@@ -3601,7 +3575,7 @@ void CConnman::SetMasternodeQuorumRelayMembers(Consensus::LLMQType llmqType, con
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
             // e.g. InstantSend locks or ChainLocks. SPV and regular full nodes should not send
             // this message as they are usually only interested in the higher level messages.
-            const CNetMsgMaker msgMaker(pnode->GetSendVersion());
+            const CNetMsgMaker msgMaker(pnode->GetCommonVersion());
             PushMessage(pnode, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
             pnode->m_masternode_iqr_connection = true;
         }
