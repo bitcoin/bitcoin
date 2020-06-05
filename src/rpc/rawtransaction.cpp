@@ -1116,6 +1116,7 @@ UniValue decodepsbt(const JSONRPCRequest& request)
         const PSBTInput& input = psbtx.inputs[i];
         UniValue in(UniValue::VOBJ);
         // UTXOs
+        bool have_a_utxo = false;
         if (!input.witness_utxo.IsNull()) {
             const CTxOut& txout = input.witness_utxo;
 
@@ -1133,7 +1134,9 @@ UniValue decodepsbt(const JSONRPCRequest& request)
             ScriptToUniv(txout.scriptPubKey, o, true);
             out.pushKV("scriptPubKey", o);
             in.pushKV("witness_utxo", out);
-        } else if (input.non_witness_utxo) {
+            have_a_utxo = true;
+        }
+        if (input.non_witness_utxo) {
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, uint256(), non_wit, false);
             in.pushKV("non_witness_utxo", non_wit);
@@ -1144,7 +1147,9 @@ UniValue decodepsbt(const JSONRPCRequest& request)
                 // Hack to just not show fee later
                 have_all_utxos = false;
             }
-        } else {
+            have_a_utxo = true;
+        }
+        if (!have_a_utxo) {
             have_all_utxos = false;
         }
 
