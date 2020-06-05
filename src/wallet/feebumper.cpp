@@ -231,7 +231,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // Write back transaction
     mtx = CMutableTransaction(*tx_new);
     // Mark new tx not replaceable, if requested.
-    if (!coin_control.m_signal_bip125_rbf.get_value_or(wallet.m_signal_rbf)) {
+    if (!coin_control.m_signal_bip125_rbf.value_or(wallet.m_signal_rbf)) {
         for (auto& input : mtx.vin) {
             if (input.nSequence < 0xfffffffe) input.nSequence = 0xfffffffe;
         }
