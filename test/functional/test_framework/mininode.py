@@ -669,6 +669,6 @@ class P2PTxInvStore(P2PInterface):
         The mempool should mark unbroadcast=False for these transactions.
         """
         # Wait until invs have been received (and getdatas sent) for each txid.
-        self.wait_until(lambda: set(self.get_invs()) == set([int(tx, 16) for tx in txns]), timeout)
+        self.wait_until(lambda: set(self.tx_invs_received.keys()) == set([int(tx, 16) for tx in txns]), timeout)
         # Flush messages and wait for the getdatas to be processed
         self.sync_with_ping()
