@@ -492,7 +492,7 @@ class P2PInterface(P2PConnection):
 # P2PConnection acquires this lock whenever delivering a message to a P2PInterface.
 # This lock should be acquired in the thread running the test logic to synchronize
 # access to any data shared with the P2PInterface or P2PConnection.
-mininode_lock = threading.RLock()
+mininode_lock = threading.Lock()
 
 
 class NetworkThread(threading.Thread):
