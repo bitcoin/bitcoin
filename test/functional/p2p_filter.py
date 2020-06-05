@@ -19,7 +19,7 @@ from test_framework.messages import (
     msg_mempool,
     msg_version,
 )
-from test_framework.mininode import P2PInterface
+from test_framework.mininode import P2PInterface, mininode_lock
 from test_framework.script import MAX_SCRIPT_ELEMENT_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 
@@ -36,6 +36,11 @@ class FilterNode(P2PInterface):
         nFlags=1,
     )
 
+    def __init__(self):
+        super().__init__()
+        self._tx_received = False
+        self._merkleblock_received = False
+
     def on_inv(self, message):
         want = msg_getdata()
         for i in message.inv:
@@ -48,10 +53,30 @@ class FilterNode(P2PInterface):
             self.send_message(want)
 
     def on_merkleblock(self, message):
-        self.merkleblock_received = True
+        self._merkleblock_received = True
 
     def on_tx(self, message):
-        self.tx_received = True
+        self._tx_received = True
+
+    @property
+    def tx_received(self):
+        with mininode_lock:
+            return self._tx_received
+
+    @tx_received.setter
+    def tx_received(self, value):
+        with mininode_lock:
+            self._tx_received = value
+
+    @property
+    def merkleblock_received(self):
+        with mininode_lock:
+            return self._merkleblock_received
+
+    @merkleblock_received.setter
+    def merkleblock_received(self, value):
+        with mininode_lock:
+            self._merkleblock_received = value
 
 
 class FilterTest(BitcoinTestFramework):
