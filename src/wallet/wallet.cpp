@@ -2491,11 +2491,6 @@ TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& comp
             continue;
         }
 
-        // Verify input looks sane. This will check that we have at most one uxto, witness or non-witness.
-        if (!input.IsSane()) {
-            return TransactionError::INVALID_PSBT;
-        }
-
         // If we have no utxo, grab it from the wallet.
         if (!input.non_witness_utxo && input.witness_utxo.IsNull()) {
             const uint256& txhash = txin.prevout.hash;
