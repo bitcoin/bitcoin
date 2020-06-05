@@ -2809,7 +2809,7 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
             mintSyscoin.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
         }
         mintSyscoin.SerializeData(data);
-    } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
+    } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
         CBurnSyscoin burnSyscoin(*tx);
         for(auto& vout: burnSyscoin.voutAssets) {
             for(auto& out: vout.second) {
