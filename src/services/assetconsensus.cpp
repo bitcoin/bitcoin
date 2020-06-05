@@ -11,7 +11,7 @@
 #include <services/witnessaddress.h>
 #include <services/asset.h>
 #include <script/standard.h>
-#include <boost/thread.hpp>
+#include <boost/thread/thread.hpp>
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
@@ -762,7 +762,6 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     }
     std::vector<unsigned char> txPos;
     while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
         try {
             if(pcursor->GetKey(nKey)) {
                 // if height is before cutoff height or after tip height passed in (re-org), remove the txroot from db
@@ -795,7 +794,6 @@ bool CEthereumTxRootsDB::Clear() {
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     if (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
         try {
             if(pcursor->GetKey(nKey)) {
                 vecHeightKeys.emplace_back(nKey);
@@ -828,7 +826,6 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     std::map<uint32_t, EthereumTxRoot> mapTxRoots;
     // sort keys numerically
     while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
         try {
             if(!pcursor->GetKey(nKey)) {
                 pcursor->Next();

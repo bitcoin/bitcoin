@@ -14,7 +14,7 @@
 #include <policy/policy.h>
 #include <index/txindex.h>
 #include <core_io.h>
-#include <boost/thread.hpp>
+#include <boost/thread/thread.hpp>
 extern std::string exePath;
 extern RecursiveMutex cs_setethstatus;
 extern std::string EncodeDestination(const CTxDestination& dest);
@@ -52,7 +52,6 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 	uint32_t key = 0;
 	uint32_t index = 0;
 	while (pcursor->Valid()) {
-		boost::this_thread::interruption_point();
 		try {
             key = 0;
 			if (pcursor->GetKey(key) && key != 0 && (nAsset == 0 || nAsset != key)) {
