@@ -67,12 +67,12 @@ struct PSBTInput
     template <typename Stream>
     inline void Serialize(Stream& s) const {
         // Write the utxo
-        // If there is a non-witness utxo, then don't add the witness one.
         if (non_witness_utxo) {
             SerializeToVector(s, PSBT_IN_NON_WITNESS_UTXO);
             OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
             SerializeToVector(os, non_witness_utxo);
-        } else if (!witness_utxo.IsNull()) {
+        }
+        if (!witness_utxo.IsNull()) {
             SerializeToVector(s, PSBT_IN_WITNESS_UTXO);
             SerializeToVector(s, witness_utxo);
         }
