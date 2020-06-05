@@ -16,6 +16,8 @@ const std::vector<std::string> NET_PERMISSIONS_DOC{
     "mempool (allow requesting BIP35 mempool contents)",
 };
 
+namespace {
+
 // The parse the following format "perm1,perm2@xxxxxx"
 bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, size_t& readen, bilingual_str& error)
 {
@@ -58,6 +60,8 @@ bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, 
     output = flags;
     error = Untranslated("");
     return true;
+}
+
 }
 
 std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
