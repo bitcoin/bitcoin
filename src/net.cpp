@@ -1930,10 +1930,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
         ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
         int64_t nTime = GetTimeMicros();
+        bool anchor = false;
         bool fFeeler = false;
 
         // Determine what type of connection to open. Opening
-        // OUTBOUND_FULL_RELAY connections gets the highest priority until we
+        // BLOCK_RELAY connections to addresses from anchors.dat gets the highest
+        // priority. Then we open OUTBOUND_FULL_RELAY priority until we
         // meet our full-relay capacity. Then we open BLOCK_RELAY connection
         // until we hit our block-relay-only peer limit.
         // GetTryNewOutboundPeer() gets set when a stale tip is detected, so we
@@ -1941,7 +1943,10 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         // these conditions are met, check the nNextFeeler timer to decide if
         // we should open a FEELER.
 
-        if (nOutboundFullRelay < m_max_outbound_full_relay) {
+        if (!m_anchors.empty() && (nOutboundBlockRelay < m_max_outbound_block_relay)) {
+            conn_type = ConnectionType::BLOCK_RELAY;
+            anchor = true;
+        } else if (nOutboundFullRelay < m_max_outbound_full_relay) {
             // OUTBOUND_FULL_RELAY
         } else if (nOutboundBlockRelay < m_max_outbound_block_relay) {
             conn_type = ConnectionType::BLOCK_RELAY;
@@ -1962,6 +1967,17 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         int nTries = 0;
         while (!interruptNet)
         {
+            if (anchor && !m_anchors.empty()) {
+                const CAddress addr = m_anchors.back();
+                m_anchors.pop_back();
+                if (!addr.IsValid() || IsLocal(addr) || !IsReachable(addr) ||
+                    !HasAllDesirableServiceFlags(addr.nServices) ||
+                    setConnected.count(addr.GetGroup(addrman.m_asmap))) continue;
+                addrConnect = addr;
+                LogPrint(BCLog::NET, "Trying to make an anchor connection to %s\n", addrConnect.ToString());
+                break;
+            }
+
             // If we didn't find an appropriate destination after trying 100 addresses fetched from addrman,
             // stop this loop, and let the outer loop run again (which sleeps, adds seed nodes, recalculates
             // already-connected network ranges, ...) before trying new addrman addresses.

@@ -174,7 +174,9 @@ enum class ConnectionType {
      * attacks. By not relaying transactions or addresses, these connections
      * are harder to detect by a third party, thus helping obfuscate the
      * network topology. We automatically attempt to open
-     * MAX_BLOCK_RELAY_ONLY_CONNECTIONS using addresses from our AddrMan.
+     * MAX_BLOCK_RELAY_ONLY_ANCHORS using addresses from our anchors.dat. Then
+     * addresses from our AddrMan if MAX_BLOCK_RELAY_ONLY_CONNECTIONS
+     * isn't reached yet.
      */
     BLOCK_RELAY,
 
