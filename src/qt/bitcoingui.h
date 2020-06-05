@@ -171,6 +171,7 @@ private:
     QMenu* m_open_wallet_menu{nullptr};
     QAction* m_close_wallet_action{nullptr};
     QAction* showCoinJoinHelpAction = nullptr;
+    QAction* m_close_all_wallets_action{nullptr};
     QAction* m_wallet_selector_action = nullptr;
 
     QComboBox* m_wallet_selector = nullptr;
