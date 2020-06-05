@@ -2492,7 +2492,7 @@ TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& comp
         }
 
         // If we have no utxo, grab it from the wallet.
-        if (!input.non_witness_utxo && input.witness_utxo.IsNull()) {
+        if (!input.non_witness_utxo) {
             const uint256& txhash = txin.prevout.hash;
             const auto it = mapWallet.find(txhash);
             if (it != mapWallet.end()) {
