@@ -10,6 +10,8 @@
 #ifndef BITCOIN_NET_PERMISSIONS_H
 #define BITCOIN_NET_PERMISSIONS_H
 
+struct bilingual_str;
+
 extern const std::vector<std::string> NET_PERMISSIONS_DOC;
 
 enum NetPermissionFlags
@@ -54,14 +56,14 @@ public:
 class NetWhitebindPermissions : public NetPermissions
 {
 public:
-    static bool TryParse(const std::string str, NetWhitebindPermissions& output, std::string& error);
+    static bool TryParse(const std::string str, NetWhitebindPermissions& output, bilingual_str& error);
     CService m_service;
 };
 
 class NetWhitelistPermissions : public NetPermissions
 {
 public:
-    static bool TryParse(const std::string str, NetWhitelistPermissions& output, std::string& error);
+    static bool TryParse(const std::string str, NetWhitelistPermissions& output, bilingual_str& error);
     CSubNet m_subnet;
 };
 
