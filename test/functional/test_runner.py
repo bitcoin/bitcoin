@@ -241,7 +241,6 @@ BASE_SCRIPTS = [
     'feature_blocksdir.py',
     'feature_config_args.py',
     'rpc_getaddressinfo_labels_purpose_deprecation.py',
-    'rpc_getaddressinfo_label_deprecation.py',
     'rpc_getdescriptorinfo.py',
     'rpc_help.py',
     'feature_help.py',
