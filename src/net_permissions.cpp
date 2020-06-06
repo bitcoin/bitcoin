@@ -8,6 +8,14 @@
 #include <util/system.h>
 #include <util/translation.h>
 
+const std::vector<std::string> NET_PERMISSIONS_DOC{
+    "bloomfilter (allow requesting BIP37 filtered blocks and transactions)",
+    "noban (do not ban for misbehavior)",
+    "forcerelay (relay transactions that are already in the mempool; implies relay)",
+    "relay (relay even in -blocksonly mode)",
+    "mempool (allow requesting BIP35 mempool contents)",
+};
+
 // The parse the following format "perm1,perm2@xxxxxx"
 bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, size_t& readen, std::string& error)
 {
