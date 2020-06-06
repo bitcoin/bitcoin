@@ -78,7 +78,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     NodeContext node;
     auto chain = interfaces::MakeChain(node);
 
-    // Verify ScanForWalletTransactions fails to read an unknown start block.
+    // Verify ScanForWalletTransactions returns success on a start block reorg.
     {
         CWallet wallet(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
         {
@@ -89,7 +89,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         WalletRescanReserver reserver(wallet);
         reserver.reserve();
         CWallet::ScanResult result = wallet.ScanForWalletTransactions({} /* start_block */, 0 /* start_height */, {} /* max_height */, reserver, false /* update */);
-        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::FAILURE);
+        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
         BOOST_CHECK(result.last_failed_block.IsNull());
         BOOST_CHECK(result.last_scanned_block.IsNull());
         BOOST_CHECK(!result.last_scanned_height);
