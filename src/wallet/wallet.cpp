@@ -1700,18 +1700,19 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         bool next_block;
         uint256 next_block_hash;
         bool reorg = false;
+
+        next_block = chain().findNextBlock(block_hash, block_height, FoundBlock().hash(next_block_hash), &reorg);
+        if (reorg) {
+            // Abort scan if current block is no longer active, to prevent
+            // marking transactions as coming from the wrong block.
+            // TODO: This should return success instead of failure, see
+            // https://github.com/bitcoin/bitcoin/pull/14711#issuecomment-458342518
+            result.last_failed_block = block_hash;
+            result.status = ScanResult::FAILURE;
+            break;
+        }
         if (chain().findBlock(block_hash, FoundBlock().data(block)) && !block.IsNull()) {
             LOCK(cs_wallet);
-            next_block = chain().findNextBlock(block_hash, block_height, FoundBlock().hash(next_block_hash), &reorg);
-            if (reorg) {
-                // Abort scan if current block is no longer active, to prevent
-                // marking transactions as coming from the wrong block.
-                // TODO: This should return success instead of failure, see
-                // https://github.com/bitcoin/bitcoin/pull/14711#issuecomment-458342518
-                result.last_failed_block = block_hash;
-                result.status = ScanResult::FAILURE;
-                break;
-            }
             for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
                 SyncTransaction(block.vtx[posInBlock], {CWalletTx::Status::CONFIRMED, block_height, block_hash, (int)posInBlock}, fUpdate);
             }
@@ -1722,7 +1723,6 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
             // could not scan block, keep scanning but record this block as the most recent failure
             result.last_failed_block = block_hash;
             result.status = ScanResult::FAILURE;
-            next_block = chain().findNextBlock(block_hash, block_height, FoundBlock().hash(next_block_hash), &reorg);
         }
         if (max_height && block_height >= *max_height) {
             break;
