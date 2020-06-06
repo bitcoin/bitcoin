@@ -13,7 +13,6 @@
 #include <compat.h>
 #include <crypto/siphash.h>
 #include <hash.h>
-#include <limitedmap.h>
 #include <netaddress.h>
 #include <net_permissions.h>
 #include <policy/feerate.h>

@@ -20,10 +20,7 @@ from test_framework.mininode import (
     mininode_lock,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    assert_equal,
-    wait_until,
-)
+from test_framework.util import wait_until
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 
 import time
@@ -42,14 +39,12 @@ class TestP2PConn(P2PInterface):
 
 # Constants from net_processing
 GETDATA_TX_INTERVAL = 60  # seconds
-MAX_GETDATA_RANDOM_DELAY = 2  # seconds
 INBOUND_PEER_TX_DELAY = 2  # seconds
-MAX_GETDATA_IN_FLIGHT = 100
 TX_EXPIRY_INTERVAL = GETDATA_TX_INTERVAL * 10
 
 # Python test constants
 NUM_INBOUND = 10
-MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + MAX_GETDATA_RANDOM_DELAY + INBOUND_PEER_TX_DELAY
+MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + INBOUND_PEER_TX_DELAY
 
 
 class TxDownloadTest(BitcoinTestFramework):
@@ -120,37 +115,9 @@ class TxDownloadTest(BitcoinTestFramework):
         # * the first time it is re-requested from the outbound peer, plus
         # * 2 seconds to avoid races
         assert self.nodes[1].getpeerinfo()[0]['inbound'] == False
-        timeout = 2 + (MAX_GETDATA_RANDOM_DELAY + INBOUND_PEER_TX_DELAY) + (
-            GETDATA_TX_INTERVAL + MAX_GETDATA_RANDOM_DELAY)
+        timeout = 2 + INBOUND_PEER_TX_DELAY + GETDATA_TX_INTERVAL
         self.log.info("Tx should be received at node 1 after {} seconds".format(timeout))
         self.sync_mempools(timeout=timeout)
-
-    def test_in_flight_max(self):
-        self.log.info("Test that we don't request more than {} transactions from any peer, every {} minutes".format(
-            MAX_GETDATA_IN_FLIGHT, TX_EXPIRY_INTERVAL / 60))
-        txids = [i for i in range(MAX_GETDATA_IN_FLIGHT + 2)]
-
-        p = self.nodes[0].p2ps[0]
-
-        with mininode_lock:
-            p.tx_getdata_count = 0
-
-        p.send_message(msg_inv([CInv(t=MSG_TX, h=i) for i in txids]))
-        wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT, lock=mininode_lock)
-        with mininode_lock:
-            assert_equal(p.tx_getdata_count, MAX_GETDATA_IN_FLIGHT)
-
-        self.log.info("Now check that if we send a NOTFOUND for a transaction, we'll get one more request")
-        p.send_message(msg_notfound(vec=[CInv(t=MSG_TX, h=txids[0])]))
-        wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT + 1, timeout=10, lock=mininode_lock)
-        with mininode_lock:
-            assert_equal(p.tx_getdata_count, MAX_GETDATA_IN_FLIGHT + 1)
-
-        WAIT_TIME = TX_EXPIRY_INTERVAL // 2 + TX_EXPIRY_INTERVAL
-        self.log.info("if we wait about {} minutes, we should eventually get more requests".format(WAIT_TIME / 60))
-        self.nodes[0].setmocktime(int(time.time() + WAIT_TIME))
-        wait_until(lambda: p.tx_getdata_count == MAX_GETDATA_IN_FLIGHT + 2)
-        self.nodes[0].setmocktime(0)
 
     def test_spurious_notfound(self):
         self.log.info('Check that spurious notfound is ignored')
@@ -166,10 +133,6 @@ class TxDownloadTest(BitcoinTestFramework):
         self.log.info("Nodes are setup with {} incoming connections each".format(NUM_INBOUND))
 
         self.test_spurious_notfound()
-
-        # Test the in-flight max first, because we want no transactions in
-        # flight ahead of this test.
-        self.test_in_flight_max()
 
         self.test_inv_block()
 
