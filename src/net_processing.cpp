@@ -1129,6 +1129,12 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
             g_recent_confirmed_transactions->insert(ptx->GetHash());
         }
     }
+    {
+        LOCK(cs_main);
+        for (const auto& ptx : pblock->vtx) {
+            g_txrequest.AlreadyHaveTx(ptx->GetHash());
+        }
+    }
 }
 
 void PeerLogicValidation::BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex)
@@ -2729,6 +2735,7 @@ void ProcessMessage(
         if (!AlreadyHave(inv, mempool) &&
             AcceptToMemoryPool(mempool, state, ptx, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             mempool.check(&::ChainstateActive().CoinsTip());
+            g_txrequest.AlreadyHaveTx(inv.hash);
             RelayTransaction(tx.GetHash(), connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(inv.hash, i));
@@ -2768,6 +2775,9 @@ void ProcessMessage(
                     if (!AlreadyHave(_inv, mempool)) RequestTx(pfrom, _inv.hash, current_time);
                 }
                 AddOrphanTx(ptx, pfrom.GetId());
+
+                // Once added to the orphan pool, it is considered AlreadyHave, and we shouldn't request it anymore.
+                g_txrequest.AlreadyHaveTx(tx.GetHash());
 
                 // DoS prevention: do not allow mapOrphanTransactions to grow unbounded (see CVE-2012-3789)
                 unsigned int nMaxOrphanTx = (unsigned int)std::max((int64_t)0, gArgs.GetArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS));
