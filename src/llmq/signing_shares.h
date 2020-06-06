@@ -45,11 +45,11 @@ public:
         return quorumMember;
     }
 
-    CSigShare(Consensus::LLMQType llmqType, const uint256 &quorumHash, const uint256 &id, const uint256 &msgHash,
-              uint16_t quorumMember, const CBLSLazySignature &sigShare) :
-                    CSigBase(llmqType, quorumHash, id, msgHash),
-                    quorumMember(quorumMember),
-                    sigShare(sigShare) {};
+    CSigShare(Consensus::LLMQType _llmqType, const uint256& _quorumHash, const uint256& _id, const uint256& _msgHash,
+              uint16_t _quorumMember, const CBLSLazySignature& _sigShare) :
+                    CSigBase(_llmqType, _quorumHash, _id, _msgHash),
+                    quorumMember(_quorumMember),
+                    sigShare(_sigShare) {};
 
     // This should only be used for serialization
     CSigShare() = default;
@@ -83,8 +83,8 @@ private:
     uint32_t sessionId{UNINITIALIZED_SESSION_ID};
 
 public:
-    CSigSesAnn(uint32_t sessionId, Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id,
-               const uint256& msgHash) : CSigBase(llmqType, quorumHash, id, msgHash), sessionId(sessionId) {};
+    CSigSesAnn(uint32_t _sessionId, Consensus::LLMQType _llmqType, const uint256& _quorumHash, const uint256& _id,
+               const uint256& _msgHash) : CSigBase(_llmqType, _quorumHash, _id, _msgHash), sessionId(_sessionId) {};
     // ONLY FOR SERIALIZATION
     CSigSesAnn() = default;
 
