@@ -97,12 +97,20 @@ else
     echo "Consider install flake8-cached for cached flake8 results."
 fi
 
-PYTHONWARNINGS="ignore" $FLAKECMD --ignore=B,C,E,F,I,N,W --select=$(IFS=","; echo "${enabled[*]}")$(
+EXIT_CODE=0
+
+if ! PYTHONWARNINGS="ignore" $FLAKECMD --ignore=B,C,E,F,I,N,W --select=$(IFS=","; echo "${enabled[*]}") $(
     if [[ $# == 0 ]]; then
         git ls-files "*.py" | grep -vE "src/(immer)/"
     else
         echo "$@"
     fi
-)
+); then
+    EXIT_CODE=1
+fi
 
-mypy --ignore-missing-imports $(git ls-files "test/functional/*.py")
+if ! mypy --ignore-missing-imports $(git ls-files "test/functional/*.py"); then
+    EXIT_CODE=1
+fi
+
+exit $EXIT_CODE

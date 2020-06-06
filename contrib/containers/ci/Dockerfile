@@ -40,6 +40,7 @@ RUN apt-get update && apt-get install $APT_ARGS \
     libxcb-xinerama0 \
     libxcb-xkb1 \
     libxkbcommon-x11-0 \
+    mypy \
     wget \
     unzip \
     m4 \
