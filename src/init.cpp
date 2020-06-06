@@ -58,6 +58,7 @@
 #include <util/error.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
@@ -607,11 +608,7 @@ void SetupServerArgs(NodeContext& node)
     hidden_args.emplace_back("-natpmp");
 #endif // USE_NATPMP
     argsman.AddArg("-whitebind=<[permissions@]addr>", "Bind to given address and whitelist peers connecting to it. "
-        "Use [host]:port notation for IPv6. Allowed permissions are bloomfilter (allow requesting BIP37 filtered blocks and transactions), "
-        "noban (do not ban for misbehavior), "
-        "forcerelay (relay transactions that are already in the mempool; implies relay), "
-        "relay (relay even in -blocksonly mode), "
-        "and mempool (allow requesting BIP35 mempool contents). "
+        "Use [host]:port notation for IPv6. Allowed permissions: " + Join(NET_PERMISSIONS_DOC, ", ") + ". "
         "Specify multiple permissions separated by commas (default: noban,mempool,relay). Can be specified multiple times.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
 
     argsman.AddArg("-whitelist=<[permissions@]IP address or network>", "Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or "
