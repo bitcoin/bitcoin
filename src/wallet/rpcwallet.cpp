@@ -3753,12 +3753,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
                         {RPCResult::Type::ARR, "labels", "Array of labels associated with the address. Currently limited to one label but returned\n"
                             "as an array to keep the API stable if multiple labels are enabled in the future.",
                         {
-                            {RPCResult::Type::STR, "label name", "The label name. Defaults to \"\"."},
-                            {RPCResult::Type::OBJ, "", "label data, DEPRECATED, will be removed in 0.21. To re-enable, launch bitcoind with `-deprecatedrpc=labelspurpose`",
-                            {
-                                {RPCResult::Type::STR, "name", "The label name. Defaults to \"\"."},
-                                {RPCResult::Type::STR, "purpose", "The purpose of the associated address (send or receive)."},
-                            }},
+                            {RPCResult::Type::STR, "label name", "Label name (defaults to \"\")."},
                         }},
                     }
                 },
@@ -3822,13 +3817,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     UniValue labels(UniValue::VARR);
     const auto* address_book_entry = pwallet->FindAddressBookEntry(dest);
     if (address_book_entry) {
-        // DEPRECATED: The previous behavior of returning an array containing a
-        // JSON object of `name` and `purpose` key/value pairs is deprecated.
-        if (pwallet->chain().rpcEnableDeprecated("labelspurpose")) {
-            labels.push_back(AddressBookDataToJSON(*address_book_entry, true));
-        } else {
-            labels.push_back(address_book_entry->GetLabel());
-        }
+        labels.push_back(address_book_entry->GetLabel());
     }
     ret.pushKV("labels", std::move(labels));
 
