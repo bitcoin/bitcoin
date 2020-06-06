@@ -64,18 +64,9 @@ ClientModel::~ClientModel()
     m_thread->wait();
 }
 
-int ClientModel::getNumConnections(unsigned int flags) const
+int ClientModel::getNumConnections(CConnman::NumConnections flags) const
 {
-    CConnman::NumConnections connections = CConnman::CONNECTIONS_NONE;
-
-    if(flags == CONNECTIONS_IN)
-        connections = CConnman::CONNECTIONS_IN;
-    else if (flags == CONNECTIONS_OUT)
-        connections = CConnman::CONNECTIONS_OUT;
-    else if (flags == CONNECTIONS_ALL)
-        connections = CConnman::CONNECTIONS_ALL;
-
-    return m_node.getNodeCount(connections);
+    return m_node.getNodeCount(flags);
 }
 
 int ClientModel::getHeaderTipHeight() const

@@ -5,13 +5,15 @@
 #ifndef BITCOIN_QT_CLIENTMODEL_H
 #define BITCOIN_QT_CLIENTMODEL_H
 
-#include <QObject>
-#include <QDateTime>
+#include <net.h>
+#include <sync.h>
+#include <uint256.h>
 
 #include <atomic>
 #include <memory>
-#include <sync.h>
-#include <uint256.h>
+
+#include <QDateTime>
+#include <QObject>
 
 class BanTableModel;
 class CBlockIndex;
@@ -35,13 +37,6 @@ enum class BlockSource {
     NETWORK
 };
 
-enum NumConnections {
-    CONNECTIONS_NONE = 0,
-    CONNECTIONS_IN   = (1U << 0),
-    CONNECTIONS_OUT  = (1U << 1),
-    CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
-};
-
 /** Model for Bitcoin network client. */
 class ClientModel : public QObject
 {
@@ -57,7 +52,7 @@ public:
     BanTableModel *getBanTableModel();
 
     //! Return number of connections, default is in- and outbound (total)
-    int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
+    int getNumConnections(CConnman::NumConnections flags = CConnman::CONNECTIONS_ALL) const;
     int getNumBlocks() const;
     uint256 getBestBlockHash();
     int getHeaderTipHeight() const;
