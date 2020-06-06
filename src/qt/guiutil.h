@@ -257,6 +257,9 @@ namespace GUIUtil
         issues loading variations of montserrat in css */
     void setFont(const std::vector<QWidget*>& vecWidgets, QFont::Weight weight, bool fItalic = false);
 
+    /** Workaround to set a fixed pitch font for traditional theme */
+    void setFixedPitchFont(const std::vector<QWidget*>& vecWidgets);
+
     /** Get a properly weighted QFont object with the font Montserrat
         Use ExtraLight as default as this lines up with the default in css. */
     QFont getFont(QFont::Weight weight, bool fItalic = false);
