@@ -1705,10 +1705,8 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         if (reorg) {
             // Abort scan if current block is no longer active, to prevent
             // marking transactions as coming from the wrong block.
-            // TODO: This should return success instead of failure, see
+            // break successfully when reorg occurs, reorg will scan blocks for transactions
             // https://github.com/bitcoin/bitcoin/pull/14711#issuecomment-458342518
-            result.last_failed_block = block_hash;
-            result.status = ScanResult::FAILURE;
             break;
         }
         if (chain().findBlock(block_hash, FoundBlock().data(block)) && !block.IsNull()) {
@@ -1728,9 +1726,8 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
             break;
         }
         {
-            if (!next_block || reorg) {
-                // break successfully when rescan has reached the tip, or
-                // previous block is no longer on the chain due to a reorg
+            if (!next_block) {
+                // break successfully when rescan has reached the tip
                 break;
             }
 
