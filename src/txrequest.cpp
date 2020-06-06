@@ -236,3 +236,87 @@ std::vector<uint256> TxRequestTracker::GetRequestable(uint64_t peer, std::chrono
     }
     return ret;
 }
+
+void TxRequestTracker::SanityCheck() const
+{
+    // Recompute m_peerdata.
+    // This verifies the data in it, including the invariant
+    // that no entries with m_total_announcements==0 exist.
+    std::unordered_map<uint64_t, PeerInfo> peerinfo;
+    for (const auto& a : m_index) {
+        auto& entry = peerinfo[a.m_peer];
+        ++entry.m_total;
+        entry.m_requested += (a.GetState() == State::REQUESTED);
+    }
+    assert(m_peerinfo == peerinfo);
+
+    struct Counts {
+        //! Number of CANDIDATE_DELAYED entries for this txid.
+        int m_candidate_delayed = 0;
+        //! Number of CANDIDATE_READY entries for this txid.
+        int m_candidate_ready = 0;
+        //! Number of CANDIDATE_BEST entries for this txid (at most one).
+        int m_candidate_best = 0;
+        //! Number of REQUESTED entries for this txid.
+        int m_requested = 0;
+        //! The priority of the CANDIDATE_BEST entry if one exists, or 0 otherwise.
+        uint64_t m_priority_candidate_best = 0;
+        //! The lowest priority of all CANDIDATE_READY entries (or max() if none exist).
+        uint64_t m_priority_best_candidate_ready = std::numeric_limits<uint64_t>::max();
+        //! All peers we have an entry for this txid for.
+        std::vector<uint64_t> m_peers;
+    };
+
+    std::map<uint256, Counts> table;
+    for (const auto& a : m_index) {
+        auto& entry = table[a.m_txid];
+        // Classify how many types peers we have for this txid.
+        entry.m_candidate_delayed += (a.GetState() == State::CANDIDATE_DELAYED);
+        entry.m_candidate_ready += (a.GetState() == State::CANDIDATE_READY);
+        entry.m_candidate_best += (a.GetState() == State::CANDIDATE_BEST);
+        entry.m_requested += (a.GetState() == State::REQUESTED);
+        // And track the priority of the best CANDIDATE_READY/CANDIDATE_BEST entries.
+        if (a.GetState() == State::CANDIDATE_BEST) entry.m_priority_candidate_best = a.ComputePriority(m_computer);
+        if (a.GetState() == State::CANDIDATE_READY) {
+            entry.m_priority_best_candidate_ready = std::min(entry.m_priority_best_candidate_ready,
+                a.ComputePriority(m_computer));
+        }
+        // Also keep track of which peers this txid has an entry for (so we can detect duplicates).
+        entry.m_peers.push_back(a.m_peer);
+    }
+    for (auto& entry : table) {
+        // Cannot have only COMPLETED peers (txid should have been deleted)
+        assert(entry.second.m_candidate_delayed + entry.second.m_candidate_ready + entry.second.m_candidate_best +
+            entry.second.m_requested > 0);
+        // Can have at most 1 CANDIDATE_BEST/REQUESTED peer
+        assert(entry.second.m_candidate_best + entry.second.m_requested <= 1);
+        // If there are any CANDIDATE_READY entries, there must be exactly one CANDIDATE_BEST or REQUESTED entry.
+        if (entry.second.m_candidate_ready > 0) {
+            assert(entry.second.m_candidate_best + entry.second.m_requested == 1);
+        }
+        // If there is both a CANDIDATE_READY and a CANDIDATE_BEST entry, the CANDIDATE_BEST one must be at least
+        // as good as the best CANDIDATE_READY.
+        if (entry.second.m_candidate_ready && entry.second.m_candidate_best) {
+            assert(entry.second.m_priority_candidate_best <= entry.second.m_priority_best_candidate_ready);
+        }
+        // Detect duplicate (peer, txid) entries
+        std::sort(entry.second.m_peers.begin(), entry.second.m_peers.end());
+        assert(std::adjacent_find(entry.second.m_peers.begin(), entry.second.m_peers.end()) ==
+            entry.second.m_peers.end());
+    }
+}
+
+void TxRequestTracker::TimeSanityCheck(std::chrono::microseconds now) const
+{
+    for (const auto& entry : m_index) {
+        if (entry.IsWaiting()) {
+            // REQUESTED and CANDIDATE_DELAYED must have a time in the future (they should have been converted to
+            // COMPLETED/CANDIDATE_READY respectively).
+            assert(entry.m_time > now);
+        } else if (entry.IsSelectable()) {
+            // CANDIDATE_READY and CANDIDATE_BEST cannot have a time in the future (they should have remained
+            // CANDIDATE_DELAYED, or should have been converted back to it if time went backwards).
+            assert(entry.m_time <= now);
+        }
+    }
+}
