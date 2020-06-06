@@ -10,10 +10,11 @@
 
 const std::vector<std::string> NET_PERMISSIONS_DOC{
     "bloomfilter (allow requesting BIP37 filtered blocks and transactions)",
-    "noban (do not ban for misbehavior)",
+    "noban (do not ban for misbehavior; implies download)",
     "forcerelay (relay transactions that are already in the mempool; implies relay)",
     "relay (relay even in -blocksonly mode)",
     "mempool (allow requesting BIP35 mempool contents)",
+    "download (allow getheaders during IBD, no disconnect after maxuploadtarget limit)",
 };
 
 namespace {
@@ -46,6 +47,7 @@ bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, 
             else if (permission == "noban") NetPermissions::AddFlag(flags, PF_NOBAN);
             else if (permission == "forcerelay") NetPermissions::AddFlag(flags, PF_FORCERELAY);
             else if (permission == "mempool") NetPermissions::AddFlag(flags, PF_MEMPOOL);
+            else if (permission == "download") NetPermissions::AddFlag(flags, PF_DOWNLOAD);
             else if (permission == "all") NetPermissions::AddFlag(flags, PF_ALL);
             else if (permission == "relay") NetPermissions::AddFlag(flags, PF_RELAY);
             else if (permission.length() == 0); // Allow empty entries
@@ -72,6 +74,7 @@ std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
     if (NetPermissions::HasFlag(flags, PF_FORCERELAY)) strings.push_back("forcerelay");
     if (NetPermissions::HasFlag(flags, PF_RELAY)) strings.push_back("relay");
     if (NetPermissions::HasFlag(flags, PF_MEMPOOL)) strings.push_back("mempool");
+    if (NetPermissions::HasFlag(flags, PF_DOWNLOAD)) strings.push_back("download");
     return strings;
 }
 
