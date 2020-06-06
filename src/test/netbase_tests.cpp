@@ -397,12 +397,13 @@ BOOST_AUTO_TEST_CASE(netpermissions_test)
     BOOST_CHECK(NetWhitelistPermissions::TryParse("bloom,forcerelay,noban,relay,mempool@1.2.3.4/32", whitelistPermissions, error));
 
     const auto strings = NetPermissions::ToStrings(PF_ALL);
-    BOOST_CHECK_EQUAL(strings.size(), 5U);
+    BOOST_CHECK_EQUAL(strings.size(), 6U);
     BOOST_CHECK(std::find(strings.begin(), strings.end(), "bloomfilter") != strings.end());
     BOOST_CHECK(std::find(strings.begin(), strings.end(), "forcerelay") != strings.end());
     BOOST_CHECK(std::find(strings.begin(), strings.end(), "relay") != strings.end());
     BOOST_CHECK(std::find(strings.begin(), strings.end(), "noban") != strings.end());
     BOOST_CHECK(std::find(strings.begin(), strings.end(), "mempool") != strings.end());
+    BOOST_CHECK(std::find(strings.begin(), strings.end(), "download") != strings.end());
 }
 
 BOOST_AUTO_TEST_CASE(netbase_dont_resolve_strings_with_embedded_nul_characters)
