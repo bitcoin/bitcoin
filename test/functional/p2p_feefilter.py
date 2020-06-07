@@ -57,9 +57,6 @@ class FeeFilterTest(BitcoinTestFramework):
     def run_test(self):
         node1 = self.nodes[1]
         node0 = self.nodes[0]
-        # Get out of IBD
-        node1.generate(1)
-        self.sync_blocks()
 
         self.nodes[0].add_p2p_connection(TestP2PConn())
 
