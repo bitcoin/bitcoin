@@ -41,6 +41,13 @@ public:
     bool randomize_credentials;
 };
 
+/** Credentials for proxy authentication */
+struct ProxyCredentials
+{
+    std::string username;
+    std::string password;
+};
+
 enum Network ParseNetwork(const std::string& net);
 std::string GetNetworkName(enum Network net);
 bool SetProxy(enum Network net, const proxyType &addrProxy);
@@ -75,5 +82,7 @@ bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking);
 /** Set the TCP_NODELAY flag on a socket */
 bool SetSocketNoDelay(const SOCKET& hSocket);
 void InterruptSocks5(bool interrupt);
+
+bool Socks5(const std::string& strDest, int port, const ProxyCredentials* auth, const Sock& socket);
 
 #endif // BITCOIN_NETBASE_H
