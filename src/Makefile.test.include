@@ -285,6 +285,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/secp256k1_ecdsa_signature_parse_der_lax.cpp \
  test/fuzz/signature_checker.cpp \
  test/fuzz/signet.cpp \
+ test/fuzz/socks5.cpp \
  test/fuzz/span.cpp \
  test/fuzz/spanparsing.cpp \
  test/fuzz/string.cpp \

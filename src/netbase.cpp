@@ -389,13 +389,6 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, c
     return len == 0 ? IntrRecvError::OK : IntrRecvError::Timeout;
 }
 
-/** Credentials for proxy authentication */
-struct ProxyCredentials
-{
-    std::string username;
-    std::string password;
-};
-
 /** Convert SOCKS5 reply to an error message */
 static std::string Socks5ErrorString(uint8_t err)
 {
@@ -439,7 +432,7 @@ static std::string Socks5ErrorString(uint8_t err)
  * @see <a href="https://www.ietf.org/rfc/rfc1928.txt">RFC1928: SOCKS Protocol
  *      Version 5</a>
  */
-static bool Socks5(const std::string& strDest, int port, const ProxyCredentials* auth, const Sock& sock)
+bool Socks5(const std::string& strDest, int port, const ProxyCredentials* auth, const Sock& sock)
 {
     IntrRecvError recvr;
     LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
