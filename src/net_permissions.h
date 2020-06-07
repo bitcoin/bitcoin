@@ -15,6 +15,7 @@ struct bilingual_str;
 extern const std::vector<std::string> NET_PERMISSIONS_DOC;
 
 enum NetPermissionFlags {
+    // NOTE: When adding here, be sure to update net_permissions.cpp's NetPermissions::ToStrings too
     PF_NONE = 0,
     // Can query bloomfilter even if -peerbloomfilters is false
     PF_BLOOMFILTER = (1U << 1),
