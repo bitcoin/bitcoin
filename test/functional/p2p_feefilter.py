@@ -15,6 +15,7 @@ from test_framework.test_framework import BitcoinTestFramework
 def hashToHex(hash):
     return format(hash, '064x')
 
+
 # Wait up to 60 secs to see if the testnode has received all the expected invs
 def allInvsMatch(invsExpected, testnode):
     for x in range(60):
@@ -23,6 +24,7 @@ def allInvsMatch(invsExpected, testnode):
                 return True
         time.sleep(1)
     return False
+
 
 class TestP2PConn(P2PInterface):
     def __init__(self):
@@ -38,6 +40,7 @@ class TestP2PConn(P2PInterface):
         with mininode_lock:
             self.txinvs = []
 
+
 class FeeFilterTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
@@ -46,7 +49,7 @@ class FeeFilterTest(BitcoinTestFramework):
         # mempool and wallet feerate calculation based on GetFee
         # rounding down 3 places, leading to stranded transactions.
         # See issue #16499
-        self.extra_args = [["-minrelaytxfee=0.00000100", "-mintxfee=0.00000100"]]*self.num_nodes
+        self.extra_args = [["-minrelaytxfee=0.00000100", "-mintxfee=0.00000100"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -80,7 +83,7 @@ class FeeFilterTest(BitcoinTestFramework):
         # by the test connection
         node1.settxfee(Decimal("0.00000100"))
         [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
-        self.sync_mempools() # must be sure node 0 has received all txs
+        self.sync_mempools()  # must be sure node 0 has received all txs
 
         # Send one transaction from node0 that should be received, so that we
         # we can sync the test on receipt (if node1's txs were relayed, they'd
@@ -99,6 +102,7 @@ class FeeFilterTest(BitcoinTestFramework):
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
         assert allInvsMatch(txids, self.nodes[0].p2p)
         self.nodes[0].p2p.clear_invs()
+
 
 if __name__ == '__main__':
     FeeFilterTest().main()
