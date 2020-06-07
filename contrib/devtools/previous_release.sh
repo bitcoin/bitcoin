@@ -137,7 +137,7 @@ pushd "$TARGET" || exit 1
         else
             BIN_PATH="bin/bitcoin-core-${tag:1}"
         fi
-        URL="https://bitcoin.org/$BIN_PATH/bitcoin-${tag:1}-$PLATFORM.tar.gz"
+        URL="https://bitcoincore.org/$BIN_PATH/bitcoin-${tag:1}-$PLATFORM.tar.gz"
         echo "Fetching: $URL"
         if ! curl -O -f $URL; then
             echo "Download failed."
