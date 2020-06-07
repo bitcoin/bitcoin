@@ -27,17 +27,6 @@ def allInvsMatch(invsExpected, testnode):
     return False
 
 
-class FeefilterConn(P2PInterface):
-    feefilter_received = False
-
-    def on_feefilter(self, message):
-        self.feefilter_received = True
-
-    def assert_feefilter_received(self, recv: bool):
-        with mininode_lock:
-            assert_equal(self.feefilter_received, recv)
-
-
 class TestP2PConn(P2PInterface):
     def __init__(self):
         super().__init__()
@@ -127,6 +116,7 @@ class FeeFilterTest(SyscoinTestFramework):
         txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
         assert allInvsMatch(txids, conn)
         conn.clear_invs()
+
 
 
 if __name__ == '__main__':
