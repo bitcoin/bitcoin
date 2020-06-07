@@ -73,6 +73,7 @@ bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, 
 std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
 {
     std::vector<std::string> strings;
+    if (NetPermissions::HasFlag(flags, PF_BLOCKFILTERS)) strings.push_back("blockfilters");
     if (NetPermissions::HasFlag(flags, PF_BLOOMFILTER)) strings.push_back("bloomfilter");
     if (NetPermissions::HasFlag(flags, PF_NOBAN)) strings.push_back("noban");
     if (NetPermissions::HasFlag(flags, PF_FORCERELAY)) strings.push_back("forcerelay");
