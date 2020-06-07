@@ -118,6 +118,5 @@ class FeeFilterTest(SyscoinTestFramework):
         conn.clear_invs()
 
 
-
 if __name__ == '__main__':
     FeeFilterTest().main()
