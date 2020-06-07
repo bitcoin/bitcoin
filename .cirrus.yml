@@ -122,6 +122,14 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
 
 task:
+  name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:bionic
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_native_nowallet.sh"
+
+task:
   name: 'macOS 10.14  [GOAL: deploy] [no functional tests]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
