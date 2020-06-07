@@ -85,7 +85,16 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.checkpermission(
             # all permission added
             ["-whitelist=all@127.0.0.1"],
-            ["blockfilters", "forcerelay", "noban", "mempool", "bloomfilter", "relay", "download", "addr"])
+            [
+                "blockfilters",
+                "forcerelay",
+                "noban",
+                "mempool",
+                "bloomfilter",
+                "relay",
+                "download",
+                "addr",
+            ])
 
         self.stop_node(1)
         self.nodes[1].assert_start_raises_init_error(["-whitelist=oopsie@127.0.0.1"], "Invalid P2P permission", match=ErrorMatch.PARTIAL_REGEX)
