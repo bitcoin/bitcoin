@@ -137,7 +137,7 @@ pushd "$TARGET" || exit 1
         else
             BIN_PATH="bin/syscoin-core-${tag:1}"
         fi
-        URL="https://syscoin.org/$BIN_PATH/syscoin-${tag:1}-$PLATFORM.tar.gz"
+        URL="https://syscoincore.org/$BIN_PATH/syscoin-${tag:1}-$PLATFORM.tar.gz"
         echo "Fetching: $URL"
         if ! curl -O -f $URL; then
             echo "Download failed."
