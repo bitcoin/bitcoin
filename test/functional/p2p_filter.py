@@ -24,7 +24,7 @@ from test_framework.script import MAX_SCRIPT_ELEMENT_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 
 
-class FilterNode(P2PInterface):
+class P2PBloomFilter(P2PInterface):
     # This is a P2SH watch-only wallet
     watch_script_pubkey = 'a914ffffffffffffffffffffffffffffffffffffffff87'
     # The initial filter (n=10, fp=0.000001) with just the above scriptPubKey added
@@ -91,38 +91,38 @@ class FilterTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def test_size_limits(self, filter_node):
+    def test_size_limits(self, filter_peer):
         self.log.info('Check that too large filter is rejected')
         with self.nodes[0].assert_debug_log(['Misbehaving']):
-            filter_node.send_and_ping(msg_filterload(data=b'\xbb'*(MAX_BLOOM_FILTER_SIZE+1)))
+            filter_peer.send_and_ping(msg_filterload(data=b'\xbb'*(MAX_BLOOM_FILTER_SIZE+1)))
 
         self.log.info('Check that max size filter is accepted')
         with self.nodes[0].assert_debug_log([], unexpected_msgs=['Misbehaving']):
-            filter_node.send_and_ping(msg_filterload(data=b'\xbb'*(MAX_BLOOM_FILTER_SIZE)))
-        filter_node.send_and_ping(msg_filterclear())
+            filter_peer.send_and_ping(msg_filterload(data=b'\xbb'*(MAX_BLOOM_FILTER_SIZE)))
+        filter_peer.send_and_ping(msg_filterclear())
 
         self.log.info('Check that filter with too many hash functions is rejected')
         with self.nodes[0].assert_debug_log(['Misbehaving']):
-            filter_node.send_and_ping(msg_filterload(data=b'\xaa', nHashFuncs=MAX_BLOOM_HASH_FUNCS+1))
+            filter_peer.send_and_ping(msg_filterload(data=b'\xaa', nHashFuncs=MAX_BLOOM_HASH_FUNCS+1))
 
         self.log.info('Check that filter with max hash functions is accepted')
         with self.nodes[0].assert_debug_log([], unexpected_msgs=['Misbehaving']):
-            filter_node.send_and_ping(msg_filterload(data=b'\xaa', nHashFuncs=MAX_BLOOM_HASH_FUNCS))
+            filter_peer.send_and_ping(msg_filterload(data=b'\xaa', nHashFuncs=MAX_BLOOM_HASH_FUNCS))
         # Don't send filterclear until next two filteradd checks are done
 
         self.log.info('Check that max size data element to add to the filter is accepted')
         with self.nodes[0].assert_debug_log([], unexpected_msgs=['Misbehaving']):
-            filter_node.send_and_ping(msg_filteradd(data=b'\xcc'*(MAX_SCRIPT_ELEMENT_SIZE)))
+            filter_peer.send_and_ping(msg_filteradd(data=b'\xcc'*(MAX_SCRIPT_ELEMENT_SIZE)))
 
         self.log.info('Check that too large data element to add to the filter is rejected')
         with self.nodes[0].assert_debug_log(['Misbehaving']):
-            filter_node.send_and_ping(msg_filteradd(data=b'\xcc'*(MAX_SCRIPT_ELEMENT_SIZE+1)))
+            filter_peer.send_and_ping(msg_filteradd(data=b'\xcc'*(MAX_SCRIPT_ELEMENT_SIZE+1)))
 
-        filter_node.send_and_ping(msg_filterclear())
+        filter_peer.send_and_ping(msg_filterclear())
 
     def test_msg_mempool(self):
         self.log.info("Check that a node with bloom filters enabled services p2p mempool messages")
-        filter_peer = FilterNode()
+        filter_peer = P2PBloomFilter()
 
         self.log.info("Create a tx relevant to the peer before connecting")
         filter_address = self.nodes[0].decodescript(filter_peer.watch_script_pubkey)['addresses'][0]
@@ -146,67 +146,67 @@ class FilterTest(BitcoinTestFramework):
         # Clear the mempool so that this transaction does not impact subsequent tests
         self.nodes[0].generate(1)
 
-    def test_filter(self, filter_node):
+    def test_filter(self, filter_peer):
         # Set the bloomfilter using filterload
-        filter_node.send_and_ping(filter_node.watch_filter_init)
+        filter_peer.send_and_ping(filter_peer.watch_filter_init)
         # If fRelay is not already True, sending filterload sets it to True
         assert self.nodes[0].getpeerinfo()[0]['relaytxes']
-        filter_address = self.nodes[0].decodescript(filter_node.watch_script_pubkey)['addresses'][0]
+        filter_address = self.nodes[0].decodescript(filter_peer.watch_script_pubkey)['addresses'][0]
 
         self.log.info('Check that we receive merkleblock and tx if the filter matches a tx in a block')
         block_hash = self.nodes[0].generatetoaddress(1, filter_address)[0]
         txid = self.nodes[0].getblock(block_hash)['tx'][0]
-        filter_node.wait_for_merkleblock(block_hash)
-        filter_node.wait_for_tx(txid)
+        filter_peer.wait_for_merkleblock(block_hash)
+        filter_peer.wait_for_tx(txid)
 
         self.log.info('Check that we only receive a merkleblock if the filter does not match a tx in a block')
-        filter_node.tx_received = False
+        filter_peer.tx_received = False
         block_hash = self.nodes[0].generatetoaddress(1, self.nodes[0].getnewaddress())[0]
-        filter_node.wait_for_merkleblock(block_hash)
-        assert not filter_node.tx_received
+        filter_peer.wait_for_merkleblock(block_hash)
+        assert not filter_peer.tx_received
 
         self.log.info('Check that we not receive a tx if the filter does not match a mempool tx')
-        filter_node.merkleblock_received = False
-        filter_node.tx_received = False
+        filter_peer.merkleblock_received = False
+        filter_peer.tx_received = False
         self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 90)
-        filter_node.sync_with_ping()
-        filter_node.sync_with_ping()
-        assert not filter_node.merkleblock_received
-        assert not filter_node.tx_received
+        filter_peer.sync_with_ping()
+        filter_peer.sync_with_ping()
+        assert not filter_peer.merkleblock_received
+        assert not filter_peer.tx_received
 
         self.log.info('Check that we receive a tx if the filter matches a mempool tx')
-        filter_node.merkleblock_received = False
+        filter_peer.merkleblock_received = False
         txid = self.nodes[0].sendtoaddress(filter_address, 90)
-        filter_node.wait_for_tx(txid)
-        assert not filter_node.merkleblock_received
+        filter_peer.wait_for_tx(txid)
+        assert not filter_peer.merkleblock_received
 
         self.log.info('Check that after deleting filter all txs get relayed again')
-        filter_node.send_and_ping(msg_filterclear())
+        filter_peer.send_and_ping(msg_filterclear())
         for _ in range(5):
             txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 7)
-            filter_node.wait_for_tx(txid)
+            filter_peer.wait_for_tx(txid)
 
         self.log.info('Check that request for filtered blocks is ignored if no filter is set')
-        filter_node.merkleblock_received = False
-        filter_node.tx_received = False
+        filter_peer.merkleblock_received = False
+        filter_peer.tx_received = False
         with self.nodes[0].assert_debug_log(expected_msgs=['received getdata']):
             block_hash = self.nodes[0].generatetoaddress(1, self.nodes[0].getnewaddress())[0]
-            filter_node.wait_for_inv([CInv(MSG_BLOCK, int(block_hash, 16))])
-            filter_node.sync_with_ping()
-            assert not filter_node.merkleblock_received
-            assert not filter_node.tx_received
+            filter_peer.wait_for_inv([CInv(MSG_BLOCK, int(block_hash, 16))])
+            filter_peer.sync_with_ping()
+            assert not filter_peer.merkleblock_received
+            assert not filter_peer.tx_received
 
         self.log.info('Check that sending "filteradd" if no filter is set is treated as misbehavior')
         with self.nodes[0].assert_debug_log(['Misbehaving']):
-            filter_node.send_and_ping(msg_filteradd(data=b'letsmisbehave'))
+            filter_peer.send_and_ping(msg_filteradd(data=b'letsmisbehave'))
 
         self.log.info("Check that division-by-zero remote crash bug [CVE-2013-5700] is fixed")
-        filter_node.send_and_ping(msg_filterload(data=b'', nHashFuncs=1))
-        filter_node.send_and_ping(msg_filteradd(data=b'letstrytocrashthisnode'))
+        filter_peer.send_and_ping(msg_filterload(data=b'', nHashFuncs=1))
+        filter_peer.send_and_ping(msg_filteradd(data=b'letstrytocrashthisnode'))
         self.nodes[0].disconnect_p2ps()
 
     def run_test(self):
-        filter_peer = self.nodes[0].add_p2p_connection(FilterNode())
+        filter_peer = self.nodes[0].add_p2p_connection(P2PBloomFilter())
         self.log.info('Test filter size limits')
         self.test_size_limits(filter_peer)
 
@@ -216,7 +216,7 @@ class FilterTest(BitcoinTestFramework):
 
         self.log.info('Test BIP 37 for a node with fRelay = False')
         # Add peer but do not send version yet
-        filter_peer_without_nrelay = self.nodes[0].add_p2p_connection(FilterNode(), send_version=False, wait_for_verack=False)
+        filter_peer_without_nrelay = self.nodes[0].add_p2p_connection(P2PBloomFilter(), send_version=False, wait_for_verack=False)
         # Send version with fRelay=False
         filter_peer_without_nrelay.wait_until(lambda: filter_peer_without_nrelay.is_connected, timeout=10)
         version_without_fRelay = msg_version()
