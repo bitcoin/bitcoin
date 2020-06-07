@@ -27,6 +27,17 @@ def allInvsMatch(invsExpected, testnode):
     return False
 
 
+class FeefilterConn(P2PInterface):
+    feefilter_received = False
+
+    def on_feefilter(self, message):
+        self.feefilter_received = True
+
+    def assert_feefilter_received(self, recv: bool):
+        with mininode_lock:
+            assert_equal(self.feefilter_received, recv)
+
+
 class TestP2PConn(P2PInterface):
     def __init__(self):
         super().__init__()
