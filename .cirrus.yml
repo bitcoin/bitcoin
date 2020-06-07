@@ -1,3 +1,36 @@
+# Global defaults
+timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
+container:
+  # https://cirrus-ci.org/faq/#are-there-any-limits
+  # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
+  cpu: 2
+  memory: 6G  # https://cirrus-ci.org/guide/linux/#linux-containers
+env:
+  PACKAGE_MANAGER_INSTALL : "apt-get update && apt-get install -y"
+  MAKEJOBS: "-j4"
+  DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
+  TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
+  CCACHE_SIZE: "200M"
+  CCACHE_DIR: "/tmp/ccache_dir"
+# Global task template
+# https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
+global_task_template: &GLOBAL_TASK_TEMPLATE
+  ccache_cache:
+    folder: "/tmp/ccache_dir"
+  depends_built_cache:
+    folder: "/tmp/cirrus-ci-build/depends/built"
+  depends_sdk_cache:
+    folder: "/tmp/cirrus-ci-build/depends/sdk-sources"
+  depends_releases_cache:
+    folder: "/tmp/cirrus-ci-build/releases"
+  merge_base_script:
+    - bash -c "$PACKAGE_MANAGER_INSTALL git"
+    - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
+    - git config --global user.email "ci@ci.ci"
+    - git config --global user.name "ci"
+    - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
+  ci_script:
+    - ./ci/test_run_all.sh
 #task:
 #  name: "Windows"
 #  windows_container:
@@ -14,3 +47,10 @@
 #  install_script:
 #    - choco install python --version=3.7.7 -y
 
+task:
+  name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:bionic
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
