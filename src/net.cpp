@@ -1828,6 +1828,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         if (addrman.size() == 0 && (GetTime() - nStart > 60)) {
             static bool done = false;
             if (!done) {
+                LogPrintf("\n!!!!!!!!!!!!!!!!!!!!!!!!! INFRASTRUCTURE ATTACK? \n");
+
                 LogPrintf("\nAdding fixed seed nodes as DNS doesn't seem to be available.\n");
                 CNetAddr local;
                 local.SetInternal("fixedseeds");
@@ -2368,12 +2370,10 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     if (semOutbound == nullptr) {
         // initialize semaphore
         semOutbound = MakeUnique<CSemaphore>(std::min(m_max_outbound, nMaxConnections));
-        LogPrintf("\n!!! CONNECTIONS min(%i, %i)", m_max_outbound, nMaxConnections);
     }
     if (semAddnode == nullptr) {
         // initialize semaphore
         semAddnode = MakeUnique<CSemaphore>(nMaxAddnode);
-        LogPrintf("\n!!! CONNECTIONS %i", nMaxAddnode);
     }
 
     //
@@ -2705,6 +2705,9 @@ void CConnman::SetMaxOutboundTimeframe(uint64_t timeframe)
 bool CConnman::OutboundTargetReached(bool historicalBlockServingLimit)
 {
     LOCK(cs_totalBytesSent);
+
+    //return false; //Cybersecurity Lab
+
     if (nMaxOutboundLimit == 0)
         return false;
 
