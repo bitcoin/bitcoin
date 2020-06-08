@@ -28,9 +28,9 @@
 #endif
 
 // Settings
-static RecursiveMutex cs_proxyInfos;
-static proxyType proxyInfo[NET_MAX] GUARDED_BY(cs_proxyInfos);
-static proxyType nameProxy GUARDED_BY(cs_proxyInfos);
+static Mutex g_proxyinfo_mutex;
+static proxyType proxyInfo[NET_MAX] GUARDED_BY(g_proxyinfo_mutex);
+static proxyType nameProxy GUARDED_BY(g_proxyinfo_mutex);
 int nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 bool fNameLookup = DEFAULT_NAME_LOOKUP;
 
@@ -711,14 +711,14 @@ bool SetProxy(enum Network net, const proxyType &addrProxy) {
     assert(net >= 0 && net < NET_MAX);
     if (!addrProxy.IsValid())
         return false;
-    LOCK(cs_proxyInfos);
+    LOCK(g_proxyinfo_mutex);
     proxyInfo[net] = addrProxy;
     return true;
 }
 
 bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
     assert(net >= 0 && net < NET_MAX);
-    LOCK(cs_proxyInfos);
+    LOCK(g_proxyinfo_mutex);
     if (!proxyInfo[net].IsValid())
         return false;
     proxyInfoOut = proxyInfo[net];
@@ -744,13 +744,13 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
 bool SetNameProxy(const proxyType &addrProxy) {
     if (!addrProxy.IsValid())
         return false;
-    LOCK(cs_proxyInfos);
+    LOCK(g_proxyinfo_mutex);
     nameProxy = addrProxy;
     return true;
 }
 
 bool GetNameProxy(proxyType &nameProxyOut) {
-    LOCK(cs_proxyInfos);
+    LOCK(g_proxyinfo_mutex);
     if(!nameProxy.IsValid())
         return false;
     nameProxyOut = nameProxy;
@@ -758,12 +758,12 @@ bool GetNameProxy(proxyType &nameProxyOut) {
 }
 
 bool HaveNameProxy() {
-    LOCK(cs_proxyInfos);
+    LOCK(g_proxyinfo_mutex);
     return nameProxy.IsValid();
 }
 
 bool IsProxy(const CNetAddr &addr) {
-    LOCK(cs_proxyInfos);
+    LOCK(g_proxyinfo_mutex);
     for (int i = 0; i < NET_MAX; i++) {
         if (addr == static_cast<CNetAddr>(proxyInfo[i].proxy))
             return true;
