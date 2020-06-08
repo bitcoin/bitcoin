@@ -98,8 +98,27 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
     const uint32_t &nAsset = asset.voutAssets.begin()->first;
     entry.__pushKV("txtype", stringFromSyscoinTx(tx.nVersion));
     entry.__pushKV("txid", tx.GetHash().GetHex());  
-    entry.__pushKV("blockhash", hashBlock.GetHex());  
-	entry.__pushKV("asset_guid", nAsset);
+    entry.__pushKV("blockhash", hashBlock.GetHex());
+    UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+    for(const auto &it: tx.voutAssets) {
+        CAmount nTotal = 0;
+        UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+        const uint32_t &nAsset = it.first;
+        oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+        UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
+        for(const auto& voutAsset: it.second){
+            nTotal += voutAsset.nValue;
+            UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
+            oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
+            oAssetAllocationReceiverOutputObj.__pushKV("amount", voutAsset.nValue);
+            oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
+        }
+        oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
+        oAssetAllocationReceiversObj.__pushKV("total", nTotal);
+        oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+    }
+
+    entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
     if (!asset.strSymbol.empty())
 		entry.__pushKV("symbol", asset.strSymbol);
 
