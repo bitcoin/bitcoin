@@ -91,7 +91,6 @@ class MiningTest(BitcoinTestFramework):
         coinbase_tx.vin[0].nSequence = 2**32 - 2
         coinbase_tx.rehash()
 
-        # round-trip the encoded bip34 block height commitment
         block = CBlock()
         block.nVersion = tmpl["version"]
         block.hashPrevBlock = int(tmpl["previousblockhash"], 16)
