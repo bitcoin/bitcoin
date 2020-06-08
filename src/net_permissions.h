@@ -2,12 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <netaddress.h>
+
 #include <string>
 #include <vector>
-#include <netaddress.h>
 
 #ifndef BITCOIN_NET_PERMISSIONS_H
 #define BITCOIN_NET_PERMISSIONS_H
+
+extern const std::vector<std::string> NET_PERMISSIONS_DOC;
+
 enum NetPermissionFlags
 {
     PF_NONE = 0,
@@ -27,6 +31,7 @@ enum NetPermissionFlags
     PF_ISIMPLICIT = (1U << 31),
     PF_ALL = PF_BLOOMFILTER | PF_FORCERELAY | PF_RELAY | PF_NOBAN | PF_MEMPOOL,
 };
+
 class NetPermissions
 {
 public:
@@ -45,6 +50,7 @@ public:
         flags = static_cast<NetPermissionFlags>(flags & ~f);
     }
 };
+
 class NetWhitebindPermissions : public NetPermissions
 {
 public:
