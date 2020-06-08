@@ -9,7 +9,6 @@ from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR
 from test_framework.util import (
     assert_equal,
     connect_nodes,
-    wait_until,
 )
 
 
@@ -57,9 +56,9 @@ class InvalidateTest(BitcoinTestFramework):
         self.log.info("..and then mine a block")
         self.nodes[2].generatetoaddress(1, self.nodes[2].get_deterministic_priv_key().address)
         self.log.info("Verify all nodes are at the right height")
-        wait_until(lambda: self.nodes[2].getblockcount() == 3, timeout=5)
-        wait_until(lambda: self.nodes[0].getblockcount() == 4, timeout=5)
-        wait_until(lambda: self.nodes[1].getblockcount() == 4, timeout=5)
+        self.wait_until(lambda: self.nodes[2].getblockcount() == 3, timeout=5)
+        self.wait_until(lambda: self.nodes[0].getblockcount() == 4, timeout=5)
+        self.wait_until(lambda: self.nodes[1].getblockcount() == 4, timeout=5)
 
         self.log.info("Verify that we reconsider all ancestors as well")
         blocks = self.nodes[1].generatetodescriptor(10, ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR)

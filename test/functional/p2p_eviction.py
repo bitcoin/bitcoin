@@ -17,7 +17,7 @@ import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.mininode import P2PInterface, P2PDataStore
-from test_framework.util import assert_equal, wait_until
+from test_framework.util import assert_equal
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import CTransaction, FromHex, msg_pong, msg_tx
 
@@ -92,7 +92,7 @@ class P2PEvict(BitcoinTestFramework):
         for _ in range(8):
             fastpeer = node.add_p2p_connection(P2PInterface())
             current_peer += 1
-            wait_until(lambda: "ping" in fastpeer.last_message, timeout=10)
+            self.wait_until(lambda: "ping" in fastpeer.last_message, timeout=10)
 
         # Make sure by asking the node what the actual min pings are
         peerinfo = node.getpeerinfo()
