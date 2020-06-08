@@ -13,10 +13,9 @@
 #include <consensus/validation.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
-#include <validation.h>
 #include <merkleblock.h>
-#include <netmessagemaker.h>
 #include <netbase.h>
+#include <netmessagemaker.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
@@ -26,15 +25,13 @@
 #include <scheduler.h>
 #include <tinyformat.h>
 #include <txmempool.h>
-#include <util/system.h>
+#include <util/check.h> // For NDEBUG compile time check
 #include <util/strencodings.h>
+#include <util/system.h>
+#include <validation.h>
 
 #include <memory>
 #include <typeinfo>
-
-#if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
-#endif
 
 /** Expiration time for orphan transactions in seconds */
 static constexpr int64_t ORPHAN_TX_EXPIRE_TIME = 20 * 60;

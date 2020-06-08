@@ -42,4 +42,8 @@ class NonFatalCheckError : public std::runtime_error
         }                                                         \
     } while (false)
 
+#if defined(NDEBUG)
+#error "Cannot compile without assertions!"
+#endif
+
 #endif // BITCOIN_UTIL_CHECK_H
