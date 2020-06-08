@@ -1654,16 +1654,17 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
     return true;
 }
 
+constexpr auto AbortError = InitError;
+
 /** Abort with a message */
-static bool AbortNode(const std::string& strMessage, const bilingual_str& userMessage = bilingual_str())
+static bool AbortNode(const std::string& strMessage, bilingual_str user_message = bilingual_str())
 {
     SetMiscWarning(strMessage);
     LogPrintf("*** %s\n", strMessage);
-    if (!userMessage.empty()) {
-        uiInterface.ThreadSafeMessageBox(userMessage, "", CClientUIInterface::MSG_ERROR);
-    } else {
-        uiInterface.ThreadSafeMessageBox(_("A fatal internal error occurred, see debug.log for details"), "", CClientUIInterface::MSG_ERROR);
+    if (user_message.empty()) {
+        user_message = _("A fatal internal error occurred, see debug.log for details");
     }
+    AbortError(user_message);
     StartShutdown();
     return false;
 }
