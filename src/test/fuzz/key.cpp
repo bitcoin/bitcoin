@@ -2,8 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
-#include <chainparamsbase.h>
 #include <key.h>
 #include <key_io.h>
 #include <outputtype.h>
@@ -17,7 +15,7 @@
 #include <script/standard.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
-#include <test/util/setup_common.h>
+#include <test/fuzz/util.h>
 #include <util/memory.h>
 #include <util/strencodings.h>
 
@@ -29,7 +27,7 @@
 
 void initialize()
 {
-    static const BasicTestingSetup basic_testing_setup{CBaseChainParams::REGTEST};
+    InitializeFuzzingContext();
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

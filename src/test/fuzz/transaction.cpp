@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
 #include <coins.h>
 #include <consensus/tx_check.h>
 #include <consensus/tx_verify.h>
@@ -14,7 +13,7 @@
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
-#include <test/util/setup_common.h>
+#include <test/fuzz/util.h>
 #include <univalue.h>
 #include <util/rbf.h>
 #include <validation.h>
@@ -24,7 +23,7 @@
 
 void initialize()
 {
-    static const BasicTestingSetup basic_testing_setup{CBaseChainParams::REGTEST};
+    InitializeFuzzingContext();
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

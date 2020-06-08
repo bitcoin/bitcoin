@@ -24,7 +24,6 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/moneystr.h>
@@ -43,7 +42,7 @@
 
 void initialize()
 {
-    static const BasicTestingSetup basic_testing_setup{CBaseChainParams::REGTEST};
+    InitializeFuzzingContext();
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

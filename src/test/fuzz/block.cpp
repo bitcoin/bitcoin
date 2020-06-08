@@ -11,7 +11,7 @@
 #include <pubkey.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
-#include <test/util/setup_common.h>
+#include <test/fuzz/util.h>
 #include <validation.h>
 #include <version.h>
 
@@ -20,7 +20,7 @@
 
 void initialize()
 {
-    static const BasicTestingSetup basic_testing_setup{CBaseChainParams::REGTEST};
+    InitializeFuzzingContext();
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

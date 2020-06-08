@@ -7,6 +7,8 @@
 #include <test/util/setup_common.h>
 
 #include <cstdint>
+#include <functional>
+#include <string>
 #include <unistd.h>
 #include <vector>
 

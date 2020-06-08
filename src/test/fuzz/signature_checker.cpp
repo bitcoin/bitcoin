@@ -6,7 +6,7 @@
 #include <script/interpreter.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <test/util/setup_common.h>
+#include <test/fuzz/util.h>
 #include <util/memory.h>
 
 #include <cstdint>
@@ -16,7 +16,7 @@
 
 void initialize()
 {
-    static const BasicTestingSetup basic_testing_setup;
+    InitializeFuzzingContext(CBaseChainParams::MAIN);
 }
 
 namespace {

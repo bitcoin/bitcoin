@@ -5,7 +5,7 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <streams.h>
-#include <test/util/setup_common.h>
+#include <test/fuzz/util.h>
 #include <util/memory.h>
 #include <version.h>
 
@@ -16,7 +16,7 @@ static bool IsValidFlagCombination(unsigned flags);
 
 void initialize()
 {
-    static const BasicTestingSetup basic_testing_setup;
+    InitializeFuzzingContext(CBaseChainParams::MAIN);
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)
