@@ -5,6 +5,8 @@
 #ifndef BITCOIN_CONSENSUS_TX_CHECK_H
 #define BITCOIN_CONSENSUS_TX_CHECK_H
 
+#include <stdint.h>
+
 /**
  * Context-independent transaction checking code that can be called outside the
  * bitcoin server and doesn't depend on chain or mempool state. Transaction
@@ -16,5 +18,11 @@ class CTransaction;
 class TxValidationState;
 
 bool CheckTransaction(const CTransaction& tx, TxValidationState& state);
+
+/**
+ * Check if transaction is final and can be included in a block with the
+ * specified height and time. Consensus critical.
+ */
+bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
 
 #endif // BITCOIN_CONSENSUS_TX_CHECK_H
