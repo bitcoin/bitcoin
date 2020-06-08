@@ -109,6 +109,11 @@ QFont::Weight fontWeightBold = defaultFontWeightBold;
 // Scale value for text sizes
 int fontScale = defaultFontScale;
 
+// Contains all widgets and its font attributes (weight, italic) with font changes due to GUIUtil::setFont
+static std::map<QWidget*, std::pair<QFont::Weight, bool>> mapNormalFontUpdates;
+// Contains all widgets where a fixed pitch font has been set with GUIUtil::setFixedPitchFont
+static std::set<QWidget*> setFixedPitchFontUpdates;
+
 static const std::map<ThemedColor, QColor> themedColors = {
     { ThemedColor::DEFAULT, QColor(0, 0, 0) },
     { ThemedColor::UNCONFIRMED, QColor(128, 128, 128) },
@@ -1191,6 +1196,9 @@ void setFont(const std::vector<QWidget*> &vecWidgets, QFont::Weight weight, bool
     QFont font = getFont(weight, fItalic);
 
     for (auto it : vecWidgets) {
+        auto fontAttributes = std::make_pair(weight, fItalic);
+        auto itw = mapNormalFontUpdates.emplace(std::make_pair(it, fontAttributes));
+        if (!itw.second) itw.first->second = fontAttributes;
         it->setFont(font);
     }
 }
@@ -1198,7 +1206,47 @@ void setFont(const std::vector<QWidget*> &vecWidgets, QFont::Weight weight, bool
 void setFixedPitchFont(const std::vector<QWidget*>& vecWidgets)
 {
     for (auto it : vecWidgets) {
+        setFixedPitchFontUpdates.emplace(it);
         it->setFont(fixedPitchFont());
+    }
+}
+
+void updateFonts()
+{
+    setApplicationFont();
+
+    std::map<QWidget*, QFont> mapWidgetFonts;
+
+    for (QWidget* w : qApp->allWidgets()) {
+        QFont font = w->font();
+        font.setFamily(qApp->font().family());
+        font.setWeight(qApp->font().weight());
+        font.setStyleName(qApp->font().styleName());
+        font.setStyle(qApp->font().style());
+        mapWidgetFonts.emplace(w, font);
+    }
+
+    auto itn = mapNormalFontUpdates.begin();
+    while (itn != mapNormalFontUpdates.end()) {
+        if (mapWidgetFonts.count(itn->first)) {
+            mapWidgetFonts[itn->first] = getFont(itn->second.first, itn->second.second);
+            ++itn;
+        } else {
+            itn = mapNormalFontUpdates.erase(itn);
+        }
+    }
+    auto itf = setFixedPitchFontUpdates.begin();
+    while (itf != setFixedPitchFontUpdates.end()) {
+        if (mapWidgetFonts.count(*itf)) {
+            mapWidgetFonts[*itf] = fixedPitchFont();
+            ++itf;
+        } else {
+            itf = setFixedPitchFontUpdates.erase(itf);
+        }
+    }
+
+    for (auto it : mapWidgetFonts) {
+        it.first->setFont(it.second);
     }
 }
 

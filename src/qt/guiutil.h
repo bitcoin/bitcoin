@@ -270,11 +270,16 @@ namespace GUIUtil
     void setApplicationFont();
 
     /** Workaround to set correct font styles in all themes since there is a bug in macOS which leads to
-        issues loading variations of montserrat in css */
+        issues loading variations of montserrat in css it also keeps track of the set fonts to update on
+        theme changes. */
     void setFont(const std::vector<QWidget*>& vecWidgets, QFont::Weight weight, bool fItalic = false);
 
-    /** Workaround to set a fixed pitch font for traditional theme */
+    /** Workaround to set a fixed pitch font in traditional theme while keeping track of font updates */
     void setFixedPitchFont(const std::vector<QWidget*>& vecWidgets);
+
+    /** Update the font of all widgets where a custom font has been set with
+        GUIUtil::setFont */
+    void updateFonts();
 
     /** Get a properly weighted QFont object with the font Montserrat
         Use ExtraLight as default as this lines up with the default in css. */
