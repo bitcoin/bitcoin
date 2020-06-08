@@ -531,7 +531,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         Split the network of four nodes into nodes 0/1 and 2/3.
         """
         disconnect_nodes(self.nodes[1], 2)
-        disconnect_nodes(self.nodes[2], 1)
         self.sync_all(self.nodes[:2])
         self.sync_all(self.nodes[2:])
 
