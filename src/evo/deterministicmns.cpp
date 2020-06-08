@@ -310,7 +310,9 @@ void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty, boo
     assert(penalty > 0);
 
     auto dmn = GetMN(proTxHash);
-    assert(dmn);
+    if (!dmn) {
+        throw(std::runtime_error(strprintf("%s: Can't find a masternode with proTxHash=%s", __func__, proTxHash.ToString())));
+    }
 
     int maxPenalty = CalcMaxPoSePenalty();
 
@@ -336,7 +338,9 @@ void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty, boo
 void CDeterministicMNList::PoSeDecrease(const uint256& proTxHash)
 {
     auto dmn = GetMN(proTxHash);
-    assert(dmn);
+    if (!dmn) {
+        throw(std::runtime_error(strprintf("%s: Can't find a masternode with proTxHash=%s", __func__, proTxHash.ToString())));
+    }
     assert(dmn->pdmnState->nPoSePenalty > 0 && dmn->pdmnState->nPoSeBanHeight == -1);
 
     auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
@@ -411,13 +415,13 @@ CDeterministicMNList CDeterministicMNList::ApplyDiff(const CBlockIndex* pindex, 
 
     for (const auto& id : diff.removedMns) {
         auto dmn = result.GetMNByInternalId(id);
-        assert(dmn);
+        if (!dmn) {
+            throw(std::runtime_error(strprintf("%s: can't find a removed masternode, id=%d", __func__, id)));
+        }
         result.RemoveMN(dmn->proTxHash);
     }
     for (const auto& dmn : diff.addedMNs) {
-        assert(dmn->internalId == result.GetTotalRegisteredCount());
         result.AddMN(dmn);
-        result.SetTotalRegisteredCount(result.GetTotalRegisteredCount() + 1);
     }
     for (const auto& p : diff.updatedMNs) {
         auto dmn = result.GetMNByInternalId(p.first);
@@ -427,9 +431,23 @@ CDeterministicMNList CDeterministicMNList::ApplyDiff(const CBlockIndex* pindex, 
     return result;
 }
 
-void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn)
+void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount)
 {
-    assert(!mnMap.find(dmn->proTxHash));
+    assert(dmn != nullptr);
+
+    if (mnMap.find(dmn->proTxHash)) {
+        throw(std::runtime_error(strprintf("%s: can't add a duplicate masternode with the same proTxHash=%s", __func__, dmn->proTxHash.ToString())));
+    }
+    if (mnInternalIdMap.find(dmn->internalId)) {
+        throw(std::runtime_error(strprintf("%s: can't add a duplicate masternode with the same internalId=%d", __func__, dmn->internalId)));
+    }
+    if (HasUniqueProperty(dmn->pdmnState->addr)) {
+        throw(std::runtime_error(strprintf("%s: can't add a masternode with a duplicate address %s", __func__, dmn->pdmnState->addr.ToStringIPPort(false))));
+    }
+    if (HasUniqueProperty(dmn->pdmnState->keyIDOwner) || HasUniqueProperty(dmn->pdmnState->pubKeyOperator)) {
+        throw(std::runtime_error(strprintf("%s: can't add a masternode with a duplicate key (%s or %s)", __func__, EncodeDestination(dmn->pdmnState->keyIDOwner), dmn->pdmnState->pubKeyOperator.Get().ToString())));
+    }
+
     mnMap = mnMap.set(dmn->proTxHash, dmn);
     mnInternalIdMap = mnInternalIdMap.set(dmn->internalId, dmn->proTxHash);
     AddUniqueProperty(dmn, dmn->collateralOutpoint);
@@ -440,11 +458,20 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn)
     if (dmn->pdmnState->pubKeyOperator.Get().IsValid()) {
         AddUniqueProperty(dmn, dmn->pdmnState->pubKeyOperator);
     }
+    if (fBumpTotalCount) {
+        // nTotalRegisteredCount acts more like a checkpoint, not as a limit,
+        nTotalRegisteredCount = std::max(dmn->internalId + 1, (uint64_t)nTotalRegisteredCount);
+    }
 }
 
 void CDeterministicMNList::UpdateMN(const CDeterministicMNCPtr& oldDmn, const CDeterministicMNStateCPtr& pdmnState)
 {
     assert(oldDmn != nullptr);
+
+    if (HasUniqueProperty(oldDmn->pdmnState->addr) && GetUniquePropertyMN(oldDmn->pdmnState->addr)->proTxHash != oldDmn->proTxHash) {
+        throw(std::runtime_error(strprintf("%s: can't update a masternode with a duplicate address %s", __func__, oldDmn->pdmnState->addr.ToStringIPPort(false))));
+    }
+
     auto dmn = std::make_shared<CDeterministicMN>(*oldDmn);
     auto oldState = dmn->pdmnState;
     dmn->pdmnState = pdmnState;
@@ -458,7 +485,9 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMNCPtr& oldDmn, const CD
 void CDeterministicMNList::UpdateMN(const uint256& proTxHash, const CDeterministicMNStateCPtr& pdmnState)
 {
     auto oldDmn = mnMap.find(proTxHash);
-    assert(oldDmn != nullptr);
+    if (!oldDmn) {
+        throw(std::runtime_error(strprintf("%s: Can't find a masternode with proTxHash=%s", __func__, proTxHash.ToString())));
+    }
     UpdateMN(*oldDmn, pdmnState);
 }
 
@@ -474,7 +503,9 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMNCPtr& oldDmn, const CD
 void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
 {
     auto dmn = GetMN(proTxHash);
-    assert(dmn != nullptr);
+    if (!dmn) {
+        throw(std::runtime_error(strprintf("%s: Can't find a masternode with proTxHash=%s", __func__, proTxHash.ToString())));
+    }
     DeleteUniqueProperty(dmn, dmn->collateralOutpoint);
     if (dmn->pdmnState->addr != CService()) {
         DeleteUniqueProperty(dmn, dmn->pdmnState->addr);
@@ -507,7 +538,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
 
     int nHeight = pindex->nHeight;
 
-    {
+    try {
         LOCK(cs);
 
         if (!BuildNewListFromBlock(block, pindex->pprev, _state, newList, true)) {
@@ -533,6 +564,9 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
             LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
                 __func__, nHeight, newList.GetAllMNsCount());
         }
+    } catch (const std::exception& e) {
+        LogPrintf("CDeterministicMNManager::%s -- internal error: %s\n", __func__, e.what());
+        return _state.DoS(100, false, REJECT_INVALID, "failed-dmn-block");
     }
 
     // Don't hold cs while calling signals
@@ -643,13 +677,12 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
             CProRegTx proTx;
             if (!GetTxPayload(tx, proTx)) {
-                assert(false); // this should have been handled already
+                return _state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
             }
 
             auto dmn = std::make_shared<CDeterministicMN>();
             dmn->proTxHash = tx.GetHash();
             dmn->internalId = newList.GetTotalRegisteredCount();
-            newList.SetTotalRegisteredCount(newList.GetTotalRegisteredCount() + 1);
 
             // collateralOutpoint is either pointing to an external collateral or to the ProRegTx itself
             if (proTx.collateralOutpoint.hash.IsNull()) {
@@ -706,7 +739,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
             CProUpServTx proTx;
             if (!GetTxPayload(tx, proTx)) {
-                assert(false); // this should have been handled already
+                return _state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
             }
 
             if (newList.HasUniqueProperty(proTx.addr) && newList.GetUniquePropertyMN(proTx.addr)->proTxHash != proTx.proTxHash) {
@@ -743,7 +776,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
             CProUpRegTx proTx;
             if (!GetTxPayload(tx, proTx)) {
-                assert(false); // this should have been handled already
+                return _state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
             }
 
             CDeterministicMNCPtr dmn = newList.GetMN(proTx.proTxHash);
@@ -769,7 +802,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
             CProUpRevTx proTx;
             if (!GetTxPayload(tx, proTx)) {
-                assert(false); // this should have been handled already
+                return _state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
             }
 
             CDeterministicMNCPtr dmn = newList.GetMN(proTx.proTxHash);
@@ -790,7 +823,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         } else if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
             llmq::CFinalCommitmentTxPayload qc;
             if (!GetTxPayload(tx, qc)) {
-                assert(false); // this should have been handled already
+                return _state.DoS(100, false, REJECT_INVALID, "bad-qc-payload");
             }
             if (!qc.commitment.IsNull()) {
                 const auto& params = Params().GetConsensus().llmqs.at(qc.commitment.llmqType);
@@ -1012,9 +1045,14 @@ bool CDeterministicMNManager::UpgradeDiff(CDBBatch& batch, const CBlockIndex* pi
     // manually apply updated MNs and calc new state diffs
     for (auto& p : oldDiff.updatedMNs) {
         auto oldMN = newMNList.GetMN(p.first);
+        if (!oldMN) {
+            throw(std::runtime_error(strprintf("%s: Can't find an old masternode with proTxHash=%s", __func__, p.first.ToString())));
+        }
         newMNList.UpdateMN(p.first, p.second);
         auto newMN = newMNList.GetMN(p.first);
-        assert(oldMN && newMN);
+        if (!newMN) {
+            throw(std::runtime_error(strprintf("%s: Can't find a new masternode with proTxHash=%s", __func__, p.first.ToString())));
+        }
 
         newDiff.updatedMNs.emplace(std::piecewise_construct,
                 std::forward_as_tuple(oldMN->internalId),

@@ -328,7 +328,7 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
             CFinalCommitmentTxPayload qc;
             if (!GetTxPayload(*tx, qc)) {
                 // should not happen as it was verified before processing the block
-                return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+                return state.DoS(100, false, REJECT_INVALID, "bad-qc-payload");
             }
 
             // only allow one commitment per type and per block

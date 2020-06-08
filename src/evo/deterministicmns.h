@@ -325,7 +325,7 @@ public:
 
         size_t cnt = ReadCompactSize(s);
         for (size_t i = 0; i < cnt; i++) {
-            AddMN(std::make_shared<CDeterministicMN>(deserialize, s));
+            AddMN(std::make_shared<CDeterministicMN>(deserialize, s), false);
         }
     }
 
@@ -376,10 +376,6 @@ public:
     uint32_t GetTotalRegisteredCount() const
     {
         return nTotalRegisteredCount;
-    }
-    void SetTotalRegisteredCount(uint32_t _count)
-    {
-        nTotalRegisteredCount = _count;
     }
 
     bool IsMNValid(const uint256& proTxHash) const;
@@ -462,7 +458,7 @@ public:
     CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to) const;
     CDeterministicMNList ApplyDiff(const CBlockIndex* pindex, const CDeterministicMNListDiff& diff) const;
 
-    void AddMN(const CDeterministicMNCPtr& dmn);
+    void AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount = true);
     void UpdateMN(const CDeterministicMNCPtr& oldDmn, const CDeterministicMNStateCPtr& pdmnState);
     void UpdateMN(const uint256& proTxHash, const CDeterministicMNStateCPtr& pdmnState);
     void UpdateMN(const CDeterministicMNCPtr& oldDmn, const CDeterministicMNStateDiff& stateDiff);

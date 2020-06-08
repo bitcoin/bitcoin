@@ -26,19 +26,24 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return state.DoS(10, false, REJECT_INVALID, "bad-tx-type");
     }
 
-    switch (tx.nType) {
-    case TRANSACTION_PROVIDER_REGISTER:
-        return CheckProRegTx(tx, pindexPrev, state);
-    case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-        return CheckProUpServTx(tx, pindexPrev, state);
-    case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
-        return CheckProUpRegTx(tx, pindexPrev, state);
-    case TRANSACTION_PROVIDER_UPDATE_REVOKE:
-        return CheckProUpRevTx(tx, pindexPrev, state);
-    case TRANSACTION_COINBASE:
-        return CheckCbTx(tx, pindexPrev, state);
-    case TRANSACTION_QUORUM_COMMITMENT:
-        return llmq::CheckLLMQCommitment(tx, pindexPrev, state);
+    try {
+        switch (tx.nType) {
+        case TRANSACTION_PROVIDER_REGISTER:
+            return CheckProRegTx(tx, pindexPrev, state);
+        case TRANSACTION_PROVIDER_UPDATE_SERVICE:
+            return CheckProUpServTx(tx, pindexPrev, state);
+        case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
+            return CheckProUpRegTx(tx, pindexPrev, state);
+        case TRANSACTION_PROVIDER_UPDATE_REVOKE:
+            return CheckProUpRevTx(tx, pindexPrev, state);
+        case TRANSACTION_COINBASE:
+            return CheckCbTx(tx, pindexPrev, state);
+        case TRANSACTION_QUORUM_COMMITMENT:
+            return llmq::CheckLLMQCommitment(tx, pindexPrev, state);
+        }
+    } catch (const std::exception& e) {
+        LogPrintf("%s -- failed: %s\n", __func__, e.what());
+        return state.DoS(100, false, REJECT_INVALID, "failed-check-special-tx");
     }
 
     return state.DoS(10, false, REJECT_INVALID, "bad-tx-type-check");
@@ -93,60 +98,68 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
     static int64_t nTimeDMN = 0;
     static int64_t nTimeMerkle = 0;
 
-    int64_t nTime1 = GetTimeMicros();
+    try {
+        int64_t nTime1 = GetTimeMicros();
 
-    for (int i = 0; i < (int)block.vtx.size(); i++) {
-        const CTransaction& tx = *block.vtx[i];
-        if (!CheckSpecialTx(tx, pindex->pprev, state)) {
+        for (int i = 0; i < (int)block.vtx.size(); i++) {
+            const CTransaction& tx = *block.vtx[i];
+            if (!CheckSpecialTx(tx, pindex->pprev, state)) {
+                return false;
+            }
+            if (!ProcessSpecialTx(tx, pindex, state)) {
+                return false;
+            }
+        }
+
+        int64_t nTime2 = GetTimeMicros(); nTimeLoop += nTime2 - nTime1;
+        LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeLoop * 0.000001);
+
+        if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state)) {
             return false;
         }
-        if (!ProcessSpecialTx(tx, pindex, state)) {
+
+        int64_t nTime3 = GetTimeMicros(); nTimeQuorum += nTime3 - nTime2;
+        LogPrint(BCLog::BENCHMARK, "        - quorumBlockProcessor: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeQuorum * 0.000001);
+
+        if (!deterministicMNManager->ProcessBlock(block, pindex, state, fJustCheck)) {
             return false;
         }
+
+        int64_t nTime4 = GetTimeMicros(); nTimeDMN += nTime4 - nTime3;
+        LogPrint(BCLog::BENCHMARK, "        - deterministicMNManager: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeDMN * 0.000001);
+
+        if (fCheckCbTxMerleRoots && !CheckCbTxMerkleRoots(block, pindex, state)) {
+            return false;
+        }
+
+        int64_t nTime5 = GetTimeMicros(); nTimeMerkle += nTime5 - nTime4;
+        LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
+    } catch (const std::exception& e) {
+        return error(strprintf("%s -- failed: %s\n", __func__, e.what()).c_str());
     }
-
-    int64_t nTime2 = GetTimeMicros(); nTimeLoop += nTime2 - nTime1;
-    LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeLoop * 0.000001);
-
-    if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state)) {
-        return false;
-    }
-
-    int64_t nTime3 = GetTimeMicros(); nTimeQuorum += nTime3 - nTime2;
-    LogPrint(BCLog::BENCHMARK, "        - quorumBlockProcessor: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeQuorum * 0.000001);
-
-    if (!deterministicMNManager->ProcessBlock(block, pindex, state, fJustCheck)) {
-        return false;
-    }
-
-    int64_t nTime4 = GetTimeMicros(); nTimeDMN += nTime4 - nTime3;
-    LogPrint(BCLog::BENCHMARK, "        - deterministicMNManager: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeDMN * 0.000001);
-
-    if (fCheckCbTxMerleRoots && !CheckCbTxMerkleRoots(block, pindex, state)) {
-        return false;
-    }
-
-    int64_t nTime5 = GetTimeMicros(); nTimeMerkle += nTime5 - nTime4;
-    LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
 
     return true;
 }
 
 bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
 {
-    for (int i = (int)block.vtx.size() - 1; i >= 0; --i) {
-        const CTransaction& tx = *block.vtx[i];
-        if (!UndoSpecialTx(tx, pindex)) {
+    try {
+        for (int i = (int)block.vtx.size() - 1; i >= 0; --i) {
+            const CTransaction& tx = *block.vtx[i];
+            if (!UndoSpecialTx(tx, pindex)) {
+                return false;
+            }
+        }
+
+        if (!deterministicMNManager->UndoBlock(block, pindex)) {
             return false;
         }
-    }
 
-    if (!deterministicMNManager->UndoBlock(block, pindex)) {
-        return false;
-    }
-
-    if (!llmq::quorumBlockProcessor->UndoBlock(block, pindex)) {
-        return false;
+        if (!llmq::quorumBlockProcessor->UndoBlock(block, pindex)) {
+            return false;
+        }
+    } catch (const std::exception& e) {
+        return error(strprintf("%s -- failed: %s\n", __func__, e.what()).c_str());
     }
 
     return true;
