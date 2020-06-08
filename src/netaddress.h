@@ -126,6 +126,13 @@ class CSubNet
 
         std::string ToString() const;
         bool IsValid() const;
+        bool IsSingleAddr(const CNetAddr** const out_addr) const {
+            for (int i = 0; i < 16; ++i) {
+                if (netmask[i] != 0xff) return false;
+            }
+            *out_addr = &network;
+            return true;
+        }
 
         friend bool operator==(const CSubNet& a, const CSubNet& b);
         friend bool operator!=(const CSubNet& a, const CSubNet& b) { return !(a == b); }
