@@ -28,8 +28,6 @@ from test_framework.descriptors import descsum_create
 from test_framework.util import (
     adjust_bitcoin_conf_for_pre_17,
     assert_equal,
-    sync_blocks,
-    sync_mempools,
 )
 
 
@@ -68,7 +66,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
     def run_test(self):
         self.nodes[0].generatetoaddress(101, self.nodes[0].getnewaddress())
 
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
         # Sanity check the test framework:
         res = self.nodes[self.num_nodes - 1].getblockchaininfo()
@@ -93,17 +91,17 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # Create a confirmed transaction, receiving coins
         address = wallet.getnewaddress()
         self.nodes[0].sendtoaddress(address, 10)
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         self.nodes[0].generate(1)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         # Create a conflicting transaction using RBF
         return_address = self.nodes[0].getnewaddress()
         tx1_id = self.nodes[1].sendtoaddress(return_address, 1)
         tx2_id = self.nodes[1].bumpfee(tx1_id)["txid"]
         # Confirm the transaction
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         self.nodes[0].generate(1)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         # Create another conflicting transaction using RBF
         tx3_id = self.nodes[1].sendtoaddress(return_address, 1)
         tx4_id = self.nodes[1].bumpfee(tx3_id)["txid"]
