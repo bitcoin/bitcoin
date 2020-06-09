@@ -12,6 +12,8 @@
 
 struct bilingual_str;
 
+struct bilingual_str;
+
 extern const std::vector<std::string> NET_PERMISSIONS_DOC;
 
 enum NetPermissionFlags
