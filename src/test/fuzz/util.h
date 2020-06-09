@@ -8,9 +8,11 @@
 #include <amount.h>
 #include <arith_uint256.h>
 #include <attributes.h>
+#include <chainparamsbase.h>
 #include <coins.h>
 #include <consensus/consensus.h>
 #include <netaddress.h>
+#include <netbase.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/standard.h>
@@ -18,6 +20,7 @@
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <version.h>
@@ -254,6 +257,11 @@ CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
 CSubNet ConsumeSubNet(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int32_t>()};
+}
+
+void InitializeFuzzingContext(const std::string& chain_name = CBaseChainParams::REGTEST)
+{
+    static const BasicTestingSetup basic_testing_setup{chain_name, {"-nodebuglogfile"}};
 }
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_H

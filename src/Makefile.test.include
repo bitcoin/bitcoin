@@ -11,6 +11,7 @@ FUZZ_TARGETS = \
   test/fuzz/asmap \
   test/fuzz/asmap_direct \
   test/fuzz/banentry_deserialize \
+  test/fuzz/banman \
   test/fuzz/base_encode_decode \
   test/fuzz/bech32 \
   test/fuzz/block \
@@ -354,6 +355,12 @@ test_fuzz_banentry_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_banentry_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_banentry_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_banentry_deserialize_SOURCES = test/fuzz/deserialize.cpp
+
+test_fuzz_banman_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_banman_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_banman_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_banman_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_banman_SOURCES = test/fuzz/banman.cpp
 
 test_fuzz_base_encode_decode_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_base_encode_decode_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
