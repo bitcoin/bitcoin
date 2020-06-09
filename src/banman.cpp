@@ -130,12 +130,6 @@ void BanMan::Ban(const CNetAddr& net_addr, int64_t ban_time_offset, bool since_u
 
 void BanMan::Discourage(const CNetAddr& net_addr)
 {
-    LOCK(m_cs_banned);
-    m_discouraged.insert(net_addr.GetAddrBytes());
-}
-
-void BanMan::Ban(const CSubNet& sub_net, int64_t ban_time_offset, bool since_unix_epoch)
-{
     assert(ban_reason == BanReasonManuallyAdded);
     CBanEntry ban_entry(GetTime(), ban_reason);
 
