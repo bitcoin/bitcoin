@@ -20,6 +20,7 @@ race:fHaveGenesis
 race:ProcessNewBlock
 race:ThreadImport
 race:WalletBatch::WriteHDChain
+race:BerkeleyDatabase
 race:zmq::*
 race:bitcoin-qt
 # deadlock (TODO fix)
