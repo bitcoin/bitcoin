@@ -1,9 +1,10 @@
 import json, os, sys, datetime
 from blockchain_parser.blockchain import Blockchain
 
-bitcoinPath = '/media/sf_Bitcoin/blocks'
+#bitcoinPath = '/media/sf_Bitcoin/blocks'
+bitcoinPath = '/media/sim/BITCOIN/blocks'
 startHeight = 0
-endHeight = 17600
+endHeight = 633892
 
 if not os.path.exists(bitcoinPath):
 	print(bitcoinPath + ' does not exist.')
