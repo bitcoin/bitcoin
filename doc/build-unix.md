@@ -19,7 +19,7 @@ To Build
 
 ```bash
 ./autogen.sh
-./configure --disable-gmock
+./configure
 make
 make install # optional
 ```

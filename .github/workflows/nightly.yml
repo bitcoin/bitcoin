@@ -61,7 +61,6 @@ jobs:
       - name: configure
         run: ./configure
           --enable-werror
-          --disable-gmock
           --enable-lcov
           --enable-lcov-branch-coverage
       - name: make
@@ -150,7 +149,6 @@ jobs:
           --disable-asm
           --with-sanitizers=address,undefined
           --enable-werror
-          --disable-gmock
       - name: make
         run: make -j2 deploy
       - name: create artifacts
@@ -218,7 +216,6 @@ jobs:
         run: ./configure
           --with-sanitizers=thread
           --enable-werror
-          --disable-gmock
       - name: make
         run: make -j2 deploy
       - name: create artifacts
@@ -381,7 +378,6 @@ jobs:
         run: ./configure
           --enable-werror
           --disable-bench
-          --disable-gmock
       - name: make
         run: make -j2
       - name: make check
@@ -446,7 +442,6 @@ jobs:
           --disable-shared
           --enable-werror
           --disable-bench
-          --disable-gmock
           --without-qtdbus
       - name: make
         run: make -j2 deploy
@@ -550,13 +545,11 @@ jobs:
         run: CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
           --enable-werror
           --disable-bench
-          --disable-gmock
       - name: configure
         if: matrix.host != 'x86_64-w64-mingw32'
         run: ./configure --prefix=$PWD/depends/${{ matrix.host }}
           --enable-werror
           --disable-bench
-          --disable-gmock
       - name: make
         run: make -j2
       - name: make deploy

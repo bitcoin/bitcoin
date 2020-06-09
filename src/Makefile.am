@@ -751,7 +751,6 @@ include Makefile.test_util.include
 
 if ENABLE_TESTS
 include Makefile.test.include
-include vbk/test/integration/Makefile.include
 endif
 
 if ENABLE_BENCH
