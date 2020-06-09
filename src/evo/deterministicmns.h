@@ -11,12 +11,13 @@
 #include <evo/evodb.h>
 #include <evo/providertx.h>
 #include <evo/simplifiedmns.h>
+#include <saltedhasher.h>
 #include <sync.h>
 
 #include <immer/map.hpp>
 #include <immer/map_transient.hpp>
 
-#include <map>
+#include <unordered_map>
 
 class CBlock;
 class CBlockIndex;
@@ -546,6 +547,8 @@ private:
 class CDeterministicMNListDiff
 {
 public:
+    int nHeight{-1}; //memory only
+
     std::vector<CDeterministicMNCPtr> addedMNs;
     // keys are all relating to the internalId of MNs
     std::map<uint64_t, CDeterministicMNStateDiff> updatedMNs;
@@ -633,8 +636,9 @@ public:
 
 class CDeterministicMNManager
 {
-    static const int SNAPSHOT_LIST_PERIOD = 576; // once per day
-    static const int LISTS_CACHE_SIZE = 576;
+    static const int DISK_SNAPSHOT_PERIOD = 576; // once per day
+    static const int DISK_SNAPSHOTS = 3; // keep cache for 3 disk snapshots to have 2 full days covered
+    static const int LIST_DIFFS_CACHE_SIZE = DISK_SNAPSHOT_PERIOD * DISK_SNAPSHOTS;
 
 public:
     CCriticalSection cs;
@@ -642,7 +646,8 @@ public:
 private:
     CEvoDB& evoDb;
 
-    std::map<uint256, CDeterministicMNList> mnListsCache;
+    std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache;
+    std::unordered_map<uint256, CDeterministicMNListDiff, StaticSaltedHasher> mnListDiffsCache;
     const CBlockIndex* tipIndex{nullptr};
 
 public:

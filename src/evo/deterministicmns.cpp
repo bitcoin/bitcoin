@@ -566,11 +566,15 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
         diff = oldList.BuildDiff(newList);
 
         evoDb.Write(std::make_pair(DB_LIST_DIFF, newList.GetBlockHash()), diff);
-        if ((nHeight % SNAPSHOT_LIST_PERIOD) == 0 || oldList.GetHeight() == -1) {
+        if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0 || oldList.GetHeight() == -1) {
             evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, newList.GetBlockHash()), newList);
+            mnListsCache.emplace(newList.GetBlockHash(), newList);
             LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
                 __func__, nHeight, newList.GetAllMNsCount());
         }
+
+        diff.nHeight = pindex->nHeight;
+        mnListDiffsCache.emplace(pindex->GetBlockHash(), diff);
     } catch (const std::exception& e) {
         LogPrintf("CDeterministicMNManager::%s -- internal error: %s\n", __func__, e.what());
         return _state.DoS(100, false, REJECT_INVALID, "failed-dmn-block");
@@ -616,6 +620,7 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
         }
 
         mnListsCache.erase(blockHash);
+        mnListDiffsCache.erase(blockHash);
     }
 
     if (diff.HasChanges()) {
@@ -918,13 +923,13 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex*
     LOCK(cs);
 
     CDeterministicMNList snapshot;
-    std::list<std::pair<const CBlockIndex*, CDeterministicMNListDiff>> listDiff;
+    std::list<const CBlockIndex*> listDiffIndexes;
 
     while (true) {
         // try using cache before reading from disk
-        auto it = mnListsCache.find(pindex->GetBlockHash());
-        if (it != mnListsCache.end()) {
-            snapshot = it->second;
+        auto itLists = mnListsCache.find(pindex->GetBlockHash());
+        if (itLists != mnListsCache.end()) {
+            snapshot = itLists->second;
             break;
         }
 
@@ -933,28 +938,51 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex*
             break;
         }
 
+        // no snapshot found yet, check diffs
+        auto itDiffs = mnListDiffsCache.find(pindex->GetBlockHash());
+        if (itDiffs != mnListDiffsCache.end()) {
+            listDiffIndexes.emplace_front(pindex);
+            pindex = pindex->pprev;
+            continue;
+        }
+
         CDeterministicMNListDiff diff;
         if (!evoDb.Read(std::make_pair(DB_LIST_DIFF, pindex->GetBlockHash()), diff)) {
+            // no snapshot and no diff on disk means that it's the initial snapshot
             snapshot = CDeterministicMNList(pindex->GetBlockHash(), -1, 0);
             mnListsCache.emplace(pindex->GetBlockHash(), snapshot);
             break;
         }
 
-        listDiff.emplace_front(pindex, std::move(diff));
+        diff.nHeight = pindex->nHeight;
+        mnListDiffsCache.emplace(pindex->GetBlockHash(), std::move(diff));
+        listDiffIndexes.emplace_front(pindex);
         pindex = pindex->pprev;
     }
 
-    for (const auto& p : listDiff) {
-        auto diffIndex = p.first;
-        auto& diff = p.second;
+    for (const auto& diffIndex : listDiffIndexes) {
+        const auto& diff = mnListDiffsCache.at(diffIndex->GetBlockHash());
         if (diff.HasChanges()) {
             snapshot = snapshot.ApplyDiff(diffIndex, diff);
         } else {
             snapshot.SetBlockHash(diffIndex->GetBlockHash());
             snapshot.SetHeight(diffIndex->nHeight);
         }
+    }
 
-        mnListsCache.emplace(diffIndex->GetBlockHash(), snapshot);
+    if (tipIndex) {
+        // always keep a snapshot for the tip
+        if (snapshot.GetBlockHash() == tipIndex->GetBlockHash()) {
+            mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
+        } else {
+            // keep snapshots for yet alive quorums
+            for (auto& p_llmq : Params().GetConsensus().llmqs) {
+                if ((snapshot.GetHeight() % p_llmq.second.dkgInterval == 0) && (snapshot.GetHeight() + p_llmq.second.dkgInterval * (p_llmq.second.keepOldConnections + 1) >= tipIndex->nHeight)) {
+                    mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
+                    break;
+                }
+            }
+        }
     }
 
     return snapshot;
@@ -1006,14 +1034,46 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
 {
     AssertLockHeld(cs);
 
-    std::vector<uint256> toDelete;
+    std::vector<uint256> toDeleteLists;
+    std::vector<uint256> toDeleteDiffs;
     for (const auto& p : mnListsCache) {
-        if (p.second.GetHeight() + LISTS_CACHE_SIZE < nHeight) {
-            toDelete.emplace_back(p.first);
+        if (p.second.GetHeight() + LIST_DIFFS_CACHE_SIZE < nHeight) {
+            toDeleteLists.emplace_back(p.first);
+            continue;
+        }
+        bool fQuorumCache{false};
+        for (auto& p_llmq : Params().GetConsensus().llmqs) {
+            if ((p.second.GetHeight() % p_llmq.second.dkgInterval == 0) && (p.second.GetHeight() + p_llmq.second.dkgInterval * (p_llmq.second.keepOldConnections + 1) >= nHeight)) {
+                fQuorumCache = true;
+                break;
+            }
+        }
+        if (fQuorumCache) {
+            // at least one quorum could be using it, keep it
+            continue;
+        }
+        // no alive quorums using it, see if it was a cache for the tip or for a now outdated quorum
+        if (tipIndex && tipIndex->pprev && (p.first == tipIndex->pprev->GetBlockHash())) {
+            toDeleteLists.emplace_back(p.first);
+        } else {
+            for (auto& p_llmq : Params().GetConsensus().llmqs) {
+                if (p.second.GetHeight() % p_llmq.second.dkgInterval == 0) {
+                    toDeleteLists.emplace_back(p.first);
+                    break;
+                }
+            }
         }
     }
-    for (const auto& h : toDelete) {
+    for (const auto& h : toDeleteLists) {
         mnListsCache.erase(h);
+    }
+    for (const auto& p : mnListDiffsCache) {
+        if (p.second.nHeight + LIST_DIFFS_CACHE_SIZE < nHeight) {
+            toDeleteDiffs.emplace_back(p.first);
+        }
+    }
+    for (const auto& h : toDeleteDiffs) {
+        mnListDiffsCache.erase(h);
     }
 }
 
@@ -1111,7 +1171,7 @@ void CDeterministicMNManager::UpgradeDBIfNeeded()
         CDeterministicMNList newMNList;
         UpgradeDiff(batch, pindex, curMNList, newMNList);
 
-        if ((nHeight % SNAPSHOT_LIST_PERIOD) == 0) {
+        if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0) {
             batch.Write(std::make_pair(DB_LIST_SNAPSHOT, pindex->GetBlockHash()), newMNList);
             evoDb.GetRawDB().WriteBatch(batch);
             batch.Clear();
