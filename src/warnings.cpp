@@ -9,32 +9,32 @@
 #include <warnings.h>
 #include <hash.h>
 
-static RecursiveMutex cs_warnings;
-static std::string strMiscWarning GUARDED_BY(cs_warnings);
-static bool fLargeWorkForkFound GUARDED_BY(cs_warnings) = false;
-static bool fLargeWorkInvalidChainFound GUARDED_BY(cs_warnings) = false;
+static Mutex g_warnings_mutex;
+static std::string strMiscWarning GUARDED_BY(g_warnings_mutex);
+static bool fLargeWorkForkFound GUARDED_BY(g_warnings_mutex) = false;
+static bool fLargeWorkInvalidChainFound GUARDED_BY(g_warnings_mutex) = false;
 
 void SetMiscWarning(const std::string& strWarning)
 {
-    LOCK(cs_warnings);
+    LOCK(g_warnings_mutex);
     strMiscWarning = strWarning;
 }
 
 void SetfLargeWorkForkFound(bool flag)
 {
-    LOCK(cs_warnings);
+    LOCK(g_warnings_mutex);
     fLargeWorkForkFound = flag;
 }
 
 bool GetfLargeWorkForkFound()
 {
-    LOCK(cs_warnings);
+    LOCK(g_warnings_mutex);
     return fLargeWorkForkFound;
 }
 
 void SetfLargeWorkInvalidChainFound(bool flag)
 {
-    LOCK(cs_warnings);
+    LOCK(g_warnings_mutex);
     fLargeWorkInvalidChainFound = flag;
 }
 
@@ -44,7 +44,7 @@ std::string GetWarnings(const std::string& strFor)
     std::string strGUI;
     const std::string uiAlertSeparator = "<hr />";
 
-    LOCK(cs_warnings);
+    LOCK(g_warnings_mutex);
 
     if (!CLIENT_VERSION_IS_RELEASE) {
         strStatusBar = "This is a pre-release test build - use at your own risk - do not use for mining or merchant applications";
