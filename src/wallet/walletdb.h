@@ -46,14 +46,14 @@ class uint256;
 using WalletDatabase = BerkeleyDatabase;
 
 /** Error statuses for the wallet database */
-enum DBErrors
+enum class DBErrors
 {
-    DB_LOAD_OK,
-    DB_CORRUPT,
-    DB_NONCRITICAL_ERROR,
-    DB_TOO_NEW,
-    DB_LOAD_FAIL,
-    DB_NEED_REWRITE
+    LOAD_OK,
+    CORRUPT,
+    NONCRITICAL_ERROR,
+    TOO_NEW,
+    LOAD_FAIL,
+    NEED_REWRITE
 };
 
 class CKeyMetadata
