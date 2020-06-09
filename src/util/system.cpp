@@ -1258,7 +1258,7 @@ void ModifyRWConfigStream(std::istream& stream_in, std::ostream& stream_out, con
     }
 }
 
-void ArgsManager::ModifyRWConfigFile(const std::map<std::string, std::string>& settings_to_change)
+void ArgsManager::ModifyRWConfigFile(const std::map<std::string, std::string>& settings_to_change, const bool also_settings_json)
 {
     LOCK(cs_args);
     assert(!rwconf_path.empty());
@@ -1283,7 +1283,7 @@ void ArgsManager::ModifyRWConfigFile(const std::map<std::string, std::string>& s
         std::remove(new_path_str.c_str());
         throw std::ios_base::failure(strprintf("Failed to replace %s", new_path_str));
     }
-    if (!IsArgNegated("-settings")) {
+    if (also_settings_json && !IsArgNegated("-settings")) {
         // Also save to settings.json for Core (0.21+) compatibility
         for (const auto& setting_change : settings_to_change) {
             m_settings.rw_settings[setting_change.first] = setting_change.second;
@@ -1295,11 +1295,11 @@ void ArgsManager::ModifyRWConfigFile(const std::map<std::string, std::string>& s
     }
 }
 
-void ArgsManager::ModifyRWConfigFile(const std::string& setting_to_change, const std::string& new_value)
+void ArgsManager::ModifyRWConfigFile(const std::string& setting_to_change, const std::string& new_value, const bool also_settings_json)
 {
     std::map<std::string, std::string> settings_to_change;
     settings_to_change[setting_to_change] = new_value;
-    ModifyRWConfigFile(settings_to_change);
+    ModifyRWConfigFile(settings_to_change, also_settings_json);
 }
 
 void ArgsManager::EraseRWConfigFile()
