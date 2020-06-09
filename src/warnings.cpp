@@ -48,8 +48,8 @@ std::string GetWarnings(bool verbose)
 
     // Pre-release build warning
     if (!CLIENT_VERSION_IS_RELEASE) {
-        warnings_concise = "This is a pre-release test build - use at your own risk - do not use for mining or merchant applications";
-        warnings_verbose = _("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications").translated;
+        warnings_concise = "This is a reference implementation for Bitcoin based coins utilizing VeriBlock's Proof-of-Proof (PoP) technology. \nCoins associated with this blockchain have no value and are for testing purposes only.";
+        warnings_verbose = _("This is a reference implementation for Bitcoin based coins utilizing VeriBlock's Proof-of-Proof (PoP) technology. \nCoins associated with this blockchain have no value and are for testing purposes only.").translated;
     }
 
     // Misc warnings like out of disk space and clock is wrong
