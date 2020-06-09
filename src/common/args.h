@@ -193,8 +193,8 @@ protected:
     [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 
     bool RWConfigHasPruneOption() const { return m_rwconf_had_prune_option; }
-    void ModifyRWConfigFile(const std::map<std::string, std::string>& settings_to_change);
-    void ModifyRWConfigFile(const std::string& setting_to_change, const std::string& new_value);
+    void ModifyRWConfigFile(const std::map<std::string, std::string>& settings_to_change, bool also_settings_json = true);
+    void ModifyRWConfigFile(const std::string& setting_to_change, const std::string& new_value, bool also_settings_json = true);
     void EraseRWConfigFile();
 
     /**

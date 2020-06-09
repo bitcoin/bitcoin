@@ -842,6 +842,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         bool nv = value.toBool();
         if (gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS) != nv) {
             gArgs.ModifyRWConfigFile("peerblockfilters", strprintf("%d", nv));
+            gArgs.ModifyRWConfigFile("peercfilters", strprintf("%d", nv), /*also_settings_json=*/ false);  // for downgrade compatibility with Knots 0.19
             gArgs.ForceSetArg("peerblockfilters", nv);
             if (nv && !GetBlockFilterIndex(BlockFilterType::BASIC)) {
                 // TODO: When other options are possible, we need to append a list!
