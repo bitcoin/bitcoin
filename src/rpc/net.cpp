@@ -604,7 +604,8 @@ static UniValue setban(const JSONRPCRequest& request)
 
     if (strCommand == "add")
     {
-        if (isSubnet ? node.banman->IsBanned(subNet) : node.banman->IsBanned(netAddr)) {
+        if ((isSubnet && node.banman->IsBanned(subNet)) ||
+            (!isSubnet && node.banman->IsBannedLevel(netAddr) == BanReasonManuallyAdded)) {
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP/Subnet already banned");
         }
 
