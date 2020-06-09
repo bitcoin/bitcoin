@@ -3537,7 +3537,6 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
 
     int start_height = 0;
     Optional<int> stop_height;
-    uint256 start_block;
     {
         LOCK(pwallet->cs_wallet);
         int tip_height = pwallet->GetLastBlockHeight();
@@ -3562,12 +3561,10 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
         if (!pwallet->chain().hasBlocks(pwallet->GetLastBlockHash(), start_height, stop_height)) {
             throw JSONRPCError(RPC_MISC_ERROR, "Can't rescan beyond pruned data. Use RPC call getblockchaininfo to determine your pruned height.");
         }
-
-        CHECK_NONFATAL(pwallet->chain().findAncestorByHeight(pwallet->GetLastBlockHash(), start_height, FoundBlock().hash(start_block)));
     }
 
     CWallet::ScanResult result =
-        pwallet->ScanForWalletTransactions(start_block, start_height, stop_height, reserver, true /* fUpdate */);
+        pwallet->ScanForWalletTransactions(start_height, stop_height, reserver, true /* fUpdate */);
     switch (result.status) {
     case CWallet::ScanResult::SUCCESS:
         break;
