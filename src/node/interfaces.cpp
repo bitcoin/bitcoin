@@ -311,6 +311,8 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
     if (block.m_time) *block.m_time = index->GetBlockTime();
     if (block.m_max_time) *block.m_max_time = index->GetBlockTimeMax();
     if (block.m_mtp_time) *block.m_mtp_time = index->GetMedianTimePast();
+    if (block.m_in_active_chain) *block.m_in_active_chain = ChainActive()[index->nHeight] == index;
+    if (block.m_next_block) FillBlock(ChainActive()[index->nHeight] == index ? ChainActive()[index->nHeight + 1] : nullptr, *block.m_next_block, lock);
     if (block.m_data) {
         REVERSE_LOCK(lock);
         if (!ReadBlockFromDisk(*block.m_data, index, Params().GetConsensus())) block.m_data->SetNull();
@@ -419,15 +421,6 @@ public:
         }
         return nullopt;
     }
-    Optional<int> getBlockHeight(const uint256& hash) override
-    {
-        LOCK(::cs_main);
-        CBlockIndex* block = LookupBlockIndex(hash);
-        if (block && ::ChainActive().Contains(block)) {
-            return block->nHeight;
-        }
-        return nullopt;
-    }
     uint256 getBlockHash(int height) override
     {
         LOCK(::cs_main);
@@ -440,16 +433,6 @@ public:
         LOCK(cs_main);
         CBlockIndex* block = ::ChainActive()[height];
         return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
-    }
-    Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) override
-    {
-        LOCK(cs_main);
-        CBlockIndex* block = ::ChainActive().FindEarliestAtLeast(time, height);
-        if (block) {
-            if (hash) *hash = block->GetBlockHash();
-            return block->nHeight;
-        }
-        return nullopt;
     }
     CBlockLocator getTipLocator() override
     {
@@ -478,13 +461,6 @@ public:
     {
         WAIT_LOCK(cs_main, lock);
         return FillBlock(ChainActive().FindEarliestAtLeast(min_time, min_height), block, lock);
-    }
-    bool findNextBlock(const uint256& block_hash, int block_height, const FoundBlock& next, bool* reorg) override {
-        WAIT_LOCK(cs_main, lock);
-        CBlockIndex* block = ChainActive()[block_height];
-        if (block && block->GetBlockHash() != block_hash) block = nullptr;
-        if (reorg) *reorg = !block;
-        return FillBlock(block ? ChainActive()[block_height + 1] : nullptr, next, lock);
     }
     bool findAncestorByHeight(const uint256& block_hash, int ancestor_height, const FoundBlock& ancestor_out) override
     {
