@@ -100,6 +100,12 @@ public:
     }
 
     using UniqueLock = std::unique_lock<PARENT>;
+#ifdef __clang__
+    //! For negative capabilities in the Clang Thread Safety Analysis.
+    //! A negative requirement uses the EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
+    //! with the ! operator, to indicate that a mutex should not be held.
+    const AnnotatedMixin& operator!() const { return *this; }
+#endif // __clang__
 };
 
 /**
