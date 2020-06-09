@@ -344,7 +344,11 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
         LOCK2(cs_main, dummyNode.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode));
     }
+<<<<<<< HEAD
     BOOST_CHECK(banman->IsDiscouraged(addr));
+=======
+    BOOST_CHECK(banman->IsBanned(addr));
+>>>>>>> Replace automatic bans with discouragement filter
 
     bool dummy;
     peerLogic->FinalizeNode(dummyNode.GetId(), dummy);
