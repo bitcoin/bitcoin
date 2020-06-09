@@ -190,7 +190,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         AssertEqualAfterSerializeDeserialize(s);
 #elif MESSAGEHEADER_DESERIALIZE
         const CMessageHeader::MessageStartChars pchMessageStart = {0x00, 0x00, 0x00, 0x00};
-        CMessageHeader mh(pchMessageStart);
+        CMessageHeader mh;
         DeserializeFromFuzzingInput(buffer, mh);
         (void)mh.IsValid(pchMessageStart);
 #elif ADDRESS_DESERIALIZE

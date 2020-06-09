@@ -765,10 +765,9 @@ private:
     }
 
 public:
-    V1TransportDeserializer(const CMessageHeader::MessageStartChars& pchMessageStartIn, const NodeId node_id, int nTypeIn, int nVersionIn)
+    V1TransportDeserializer(const NodeId node_id, int nTypeIn, int nVersionIn)
         : m_node_id(node_id),
           hdrbuf(nTypeIn, nVersionIn),
-          hdr(pchMessageStartIn),
           vRecv(nTypeIn, nVersionIn)
     {
         Reset();

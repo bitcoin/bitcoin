@@ -2846,7 +2846,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
 
-    m_deserializer = MakeUnique<V1TransportDeserializer>(V1TransportDeserializer(Params().MessageStart(), GetId(), SER_NETWORK, INIT_PROTO_VERSION));
+    m_deserializer = MakeUnique<V1TransportDeserializer>(V1TransportDeserializer(GetId(), SER_NETWORK, INIT_PROTO_VERSION));
     m_serializer = MakeUnique<V1TransportSerializer>(V1TransportSerializer());
 }
 

@@ -84,9 +84,9 @@ const static std::string allNetMessageTypes[] = {
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
-CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn)
+CMessageHeader::CMessageHeader()
 {
-    memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
+    memset(pchMessageStart, 0, MESSAGE_START_SIZE);
     memset(pchCommand, 0, sizeof(pchCommand));
     nMessageSize = -1;
     memset(pchChecksum, 0, CHECKSUM_SIZE);
