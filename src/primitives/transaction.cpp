@@ -341,7 +341,9 @@ void CMutableTransaction::LoadAssets()
             throw std::ios_base::failure("Unknown asset data");
         }
         voutAssets = std::move(allocation.voutAssets);
-        
+        if(voutAssets.empty()) {
+            throw std::ios_base::failure("asset empty map");
+        }
         const size_t &nVoutSize = vout.size();
         for(const auto &it: voutAssets) {
             const uint32_t &nAsset = it.first;
@@ -364,7 +366,7 @@ void CMutableTransaction::LoadAssets()
         }       
     }
 }
-bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<uint32_t, uint64_t> &mapAssetOut, TxValidationState& state) const
+bool CTransaction::GetAssetValueOut(std::unordered_map<uint32_t, std::pair<bool, uint64_t> > &mapAssetOut, TxValidationState& state) const
 {
     std::unordered_set<uint32_t> setUsedIndex;
     uint64_t nTotal = 0;
@@ -375,6 +377,7 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<ui
         }
         const uint32_t &nAsset = it.first;
         const size_t &nVoutSize = vout.size();
+        bool zeroVal = false;
         for(const auto& voutAsset: it.second) {
             const uint32_t& nOut = voutAsset.n;
             if(nOut >= nVoutSize) {
@@ -388,10 +391,11 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<ui
             nPrevTotal = nTotal;
             nTotal += nAmount;
             if(nAmount == 0) {
-                // 0 amount output not possible for anything except asset tx (new/update/send)
-                if(!isAssetTx) {
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-zero-out-non-asset");
+                // only one zero val per asset is allowed
+                if(zeroVal) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-zero-out");
                 }
+                zeroVal = true;
             }
             // overflow
             else if(nTotal <= nPrevTotal) {
@@ -402,7 +406,7 @@ bool CTransaction::GetAssetValueOut(const bool &isAssetTx, std::unordered_map<ui
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-out-not-unique");
             }
         }
-        auto itRes = mapAssetOut.emplace(nAsset, nTotal);
+        auto itRes = mapAssetOut.emplace(nAsset, std::make_pair(zeroVal, nTotal));
         if(!itRes.second) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-not-unique");
         }
