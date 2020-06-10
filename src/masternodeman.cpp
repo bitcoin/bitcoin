@@ -1655,7 +1655,7 @@ void CMasternodeMan::WarnMasternodeDaemonUpdates()
     }
 
     // notify GetWarnings(), called by Qt and the JSON-RPC code to warn the user
-    SetMiscWarning(strWarning);
+    SetMiscWarning(Untranslated(strWarning));
     
     fWarned = true;
 }
