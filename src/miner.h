@@ -105,12 +105,6 @@ typedef boost::multi_index_container<
             boost::multi_index::tag<ancestor_score>,
             boost::multi_index::identity<CTxMemPoolModifiedEntry>,
             CompareTxMemPoolEntryByAncestorFee
-        >,
-        // sorted by pop tx priority
-        boost::multi_index::ordered_non_unique<
-            boost::multi_index::tag<VeriBlock::poptx_priority<ancestor_score>>,
-            boost::multi_index::identity<CTxMemPoolModifiedEntry>,
-            VeriBlock::CompareTxMemPoolEntryByPoPtxPriority<CompareTxMemPoolEntryByAncestorFee>
         >
     >
 > indexed_modified_transaction_set;
@@ -149,7 +143,6 @@ protected:
     // Information on the current status of the block
     uint64_t nBlockWeight;
     uint64_t nBlockTx;
-    uint64_t nPopTx = 0;
     uint64_t nBlockSigOpsCost;
     CAmount nFees;
     CTxMemPool::setEntries inBlock;
@@ -187,7 +180,7 @@ protected:
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
       * statistics from the package selection (for logging statistics). */
     template<typename MempoolComparatorTagName>
-    void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, CBlockIndex& prevIndex) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
+    void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */

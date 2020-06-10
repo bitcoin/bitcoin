@@ -30,38 +30,6 @@ namespace VeriBlock {
 
 namespace {
 
-UniValue createPopTx(const CScript& scriptSig)
-{
-    LOCK(cs_main);
-
-    auto tx = VeriBlock::MakePopTx(scriptSig);
-
-    const uint256& hashTx = tx.GetHash();
-    if (!::mempool.exists(hashTx)) {
-        TxValidationState state;
-        auto tx_ref = MakeTransactionRef<const CMutableTransaction&>(tx);
-
-        auto result = AcceptToMemoryPool(mempool, state, tx_ref,
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */, false /* test accept */);
-        if (result) {
-            std::string err;
-            if (!g_rpc_chain->broadcastTransaction(tx_ref, err, 0, true)) {
-                throw JSONRPCError(RPC_TRANSACTION_ERROR, err);
-            }
-            //            RelayTransaction(hashTx, *this->connman);
-            return hashTx.GetHex();
-        }
-
-        if (state.IsInvalid()) {
-            throw JSONRPCError(RPC_TRANSACTION_REJECTED, FormatStateMessage(state));
-        }
-
-        throw JSONRPCError(RPC_TRANSACTION_ERROR, FormatStateMessage(state));
-    }
-
-    return hashTx.GetHex();
-}
-
 uint256 GetBlockHashByHeight(const int height)
 {
     if (height < 0 || height > ChainActive().Height())
@@ -115,8 +83,8 @@ void SaveState(std::string file_name)
         std::vector<altintegration::AltPayloads> payloads;
         if (index->pprev) {
             CBlock block;
-            if (ReadBlockFromDisk(block, index, Params().GetConsensus())) { 
-                bool res = parseBlockPopPayloadsImpl(block, *index->pprev, Params().GetConsensus(), state, &payloads);
+            if (ReadBlockFromDisk(block, index, Params().GetConsensus())) {
+                bool res = popDataToPayloads(block, *index->pprev, state, payloads);
                 assert(res);
             }
         }
@@ -239,18 +207,32 @@ UniValue submitpop(const JSONRPCRequest& request)
 
     const UniValue& vtb_array = request.params[1].get_array();
     LogPrint(BCLog::POP, "VeriBlock-PoP: submitpop RPC called with 1 ATV and %d VTBs\n", vtb_array.size());
+    std::vector<altintegration::VTB> vtbs;
     for (uint32_t idx = 0u, size = vtb_array.size(); idx < size; ++idx) {
         auto& vtbhex = vtb_array[idx];
-        auto vtb = ParseHexV(vtbhex, "vtb[" + std::to_string(idx) + "]");
-        script << vtb << OP_CHECKVTB;
+        auto vtb_bytes = ParseHexV(vtbhex, "vtb[" + std::to_string(idx) + "]");
+        vtbs.push_back(altintegration::VTB::fromVbkEncoding(vtb_bytes));
     }
 
     auto& atvhex = request.params[0];
-    auto atv = ParseHexV(atvhex, "atv");
-    script << atv << OP_CHECKATV;
-    script << OP_CHECKPOP;
+    auto atv_bytes = ParseHexV(atvhex, "atv");
 
-    return createPopTx(script);
+    auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
+    auto& pop_mempool = pop_service.getMemPool();
+
+    LogPrintf("{submitpop} vtbs amount: %d \n", vtbs.size());
+
+    altintegration::ValidationState state;
+    if (!pop_mempool.submitATV({ altintegration::ATV::fromVbkEncoding(atv_bytes) }, state)) {
+        LogPrint(BCLog::POP, "VeriBlock-PoP: %s ", state.GetPath());
+        return "ivalid ATV";
+    }
+    if (!pop_mempool.submitVTB(vtbs, state)) {
+        LogPrint(BCLog::POP, "VeriBlock-PoP: %s ", state.GetPath());
+        return "invalid oone of the VTB";
+    }
+
+    return "successful added";
 }
 
 UniValue debugpop(const JSONRPCRequest& request)
@@ -292,7 +274,6 @@ const CRPCCommand commands[] = {
     {"pop_mining", "submitpop", &submitpop, {"atv", "vtbs"}},
     {"pop_mining", "getpopdata", &getpopdata, {"blockheight"}},
     {"pop_mining", "debugpop", &debugpop, {}},
-    {"pop_mining", "savepopstate", &savepopstate, {}},
 };
 
 void RegisterPOPMiningRPCCommands(CRPCTable& t)

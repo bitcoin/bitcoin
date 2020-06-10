@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize)
     std::vector<char> expected(vch.size());
 
     for (unsigned int i = 0; i < vch.size(); i++)
-        expected[i] = (char)vch[i];
+       expected[i] = (char)vch[i];
 
     BOOST_CHECK_EQUAL_COLLECTIONS(stream.begin(), stream.end(), expected.begin(), expected.end());
 
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize_with_tweak)
     std::vector<char> expected(vch.size());
 
     for (unsigned int i = 0; i < vch.size(); i++)
-        expected[i] = (char)vch[i];
+       expected[i] = (char)vch[i];
 
     BOOST_CHECK_EQUAL_COLLECTIONS(stream.begin(), stream.end(), expected.begin(), expected.end());
 }
@@ -151,10 +151,10 @@ BOOST_AUTO_TEST_CASE(bloom_match)
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
     COutPoint prevOutPoint(uint256S("0x90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b"), 0);
     {
-        std::vector<unsigned char> data(32 + sizeof(unsigned int));
-        memcpy(data.data(), prevOutPoint.hash.begin(), 32);
-        memcpy(data.data()+32, &prevOutPoint.n, sizeof(unsigned int));
-        filter.insert(data);
+       std::vector<unsigned char> data(32 + sizeof(unsigned int));
+       memcpy(data.data(), prevOutPoint.hash.begin(), 32);
+       memcpy(data.data()+32, &prevOutPoint.n, sizeof(unsigned int));
+       filter.insert(data);
     }
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match manually serialized COutPoint");
 
@@ -471,12 +471,12 @@ BOOST_AUTO_TEST_CASE(rolling_bloom)
     static const int DATASIZE=399;
     std::vector<unsigned char> data[DATASIZE];
     for (int i = 0; i < DATASIZE; i++) {
-        data[i] = RandomData();
-        rb1.insert(data[i]);
+       data[i] = RandomData();
+       rb1.insert(data[i]);
     }
     // Last 100 guaranteed to be remembered:
     for (int i = 299; i < DATASIZE; i++) {
-        BOOST_CHECK(rb1.contains(data[i]));
+       BOOST_CHECK(rb1.contains(data[i]));
     }
 
     // false positive rate is 1%, so we should get about 100 hits if
@@ -485,8 +485,8 @@ BOOST_AUTO_TEST_CASE(rolling_bloom)
     // when we've inserted one minus an integer multiple of nElement*2.
     unsigned int nHits = 0;
     for (int i = 0; i < 10000; i++) {
-        if (rb1.contains(RandomData()))
-            ++nHits;
+       if (rb1.contains(RandomData()))
+           ++nHits;
     }
     // Expect about 100 hits
     BOOST_CHECK_EQUAL(nHits, 75);
@@ -498,23 +498,23 @@ BOOST_AUTO_TEST_CASE(rolling_bloom)
     // Now roll through data, make sure last 100 entries
     // are always remembered:
     for (int i = 0; i < DATASIZE; i++) {
-        if (i >= 100)
-            BOOST_CHECK(rb1.contains(data[i-100]));
-        rb1.insert(data[i]);
-        BOOST_CHECK(rb1.contains(data[i]));
+       if (i >= 100)
+           BOOST_CHECK(rb1.contains(data[i-100]));
+       rb1.insert(data[i]);
+       BOOST_CHECK(rb1.contains(data[i]));
     }
 
     // Insert 999 more random entries:
     for (int i = 0; i < 999; i++) {
-        std::vector<unsigned char> d = RandomData();
-        rb1.insert(d);
-        BOOST_CHECK(rb1.contains(d));
+       std::vector<unsigned char> d = RandomData();
+       rb1.insert(d);
+       BOOST_CHECK(rb1.contains(d));
     }
     // Sanity check to make sure the filter isn't just filling up:
     nHits = 0;
     for (int i = 0; i < DATASIZE; i++) {
-        if (rb1.contains(data[i]))
-            ++nHits;
+       if (rb1.contains(data[i]))
+           ++nHits;
     }
     // Expect about 5 false positives
     BOOST_CHECK_EQUAL(nHits, 6);
@@ -522,11 +522,11 @@ BOOST_AUTO_TEST_CASE(rolling_bloom)
     // last-1000-entry, 0.01% false positive:
     CRollingBloomFilter rb2(1000, 0.001);
     for (int i = 0; i < DATASIZE; i++) {
-        rb2.insert(data[i]);
+       rb2.insert(data[i]);
     }
     // ... room for all of them:
     for (int i = 0; i < DATASIZE; i++) {
-        BOOST_CHECK(rb2.contains(data[i]));
+       BOOST_CHECK(rb2.contains(data[i]));
     }
     g_mock_deterministic_tests = false;
 }

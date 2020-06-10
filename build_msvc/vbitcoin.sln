@@ -23,6 +23,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_zmq", "libbitcoin_zmq\libbitcoin_zmq.vcxproj", "{792D487F-F14C-49FC-A9DE-3FC150F31C3F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_bitcoin", "test_bitcoin\test_bitcoin.vcxproj", "{A56B73DB-D46D-4882-8374-1FE3FFA08F07}"
+	ProjectSection(ProjectDependencies) = postProject
+		{868474FD-35F6-4400-8EED-30A33E7521D4} = {868474FD-35F6-4400-8EED-30A33E7521D4}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_cli", "libbitcoin_cli\libbitcoin_cli.vcxproj", "{0667528C-D734-4009-ADF9-C0D6C4A5A5A6}"
 EndProject
@@ -235,9 +238,9 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		        SolutionGuid = {58AAB032-7274-49BD-845E-5EF4DBB69B70}
-		                SolutionGuid = {8607C0F4-F33D-41B8-8D51-18E366A0F8DF}
-		                        SolutionGuid = {8AA72EDA-2CD4-4564-B1E4-688B760EEEE9}
 		SolutionGuid = {36873EAA-D3D2-421D-85D8-B6BFAB11D8D7}
+		                        SolutionGuid = {8AA72EDA-2CD4-4564-B1E4-688B760EEEE9}
+		                SolutionGuid = {8607C0F4-F33D-41B8-8D51-18E366A0F8DF}
+		        SolutionGuid = {58AAB032-7274-49BD-845E-5EF4DBB69B70}
 	EndGlobalSection
 EndGlobal

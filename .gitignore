@@ -15,6 +15,9 @@ src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
 
+# functional tests
+test/functional/temp
+
 # autoreconf
 Makefile.in
 aclocal.m4

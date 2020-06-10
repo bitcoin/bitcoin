@@ -1,8 +1,7 @@
 // Copyright (c) 2019-2020 Xenios SEZC
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
@@ -16,12 +15,13 @@
 #include "vbk/init.hpp"
 #include "vbk/merkle.hpp"
 #include "vbk/service_locator.hpp"
-#include "vbk/test/util/e2e_fixture.hpp"
-#include "vbk/test/util/tx.hpp"
+#include "vbk/test/util/mock.hpp"
 
 BOOST_AUTO_TEST_SUITE(vbk_merkle_tests)
 
-struct MerkleFixture : public E2eFixture {
+struct MerkleFixture {
+    // this inits veriblock services
+    TestChain100Setup blockchain;
 };
 
 BOOST_FIXTURE_TEST_CASE(genesis_block_hash_is_valid, MerkleFixture)
@@ -53,10 +53,13 @@ BOOST_FIXTURE_TEST_CASE(TestChain100Setup_has_valid_merkle_roots, MerkleFixture)
 
 BOOST_FIXTURE_TEST_CASE(addPopTransactionRootIntoCoinbaseCommitment_test, MerkleFixture)
 {
-    auto block = endorseAltBlockAndMine(ChainActive().Tip()->GetBlockHash());
-    LOCK(cs_main);
-    auto index = LookupBlockIndex(block.GetHash());
 
+    // TODO add PopData into the mempool
+
+    CScript scriptPubKey = CScript() << ToByteVector(blockchain.coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+
+    CBlock block = blockchain.CreateAndProcessBlock({}, scriptPubKey);
+    CBlockIndex* index = ChainActive().Tip();
 
     BlockValidationState state;
     BOOST_CHECK(VeriBlock::VerifyTopLevelMerkleRoot(block, state, index->pprev));
@@ -75,40 +78,12 @@ BOOST_FIXTURE_TEST_CASE(addPopTransactionRootIntoCoinbaseCommitment_test, Merkle
     block.vtx[0] = MakeTransactionRef(tx);
 
     BOOST_CHECK(!VeriBlock::VerifyTopLevelMerkleRoot(block, state, index->pprev));
-    BOOST_CHECK(state.GetRejectReason() == "bad-txnmrklroot");
 
     // erase commitment
     tx.vout.erase(tx.vout.begin() + commitpos);
     block.vtx[0] = MakeTransactionRef(tx);
 
     BOOST_CHECK(!VeriBlock::VerifyTopLevelMerkleRoot(block, state, index->pprev));
-    BOOST_CHECK(state.GetRejectReason() == "bad-txnmrklroot");
-}
-
-BOOST_FIXTURE_TEST_CASE(Regression, MerkleFixture){
-    auto block = endorseAltBlockAndMine(ChainActive().Tip()->GetBlockHash());
-    LOCK(cs_main);
-    auto index = LookupBlockIndex(block.GetHash());
-    BlockValidationState state;
-    BOOST_CHECK(VeriBlock::VerifyTopLevelMerkleRoot(block, state, index->pprev));
-
-    using namespace VeriBlock;
-
-    auto topLevel = VeriBlock::TopLevelMerkleRoot(ChainActive()[0], block, nullptr);
-    auto keystones = VeriBlock::getKeystoneHashesForTheNextBlock(ChainActive()[0]);
-    auto mroot = BlockMerkleRoot(block, nullptr);
-    auto height = 1;
-    auto context = VeriBlock::ContextInfoContainer(height, keystones, mroot);
-
-    std::cout << "topLevel1 : " << topLevel.GetHex() << "\n";
-    std::cout << "topLevel2 : " << context.getTopLevelMerkleRoot().GetHex() << "\n";
-    std::cout << "keystone1 : " << keystones[0].GetHex() << "\n";
-    std::cout << "keystone2 : " << keystones[1].GetHex() << "\n";
-    std::cout << "mroot     : " << mroot.GetHex() << "\n";
-    std::cout << "height    : " << height << "\n";
-    std::cout << "unauthd   : " << HexStr(context.getUnauthenticated()) << "\n";
-    std::cout << "unauthdh  : " << context.getUnauthenticatedHash().GetHex() << "\n";
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -19,6 +19,9 @@ namespace VeriBlock {
 
 using KeystoneArray = std::array<uint256, 2>;
 
+// 0000 0000 0000 1000 0000 0000 0000 0000
+const static int32_t POP_BLOCK_VERSION_BIT = 0x80000000UL;
+
 
 struct Config {
     // unique index to this chain; network id across chains
@@ -32,12 +35,6 @@ struct Config {
     uint32_t min_atv_size = 1;             // TODO: figure out number
 
     uint32_t max_future_block_time = 10 * 60; // 10 minutes
-
-    /// The maximum allowed weight for the PoP transaction
-//    uint32_t max_pop_tx_weight = 150000;
-
-    /// The maximum allowed number of PoP transaction in a block
-    uint32_t max_pop_tx_amount = 50;
 
     altintegration::Config popconfig;
 

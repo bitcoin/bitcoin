@@ -13,7 +13,6 @@
 #include <vbk/pop_service.hpp>
 #include <vbk/service_locator.hpp>
 #include <vbk/test/util/mock.hpp>
-#include <vbk/test/util/tx.hpp>
 #include <vbk/test/util/e2e_fixture.hpp>
 #include <veriblock/mock_miner.hpp>
 

@@ -33,20 +33,9 @@
 
 namespace {
 
-bool set_error(ScriptError* ret, const ScriptError serror)
+std::vector<uint8_t> HashFunction(const std::vector<uint8_t>& data)
 {
-    if (ret)
-        *ret = serror;
-    return false;
-}
-typedef std::vector<unsigned char> valtype;
-
-#define stacktop(i) (stack.at(stack.size() + (i)))
-void popstack(std::vector<valtype>& stack)
-{
-    if (stack.empty())
-        throw std::runtime_error("popstack(): stack empty");
-    stack.pop_back();
+    return VeriBlock::headerFromBytes(data).GetHash().asVector();
 }
 
 } // namespace
@@ -130,11 +119,15 @@ bool PopServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, const
 PoPRewards PopServiceImpl::getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
+    altintegration::ValidationState state;
+    bool ret = this->altTree->setState(pindexPrev.GetBlockHash().asVector(), state);
+    (void)ret;
+    assert(ret);
+
     auto& config = getService<Config>();
     if ((pindexPrev.nHeight + 1) < (int)config.popconfig.alt->getEndorsementSettlementInterval()) {
         return {};
     }
-    auto state = altintegration::ValidationState();
     auto blockHash = pindexPrev.GetBlockHash();
     auto rewards = altTree->getPopPayout(blockHash.asVector(), state);
     if (state.IsError()) {
@@ -156,68 +149,7 @@ PoPRewards PopServiceImpl::getPopRewards(const CBlockIndex& pindexPrev, const Co
     return btcRewards;
 }
 
-bool PopServiceImpl::validatePopTx(const CTransaction& tx, TxValidationState& state)
-{
-    // validate input
-    {
-        if (tx.vin.size() != 1) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-vin-not-single", strprintf("Expected 1 input, got %d", tx.vin.size()));
-        }
-        if (!validatePopTxInput(tx.vin[0], state)) {
-            return false; // reason already set by ValidatePopTxInput
-        }
-    }
-
-    // validate output
-    {
-        if (tx.vout.size() != 1) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-vout-not-single", strprintf("Expected 1 output, got %d", tx.vout.size()));
-        }
-        if (!validatePopTxOutput(tx.vout[0], state)) {
-            return false; // reason already set by ValidatePopTxOutput
-        }
-    }
-
-    //    // check size
-    //    auto& config = getService<Config>();
-    //    if (::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > config.max_pop_tx_weight) {
-    //        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-txns-oversize");
-    //    }
-
-    return true;
-}
-
-bool PopServiceImpl::validatePopTxInput(const CTxIn& in, TxValidationState& state)
-{
-    if (!isVBKNoInput(in.prevout)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-prevout");
-    }
-    return true;
-}
-
-bool PopServiceImpl::validatePopTxOutput(const CTxOut& out, TxValidationState& state)
-{
-    if (out.scriptPubKey.size() != 1) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-out-scriptpubkey-not-single");
-    }
-    if (out.scriptPubKey[0] != OP_RETURN) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-out-scriptpubkey-unexpected");
-    }
-    return true;
-}
-
-bool PopServiceImpl::checkPopInputs(const CTransaction& tx, TxValidationState& state, unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata)
-{
-    ScriptError error(SCRIPT_ERR_UNKNOWN_ERROR);
-
-    auto checker = CachingTransactionSignatureChecker(&tx, 0, 0, cacheSigStore, txdata);
-    if (!VerifyScript(tx.vin[0].scriptSig, tx.vout[0].scriptPubKey, &tx.vin[0].scriptWitness, flags | SCRIPT_VERIFY_POP, checker, &error))
-        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, strprintf("invalid pop tx script (%s)", ScriptErrorString(error)));
-
-    return true;
-}
-
-bool PopServiceImpl::acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool PopServiceImpl::acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state)
 {
     AssertLockHeld(cs_main);
     auto containing = VeriBlock::blockToAltBlock(indexNew);
@@ -233,11 +165,6 @@ bool PopServiceImpl::addAllBlockPayloads(const CBlockIndex* indexPrev, const CBl
 {
     AssertLockHeld(cs_main);
     return addAllPayloadsToBlockImpl(*altTree, indexPrev, connecting, state);
-}
-
-bool PopServiceImpl::evalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks)
-{
-    return evalScriptImpl(script, stack, serror, pub, state, with_checks);
 }
 
 std::vector<BlockBytes> PopServiceImpl::getLastKnownVBKBlocks(size_t blocks)
@@ -264,8 +191,10 @@ int PopServiceImpl::compareForks(const CBlockIndex& leftForkTip, const CBlockInd
     auto right = blockToAltBlock(rightForkTip);
     auto state = altintegration::ValidationState();
 
-    if (!altTree->setState(left.hash, state))
-    {
+    if (!altTree->setState(left.hash, state)) {
+        if (!altTree->setState(right.hash, state)) {
+            throw std::logic_error("both chains are invalid");
+        }
         return -1;
     }
 
@@ -276,13 +205,7 @@ PopServiceImpl::PopServiceImpl(const altintegration::Config& config)
 {
     config.validate();
     altTree = altintegration::Altintegration::create(config);
-}
-
-void PopServiceImpl::invalidateBlockByHash(const uint256& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    AssertLockHeld(cs_main);
-    auto v = block.asVector();
-    altTree->removeSubtree(v);
+    mempool = std::make_shared<altintegration::MemPool>(altTree->getParams(), altTree->vbk().getParams(), altTree->btc().getParams(), HashFunction);
 }
 
 bool PopServiceImpl::setState(const uint256& block, altintegration::ValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -291,206 +214,54 @@ bool PopServiceImpl::setState(const uint256& block, altintegration::ValidationSt
     return altTree->setState(block.asVector(), state);
 }
 
-bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks)
-{
-    CScript::const_iterator pc = script.begin();
-    CScript::const_iterator pend = script.end();
-    static const valtype vchFalse(0);
-    static const valtype vchTrue(1, 1);
-    opcodetype opcode;
-    std::vector<unsigned char> vchPushValue;
-    auto& config = getService<Config>();
-    auto& altp = *config.popconfig.alt;
-    auto& vbkp = *config.popconfig.vbk.params;
-    auto& btcp = *config.popconfig.btc.params;
-    altintegration::PopData popdata;
-
-    try {
-        while (pc < pend) {
-            if (!script.GetOp(pc, opcode, vchPushValue)) {
-                return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
-            }
-
-            if (!vchPushValue.empty()) {
-                stack.push_back(vchPushValue);
-                continue;
-            }
-
-            switch (opcode) {
-            case OP_CHECKATV: {
-                // tx has zero or one ATV
-                if (popdata.hasAtv) {
-                    return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
-                }
-
-                // validate ATV size
-                const auto& el = stacktop(-1);
-                if (el.size() > config.max_atv_size || el.size() < config.min_atv_size) {
-                    return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
-                }
-
-                // validate ATV content
-                try {
-                    popdata.atv = altintegration::ATV::fromVbkEncoding(el);
-                    popdata.hasAtv = true;
-                    if (with_checks && !altintegration::checkATV(popdata.atv, state, altp, vbkp)) {
-                        return set_error(serror, SCRIPT_ERR_VBK_ATVFAIL);
-                    }
-                } catch (...) {
-                    return set_error(serror, SCRIPT_ERR_VBK_ATVFAIL);
-                }
-
-                popstack(stack);
-                break;
-            }
-            case OP_CHECKVTB: {
-                // validate VTB size
-                const auto& el = stacktop(-1);
-                if (el.size() > config.max_vtb_size || el.size() < config.min_vtb_size) {
-                    return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
-                }
-
-                try {
-                    auto vtb = altintegration::VTB::fromVbkEncoding(el);
-                    if (with_checks && !altintegration::checkVTB(vtb, state, vbkp, btcp)) {
-                        return set_error(serror, SCRIPT_ERR_VBK_VTBFAIL);
-                    }
-                    popdata.vtbs.push_back(std::move(vtb));
-                } catch (...) {
-                    return set_error(serror, SCRIPT_ERR_VBK_VTBFAIL);
-                }
-
-                popstack(stack);
-                break;
-            }
-            case OP_CHECKPOP: {
-                // OP_CHECKPOP should be last opcode
-                if (script.GetOp(pc, opcode, vchPushValue)) {
-                    // we could read next opcode. extra opcodes is an error
-                    return set_error(serror, SCRIPT_ERR_VBK_EXTRA_OPCODE);
-                }
-
-                // stack should be empty at this point
-                if (!stack.empty()) {
-                    return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
-                }
-
-                // we did all checks, put true on stack to signal successful execution
-                stack.push_back(vchTrue);
-                break;
-            }
-            default:
-                // forbid any other opcodes in pop transactions
-                return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
-            }
-        }
-    } catch (...) {
-        return set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
-    }
-
-    // set return value of publications
-    if (pub != nullptr) {
-        pub->popData = popdata;
-    }
-
-    return true;
-}
-
-bool parseBlockPopPayloadsImpl(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state, std::vector<altintegration::AltPayloads>* payloads)
+std::vector<altintegration::PopData> PopServiceImpl::getPopData(const CBlockIndex& currentBlockIndex)
 {
     AssertLockHeld(cs_main);
-    const auto& config = getService<Config>();
-    size_t numOfPopTxes = 0;
+    altintegration::AltBlock current = VeriBlock::blockToAltBlock(currentBlockIndex.nHeight, currentBlockIndex.GetBlockHeader());
+    altintegration::ValidationState state;
+    return mempool->getPop(current, *this->altTree);
+}
 
-    for (const auto& tx : block.vtx) {
-        if (!isPopTx(*tx)) {
-            // do not even consider regular txes here
-            continue;
+void PopServiceImpl::removePayloadsFromMempool(const std::vector<altintegration::PopData>& v_popData)
+{
+    AssertLockHeld(cs_main);
+    mempool->removePayloads(v_popData);
+}
+
+bool popDataToPayloads(const CBlock& block, const CBlockIndex& indexPrev, BlockValidationState& state, std::vector<altintegration::AltPayloads>& payloads)
+{
+    auto containing = VeriBlock::blockToAltBlock(indexPrev.nHeight + 1, block.GetBlockHeader());
+
+    payloads.resize(block.v_popData.size());
+    // transform v_popData to the AltPayloads
+    for (size_t i = 0; i < payloads.size(); ++i) {
+        auto& pop_data = block.v_popData[i];
+
+        const altintegration::PublicationData& publicationData = pop_data.atv.transaction.publicationData;
+        CBlockHeader endorsedHeader;
+
+        try {
+            endorsedHeader = headerFromBytes(publicationData.header);
+        } catch (const std::exception& e) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "pop-data-alt-block-invalid", "[" + pop_data.atv.getId().asString() + "] can't deserialize endorsed block header: " + e.what());
         }
 
-        if (++numOfPopTxes > config.max_pop_tx_amount) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "pop-block-num-pop-tx", "too many pop transactions in a block");
+        // set endorsed header
+        AssertLockHeld(cs_main);
+        CBlockIndex* endorsedIndex = LookupBlockIndex(endorsedHeader.GetHash());
+        if (!endorsedIndex) {
+            return state.Invalid(
+                BlockValidationResult::BLOCK_INVALID_HEADER,
+                "pop-data-endorsed-block-missing",
+                "[ " + pop_data.atv.getId().asString() + "]: endorsed block " + endorsedHeader.GetHash().ToString() + " is missing");
         }
 
-        TxValidationState txstate;
         altintegration::AltPayloads p;
-        if (!parseTxPopPayloadsImpl(*tx, params, txstate, p)) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, txstate.GetRejectReason(), txstate.GetDebugMessage());
-        }
-        p.containingBlock = blockToAltBlock(pindexPrev.nHeight + 1, block.GetBlockHeader());
+        p.containingBlock = containing;
+        p.endorsed = blockToAltBlock(*endorsedIndex);
+        p.popData = pop_data;
 
-        if (payloads) {
-            payloads->push_back(std::move(p));
-        }
-    }
-
-    return true;
-}
-
-bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& params, TxValidationState& state, altintegration::AltPayloads& payloads) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    AssertLockHeld(cs_main);
-    // do only validation of endorsed block, as all other stateful validations will be performed inside addPayloads
-    altintegration::ValidationState instate;
-    auto txhash = tx.GetHash();
-    ScriptError serror = ScriptError::SCRIPT_ERR_UNKNOWN_ERROR;
-    std::vector<std::vector<uint8_t>> stack;
-
-    // parse transaction
-    if (!evalScriptImpl(tx.vin[0].scriptSig, stack, &serror, &payloads, instate, true)) {
-        return state.Invalid(
-            TxValidationResult::TX_BAD_POP_DATA,
-            "pop-tx-invalid-script",
-            "[" + txhash.ToString() + "] scriptSig of POP tx is invalid: " + ScriptErrorString(serror) + ", " + instate.GetPath() + ", " + instate.GetDebugMessage());
-    }
-
-    const altintegration::PublicationData& publicationData = payloads.popData.atv.transaction.publicationData;
-
-    CBlockHeader endorsedHeader;
-
-    // parse endorsed header
-    try {
-        endorsedHeader = headerFromBytes(publicationData.header);
-    } catch (const std::exception& e) {
-        return state.Invalid(TxValidationResult::TX_BAD_POP_DATA, "pop-tx-alt-block-invalid", "[" + txhash.ToString() + "] can't deserialize endorsed block header: " + e.what());
-    }
-
-    // set endorsed header
-    AssertLockHeld(cs_main);
-    CBlockIndex* endorsedIndex = LookupBlockIndex(endorsedHeader.GetHash());
-    if (!endorsedIndex) {
-        return state.Invalid(
-            TxValidationResult::TX_BAD_POP_DATA,
-            "pop-tx-endorsed-block-missing",
-            "[ " + txhash.ToString() + "]: endorsed block " + endorsedHeader.GetHash().ToString() + " is missing");
-    }
-
-    payloads.endorsed = blockToAltBlock(*endorsedIndex);
-
-    // HACK: fill vbk_context here. Remove when mempool is added.
-    {
-        auto& p = payloads;
-        // extract VBK context
-        auto cmp = [](const altintegration::VbkBlock& a, const altintegration::VbkBlock& b) {
-            return a.height < b.height;
-        };
-        auto& v = p.popData.vbk_context;
-        for (auto& vtb : p.popData.vtbs) {
-            for (auto& ctx : vtb.context) {
-                v.push_back(ctx);
-            }
-            v.push_back(vtb.containingBlock);
-            vtb.context.clear();
-        }
-        if (p.popData.hasAtv) {
-            for (auto& ctx : p.popData.atv.context) {
-                v.push_back(ctx);
-            }
-            v.push_back(p.popData.atv.containingBlock);
-            p.popData.atv.context.clear();
-        }
-        std::sort(v.begin(), v.end(), cmp);
-        v.erase(std::unique(v.begin(), v.end()), v.end());
+        payloads[i] = p;
     }
 
     return true;
@@ -499,6 +270,7 @@ bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& par
 bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex* indexPrev, const CBlock& block, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
+
     int height = 0;
     if (indexPrev != nullptr) {
         height = indexPrev->nHeight + 1;
@@ -509,17 +281,19 @@ bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex*
     altintegration::ValidationState instate;
 
     if (!tree.acceptBlock(containing, instate)) {
-        return error("[%s] block %s is not accepted by altTree: %s", __func__, block.GetHash().ToString(), instate.toString());
+        return error("[%s] block %s is not accepted by altTree: %s", __func__, block.GetHash().ToString(),
+            instate.toString());
     }
 
     if (indexPrev != nullptr) {
         std::vector<altintegration::AltPayloads> payloads;
-        if (!parseBlockPopPayloadsImpl(block, *indexPrev, Params().GetConsensus(), state, &payloads)) {
-            return error("[%s] block %s failed stateless validation: %s", __func__, block.GetHash().ToString(), instate.toString());
+        if (!popDataToPayloads(block, *indexPrev, state, payloads)) {
+            return false;
         }
 
         if (!payloads.empty() && !tree.addPayloads(containing, payloads, instate)) {
-            return error("[%s] block %s failed stateful pop validation: %s", __func__, block.GetHash().ToString(), instate.toString());
+            return error("[%s] block %s failed stateful pop validation: %s", __func__, block.GetHash().ToString(),
+                instate.toString());
         }
     }
 

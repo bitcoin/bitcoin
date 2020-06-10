@@ -14,6 +14,7 @@
 #include <validation.h>
 #include <vbk/util.hpp>
 #include <veriblock/alt-util.hpp>
+#include <veriblock/mempool.hpp>
 #include <veriblock/mock_miner.hpp>
 #include <vbk/log.hpp>
 
@@ -87,29 +88,47 @@ struct E2eFixture : public TestChain100Setup {
         return endorseAltBlock(hash, vtbs, defaultPayoutInfo);
     }
 
-    CBlock endorseAltBlockAndMine(uint256 hash, size_t generateVtbs = 0)
+    CBlock endorseAltBlockAndMine(const std::vector<uint256>& hashes, size_t generateVtbs = 0)
     {
-        return endorseAltBlockAndMine(hash, ChainActive().Tip()->GetBlockHash(), generateVtbs);
+        return endorseAltBlockAndMine(hashes, ChainActive().Tip()->GetBlockHash(), generateVtbs);
     }
 
-    CBlock endorseAltBlockAndMine(uint256 hash, uint256 prevBlock, const std::vector<uint8_t>& payoutInfo, size_t generateVtbs = 0)
+    CBlock endorseAltBlockAndMine(const std::vector<uint256>& hashes, uint256 prevBlock, size_t generateVtbs = 0)
+    {
+        return endorseAltBlockAndMine(hashes, prevBlock, defaultPayoutInfo, generateVtbs);
+    }
+
+    CBlock endorseAltBlockAndMine(const std::vector<uint256>& hashes, uint256 prevBlock, const std::vector<uint8_t>& payoutInfo, size_t generateVtbs = 0)
     {
         std::vector<VTB> vtbs;
         vtbs.reserve(generateVtbs);
         std::generate_n(std::back_inserter(vtbs), generateVtbs, [&]() {
             return endorseVbkTip();
         });
-        auto atv = endorseAltBlock(hash, vtbs, payoutInfo);
-        CScript sig;
-        sig << atv.toVbkEncoding() << OP_CHECKATV;
-        for (const auto& v : vtbs) {
-            sig << v.toVbkEncoding() << OP_CHECKVTB;
-        }
-        sig << OP_CHECKPOP;
 
-        auto tx = VeriBlock::MakePopTx(sig);
+        std::vector<ATV> atvs;
+        atvs.reserve(hashes.size());
+        std::transform(hashes.begin(), hashes.end(), std::back_inserter(atvs), [&](const uint256& hash) -> ATV {
+            return endorseAltBlock(hash, {}, payoutInfo);
+        });
+
+        auto& pop_mempool = pop->getMemPool();
+        altintegration::ValidationState state;
+        BOOST_CHECK(pop_mempool.submitATV(atvs, state));
+        BOOST_CHECK(pop_mempool.submitVTB(vtbs, state));
+
         bool isValid = false;
-        return CreateAndProcessBlock({tx}, prevBlock, cbKey, &isValid);
+        return CreateAndProcessBlock({}, prevBlock, cbKey, &isValid);
+    }
+
+    CBlock endorseAltBlockAndMine(uint256 hash, uint256 prevBlock, const std::vector<uint8_t>& payoutInfo, size_t generateVtbs = 0)
+    {
+        return endorseAltBlockAndMine(std::vector<uint256>{hash}, prevBlock, payoutInfo, generateVtbs);
+    }
+
+    CBlock endorseAltBlockAndMine(uint256 hash, size_t generateVtbs = 0)
+    {
+        return endorseAltBlockAndMine(hash, ChainActive().Tip()->GetBlockHash(), generateVtbs);
     }
 
     CBlock endorseAltBlockAndMine(uint256 hash, uint256 prevBlock, size_t generateVtbs = 0)

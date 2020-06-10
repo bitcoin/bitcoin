@@ -54,6 +54,4 @@ void selectPopConfig(
     const std::string& btcblocks = {},
     int vbkstart = 0,
     const std::string& vbkblocks = {});
-
-
 #endif

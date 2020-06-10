@@ -17,12 +17,14 @@
 #include <veriblock/altintegration.hpp>
 #include <veriblock/blockchain/alt_block_tree.hpp>
 #include <veriblock/config.hpp>
+#include <veriblock/mempool.hpp>
 
 namespace VeriBlock {
 
 class PopServiceImpl : public PopService
 {
 private:
+    std::shared_ptr<altintegration::MemPool> mempool;
     std::shared_ptr<altintegration::AltTree> altTree;
 
 public:
@@ -37,34 +39,33 @@ public:
         return *altTree;
     }
 
+    altintegration::MemPool& getMemPool() override
+    {
+        return *mempool;
+    }
+
     PopServiceImpl(const altintegration::Config& config);
 
     ~PopServiceImpl() override = default;
 
-    bool validatePopTxInput(const CTxIn& in, TxValidationState& state) override;
-    bool validatePopTxOutput(const CTxOut& out, TxValidationState& state) override;
     PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) override;
     void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) override;
     bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state) override;
-    bool validatePopTx(const CTransaction& tx, TxValidationState& state) override;
-
-    bool checkPopInputs(const CTransaction& tx, TxValidationState& state, unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata) override;
 
     std::vector<BlockBytes> getLastKnownVBKBlocks(size_t blocks) override;
     std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks) override;
 
     bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state) override;
     bool addAllBlockPayloads(const CBlockIndex* indexPrev, const CBlock& fullBlock, BlockValidationState& state) override;
-    void invalidateBlockByHash(const uint256& block) override;
     bool setState(const uint256& block, altintegration::ValidationState& state) override;
 
-    bool evalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks) override;
+    std::vector<altintegration::PopData> getPopData(const CBlockIndex& currentBlockIndex) override;
+    void removePayloadsFromMempool(const std::vector<altintegration::PopData>& v_popData) override;
+
     int compareForks(const CBlockIndex& left, const CBlockIndex& right) override;
 };
 
-bool parseTxPopPayloadsImpl(const CTransaction& tx, const Consensus::Params& params, TxValidationState& state, altintegration::AltPayloads& payloads);
-bool parseBlockPopPayloadsImpl(const CBlock& block, const CBlockIndex& indexPrev, const Consensus::Params& params, BlockValidationState& state, std::vector<altintegration::AltPayloads>* payloads);
-bool evalScriptImpl(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks);
+bool popDataToPayloads(const CBlock& block, const CBlockIndex& indexPrev, BlockValidationState& state, std::vector<altintegration::AltPayloads>& payloads);
 bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex* indexPrev, const CBlock& block, BlockValidationState& state);
 
 } // namespace VeriBlock

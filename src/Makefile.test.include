@@ -117,9 +117,9 @@ FUZZ_SUITE_LD_COMMON = \
 # path is relative to src
 VBK_TESTS = \
 	vbk/test/unit/e2e_poptx_tests.cpp \
-	vbk/test/unit/pop_tx_tests.cpp \
 	vbk/test/unit/pop_reward_tests.cpp \
     vbk/test/unit/vbk_merkle_tests.cpp \
+    vbk/test/unit/block_validation_tests.cpp \
     vbk/test/unit/forkresolution_tests.cpp
 
 #  vbk/test/unit/updated_mempool_tests.cpp \
@@ -127,6 +127,7 @@ VBK_TESTS = \
 #  vbk/test/unit/genesis_block_tests.cpp \
 #  vbk/test/unit/pop_service_tests.cpp \
 #  vbk/test/unit/util_service_tests.cpp \
+#  vbk/test/unit/vbk_merkle_tests.cpp \
 #  vbk/test/unit/vbk_net_processing_tests.cpp \
 #  vbk/test/unit/pop_interpreter_tests.cpp \
 #  vbk/test/unit/block_validation_tests.cpp \

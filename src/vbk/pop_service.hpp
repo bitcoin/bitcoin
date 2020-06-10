@@ -25,6 +25,7 @@ namespace altintegration {
 struct AltPayloads;
 class ValidationState;
 struct AltTree;
+struct MemPool;
 } // namespace altintegration
 
 namespace Consensus {
@@ -39,24 +40,21 @@ using PoPRewards = std::map<CScript, CAmount>;
 struct PopService {
     virtual ~PopService() = default;
     virtual altintegration::AltTree& getAltTree() = 0;
-    virtual bool validatePopTxOutput(const CTxOut& out, TxValidationState& state) = 0;
-    virtual bool validatePopTxInput(const CTxIn& in, TxValidationState& state) = 0;
+    virtual altintegration::MemPool& getMemPool() = 0;
     virtual PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) = 0;
     virtual void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) = 0;
     virtual bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state) = 0;
-
-    virtual bool validatePopTx(const CTransaction& tx, TxValidationState& state) = 0;
-    virtual bool checkPopInputs(const CTransaction& tx, TxValidationState& state, unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata) = 0;
 
     virtual std::vector<BlockBytes> getLastKnownVBKBlocks(size_t blocks) = 0;
     virtual std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks) = 0;
 
     virtual bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state) = 0;
     virtual bool addAllBlockPayloads(const CBlockIndex* prevIndex, const CBlock& fullBlock, BlockValidationState& state) = 0;
-    virtual void invalidateBlockByHash(const uint256& block) = 0;
     virtual bool setState(const uint256& block, altintegration::ValidationState& state) = 0;
 
-    virtual bool evalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, altintegration::AltPayloads* pub, altintegration::ValidationState& state, bool with_checks) = 0;
+    virtual std::vector<altintegration::PopData> getPopData(const CBlockIndex& currentBlockIndex) = 0;
+    virtual void removePayloadsFromMempool(const std::vector<altintegration::PopData>& v_popData) = 0;
+
     virtual int compareForks(const CBlockIndex& left, const CBlockIndex& right) = 0;
 
     virtual std::string toPrettyString() const = 0;

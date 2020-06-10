@@ -720,7 +720,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         keystoneArray.push_back(keystone.GetHex());
     }
 
-    CTxOut popCoinbaseCommitment = VeriBlock::addPopTransactionRootIntoCoinbaseCommitment(*pblock);
+    CTxOut popCoinbaseCommitment = VeriBlock::addPopDataRootIntoCoinbaseCommitment(*pblock);
 
     result.pushKV("keystone_hashes", keystoneArray);
     result.pushKV("pop_witness_commitment", HexStr(popCoinbaseCommitment.scriptPubKey.begin(), popCoinbaseCommitment.scriptPubKey.end()));

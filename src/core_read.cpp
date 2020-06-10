@@ -102,10 +102,9 @@ static bool CheckTxScriptsSanity(const CMutableTransaction& tx)
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
             if (!tx.vin[i].scriptSig.HasValidOps())
                 return false;
-            else {
-                if(tx.vin[i].scriptSig.size() > MAX_SCRIPT_SIZE)
-                    return false;
-            }
+            if(tx.vin[i].scriptSig.size() > MAX_SCRIPT_SIZE)
+                return false;
+            
         }
     }
     // Check output scripts

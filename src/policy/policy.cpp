@@ -106,20 +106,13 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
         // CHECKMULTISIG scriptPubKey, though such a scriptPubKey is not
         // considered standard.
 
-        if (VeriBlock::isPopTx(tx))
-        {
-            return true; // accept pop txes with any size
+        if (txin.scriptSig.size() > 1650) {
+            reason = "scriptsig-size";
+            return false;
         }
-        else
-        {
-            if (txin.scriptSig.size() > 1650) {
-                reason = "scriptsig-size";
-                return false;
-            }
-            if (!txin.scriptSig.IsPushOnly()) {
-                reason = "scriptsig-not-pushonly";
-                return false;
-            }
+        if (!txin.scriptSig.IsPushOnly()) {
+            reason = "scriptsig-not-pushonly";
+            return false;
         }
     }
 
@@ -171,9 +164,6 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
-
-    if (VeriBlock::isPopTx(tx))
-        return true; // VBK POP tx doesn't have a linked preout, not spending anything.
 
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {

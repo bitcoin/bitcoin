@@ -606,7 +606,7 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
 {
     TxValidationState dummy_state; // Not used. CheckTxInputs() should always pass
     CAmount txfee = 0;
-    bool fCheckResult = tx.IsCoinBase() || VeriBlock::isPopTx(tx) || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee);
+    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee);
     assert(fCheckResult);
     UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
 }
@@ -640,26 +640,24 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         innerUsage += memusage::DynamicUsage(links.parents) + memusage::DynamicUsage(links.children);
         bool fDependsWait = false;
         setEntries setParentCheck;
-        if (!VeriBlock::isPopTx(tx))
-        {
-            for (const CTxIn &txin : tx.vin) {
-                // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
-                indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
-                if (it2 != mapTx.end()) {
-                    const CTransaction& tx2 = it2->GetTx();
-                    assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
-                    fDependsWait = true;
-                    setParentCheck.insert(it2);
-                } else {
-                    assert(pcoins->HaveCoin(txin.prevout));
-                }
-                // Check whether its inputs are marked in mapNextTx.
-                auto it3 = mapNextTx.find(txin.prevout);
-                assert(it3 != mapNextTx.end());
-                assert(it3->first == &txin.prevout);
-                assert(it3->second == &tx);
-                i++;
+
+        for (const CTxIn &txin : tx.vin) {
+        // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
+            indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
+            if (it2 != mapTx.end()) {
+                const CTransaction& tx2 = it2->GetTx();
+                assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
+                fDependsWait = true;
+                setParentCheck.insert(it2);
+            } else {
+                assert(pcoins->HaveCoin(txin.prevout));
             }
+            // Check whether its inputs are marked in mapNextTx.
+            auto it3 = mapNextTx.find(txin.prevout);
+            assert(it3 != mapNextTx.end());
+            assert(it3->first == &txin.prevout);
+            assert(it3->second == &tx);
+            i++;
         }
         assert(setParentCheck == GetMemPoolParents(it));
         // Verify ancestor state is correct.
@@ -940,30 +938,6 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     setEntries toremove;
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
         toremove.insert(mapTx.project<0>(it));
-        it++;
-    }
-    setEntries stage;
-    for (txiter removeit : toremove) {
-        CalculateDescendants(removeit, stage);
-    }
-    RemoveStaged(stage, false, MemPoolRemovalReason::EXPIRY);
-    return stage.size();
-}
-
-int CTxMemPool::ExpirePop()
-{
-    AssertLockHeld(cs);
-    indexed_transaction_set::index<entry_time>::type::iterator it = mapTx.get<entry_time>().begin();
-    setEntries toremove;
-    auto tipHeight = ChainActive().Tip()->nHeight;
-    auto& config = VeriBlock::getService<VeriBlock::Config>();
-    while (it != mapTx.get<entry_time>().end() && VeriBlock::isPopTx(it->GetTx())) {
-        TxValidationState state;
-        altintegration::AltPayloads payloads;
-        bool ret = VeriBlock::parseTxPopPayloadsImpl(it->GetTx(), Params().GetConsensus(), state, payloads);
-        if (ret && (payloads.endorsed.height + config.popconfig.alt->getEndorsementSettlementInterval() < tipHeight)) {
-            toremove.insert(mapTx.project<0>(it));
-        }
         it++;
     }
     setEntries stage;

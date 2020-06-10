@@ -23,6 +23,8 @@
 #include <prevector.h>
 #include <span.h>
 
+#include "veriblock/entities/popdata.hpp"
+
 static const unsigned int MAX_SIZE = 0x02000000;
 
 /**
@@ -608,6 +610,17 @@ inline void Unserialize(Stream& is, T&& a)
     a.Unserialize(is);
 }
 
+// VeriBlock: Serialize a PopData object
+template<typename Stream> inline void Serialize(Stream& s, const altintegration::PopData& pop_data) {
+    std::vector<uint8_t> bytes_data = pop_data.toVbkEncoding();
+    Serialize(s, bytes_data);
+}
+
+template<typename Stream> inline void Unserialize(Stream& s, altintegration::PopData& pop_data) {
+    std::vector<uint8_t> bytes_data;
+    Unserialize(s, bytes_data);
+    pop_data = altintegration::PopData::fromVbkEncoding(bytes_data);
+}
 
 
 

@@ -1643,6 +1643,10 @@ inline void static SendBlockTransactions(const CBlock& block, const BlockTransac
     LOCK(cs_main);
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
     int nSendFlags = State(pfrom->GetId())->fWantsCmpctWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS;
+
+    //VeriBlock add popData
+    resp.v_popData = block.v_popData;
+
     connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::BLOCKTXN, resp));
 }
 
@@ -2366,7 +2370,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     if (strCommand == NetMsgType::GETBLOCKTXN) {
         BlockTransactionsRequest req;
         vRecv >> req;
-
         std::shared_ptr<const CBlock> recent_block;
         {
             LOCK(cs_most_recent_block);
@@ -2758,6 +2761,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     // Dirty hack to jump to BLOCKTXN code (TODO: move message handling into their own functions)
                     BlockTransactions txn;
                     txn.blockhash = cmpctblock.header.GetHash();
+                    txn.v_popData = cmpctblock.v_popData;
                     blockTxnMsg << txn;
                     fProcessBLOCKTXN = true;
                 } else {
@@ -2855,7 +2859,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         BlockTransactions resp;
         vRecv >> resp;
-
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
         bool fBlockRead = false;
         {
@@ -2869,7 +2872,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
 
             PartiallyDownloadedBlock& partialBlock = *it->second.second->partialBlock;
-            ReadStatus status = partialBlock.FillBlock(*pblock, resp.txn);
+            ReadStatus status = partialBlock.FillBlock(*pblock, resp.txn, resp.v_popData);
             if (status == READ_STATUS_INVALID) {
                 MarkBlockAsReceived(resp.blockhash); // Reset in-flight state in case of whitelist
                 Misbehaving(pfrom->GetId(), 100, strprintf("Peer %d sent us invalid compact block/non-matching block transactions\n", pfrom->GetId()));
@@ -2936,7 +2939,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         }
 
         std::vector<CBlockHeader> headers;
-
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
         if (nCount > MAX_HEADERS_RESULTS) {
@@ -2948,6 +2950,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         for (unsigned int n = 0; n < nCount; n++) {
             vRecv >> headers[n];
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
+            if (headers[n].nVersion & VeriBlock::POP_BLOCK_VERSION_BIT) {
+                ReadCompactSize(vRecv);
+            }
         }
 
         return ProcessHeadersMessage(pfrom, connman, headers, chainparams, /*via_compact_block=*/false);
@@ -3839,7 +3844,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         CInv inv(MSG_TX, hash);
                         pto->m_tx_relay->setInventoryTxToSend.erase(hash);
                         // Don't send transactions that peers will not put into their mempool
-                        if (!VeriBlock::isPopTx(*txinfo.tx) && txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
+                        if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
                             continue;
                         }
                         if (pto->m_tx_relay->pfilter) {
@@ -3894,7 +3899,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                             continue;
                         }
                         // Peer told you to not send transactions at that feerate? Don't bother sending it.
-                        if (!VeriBlock::isPopTx(*txinfo.tx) && txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
+                        if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
                             continue;
                         }
                         if (pto->m_tx_relay->pfilter && !pto->m_tx_relay->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;

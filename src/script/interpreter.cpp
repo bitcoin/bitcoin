@@ -303,12 +303,6 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     std::vector<valtype> altstack;
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
 
-    if (flags & SCRIPT_VERIFY_POP) {
-        auto& pop = VeriBlock::getService<VeriBlock::PopService>();
-        altintegration::ValidationState state;
-        return pop.evalScript(script, stack, serror, nullptr, state, true);
-    }
-
     if (script.size() > MAX_SCRIPT_SIZE) {
         return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
     }
@@ -1507,7 +1501,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     if (flags & SCRIPT_VERIFY_P2SH)
         stackCopy = stack;
     // if SCRIPT_VERIFY_POP is set, then do not eval scriptPubKey
-    if (!(flags & SCRIPT_VERIFY_POP) && !EvalScript(stack, scriptPubKey, flags, checker, SigVersion::BASE, serror))
+    if (!EvalScript(stack, scriptPubKey, flags, checker, SigVersion::BASE, serror))
         // serror is set
         return false;
     if (stack.empty())
