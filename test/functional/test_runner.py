@@ -67,7 +67,7 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
 
 TEST_FRAMEWORK_MODULES = [
-    "base58",
+    "address",
     "blocktools",
     "script",
 ]

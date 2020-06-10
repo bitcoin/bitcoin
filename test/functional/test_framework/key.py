@@ -8,7 +8,7 @@ keys, and is trivially vulnerable to side channel attacks. Do not use for
 anything but tests."""
 import random
 
-from .base58 import byte_to_base58
+from .address import byte_to_base58
 
 def modinv(a, n):
     """Compute the modular inverse of a modulo n
