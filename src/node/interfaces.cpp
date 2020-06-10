@@ -246,7 +246,7 @@ public:
     std::string getNetwork() override { return Params().NetworkIDString(); }
     void initLogging() override { InitLogging(gArgs); }
     void initParameterInteraction() override { InitParameterInteraction(gArgs); }
-    std::string getWarnings() override { return GetWarnings(true); }
+    bilingual_str getWarnings() override { return GetWarnings(true); }
     uint64_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {

@@ -11,6 +11,7 @@
 #include <netaddress.h> // For Network
 #include <support/allocators/secure.h> // For SecureString
 #include <uint256.h>
+#include <util/translation.h>
 
 #include <functional>
 #include <memory>
@@ -171,7 +172,7 @@ public:
     virtual void initParameterInteraction() = 0;
 
     //! Get warnings.
-    virtual std::string getWarnings() = 0;
+    virtual bilingual_str getWarnings() = 0;
 
     // Get log flags.
     virtual uint64_t getLogCategories() = 0;

@@ -143,7 +143,7 @@ BitcoinCore::BitcoinCore(interfaces::Node& node) :
 void BitcoinCore::handleRunawayException(const std::exception_ptr e)
 {
     PrintExceptionContinue(e, "Runaway exception");
-    Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings()));
+    Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings().translated));
 }
 
 void BitcoinCore::initialize()
@@ -747,7 +747,7 @@ int GuiMain(int argc, char* argv[])
         }
     } catch (...) {
         PrintExceptionContinue(std::current_exception(), "Runaway exception");
-        app.handleRunawayException(QString::fromStdString(node->getWarnings()));
+        app.handleRunawayException(QString::fromStdString(node->getWarnings().translated));
     }
     return rv;
 }

@@ -2655,20 +2655,20 @@ void CChainState::PruneAndFlush()
     }
 }
 
-static void DoWarning(const std::string& strWarning)
+static void DoWarning(const bilingual_str& warning)
 {
     static bool fWarned = false;
-    SetMiscWarning(strWarning);
+    SetMiscWarning(warning);
     if (!fWarned) {
-        AlertNotify(strWarning);
+        AlertNotify(warning.original);
         fWarned = true;
     }
 }
 
 /** Private helper function that concatenates warning messages. */
-static void AppendWarning(std::string& res, const std::string& warn)
+static void AppendWarning(bilingual_str& res, const bilingual_str& warn)
 {
-    if (!res.empty()) res += ", ";
+    if (!res.empty()) res += Untranslated(", ");
     res += warn;
 }
 
@@ -2685,7 +2685,7 @@ void CChainState::UpdateTip(const CBlockIndex* pindexNew)
         g_best_block_cv.notify_all();
     }
 
-    std::string warningMessages;
+    bilingual_str warning_messages;
     assert(std::addressof(::ChainstateActive()) == std::addressof(*this));
     if (!this->IsInitialBlockDownload())
     {
@@ -2694,11 +2694,11 @@ void CChainState::UpdateTip(const CBlockIndex* pindexNew)
             WarningBitsConditionChecker checker(bit);
             ThresholdState state = checker.GetStateFor(pindex, m_params.GetConsensus(), warningcache[bit]);
             if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
-                const std::string strWarning = strprintf(_("Warning: unknown new rules activated (versionbit %i)").translated, bit);
+                const bilingual_str warning = strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit);
                 if (state == ThresholdState::ACTIVE) {
-                    DoWarning(strWarning);
+                    DoWarning(warning);
                 } else {
-                    AppendWarning(warningMessages, strWarning);
+                    AppendWarning(warning_messages, warning);
                 }
             }
         }
@@ -2710,7 +2710,7 @@ void CChainState::UpdateTip(const CBlockIndex* pindexNew)
       FormatISO8601DateTime(pindexNew->GetBlockTime()),
       GuessVerificationProgress(m_params.TxData(), pindexNew), this->CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)), this->CoinsTip().GetCacheSize(),
               m_evoDb.GetMemoryUsage() * (1.0 / (1<<20)),
-      !warningMessages.empty() ? strprintf(" warning='%s'", warningMessages) : "");
+      !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages.original) : "");
 }
 
 /** Disconnect m_chain's tip.
