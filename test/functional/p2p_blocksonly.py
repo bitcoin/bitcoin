@@ -21,24 +21,17 @@ class P2PBlocksOnly(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        block_relay_peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        self.blocksonly_mode_tests()
 
-        input_txid = self.nodes[0].getblock(self.nodes[0].getblockhash(1), 2)['tx'][0]['txid']
-        tx = create_transaction(self.nodes[0], input_txid, self.nodes[0].getnewaddress(), amount=(50 - 0.001))
-        txid = tx.rehash()
-        tx_hex = tx.serialize().hex()
-
+    def blocksonly_mode_tests(self):
+        self.log.info("Tests with node running in -blocksonly mode")
         assert_equal(self.nodes[0].getnetworkinfo()['localrelay'], False)
-        with self.nodes[0].assert_debug_log(['transaction sent in violation of protocol peer=0']):
-            block_relay_peer.send_message(msg_tx(tx))
-            block_relay_peer.wait_for_disconnect()
-            assert_equal(self.nodes[0].getmempoolinfo()['size'], 0)
 
-        # Remove the disconnected peer and add a new one.
-        del self.nodes[0].p2ps[0]
-        tx_relay_peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        self.nodes[0].add_p2p_connection(P2PInterface())
+        tx, txid, tx_hex = self.check_p2p_tx_violation()
 
         self.log.info('Check that txs from rpc are not rejected and relayed to other peers')
+        tx_relay_peer = self.nodes[0].add_p2p_connection(P2PInterface())
         assert_equal(self.nodes[0].getpeerinfo()[0]['relaytxes'], True)
 
         assert_equal(self.nodes[0].testmempoolaccept([tx_hex])[0]['allowed'], True)
@@ -72,6 +65,24 @@ class P2PBlocksOnly(BitcoinTestFramework):
             second_peer.wait_for_tx(txid)
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 1)
         self.log.info("Relay-permission peer's transaction is accepted and relayed")
+
+    def check_p2p_tx_violation(self):
+        self.log.info('Check that txs from P2P are rejected and result in disconnect')
+
+        input_txid = self.nodes[0].getblock(self.nodes[0].getblockhash(1), 2)['tx'][0]['txid']
+        tx = create_transaction(self.nodes[0], input_txid, self.nodes[0].getnewaddress(), amount=(50 - 0.001))
+        txid = tx.rehash()
+        tx_hex = tx.serialize().hex()
+
+        with self.nodes[0].assert_debug_log(['transaction sent in violation of protocol peer=0']):
+            self.nodes[0].p2ps[0].send_message(msg_tx(tx))
+            self.nodes[0].p2ps[0].wait_for_disconnect()
+            assert_equal(self.nodes[0].getmempoolinfo()['size'], 0)
+
+        # Remove the disconnected peer
+        del self.nodes[0].p2ps[0]
+
+        return tx, txid, tx_hex
 
 
 if __name__ == '__main__':
