@@ -27,24 +27,13 @@ archive. This makes the SDK less-trivial to extract on non-macOS machines. One
 approach (tested on Debian Buster) is outlined below:
 
 ```bash
+# Install/clone tools needed for extracting Xcode.app
+apt install cpio
+git clone https://github.com/bitcoin-core/apple-sdk-tools.git
 
-apt install clang cpio git liblzma-dev libxml2-dev libssl-dev make
-
-git clone https://github.com/tpoechtrager/xar
-pushd xar/xar
-./configure
-make
-make install
-popd
-
-git clone https://github.com/NiklasRosenstein/pbzx
-pushd pbzx
-clang -llzma -lxar pbzx.c -o pbzx -Wl,-rpath=/usr/local/lib
-popd
-
-xar -xf Xcode_10.2.1.xip -C .
-
-./pbzx/pbzx -n Content | cpio -i
+# Unpack Xcode_10.2.1.xip and place the resulting Xcode.app in your current
+# working directory
+python3 apple-sdk-tools/extract_xcode.py -f Xcode_10.2.1.xip | cpio -d -i
 ```
 
 On macOS the process is more straightforward:
