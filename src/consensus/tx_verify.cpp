@@ -163,10 +163,9 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent",
                          strprintf("%s: inputs missing/spent", __func__));
     }
-    const bool &isAssetTx = IsAssetTx(tx.nVersion);
     CAmount nValueIn = 0;
-    std::unordered_map<uint32_t, uint64_t> mapAssetIn;
-    std::unordered_map<uint32_t, uint64_t> mapAssetOut;
+    std::unordered_map<uint32_t, std::pair<bool, uint64_t> > mapAssetIn;
+    std::unordered_map<uint32_t, std::pair<bool, uint64_t> > mapAssetOut;
     uint64_t nPrevTotal;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
@@ -178,20 +177,21 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
-        if(!coin.out.assetInfo.IsNull()) {
+        if (!coin.out.assetInfo.IsNull()) {
             const bool &zeroVal = coin.out.assetInfo.nValue == 0;
-            auto inRes = mapAssetIn.emplace(coin.out.assetInfo.nAsset, coin.out.assetInfo.nValue);
-            if(!inRes.second) {
-                nPrevTotal = inRes.first->second;
-                inRes.first->second += coin.out.assetInfo.nValue;
-                // overflow
-                if(!zeroVal && inRes.first->second <= nPrevTotal) {
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-overflow");
+            auto inRes = mapAssetIn.emplace(coin.out.assetInfo.nAsset, std::make_pair(zeroVal, coin.out.assetInfo.nValue));
+            if (!inRes.second) {
+                nPrevTotal = inRes.first->second.second;
+                inRes.first->second.second += coin.out.assetInfo.nValue;
+                if (!inRes.first->second.first) {
+                    inRes.first->second.first = zeroVal;
                 }
-            }
-            if(zeroVal) {
-                if(!isAssetTx) {
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalue-zero-change-non-asset");
+                else if (zeroVal) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-zero-val-input");
+                }
+                // overflow
+                if(!zeroVal && inRes.first->second.second <= nPrevTotal) {
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-overflow");
                 }
             }
         }
@@ -209,11 +209,11 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     }
     // SYSCOIN
     if(tx.HasAssets()) {
-        if(!tx.GetAssetValueOut(isAssetTx, mapAssetOut, state)) {
+        if(!tx.GetAssetValueOut(mapAssetOut, state)) {
             return false; // state is filled by GetAssetValueOut
         }
         // if input was used, validate it against output (note, no fees for assets in == out)
-        if(!CheckTxInputsAssets(tx, state, mapAssetIn, mapAssetOut)) {
+        if(!CheckTxInputsAssets(tx, state, tx.voutAssets.begin()->first, mapAssetIn, mapAssetOut)) {
             return false; // state filled by CheckTxInputsAssets
         }
     }

@@ -62,15 +62,9 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(mintSyscoin.IsNull()) {
         return FormatSyscoinErrorMessage(state, "mint-unserialize", bSanityCheck);
     }
-    if(tx.voutAssets.size() != 1) {
-        return FormatSyscoinErrorMessage(state, "mint-invalid-vout-map-size", bSanityCheck);
-    }
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
-    if(vecVout.size() != 1) {
-        return FormatSyscoinErrorMessage(state, "mint-invalid-vout-size", bSanityCheck);
-    }
     // do this check only when not in IBD (initial block download) or litemode
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     EthereumTxRoot txRootDB;
@@ -375,15 +369,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         break; 
         case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
         {   
-            if(tx.voutAssets.size() != 1) {
-                return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-vout-map-size", bSanityCheck);
-            }
             auto it = tx.voutAssets.begin();
             const uint32_t &nAsset = it->first;
             const std::vector<CAssetOut> &vecVout = it->second;
-            if(vecVout.size() != 1) {
-                return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-vout-size", bSanityCheck);
-            }
             const CAmount &nBurnAmount = tx.vout[nOut].nValue;
             if(nBurnAmount <= 0) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-amount", bSanityCheck);
@@ -401,21 +389,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
         {
-            // there is no reason for allocation burns to have multiple assets or outputs
-            // going from SYSX to SYS its just assumed to be one asset (SYSX)
-            // going to ethereum its one asset as well
-            if(tx.voutAssets.size() != 1) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-burn-invalid-vout-map-size", bSanityCheck);
-            }
-            // could be size 2 because of asset change
-            // the value in == out is enforced in CheckTxInputsAssets() for this type of transaction but we just simply want
-            // to limit the size of outputs because it doesn't make any sense to have more
-            const size_t& voutSize = tx.voutAssets.begin()->second.size();
-            if(voutSize < 1 || voutSize > 2) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-burn-invalid-vout-size", bSanityCheck);
+            const uint64_t &nBurnAmount = tx.vout[nOut].assetInfo.nValue;
+            if (nBurnAmount == 0) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bSanityCheck);
             }
             if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
-                const uint64_t &nBurnAmount = tx.vout[nOut].assetInfo.nValue;
                 // the burn of asset in opreturn should match the output value of index 0 (sys)
                 if(((CAmount)nBurnAmount) != tx.vout[0].nValue) {
                     return FormatSyscoinErrorMessage(state, "assetallocation-mismatch-burn-amount", bSanityCheck);
@@ -557,9 +535,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "asset-missing-burn-output", bSanityCheck);
     } 
-    if(tx.voutAssets.size() != 1) {
-        return FormatSyscoinErrorMessage(state, "asset-invalid-vout-map-size", bSanityCheck);
-    }
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->first;
     const std::vector<CAssetOut> &vecVout = it->second;
@@ -593,9 +568,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
         {
-            if(vecVout.size() != 1) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-vout-size", bSanityCheck);
-            }
             if(tx.vout[vecVout[0].n].assetInfo.nValue != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
             }
@@ -641,9 +613,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
 
         case SYSCOIN_TX_VERSION_ASSET_UPDATE:
         {
-            if(vecVout.size() != 1) {
-                return FormatSyscoinErrorMessage(state, "asset-invalid-vout-size", bSanityCheck);
-            }
             if(tx.vout[vecVout[0].n].assetInfo.nValue != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-amount", bSanityCheck);
             }

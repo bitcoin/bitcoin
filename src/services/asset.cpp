@@ -94,22 +94,58 @@ bool GetAsset(const uint32_t &nAsset,
     return true;
 }
 
-bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const std::unordered_map<uint32_t, uint64_t> &mapAssetIn, const std::unordered_map<uint32_t, uint64_t> &mapAssetOut) {
-    if(!IsSyscoinWithNoInputTx(tx.nVersion)) {
-        if(mapAssetIn != mapAssetOut) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-io-mismatch");
+bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, std::unordered_map<uint32_t, std::pair<bool, uint64_t> > &mapAssetIn, const std::unordered_map<uint32_t, std::pair<bool, uint64_t> > &mapAssetOut) {
+    if (mapAssetOut.empty()) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outputs-empty");
+    }
+    std::unordered_map<uint32_t, std::pair<bool, uint64_t> >::const_iterator itOut;
+    const bool &isNoInput = IsSyscoinWithNoInputTx(tx.nVersion);
+    if(isNoInput) {
+        itOut = mapAssetOut.find(nAsset);
+        if (itOut == mapAssetOut.end()) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-output-first-asset-not-found");
         }
-    // for asset sends ensure that all inputs of a single asset, and all outputs match the asset guid
-    } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
-        if(mapAssetIn.size() != 1) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-wrong-number-inputs");
+    }
+    // case 1: asset send without zero val input, covered by this check
+    // case 2: asset send with zero val of another asset, covered by mapAssetIn != mapAssetOut
+    // case 3: asset send with multiple zero val input/output, covered by GetAssetValueOut() for output and CheckTxInputs() for input
+    // case 4: asset send sending assets without inputs of those assets, covered by this check + mapAssetIn != mapAssetOut
+    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
+        if (mapAssetIn.empty()) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-inputs-empty");
         }
-        const uint32_t &nAsset = mapAssetIn.begin()->first;
-        for(const auto& outAsset: mapAssetOut) {
-            if(outAsset.first != nAsset) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-io-mismatch");
-            }
+        auto itIn = mapAssetIn.find(nAsset);
+        if (itIn == mapAssetIn.end()) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-input-first-asset-not-found");
         }
+        // check that the first input asset and first output asset match
+        // note that we only care about first asset because below we will end up enforcing in == out for the rest
+        if (itIn->first != itOut->first) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-guid-mismatch");
+        }
+        // check that the first input asset has zero val input spent
+        if (!itIn->second.first) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-missing-zero-val-input");
+        }
+        // check that the first output asset has zero val output
+        if (!itOut->second.first) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-missing-zero-val-output");
+        }
+    }
+    // asset send also falls into this so for the first out we need to check for asset send seperately above
+    if (isNoInput) {
+        // add first asset out to in so it matches, the rest should be the same
+        // the first one is verified by checksyscoininputs() later on (part of asset send is also)
+        // emplace will add if it doesn't exist or update it below
+        auto it = mapAssetIn.emplace(nAsset, std::make_pair(itOut->second.first, itOut->second.second));
+        if (!it.second) {
+            it.first->second = std::make_pair(itOut->second.first, itOut->second.second);
+        }
+    }
+    // this will check that all assets with inputs match amounts being sent on outputs
+    // it will also ensure that inputs and outputs per asset are equal with respects to zero-val inputs/outputs (asset ownership utxos) 
+    if (mapAssetIn != mapAssetOut) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetsend-io-mismatch");
     }
     return true;
 }
