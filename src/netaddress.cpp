@@ -20,7 +20,6 @@ bool fAllowPrivateNet = DEFAULT_ALLOWPRIVATENET;
 CNetAddr::CNetAddr()
 {
     memset(ip, 0, sizeof(ip));
-    scopeId = 0;
 }
 
 void CNetAddr::SetIP(const CNetAddr& ipIn)
