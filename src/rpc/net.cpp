@@ -22,6 +22,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
+#include <util/translation.h>
 #include <validation.h>
 #include <version.h>
 #include <warnings.h>
@@ -548,7 +549,7 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
         }
     }
     obj.pushKV("localaddresses", localAddresses);
-    obj.pushKV("warnings",       GetWarnings(false));
+    obj.pushKV("warnings",       GetWarnings(false).original);
     return obj;
 }
 
