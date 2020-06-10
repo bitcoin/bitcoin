@@ -146,6 +146,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     int spFinality = 0;
     bool isAttackInProgress = false;
     QString vbkMessage = "";
+    int nDepth = status.depth_in_main_chain;
     
     try { 
         ///////////////////////////////////////////////
@@ -160,7 +161,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
             if( !url.contains("%1") ) {
                 url = url + "%1";
             }
-            url = url.arg(numBlocks); // + numBlocks for live.
+            url = url.arg(nDepth); // + numBlocks for live.
         } catch(...) { }
         
         QEventLoop loop;
