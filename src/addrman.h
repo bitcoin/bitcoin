@@ -320,7 +320,7 @@ public:
      * very little in common.
      */
     template<typename Stream>
-    void Serialize(Stream &s) const
+    void Serialize(Stream &s) const EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
 
@@ -377,7 +377,7 @@ public:
     }
 
     template<typename Stream>
-    void Unserialize(Stream& s)
+    void Unserialize(Stream& s) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
 
@@ -554,7 +554,7 @@ public:
     }
 
     //! Add a single address.
-    bool Add(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty = 0)
+    bool Add(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty = 0) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         bool fRet = false;
@@ -568,7 +568,7 @@ public:
     }
 
     //! Add multiple addresses.
-    bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty = 0)
+    bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty = 0) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         int nAdd = 0;
@@ -583,7 +583,7 @@ public:
     }
 
     //! Mark an entry as accessible.
-    void Good(const CService &addr, bool test_before_evict = true, int64_t nTime = GetAdjustedTime())
+    void Good(const CService &addr, bool test_before_evict = true, int64_t nTime = GetAdjustedTime()) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         Check();
@@ -601,7 +601,7 @@ public:
     }
 
     //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
-    void ResolveCollisions()
+    void ResolveCollisions() EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         Check();
@@ -610,7 +610,7 @@ public:
     }
 
     //! Randomly select an address in tried that another address is attempting to evict.
-    CAddrInfo SelectTriedCollision()
+    CAddrInfo SelectTriedCollision() EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         CAddrInfo ret;
         {
@@ -625,7 +625,7 @@ public:
     /**
      * Choose an address to connect to.
      */
-    CAddrInfo Select(bool newOnly = false)
+    CAddrInfo Select(bool newOnly = false) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         CAddrInfo addrRet;
         {
@@ -638,7 +638,7 @@ public:
     }
 
     //! Return a bunch of addresses, selected at random.
-    std::vector<CAddress> GetAddr()
+    std::vector<CAddress> GetAddr() EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         Check();
         std::vector<CAddress> vAddr;
@@ -651,7 +651,7 @@ public:
     }
 
     //! Mark an entry as currently-connected-to.
-    void Connected(const CService &addr, int64_t nTime = GetAdjustedTime())
+    void Connected(const CService &addr, int64_t nTime = GetAdjustedTime()) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         Check();
@@ -659,7 +659,7 @@ public:
         Check();
     }
 
-    void SetServices(const CService &addr, ServiceFlags nServices)
+    void SetServices(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         Check();
