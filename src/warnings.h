@@ -10,7 +10,7 @@
 
 struct bilingual_str;
 
-void SetMiscWarning(const std::string& strWarning);
+void SetMiscWarning(const bilingual_str& warning);
 void SetfLargeWorkForkFound(bool flag);
 bool GetfLargeWorkForkFound();
 void SetfLargeWorkInvalidChainFound(bool flag);

@@ -13,14 +13,14 @@
 #include <vector>
 
 static Mutex g_warnings_mutex;
-static std::string strMiscWarning GUARDED_BY(g_warnings_mutex);
+static bilingual_str g_misc_warnings GUARDED_BY(g_warnings_mutex);
 static bool fLargeWorkForkFound GUARDED_BY(g_warnings_mutex) = false;
 static bool fLargeWorkInvalidChainFound GUARDED_BY(g_warnings_mutex) = false;
 
-void SetMiscWarning(const std::string& strWarning)
+void SetMiscWarning(const bilingual_str& warning)
 {
     LOCK(g_warnings_mutex);
-    strMiscWarning = strWarning;
+    g_misc_warnings = warning;
 }
 
 void SetfLargeWorkForkFound(bool flag)
@@ -55,8 +55,8 @@ bilingual_str GetWarnings(bool verbose)
     }
 
     // Misc warnings like out of disk space and clock is wrong
-    if (!strMiscWarning.empty()) {
-        warnings_concise = Untranslated(strMiscWarning);
+    if (!g_misc_warnings.empty()) {
+        warnings_concise = g_misc_warnings;
         warnings_verbose.emplace_back(warnings_concise);
     }
 
