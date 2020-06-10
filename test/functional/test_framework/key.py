@@ -14,7 +14,7 @@ import random
 import unittest
 
 from test_framework.crypto import secp256k1
-from .address import byte_to_base58
+from .base58 import byte_to_base58
 
 # Order of the secp256k1 curve
 ORDER = secp256k1.GE.ORDER

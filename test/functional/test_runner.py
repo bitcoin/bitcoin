@@ -70,7 +70,7 @@ TEST_EXIT_SKIPPED = 77
 # List of framework modules containing unit tests. Should be kept in sync with
 # the output of `git grep unittest.TestCase ./test/functional/test_framework`
 TEST_FRAMEWORK_MODULES = [
-    "address",
+    "base58",
     "crypto.bip324_cipher",
     "blocktools",
     "crypto.chacha20",
