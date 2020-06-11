@@ -11,6 +11,8 @@
 #include <util/time.h>
 #include <util/translation.h>
 
+#include <algorithm>
+
 
 BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time)
     : m_client_interface(client_interface), m_ban_db(std::move(ban_file)), m_default_ban_time(default_ban_time)
@@ -39,6 +41,13 @@ BanMan::~BanMan()
     DumpBanlist();
 }
 
+void BanMan::SetMisbehavingLimit(const size_t limit)
+{
+    LOCK(m_cs_banned);
+    // NOTE: For now, this only works before bans are set!
+    m_misbehaving_addrs.set_capacity(limit);
+}
+
 void BanMan::DumpBanlist()
 {
     SweepBanned(); // clean unused entries (if bantime has expired)
@@ -62,6 +71,7 @@ void BanMan::ClearBanned()
     {
         LOCK(m_cs_banned);
         m_banned_addrs.clear();
+        m_misbehaving_addrs.clear();
         m_banned.clear();
         m_is_dirty = true;
     }
@@ -161,9 +171,33 @@ void BanMan::Ban(const CSubNet& sub_net, const BanReason& ban_reason, int64_t ba
 
     {
         LOCK(m_cs_banned);
-        const CNetAddr *addr;
-        auto& old_ban_entry = sub_net.IsSingleAddr(&addr) ? m_banned_addrs[*addr] : m_banned[sub_net];
+        const CNetAddr *addr = nullptr;
+        const bool is_single_addr = sub_net.IsSingleAddr(&addr);
+        auto& old_ban_entry = is_single_addr ? m_banned_addrs[*addr] : m_banned[sub_net];
         if (old_ban_entry.nBanUntil < ban_entry.nBanUntil) {
+            if (m_misbehaving_addrs.capacity()) {
+                // we have a limit on misbehaving entries
+                if (old_ban_entry.nBanUntil) {
+                    // overwriting a prior ban
+                    if (old_ban_entry.banReason == BanReasonNodeMisbehaving && ban_reason != BanReasonNodeMisbehaving) {
+                        // overwriting a misbehaving entry with manually-added
+                        // ensure we won't remove a manual ban later
+                        assert(is_single_addr);
+                        m_misbehaving_addrs.erase(std::find(m_misbehaving_addrs.begin(), m_misbehaving_addrs.end(), *addr));
+                    }
+                } else if (ban_reason == BanReasonNodeMisbehaving) {
+                    // completely new misbehaving entry
+                    assert(is_single_addr);
+                    if (m_misbehaving_addrs.full()) {
+                        auto old_misbehaving = m_misbehaving_addrs.front();
+                        CSubNet old_misbehaving_sub_net(old_misbehaving);
+                        LogPrint(BCLog::NET, "%s: Removed banned node ip/subnet from banlist.dat: %s\n", __func__, old_misbehaving_sub_net.ToString() + " (misbehaving ban overflow)");
+                        m_banned_addrs.erase(old_misbehaving);
+                        // push_back will overwrite
+                    }
+                    m_misbehaving_addrs.push_back(*addr);
+                }
+            }
             old_ban_entry = ban_entry;
             m_is_dirty = true;
         } else
@@ -187,7 +221,12 @@ bool BanMan::Unban(const CSubNet& sub_net)
         LOCK(m_cs_banned);
         const CNetAddr *addr;
         if (sub_net.IsSingleAddr(&addr)) {
-            if (m_banned_addrs.erase(*addr) == 0) return false;
+            auto it = m_banned_addrs.find(*addr);
+            if (it == m_banned_addrs.end()) return false;
+            if (it->second.banReason == BanReasonNodeMisbehaving) {
+                m_misbehaving_addrs.erase(std::find(m_misbehaving_addrs.begin(), m_misbehaving_addrs.end(), *addr));
+            }
+            m_banned_addrs.erase(it);
         } else {
             if (m_banned.erase(sub_net) == 0) return false;
         }

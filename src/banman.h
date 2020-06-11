@@ -14,8 +14,13 @@
 #include <cstdint>
 #include <memory>
 
+#include <boost/circular_buffer.hpp>
+#include <boost/circular_buffer/space_optimized.hpp>
+
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static constexpr unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24; // Default 24-hour ban
+// Maximum number of misbehaving nodes to keep track of for deprioritisation
+static constexpr size_t DEFAULT_MISBEHAVING_LIMIT = 50000;
 // How often to dump addresses to banlist.dat
 static constexpr std::chrono::minutes DUMP_BANS_INTERVAL{15};
 
@@ -43,6 +48,7 @@ class BanMan
 public:
     ~BanMan();
     BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time);
+    void SetMisbehavingLimit(size_t limit);
     void Ban(const CNetAddr& net_addr, const BanReason& ban_reason, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
     void Ban(const CSubNet& sub_net, const BanReason& ban_reason, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
     void ClearBanned();
@@ -64,6 +70,7 @@ private:
 
     RecursiveMutex m_cs_banned;
     std::map<CNetAddr, CBanEntry> m_banned_addrs GUARDED_BY(m_cs_banned);
+    boost::circular_buffer_space_optimized<CNetAddr> m_misbehaving_addrs GUARDED_BY(m_cs_banned);
     banmap_t m_banned GUARDED_BY(m_cs_banned);
     bool m_is_dirty GUARDED_BY(m_cs_banned);
     CClientUIInterface* m_client_interface = nullptr;
