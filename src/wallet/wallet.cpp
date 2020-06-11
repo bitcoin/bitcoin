@@ -2806,7 +2806,13 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
         // add new output if assetInfo is valid (its an asset change output not a syscoin-only output)
         if(assetInfo.nValue > 0) {
             // at this point nChangePosInOut output should be available to add new asset commitment to
-            mintSyscoin.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
+            auto it = std::find_if( mintSyscoin.voutAssets.begin(), mintSyscoin.voutAssets.end(), [&assetInfo](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == assetInfo.nAsset;} );
+            if(it == mintSyscoin.voutAssets.end()) {
+                std::vector<CAssetOut> vecOut;
+                mintSyscoin.voutAssets.emplace_back(assetInfo.nAsset, vecOut);
+                it = std::find_if( mintSyscoin.voutAssets.begin(), mintSyscoin.voutAssets.end(), [&assetInfo](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == assetInfo.nAsset;} );
+            }
+            it->second.push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
         }
         mintSyscoin.SerializeData(data);
     } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
@@ -2819,7 +2825,13 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
             }
         }
         if(assetInfo.nValue > 0) {
-            burnSyscoin.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
+            auto it = std::find_if( burnSyscoin.voutAssets.begin(), burnSyscoin.voutAssets.end(), [&assetInfo](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == assetInfo.nAsset;} );
+            if(it == burnSyscoin.voutAssets.end()) {
+                std::vector<CAssetOut> vecOut;
+                burnSyscoin.voutAssets.emplace_back(assetInfo.nAsset, vecOut);
+                it = std::find_if( burnSyscoin.voutAssets.begin(), burnSyscoin.voutAssets.end(), [&assetInfo](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == assetInfo.nAsset;} );
+            }
+            it->second.push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
         }
         burnSyscoin.SerializeData(data);
     } else if(IsAssetTx(tx->nVersion)) {
@@ -2832,7 +2844,13 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
             }
         }
         if(assetInfo.nValue > 0) {
-            asset.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
+            auto it = std::find_if( asset.voutAssets.begin(), asset.voutAssets.end(), [&assetInfo](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == assetInfo.nAsset;} );
+            if(it == asset.voutAssets.end()) {
+                std::vector<CAssetOut> vecOut;
+                asset.voutAssets.emplace_back(assetInfo.nAsset, vecOut);
+                it = std::find_if( asset.voutAssets.begin(), asset.voutAssets.end(), [&assetInfo](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == assetInfo.nAsset;} );
+            }
+            it->second.push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
         }
         asset.SerializeData(data); 
     } else if(IsAssetAllocationTx(tx->nVersion)) {
@@ -2845,7 +2863,13 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
             }
         }
         if(assetInfo.nValue > 0) {
-            allocation.voutAssets[assetInfo.nAsset].push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
+            auto it = std::find_if( allocation.voutAssets.begin(), allocation.voutAssets.end(), [&assetInfo](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == assetInfo.nAsset;} );
+            if(it == allocation.voutAssets.end()) {
+                std::vector<CAssetOut> vecOut;
+                allocation.voutAssets.emplace_back(assetInfo.nAsset, vecOut);
+                it = std::find_if( allocation.voutAssets.begin(), allocation.voutAssets.end(), [&assetInfo](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == assetInfo.nAsset;} );
+            }
+            it->second.push_back(CAssetOut(nChangePosInOut, assetInfo.nValue));
         }
         allocation.SerializeData(data); 
     }

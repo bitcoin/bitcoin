@@ -254,7 +254,8 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     CMutableTransaction mtx;
     UniValue amountObj = params[1];
 	uint64_t nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
-    theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(1, nAmount));
+    std::vector<CAssetOut> outVec = {CAssetOut(1, nAmount)};
+    theAssetAllocation.voutAssets.emplace_back(nAsset, outVec);
 
 
     std::vector<unsigned char> data;
@@ -382,8 +383,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
     if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
         publicData.pushKV("aux_fees", params[8]);
 
-
-    newAsset.voutAssets[0].push_back(CAssetOut(0, 0));
+    std::vector<CAssetOut> outVec = {CAssetOut(0, 0)};
+    newAsset.voutAssets.emplace_back(0, outVec);
     newAsset.strSymbol = strSymbol;
     newAsset.vchPubData = vchFromString(publicData.write());
     newAsset.vchContract = ParseHex(strContract);
@@ -438,7 +439,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     // generate deterministic guid based on input txid
     const uint32_t &nAsset = GenerateSyscoinGuid(mtx.vin[0].prevout);
     newAsset.voutAssets.clear();
-    newAsset.voutAssets[nAsset].push_back(CAssetOut(0, 0));
+    newAsset.voutAssets.emplace_back(nAsset, outVec);
     newAsset.SerializeData(data);
     scriptData.clear();
     scriptData << OP_RETURN << data;
@@ -634,7 +635,9 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         theAsset.vchContract = vchContract;
     }
 
-    theAsset.voutAssets[nAsset].push_back(CAssetOut(0, 0));
+    std::vector<CAssetOut> outVec = {CAssetOut(0, 0)};
+    theAsset.voutAssets.emplace_back(nAsset, outVec);
+
     theAsset.nBalance = nBalance;
     // prev flags is set in clearasset()
     theAsset.nUpdateFlags = nUpdateFlags;
@@ -688,7 +691,8 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     CTxOut change_prototype_txout(0, scriptPubKey);
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
     theAsset.ClearAsset();
-    theAsset.voutAssets[nAsset].push_back(CAssetOut(0, 0));
+    std::vector<CAssetOut> outVec = {CAssetOut(0, 0)};
+    theAsset.voutAssets.emplace_back(nAsset, outVec);
 
     std::vector<unsigned char> data;
     theAsset.SerializeData(data);
@@ -753,6 +757,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     CAssetAllocation theAssetAllocation;
     UniValue receivers = valueTo.get_array();
     std::vector<CRecipient> vecSend;
+    std::vector<CAssetOut> vecOut;
     for (unsigned int idx = 0; idx < receivers.size(); idx++) {
         const UniValue& receiver = receivers[idx];
         if (!receiver.isObject())
@@ -770,17 +775,25 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         }
         else
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in asset output array");
-        auto& voutAsset = theAssetAllocation.voutAssets[nAsset];
-        const size_t len = voutAsset.size();
-        voutAsset.push_back(CAssetOut(len, nAmount));
+        auto it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+        if(it == theAssetAllocation.voutAssets.end()) {
+            theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
+            it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+        }
+        const size_t len = it->second.size();
+        it->second.push_back(CAssetOut(len, nAmount));
         CTxOut change_prototype_txout(0, scriptPubKey);
         CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
         vecSend.push_back(recp);
     }
-    auto& voutAsset = theAssetAllocation.voutAssets[nAsset];
-    const size_t len = voutAsset.size();
+    auto it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+    if(it == theAssetAllocation.voutAssets.end()) {
+        theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
+        it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+    }
+    const size_t len = it->second.size();
     // add change for asset
-    voutAsset.push_back(CAssetOut(len, 0));
+    it->second.push_back(CAssetOut(len, 0));
     CScript scriptPubKey;
     std::vector<unsigned char> data;
     theAssetAllocation.SerializeData(data);
@@ -904,6 +917,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     CMutableTransaction mtx;
 	UniValue receivers = valueTo.get_array();
     std::map<uint32_t, uint64_t> mapAssetTotals;
+    std::vector<CAssetOut> vecOut;
     unsigned int idx;
 	for (idx = 0; idx < receivers.size(); idx++) {
         uint64_t nTotalSending = 0;
@@ -925,7 +939,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			const uint64_t &nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
 			if (nAmount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-            theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(idx, nAmount));
+            auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+            if(itVout == theAssetAllocation.voutAssets.end()) {
+                theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
+                itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+            }
+            itVout->second.push_back(CAssetOut(idx, nAmount));
 
             CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
@@ -941,7 +960,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         CTxDestination auxFeeAddress;
         const uint64_t &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, theAsset.nPrecision, auxFeeAddress);
         if(nAuxFee > 0){
-            theAssetAllocation.voutAssets[nAsset].push_back(CAssetOut(idx, nAuxFee));
+            auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+            if(itVout == theAssetAllocation.voutAssets.end()) {
+                theAssetAllocation.voutAssets.emplace_back(nAsset, vecOut);
+                itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const std::pair<uint32_t, std::vector<CAssetOut> >& element){ return element.first == nAsset;} );
+            }
+            itVout->second.push_back(CAssetOut(idx, nAuxFee));
             const CScript& scriptPubKey = GetScriptForDestination(auxFeeAddress);
             CTxOut change_prototype_txout(0, scriptPubKey);
             CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
@@ -1041,13 +1065,15 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''") {
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
-        burnSyscoin.voutAssets[nAsset].push_back(CAssetOut(1, (CAmount)nAmount)); // burn has to be in index 1, sys is output in index 0, any change in index 2
+        std::vector<CAssetOut> vecOut = {CAssetOut(1, (CAmount)nAmount)}; // burn has to be in index 1, sys is output in index 0, any change in index 2
+        burnSyscoin.voutAssets.emplace_back(nAsset, vecOut);
         nChangePosRet++;
     }
     else {
         burnSyscoin.vchEthAddress = ParseHex(ethAddress);
         nVersionIn = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
-        burnSyscoin.voutAssets[nAsset].push_back(CAssetOut(0, (CAmount)nAmount)); // burn has to be in index 0, any change in index 1
+        std::vector<CAssetOut> vecOut = {CAssetOut(0, (CAmount)nAmount)}; // burn has to be in index 0, any change in index 1
+        burnSyscoin.voutAssets.emplace_back(nAsset, vecOut);
     }
 
     std::string label = "";
@@ -1177,7 +1203,8 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     std::vector<CRecipient> vecSend;
     
     CMintSyscoin mintSyscoin;
-    mintSyscoin.voutAssets[nAsset].push_back(CAssetOut(0, nAmount));
+    std::vector<CAssetOut> vecOut = {CAssetOut(0, nAmount)};
+    mintSyscoin.voutAssets.emplace_back(nAsset, vecOut);
     mintSyscoin.nBlockNumber = nBlockNumber;
     mintSyscoin.vchTxValue = ushortToBytes(posTxValue);
     mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
