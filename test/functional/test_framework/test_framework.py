@@ -105,7 +105,7 @@ class BitcoinTestFramework():
         parser.add_option("--pdbonfailure", dest="pdbonfailure", default=False, action="store_true",
                           help="Attach a python debugger if test fails")
         parser.add_option("--usecli", dest="usecli", default=False, action="store_true",
-                          help="use bitcoin-cli instead of RPC for all commands")
+                          help="use dash-cli instead of RPC for all commands")
         parser.add_option("--dashd-arg", dest="dashd_extra_args", default=[], type='string', action='append',
                           help="Pass extra args to all dashd instances")
         self.add_options(parser)

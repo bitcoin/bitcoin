@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this software; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-"""HTTP proxy for opening RPC connection to bitcoind.
+"""HTTP proxy for opening RPC connection to dashd.
 
 AuthServiceProxy has the following improvements over python-jsonrpc's
 ServiceProxy class:
