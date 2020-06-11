@@ -138,8 +138,10 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
             }
         }
 
-        if (whichType == TxoutType::NULL_DATA)
+        if (whichType == TxoutType::NULL_DATA) {
             nDataOut++;
+            continue;
+        }
         else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
             MaybeReject("bare-multisig");
         }
