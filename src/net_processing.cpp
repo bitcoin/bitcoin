@@ -2869,7 +2869,7 @@ void ProcessMessage(
                 // SYSCOIN inv not inv.hash
                 } else if (!fAlreadyHave) {
                     bool allowWhileInIBD = allowWhileInIBDObjs.count(inv.type);
-                    if (allowWhileInIBD || (!fImporting && !fReindex && !::ChainstateActive().IsInitialBlockDownload())) {
+                    if (allowWhileInIBD || !chainman.ActiveChainstate().IsInitialBlockDownload()) {
                         RequestTx(State(pfrom.GetId()), inv, current_time);
                     }
                 }
