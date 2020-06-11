@@ -291,7 +291,7 @@ public:
     void SyncSingleObjVotes(CNode* pnode, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
     void SyncObjects(CNode* pnode, CConnman& connman) const;
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
 
     void DoMaintenance(CConnman& connman);
 

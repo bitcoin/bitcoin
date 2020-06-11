@@ -24,7 +24,7 @@
 
 CPrivateSendServer privateSendServer;
 
-void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
     if (!fMasternodeMode) return;
     if (fLiteMode) return; // ignore all Dash related functionality
@@ -33,7 +33,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
     if (strCommand == NetMsgType::DSACCEPT) {
         if (pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
             LogPrint(BCLog::PRIVATESEND, "DSACCEPT -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            if (g_enable_bip61) {
+            if (enable_bip61) {
                 connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand,
                                                                                       REJECT_OBSOLETE, strprintf(
                                 "Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));
@@ -106,7 +106,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
     } else if (strCommand == NetMsgType::DSQUEUE) {
         if (pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
             LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            if (g_enable_bip61) {
+            if (enable_bip61) {
                 connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand,
                                                                                       REJECT_OBSOLETE, strprintf(
                                 "Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));
@@ -170,7 +170,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
     } else if (strCommand == NetMsgType::DSVIN) {
         if (pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
             LogPrint(BCLog::PRIVATESEND, "DSVIN -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            if (g_enable_bip61) {
+            if (enable_bip61) {
                 connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand,
                                                                                       REJECT_OBSOLETE, strprintf(
                                 "Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));
@@ -205,7 +205,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
     } else if (strCommand == NetMsgType::DSSIGNFINALTX) {
         if (pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
             LogPrint(BCLog::PRIVATESEND, "DSSIGNFINALTX -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            if (g_enable_bip61) {
+            if (enable_bip61) {
                 connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand,
                                                                                       REJECT_OBSOLETE, strprintf(
                                 "Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));

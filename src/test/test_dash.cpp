@@ -111,7 +111,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
-        peerLogic.reset(new PeerLogicValidation(connman, scheduler));
+        peerLogic.reset(new PeerLogicValidation(connman, scheduler, /*enable_bip61=*/true));
 }
 
 TestingSetup::~TestingSetup()

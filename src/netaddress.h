@@ -23,7 +23,7 @@ enum Network
     NET_UNROUTABLE = 0,
     NET_IPV4,
     NET_IPV6,
-    NET_TOR,
+    NET_ONION,
     NET_INTERNAL,
 
     NET_MAX,
@@ -34,7 +34,7 @@ class CNetAddr
 {
     protected:
         unsigned char ip[16]; // in network byte order
-        uint32_t scopeId; // for scoped/link-local ipv6 addresses
+        uint32_t scopeId{0}; // for scoped/link-local ipv6 addresses
 
     public:
         CNetAddr();
@@ -56,6 +56,7 @@ class CNetAddr
         bool SetInternal(const std::string& name);
 
         bool SetSpecial(const std::string &strName); // for Tor addresses
+        bool IsBindAny() const; // INADDR_ANY equivalent
         bool IsIPv4() const;    // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
         bool IsIPv6() const;    // IPv6 address (not mapped IPv4, not Tor)
         bool IsRFC1918() const; // IPv4 private networks (10.0.0.0/8, 192.168.0.0/16, 172.16.0.0/12)

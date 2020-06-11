@@ -648,7 +648,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageGroup(_("RPC server options:"));
     strUsage += HelpMessageOpt("-server", _("Accept command line and JSON-RPC commands"));
     strUsage += HelpMessageOpt("-rest", strprintf(_("Accept public REST requests (default: %u)"), DEFAULT_REST_ENABLE));
-    strUsage += HelpMessageOpt("-rpcbind=<addr>[:port]", _("Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)"));
+    strUsage += HelpMessageOpt("-rpcbind=<addr>[:port]", _("Bind to given address to listen for JSON-RPC connections. Do not expose the RPC server to untrusted networks such as the public internet! This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)"));
     strUsage += HelpMessageOpt("-rpccookiefile=<loc>", _("Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)"));
     strUsage += HelpMessageOpt("-rpcuser=<user>", _("Username for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcpassword=<pw>", _("Password for JSON-RPC connections"));
@@ -1318,8 +1318,6 @@ bool AppInitParameterInteraction()
     if (gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         nLocalServices = ServiceFlags(nLocalServices | NODE_BLOOM);
 
-    g_enable_bip61 = gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61);
-
     nMaxTipAge = gArgs.GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
     if (gArgs.IsArgSet("-vbparams")) {
@@ -1651,7 +1649,7 @@ bool AppInitMain()
     g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
     CConnman& connman = *g_connman;
 
-    peerLogic.reset(new PeerLogicValidation(&connman, scheduler));
+    peerLogic.reset(new PeerLogicValidation(&connman, scheduler, gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
     RegisterValidationInterface(peerLogic.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
@@ -1695,7 +1693,7 @@ bool AppInitMain()
     // -proxy sets a proxy for all outgoing network traffic
     // -noproxy (or -proxy=0) as well as the empty string can be used to not set a proxy, this is the default
     std::string proxyArg = gArgs.GetArg("-proxy", "");
-    SetLimited(NET_TOR);
+    SetLimited(NET_ONION);
     if (proxyArg != "" && proxyArg != "0") {
         CService proxyAddr;
         if (!Lookup(proxyArg.c_str(), proxyAddr, 9050, fNameLookup)) {
@@ -1708,9 +1706,9 @@ bool AppInitMain()
 
         SetProxy(NET_IPV4, addrProxy);
         SetProxy(NET_IPV6, addrProxy);
-        SetProxy(NET_TOR, addrProxy);
+        SetProxy(NET_ONION, addrProxy);
         SetNameProxy(addrProxy);
-        SetLimited(NET_TOR, false); // by default, -proxy sets onion as reachable, unless -noonion later
+        SetLimited(NET_ONION, false); // by default, -proxy sets onion as reachable, unless -noonion later
     }
 
     // -onion can be used to set only a proxy for .onion, or override normal proxy for .onion addresses
@@ -1719,7 +1717,7 @@ bool AppInitMain()
     std::string onionArg = gArgs.GetArg("-onion", "");
     if (onionArg != "") {
         if (onionArg == "0") { // Handle -noonion/-onion=0
-            SetLimited(NET_TOR); // set onions as unreachable
+            SetLimited(NET_ONION); // set onions as unreachable
         } else {
             CService onionProxy;
             if (!Lookup(onionArg.c_str(), onionProxy, 9050, fNameLookup)) {
@@ -1728,8 +1726,8 @@ bool AppInitMain()
             proxyType addrOnion = proxyType(onionProxy, proxyRandomize);
             if (!addrOnion.IsValid())
                 return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
-            SetProxy(NET_TOR, addrOnion);
-            SetLimited(NET_TOR, false);
+            SetProxy(NET_ONION, addrOnion);
+            SetLimited(NET_ONION, false);
         }
     }
 

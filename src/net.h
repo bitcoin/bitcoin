@@ -60,6 +60,8 @@ static const int WARNING_INTERVAL = 10 * 60;
 static const int FEELER_INTERVAL = 120;
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
+/** The maximum number of entries in a locator */
+static const unsigned int MAX_LOCATOR_SZ = 101;
 /** The maximum number of new addresses to accumulate before announcing. */
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 3 MiB is currently acceptable). */
@@ -178,6 +180,7 @@ public:
         nLocalServices = connOptions.nLocalServices;
         nMaxConnections = connOptions.nMaxConnections;
         nMaxOutbound = std::min(connOptions.nMaxOutbound, connOptions.nMaxConnections);
+        m_use_addrman_outgoing = connOptions.m_use_addrman_outgoing;
         nMaxAddnode = connOptions.nMaxAddnode;
         nMaxFeeler = connOptions.nMaxFeeler;
         nBestHeight = connOptions.nBestHeight;
@@ -204,6 +207,7 @@ public:
     void Stop();
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
+    bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
     SocketEventsMode GetSocketEventsMode() const { return socketEventsMode; }
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool fConnectToMasternode = false, bool fMasternodeProbe = false);
@@ -588,6 +592,7 @@ private:
     int nMaxOutbound;
     int nMaxAddnode;
     int nMaxFeeler;
+    bool m_use_addrman_outgoing;
     std::atomic<int> nBestHeight;
     CClientUIInterface* clientInterface;
     NetEventsInterface* m_msgproc;
