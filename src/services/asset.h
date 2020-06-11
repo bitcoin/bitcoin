@@ -7,13 +7,13 @@
 #include <primitives/transaction.h>
 static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_VALUE_LENGTH = 512;
-static const int64_t MAINNET_MAX_MINT_AGE = 604800; // 1 week in seconds
-static const int64_t TESTNET_MAX_MINT_AGE = 10800; // 3 hours
+// this should be set well after mempool expiry (DEFAULT_MEMPOOL_EXPIRY)
+// so that miner will expire txs before they hit expiry errors if for some reason they aren't getting mined (geth issue etc)
+static const int64_t MAINNET_MAX_MINT_AGE = 302400; // 0.5 week in seconds, should send to network in half a week or less
+static const int64_t MAINNET_MAX_VALIDATE_AGE = 1512000; // 2.5 weeks in seconds
 static const int64_t MAINNET_MIN_MINT_AGE = 3600; // 1 hr
-static const int64_t TESTNET_MIN_MINT_AGE = 600; // 10 mins
-static const uint32_t MAX_ETHEREUM_TX_ROOTS = 120000;
-
-static const uint32_t DOWNLOAD_ETHEREUM_TX_ROOTS = 50000;
+static const uint32_t DOWNLOAD_ETHEREUM_TX_ROOTS = 150000; // roughly 7k blocks a day * 3 weeks
+static const uint32_t MAX_ETHEREUM_TX_ROOTS = DOWNLOAD_ETHEREUM_TX_ROOTS*2.5;
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromString(const std::string &str);
 uint32_t GenerateSyscoinGuid(const COutPoint& outPoint);
