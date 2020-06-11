@@ -233,17 +233,17 @@ extern const char *BLOCKTXN;
 
 // VeriBlock PopData
 /**
-  * Contains ATVs
+  * Contains ATV
   */
 extern const char *ATV;
 
 /**
-  * Contains VTBs
+  * Contains VTB
   */
 extern const char *VTB;
 
 /**
-  * Contains VbkBlocks
+  * Contains VbkBlock
   */
 extern const char *VBKBLOCK;
 
