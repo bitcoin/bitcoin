@@ -39,26 +39,26 @@ public:
 
     CAddrInfo* Find(const CNetAddr& addr, int* pnId = nullptr)
     {
-        LOCK(cs);
+        LOCK(m_addrman_mutex);
         return CAddrMan::Find(addr, pnId);
     }
 
     CAddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = nullptr)
     {
-        LOCK(cs);
+        LOCK(m_addrman_mutex);
         return CAddrMan::Create(addr, addrSource, pnId);
     }
 
     void Delete(int nId)
     {
-        LOCK(cs);
+        LOCK(m_addrman_mutex);
         CAddrMan::Delete(nId);
     }
 
     // Used to test deserialization
     std::pair<int, int> GetBucketAndEntry(const CAddress& addr)
     {
-        LOCK(cs);
+        LOCK(m_addrman_mutex);
         int nId = mapAddr[addr];
         for (int bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; ++bucket) {
             for (int entry = 0; entry < ADDRMAN_BUCKET_SIZE; ++entry) {
@@ -73,7 +73,7 @@ public:
     // Simulates connection failure so that we can test eviction of offline nodes
     void SimConnFail(CService& addr)
     {
-         LOCK(cs);
+         LOCK(m_addrman_mutex);
          int64_t nLastSuccess = 1;
          Good_(addr, true, nLastSuccess); // Set last good connection in the deep past.
 
