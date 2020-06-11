@@ -1311,9 +1311,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 UniValue convertaddresswallet(const JSONRPCRequest& request) {	
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);	
     CWallet* const pwallet = wallet.get();	
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {	
-        return NullUniValue;	
-    }	
+    if (!pwallet) return NullUniValue;	
     RPCHelpMan{"convertaddresswallet",
     "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3. Adds to wallet as receiving address under label specified.",   
     {	
@@ -1403,9 +1401,7 @@ UniValue convertaddresswallet(const JSONRPCRequest& request) {
 UniValue listunspentasset(const JSONRPCRequest& request) {	
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);	
     CWallet* const pwallet = wallet.get();	
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {	
-        return NullUniValue;	
-    }	
+    if (!pwallet) return NullUniValue;
     RPCHelpMan{"listunspentasset",
     "\nHelper function which just calls listunspent to find unspent UTXO's for an asset.",   
     {	
