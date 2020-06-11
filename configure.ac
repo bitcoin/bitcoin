@@ -1408,13 +1408,12 @@ if test "$use_boost" = "yes"; then
     AC_MSG_ERROR([only libbitcoinconsensus can be built without Boost])
   fi
   AX_BOOST_SYSTEM
-  AX_BOOST_FILESYSTEM
 
   if test "$suppress_external_warnings" != "no"; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
   fi
 
-  BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB"
+  BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB"
 fi
 
 if test "$use_external_signer" != "no"; then
