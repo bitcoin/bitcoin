@@ -51,22 +51,22 @@ class PopPayouts(BitcoinTestFramework):
 
         # TODO fixed it after P2P modified for the pop_data
         # wait until node[1] gets relayed pop tx
-        #sync_mempools(self.nodes)
-        #self.log.info("node1 got relayed transaction")
+        sync_mempools(self.nodes)
+        self.log.info("node1 got relayed transaction")
 
         # mine a block on node[1] with this pop tx
-        #containingblockhash = self.nodes[1].generate(nblocks=1)[0]
-        #containingblock = self.nodes[1].getblock(containingblockhash)
-        #self.log.info("node1 mined containing block={}".format(containingblock['hash']))
-        #self.nodes[0].waitforblockheight(containingblock['height'])
-        #self.log.info("node0 got containing block over p2p")
+        containingblockhash = self.nodes[1].generate(nblocks=1)[0]
+        containingblock = self.nodes[1].getblock(containingblockhash)
+        self.log.info("node1 mined containing block={}".format(containingblock['hash']))
+        self.nodes[0].waitforblockheight(containingblock['height'])
+        self.log.info("node0 got containing block over p2p")
 
         # TODO remove it after P2P modified for the pop_data
-        containingblockhash = self.nodes[0].generate(nblocks=1)[0]
-        containingblock = self.nodes[0].getblock(containingblockhash)
-        self.log.info("node1 mined containing block={}".format(containingblock['hash']))
-        self.nodes[1].waitforblockheight(containingblock['height'])
-        self.log.info("node0 got containing block over p2p")
+        #containingblockhash = self.nodes[0].generate(nblocks=1)[0]
+        #containingblock = self.nodes[0].getblock(containingblockhash)
+        #self.log.info("node1 mined containing block={}".format(containingblock['hash']))
+        #self.nodes[1].waitforblockheight(containingblock['height'])
+        #self.log.info("node0 got containing block over p2p")
         #----------------
 
         # assert that txid exists in this block
@@ -96,7 +96,7 @@ class PopPayouts(BitcoinTestFramework):
         balance = self.nodes[0].getbalance()
 
         # node[0] has 11 mature coinbases and single pop payout
-        assert balance == POW_PAYOUT * 11 + outputs[1]['value']
+        assert balance == POW_PAYOUT * 10 + outputs[1]['value']
         self.log.warning("success! _case1_endorse_keystone_get_paid()")
 
     def run_test(self):

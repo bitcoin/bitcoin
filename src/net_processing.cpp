@@ -29,6 +29,7 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
+#include <vbk/pop_service_impl.hpp>
 
 #include <memory>
 
@@ -1901,6 +1902,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
+    if(!VeriBlock::p2p::processPopData(pfrom, strCommand, vRecv, nTimeReceived, chainparams, connman, banman, interruptMsgProc))
+    {
+        return false;
+    }
 
     if (!(pfrom->GetLocalServices() & NODE_BLOOM) &&
               (strCommand == NetMsgType::FILTERLOAD ||

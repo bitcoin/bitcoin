@@ -18,6 +18,8 @@
 #include <wallet/rpcwallet.h>
 #include <wallet/rpcwallet.h> // for GetWalletForJSONRPCRequest
 #include <wallet/wallet.h>    // for CWallet
+#include <rpc/blockchain.h>
+#include <node/context.h>
 
 #include <fstream>
 #include <set>
@@ -216,20 +218,25 @@ UniValue submitpop(const JSONRPCRequest& request)
 
     auto& atvhex = request.params[0];
     auto atv_bytes = ParseHexV(atvhex, "atv");
-
     auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
     auto& pop_mempool = pop_service.getMemPool();
 
-    LogPrintf("{submitpop} vtbs amount: %d \n", vtbs.size());
+    {
+        LOCK(cs_main);
+        altintegration::ValidationState state;
+        altintegration::ATV atv = altintegration::ATV::fromVbkEncoding(atv_bytes);
+        if (!pop_mempool.submitATV({atv}, state)) {
+            LogPrint(BCLog::POP, "VeriBlock-PoP: %s ", state.GetPath());
+            return "ivalid ATV";
+        }
+        if (!pop_mempool.submitVTB(vtbs, state)) {
+            LogPrint(BCLog::POP, "VeriBlock-PoP: %s ", state.GetPath());
+            return "invalid oone of the VTB";
+        }
 
-    altintegration::ValidationState state;
-    if (!pop_mempool.submitATV({ altintegration::ATV::fromVbkEncoding(atv_bytes) }, state)) {
-        LogPrint(BCLog::POP, "VeriBlock-PoP: %s ", state.GetPath());
-        return "ivalid ATV";
-    }
-    if (!pop_mempool.submitVTB(vtbs, state)) {
-        LogPrint(BCLog::POP, "VeriBlock-PoP: %s ", state.GetPath());
-        return "invalid oone of the VTB";
+        const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
+        VeriBlock::p2p::sendATVs(g_rpc_node->connman.get(), msgMaker, {atv});
+        VeriBlock::p2p::sendVTBs(g_rpc_node->connman.get(), msgMaker, vtbs);
     }
 
     return "successful added";

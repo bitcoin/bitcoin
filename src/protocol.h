@@ -230,6 +230,23 @@ extern const char *GETBLOCKTXN;
  * @since protocol version 70014 as described by BIP 152
  */
 extern const char *BLOCKTXN;
+
+// VeriBlock PopData
+/**
+  * Contains ATVs
+  */
+extern const char *ATV;
+
+/**
+  * Contains VTBs
+  */
+extern const char *VTB;
+
+/**
+  * Contains VbkBlocks
+  */
+extern const char *VBKBLOCK;
+
 };
 
 /* Get a vector of all valid message types (see above) */
