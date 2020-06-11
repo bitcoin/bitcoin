@@ -619,12 +619,12 @@ bool BerkeleyDatabase::Backup(const std::string& strDest) const
                     pathDest /= strFile;
 
                 try {
-                    if (fs::equivalent(pathSrc, pathDest)) {
+                    if (fs::exists(pathDest) && fs::equivalent(pathSrc, pathDest)) {
                         LogPrintf("cannot backup to wallet source file %s\n", pathDest.string());
                         return false;
                     }
 
-                    fs::copy_file(pathSrc, pathDest, fs::copy_option::overwrite_if_exists);
+                    fs::copy_file(pathSrc, pathDest, fs::copy_options::overwrite_existing);
                     LogPrintf("copied %s to %s\n", strFile, pathDest.string());
                     return true;
                 } catch (const fs::filesystem_error& e) {

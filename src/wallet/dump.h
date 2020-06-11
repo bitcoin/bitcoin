@@ -5,6 +5,8 @@
 #ifndef BITCOIN_WALLET_DUMP_H
 #define BITCOIN_WALLET_DUMP_H
 
+#include <vector>
+
 #include <fs.h>
 
 class CWallet;
