@@ -54,21 +54,6 @@ previous stage) as the first argument.
 ./contrib/macdeploy/gen-sdk '/path/to/Xcode.app'
 ```
 
-### Historial macOS SDK Extraction Notes
-
-Our previously used macOS SDK (`MacOSX10.11.sdk`) can be extracted from
-[Xcode 7.3.1 dmg](https://developer.apple.com/devcenter/download.action?path=/Developer_Tools/Xcode_7.3.1/Xcode_7.3.1.dmg).
-The script [`extract-osx-sdk.sh`](./extract-osx-sdk.sh) automates this. First
-ensure the DMG file is in the current directory, and then run the script. You
-may wish to delete the `intermediate 5.hfs` file and `MacOSX10.11.sdk` (the
-directory) when you've confirmed the extraction succeeded.
-
-```bash
-apt-get install p7zip-full sleuthkit
-contrib/macdeploy/extract-osx-sdk.sh
-rm -rf 5.hfs MacOSX10.11.sdk
-```
-
 ## Deterministic macOS DMG Notes
 Working macOS DMGs are created in Linux by combining a recent `clang`, the Apple
 `binutils` (`ld`, `ar`, etc) and DMG authoring tools.
