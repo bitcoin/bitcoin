@@ -453,7 +453,7 @@ public:
 		return !(a == b);
 	}
 };
-typedef std::map<uint32_t, std::vector<CAssetOut> > assetOutputType;
+typedef std::vector<std::pair<uint32_t, std::vector<CAssetOut> > > assetOutputType;
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
