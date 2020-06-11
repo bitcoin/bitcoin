@@ -477,7 +477,7 @@ int CAddrMan::Check_()
 
     return 0;
 }
-#endif
+#endif // DEBUG_ADDRMAN
 
 void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr)
 {
