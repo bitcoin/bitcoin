@@ -123,7 +123,7 @@ void ReleaseDirectoryLocks()
 
 bool DirIsWritable(const fs::path& directory)
 {
-    fs::path tmpFile = directory / fs::unique_path();
+    fs::path tmpFile = directory / fsbridge::unique_path();
 
     FILE* file = fsbridge::fopen(tmpFile, "a");
     if (!file) return false;

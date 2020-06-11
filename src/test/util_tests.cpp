@@ -1816,7 +1816,7 @@ BOOST_AUTO_TEST_CASE(test_DirIsWritable)
     BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
 
     // Should not be able to write to a non-existent dir.
-    tmpdirname = tmpdirname / fs::unique_path();
+    tmpdirname = tmpdirname / fsbridge::unique_path();
     BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), false);
 
     fs::create_directory(tmpdirname);
