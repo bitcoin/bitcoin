@@ -156,8 +156,7 @@ UniValue gobject(const JSONRPCRequest& request)
     // PREPARE THE GOVERNANCE OBJECT BY CREATING A COLLATERAL TRANSACTION
     if(strCommand == "prepare")
     {
-        if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-            return NullUniValue;
+        if (!pwallet) return NullUniValue;
 
         if (request.params.size() != 5) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject prepare <parent-hash> <revision> <time> <data-hex>'");

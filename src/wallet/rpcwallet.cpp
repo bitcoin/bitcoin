@@ -4299,10 +4299,7 @@ UniValue getauxblock(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
-
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
+    if (!pwallet) return NullUniValue;
 
     /* RPCHelpMan::Check is not applicable here since we have the
        custom check for exactly zero or two arguments.  */

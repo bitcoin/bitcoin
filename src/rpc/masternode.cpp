@@ -194,8 +194,7 @@ UniValue masternode(const JSONRPCRequest& request)
 #ifdef ENABLE_WALLET
     if (strCommand == "initialize")
     {
-        if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-            return NullUniValue;
+        if (!pwallet) return NullUniValue;
         NodeContext& node = EnsureNodeContext(request.context);
         if(!node.connman)
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -253,8 +252,7 @@ UniValue masternode(const JSONRPCRequest& request)
         if(!node.connman)
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
  
-        if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-            return NullUniValue;
+        if (!pwallet) return NullUniValue;
 
         {
             LOCK(pwallet->cs_wallet);
@@ -356,8 +354,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
 #ifdef ENABLE_WALLET
     if (strCommand == "outputs") {
-        if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-            return NullUniValue;
+       if (!pwallet) return NullUniValue;
         LOCK(pwallet->cs_wallet);
         // Find possible candidates
         std::vector<COutput> vPossibleCoins;
@@ -674,8 +671,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
 #ifdef ENABLE_WALLET
     if (strCommand == "create-name")
     {
-        if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-            return NullUniValue;
+        if (!pwallet) return NullUniValue;
 
         // wait for reindex and/or import to finish
         if (fImporting || fReindex)
@@ -728,8 +724,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
 
     if (strCommand == "create-all")
     {
-        if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-            return NullUniValue;
+        if (!pwallet) return NullUniValue;
 
         // wait for reindex and/or import to finish
         if (fImporting || fReindex)
