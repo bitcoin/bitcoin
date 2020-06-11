@@ -71,6 +71,7 @@ TEST_FRAMEWORK_MODULES = [
     "blocktools",
     "muhash",
     "script",
+    "segwit_addr",
     "util",
 ]
 
