@@ -82,7 +82,7 @@ Build requirements:
 
 Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
 
-    sudo apt-get install libevent-dev libboost-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
+    sudo apt-get install libevent-dev libboost-dev libboost-system-dev libboost-test-dev
 
 Berkeley DB is required for the wallet.
 

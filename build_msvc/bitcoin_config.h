@@ -47,9 +47,6 @@
 /* define if the Boost library is available */
 #define HAVE_BOOST /**/
 
-/* define if the Boost::Filesystem library is available */
-#define HAVE_BOOST_FILESYSTEM /**/
-
 /* define if external signer support is enabled (requires Boost::Process) */
 #define ENABLE_EXTERNAL_SIGNER /**/
 
