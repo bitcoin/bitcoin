@@ -174,12 +174,14 @@ void BanMan::Ban(const CSubNet& sub_net, const BanReason& ban_reason, int64_t ba
         const CNetAddr *addr = nullptr;
         const bool is_single_addr = sub_net.IsSingleAddr(&addr);
         auto& old_ban_entry = is_single_addr ? m_banned_addrs[*addr] : m_banned_subnets[sub_net];
-        if (old_ban_entry.nBanUntil < ban_entry.nBanUntil) {
+        if (old_ban_entry.banReason == BanReasonManuallyAdded && ban_reason != BanReasonManuallyAdded) return;
+        const bool ban_reason_upgrade = (old_ban_entry.banReason == BanReasonNodeMisbehaving && ban_reason != BanReasonNodeMisbehaving);
+        if (old_ban_entry.nBanUntil < ban_entry.nBanUntil || ban_reason_upgrade) {
             if (m_misbehaving_addrs.capacity()) {
                 // we have a limit on misbehaving entries
                 if (old_ban_entry.nBanUntil) {
                     // overwriting a prior ban
-                    if (old_ban_entry.banReason == BanReasonNodeMisbehaving && ban_reason != BanReasonNodeMisbehaving) {
+                    if (ban_reason_upgrade) {
                         // overwriting a misbehaving entry with manually-added
                         // ensure we won't remove a manual ban later
                         assert(is_single_addr);
