@@ -356,6 +356,57 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     peerLogic->FinalizeNode(dummyNode.GetId(), dummy);
 }
 
+BOOST_AUTO_TEST_CASE(DoS_misbehavinglimit)
+{
+    auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+
+    banman->SetMisbehavingLimit(2);
+    banman->ClearBanned();
+
+    int64_t nStartTime = GetTime();
+    SetMockTime(nStartTime); // Overrides future calls to GetTime()
+
+    std::vector<CAddress> addrs;
+    for (int i = 0; i < 4; ++i) {
+        addrs.emplace_back(ip(0xa0b0c000 + i), NODE_NONE);
+        BOOST_CHECK(!banman->IsBanned(addrs[i]));
+    }
+    banman->Ban(addrs[0], BanReasonNodeMisbehaving);
+    BOOST_CHECK(banman->IsBanned(addrs[0]));
+    banman->Ban(addrs[1], BanReasonNodeMisbehaving);
+    BOOST_CHECK(banman->IsBanned(addrs[1]));
+
+    // Should overflow misbehaving limit and evict addrs[0]
+    banman->Ban(addrs[2], BanReasonNodeMisbehaving);
+    BOOST_CHECK(banman->IsBanned(addrs[2]));
+    BOOST_CHECK(!banman->IsBanned(addrs[0]));
+
+    // Manually added shouldn't affect misbehaving limit
+    banman->Ban(addrs[0], BanReasonManuallyAdded);
+    BOOST_CHECK(banman->IsBanned(addrs[0]));
+    BOOST_CHECK(banman->IsBanned(addrs[1]));
+    BOOST_CHECK(banman->IsBanned(addrs[2]));
+
+    // Should overflow misbehaving limit and evict addrs[1]
+    banman->Ban(addrs[3], BanReasonNodeMisbehaving);
+    BOOST_CHECK(banman->IsBanned(addrs[0]));
+    BOOST_CHECK(!banman->IsBanned(addrs[1]));
+    BOOST_CHECK(banman->IsBanned(addrs[2]));
+    BOOST_CHECK(banman->IsBanned(addrs[3]));
+
+    // Unbanning addrs[3] should allow re-adding addrs[1] without overflowing
+    banman->Unban(addrs[3]);
+    BOOST_CHECK(banman->IsBanned(addrs[0]));
+    BOOST_CHECK(!banman->IsBanned(addrs[1]));
+    BOOST_CHECK(banman->IsBanned(addrs[2]));
+    BOOST_CHECK(!banman->IsBanned(addrs[3]));
+    banman->Ban(addrs[1], BanReasonNodeMisbehaving);
+    BOOST_CHECK(banman->IsBanned(addrs[0]));
+    BOOST_CHECK(banman->IsBanned(addrs[1]));
+    BOOST_CHECK(banman->IsBanned(addrs[2]));
+    BOOST_CHECK(!banman->IsBanned(addrs[3]));
+}
+
 static CTransactionRef RandomOrphan()
 {
     std::map<uint256, COrphanTx>::iterator it;
