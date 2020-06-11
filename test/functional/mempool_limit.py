@@ -50,5 +50,15 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
         assert_greater_than(self.nodes[0].getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
+        self.log.info('Create a mempool tx that will not pass mempoolminfee')
+        us0 = utxos.pop()
+        inputs = [{ "txid" : us0["txid"], "vout" : us0["vout"]}]
+        outputs = {self.nodes[0].getnewaddress() : 0.0001}
+        tx = self.nodes[0].createrawtransaction(inputs, outputs)
+        # specifically fund this tx with a fee < mempoolminfee, >= than minrelaytxfee
+        txF = self.nodes[0].fundrawtransaction(tx, {'feeRate': relayfee})
+        txFS = self.nodes[0].signrawtransaction(txF['hex'])
+        assert_raises_rpc_error(-26, "mempool min fee not met", self.nodes[0].sendrawtransaction, txFS['hex'])
+
 if __name__ == '__main__':
     MempoolLimitTest().main()

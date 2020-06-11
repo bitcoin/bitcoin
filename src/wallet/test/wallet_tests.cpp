@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         // we can't make 3 cents of mature coins
         BOOST_CHECK(!testWallet.SelectCoinsMinConf( 3 * CENT, 1, 6, 0, vCoins, setCoinsRet, nValueRet));
 
-        // we can make 3 cents of new  coins
+        // we can make 3 cents of new coins
         BOOST_CHECK( testWallet.SelectCoinsMinConf( 3 * CENT, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
         BOOST_CHECK_EQUAL(nValueRet, 3 * CENT);
 
@@ -671,18 +671,24 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
     BOOST_CHECK_EQUAL(list.begin()->second.size(), 2);
 
     // Lock both coins. Confirm number of available coins drops to 0.
-    std::vector<COutput> available;
-    wallet->AvailableCoins(available);
-    BOOST_CHECK_EQUAL(available.size(), 2);
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+        std::vector<COutput> available;
+        wallet->AvailableCoins(available);
+        BOOST_CHECK_EQUAL(available.size(), 2);
+    }
     for (const auto& group : list) {
         for (const auto& coin : group.second) {
             LOCK(wallet->cs_wallet);
             wallet->LockCoin(COutPoint(coin.tx->GetHash(), coin.i));
         }
     }
-    wallet->AvailableCoins(available);
-    BOOST_CHECK_EQUAL(available.size(), 0);
-
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+        std::vector<COutput> available;
+        wallet->AvailableCoins(available);
+        BOOST_CHECK_EQUAL(available.size(), 0);
+    }
     // Confirm ListCoins still returns same result as before, despite coins
     // being locked.
     list = wallet->ListCoins();
