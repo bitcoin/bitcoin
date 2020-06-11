@@ -29,7 +29,7 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
-#include <vbk/pop_service_impl.hpp>
+#include <vbk/p2p_sync.hpp>
 
 #include <memory>
 

@@ -10,16 +10,15 @@
 #include "vbk/service_locator.hpp"
 #include <chainparams.h>
 #include <consensus/merkle.h>
-#include <key_io.h>
+#include <node/context.h>
+#include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/validation.h>
 #include <validation.h>
+#include <vbk/p2p_sync.hpp>
 #include <wallet/rpcwallet.h>
-#include <wallet/rpcwallet.h> // for GetWalletForJSONRPCRequest
 #include <wallet/wallet.h>    // for CWallet
-#include <rpc/blockchain.h>
-#include <node/context.h>
 
 #include <fstream>
 #include <set>
@@ -235,8 +234,8 @@ UniValue submitpop(const JSONRPCRequest& request)
         }
 
         const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
-        VeriBlock::p2p::sendATVs(g_rpc_node->connman.get(), msgMaker, {atv});
-        VeriBlock::p2p::sendVTBs(g_rpc_node->connman.get(), msgMaker, vtbs);
+        VeriBlock::p2p::sendPopData<altintegration::ATV>(g_rpc_node->connman.get(), msgMaker, {atv});
+        VeriBlock::p2p::sendPopData<altintegration::VTB>(g_rpc_node->connman.get(), msgMaker, vtbs);
     }
 
     return "successful added";

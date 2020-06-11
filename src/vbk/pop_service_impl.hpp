@@ -13,8 +13,6 @@
 #include <mutex>
 #include <vector>
 
-#include <net_processing.h>
-#include <netmessagemaker.h>
 #include <util/system.h>
 #include <veriblock/altintegration.hpp>
 #include <veriblock/blockchain/alt_block_tree.hpp>
@@ -69,14 +67,5 @@ public:
 
 bool popDataToPayloads(const CBlock& block, const CBlockIndex& indexPrev, BlockValidationState& state, std::vector<altintegration::AltPayloads>& payloads);
 bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex* indexPrev, const CBlock& block, BlockValidationState& state);
-
-namespace p2p {
-bool processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc);
-
-void sendATVs(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector<altintegration::ATV>& atvs);
-void sendVTBs(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector<altintegration::VTB>& vtbs);
-void sendVbkBlocks(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector<altintegration::VbkBlock>& blocks);
-} // namespace p2p
-
 } // namespace VeriBlock
 #endif //BITCOIN_SRC_VBK_POP_SERVICE_POP_SERVICE_IMPL_HPP

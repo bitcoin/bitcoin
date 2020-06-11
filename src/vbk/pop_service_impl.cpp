@@ -7,7 +7,6 @@
 
 #include <chrono>
 #include <memory>
-#include <thread>
 
 #include <amount.h>
 #include <chain.h>
@@ -15,9 +14,6 @@
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <script/interpreter.h>
-#include <script/sigcache.h>
-#include <shutdown.h>
 #include <streams.h>
 #include <util/strencodings.h>
 #include <validation.h>
@@ -299,87 +295,5 @@ bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex*
 
     return true;
 }
-
-// PopData P2P networking
-namespace p2p {
-void sendATVs(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector<altintegration::ATV>& atvs)
-{
-    AssertLockHeld(cs_main);
-    LogPrint(BCLog::NET, "send ATVs: count %d\n", atvs.size());
-    connman->ForEachNode([&connman, &msgMaker, &atvs](CNode* pnode) {
-        for (const auto& atv : atvs) {
-            connman->PushMessage(pnode, msgMaker.Make(NetMsgType::ATV, atv));
-        }
-    });
-}
-
-void sendVTBs(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector<altintegration::VTB>& vtbs)
-{
-    AssertLockHeld(cs_main);
-    LogPrint(BCLog::NET, "send VTbs: count %d\n", vtbs.size());
-    connman->ForEachNode([&connman, &msgMaker, &vtbs](CNode* pnode) {
-        for (const auto& vtb : vtbs) {
-            connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VTB, vtb));
-        }
-    });
-}
-
-void sendVbkBlocks(CConnman* connman, const CNetMsgMaker& msgMaker, std::vector<altintegration::VbkBlock>& blocks)
-{
-    AssertLockHeld(cs_main);
-    LogPrint(BCLog::NET, "send VbkBlocks: count %d\n", blocks.size());
-    connman->ForEachNode([&connman, &msgMaker, &blocks](CNode* pnode) {
-        for (const auto& block : blocks) {
-            connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VBKBLOCK, block));
-        }
-    });
-}
-
-bool processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
-{
-    auto& pop_mempool = VeriBlock::getService<VeriBlock::PopService>().getMemPool();
-    if (strCommand == NetMsgType::ATV) {
-        LOCK(cs_main);
-        LogPrint(BCLog::NET, "received: ATV\n");
-        altintegration::ATV atv;
-        vRecv >> atv;
-
-        altintegration::ValidationState state;
-        if (!pop_mempool.submitATV({atv}, state)) {
-            LogPrint(BCLog::NET, "VeriBlock-PoP: %s ", state.GetPath());
-            return false;
-        }
-
-        return true;
-    }
-
-    if (strCommand == NetMsgType::VTB) {
-        LOCK(cs_main);
-        LogPrint(BCLog::NET, "received: VTB\n");
-        altintegration::VTB vtb;
-        vRecv >> vtb;
-
-        altintegration::ValidationState state;
-        if (!pop_mempool.submitVTB({vtb}, state)) {
-            LogPrint(BCLog::NET, "VeriBlock-PoP: %s ", state.GetPath());
-            return false;
-        }
-
-        return true;
-    }
-
-    if (strCommand == NetMsgType::VBKBLOCK) {
-        LOCK(cs_main);
-        LogPrint(BCLog::NET, "received: VbkBlock\n");
-        altintegration::VbkBlock block;
-        vRecv >> block;
-
-
-        return true;
-    }
-
-    return true;
-}
-} // namespace p2p
 
 } // namespace VeriBlock
