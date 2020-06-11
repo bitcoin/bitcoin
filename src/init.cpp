@@ -1940,7 +1940,10 @@ bool AppInitMain()
                     assert(chainActive.Tip() != NULL);
                 }
 
-                deterministicMNManager->UpgradeDBIfNeeded();
+                if (!deterministicMNManager->UpgradeDBIfNeeded()) {
+                    strLoadError = _("Error upgrading evo database");
+                    break;
+                }
 
                 if (!is_coinsview_empty) {
                     uiInterface.InitMessage(_("Verifying blocks..."));

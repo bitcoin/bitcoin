@@ -673,8 +673,8 @@ public:
 
 public:
     // TODO these can all be removed in a future version
-    bool UpgradeDiff(CDBBatch& batch, const CBlockIndex* pindexNext, const CDeterministicMNList& curMNList, CDeterministicMNList& newMNList);
-    void UpgradeDBIfNeeded();
+    void UpgradeDiff(CDBBatch& batch, const CBlockIndex* pindexNext, const CDeterministicMNList& curMNList, CDeterministicMNList& newMNList);
+    bool UpgradeDBIfNeeded();
 
 private:
     void CleanupCache(int nHeight);
