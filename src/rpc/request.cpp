@@ -12,6 +12,11 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 
+#include <fstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 /**
  * JSON-RPC protocol.  Bitcoin speaks version 1.0 for maximum compatibility,
  * but uses JSON-RPC 1.1/2.0 standards for parts of the 1.0 standard that were
@@ -83,7 +88,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
     /** the umask determines what permissions are used to create this file -
      * these are set to 077 in init.cpp unless overridden with -sysperms.
      */
-    fsbridge::ofstream file;
+    std::ofstream file;
     fs::path filepath_tmp = GetAuthCookieFile(true);
     file.open(filepath_tmp);
     if (!file.is_open()) {
@@ -107,7 +112,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
 
 bool GetAuthCookie(std::string *cookie_out)
 {
-    fsbridge::ifstream file;
+    std::ifstream file;
     std::string cookie;
     fs::path filepath = GetAuthCookieFile();
     file.open(filepath);

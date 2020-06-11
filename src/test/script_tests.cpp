@@ -24,7 +24,8 @@
 #include <script/bitcoinconsensus.h>
 #endif
 
-#include <stdint.h>
+#include <cstdint>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -1727,7 +1728,7 @@ BOOST_AUTO_TEST_CASE(script_assets_test)
     bool exists = fs::exists(path);
     BOOST_WARN_MESSAGE(exists, "File $DIR_UNIT_TEST_DATA/script_assets_test.json not found, skipping script_assets_test");
     if (!exists) return;
-    fs::ifstream file(path);
+    std::ifstream file{path};
     BOOST_CHECK(file.is_open());
     file.seekg(0, std::ios::end);
     size_t length = file.tellg();
