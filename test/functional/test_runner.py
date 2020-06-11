@@ -181,7 +181,7 @@ BASE_SCRIPTS = [
     'rpc_net.py',
     'wallet_keypool.py',
     'wallet_keypool_hd.py',
-    'p2p_mempool.py',
+    'p2p_nobloomfilter_messages.py',
     'p2p_filter.py',
     'p2p_blocksonly.py',
     'rpc_setban.py',
