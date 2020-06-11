@@ -84,19 +84,22 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }  
     // if we checking this on block we would have already verified this in checkblock
     if(ethTxRootShouldExist){
-        // time must be between 1 week and 1 hour old to be accepted
+        // time must be between 2.5 week and 1 hour old to be accepted
         if(nTime < txRootDB.nTimestamp) {
             return FormatSyscoinErrorMessage(state, "mint-invalid-timestamp", bSanityCheck);
         }
-        // 3 hr on testnet and 1 week on mainnet
-        else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? TESTNET_MAX_MINT_AGE: MAINNET_MAX_MINT_AGE)) {
+        else if((nTime - txRootDB.nTimestamp) > MAINNET_MAX_VALIDATE_AGE) {
             return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", bSanityCheck);
         } 
         
         // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
         // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-        else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? TESTNET_MIN_MINT_AGE: MAINNET_MIN_MINT_AGE)) {
+        else if((nTime - txRootDB.nTimestamp) < MAINNET_MIN_MINT_AGE) {
             return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", bSanityCheck);
+        }
+        // must propogate by 0.5 weeks or less, otherwise shouldn't be allowed to propogate
+        else if(fJustCheck && blockhash.IsNull() && (nTime - txRootDB.nTimestamp) > MAINNET_MAX_MINT_AGE) {
+            return FormatSyscoinErrorMessage(state, "mint-too-old", bSanityCheck);
         }
     }
     
@@ -722,7 +725,7 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     uint32_t nKey = 0;
     uint32_t cutoffHeight = 0;
     if(fNewGethSyncHeight > 0) {
-        // cutoff to keep blocks is ~3 week of blocks is about 120k blocks
+        // cutoff to keep blocks
         cutoffHeight = fNewGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
         if(fNewGethSyncHeight < MAX_ETHEREUM_TX_ROOTS) {
             LogPrint(BCLog::SYS, "Nothing to prune fGethSyncHeight = %d\n", fNewGethSyncHeight);
@@ -762,10 +765,10 @@ bool CEthereumTxRootsDB::Clear() {
     uint32_t nKey = 0;
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
-    if (pcursor->Valid()) {
+    while (pcursor->Valid()) {
         try {
             if(pcursor->GetKey(nKey)) {
-                vecHeightKeys.emplace_back(nKey);
+                vecHeightKeys.push_back(nKey);
             }
             pcursor->Next();
         }
@@ -774,7 +777,7 @@ bool CEthereumTxRootsDB::Clear() {
         }
     }
     fGethSyncHeight = 0;
-    fGethCurrentHeight = 0;     
+    fGethCurrentHeight = 0;   
     return FlushErase(vecHeightKeys);
 }
 
@@ -811,6 +814,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
             pcursor->Next();
         }
         catch (std::exception &e) {
+            LogPrintf("AuditTxRootDB exception: %s\n", e.what()); 
             return;
         }
     }

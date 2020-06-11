@@ -3904,16 +3904,16 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
                 }  
                 if(ethTxRootShouldExist){
                     const int64_t &nTime = pindexPrev->GetMedianTimePast();
-                    // time must be between 1 week and 1 hour old to be accepted
+                    // time must be between 2.5 week and 1 hour old to be accepted
                     if(nTime < txRootDB.nTimestamp) {
                         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "invalid-timestamp", "Time must be in the present or future, not passed");
                     }
-                    else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? TESTNET_MAX_MINT_AGE: MAINNET_MAX_MINT_AGE)) {
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-blockheight-too-old", "Time must be between 1 week and 1 hour old");
+                    else if((nTime - txRootDB.nTimestamp) > MAINNET_MAX_VALIDATE_AGE) {
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-blockheight-too-old", "Time must be between 2.5 week and 1 hour old");
                     }
                     // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
                     // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-                    else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? TESTNET_MIN_MINT_AGE: MAINNET_MIN_MINT_AGE)) {
+                    else if((nTime - txRootDB.nTimestamp) < MAINNET_MIN_MINT_AGE) {
                         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-insufficient-confirmations", "You must wait at least 1 hour to mint");
                     }
                 } 
