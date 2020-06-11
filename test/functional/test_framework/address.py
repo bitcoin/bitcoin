@@ -9,10 +9,7 @@ import unittest
 
 from .script import hash256, hash160, sha256, CScript, OP_0
 from .segwit_addr import encode_segwit_address
-from .util import hex_str_to_bytes
-
-
-from test_framework.util import assert_equal
+from .util import assert_equal, hex_str_to_bytes
 
 ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
 ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj)#juyq9d97'
