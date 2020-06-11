@@ -304,6 +304,7 @@ bool addAllPayloadsToBlockImpl(altintegration::AltTree& tree, const CBlockIndex*
 namespace p2p {
 void sendATVs(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector<altintegration::ATV>& atvs)
 {
+    AssertLockHeld(cs_main);
     LogPrint(BCLog::POP, "send ATVs: count %d\n", atvs.size());
     connman->ForEachNode([&connman, &msgMaker, &atvs](CNode* pnode) {
         for (const auto& atv : atvs) {
@@ -314,8 +315,8 @@ void sendATVs(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector
 
 void sendVTBs(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector<altintegration::VTB>& vtbs)
 {
+    AssertLockHeld(cs_main);
     LogPrint(BCLog::POP, "send VTbs: count %d\n", vtbs.size());
-    LogPrintf("send VTbs: count %d\n", vtbs.size());
     connman->ForEachNode([&connman, &msgMaker, &vtbs](CNode* pnode) {
         for (const auto& vtb : vtbs) {
             connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VTB, vtb));
@@ -325,8 +326,8 @@ void sendVTBs(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vector
 
 void sendVbkBlocks(CConnman* connman, const CNetMsgMaker& msgMaker, std::vector<altintegration::VbkBlock>& blocks)
 {
+    AssertLockHeld(cs_main);
     LogPrint(BCLog::POP, "send VbkBlocks: count %d\n", blocks.size());
-    LogPrintf("send VbkBlocks: count %d\n", blocks.size());
     connman->ForEachNode([&connman, &msgMaker, &blocks](CNode* pnode) {
         for (const auto& block : blocks) {
             connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VBKBLOCK, block));
@@ -340,7 +341,6 @@ bool processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vR
     if (strCommand == NetMsgType::ATV) {
         LOCK(cs_main);
         LogPrint(BCLog::POP, "received: ATV\n");
-        LogPrintf("received: ATV\n");
         altintegration::ATV atv;
         vRecv >> atv;
 
@@ -356,7 +356,6 @@ bool processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vR
     if (strCommand == NetMsgType::VTB) {
         LOCK(cs_main);
         LogPrint(BCLog::POP, "received: VTB\n");
-        LogPrintf("received: VTB\n");
         altintegration::VTB vtb;
         vRecv >> vtb;
 
@@ -372,7 +371,6 @@ bool processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vR
     if (strCommand == NetMsgType::VBKBLOCK) {
         LOCK(cs_main);
         LogPrint(BCLog::POP, "received: VbkBlock\n");
-        LogPrintf("received: VbkBlock\n");
         altintegration::VbkBlock block;
         vRecv >> block;
 
