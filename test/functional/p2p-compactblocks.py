@@ -11,7 +11,7 @@ from test_framework.util import *
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.script import CScript, OP_TRUE
 
-# TestNode: A peer we use to send messages to bitcoind, and store responses.
+# TestNode: A peer we use to send messages to dashd, and store responses.
 class TestNode(P2PInterface):
     def __init__(self):
         super().__init__()
@@ -218,7 +218,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             #old_node.request_headers_and_sync(locator=[tip])
             #check_announcement_of_new_block(node, old_node, lambda p: "cmpctblock" in p.last_message)
 
-    # This test actually causes bitcoind to (reasonably!) disconnect us, so do this last.
+    # This test actually causes dashd to (reasonably!) disconnect us, so do this last.
     def test_invalid_cmpctblock_message(self):
         self.nodes[0].generate(101)
         block = self.build_block_on_tip(self.nodes[0])
@@ -233,7 +233,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.hashPrevBlock)
 
     # Compare the generated shortids to what we expect based on BIP 152, given
-    # bitcoind's choice of nonce.
+    # dashd's choice of nonce.
     def test_compactblock_construction(self, node, test_node, version):
         # Generate a bunch of transactions.
         node.generate(101)
@@ -324,7 +324,7 @@ class CompactBlocksTest(BitcoinTestFramework):
                 header_and_shortids.shortids.pop(0)
             index += 1
 
-    # Test that bitcoind requests compact blocks when we announce new blocks
+    # Test that dashd requests compact blocks when we announce new blocks
     # via header or inv, and that responding to getblocktxn causes the block
     # to be successfully reconstructed.
     def test_compactblock_requests(self, node, test_node):
@@ -494,7 +494,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(absolute_indexes, [6, 7, 8, 9, 10])
 
         # Now give an incorrect response.
-        # Note that it's possible for bitcoind to be smart enough to know we're
+        # Note that it's possible for dashd to be smart enough to know we're
         # lying, since it could check to see if the shortid matches what we're
         # sending, and eg disconnect us for misbehavior.  If that behavior
         # change were made, we could just modify this test by having a
@@ -519,7 +519,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 
     def test_getblocktxn_handler(self, node, test_node, version):
-        # bitcoind will not send blocktxn responses for blocks whose height is
+        # dashd will not send blocktxn responses for blocks whose height is
         # more than 10 blocks deep.
         MAX_GETBLOCKTXN_DEPTH = 10
         chain_height = node.getblockcount()
