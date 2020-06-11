@@ -1,4 +1,0 @@
-# Add 'RPC' to any changes within 'src/rpc/*' or 'src/wallet/rpc*'
-RPC:
-  - src/rpc/*
-  - src/wallet/rpc*
