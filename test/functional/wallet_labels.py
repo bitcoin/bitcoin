@@ -156,7 +156,7 @@ class WalletLabelsTest(SyscoinTestFramework):
             ad = BECH32_INVALID[l]
             assert_raises_rpc_error(
                 -5,
-                "Invalid Bitcoin address or script",
+                "Invalid Syscoin address or script",
                 lambda: wallet_watch_only.importaddress(label=l, rescan=False, address=ad),
             )
 
