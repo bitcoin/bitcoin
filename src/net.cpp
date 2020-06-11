@@ -1012,6 +1012,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     SetSocketNoDelay(hSocket);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     // Don't accept connections from banned peers.
     bool banned = m_banman->IsBanned(addr);
     if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_NOBAN) && banned)
@@ -1021,6 +1022,11 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     // Don't accept connections from banned peers.
     if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_NOBAN) && bannedlevel == 2)
 >>>>>>> Replace automatic bans with discouragement filter
+=======
+    // Don't accept connections from banned peers.
+    bool banned = m_banman->IsBanned(addr);
+    if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_NOBAN) && banned)
+>>>>>>> Clean up separated ban/discourage interface
     {
         LogPrint(BCLog::NET, "connection from %s dropped (banned)\n", addr.ToString());
         CloseSocket(hSocket);
@@ -1029,11 +1035,16 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 
     // Only accept connections from discouraged peers if our inbound slots aren't (almost) full.
 <<<<<<< HEAD
+<<<<<<< HEAD
     bool discouraged = m_banman->IsDiscouraged(addr);
     if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_NOBAN) && nInbound + 1 >= nMaxInbound && discouraged)
 =======
     if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_NOBAN) && nInbound + 1 >= nMaxInbound && bannedlevel >= 1)
 >>>>>>> Replace automatic bans with discouragement filter
+=======
+    bool discouraged = m_banman->IsDiscouraged(addr);
+    if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_NOBAN) && nInbound + 1 >= nMaxInbound && discouraged)
+>>>>>>> Clean up separated ban/discourage interface
     {
         LogPrint(BCLog::NET, "connection from %s dropped (discouraged)\n", addr.ToString());
         CloseSocket(hSocket);
