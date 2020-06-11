@@ -72,7 +72,7 @@ void BanMan::ClearBanned()
         LOCK(m_cs_banned);
         m_banned_addrs.clear();
         m_misbehaving_addrs.clear();
-        m_banned.clear();
+        m_banned_subnets.clear();
         m_is_dirty = true;
     }
     DumpBanlist(); //store banlist to disk
@@ -97,7 +97,7 @@ int BanMan::IsBannedLevel(CNetAddr net_addr)
             level = 1;
         }
     }
-    for (const auto& it : m_banned) {
+    for (const auto& it : m_banned_subnets) {
         CSubNet sub_net = it.first;
         CBanEntry ban_entry = it.second;
 
@@ -122,7 +122,7 @@ bool BanMan::IsBanned(CNetAddr net_addr)
             }
         }
     }
-    for (const auto& it : m_banned) {
+    for (const auto& it : m_banned_subnets) {
         CSubNet sub_net = it.first;
         CBanEntry ban_entry = it.second;
 
@@ -141,8 +141,8 @@ bool BanMan::IsBanned(CSubNet sub_net)
     }
     auto current_time = GetTime();
     LOCK(m_cs_banned);
-    banmap_t::iterator i = m_banned.find(sub_net);
-    if (i != m_banned.end()) {
+    banmap_t::iterator i = m_banned_subnets.find(sub_net);
+    if (i != m_banned_subnets.end()) {
         CBanEntry ban_entry = (*i).second;
         if (current_time < ban_entry.nBanUntil) {
             return true;
@@ -173,7 +173,7 @@ void BanMan::Ban(const CSubNet& sub_net, const BanReason& ban_reason, int64_t ba
         LOCK(m_cs_banned);
         const CNetAddr *addr = nullptr;
         const bool is_single_addr = sub_net.IsSingleAddr(&addr);
-        auto& old_ban_entry = is_single_addr ? m_banned_addrs[*addr] : m_banned[sub_net];
+        auto& old_ban_entry = is_single_addr ? m_banned_addrs[*addr] : m_banned_subnets[sub_net];
         if (old_ban_entry.nBanUntil < ban_entry.nBanUntil) {
             if (m_misbehaving_addrs.capacity()) {
                 // we have a limit on misbehaving entries
@@ -228,7 +228,7 @@ bool BanMan::Unban(const CSubNet& sub_net)
             }
             m_banned_addrs.erase(it);
         } else {
-            if (m_banned.erase(sub_net) == 0) return false;
+            if (m_banned_subnets.erase(sub_net) == 0) return false;
         }
         m_is_dirty = true;
     }
@@ -242,7 +242,7 @@ void BanMan::GetBanned(banmap_t& banmap)
     LOCK(m_cs_banned);
     // Sweep the banlist so expired bans are not returned
     SweepBanned();
-    banmap = m_banned; //create a thread safe copy
+    banmap = m_banned_subnets; //create a thread safe copy
     for (const auto& addr_pair : m_banned_addrs) {
         banmap[CSubNet(addr_pair.first)] = addr_pair.second;
     }
@@ -252,7 +252,7 @@ void BanMan::SetBanned(const banmap_t& banmap)
 {
     LOCK(m_cs_banned);
     m_banned_addrs.clear();
-    m_banned.clear();
+    m_banned_subnets.clear();
     const CNetAddr* addr;
     for (const auto& sub_net_pair : banmap) {
         const auto& sub_net = sub_net_pair.first;
@@ -260,7 +260,7 @@ void BanMan::SetBanned(const banmap_t& banmap)
         if (sub_net.IsSingleAddr(&addr)) {
             m_banned_addrs[*addr] = ban_entry;
         } else {
-            m_banned[sub_net] = ban_entry;
+            m_banned_subnets[sub_net] = ban_entry;
         }
     }
     m_is_dirty = true;
@@ -272,12 +272,12 @@ void BanMan::SweepBanned()
     bool notify_ui = false;
     {
         LOCK(m_cs_banned);
-        banmap_t::iterator it = m_banned.begin();
-        while (it != m_banned.end()) {
+        banmap_t::iterator it = m_banned_subnets.begin();
+        while (it != m_banned_subnets.end()) {
             CSubNet sub_net = (*it).first;
             CBanEntry ban_entry = (*it).second;
             if (now > ban_entry.nBanUntil) {
-                m_banned.erase(it++);
+                m_banned_subnets.erase(it++);
                 m_is_dirty = true;
                 notify_ui = true;
                 LogPrint(BCLog::NET, "%s: Removed banned node ip/subnet from banlist.dat: %s\n", __func__, sub_net.ToString());
@@ -312,6 +312,6 @@ bool BanMan::BannedSetIsDirty()
 
 void BanMan::SetBannedSetDirty(bool dirty)
 {
-    LOCK(m_cs_banned); //reuse m_banned lock for the m_is_dirty flag
+    LOCK(m_cs_banned);
     m_is_dirty = dirty;
 }
