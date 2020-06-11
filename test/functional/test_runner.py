@@ -70,6 +70,7 @@ TEST_FRAMEWORK_MODULES = [
     "address",
     "blocktools",
     "script",
+    "util",
 ]
 
 EXTENDED_SCRIPTS = [
