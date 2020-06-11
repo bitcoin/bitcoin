@@ -221,6 +221,29 @@ private:
 #endif // DEBUG_ADDRMAN
     }
 
+    void ClearNonLockHelper() EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        std::vector<int>().swap(vRandom);
+        nKey = insecure_rand.rand256();
+        for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
+            for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
+                vvNew[bucket][entry] = -1;
+            }
+        }
+        for (size_t bucket = 0; bucket < ADDRMAN_TRIED_BUCKET_COUNT; bucket++) {
+            for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
+                vvTried[bucket][entry] = -1;
+            }
+        }
+
+        nIdCount = 0;
+        nTried = 0;
+        nNew = 0;
+        nLastGood = 1; //Initially at 1 so that "never" is strictly worse.
+        mapInfo.clear();
+        mapAddr.clear();
+    }
+
 protected:
     //! secret key to randomize bucket select with
     uint256 nKey;
@@ -391,7 +414,7 @@ public:
     {
         LOCK(cs);
 
-        Clear();
+        ClearNonLockHelper();
         unsigned char nVersion;
         s >> nVersion;
         unsigned char nKeySize;
@@ -509,28 +532,10 @@ public:
         CheckNonLockHelper();
     }
 
-    void Clear()
+    void Clear() EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
-        std::vector<int>().swap(vRandom);
-        nKey = insecure_rand.rand256();
-        for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
-            for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
-                vvNew[bucket][entry] = -1;
-            }
-        }
-        for (size_t bucket = 0; bucket < ADDRMAN_TRIED_BUCKET_COUNT; bucket++) {
-            for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
-                vvTried[bucket][entry] = -1;
-            }
-        }
-
-        nIdCount = 0;
-        nTried = 0;
-        nNew = 0;
-        nLastGood = 1; //Initially at 1 so that "never" is strictly worse.
-        mapInfo.clear();
-        mapAddr.clear();
+        ClearNonLockHelper();
     }
 
     CAddrMan()
