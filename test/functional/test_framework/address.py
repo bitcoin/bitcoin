@@ -45,7 +45,10 @@ def byte_to_base58(b, version):
     return result
 
 
-def base58_to_byte(s, verify_checksum=True):
+def base58_to_byte(s):
+    """Converts a base58-encoded string to its data and version.
+
+    Throws if the base58 checksum is invalid."""
     if not s:
         return b''
     n = 0
@@ -65,8 +68,9 @@ def base58_to_byte(s, verify_checksum=True):
         else:
             break
     res = b'\x00' * pad + res
-    if verify_checksum:
-        assert_equal(hash256(res[:-4])[:4], res[-4:])
+
+    # Assert if the checksum is invalid
+    assert_equal(hash256(res[:-4])[:4], res[-4:])
 
     return res[1:-4], int(res[0])
 
