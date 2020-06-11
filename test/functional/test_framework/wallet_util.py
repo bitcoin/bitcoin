@@ -6,13 +6,11 @@
 from collections import namedtuple
 
 from test_framework.address import (
+    byte_to_base58,
     key_to_p2pkh,
     script_to_p2sh,
 )
-from test_framework.key import (
-    bytes_to_wif,
-    ECKey,
-)
+from test_framework.key import ECKey
 from test_framework.script import (
     CScript,
     OP_2,
@@ -90,3 +88,14 @@ def test_address(node, address, **kwargs):
                 raise AssertionError("key {} unexpectedly returned in getaddressinfo.".format(key))
         elif addr_info[key] != value:
             raise AssertionError("key {} value {} did not match expected value {}".format(key, addr_info[key], value))
+
+def bytes_to_wif(b, compressed=True):
+    if compressed:
+        b += b'\x01'
+    return byte_to_base58(b, 239)
+
+def generate_wif_key():
+    # Makes a WIF privkey for imports
+    k = ECKey()
+    k.generate()
+    return bytes_to_wif(k.get_bytes(), k.is_compressed)
