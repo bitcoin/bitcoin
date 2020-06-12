@@ -129,9 +129,9 @@ class PopFr(BitcoinTestFramework):
         # expected best block hash is fork A (has higher pop score)
         bestblocks = [self.get_best_block(x) for x in self.nodes]
         print(bestblocks[2]['height'])
-        assert_equal(bestblocks[0], bestblocks[1])
-        assert_equal(bestblocks[0], bestblocks[2])
-        assert_equal(bestblocks[0], bestblocks[3])
+        assert_equal(bestblocks[0]['hash'], bestblocks[1]['hash'])
+        assert_equal(bestblocks[0]['hash'], bestblocks[2]['hash'])
+        assert_equal(bestblocks[0]['hash'], bestblocks[3]['hash'])
         self.log.info("all nodes switched to common block")
 
         for i in range(len(bestblocks)):
