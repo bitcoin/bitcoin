@@ -662,7 +662,7 @@ fs::path GetDefaultDataDir()
     if (pszHome == nullptr || strlen(pszHome) == 0)
         pathRet = fs::path("/");
     else
-        pathRet = fs::path(pszHome);
+        pathRet = fs::u8path(pszHome);
 #ifdef MAC_OSX
     // macOS
     return pathRet / "Library/Application Support/Bitcoin";
@@ -728,7 +728,7 @@ const fs::path &GetDataDir(bool fNetSpecific)
 
     std::string datadir = gArgs.GetArg("-datadir", "");
     if (!datadir.empty()) {
-        path = fs::absolute(datadir);
+        path = fs::absolute(fs::u8path(datadir));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
