@@ -231,22 +231,6 @@ extern const char *GETBLOCKTXN;
  */
 extern const char *BLOCKTXN;
 
-// VeriBlock PopData
-/**
-  * Contains ATV
-  */
-extern const char *ATV;
-
-/**
-  * Contains VTB
-  */
-extern const char *VTB;
-
-/**
-  * Contains VbkBlock
-  */
-extern const char *VBKBLOCK;
-
 };
 
 /* Get a vector of all valid message types (see above) */

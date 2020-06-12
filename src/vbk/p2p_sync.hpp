@@ -19,6 +19,7 @@ void sendPopData(CConnman* connman, const CNetMsgMaker& msgMaker, const std::vec
 {
     AssertLockHeld(cs_main);
     LogPrint(BCLog::NET, "send PopData: count %d\n", data.size());
+    LogPrintf("send PopData: count %d\n", data.size());
     connman->ForEachNode([&connman, &msgMaker, &data](CNode* pnode) {
         for (const auto& el : data) {
             connman->PushMessage(pnode, msgMaker.Make(PopDataType::name(), el));

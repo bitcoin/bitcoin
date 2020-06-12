@@ -41,11 +41,6 @@ const char *CMPCTBLOCK="cmpctblock";
 const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
 
-// VeriBlock
-const char *ATV="atv";
-const char *VTB="vtb";
-const char *VBKBLOCK="vbkblock";
-
 } // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of

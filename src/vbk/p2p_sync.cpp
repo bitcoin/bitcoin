@@ -3,8 +3,8 @@
 #include <vbk/pop_service.hpp>
 
 #include "veriblock/entities/atv.hpp"
-#include "veriblock/entities/vtb.hpp"
 #include "veriblock/entities/vbkblock.hpp"
+#include "veriblock/entities/vtb.hpp"
 
 #include "veriblock/mempool.hpp"
 
@@ -14,7 +14,7 @@ namespace p2p {
 bool processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
 {
     auto& pop_mempool = VeriBlock::getService<VeriBlock::PopService>().getMemPool();
-    if (strCommand == NetMsgType::ATV) {
+    if (strCommand == altintegration::ATV::name()) {
         LOCK(cs_main);
         LogPrint(BCLog::NET, "received: ATV\n");
         altintegration::ATV atv;
@@ -29,7 +29,7 @@ bool processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vR
         return true;
     }
 
-    if (strCommand == NetMsgType::VTB) {
+    if (strCommand == altintegration::VTB::name()) {
         LOCK(cs_main);
         LogPrint(BCLog::NET, "received: VTB\n");
         altintegration::VTB vtb;
@@ -44,7 +44,7 @@ bool processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vR
         return true;
     }
 
-    if (strCommand == NetMsgType::VBKBLOCK) {
+    if (strCommand == altintegration::VbkBlock::name()) {
         LOCK(cs_main);
         LogPrint(BCLog::NET, "received: VbkBlock\n");
         altintegration::VbkBlock block;

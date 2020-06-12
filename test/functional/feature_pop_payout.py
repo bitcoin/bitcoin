@@ -61,14 +61,6 @@ class PopPayouts(BitcoinTestFramework):
         self.nodes[0].waitforblockheight(containingblock['height'])
         self.log.info("node0 got containing block over p2p")
 
-        # TODO remove it after P2P modified for the pop_data
-        #containingblockhash = self.nodes[0].generate(nblocks=1)[0]
-        #containingblock = self.nodes[0].getblock(containingblockhash)
-        #self.log.info("node1 mined containing block={}".format(containingblock['hash']))
-        #self.nodes[1].waitforblockheight(containingblock['height'])
-        #self.log.info("node0 got containing block over p2p")
-        #----------------
-
         # assert that txid exists in this block
         block = self.nodes[0].getblock(containingblockhash)
 

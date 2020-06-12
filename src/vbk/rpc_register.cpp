@@ -18,7 +18,7 @@
 #include <validation.h>
 #include <vbk/p2p_sync.hpp>
 #include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>    // for CWallet
+#include <wallet/wallet.h> // for CWallet
 
 #include <fstream>
 #include <set>
