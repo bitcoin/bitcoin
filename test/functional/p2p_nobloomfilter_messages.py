@@ -8,9 +8,10 @@ Test that, when bloom filters are not enabled, nodes are disconnected if:
 1. They send a p2p mempool message
 2. They send a p2p filterload message
 3. They send a p2p filteradd message
+4. They send a p2p filterclear message
 """
 
-from test_framework.messages import msg_mempool, msg_filteradd, msg_filterload
+from test_framework.messages import msg_mempool, msg_filteradd, msg_filterload, msg_filterclear
 from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -38,6 +39,9 @@ class P2PNobloomfilterMessages(BitcoinTestFramework):
 
         self.log.info("Test that node is disconnected if it sends filteradd message")
         self.test_message_causes_disconnect(msg_filteradd(data=b'\xcc'))
+
+        self.log.info("Test that peer is disconnected if it sends a filterclear message")
+        self.test_message_causes_disconnect(msg_filterclear())
 
 if __name__ == '__main__':
     P2PNobloomfilterMessages().main()
