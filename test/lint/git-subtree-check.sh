@@ -81,7 +81,7 @@ fi
 
 # get the tree in the subtree commit referred to
 if [ "d$(git cat-file -t $rev 2>/dev/null)" != dcommit ]; then
-    echo "subtree commit $rev unavailable: cannot compare" >&2
+    echo "subtree commit $rev unavailable: cannot compare. Did you add and fetch the remote?" >&2
     exit
 fi
 tree_subtree=$(git show -s --format="%T" $rev)
