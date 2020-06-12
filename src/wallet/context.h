@@ -9,6 +9,9 @@ namespace interfaces {
 class Chain;
 } // namespace interfaces
 
+// SYSCOIN
+struct NodeContext;
+
 //! WalletContext struct containing references to state shared between CWallet
 //! instances, like the reference to the chain interface, and the list of opened
 //! wallets.
@@ -22,6 +25,9 @@ class Chain;
 struct WalletContext {
     interfaces::Chain* chain{nullptr};
 
+    /* SYSCOIN getauxwork is a wallet RPC but actually needs the NodeContext (unlike
+       any of the upstream Bitcoin wallet RPCs).  */
+    NodeContext* nodeContext{nullptr};
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the WalletContext struct doesn't need to #include class
     //! definitions for smart pointer and container members.
