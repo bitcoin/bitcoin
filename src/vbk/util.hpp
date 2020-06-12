@@ -77,5 +77,57 @@ inline int64_t GetPopDataWeight(const altintegration::PopData& pop_data)
     return ::GetSerializeSize(pop_data, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(pop_data, PROTOCOL_VERSION);
 }
 
+template <typename T>
+bool FindPayloadInBlock(const CBlock& block, const typename T::id_t& id, T& out)
+{
+    (void)block;
+    (void)id;
+    (void)out;
+    static_assert(sizeof(T) == 0, "Undefined type in FindPayloadInBlock");
+    return false;
+}
+
+template <>
+inline bool FindPayloadInBlock(const CBlock& block, const altintegration::VbkBlock::id_t& id, altintegration::VbkBlock& out)
+{
+    for (auto& p : block.v_popData) {
+        for (auto& blk : p.vbk_context) {
+            if (blk.getShortHash() == id) {
+                out = blk;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+template <>
+inline bool FindPayloadInBlock(const CBlock& block, const altintegration::VTB::id_t& id, altintegration::VTB& out)
+{
+    for (auto& p : block.v_popData) {
+        for (auto& vtb : p.vtbs) {
+            if (vtb.getId() == id) {
+                out = vtb;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+template <>
+inline bool FindPayloadInBlock(const CBlock& block, const altintegration::ATV::id_t& id, altintegration::ATV& out)
+{
+    for (auto& p : block.v_popData) {
+        if (p.hasAtv) {
+            if (p.atv.getId() == id) {
+                out = p.atv;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 } // namespace VeriBlock
 #endif
