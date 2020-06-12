@@ -226,7 +226,7 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
         return false;
     }
 
-    LogPrintf("Unknown special transaction type in Bloom filter check.");
+    LogPrintf("Unknown special transaction type in Bloom filter check.\n");
     return false;
 }
 

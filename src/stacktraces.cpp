@@ -524,7 +524,7 @@ static std::string GetCrashInfoStr(const crash_info& ci, size_t spaces)
 static void PrintCrashInfo(const crash_info& ci)
 {
     auto str = GetCrashInfoStr(ci);
-    LogPrintf("%s", str);
+    LogPrintf("%s", str); /* Continued */
     fprintf(stderr, "%s", str.c_str());
     fflush(stderr);
 }
