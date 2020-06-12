@@ -105,7 +105,7 @@ class PopFr(BitcoinTestFramework):
         self.sync_all(self.nodes[0:1])
         containingblock = self.nodes[0].getblock(containinghash[0])
 
-        assert_equal(self.nodes[1].getblock(containinghash[0]), containingblock)
+        assert_equal(self.nodes[1].getblock(containinghash[0])['hash'], containingblock['hash'])
 
         tip = self.get_best_block(self.nodes[0])
         ## TODO check that this pop data contains in the containing block
