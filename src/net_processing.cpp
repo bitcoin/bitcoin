@@ -2446,20 +2446,6 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
     }
 
 
-    if (!(pfrom.GetLocalServices() & NODE_BLOOM) &&
-              (msg_type == NetMsgType::FILTERLOAD ||
-               msg_type == NetMsgType::FILTERADD))
-    {
-        if (pfrom.nVersion >= NO_BLOOM_VERSION) {
-            LOCK(cs_main);
-            Misbehaving(pfrom.GetId(), 100);
-            return false;
-        } else {
-            pfrom.fDisconnect = true;
-            return false;
-        }
-    }
-
     if (msg_type == NetMsgType::VERSION) {
         // Each connection can only send one version message
         if (pfrom.nVersion != 0)
@@ -3760,6 +3746,10 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
     }
 
     if (msg_type == NetMsgType::FILTERLOAD) {
+        if (!(pfrom.GetLocalServices() & NODE_BLOOM)) {
+            pfrom.fDisconnect = true;
+            return true;
+        }
         CBloomFilter filter;
         vRecv >> filter;
 
@@ -3779,6 +3769,10 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
     }
 
     if (msg_type == NetMsgType::FILTERADD) {
+        if (!(pfrom.GetLocalServices() & NODE_BLOOM)) {
+            pfrom.fDisconnect = true;
+            return true;
+        }
         std::vector<unsigned char> vData;
         vRecv >> vData;
 
