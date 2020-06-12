@@ -421,7 +421,7 @@ void WalletInit::InitPrivateSendSettings()
     privateSendClient.nPrivateSendDenomsHardCap = std::min(std::max((int)gArgs.GetArg("-privatesenddenomshardcap", DEFAULT_PRIVATESEND_DENOMS_HARDCAP), MIN_PRIVATESEND_DENOMS_HARDCAP), MAX_PRIVATESEND_DENOMS_HARDCAP);
 
     if (privateSendClient.fEnablePrivateSend) {
-        LogPrintf("PrivateSend: autostart=%d, multisession=%d, "
+        LogPrintf("PrivateSend: autostart=%d, multisession=%d," /* Continued */
                   "sessions=%d, rounds=%d, amount=%d, denoms_goal=%d, denoms_hardcap=%d\n",
                   privateSendClient.fPrivateSendRunning, privateSendClient.fPrivateSendMultiSession,
                   privateSendClient.nPrivateSendSessions, privateSendClient.nPrivateSendRounds,

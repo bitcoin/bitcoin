@@ -656,7 +656,7 @@ void CInstantSendManager::HandleNewInstantSendLockRecoveredSig(const llmq::CReco
     }
 
     if (islock.txid != recoveredSig.msgHash) {
-        LogPrintf("CInstantSendManager::%s -- txid=%s: islock conflicts with %s, dropping own version", __func__,
+        LogPrintf("CInstantSendManager::%s -- txid=%s: islock conflicts with %s, dropping own version\n", __func__,
                 islock.txid.ToString(), recoveredSig.msgHash.ToString());
         return;
     }
