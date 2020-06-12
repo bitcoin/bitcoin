@@ -726,9 +726,9 @@ private:
     int64_t nLastResend = 0;
     bool fBroadcastTransactions = false;
 
-    mutable bool fAnonymizableTallyCached;
+    mutable bool fAnonymizableTallyCached = false;
     mutable std::vector<CompactTallyItem> vecAnonymizableTallyCached;
-    mutable bool fAnonymizableTallyCachedNonDenom;
+    mutable bool fAnonymizableTallyCachedNonDenom = false;
     mutable std::vector<CompactTallyItem> vecAnonymizableTallyCachedNonDenom;
 
     /**
