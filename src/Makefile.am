@@ -115,7 +115,8 @@ VBK_H = \
   vbk/genesis.hpp \
   vbk/altchainparam.hpp \
   vbk/p2p_sync.hpp \
-  vbk/util.hpp
+  vbk/util.hpp \
+  vbk/adaptors/univalue_json.hpp
 ### VeriBlock section end
 
 
