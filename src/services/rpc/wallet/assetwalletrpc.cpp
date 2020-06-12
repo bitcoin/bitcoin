@@ -202,8 +202,6 @@ void TestTransaction(const CTransactionRef& tx, const util::Ref& context) {
 }
 
 UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
     RPCHelpMan{"syscoinburntoassetallocation",
         "\nBurns Syscoin to the SYSX asset\n",
@@ -221,7 +219,9 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
             + HelpExampleRpc("syscoinburntoassetallocation", "\"asset_guid\", \"amount\"")
         }
     }.Check(request);
-
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -291,8 +291,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 }
 
 UniValue assetnew(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
     RPCHelpMan{"assetnew",
     "\nCreate a new asset\n",
@@ -328,7 +326,9 @@ UniValue assetnew(const JSONRPCRequest& request) {
     + HelpExampleRpc("assetnew", "1, \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, {}")
     }
     }.Check(request);
-       
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();  
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -554,8 +554,6 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
 }
 
 UniValue assetupdate(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
     RPCHelpMan{"assetupdate",
         "\nPerform an update on an asset you control.\n",
@@ -587,7 +585,9 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetupdate", "\"asset_guid\", \"description\", \"contract\", \"supply\", \"update_flags\", {}")
         }
         }.Check(request);
-
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -654,8 +654,6 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 }
 
 UniValue assettransfer(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
     RPCHelpMan{"assettransfer",
         "\nPerform a transfer of ownership on an asset you control.\n",
@@ -673,7 +671,9 @@ UniValue assettransfer(const JSONRPCRequest& request) {
             + HelpExampleRpc("assettransfer", "\"asset_guid\", \"address\"")
         }
         }.Check(request);
-
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -706,8 +706,6 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 }
 
 UniValue assetsendmany(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
     RPCHelpMan{"assetsendmany",
     "\nSend an asset you own to another address/addresses as an asset allocation. Maximum recipients is 250.\n",
@@ -737,7 +735,9 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
         + HelpExampleRpc("assetsendmany", "\"asset_guid\",\"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\"")
     }
     }.Check(request);
-
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -849,8 +849,6 @@ UniValue assetsend(const JSONRPCRequest& request) {
 }
 
 UniValue assetallocationsendmany(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
     RPCHelpMan{"assetallocationsendmany",
         "\nSend an asset allocation you own to another address. Maximum recipients is 250.\n",
@@ -887,7 +885,9 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetallocationsendmany", "\"[{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\",\"true\"")
         }
     }.Check(request);
-
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -1018,8 +1018,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 }
 
 UniValue assetallocationburn(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
     RPCHelpMan{"assetallocationburn",
         "\nBurn an asset allocation in order to use the bridge or move back to Syscoin\n",
@@ -1038,7 +1036,9 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetallocationburn", "\"asset_guid\", \"amount\", \"ethereum_destination_address\"")
         }
     }.Check(request);
-
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -1129,8 +1129,6 @@ std::vector<unsigned char> ushortToBytes(unsigned short paramShort) {
 }
 
 UniValue assetallocationmint(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
     RPCHelpMan{"assetallocationmint",
         "\nMint assetallocation to come back from the bridge\n",
@@ -1157,7 +1155,9 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetallocationmint", "\"asset_guid\", \"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\"")
         }
     }.Check(request);
-
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -1310,9 +1310,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 }
 
 UniValue convertaddresswallet(const JSONRPCRequest& request) {	
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);	
-    CWallet* const pwallet = wallet.get();	
-    if (!pwallet) return NullUniValue;	
+
     RPCHelpMan{"convertaddresswallet",
     "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3. Adds to wallet as receiving address under label specified.",   
     {	
@@ -1331,7 +1329,9 @@ UniValue convertaddresswallet(const JSONRPCRequest& request) {
         HelpExampleCli("convertaddresswallet", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\" \"bob\" true")	
         + HelpExampleRpc("convertaddresswallet", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\" \"bob\" true")	
     }}.Check(request);	
-
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
 
     UniValue ret(UniValue::VOBJ);	
     CTxDestination dest = DecodeDestination(request.params[0].get_str());	
@@ -1400,9 +1400,6 @@ UniValue convertaddresswallet(const JSONRPCRequest& request) {
 
 
 UniValue listunspentasset(const JSONRPCRequest& request) {	
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);	
-    CWallet* const pwallet = wallet.get();	
-    if (!pwallet) return NullUniValue;
     RPCHelpMan{"listunspentasset",
     "\nHelper function which just calls listunspent to find unspent UTXO's for an asset.",   
     {	
@@ -1416,6 +1413,7 @@ UniValue listunspentasset(const JSONRPCRequest& request) {
         HelpExampleCli("listunspentasset", "2328882 0")	
         + HelpExampleRpc("listunspentasset", "2328882 0")	
     }}.Check(request);	
+
     uint32_t nAsset = request.params[0].get_uint();
     int nMinDepth = 1;
     if (!request.params[1].isNull()) {
@@ -1557,9 +1555,6 @@ ReservedKeysForMining g_mining_keys;
 
 UniValue getauxblock(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!pwallet) return NullUniValue;
 
     /* RPCHelpMan::Check is not applicable here since we have the
        custom check for exactly zero or two arguments.  */
@@ -1598,7 +1593,9 @@ UniValue getauxblock(const JSONRPCRequest& request)
                     + HelpExampleRpc("getauxblock", "")
                 },
             }.ToString());
-
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
     }
