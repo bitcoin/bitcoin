@@ -230,6 +230,7 @@ extern const char *GETBLOCKTXN;
  * @since protocol version 70014 as described by BIP 152
  */
 extern const char *BLOCKTXN;
+
 };
 
 /* Get a vector of all valid message types (see above) */

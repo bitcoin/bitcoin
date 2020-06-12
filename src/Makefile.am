@@ -114,6 +114,7 @@ VBK_H = \
   vbk/merkle.hpp \
   vbk/genesis.hpp \
   vbk/altchainparam.hpp \
+  vbk/p2p_sync.hpp \
   vbk/util.hpp \
   vbk/adaptors/univalue_json.hpp
 ### VeriBlock section end
@@ -329,6 +330,8 @@ libbitcoin_server_a_SOURCES = \
   rest.cpp \
   vbk/rpc_register.hpp \
   vbk/rpc_register.cpp \
+  vbk/p2p_sync.hpp \
+  vbk/p2p_sync.cpp \
   rpc/blockchain.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \

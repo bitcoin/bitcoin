@@ -7,7 +7,6 @@
 
 #include <chrono>
 #include <memory>
-#include <thread>
 
 #include <amount.h>
 #include <chain.h>
@@ -15,9 +14,6 @@
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <script/interpreter.h>
-#include <script/sigcache.h>
-#include <shutdown.h>
 #include <streams.h>
 #include <util/strencodings.h>
 #include <validation.h>
