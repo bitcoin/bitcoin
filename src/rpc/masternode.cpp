@@ -36,10 +36,6 @@ UniValue voteraw(const JSONRPCRequest& request);
 
 UniValue masternode(const JSONRPCRequest& request)
 {
-    #ifdef ENABLE_WALLET
-    std::shared_ptr<CWallet> wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* pwallet = wallet.get();
-    #endif // ENABLE_WALLET
     std::string strCommand;
     if (request.params.size() >= 1) {
         strCommand = request.params[0].get_str();
@@ -87,7 +83,11 @@ UniValue masternode(const JSONRPCRequest& request)
                         + HelpExampleRpc("masternode", "list")
                     },
                 }.ToString());
-
+    #ifdef ENABLE_WALLET
+    std::shared_ptr<CWallet> wallet = GetWalletForJSONRPCRequest(request);
+    if(!wallet) return NullUniValue;
+    CWallet* pwallet = wallet.get();
+    #endif // ENABLE_WALLET
     if (strCommand == "list")
     {
         JSONRPCRequest newRequest = request;
@@ -194,7 +194,6 @@ UniValue masternode(const JSONRPCRequest& request)
 #ifdef ENABLE_WALLET
     if (strCommand == "initialize")
     {
-        if (!pwallet) return NullUniValue;
         NodeContext& node = EnsureNodeContext(request.context);
         if(!node.connman)
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -252,7 +251,6 @@ UniValue masternode(const JSONRPCRequest& request)
         if(!node.connman)
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
  
-        if (!pwallet) return NullUniValue;
 
         {
             LOCK(pwallet->cs_wallet);
@@ -354,7 +352,6 @@ UniValue masternode(const JSONRPCRequest& request)
 
 #ifdef ENABLE_WALLET
     if (strCommand == "outputs") {
-       if (!pwallet) return NullUniValue;
         LOCK(pwallet->cs_wallet);
         // Find possible candidates
         std::vector<COutput> vPossibleCoins;
@@ -634,10 +631,6 @@ bool DecodeHexVecMnb(std::vector<CMasternodeBroadcast>& vecMnb, std::string strH
 
 UniValue masternodebroadcast(const JSONRPCRequest& request)
 {
-    #ifdef ENABLE_WALLET
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    #endif // ENABLE_WALLET
     std::string strCommand;
     if (request.params.size() >= 1)
         strCommand = request.params[0].get_str();
@@ -669,9 +662,12 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
                 }.ToString());
 
 #ifdef ENABLE_WALLET
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
     if (strCommand == "create-name")
     {
-        if (!pwallet) return NullUniValue;
+        
 
         // wait for reindex and/or import to finish
         if (fImporting || fReindex)
@@ -724,7 +720,6 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
 
     if (strCommand == "create-all")
     {
-        if (!pwallet) return NullUniValue;
 
         // wait for reindex and/or import to finish
         if (fImporting || fReindex)

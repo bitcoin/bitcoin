@@ -35,10 +35,6 @@ UniValue gobject(const JSONRPCRequest& request);
 UniValue voteraw(const JSONRPCRequest& request);
 UniValue gobject(const JSONRPCRequest& request)
 {
-    #ifdef ENABLE_WALLET
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    #endif // ENABLE_WALLET
     std::string strCommand;
     if (request.params.size() >= 1)
         strCommand = request.params[0].get_str();
@@ -80,6 +76,11 @@ UniValue gobject(const JSONRPCRequest& request)
                     }
                 }.ToString());
 
+    #ifdef ENABLE_WALLET
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+    #endif // ENABLE_WALLET
 
     if(strCommand == "count") {
         std::string strMode{"json"};
@@ -156,7 +157,6 @@ UniValue gobject(const JSONRPCRequest& request)
     // PREPARE THE GOVERNANCE OBJECT BY CREATING A COLLATERAL TRANSACTION
     if(strCommand == "prepare")
     {
-        if (!pwallet) return NullUniValue;
 
         if (request.params.size() != 5) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject prepare <parent-hash> <revision> <time> <data-hex>'");
