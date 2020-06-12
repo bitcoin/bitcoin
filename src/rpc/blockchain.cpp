@@ -46,6 +46,7 @@
 #include <memory>
 #include <mutex>
 // SYSCOIN
+#include <wallet/context.h>
 #include <services/asset.h>
 struct CUpdatedBlock
 {
@@ -59,6 +60,12 @@ static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
 NodeContext& EnsureNodeContext(const util::Ref& context)
 {
+    // SYSCOIN
+    if (context.Has<WalletContext>()) {
+        const auto& wctx = context.Get<WalletContext>();
+        if (wctx.nodeContext != nullptr)
+            return *wctx.nodeContext;
+    }
     if (!context.Has<NodeContext>()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
     }
