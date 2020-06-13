@@ -112,7 +112,7 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
 
     - stage: test
-      name: 'x86_64 Linux [GOAL: install]  [bionic]  [multiprocess]'
+      name: 'x86_64 Linux [GOAL: install]  [focal]  [multiprocess]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_multiprocess.sh"
 
