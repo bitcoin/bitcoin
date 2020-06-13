@@ -1503,27 +1503,6 @@
     "BIP66 example 4, with DERSIG"
 ],
 [
-    "0x09 0x300602010102010101",
-    "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT",
-    "DERSIG",
-    "OK",
-    "BIP66 example 4, with DERSIG, non-null DER-compliant signature"
-],
-[
-    "0",
-    "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT",
-    "DERSIG,NULLFAIL",
-    "OK",
-    "BIP66 example 4, with DERSIG and NULLFAIL"
-],
-[
-    "0x09 0x300602010102010101",
-    "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT",
-    "DERSIG,NULLFAIL",
-    "NULLFAIL",
-    "BIP66 example 4, with DERSIG and NULLFAIL, non-null DER-compliant signature"
-],
-[
     "1",
     "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG",
     "",
@@ -2515,6 +2494,30 @@
     "WITNESS_PUBKEYTYPE",
     "P2SH(P2WSH) CHECKMULTISIG with second key uncompressed and signing with the second key"
 ],
+
+["NULLFAIL tests"],
+[
+    "0x09 0x300602010102010101",
+    "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT",
+    "DERSIG",
+    "OK",
+    "BIP66 example 4, with DERSIG, non-null DER-compliant signature"
+],
+[
+    "0",
+    "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT",
+    "DERSIG,NULLFAIL",
+    "OK",
+    "BIP66 example 4, with DERSIG and NULLFAIL"
+],
+[
+    "0x09 0x300602010102010101",
+    "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT",
+    "DERSIG,NULLFAIL",
+    "NULLFAIL",
+    "BIP66 example 4, with DERSIG and NULLFAIL, non-null DER-compliant signature"
+],
+
 
 ["CHECKSEQUENCEVERIFY tests"],
 ["", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "INVALID_STACK_OPERATION", "CSV automatically fails on an empty stack"],
