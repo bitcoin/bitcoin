@@ -74,7 +74,7 @@ class TimeoutsTest(BitcoinTestFramework):
         ]
 
         with self.nodes[0].assert_debug_log(expected_msgs=expected_timeout_logs):
-            sleep(2)
+            sleep(3)
             assert not no_verack_node.connected
             assert not no_version_node.connected
             assert not no_send_node.connected
