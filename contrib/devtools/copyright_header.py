@@ -22,6 +22,7 @@ EXCLUDE = [
     'src/reverse_iterator.h',
     'src/test/fuzz/FuzzedDataProvider.h',
     'src/tinyformat.h',
+    'src/bench/nanobench.h',
     'test/functional/test_framework/bignum.py',
     # python init:
     '*__init__.py',
