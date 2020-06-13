@@ -106,7 +106,7 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
         return wallets[0];
     }
 
-    if (!HasWallets()) {
+    if (wallets.empty()) {
         throw JSONRPCError(
             RPC_METHOD_NOT_FOUND, "Method not found (wallet method is disabled because no wallet is loaded)");
     }
