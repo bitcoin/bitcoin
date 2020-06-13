@@ -410,7 +410,7 @@ void WalletInit::InitPrivateSendSettings()
     if (!HasWallets()) {
         privateSendClient.fEnablePrivateSend = privateSendClient.fPrivateSendRunning = false;
     } else {
-        privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", !fLiteMode);
+        privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", true);
         privateSendClient.fPrivateSendRunning = GetWallets()[0]->IsLocked() ? false : gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART);
     }
     privateSendClient.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);

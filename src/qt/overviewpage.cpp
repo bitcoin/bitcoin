@@ -149,7 +149,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
     // hide PS frame (helps to preserve saved size)
-    // we'll setup and make it visible in updateAdvancedPSUI() later if we are not in litemode
+    // we'll setup and make it visible in updateAdvancedPSUI() later
     ui->framePrivateSend->setVisible(false);
 
     // start with displaying the "out of sync" warnings
