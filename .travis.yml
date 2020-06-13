@@ -27,7 +27,7 @@
 
 version: ~> 1.0
 
-dist: xenial
+dist: bionic
 os: linux
 language: minimal
 arch: amd64
@@ -131,7 +131,7 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_multiprocess.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
+      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
 
