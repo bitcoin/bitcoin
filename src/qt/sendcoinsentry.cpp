@@ -82,7 +82,7 @@ void SendCoinsEntry::on_payTo_textChanged(const QString &address)
         setValue(rcp);
         ui->payTo->blockSignals(false);
     } else {
-        updateLabel(rcp.address);
+        updateLabel(address);
     }
 }
 
