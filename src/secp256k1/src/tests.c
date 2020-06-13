@@ -16,6 +16,7 @@
 
 #include "secp256k1.c"
 #include "include/secp256k1.h"
+#include "include/secp256k1_preallocated.h"
 #include "testrand_impl.h"
 
 #ifdef ENABLE_OPENSSL_TESTS
@@ -30,17 +31,6 @@ void ECDSA_SIG_get0(const ECDSA_SIG *sig, const BIGNUM **pr, const BIGNUM **ps) 
 
 #include "contrib/lax_der_parsing.c"
 #include "contrib/lax_der_privatekey_parsing.c"
-
-#if !defined(VG_CHECK)
-# if defined(VALGRIND)
-#  include <valgrind/memcheck.h>
-#  define VG_UNDEF(x,y) VALGRIND_MAKE_MEM_UNDEFINED((x),(y))
-#  define VG_CHECK(x,y) VALGRIND_CHECK_MEM_IS_DEFINED((x),(y))
-# else
-#  define VG_UNDEF(x,y)
-#  define VG_CHECK(x,y)
-# endif
-#endif
 
 static int count = 64;
 static secp256k1_context *ctx = NULL;
@@ -82,7 +72,9 @@ void random_field_element_magnitude(secp256k1_fe *fe) {
     secp256k1_fe_negate(&zero, &zero, 0);
     secp256k1_fe_mul_int(&zero, n - 1);
     secp256k1_fe_add(fe, &zero);
-    VERIFY_CHECK(fe->magnitude == n);
+#ifdef VERIFY
+    CHECK(fe->magnitude == n);
+#endif
 }
 
 void random_group_element_test(secp256k1_ge *ge) {
@@ -137,22 +129,52 @@ void random_scalar_order(secp256k1_scalar *num) {
     } while(1);
 }
 
-void run_context_tests(void) {
+void random_scalar_order_b32(unsigned char *b32) {
+    secp256k1_scalar num;
+    random_scalar_order(&num);
+    secp256k1_scalar_get_b32(b32, &num);
+}
+
+void run_context_tests(int use_prealloc) {
     secp256k1_pubkey pubkey;
     secp256k1_pubkey zero_pubkey;
     secp256k1_ecdsa_signature sig;
     unsigned char ctmp[32];
     int32_t ecount;
     int32_t ecount2;
-    secp256k1_context *none = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
-    secp256k1_context *sign = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
-    secp256k1_context *vrfy = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
-    secp256k1_context *both = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+    secp256k1_context *none;
+    secp256k1_context *sign;
+    secp256k1_context *vrfy;
+    secp256k1_context *both;
+    void *none_prealloc = NULL;
+    void *sign_prealloc = NULL;
+    void *vrfy_prealloc = NULL;
+    void *both_prealloc = NULL;
 
     secp256k1_gej pubj;
     secp256k1_ge pub;
     secp256k1_scalar msg, key, nonce;
     secp256k1_scalar sigr, sigs;
+
+    if (use_prealloc) {
+        none_prealloc = malloc(secp256k1_context_preallocated_size(SECP256K1_CONTEXT_NONE));
+        sign_prealloc = malloc(secp256k1_context_preallocated_size(SECP256K1_CONTEXT_SIGN));
+        vrfy_prealloc = malloc(secp256k1_context_preallocated_size(SECP256K1_CONTEXT_VERIFY));
+        both_prealloc = malloc(secp256k1_context_preallocated_size(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY));
+        CHECK(none_prealloc != NULL);
+        CHECK(sign_prealloc != NULL);
+        CHECK(vrfy_prealloc != NULL);
+        CHECK(both_prealloc != NULL);
+        none = secp256k1_context_preallocated_create(none_prealloc, SECP256K1_CONTEXT_NONE);
+        sign = secp256k1_context_preallocated_create(sign_prealloc, SECP256K1_CONTEXT_SIGN);
+        vrfy = secp256k1_context_preallocated_create(vrfy_prealloc, SECP256K1_CONTEXT_VERIFY);
+        both = secp256k1_context_preallocated_create(both_prealloc, SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+    } else {
+        none = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
+        sign = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+        vrfy = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
+        both = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+    }
 
     memset(&zero_pubkey, 0, sizeof(zero_pubkey));
 
@@ -163,14 +185,57 @@ void run_context_tests(void) {
     secp256k1_context_set_error_callback(sign, counting_illegal_callback_fn, NULL);
     CHECK(vrfy->error_callback.fn != sign->error_callback.fn);
 
+    /* check if sizes for cloning are consistent */
+    CHECK(secp256k1_context_preallocated_clone_size(none) == secp256k1_context_preallocated_size(SECP256K1_CONTEXT_NONE));
+    CHECK(secp256k1_context_preallocated_clone_size(sign) == secp256k1_context_preallocated_size(SECP256K1_CONTEXT_SIGN));
+    CHECK(secp256k1_context_preallocated_clone_size(vrfy) == secp256k1_context_preallocated_size(SECP256K1_CONTEXT_VERIFY));
+    CHECK(secp256k1_context_preallocated_clone_size(both) == secp256k1_context_preallocated_size(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY));
+
     /*** clone and destroy all of them to make sure cloning was complete ***/
     {
         secp256k1_context *ctx_tmp;
 
-        ctx_tmp = none; none = secp256k1_context_clone(none); secp256k1_context_destroy(ctx_tmp);
-        ctx_tmp = sign; sign = secp256k1_context_clone(sign); secp256k1_context_destroy(ctx_tmp);
-        ctx_tmp = vrfy; vrfy = secp256k1_context_clone(vrfy); secp256k1_context_destroy(ctx_tmp);
-        ctx_tmp = both; both = secp256k1_context_clone(both); secp256k1_context_destroy(ctx_tmp);
+        if (use_prealloc) {
+            /* clone into a non-preallocated context and then again into a new preallocated one. */
+            ctx_tmp = none; none = secp256k1_context_clone(none); secp256k1_context_preallocated_destroy(ctx_tmp);
+            free(none_prealloc); none_prealloc = malloc(secp256k1_context_preallocated_size(SECP256K1_CONTEXT_NONE)); CHECK(none_prealloc != NULL);
+            ctx_tmp = none; none = secp256k1_context_preallocated_clone(none, none_prealloc); secp256k1_context_destroy(ctx_tmp);
+
+            ctx_tmp = sign; sign = secp256k1_context_clone(sign); secp256k1_context_preallocated_destroy(ctx_tmp);
+            free(sign_prealloc); sign_prealloc = malloc(secp256k1_context_preallocated_size(SECP256K1_CONTEXT_SIGN)); CHECK(sign_prealloc != NULL);
+            ctx_tmp = sign; sign = secp256k1_context_preallocated_clone(sign, sign_prealloc); secp256k1_context_destroy(ctx_tmp);
+
+            ctx_tmp = vrfy; vrfy = secp256k1_context_clone(vrfy); secp256k1_context_preallocated_destroy(ctx_tmp);
+            free(vrfy_prealloc); vrfy_prealloc = malloc(secp256k1_context_preallocated_size(SECP256K1_CONTEXT_VERIFY)); CHECK(vrfy_prealloc != NULL);
+            ctx_tmp = vrfy; vrfy = secp256k1_context_preallocated_clone(vrfy, vrfy_prealloc); secp256k1_context_destroy(ctx_tmp);
+
+            ctx_tmp = both; both = secp256k1_context_clone(both); secp256k1_context_preallocated_destroy(ctx_tmp);
+            free(both_prealloc); both_prealloc = malloc(secp256k1_context_preallocated_size(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY)); CHECK(both_prealloc != NULL);
+            ctx_tmp = both; both = secp256k1_context_preallocated_clone(both, both_prealloc); secp256k1_context_destroy(ctx_tmp);
+        } else {
+            /* clone into a preallocated context and then again into a new non-preallocated one. */
+            void *prealloc_tmp;
+
+            prealloc_tmp = malloc(secp256k1_context_preallocated_size(SECP256K1_CONTEXT_NONE)); CHECK(prealloc_tmp != NULL);
+            ctx_tmp = none; none = secp256k1_context_preallocated_clone(none, prealloc_tmp); secp256k1_context_destroy(ctx_tmp);
+            ctx_tmp = none; none = secp256k1_context_clone(none); secp256k1_context_preallocated_destroy(ctx_tmp);
+            free(prealloc_tmp);
+
+            prealloc_tmp = malloc(secp256k1_context_preallocated_size(SECP256K1_CONTEXT_SIGN)); CHECK(prealloc_tmp != NULL);
+            ctx_tmp = sign; sign = secp256k1_context_preallocated_clone(sign, prealloc_tmp); secp256k1_context_destroy(ctx_tmp);
+            ctx_tmp = sign; sign = secp256k1_context_clone(sign); secp256k1_context_preallocated_destroy(ctx_tmp);
+            free(prealloc_tmp);
+
+            prealloc_tmp = malloc(secp256k1_context_preallocated_size(SECP256K1_CONTEXT_VERIFY)); CHECK(prealloc_tmp != NULL);
+            ctx_tmp = vrfy; vrfy = secp256k1_context_preallocated_clone(vrfy, prealloc_tmp); secp256k1_context_destroy(ctx_tmp);
+            ctx_tmp = vrfy; vrfy = secp256k1_context_clone(vrfy); secp256k1_context_preallocated_destroy(ctx_tmp);
+            free(prealloc_tmp);
+
+            prealloc_tmp = malloc(secp256k1_context_preallocated_size(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY)); CHECK(prealloc_tmp != NULL);
+            ctx_tmp = both; both = secp256k1_context_preallocated_clone(both, prealloc_tmp); secp256k1_context_destroy(ctx_tmp);
+            ctx_tmp = both; both = secp256k1_context_clone(both); secp256k1_context_preallocated_destroy(ctx_tmp);
+            free(prealloc_tmp);
+        }
     }
 
     /* Verify that the error callback makes it across the clone. */
@@ -229,10 +294,6 @@ void run_context_tests(void) {
     secp256k1_context_set_illegal_callback(vrfy, NULL, NULL);
     secp256k1_context_set_illegal_callback(sign, NULL, NULL);
 
-    /* This shouldn't leak memory, due to already-set tests. */
-    secp256k1_ecmult_gen_context_build(&sign->ecmult_gen_ctx, NULL);
-    secp256k1_ecmult_context_build(&vrfy->ecmult_ctx, NULL);
-
     /* obtain a working nonce */
     do {
         random_scalar_order_test(&nonce);
@@ -247,49 +308,95 @@ void run_context_tests(void) {
     CHECK(secp256k1_ecdsa_sig_verify(&both->ecmult_ctx, &sigr, &sigs, &pub, &msg));
 
     /* cleanup */
-    secp256k1_context_destroy(none);
-    secp256k1_context_destroy(sign);
-    secp256k1_context_destroy(vrfy);
-    secp256k1_context_destroy(both);
+    if (use_prealloc) {
+        secp256k1_context_preallocated_destroy(none);
+        secp256k1_context_preallocated_destroy(sign);
+        secp256k1_context_preallocated_destroy(vrfy);
+        secp256k1_context_preallocated_destroy(both);
+        free(none_prealloc);
+        free(sign_prealloc);
+        free(vrfy_prealloc);
+        free(both_prealloc);
+    } else {
+        secp256k1_context_destroy(none);
+        secp256k1_context_destroy(sign);
+        secp256k1_context_destroy(vrfy);
+        secp256k1_context_destroy(both);
+    }
     /* Defined as no-op. */
     secp256k1_context_destroy(NULL);
+    secp256k1_context_preallocated_destroy(NULL);
+
 }
 
 void run_scratch_tests(void) {
+    const size_t adj_alloc = ((500 + ALIGNMENT - 1) / ALIGNMENT) * ALIGNMENT;
+
     int32_t ecount = 0;
+    size_t checkpoint;
+    size_t checkpoint_2;
     secp256k1_context *none = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     secp256k1_scratch_space *scratch;
+    secp256k1_scratch_space local_scratch;
 
     /* Test public API */
     secp256k1_context_set_illegal_callback(none, counting_illegal_callback_fn, &ecount);
+    secp256k1_context_set_error_callback(none, counting_illegal_callback_fn, &ecount);
 
     scratch = secp256k1_scratch_space_create(none, 1000);
     CHECK(scratch != NULL);
     CHECK(ecount == 0);
 
     /* Test internal API */
-    CHECK(secp256k1_scratch_max_allocation(scratch, 0) == 1000);
-    CHECK(secp256k1_scratch_max_allocation(scratch, 1) < 1000);
+    CHECK(secp256k1_scratch_max_allocation(&none->error_callback, scratch, 0) == 1000);
+    CHECK(secp256k1_scratch_max_allocation(&none->error_callback, scratch, 1) == 1000 - (ALIGNMENT - 1));
+    CHECK(scratch->alloc_size == 0);
+    CHECK(scratch->alloc_size % ALIGNMENT == 0);
 
-    /* Allocating 500 bytes with no frame fails */
-    CHECK(secp256k1_scratch_alloc(scratch, 500) == NULL);
-    CHECK(secp256k1_scratch_max_allocation(scratch, 0) == 1000);
+    /* Allocating 500 bytes succeeds */
+    checkpoint = secp256k1_scratch_checkpoint(&none->error_callback, scratch);
+    CHECK(secp256k1_scratch_alloc(&none->error_callback, scratch, 500) != NULL);
+    CHECK(secp256k1_scratch_max_allocation(&none->error_callback, scratch, 0) == 1000 - adj_alloc);
+    CHECK(secp256k1_scratch_max_allocation(&none->error_callback, scratch, 1) == 1000 - adj_alloc - (ALIGNMENT - 1));
+    CHECK(scratch->alloc_size != 0);
+    CHECK(scratch->alloc_size % ALIGNMENT == 0);
 
-    /* ...but pushing a new stack frame does affect the max allocation */
-    CHECK(secp256k1_scratch_allocate_frame(scratch, 500, 1 == 1));
-    CHECK(secp256k1_scratch_max_allocation(scratch, 1) < 500); /* 500 - ALIGNMENT */
-    CHECK(secp256k1_scratch_alloc(scratch, 500) != NULL);
-    CHECK(secp256k1_scratch_alloc(scratch, 500) == NULL);
+    /* Allocating another 500 bytes fails */
+    CHECK(secp256k1_scratch_alloc(&none->error_callback, scratch, 500) == NULL);
+    CHECK(secp256k1_scratch_max_allocation(&none->error_callback, scratch, 0) == 1000 - adj_alloc);
+    CHECK(secp256k1_scratch_max_allocation(&none->error_callback, scratch, 1) == 1000 - adj_alloc - (ALIGNMENT - 1));
+    CHECK(scratch->alloc_size != 0);
+    CHECK(scratch->alloc_size % ALIGNMENT == 0);
 
-    CHECK(secp256k1_scratch_allocate_frame(scratch, 500, 1) == 0);
+    /* ...but it succeeds once we apply the checkpoint to undo it */
+    secp256k1_scratch_apply_checkpoint(&none->error_callback, scratch, checkpoint);
+    CHECK(scratch->alloc_size == 0);
+    CHECK(secp256k1_scratch_max_allocation(&none->error_callback, scratch, 0) == 1000);
+    CHECK(secp256k1_scratch_alloc(&none->error_callback, scratch, 500) != NULL);
+    CHECK(scratch->alloc_size != 0);
 
-    /* ...and this effect is undone by popping the frame */
-    secp256k1_scratch_deallocate_frame(scratch);
-    CHECK(secp256k1_scratch_max_allocation(scratch, 0) == 1000);
-    CHECK(secp256k1_scratch_alloc(scratch, 500) == NULL);
+    /* try to apply a bad checkpoint */
+    checkpoint_2 = secp256k1_scratch_checkpoint(&none->error_callback, scratch);
+    secp256k1_scratch_apply_checkpoint(&none->error_callback, scratch, checkpoint);
+    CHECK(ecount == 0);
+    secp256k1_scratch_apply_checkpoint(&none->error_callback, scratch, checkpoint_2); /* checkpoint_2 is after checkpoint */
+    CHECK(ecount == 1);
+    secp256k1_scratch_apply_checkpoint(&none->error_callback, scratch, (size_t) -1); /* this is just wildly invalid */
+    CHECK(ecount == 2);
+
+    /* try to use badly initialized scratch space */
+    secp256k1_scratch_space_destroy(none, scratch);
+    memset(&local_scratch, 0, sizeof(local_scratch));
+    scratch = &local_scratch;
+    CHECK(!secp256k1_scratch_max_allocation(&none->error_callback, scratch, 0));
+    CHECK(ecount == 3);
+    CHECK(secp256k1_scratch_alloc(&none->error_callback, scratch, 500) == NULL);
+    CHECK(ecount == 4);
+    secp256k1_scratch_space_destroy(none, scratch);
+    CHECK(ecount == 5);
 
     /* cleanup */
-    secp256k1_scratch_space_destroy(scratch);
+    secp256k1_scratch_space_destroy(none, NULL); /* no-op */
     secp256k1_context_destroy(none);
 }
 
@@ -965,10 +1072,30 @@ void scalar_test(void) {
 
 }
 
+void run_scalar_set_b32_seckey_tests(void) {
+    unsigned char b32[32];
+    secp256k1_scalar s1;
+    secp256k1_scalar s2;
+
+    /* Usually set_b32 and set_b32_seckey give the same result */
+    random_scalar_order_b32(b32);
+    secp256k1_scalar_set_b32(&s1, b32, NULL);
+    CHECK(secp256k1_scalar_set_b32_seckey(&s2, b32) == 1);
+    CHECK(secp256k1_scalar_eq(&s1, &s2) == 1);
+
+    memset(b32, 0, sizeof(b32));
+    CHECK(secp256k1_scalar_set_b32_seckey(&s2, b32) == 0);
+    memset(b32, 0xFF, sizeof(b32));
+    CHECK(secp256k1_scalar_set_b32_seckey(&s2, b32) == 0);
+}
+
 void run_scalar_tests(void) {
     int i;
     for (i = 0; i < 128 * count; i++) {
         scalar_test();
+    }
+    for (i = 0; i < count; i++) {
+        run_scalar_set_b32_seckey_tests();
     }
 
     {
@@ -985,16 +1112,43 @@ void run_scalar_tests(void) {
 
 #ifndef USE_NUM_NONE
     {
-        /* A scalar with value of the curve order should be 0. */
+        /* Test secp256k1_scalar_set_b32 boundary conditions */
         secp256k1_num order;
-        secp256k1_scalar zero;
+        secp256k1_scalar scalar;
         unsigned char bin[32];
+        unsigned char bin_tmp[32];
         int overflow = 0;
+        /* 2^256-1 - order */
+        static const secp256k1_scalar all_ones_minus_order = SECP256K1_SCALAR_CONST(
+            0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000001UL,
+            0x45512319UL, 0x50B75FC4UL, 0x402DA173UL, 0x2FC9BEBEUL
+        );
+
+        /* A scalar set to 0s should be 0. */
+        memset(bin, 0, 32);
+        secp256k1_scalar_set_b32(&scalar, bin, &overflow);
+        CHECK(overflow == 0);
+        CHECK(secp256k1_scalar_is_zero(&scalar));
+
+        /* A scalar with value of the curve order should be 0. */
         secp256k1_scalar_order_get_num(&order);
         secp256k1_num_get_bin(bin, 32, &order);
-        secp256k1_scalar_set_b32(&zero, bin, &overflow);
+        secp256k1_scalar_set_b32(&scalar, bin, &overflow);
         CHECK(overflow == 1);
-        CHECK(secp256k1_scalar_is_zero(&zero));
+        CHECK(secp256k1_scalar_is_zero(&scalar));
+
+        /* A scalar with value of the curve order minus one should not overflow. */
+        bin[31] -= 1;
+        secp256k1_scalar_set_b32(&scalar, bin, &overflow);
+        CHECK(overflow == 0);
+        secp256k1_scalar_get_b32(bin_tmp, &scalar);
+        CHECK(memcmp(bin, bin_tmp, 32) == 0);
+
+        /* A scalar set to all 1s should overflow. */
+        memset(bin, 0xFF, 32);
+        secp256k1_scalar_set_b32(&scalar, bin, &overflow);
+        CHECK(overflow == 1);
+        CHECK(secp256k1_scalar_eq(&scalar, &all_ones_minus_order));
     }
 #endif
 
@@ -1709,24 +1863,32 @@ void run_field_misc(void) {
         /* Test fe conditional move; z is not normalized here. */
         q = x;
         secp256k1_fe_cmov(&x, &z, 0);
-        VERIFY_CHECK(!x.normalized && x.magnitude == z.magnitude);
+#ifdef VERIFY
+        CHECK(x.normalized && x.magnitude == 1);
+#endif
         secp256k1_fe_cmov(&x, &x, 1);
         CHECK(fe_memcmp(&x, &z) != 0);
         CHECK(fe_memcmp(&x, &q) == 0);
         secp256k1_fe_cmov(&q, &z, 1);
-        VERIFY_CHECK(!q.normalized && q.magnitude == z.magnitude);
+#ifdef VERIFY
+        CHECK(!q.normalized && q.magnitude == z.magnitude);
+#endif
         CHECK(fe_memcmp(&q, &z) == 0);
         secp256k1_fe_normalize_var(&x);
         secp256k1_fe_normalize_var(&z);
         CHECK(!secp256k1_fe_equal_var(&x, &z));
         secp256k1_fe_normalize_var(&q);
         secp256k1_fe_cmov(&q, &z, (i&1));
-        VERIFY_CHECK(q.normalized && q.magnitude == 1);
+#ifdef VERIFY
+        CHECK(q.normalized && q.magnitude == 1);
+#endif
         for (j = 0; j < 6; j++) {
             secp256k1_fe_negate(&z, &z, j+1);
             secp256k1_fe_normalize_var(&q);
             secp256k1_fe_cmov(&q, &z, (j&1));
-            VERIFY_CHECK(!q.normalized && q.magnitude == (j+2));
+#ifdef VERIFY
+            CHECK((q.normalized != (j&1)) && q.magnitude == ((j&1) ? z.magnitude : 1));
+#endif
         }
         secp256k1_fe_normalize_var(&z);
         /* Test storage conversion and conditional moves. */
@@ -2120,7 +2282,7 @@ void test_ge(void) {
     /* Test batch gej -> ge conversion with many infinities. */
     for (i = 0; i < 4 * runs + 1; i++) {
         random_group_element_test(&ge[i]);
-        /* randomly set half the points to infinitiy */
+        /* randomly set half the points to infinity */
         if(secp256k1_fe_is_odd(&ge[i].x)) {
             secp256k1_ge_set_infinity(&ge[i]);
         }
@@ -2572,14 +2734,13 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
     secp256k1_gej r;
     secp256k1_gej r2;
     ecmult_multi_data data;
-    secp256k1_scratch *scratch_empty;
 
     data.sc = sc;
     data.pt = pt;
     secp256k1_scalar_set_int(&szero, 0);
 
     /* No points to multiply */
-    CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, NULL, ecmult_multi_callback, &data, 0));
+    CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, NULL, ecmult_multi_callback, &data, 0));
 
     /* Check 1- and 2-point multiplies against ecmult */
     for (ncount = 0; ncount < count; ncount++) {
@@ -2595,36 +2756,31 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
 
         /* only G scalar */
         secp256k1_ecmult(&ctx->ecmult_ctx, &r2, &ptgj, &szero, &sc[0]);
-        CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &sc[0], ecmult_multi_callback, &data, 0));
+        CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &sc[0], ecmult_multi_callback, &data, 0));
         secp256k1_gej_neg(&r2, &r2);
         secp256k1_gej_add_var(&r, &r, &r2, NULL);
         CHECK(secp256k1_gej_is_infinity(&r));
 
         /* 1-point */
         secp256k1_ecmult(&ctx->ecmult_ctx, &r2, &ptgj, &sc[0], &szero);
-        CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 1));
+        CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 1));
         secp256k1_gej_neg(&r2, &r2);
         secp256k1_gej_add_var(&r, &r, &r2, NULL);
         CHECK(secp256k1_gej_is_infinity(&r));
 
-        /* Try to multiply 1 point, but scratch space is empty */
-        scratch_empty = secp256k1_scratch_create(&ctx->error_callback, 0);
-        CHECK(!ecmult_multi(&ctx->ecmult_ctx, scratch_empty, &r, &szero, ecmult_multi_callback, &data, 1));
-        secp256k1_scratch_destroy(scratch_empty);
-
         /* Try to multiply 1 point, but callback returns false */
-        CHECK(!ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_false_callback, &data, 1));
+        CHECK(!ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_false_callback, &data, 1));
 
         /* 2-point */
         secp256k1_ecmult(&ctx->ecmult_ctx, &r2, &ptgj, &sc[0], &sc[1]);
-        CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 2));
+        CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 2));
         secp256k1_gej_neg(&r2, &r2);
         secp256k1_gej_add_var(&r, &r, &r2, NULL);
         CHECK(secp256k1_gej_is_infinity(&r));
 
         /* 2-point with G scalar */
         secp256k1_ecmult(&ctx->ecmult_ctx, &r2, &ptgj, &sc[0], &sc[1]);
-        CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &sc[1], ecmult_multi_callback, &data, 1));
+        CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &sc[1], ecmult_multi_callback, &data, 1));
         secp256k1_gej_neg(&r2, &r2);
         secp256k1_gej_add_var(&r, &r, &r2, NULL);
         CHECK(secp256k1_gej_is_infinity(&r));
@@ -2641,7 +2797,7 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
                 random_scalar_order(&sc[i]);
                 secp256k1_ge_set_infinity(&pt[i]);
             }
-            CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, sizes[j]));
+            CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, sizes[j]));
             CHECK(secp256k1_gej_is_infinity(&r));
         }
 
@@ -2651,7 +2807,7 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
                 pt[i] = ptg;
                 secp256k1_scalar_set_int(&sc[i], 0);
             }
-            CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, sizes[j]));
+            CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, sizes[j]));
             CHECK(secp256k1_gej_is_infinity(&r));
         }
 
@@ -2664,7 +2820,7 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
                 pt[2 * i + 1] = ptg;
             }
 
-            CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, sizes[j]));
+            CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, sizes[j]));
             CHECK(secp256k1_gej_is_infinity(&r));
 
             random_scalar_order(&sc[0]);
@@ -2677,7 +2833,7 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
                 secp256k1_ge_neg(&pt[2*i+1], &pt[2*i]);
             }
 
-            CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, sizes[j]));
+            CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, sizes[j]));
             CHECK(secp256k1_gej_is_infinity(&r));
         }
 
@@ -2692,7 +2848,7 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
             secp256k1_scalar_negate(&sc[i], &sc[i]);
         }
 
-        CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 32));
+        CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 32));
         CHECK(secp256k1_gej_is_infinity(&r));
     }
 
@@ -2711,7 +2867,7 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
         }
 
         secp256k1_ecmult(&ctx->ecmult_ctx, &r2, &r, &sc[0], &szero);
-        CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 20));
+        CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 20));
         secp256k1_gej_neg(&r2, &r2);
         secp256k1_gej_add_var(&r, &r, &r2, NULL);
         CHECK(secp256k1_gej_is_infinity(&r));
@@ -2734,7 +2890,7 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
 
         secp256k1_gej_set_ge(&p0j, &pt[0]);
         secp256k1_ecmult(&ctx->ecmult_ctx, &r2, &p0j, &rs, &szero);
-        CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 20));
+        CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 20));
         secp256k1_gej_neg(&r2, &r2);
         secp256k1_gej_add_var(&r, &r, &r2, NULL);
         CHECK(secp256k1_gej_is_infinity(&r));
@@ -2747,13 +2903,13 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
     }
 
     secp256k1_scalar_clear(&sc[0]);
-    CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 20));
+    CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 20));
     secp256k1_scalar_clear(&sc[1]);
     secp256k1_scalar_clear(&sc[2]);
     secp256k1_scalar_clear(&sc[3]);
     secp256k1_scalar_clear(&sc[4]);
-    CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 6));
-    CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 5));
+    CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 6));
+    CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &szero, ecmult_multi_callback, &data, 5));
     CHECK(secp256k1_gej_is_infinity(&r));
 
     /* Run through s0*(t0*P) + s1*(t1*P) exhaustively for many small values of s0, s1, t0, t1 */
@@ -2798,7 +2954,7 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
                         secp256k1_scalar_add(&tmp1, &tmp1, &tmp2);
 
                         secp256k1_ecmult(&ctx->ecmult_ctx, &expected, &ptgj, &tmp1, &szero);
-                        CHECK(ecmult_multi(&ctx->ecmult_ctx, scratch, &actual, &szero, ecmult_multi_callback, &data, 2));
+                        CHECK(ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &actual, &szero, ecmult_multi_callback, &data, 2));
                         secp256k1_gej_neg(&expected, &expected);
                         secp256k1_gej_add_var(&actual, &actual, &expected, NULL);
                         CHECK(secp256k1_gej_is_infinity(&actual));
@@ -2807,6 +2963,24 @@ void test_ecmult_multi(secp256k1_scratch *scratch, secp256k1_ecmult_multi_func e
             }
         }
     }
+}
+
+void test_ecmult_multi_batch_single(secp256k1_ecmult_multi_func ecmult_multi) {
+    secp256k1_scalar szero;
+    secp256k1_scalar sc[32];
+    secp256k1_ge pt[32];
+    secp256k1_gej r;
+    ecmult_multi_data data;
+    secp256k1_scratch *scratch_empty;
+
+    data.sc = sc;
+    data.pt = pt;
+    secp256k1_scalar_set_int(&szero, 0);
+
+    /* Try to multiply 1 point, but scratch space is empty.*/
+    scratch_empty = secp256k1_scratch_create(&ctx->error_callback, 0);
+    CHECK(!ecmult_multi(&ctx->error_callback, &ctx->ecmult_ctx, scratch_empty, &r, &szero, ecmult_multi_callback, &data, 1));
+    secp256k1_scratch_destroy(&ctx->error_callback, scratch_empty);
 }
 
 void test_secp256k1_pippenger_bucket_window_inv(void) {
@@ -2839,17 +3013,27 @@ void test_ecmult_multi_pippenger_max_points(void) {
     int bucket_window = 0;
 
     for(; scratch_size < max_size; scratch_size+=256) {
+        size_t i;
+        size_t total_alloc;
+        size_t checkpoint;
         scratch = secp256k1_scratch_create(&ctx->error_callback, scratch_size);
         CHECK(scratch != NULL);
-        n_points_supported = secp256k1_pippenger_max_points(scratch);
+        checkpoint = secp256k1_scratch_checkpoint(&ctx->error_callback, scratch);
+        n_points_supported = secp256k1_pippenger_max_points(&ctx->error_callback, scratch);
         if (n_points_supported == 0) {
-            secp256k1_scratch_destroy(scratch);
+            secp256k1_scratch_destroy(&ctx->error_callback, scratch);
             continue;
         }
         bucket_window = secp256k1_pippenger_bucket_window(n_points_supported);
-        CHECK(secp256k1_scratch_allocate_frame(scratch, secp256k1_pippenger_scratch_size(n_points_supported, bucket_window), PIPPENGER_SCRATCH_OBJECTS));
-        secp256k1_scratch_deallocate_frame(scratch);
-        secp256k1_scratch_destroy(scratch);
+        /* allocate `total_alloc` bytes over `PIPPENGER_SCRATCH_OBJECTS` many allocations */
+        total_alloc = secp256k1_pippenger_scratch_size(n_points_supported, bucket_window);
+        for (i = 0; i < PIPPENGER_SCRATCH_OBJECTS - 1; i++) {
+            CHECK(secp256k1_scratch_alloc(&ctx->error_callback, scratch, 1));
+            total_alloc--;
+        }
+        CHECK(secp256k1_scratch_alloc(&ctx->error_callback, scratch, total_alloc));
+        secp256k1_scratch_apply_checkpoint(&ctx->error_callback, scratch, checkpoint);
+        secp256k1_scratch_destroy(&ctx->error_callback, scratch);
     }
     CHECK(bucket_window == PIPPENGER_MAX_BUCKET_WINDOW);
 }
@@ -2932,19 +3116,25 @@ void test_ecmult_multi_batching(void) {
     }
     data.sc = sc;
     data.pt = pt;
+    secp256k1_gej_neg(&r2, &r2);
 
-    /* Test with empty scratch space */
+    /* Test with empty scratch space. It should compute the correct result using
+     * ecmult_mult_simple algorithm which doesn't require a scratch space. */
     scratch = secp256k1_scratch_create(&ctx->error_callback, 0);
-    CHECK(!secp256k1_ecmult_multi_var(&ctx->ecmult_ctx, scratch, &r, &scG, ecmult_multi_callback, &data, 1));
-    secp256k1_scratch_destroy(scratch);
+    CHECK(secp256k1_ecmult_multi_var(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &scG, ecmult_multi_callback, &data, n_points));
+    secp256k1_gej_add_var(&r, &r, &r2, NULL);
+    CHECK(secp256k1_gej_is_infinity(&r));
+    secp256k1_scratch_destroy(&ctx->error_callback, scratch);
 
     /* Test with space for 1 point in pippenger. That's not enough because
-     * ecmult_multi selects strauss which requires more memory. */
+     * ecmult_multi selects strauss which requires more memory. It should
+     * therefore select the simple algorithm. */
     scratch = secp256k1_scratch_create(&ctx->error_callback, secp256k1_pippenger_scratch_size(1, 1) + PIPPENGER_SCRATCH_OBJECTS*ALIGNMENT);
-    CHECK(!secp256k1_ecmult_multi_var(&ctx->ecmult_ctx, scratch, &r, &scG, ecmult_multi_callback, &data, 1));
-    secp256k1_scratch_destroy(scratch);
+    CHECK(secp256k1_ecmult_multi_var(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &scG, ecmult_multi_callback, &data, n_points));
+    secp256k1_gej_add_var(&r, &r, &r2, NULL);
+    CHECK(secp256k1_gej_is_infinity(&r));
+    secp256k1_scratch_destroy(&ctx->error_callback, scratch);
 
-    secp256k1_gej_neg(&r2, &r2);
     for(i = 1; i <= n_points; i++) {
         if (i > ECMULT_PIPPENGER_THRESHOLD) {
             int bucket_window = secp256k1_pippenger_bucket_window(i);
@@ -2954,10 +3144,10 @@ void test_ecmult_multi_batching(void) {
             size_t scratch_size = secp256k1_strauss_scratch_size(i);
             scratch = secp256k1_scratch_create(&ctx->error_callback, scratch_size + STRAUSS_SCRATCH_OBJECTS*ALIGNMENT);
         }
-        CHECK(secp256k1_ecmult_multi_var(&ctx->ecmult_ctx, scratch, &r, &scG, ecmult_multi_callback, &data, n_points));
+        CHECK(secp256k1_ecmult_multi_var(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &r, &scG, ecmult_multi_callback, &data, n_points));
         secp256k1_gej_add_var(&r, &r, &r2, NULL);
         CHECK(secp256k1_gej_is_infinity(&r));
-        secp256k1_scratch_destroy(scratch);
+        secp256k1_scratch_destroy(&ctx->error_callback, scratch);
     }
     free(sc);
     free(pt);
@@ -2972,13 +3162,15 @@ void run_ecmult_multi_tests(void) {
     test_ecmult_multi(scratch, secp256k1_ecmult_multi_var);
     test_ecmult_multi(NULL, secp256k1_ecmult_multi_var);
     test_ecmult_multi(scratch, secp256k1_ecmult_pippenger_batch_single);
+    test_ecmult_multi_batch_single(secp256k1_ecmult_pippenger_batch_single);
     test_ecmult_multi(scratch, secp256k1_ecmult_strauss_batch_single);
-    secp256k1_scratch_destroy(scratch);
+    test_ecmult_multi_batch_single(secp256k1_ecmult_strauss_batch_single);
+    secp256k1_scratch_destroy(&ctx->error_callback, scratch);
 
     /* Run test_ecmult_multi with space for exactly one point */
     scratch = secp256k1_scratch_create(&ctx->error_callback, secp256k1_strauss_scratch_size(1) + STRAUSS_SCRATCH_OBJECTS*ALIGNMENT);
     test_ecmult_multi(scratch, secp256k1_ecmult_multi_var);
-    secp256k1_scratch_destroy(scratch);
+    secp256k1_scratch_destroy(&ctx->error_callback, scratch);
 
     test_ecmult_multi_batch_size_helper();
     test_ecmult_multi_batching();
@@ -3050,7 +3242,7 @@ void test_constant_wnaf(const secp256k1_scalar *number, int w) {
     }
     bits = 128;
 #endif
-    skew = secp256k1_wnaf_const(wnaf, num, w, bits);
+    skew = secp256k1_wnaf_const(wnaf, &num, w, bits);
 
     for (i = WNAF_SIZE_BITS(bits, w); i >= 0; --i) {
         secp256k1_scalar t;
@@ -3786,37 +3978,57 @@ void run_eckey_edge_case_test(void) {
     pubkey_negone = pubkey;
     /* Tweak of zero leaves the value unchanged. */
     memset(ctmp2, 0, 32);
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp, ctmp2) == 1);
+    CHECK(secp256k1_ec_seckey_tweak_add(ctx, ctmp, ctmp2) == 1);
     CHECK(memcmp(orderc, ctmp, 31) == 0 && ctmp[31] == 0x40);
     memcpy(&pubkey2, &pubkey, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, ctmp2) == 1);
     CHECK(memcmp(&pubkey, &pubkey2, sizeof(pubkey)) == 0);
     /* Multiply tweak of zero zeroizes the output. */
-    CHECK(secp256k1_ec_privkey_tweak_mul(ctx, ctmp, ctmp2) == 0);
+    CHECK(secp256k1_ec_seckey_tweak_mul(ctx, ctmp, ctmp2) == 0);
     CHECK(memcmp(zeros, ctmp, 32) == 0);
     CHECK(secp256k1_ec_pubkey_tweak_mul(ctx, &pubkey, ctmp2) == 0);
     CHECK(memcmp(&pubkey, zeros, sizeof(pubkey)) == 0);
     memcpy(&pubkey, &pubkey2, sizeof(pubkey));
-    /* Overflowing key tweak zeroizes. */
+    /* If seckey_tweak_add or seckey_tweak_mul are called with an overflowing
+    seckey, the seckey is zeroized. */
+    memcpy(ctmp, orderc, 32);
+    memset(ctmp2, 0, 32);
+    ctmp2[31] = 0x01;
+    CHECK(secp256k1_ec_seckey_verify(ctx, ctmp2) == 1);
+    CHECK(secp256k1_ec_seckey_verify(ctx, ctmp) == 0);
+    CHECK(secp256k1_ec_seckey_tweak_add(ctx, ctmp, ctmp2) == 0);
+    CHECK(memcmp(zeros, ctmp, 32) == 0);
+    memcpy(ctmp, orderc, 32);
+    CHECK(secp256k1_ec_seckey_tweak_mul(ctx, ctmp, ctmp2) == 0);
+    CHECK(memcmp(zeros, ctmp, 32) == 0);
+    /* If seckey_tweak_add or seckey_tweak_mul are called with an overflowing
+    tweak, the seckey is zeroized. */
     memcpy(ctmp, orderc, 32);
     ctmp[31] = 0x40;
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp, orderc) == 0);
+    CHECK(secp256k1_ec_seckey_tweak_add(ctx, ctmp, orderc) == 0);
     CHECK(memcmp(zeros, ctmp, 32) == 0);
     memcpy(ctmp, orderc, 32);
     ctmp[31] = 0x40;
-    CHECK(secp256k1_ec_privkey_tweak_mul(ctx, ctmp, orderc) == 0);
+    CHECK(secp256k1_ec_seckey_tweak_mul(ctx, ctmp, orderc) == 0);
     CHECK(memcmp(zeros, ctmp, 32) == 0);
     memcpy(ctmp, orderc, 32);
     ctmp[31] = 0x40;
+    /* If pubkey_tweak_add or pubkey_tweak_mul are called with an overflowing
+    tweak, the pubkey is zeroized. */
     CHECK(secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, orderc) == 0);
     CHECK(memcmp(&pubkey, zeros, sizeof(pubkey)) == 0);
     memcpy(&pubkey, &pubkey2, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_tweak_mul(ctx, &pubkey, orderc) == 0);
     CHECK(memcmp(&pubkey, zeros, sizeof(pubkey)) == 0);
     memcpy(&pubkey, &pubkey2, sizeof(pubkey));
-    /* Private key tweaks results in a key of zero. */
+    /* If the resulting key in secp256k1_ec_seckey_tweak_add and
+     * secp256k1_ec_pubkey_tweak_add is 0 the functions fail and in the latter
+     * case the pubkey is zeroized. */
+    memcpy(ctmp, orderc, 32);
+    ctmp[31] = 0x40;
+    memset(ctmp2, 0, 32);
     ctmp2[31] = 1;
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp2, ctmp) == 0);
+    CHECK(secp256k1_ec_seckey_tweak_add(ctx, ctmp2, ctmp) == 0);
     CHECK(memcmp(zeros, ctmp2, 32) == 0);
     ctmp2[31] = 1;
     CHECK(secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, ctmp2) == 0);
@@ -3824,7 +4036,7 @@ void run_eckey_edge_case_test(void) {
     memcpy(&pubkey, &pubkey2, sizeof(pubkey));
     /* Tweak computation wraps and results in a key of 1. */
     ctmp2[31] = 2;
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp2, ctmp) == 1);
+    CHECK(secp256k1_ec_seckey_tweak_add(ctx, ctmp2, ctmp) == 1);
     CHECK(memcmp(ctmp2, zeros, 31) == 0 && ctmp2[31] == 1);
     ctmp2[31] = 2;
     CHECK(secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, ctmp2) == 1);
@@ -3872,16 +4084,16 @@ void run_eckey_edge_case_test(void) {
     CHECK(ecount == 2);
     ecount = 0;
     memset(ctmp2, 0, 32);
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, NULL, ctmp2) == 0);
+    CHECK(secp256k1_ec_seckey_tweak_add(ctx, NULL, ctmp2) == 0);
     CHECK(ecount == 1);
-    CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp, NULL) == 0);
+    CHECK(secp256k1_ec_seckey_tweak_add(ctx, ctmp, NULL) == 0);
     CHECK(ecount == 2);
     ecount = 0;
     memset(ctmp2, 0, 32);
     ctmp2[31] = 1;
-    CHECK(secp256k1_ec_privkey_tweak_mul(ctx, NULL, ctmp2) == 0);
+    CHECK(secp256k1_ec_seckey_tweak_mul(ctx, NULL, ctmp2) == 0);
     CHECK(ecount == 1);
-    CHECK(secp256k1_ec_privkey_tweak_mul(ctx, ctmp, NULL) == 0);
+    CHECK(secp256k1_ec_seckey_tweak_mul(ctx, ctmp, NULL) == 0);
     CHECK(ecount == 2);
     ecount = 0;
     CHECK(secp256k1_ec_pubkey_create(ctx, NULL, ctmp) == 0);
@@ -3952,6 +4164,41 @@ void run_eckey_edge_case_test(void) {
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
     CHECK(ecount == 3);
     secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
+}
+
+void run_eckey_negate_test(void) {
+    unsigned char seckey[32];
+    unsigned char seckey_tmp[32];
+
+    random_scalar_order_b32(seckey);
+    memcpy(seckey_tmp, seckey, 32);
+
+    /* Verify negation changes the key and changes it back */
+    CHECK(secp256k1_ec_seckey_negate(ctx, seckey) == 1);
+    CHECK(memcmp(seckey, seckey_tmp, 32) != 0);
+    CHECK(secp256k1_ec_seckey_negate(ctx, seckey) == 1);
+    CHECK(memcmp(seckey, seckey_tmp, 32) == 0);
+
+    /* Check that privkey alias gives same result */
+    CHECK(secp256k1_ec_seckey_negate(ctx, seckey) == 1);
+    CHECK(secp256k1_ec_privkey_negate(ctx, seckey_tmp) == 1);
+    CHECK(memcmp(seckey, seckey_tmp, 32) == 0);
+
+    /* Negating all 0s fails */
+    memset(seckey, 0, 32);
+    memset(seckey_tmp, 0, 32);
+    CHECK(secp256k1_ec_seckey_negate(ctx, seckey) == 0);
+    /* Check that seckey is not modified */
+    CHECK(memcmp(seckey, seckey_tmp, 32) == 0);
+
+    /* Negating an overflowing seckey fails and the seckey is zeroed. In this
+     * test, the seckey has 16 random bytes to ensure that ec_seckey_negate
+     * doesn't just set seckey to a constant value in case of failure. */
+    random_scalar_order_b32(seckey);
+    memset(seckey, 0xFF, 16);
+    memset(seckey_tmp, 0, 32);
+    CHECK(secp256k1_ec_seckey_negate(ctx, seckey) == 0);
+    CHECK(memcmp(seckey, seckey_tmp, 32) == 0);
 }
 
 void random_sign(secp256k1_scalar *sigr, secp256k1_scalar *sigs, const secp256k1_scalar *key, const secp256k1_scalar *msg, int *recid) {
@@ -4093,15 +4340,22 @@ void test_ecdsa_end_to_end(void) {
     if (secp256k1_rand_int(3) == 0) {
         int ret1;
         int ret2;
+        int ret3;
         unsigned char rnd[32];
+        unsigned char privkey_tmp[32];
         secp256k1_pubkey pubkey2;
         secp256k1_rand256_test(rnd);
-        ret1 = secp256k1_ec_privkey_tweak_add(ctx, privkey, rnd);
+        memcpy(privkey_tmp, privkey, 32);
+        ret1 = secp256k1_ec_seckey_tweak_add(ctx, privkey, rnd);
         ret2 = secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, rnd);
+        /* Check that privkey alias gives same result */
+        ret3 = secp256k1_ec_privkey_tweak_add(ctx, privkey_tmp, rnd);
         CHECK(ret1 == ret2);
+        CHECK(ret2 == ret3);
         if (ret1 == 0) {
             return;
         }
+        CHECK(memcmp(privkey, privkey_tmp, 32) == 0);
         CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey2, privkey) == 1);
         CHECK(memcmp(&pubkey, &pubkey2, sizeof(pubkey)) == 0);
     }
@@ -4110,15 +4364,22 @@ void test_ecdsa_end_to_end(void) {
     if (secp256k1_rand_int(3) == 0) {
         int ret1;
         int ret2;
+        int ret3;
         unsigned char rnd[32];
+        unsigned char privkey_tmp[32];
         secp256k1_pubkey pubkey2;
         secp256k1_rand256_test(rnd);
-        ret1 = secp256k1_ec_privkey_tweak_mul(ctx, privkey, rnd);
+        memcpy(privkey_tmp, privkey, 32);
+        ret1 = secp256k1_ec_seckey_tweak_mul(ctx, privkey, rnd);
         ret2 = secp256k1_ec_pubkey_tweak_mul(ctx, &pubkey, rnd);
+        /* Check that privkey alias gives same result */
+        ret3 = secp256k1_ec_privkey_tweak_mul(ctx, privkey_tmp, rnd);
         CHECK(ret1 == ret2);
+        CHECK(ret2 == ret3);
         if (ret1 == 0) {
             return;
         }
+        CHECK(memcmp(privkey, privkey_tmp, 32) == 0);
         CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey2, privkey) == 1);
         CHECK(memcmp(&pubkey, &pubkey2, sizeof(pubkey)) == 0);
     }
@@ -4315,7 +4576,7 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
     if (valid_der) {
         ret |= (!roundtrips_der_lax) << 12;
         ret |= (len_der != len_der_lax) << 13;
-        ret |= (memcmp(roundtrip_der_lax, roundtrip_der, len_der) != 0) << 14;
+        ret |= ((len_der != len_der_lax) || (memcmp(roundtrip_der_lax, roundtrip_der, len_der) != 0)) << 14;
     }
     ret |= (roundtrips_der != roundtrips_der_lax) << 15;
     if (parsed_der) {
@@ -4356,7 +4617,7 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
     ret |= (roundtrips_der != roundtrips_openssl) << 7;
     if (roundtrips_openssl) {
         ret |= (len_der != (size_t)len_openssl) << 8;
-        ret |= (memcmp(roundtrip_der, roundtrip_openssl, len_der) != 0) << 9;
+        ret |= ((len_der != (size_t)len_openssl) || (memcmp(roundtrip_der, roundtrip_openssl, len_der) != 0)) << 9;
     }
 #endif
     return ret;
@@ -5016,9 +5277,188 @@ void run_ecdsa_openssl(void) {
 # include "modules/recovery/tests_impl.h"
 #endif
 
+void run_memczero_test(void) {
+    unsigned char buf1[6] = {1, 2, 3, 4, 5, 6};
+    unsigned char buf2[sizeof(buf1)];
+
+    /* memczero(..., ..., 0) is a noop. */
+    memcpy(buf2, buf1, sizeof(buf1));
+    memczero(buf1, sizeof(buf1), 0);
+    CHECK(memcmp(buf1, buf2, sizeof(buf1)) == 0);
+
+    /* memczero(..., ..., 1) zeros the buffer. */
+    memset(buf2, 0, sizeof(buf2));
+    memczero(buf1, sizeof(buf1) , 1);
+    CHECK(memcmp(buf1, buf2, sizeof(buf1)) == 0);
+}
+
+void int_cmov_test(void) {
+    int r = INT_MAX;
+    int a = 0;
+
+    secp256k1_int_cmov(&r, &a, 0);
+    CHECK(r == INT_MAX);
+
+    r = 0; a = INT_MAX;
+    secp256k1_int_cmov(&r, &a, 1);
+    CHECK(r == INT_MAX);
+
+    a = 0;
+    secp256k1_int_cmov(&r, &a, 1);
+    CHECK(r == 0);
+
+    a = 1;
+    secp256k1_int_cmov(&r, &a, 1);
+    CHECK(r == 1);
+
+    r = 1; a = 0;
+    secp256k1_int_cmov(&r, &a, 0);
+    CHECK(r == 1);
+
+}
+
+void fe_cmov_test(void) {
+    static const secp256k1_fe zero = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0);
+    static const secp256k1_fe one = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
+    static const secp256k1_fe max = SECP256K1_FE_CONST(
+        0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL,
+        0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL
+    );
+    secp256k1_fe r = max;
+    secp256k1_fe a = zero;
+
+    secp256k1_fe_cmov(&r, &a, 0);
+    CHECK(memcmp(&r, &max, sizeof(r)) == 0);
+
+    r = zero; a = max;
+    secp256k1_fe_cmov(&r, &a, 1);
+    CHECK(memcmp(&r, &max, sizeof(r)) == 0);
+
+    a = zero;
+    secp256k1_fe_cmov(&r, &a, 1);
+    CHECK(memcmp(&r, &zero, sizeof(r)) == 0);
+
+    a = one;
+    secp256k1_fe_cmov(&r, &a, 1);
+    CHECK(memcmp(&r, &one, sizeof(r)) == 0);
+
+    r = one; a = zero;
+    secp256k1_fe_cmov(&r, &a, 0);
+    CHECK(memcmp(&r, &one, sizeof(r)) == 0);
+}
+
+void fe_storage_cmov_test(void) {
+    static const secp256k1_fe_storage zero = SECP256K1_FE_STORAGE_CONST(0, 0, 0, 0, 0, 0, 0, 0);
+    static const secp256k1_fe_storage one = SECP256K1_FE_STORAGE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
+    static const secp256k1_fe_storage max = SECP256K1_FE_STORAGE_CONST(
+        0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL,
+        0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL
+    );
+    secp256k1_fe_storage r = max;
+    secp256k1_fe_storage a = zero;
+
+    secp256k1_fe_storage_cmov(&r, &a, 0);
+    CHECK(memcmp(&r, &max, sizeof(r)) == 0);
+
+    r = zero; a = max;
+    secp256k1_fe_storage_cmov(&r, &a, 1);
+    CHECK(memcmp(&r, &max, sizeof(r)) == 0);
+
+    a = zero;
+    secp256k1_fe_storage_cmov(&r, &a, 1);
+    CHECK(memcmp(&r, &zero, sizeof(r)) == 0);
+
+    a = one;
+    secp256k1_fe_storage_cmov(&r, &a, 1);
+    CHECK(memcmp(&r, &one, sizeof(r)) == 0);
+
+    r = one; a = zero;
+    secp256k1_fe_storage_cmov(&r, &a, 0);
+    CHECK(memcmp(&r, &one, sizeof(r)) == 0);
+}
+
+void scalar_cmov_test(void) {
+    static const secp256k1_scalar zero = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
+    static const secp256k1_scalar one = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 1);
+    static const secp256k1_scalar max = SECP256K1_SCALAR_CONST(
+        0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL,
+        0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL
+    );
+    secp256k1_scalar r = max;
+    secp256k1_scalar a = zero;
+
+    secp256k1_scalar_cmov(&r, &a, 0);
+    CHECK(memcmp(&r, &max, sizeof(r)) == 0);
+
+    r = zero; a = max;
+    secp256k1_scalar_cmov(&r, &a, 1);
+    CHECK(memcmp(&r, &max, sizeof(r)) == 0);
+
+    a = zero;
+    secp256k1_scalar_cmov(&r, &a, 1);
+    CHECK(memcmp(&r, &zero, sizeof(r)) == 0);
+
+    a = one;
+    secp256k1_scalar_cmov(&r, &a, 1);
+    CHECK(memcmp(&r, &one, sizeof(r)) == 0);
+
+    r = one; a = zero;
+    secp256k1_scalar_cmov(&r, &a, 0);
+    CHECK(memcmp(&r, &one, sizeof(r)) == 0);
+}
+
+void ge_storage_cmov_test(void) {
+    static const secp256k1_ge_storage zero = SECP256K1_GE_STORAGE_CONST(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    static const secp256k1_ge_storage one = SECP256K1_GE_STORAGE_CONST(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1);
+    static const secp256k1_ge_storage max = SECP256K1_GE_STORAGE_CONST(
+        0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL,
+        0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL,
+        0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL,
+        0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL
+    );
+    secp256k1_ge_storage r = max;
+    secp256k1_ge_storage a = zero;
+
+    secp256k1_ge_storage_cmov(&r, &a, 0);
+    CHECK(memcmp(&r, &max, sizeof(r)) == 0);
+
+    r = zero; a = max;
+    secp256k1_ge_storage_cmov(&r, &a, 1);
+    CHECK(memcmp(&r, &max, sizeof(r)) == 0);
+
+    a = zero;
+    secp256k1_ge_storage_cmov(&r, &a, 1);
+    CHECK(memcmp(&r, &zero, sizeof(r)) == 0);
+
+    a = one;
+    secp256k1_ge_storage_cmov(&r, &a, 1);
+    CHECK(memcmp(&r, &one, sizeof(r)) == 0);
+
+    r = one; a = zero;
+    secp256k1_ge_storage_cmov(&r, &a, 0);
+    CHECK(memcmp(&r, &one, sizeof(r)) == 0);
+}
+
+void run_cmov_tests(void) {
+    int_cmov_test();
+    fe_cmov_test();
+    fe_storage_cmov_test();
+    scalar_cmov_test();
+    ge_storage_cmov_test();
+}
+
 int main(int argc, char **argv) {
     unsigned char seed16[16] = {0};
     unsigned char run32[32] = {0};
+
+    /* Disable buffering for stdout to improve reliability of getting
+     * diagnostic information. Happens right at the start of main because
+     * setbuf must be used before any other operation on the stream. */
+    setbuf(stdout, NULL);
+    /* Also disable buffering for stderr because it's not guaranteed that it's
+     * unbuffered on all systems. */
+    setbuf(stderr, NULL);
+
     /* find iteration count */
     if (argc > 1) {
         count = strtol(argv[1], NULL, 0);
@@ -5030,7 +5470,7 @@ int main(int argc, char **argv) {
         const char* ch = argv[2];
         while (pos < 16 && ch[0] != 0 && ch[1] != 0) {
             unsigned short sh;
-            if (sscanf(ch, "%2hx", &sh)) {
+            if ((sscanf(ch, "%2hx", &sh)) == 1) {
                 seed16[pos] = sh;
             } else {
                 break;
@@ -5062,7 +5502,8 @@ int main(int argc, char **argv) {
     printf("random seed = %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", seed16[0], seed16[1], seed16[2], seed16[3], seed16[4], seed16[5], seed16[6], seed16[7], seed16[8], seed16[9], seed16[10], seed16[11], seed16[12], seed16[13], seed16[14], seed16[15]);
 
     /* initialize */
-    run_context_tests();
+    run_context_tests(0);
+    run_context_tests(1);
     run_scratch_tests();
     ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
     if (secp256k1_rand_bits(1)) {
@@ -5119,6 +5560,9 @@ int main(int argc, char **argv) {
     /* EC key edge cases */
     run_eckey_edge_case_test();
 
+    /* EC key arithmetic test */
+    run_eckey_negate_test();
+
 #ifdef ENABLE_MODULE_ECDH
     /* ecdh tests */
     run_ecdh_tests();
@@ -5138,6 +5582,11 @@ int main(int argc, char **argv) {
     /* ECDSA pubkey recovery tests */
     run_recovery_tests();
 #endif
+
+    /* util tests */
+    run_memczero_test();
+
+    run_cmov_tests();
 
     secp256k1_rand256(run32);
     printf("random run = %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", run32[0], run32[1], run32[2], run32[3], run32[4], run32[5], run32[6], run32[7], run32[8], run32[9], run32[10], run32[11], run32[12], run32[13], run32[14], run32[15]);

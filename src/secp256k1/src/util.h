@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <limits.h>
 
 typedef struct {
     void (*fn)(const char *text, void* data);
@@ -68,6 +69,25 @@ static SECP256K1_INLINE void secp256k1_callback_call(const secp256k1_callback * 
 #define VERIFY_SETUP(stmt)
 #endif
 
+/* Define `VG_UNDEF` and `VG_CHECK` when VALGRIND is defined  */
+#if !defined(VG_CHECK)
+# if defined(VALGRIND)
+#  include <valgrind/memcheck.h>
+#  define VG_UNDEF(x,y) VALGRIND_MAKE_MEM_UNDEFINED((x),(y))
+#  define VG_CHECK(x,y) VALGRIND_CHECK_MEM_IS_DEFINED((x),(y))
+# else
+#  define VG_UNDEF(x,y)
+#  define VG_CHECK(x,y)
+# endif
+#endif
+
+/* Like `VG_CHECK` but on VERIFY only */
+#if defined(VERIFY)
+#define VG_CHECK_VERIFY(x,y) VG_CHECK((x), (y))
+#else
+#define VG_CHECK_VERIFY(x,y)
+#endif
+
 static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_t size) {
     void *ret = malloc(size);
     if (ret == NULL) {
@@ -81,6 +101,47 @@ static SECP256K1_INLINE void *checked_realloc(const secp256k1_callback* cb, void
     if (ret == NULL) {
         secp256k1_callback_call(cb, "Out of memory");
     }
+    return ret;
+}
+
+#if defined(__BIGGEST_ALIGNMENT__)
+#define ALIGNMENT __BIGGEST_ALIGNMENT__
+#else
+/* Using 16 bytes alignment because common architectures never have alignment
+ * requirements above 8 for any of the types we care about. In addition we
+ * leave some room because currently we don't care about a few bytes. */
+#define ALIGNMENT 16
+#endif
+
+#define ROUND_TO_ALIGN(size) (((size + ALIGNMENT - 1) / ALIGNMENT) * ALIGNMENT)
+
+/* Assume there is a contiguous memory object with bounds [base, base + max_size)
+ * of which the memory range [base, *prealloc_ptr) is already allocated for usage,
+ * where *prealloc_ptr is an aligned pointer. In that setting, this functions
+ * reserves the subobject [*prealloc_ptr, *prealloc_ptr + alloc_size) of
+ * alloc_size bytes by increasing *prealloc_ptr accordingly, taking into account
+ * alignment requirements.
+ *
+ * The function returns an aligned pointer to the newly allocated subobject.
+ *
+ * This is useful for manual memory management: if we're simply given a block
+ * [base, base + max_size), the caller can use this function to allocate memory
+ * in this block and keep track of the current allocation state with *prealloc_ptr.
+ *
+ * It is VERIFY_CHECKed that there is enough space left in the memory object and
+ * *prealloc_ptr is aligned relative to base.
+ */
+static SECP256K1_INLINE void *manual_alloc(void** prealloc_ptr, size_t alloc_size, void* base, size_t max_size) {
+    size_t aligned_alloc_size = ROUND_TO_ALIGN(alloc_size);
+    void* ret;
+    VERIFY_CHECK(prealloc_ptr != NULL);
+    VERIFY_CHECK(*prealloc_ptr != NULL);
+    VERIFY_CHECK(base != NULL);
+    VERIFY_CHECK((unsigned char*)*prealloc_ptr >= (unsigned char*)base);
+    VERIFY_CHECK(((unsigned char*)*prealloc_ptr - (unsigned char*)base) % ALIGNMENT == 0);
+    VERIFY_CHECK((unsigned char*)*prealloc_ptr - (unsigned char*)base + aligned_alloc_size <= max_size);
+    ret = *prealloc_ptr;
+    *((unsigned char**)prealloc_ptr) += aligned_alloc_size;
     return ret;
 }
 
@@ -117,5 +178,34 @@ static SECP256K1_INLINE void *checked_realloc(const secp256k1_callback* cb, void
 # endif
 SECP256K1_GNUC_EXT typedef unsigned __int128 uint128_t;
 #endif
+
+/* Zero memory if flag == 1. Flag must be 0 or 1. Constant time. */
+static SECP256K1_INLINE void memczero(void *s, size_t len, int flag) {
+    unsigned char *p = (unsigned char *)s;
+    /* Access flag with a volatile-qualified lvalue.
+       This prevents clang from figuring out (after inlining) that flag can
+       take only be 0 or 1, which leads to variable time code. */
+    volatile int vflag = flag;
+    unsigned char mask = -(unsigned char) vflag;
+    while (len) {
+        *p &= ~mask;
+        p++;
+        len--;
+    }
+}
+
+/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time.  Both *r and *a must be initialized and non-negative.*/
+static SECP256K1_INLINE void secp256k1_int_cmov(int *r, const int *a, int flag) {
+    unsigned int mask0, mask1, r_masked, a_masked;
+    /* Casting a negative int to unsigned and back to int is implementation defined behavior */
+    VERIFY_CHECK(*r >= 0 && *a >= 0);
+
+    mask0 = (unsigned int)flag + ~0u;
+    mask1 = ~mask0;
+    r_masked = ((unsigned int)*r & mask0);
+    a_masked = ((unsigned int)*a & mask1);
+
+    *r = (int)(r_masked | a_masked);
+}
 
 #endif /* SECP256K1_UTIL_H */
