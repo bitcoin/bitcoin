@@ -1214,7 +1214,8 @@ static void AlertNotify(const std::string& strMessage)
     safeStatus = singleQuote+safeStatus+singleQuote;
     boost::replace_all(strCmd, "%s", safeStatus);
 
-    boost::thread t(runCommand, strCmd); // thread runs free
+    std::thread t(runCommand, strCmd);
+    t.detach(); // thread runs free
 }
 
 static void CheckForkWarningConditions()

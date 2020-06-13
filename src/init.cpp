@@ -220,6 +220,7 @@ void Interrupt()
     InterruptREST();
     InterruptTorControl();
     llmq::InterruptLLMQSystem();
+    InterruptMapPort();
     if (g_connman)
         g_connman->Interrupt();
 }
@@ -251,13 +252,15 @@ void PrepareShutdown()
     bool fRPCInWarmup = RPCIsInWarmup(&statusmessage);
 
     g_wallet_init_interface->Flush();
-    MapPort(false);
+    StopMapPort();
 
     // Because these depend on each-other, we make sure that neither can be
     // using the other before destroying them.
     if (peerLogic) UnregisterValidationInterface(peerLogic.get());
     if (g_connman) g_connman->Stop();
     // if (g_txindex) g_txindex->Stop(); //TODO watch out when backporting bitcoin#13033 (don't accidently put the reset here, as we've already backported bitcoin#13894)
+
+    StopTorControl();
 
     // After everything has been shut down, but before things get flushed, stop the
     // CScheduler/checkqueue threadGroup
@@ -378,8 +381,7 @@ void Shutdown()
     if(!fRequestRestart) {
         PrepareShutdown();
     }
-   // Shutdown part 2: Stop TOR thread and delete wallet instance
-    StopTorControl();
+    // Shutdown part 2: delete wallet instance
     g_wallet_init_interface->Close();
     globalVerifyHandle.reset();
     ECC_Stop();
@@ -695,7 +697,8 @@ static void BlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex
     std::string strCmd = gArgs.GetArg("-blocknotify", "");
     if (!strCmd.empty()) {
         boost::replace_all(strCmd, "%s", pBlockIndex->GetBlockHash().GetHex());
-        boost::thread t(runCommand, strCmd); // thread runs free
+        std::thread t(runCommand, strCmd);
+        t.detach(); // thread runs free
     }
 }
 
@@ -2221,12 +2224,14 @@ bool AppInitMain()
     }
     LogPrintf("chainActive.Height() = %d\n",   chain_active_height);
     if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
-        StartTorControl(threadGroup, scheduler);
+        StartTorControl();
 
-    Discover(threadGroup);
+    Discover();
 
     // Map ports with UPnP
-    MapPort(gArgs.GetBoolArg("-upnp", DEFAULT_UPNP));
+    if (gArgs.GetBoolArg("-upnp", DEFAULT_UPNP)) {
+        StartMapPort();
+    }
 
     CConnman::Options connOptions;
     connOptions.nLocalServices = nLocalServices;
