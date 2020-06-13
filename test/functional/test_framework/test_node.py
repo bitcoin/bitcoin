@@ -27,6 +27,7 @@ from .messages import MY_SUBVERSION
 from .util import (
     MAX_NODES,
     append_config,
+    assert_equal,
     delete_cookie_file,
     get_auth_cookie,
     get_rpc_proxy,
@@ -130,6 +131,7 @@ class TestNode():
 
         self.p2ps = []
         self.timeout_factor = timeout_factor
+        self.hdkeypathnonce =0
 
     AddressKeyPair = collections.namedtuple('AddressKeyPair', ['address', 'key'])
     PRIV_KEYS = [
@@ -294,8 +296,18 @@ class TestNode():
         self._raise_assertion_error("Unable to retrieve cookie credentials after {}s".format(self.rpc_timeout))
 
     def generate(self, nblocks, maxtries=1000000):
-        self.log.debug("TestNode.generate() dispatches `generate` call to `generatetoaddress`")
-        return self.generatetoaddress(nblocks=nblocks, address=self.get_deterministic_priv_key().address, maxtries=maxtries)
+        # if wallet is not compiled, blocks are generated to an address or descriptor using an HD seed
+        hd_address = self.getnewaddress()
+        hd_info = self.getaddressinfo(hd_address)
+        if self.getwalletinfo()["descriptors"]:
+            #TODO: figure out how to make sure the keypath does increase & is unique
+            assert_equal(hd_info["hdkeypath"], "m/84'/1'/0'/0/" + str(self.hdkeypathnonce))
+            self.hdkeypathnonce += 1 
+            self.generatetodescriptor(nblocks, hd_address, maxtries)
+        else:
+            assert_equal(hd_info["hdkeypath"], "m/0'/0'/"+str(self.hdkeypathnonce)+"'")          
+            self.hdkeypathnonce += 1
+            self.generatetoaddress(nblocks, hd_address, maxtries)
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
