@@ -60,7 +60,7 @@ class TestNode():
         self.stderr = stderr
         self.coverage_dir = coverage_dir
         self.mocktime = mocktime
-        # Most callers will just need to add extra args to the standard list below. For those callers that need more flexibity, they can just set the args property directly.
+        # Most callers will just need to add extra args to the standard list below. For those callers that need more flexibility, they can just set the args property directly.
         self.extra_args = extra_args
         self.extra_args_from_options = extra_args_from_options
         self.args = [self.binary, "-datadir=" + self.datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]

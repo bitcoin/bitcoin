@@ -187,8 +187,8 @@ class PruneTest(BitcoinTestFramework):
 
         # Verify that we have enough history to reorg back to the fork point
         # Although this is more than 288 blocks, because this chain was written more recently
-        # and only its other 299 small and 220 large block are in the block files after it,
-        # its expected to still be retained
+        # and only its other 299 small and 220 large blocks are in the block files after it,
+        # it is expected to still be retained
         self.nodes[2].getblock(self.nodes[2].getblockhash(self.forkheight))
 
         first_reorg_height = self.nodes[2].getblockcount()

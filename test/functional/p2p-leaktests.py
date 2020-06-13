@@ -7,7 +7,7 @@
 A node should never send anything other than VERSION/VERACK/REJECT until it's
 received a VERACK.
 
-This test connects to a node and sends it a few messages, trying to intice it
+This test connects to a node and sends it a few messages, trying to entice it
 into sending us something it shouldn't.
 """
 

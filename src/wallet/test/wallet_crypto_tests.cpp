@@ -10,7 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(wallet_crypto, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(wallet_crypto_tests, BasicTestingSetup)
 
 void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, const std::string &hexin, const std::string &hexout)
 {

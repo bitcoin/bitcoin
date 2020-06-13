@@ -24,21 +24,21 @@
 
 static const size_t MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
 
-enum RetFormat {
-    RF_UNDEF,
-    RF_BINARY,
-    RF_HEX,
-    RF_JSON,
+enum class RetFormat {
+    UNDEF,
+    BINARY,
+    HEX,
+    JSON,
 };
 
 static const struct {
-    enum RetFormat rf;
+    RetFormat rf;
     const char* name;
 } rf_names[] = {
-      {RF_UNDEF, ""},
-      {RF_BINARY, "bin"},
-      {RF_HEX, "hex"},
-      {RF_JSON, "json"},
+      {RetFormat::UNDEF, ""},
+      {RetFormat::BINARY, "bin"},
+      {RetFormat::HEX, "hex"},
+      {RetFormat::JSON, "json"},
 };
 
 struct CCoin {
@@ -67,7 +67,7 @@ static bool RESTERR(HTTPRequest* req, enum HTTPStatusCode status, std::string me
     return false;
 }
 
-static enum RetFormat ParseDataFormat(std::string& param, const std::string& strReq)
+static RetFormat ParseDataFormat(std::string& param, const std::string& strReq)
 {
     const std::string::size_type pos = strReq.rfind('.');
     if (pos == std::string::npos)
@@ -163,20 +163,20 @@ static bool rest_headers(HTTPRequest* req,
     }
 
     switch (rf) {
-    case RF_BINARY: {
+    case RetFormat::BINARY: {
         std::string binaryHeader = ssHeader.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
         req->WriteReply(HTTP_OK, binaryHeader);
         return true;
     }
 
-    case RF_HEX: {
+    case RetFormat::HEX: {
         std::string strHex = HexStr(ssHeader.begin(), ssHeader.end()) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);
         return true;
     }
-    case RF_JSON: {
+    case RetFormat::JSON: {
         UniValue jsonHeaders(UniValue::VARR);
         {
             LOCK(cs_main);
@@ -227,21 +227,21 @@ static bool rest_block(HTTPRequest* req,
     ssBlock << block;
 
     switch (rf) {
-    case RF_BINARY: {
+    case RetFormat::BINARY: {
         std::string binaryBlock = ssBlock.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
         req->WriteReply(HTTP_OK, binaryBlock);
         return true;
     }
 
-    case RF_HEX: {
+    case RetFormat::HEX: {
         std::string strHex = HexStr(ssBlock.begin(), ssBlock.end()) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);
         return true;
     }
 
-    case RF_JSON: {
+    case RetFormat::JSON: {
         UniValue objBlock;
         {
             LOCK(cs_main);
@@ -280,7 +280,7 @@ static bool rest_chaininfo(HTTPRequest* req, const std::string& strURIPart)
     const RetFormat rf = ParseDataFormat(param, strURIPart);
 
     switch (rf) {
-    case RF_JSON: {
+    case RetFormat::JSON: {
         JSONRPCRequest jsonRequest;
         jsonRequest.params = UniValue(UniValue::VARR);
         UniValue chainInfoObject = getblockchaininfo(jsonRequest);
@@ -303,7 +303,7 @@ static bool rest_mempool_info(HTTPRequest* req, const std::string& strURIPart)
     const RetFormat rf = ParseDataFormat(param, strURIPart);
 
     switch (rf) {
-    case RF_JSON: {
+    case RetFormat::JSON: {
         UniValue mempoolInfoObject = mempoolInfoToJSON();
 
         std::string strJSON = mempoolInfoObject.write() + "\n";
@@ -325,7 +325,7 @@ static bool rest_mempool_contents(HTTPRequest* req, const std::string& strURIPar
     const RetFormat rf = ParseDataFormat(param, strURIPart);
 
     switch (rf) {
-    case RF_JSON: {
+    case RetFormat::JSON: {
         UniValue mempoolObject = mempoolToJSON(true);
 
         std::string strJSON = mempoolObject.write() + "\n";
@@ -359,21 +359,21 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
     ssTx << tx;
 
     switch (rf) {
-    case RF_BINARY: {
+    case RetFormat::BINARY: {
         std::string binaryTx = ssTx.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
         req->WriteReply(HTTP_OK, binaryTx);
         return true;
     }
 
-    case RF_HEX: {
+    case RetFormat::HEX: {
         std::string strHex = HexStr(ssTx.begin(), ssTx.end()) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);
         return true;
     }
 
-    case RF_JSON: {
+    case RetFormat::JSON: {
         UniValue objTx(UniValue::VOBJ);
         TxToUniv(*tx, hashBlock, objTx);
         std::string strJSON = objTx.write() + "\n";
@@ -440,13 +440,13 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     }
 
     switch (rf) {
-    case RF_HEX: {
+    case RetFormat::HEX: {
         // convert hex to bin, continue then with bin part
         std::vector<unsigned char> strRequestV = ParseHex(strRequestMutable);
         strRequestMutable.assign(strRequestV.begin(), strRequestV.end());
     }
 
-    case RF_BINARY: {
+    case RetFormat::BINARY: {
         try {
             //deserialize only if user sent a request
             if (strRequestMutable.size() > 0)
@@ -466,7 +466,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         break;
     }
 
-    case RF_JSON: {
+    case RetFormat::JSON: {
         if (!fInputParsed)
             return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
         break;
@@ -513,7 +513,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     }
 
     switch (rf) {
-    case RF_BINARY: {
+    case RetFormat::BINARY: {
         // serialize data
         // use exact same output as mentioned in Bip64
         CDataStream ssGetUTXOResponse(SER_NETWORK, PROTOCOL_VERSION);
@@ -525,7 +525,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         return true;
     }
 
-    case RF_HEX: {
+    case RetFormat::HEX: {
         CDataStream ssGetUTXOResponse(SER_NETWORK, PROTOCOL_VERSION);
         ssGetUTXOResponse << chainActive.Height() << chainActive.Tip()->GetBlockHash() << bitmap << outs;
         std::string strHex = HexStr(ssGetUTXOResponse.begin(), ssGetUTXOResponse.end()) + "\n";
@@ -535,7 +535,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         return true;
     }
 
-    case RF_JSON: {
+    case RetFormat::JSON: {
         UniValue objGetUTXOResponse(UniValue::VOBJ);
 
         // pack in some essentials
