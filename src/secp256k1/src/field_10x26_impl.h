@@ -320,6 +320,7 @@ static int secp256k1_fe_cmp_var(const secp256k1_fe *a, const secp256k1_fe *b) {
 }
 
 static int secp256k1_fe_set_b32(secp256k1_fe *r, const unsigned char *a) {
+    int ret;
     r->n[0] = (uint32_t)a[31] | ((uint32_t)a[30] << 8) | ((uint32_t)a[29] << 16) | ((uint32_t)(a[28] & 0x3) << 24);
     r->n[1] = (uint32_t)((a[28] >> 2) & 0x3f) | ((uint32_t)a[27] << 6) | ((uint32_t)a[26] << 14) | ((uint32_t)(a[25] & 0xf) << 22);
     r->n[2] = (uint32_t)((a[25] >> 4) & 0xf) | ((uint32_t)a[24] << 4) | ((uint32_t)a[23] << 12) | ((uint32_t)(a[22] & 0x3f) << 20);
@@ -331,15 +332,17 @@ static int secp256k1_fe_set_b32(secp256k1_fe *r, const unsigned char *a) {
     r->n[8] = (uint32_t)a[5] | ((uint32_t)a[4] << 8) | ((uint32_t)a[3] << 16) | ((uint32_t)(a[2] & 0x3) << 24);
     r->n[9] = (uint32_t)((a[2] >> 2) & 0x3f) | ((uint32_t)a[1] << 6) | ((uint32_t)a[0] << 14);
 
-    if (r->n[9] == 0x3FFFFFUL && (r->n[8] & r->n[7] & r->n[6] & r->n[5] & r->n[4] & r->n[3] & r->n[2]) == 0x3FFFFFFUL && (r->n[1] + 0x40UL + ((r->n[0] + 0x3D1UL) >> 26)) > 0x3FFFFFFUL) {
-        return 0;
-    }
+    ret = !((r->n[9] == 0x3FFFFFUL) & ((r->n[8] & r->n[7] & r->n[6] & r->n[5] & r->n[4] & r->n[3] & r->n[2]) == 0x3FFFFFFUL) & ((r->n[1] + 0x40UL + ((r->n[0] + 0x3D1UL) >> 26)) > 0x3FFFFFFUL));
 #ifdef VERIFY
     r->magnitude = 1;
-    r->normalized = 1;
-    secp256k1_fe_verify(r);
+    if (ret) {
+        r->normalized = 1;
+        secp256k1_fe_verify(r);
+    } else {
+        r->normalized = 0;
+    }
 #endif
-    return 1;
+    return ret;
 }
 
 /** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */
@@ -1094,6 +1097,7 @@ static void secp256k1_fe_sqr(secp256k1_fe *r, const secp256k1_fe *a) {
 
 static SECP256K1_INLINE void secp256k1_fe_cmov(secp256k1_fe *r, const secp256k1_fe *a, int flag) {
     uint32_t mask0, mask1;
+    VG_CHECK_VERIFY(r->n, sizeof(r->n));
     mask0 = flag + ~((uint32_t)0);
     mask1 = ~mask0;
     r->n[0] = (r->n[0] & mask0) | (a->n[0] & mask1);
@@ -1107,15 +1111,16 @@ static SECP256K1_INLINE void secp256k1_fe_cmov(secp256k1_fe *r, const secp256k1_
     r->n[8] = (r->n[8] & mask0) | (a->n[8] & mask1);
     r->n[9] = (r->n[9] & mask0) | (a->n[9] & mask1);
 #ifdef VERIFY
-    if (a->magnitude > r->magnitude) {
+    if (flag) {
         r->magnitude = a->magnitude;
+        r->normalized = a->normalized;
     }
-    r->normalized &= a->normalized;
 #endif
 }
 
 static SECP256K1_INLINE void secp256k1_fe_storage_cmov(secp256k1_fe_storage *r, const secp256k1_fe_storage *a, int flag) {
     uint32_t mask0, mask1;
+    VG_CHECK_VERIFY(r->n, sizeof(r->n));
     mask0 = flag + ~((uint32_t)0);
     mask1 = ~mask0;
     r->n[0] = (r->n[0] & mask0) | (a->n[0] & mask1);
