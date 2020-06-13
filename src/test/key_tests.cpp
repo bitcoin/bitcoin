@@ -154,16 +154,16 @@ BOOST_AUTO_TEST_CASE(key_test1)
 
 BOOST_AUTO_TEST_CASE(key_signature_tests)
 {
-    // When entropy is specified, we should see at least one high R signature within 20 signatures
+    // When entropy is specified without grind, we should see at least one high R signature within 20 signatures
     CKey key = DecodeSecret(strSecret1);
     std::string msg = "A message to be signed";
     uint256 msg_hash = Hash(msg.begin(), msg.end());
     std::vector<unsigned char> sig;
     bool found = false;
-
     for (int i = 1; i <=20; ++i) {
+        arith_uint256 extra_entropy(i);
         sig.clear();
-        BOOST_CHECK(key.Sign(msg_hash, sig, false, i));
+        BOOST_CHECK(key.Sign(msg_hash, sig, false, &extra_entropy));
         found = sig[3] == 0x21 && sig[4] == 0x00;
         if (found) {
             break;

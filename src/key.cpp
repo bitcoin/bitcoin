@@ -207,21 +207,24 @@ bool SigHasLowR(const secp256k1_ecdsa_signature* sig)
     return compact_sig[0] < 0x80;
 }
 
-bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool grind, uint32_t test_case) const {
+bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool grind, const arith_uint256* extra_entropy_in) const {
     if (!fValid)
         return false;
     vchSig.resize(CPubKey::SIGNATURE_SIZE);
     size_t nSigLen = CPubKey::SIGNATURE_SIZE;
-    unsigned char extra_entropy[32] = {0};
-    WriteLE32(extra_entropy, test_case);
+    arith_uint256 extra_entropy;
+    if (extra_entropy_in) {
+        extra_entropy = *extra_entropy_in;
+    }
     secp256k1_ecdsa_signature sig;
-    uint32_t counter = 0;
-    int ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, (!grind && test_case) ? extra_entropy : nullptr);
+    uint256 entropy(ArithToUint256(extra_entropy));
+    int ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, (!grind && extra_entropy_in) ? entropy.begin() : nullptr);
 
     // Grind for low R
     while (ret && !SigHasLowR(&sig) && grind) {
-        WriteLE32(extra_entropy, ++counter);
-        ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, extra_entropy);
+        extra_entropy++;
+        entropy = ArithToUint256(extra_entropy);
+        ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, entropy.begin());
     }
     assert(ret);
     secp256k1_ecdsa_signature_serialize_der(secp256k1_context_sign, vchSig.data(), &nSigLen, &sig);

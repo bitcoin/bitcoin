@@ -10,6 +10,7 @@
 #include <pubkey.h>
 #include <serialize.h>
 #include <support/allocators/secure.h>
+#include <arith_uint256.h>
 #include <uint256.h>
 
 #include <stdexcept>
@@ -115,9 +116,9 @@ public:
 
     /**
      * Create a DER-serialized signature.
-     * The test_case parameter tweaks the deterministic nonce.
+     * The extra_entropy argument tweaks the deterministic nonce by the given amount.
      */
-    bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig, bool grind = true, uint32_t test_case = 0) const;
+    bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig, bool grind = true, const arith_uint256* extra_entropy = nullptr) const;
 
     /**
      * Create a compact signature (65 bytes), which allows reconstructing the used public key.
