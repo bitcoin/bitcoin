@@ -165,7 +165,7 @@ AC_ARG_ENABLE([lcov],
   [enable lcov testing (default is no)])],
   [use_lcov=$enableval],
   [use_lcov=no])
-  
+
 AC_ARG_ENABLE([lcov-branch-coverage],
   [AS_HELP_STRING([--enable-lcov-branch-coverage],
   [enable lcov testing branch coverage (default is no)])],
@@ -856,7 +856,7 @@ fi
 BITCOIN_QT_INIT
 
 dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
-BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt5])
+BITCOIN_QT_CONFIGURE([$use_pkgconfig])
 
 if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononono; then
     use_boost=no
@@ -1442,12 +1442,11 @@ case ${OS} in
    ;;
 esac
 
-echo 
+echo
 echo "Options used to compile and link:"
 echo "  with wallet         = $enable_wallet"
 echo "  with gui / qt       = $bitcoin_enable_qt"
 if test x$bitcoin_enable_qt != xno; then
-    echo "    qt version        = $bitcoin_qt_got_major_vers"
     echo "    with qr           = $use_qr"
 fi
 echo "  with zmq            = $use_zmq"
@@ -1459,7 +1458,7 @@ echo "  debug enabled       = $enable_debug"
 echo "  crash hooks enabled = $enable_crashhooks"
 echo "  miner enabled       = $enable_miner"
 echo "  werror              = $enable_werror"
-echo 
+echo
 echo "  target os           = $TARGET_OS"
 echo "  build os            = $BUILD_OS"
 echo
@@ -1470,4 +1469,4 @@ echo "  CXX                 = $CXX"
 echo "  CXXFLAGS            = $CXXFLAGS"
 echo "  LDFLAGS             = $LDFLAGS"
 echo "  ARFLAGS             = $ARFLAGS"
-echo 
+echo

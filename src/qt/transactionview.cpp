@@ -113,16 +113,12 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     hlayout->addWidget(typeWidget);
 
     search_widget = new QLineEdit(this);
-#if QT_VERSION >= 0x040700
     search_widget->setPlaceholderText(tr("Enter address, transaction id, or label to search"));
-#endif
     search_widget->setObjectName("search_widget");
     hlayout->addWidget(search_widget);
 
     amountWidget = new QLineEdit(this);
-#if QT_VERSION >= 0x040700
     amountWidget->setPlaceholderText(tr("Min amount"));
-#endif
     if (platformStyle->getUseExtraSpacing()) {
         amountWidget->setFixedWidth(118);
     } else {

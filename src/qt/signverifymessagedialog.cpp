@@ -29,9 +29,7 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformS
 {
     ui->setupUi(this);
 
-#if QT_VERSION >= 0x040700
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
-#endif
 
 #ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
     ui->signMessageButton_SM->setIcon(QIcon());
