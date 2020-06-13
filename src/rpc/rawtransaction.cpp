@@ -171,9 +171,9 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
             "  \"confirmations\" : n,      (numeric) The confirmations\n"
             "  \"time\" : ttt,             (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"blocktime\" : ttt         (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  \"instantlock\" : true|false, (bool) Current transaction lock state. Always false if litemode is enabled\n"
-            "  \"instantlock_internal\" : true|false, (bool) Current internal transaction lock state. Always false if litemode is enabled\n"
-            "  \"chainlock\" : true|false, (bool) The state of the corresponding block chainlock. Always false if litemode is enabled\n"
+            "  \"instantlock\" : true|false, (bool) Current transaction lock state\n"
+            "  \"instantlock_internal\" : true|false, (bool) Current internal transaction lock state\n"
+            "  \"chainlock\" : true|false, (bool) The state of the corresponding block chainlock\n"
             "}\n"
 
             "\nExamples:\n"
