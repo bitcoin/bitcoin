@@ -4324,7 +4324,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             if (reportDone < percentageDone/log_step) {
                 // report every 10% step if nCheckDepth is <= 1000 blocks else report every 1% step.
                 LogPrintf("[%d%%]...", percentageDone); /* Continued */
-                reportDone = percentageDone/log_step;
+                reportDone = percentageDone / log_step;
             }
             uiInterface.ShowProgress(_("Verifying blocks...").translated, percentageDone, false);
             pindex = ::ChainActive().Next(pindex);
