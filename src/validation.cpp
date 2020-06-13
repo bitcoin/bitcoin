@@ -4263,7 +4263,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     for (pindex = ::ChainActive().Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
         boost::this_thread::interruption_point();
         const int percentageDone = std::max(1, std::min(99, (int)(((double)(::ChainActive().Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
-        if (reportDone < percentageDone/log_step) {
+        if (reportDone < percentageDone / log_step) {
             // report every 10% step if nCheckDepth is <= 1000 blocks else report every 1% step.
             LogPrintf("[%d%%]...", percentageDone); /* Continued */
             reportDone = percentageDone / log_step;
