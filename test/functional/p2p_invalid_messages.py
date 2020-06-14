@@ -3,20 +3,16 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid network messages."""
-import asyncio
-
 from test_framework.messages import (
     CBlockHeader,
     CInv,
     msg_getdata,
     msg_headers,
     msg_inv,
-    msg_ping,
     MSG_TX,
     ser_string,
 )
 from test_framework.mininode import (
-    NetworkThread,
     P2PDataStore,
     P2PInterface,
 )
@@ -55,17 +51,11 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
     def test_magic_bytes(self):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-
-        async def swap_magic_bytes():
-            conn._on_data = lambda: None  # Need to ignore all incoming messages from now, since they come with "invalid" magic bytes
-            conn.magic_bytes = b'\x00\x11\x22\x32'
-
-        # Call .result() to block until the atomic swap is complete, otherwise
-        # we might run into races later on
-        asyncio.run_coroutine_threadsafe(swap_magic_bytes(), NetworkThread.network_event_loop).result()
-
-        with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: INVALID MESSAGESTART ping']):
-            conn.send_message(msg_ping(nonce=0xff))
+        with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: INVALID MESSAGESTART badmsg']):
+            msg = conn.build_message(msg_unrecognized(str_data="d"))
+            # modify magic bytes
+            msg = b'\xff' * 4 + msg[4:]
+            conn.send_raw_message(msg)
             conn.wait_for_disconnect(timeout=1)
             self.nodes[0].disconnect_p2ps()
 
@@ -73,11 +63,8 @@ class InvalidMessagesTest(BitcoinTestFramework):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         with self.nodes[0].assert_debug_log(['CHECKSUM ERROR (badmsg, 2 bytes), expected 78df0a04 was ffffffff']):
             msg = conn.build_message(msg_unrecognized(str_data="d"))
-            cut_len = (
-                4 +  # magic
-                12 +  # msgtype
-                4  #len
-            )
+            # Checksum is after start bytes (4B), message type (12B), len (4B)
+            cut_len = 4 + 12 + 4
             # modify checksum
             msg = msg[:cut_len] + b'\xff' * 4 + msg[cut_len + 4:]
             self.nodes[0].p2p.send_raw_message(msg)
@@ -88,7 +75,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         with self.nodes[0].assert_debug_log(['']):
             # Create a message with oversized payload
-            msg = msg_unrecognized(str_data="d"*(VALID_DATA_LIMIT + 1))
+            msg = msg_unrecognized(str_data="d" * (VALID_DATA_LIMIT + 1))
             msg = conn.build_message(msg)
             self.nodes[0].p2p.send_raw_message(msg)
             conn.wait_for_disconnect(timeout=1)
