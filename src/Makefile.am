@@ -446,7 +446,6 @@ libsyscoin_wallet_a_SOURCES = \
   wallet/coinselection.cpp \
   rpc/governance.cpp \
   rpc/masternode.cpp \
-  rpc/auxpow_miner.cpp \
   services/rpc/wallet/assetwalletrpc.cpp \
   masternodeconfig.cpp \
   $(SYSCOIN_CORE_H)
@@ -664,8 +663,8 @@ syscoin_daemon_sources += syscoind-res.rc
 endif
 
 syscoin_bin_ldadd = \
-  $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_WALLET) \
+  $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_UTIL) \
   $(LIBUNIVALUE) \
