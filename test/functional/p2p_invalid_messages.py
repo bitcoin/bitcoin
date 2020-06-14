@@ -7,6 +7,9 @@
 from test_framework.messages import (
     CBlockHeader,
     CInv,
+    MAX_HEADERS_RESULTS,
+    MAX_INV_SIZE,
+    MAX_PROTOCOL_MESSAGE_LENGTH,
     msg_getdata,
     msg_headers,
     msg_inv,
@@ -24,8 +27,7 @@ from test_framework.util import (
     wait_until,
 )
 
-MSG_LIMIT = 4 * 1000 * 1000  # 4MB, per MAX_PROTOCOL_MESSAGE_LENGTH
-VALID_DATA_LIMIT = MSG_LIMIT - 5  # Account for the 5-byte length prefix
+VALID_DATA_LIMIT = MAX_PROTOCOL_MESSAGE_LENGTH - 5  # Account for the 5-byte length prefix
 
 class msg_unrecognized:
     """Nonsensical message. Modeled after similar types in test_framework.messages."""
@@ -132,20 +134,23 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
     def test_oversized_inv_msg(self):
-        self.test_oversized_msg(msg_inv([CInv(MSG_TX, 1)] * 50001), 50001)
+        size = MAX_INV_SIZE + 1
+        self.test_oversized_msg(msg_inv([CInv(MSG_TX, 1)] * size), size)
 
     def test_oversized_getdata_msg(self):
-        self.test_oversized_msg(msg_getdata([CInv(MSG_TX, 1)] * 50001), 50001)
+        size = MAX_INV_SIZE + 1
+        self.test_oversized_msg(msg_getdata([CInv(MSG_TX, 1)] * size), size)
 
     def test_oversized_headers_msg(self):
-        self.test_oversized_msg(msg_headers([CBlockHeader()] * 2001), 2001)
+        size = MAX_HEADERS_RESULTS + 1
+        self.test_oversized_msg(msg_headers([CBlockHeader()] * size), size)
 
     def test_resource_exhaustion(self):
         self.log.info("Test node stays up despite many large junk messages")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         conn2 = self.nodes[0].add_p2p_connection(P2PDataStore())
         msg_at_size = msg_unrecognized(str_data="b" * VALID_DATA_LIMIT)
-        assert len(msg_at_size.serialize()) == MSG_LIMIT
+        assert len(msg_at_size.serialize()) == MAX_PROTOCOL_MESSAGE_LENGTH
 
         self.log.info("(a) Send 80 messages, each of maximum valid data size (4MB)")
         for _ in range(80):
