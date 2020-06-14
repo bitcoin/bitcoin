@@ -407,9 +407,9 @@ std::set<uint256> CWallet::GetConflicts(const uint256& txid) const
 
     for (const CTxIn& txin : wtx.tx->vin)
     {
-        if (mapTxSpends.count(txin.prevout) <= 1)
-            continue;  // No conflict if zero or one spends
         range = mapTxSpends.equal_range(txin.prevout);
+        // No conflict if zero or one spends
+        if (range.first == range.second || std::next(range.first) == range.second) continue;
         for (TxSpends::const_iterator _it = range.first; _it != range.second; ++_it)
             result.insert(_it->second);
     }
