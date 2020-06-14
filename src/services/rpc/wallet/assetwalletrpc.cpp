@@ -640,7 +640,9 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     theAsset.voutAssets.emplace_back(nAsset, outVec);
 
     theAsset.nBalance = nBalance;
-    // prev flags is set in clearasset()
+    if(heAsset.nUpdateFlags != nUpdateFlags) {
+        theAsset.nPrevUpdateFlags = theAsset.nUpdateFlags;
+    }
     theAsset.nUpdateFlags = nUpdateFlags;
 
     std::vector<unsigned char> data;

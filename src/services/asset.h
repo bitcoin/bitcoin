@@ -56,7 +56,7 @@ public:
         vchPrevContract.clear();
         voutAssets.clear();
         strSymbol.clear();
-        nPrevUpdateFlags = nUpdateFlags;
+        nPrevUpdateFlags = 0;
         nBalance = 0;
         nTotalSupply = 0;
         nMaxSupply = 0;

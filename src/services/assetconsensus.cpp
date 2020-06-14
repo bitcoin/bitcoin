@@ -484,13 +484,13 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     }
     CAsset& storedAssetRef = mapAsset->second;    
     if(theAsset.nBalance > 0) {
+        if(theAsset.nBalance > storedAssetRef.nBalance || theAsset.nBalance > storedAssetRef.nTotalSupply) {
+            LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Asset cannot be negative: Balance %lld, Supply: %lld payload %lld\n",storedAssetRef.nBalance, storedAssetRef.nTotalSupply, theAsset.nBalance);
+            return false;
+        }  
         // reverse asset minting by the issuer
         storedAssetRef.nBalance -= theAsset.nBalance;
-        storedAssetRef.nTotalSupply -= theAsset.nBalance;
-        if(storedAssetRef.nBalance < 0 || storedAssetRef.nTotalSupply < 0) {
-            LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Asset cannot be negative: Balance %lld, Supply: %lld\n",storedAssetRef.nBalance, storedAssetRef.nTotalSupply);
-            return false;
-        }                                        
+        storedAssetRef.nTotalSupply -= theAsset.nBalance;                                      
     }
     // undo data fields from last update
     // if fields changed then undo them using prev fields
