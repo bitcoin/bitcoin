@@ -57,7 +57,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.test_resource_exhaustion()
 
     def test_buffer(self):
-        self.log.info("Test message with header split across two buffers, should be received")
+        self.log.info("Test message with header split across two buffers is received")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         # Create valid message
         msg = conn.build_message(msg_ping(nonce=12345))
@@ -76,6 +76,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
     def test_magic_bytes(self):
+        self.log.info("Test message with invalid magic bytes disconnects peer")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: INVALID MESSAGESTART badmsg']):
             msg = conn.build_message(msg_unrecognized(str_data="d"))
@@ -86,6 +87,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             self.nodes[0].disconnect_p2ps()
 
     def test_checksum(self):
+        self.log.info("Test message with invalid checksum logs an error")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         with self.nodes[0].assert_debug_log(['CHECKSUM ERROR (badmsg, 2 bytes), expected 78df0a04 was ffffffff']):
             msg = conn.build_message(msg_unrecognized(str_data="d"))
@@ -98,9 +100,9 @@ class InvalidMessagesTest(BitcoinTestFramework):
             self.nodes[0].disconnect_p2ps()
 
     def test_size(self):
+        self.log.info("Test message with oversized payload disconnects peer")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         with self.nodes[0].assert_debug_log(['']):
-            # Create a message with oversized payload
             msg = msg_unrecognized(str_data="d" * (VALID_DATA_LIMIT + 1))
             msg = conn.build_message(msg)
             self.nodes[0].p2p.send_raw_message(msg)
@@ -108,6 +110,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             self.nodes[0].disconnect_p2ps()
 
     def test_msgtype(self):
+        self.log.info("Test message with invalid message type logs an error")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: ERRORS IN HEADER']):
             msg = msg_unrecognized(str_data="d")
@@ -120,6 +123,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             self.nodes[0].disconnect_p2ps()
 
     def test_large_inv(self):
+        self.log.info("Test oversized inv/getdata/headers messages are logged as misbehaving")
         conn = self.nodes[0].add_p2p_connection(P2PInterface())
         with self.nodes[0].assert_debug_log(['Misbehaving', '(0 -> 20): inv message size = 50001']):
             msg = msg_inv([CInv(MSG_TX, 1)] * 50001)
@@ -133,25 +137,26 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
     def test_resource_exhaustion(self):
+        self.log.info("Test node stays up despite many large junk messages")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         conn2 = self.nodes[0].add_p2p_connection(P2PDataStore())
         msg_at_size = msg_unrecognized(str_data="b" * VALID_DATA_LIMIT)
         assert len(msg_at_size.serialize()) == MSG_LIMIT
 
-        self.log.info("Sending a bunch of large, junk messages to test memory exhaustion. May take a bit...")
-
-        # Run a bunch of times to test for memory exhaustion.
+        self.log.info("(a) Send 80 messages, each of maximum valid data size (4MB)")
         for _ in range(80):
             conn.send_message(msg_at_size)
 
         # Check that, even though the node is being hammered by nonsense from one
         # connection, it can still service other peers in a timely way.
+        self.log.info("(b) Check node still services peers in a timely way")
         for _ in range(20):
             conn2.sync_with_ping(timeout=2)
 
-        # Peer 1, despite being served up a bunch of nonsense, should still be connected.
-        self.log.info("Waiting for node to drop junk messages.")
+        self.log.info("(c) Wait for node to drop junk messages, while remaining connected")
         conn.sync_with_ping(timeout=400)
+
+        # Peer 1, despite being served up a bunch of nonsense, should still be connected.
         assert conn.is_connected
         self.nodes[0].disconnect_p2ps()
 
