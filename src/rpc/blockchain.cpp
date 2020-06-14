@@ -458,8 +458,7 @@ void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
         spent.push_back(childiter->GetTx().GetHash().ToString());
     }
 
-    info.push_back(Pair("spentby", spent))
-    ;
+    info.push_back(Pair("spentby", spent));
     info.push_back(Pair("instantlock", llmq::quorumInstantSendManager->IsLocked(tx.GetHash())));
 }
 
