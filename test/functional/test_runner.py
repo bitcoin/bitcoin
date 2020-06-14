@@ -198,6 +198,7 @@ def main():
                                      epilog='''
     Help text and arguments for individual test script:''',
                                      formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('--combinedlogslen', '-c', type=int, default=0, help='print a combined log (of length n lines) from all test nodes and test framework to the console on failure.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
     parser.add_argument('--ci', action='store_true', help='Run checks and code that are usually only enabled in a continuous integration environment')
     parser.add_argument('--exclude', '-x', help='specify a comma-separated-list of scripts to exclude.')
@@ -303,9 +304,10 @@ def main():
         args=passon_args,
         failfast=args.failfast,
         runs_ci=args.ci,
+        combined_logs_len=args.combinedlogslen,
     )
 
-def run_tests(*, test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=None, failfast=False, runs_ci):
+def run_tests(*, test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=None, failfast=False, runs_ci, combined_logs_len=0):
     args = args or []
 
     # Warn if dashd is already running (unix only)
@@ -373,14 +375,14 @@ def run_tests(*, test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_c
             print("\n%s%s%s failed, Duration: %s s\n" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
             print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
             print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
-            if os.getenv("PYTHON_DEBUG", "") and os.path.isdir(testdir):
-                # Print the logs on travis, so they are preserved when the vm is disposed
-                print('{}Combine the logs and print the last {} lines ...{}'.format(BOLD[1], 4000, BOLD[0]))
+            if combined_logs_len and os.path.isdir(testdir):
+                # Print the final `combinedlogslen` lines of the combined logs
+                print('{}Combine the logs and print the last {} lines ...{}'.format(BOLD[1], combined_logs_len, BOLD[0]))
                 print('\n============')
                 print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
                 print('============\n')
                 combined_logs, _ = subprocess.Popen([sys.executable, os.path.join(tests_dir, 'combine_logs.py'), '-c', testdir], universal_newlines=True, stdout=subprocess.PIPE).communicate()
-                print("\n".join(deque(combined_logs.splitlines(), 4000)))
+                print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
 
             if failfast:
                 logging.debug("Early exiting after test failure")

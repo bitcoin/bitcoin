@@ -283,8 +283,8 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(mempool[2]["txid"], memtxid2)
         assert_equal(mempool[2]["index"], 1)
 
-        self.nodes[2].generate(1);
-        self.sync_all();
+        self.nodes[2].generate(1)
+        self.sync_all()
         mempool2 = self.nodes[2].getaddressmempool({"addresses": [address3]})
         assert_equal(len(mempool2), 0)
 

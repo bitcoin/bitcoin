@@ -13,7 +13,6 @@ from test_framework.util import (
 )
 import json
 import os
-import time
 
 TESTSDIR = os.path.dirname(os.path.realpath(__file__))
 

@@ -7,8 +7,6 @@
 If an stale block more than a month old or its header are requested by a peer,
 the node should pretend that it does not have it to avoid fingerprinting.
 """
-import threading
-
 import time
 
 from test_framework.blocktools import (create_block, create_coinbase)

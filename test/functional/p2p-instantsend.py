@@ -5,7 +5,7 @@
 
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import isolate_node, sync_mempools, reconnect_isolated_node, assert_equal, \
+from test_framework.util import isolate_node, reconnect_isolated_node, assert_equal, \
     assert_raises_rpc_error
 
 '''

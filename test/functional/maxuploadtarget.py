@@ -11,7 +11,6 @@ if uploadtarget has been reached.
 * Verify that the upload counters are reset after 24 hours.
 """
 from collections import defaultdict
-import time
 
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework

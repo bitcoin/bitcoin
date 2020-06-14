@@ -5,7 +5,6 @@
 """Test block processing."""
 import copy
 import struct
-import time
 
 from test_framework.blocktools import create_block, create_coinbase, create_transaction, get_legacy_sigopcount_block
 from test_framework.key import CECKey

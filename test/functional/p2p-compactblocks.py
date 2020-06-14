@@ -209,14 +209,14 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # This code should be enabled after increasing cmctblk version
         #if old_node is not None:
-            # Verify that a peer using an older protocol version can receive
-            # announcements from this node.
-            #sendcmpct.version = preferred_version-1
-            #sendcmpct.announce = True
-            #old_node.send_and_ping(sendcmpct)
-            # Header sync
-            #old_node.request_headers_and_sync(locator=[tip])
-            #check_announcement_of_new_block(node, old_node, lambda p: "cmpctblock" in p.last_message)
+        #    Verify that a peer using an older protocol version can receive
+        #    announcements from this node.
+        #   sendcmpct.version = preferred_version-1
+        #   sendcmpct.announce = True
+        #   old_node.send_and_ping(sendcmpct)
+        #    Header sync
+        #   old_node.request_headers_and_sync(locator=[tip])
+        #   check_announcement_of_new_block(node, old_node, lambda p: "cmpctblock" in p.last_message)
 
     # This test actually causes dashd to (reasonably!) disconnect us, so do this last.
     def test_invalid_cmpctblock_message(self):

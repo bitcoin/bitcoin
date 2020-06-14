@@ -2,11 +2,9 @@
 # Copyright (c) 2015-2020 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-from collections import namedtuple
-
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import p2p_port, assert_equal, sync_blocks
+from test_framework.util import assert_equal
 
 '''
 dip4-coinbasemerkleroots.py

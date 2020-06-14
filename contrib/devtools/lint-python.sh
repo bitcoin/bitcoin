@@ -27,7 +27,7 @@
 # E703 statement ends with a semicolon
 # E714 test for object identity should be "is not"
 # E721 do not compare types, use "isinstance()"
-# E741 do not use variables named "l", "O", or "I"
+# E741 do not use variables named "l", "O", or "I" # disabled
 # E742 do not define classes named "l", "O", or "I"
 # E743 do not define functions named "l", "O", or "I"
 # F401 module imported but unused
@@ -53,11 +53,11 @@
 # F823 local variable name … referenced before assignment
 # F831 duplicate argument name in function definition
 # W292 no newline at end of file
-# W504 line break after binary operator
+# W504 line break after binary operator # disabled
 # W601 .has_key() is deprecated, use "in"
 # W602 deprecated form of raising exception
 # W603 "<>" is deprecated, use "!="
 # W604 backticks are deprecated, use "repr()"
-# W605 invalid escape sequence "x"
+# W605 invalid escape sequence "x" # disabled
 
-flake8 --ignore=B,C,E,F,I,N,W --select=E112,E113,E115,E116,E125,E131,E133,E223,E224,E271,E272,E273,E274,E275,E304,E306,E502,E702,E703,E714,E721,E741,E742,E743,F401,F402,F404,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F822,F823,F831,W292,W504,W601,W602,W603,W604,W605 .
+git ls-files "*.py" | xargs flake8 --ignore=B,C,E,F,I,N,W --select=E112,E113,E115,E116,E125,E131,E133,E223,E224,E271,E272,E273,E274,E275,E304,E306,E502,E702,E703,E714,E721,E742,E743,F401,F402,F404,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F822,F823,F831,W292,W601,W602,W603,W604 #,E741,W504,W605

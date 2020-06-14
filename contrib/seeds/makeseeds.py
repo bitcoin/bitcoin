@@ -20,7 +20,6 @@ import sys
 import dns.resolver
 import collections
 import json
-import time
 import multiprocessing
 
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")

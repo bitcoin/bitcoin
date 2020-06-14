@@ -1,10 +1,6 @@
 #!/usr/bin/python
 #
 
-try:
-    import gdb
-except ImportError as e:
-    raise ImportError("This script must be run in GDB: ", str(e))
 import sys
 import os
 sys.path.append(os.getcwd())
