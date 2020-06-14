@@ -21,8 +21,6 @@ if [ -n "$USE_VALGRIND" ]; then
   END_FOLD
 fi
 
-bash -c "${CI_WAIT}" &  # Print dots in case the tests take a long time to run
-
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
   BEGIN_FOLD unit-tests
   DOCKER_EXEC LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib make $MAKEJOBS check VERBOSE=1
