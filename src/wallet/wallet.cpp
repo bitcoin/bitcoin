@@ -1018,9 +1018,7 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
             // Iterate over all its outputs, and mark transactions in the wallet that spend them abandoned too
             TxSpends::const_iterator iter = mapTxSpends.lower_bound(COutPoint(now, 0));
             while (iter != mapTxSpends.end() && iter->first.hash == now) {
-                if (!done.count(iter->second)) {
-                    todo.insert(iter->second);
-                }
+                todo.emplace(iter->second);
                 iter++;
             }
             // If a transaction changes 'conflicted' state, that changes the balance
@@ -1072,9 +1070,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
             // Iterate over all its outputs, and mark transactions in the wallet that spend them conflicted too
             TxSpends::const_iterator iter = mapTxSpends.lower_bound(COutPoint(now, 0));
             while (iter != mapTxSpends.end() && iter->first.hash == now) {
-                 if (!done.count(iter->second)) {
-                     todo.insert(iter->second);
-                 }
+                 todo.emplace(iter->second);
                  iter++;
             }
             // If a transaction changes 'conflicted' state, that changes the balance
