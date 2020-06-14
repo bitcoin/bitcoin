@@ -946,7 +946,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Co
              * the mostly recently created transactions from newer versions of the wallet.
              */
 
-            // loop though all outputs
+            // loop through all outputs
             for (const CTxOut& txout: tx.vout) {
                 for (const auto& spk_man_pair : m_spk_managers) {
                     spk_man_pair.second->MarkUnusedAddresses(txout.scriptPubKey);
