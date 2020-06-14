@@ -448,7 +448,6 @@ libsyscoin_wallet_a_SOURCES = \
   rpc/masternode.cpp \
   rpc/auxpow_miner.cpp \
   services/rpc/wallet/assetwalletrpc.cpp \
-  masternodeconfig.cpp \
   $(SYSCOIN_CORE_H)
 
 libsyscoin_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
