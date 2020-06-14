@@ -661,7 +661,7 @@ syscoin_bin_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 if TARGET_WINDOWS
 syscoin_daemon_sources += syscoind-res.rc
 endif
-
+# SYSCOIN need getauxwork and mempool stuff inside of wallet so server needs linking here for now but order has to be after wallet
 syscoin_bin_ldadd = \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_SERVER) \
