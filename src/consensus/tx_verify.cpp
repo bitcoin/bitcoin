@@ -186,6 +186,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                 if (!inRes.first->second.first) {
                     inRes.first->second.first = zeroVal;
                 }
+                // sanity, should never have multiple zero val inputs for an asset
                 else if (zeroVal) {
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-zero-val-input");
                 }
