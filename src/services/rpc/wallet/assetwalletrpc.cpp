@@ -640,7 +640,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     theAsset.voutAssets.emplace_back(nAsset, outVec);
 
     theAsset.nBalance = nBalance;
-    if(heAsset.nUpdateFlags != nUpdateFlags) {
+    if(theAsset.nUpdateFlags != nUpdateFlags) {
         theAsset.nPrevUpdateFlags = theAsset.nUpdateFlags;
     }
     theAsset.nUpdateFlags = nUpdateFlags;
