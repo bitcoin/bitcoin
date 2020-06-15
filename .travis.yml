@@ -81,7 +81,9 @@ before_install:
 install:
   - set -o errexit; source ./ci/test/04_install.sh
 before_script:
-  - set -o errexit; source ./ci/test/05_before_script.sh
+  # Temporary workaround for https://github.com/bitcoin/bitcoin/issues/16368
+  - for i in {1..4}; do echo "$(sleep 500)" ; done &
+  - set -o errexit; source ./ci/test/05_before_script.sh &> "/dev/null"
 script:
   - if [ $SECONDS -gt 1200 ]; then set +o errexit; echo "Travis early exit to cache current state"; false; else set -o errexit; source .travis/test_06_script.sh; fi
 after_script:
