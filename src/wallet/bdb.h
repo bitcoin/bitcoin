@@ -93,6 +93,8 @@ std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, s
 /** Return wheter a BDB wallet database is currently loaded. */
 bool IsBDBWalletLoaded(const fs::path& wallet_path);
 
+class BerkeleyBatch;
+
 /** An instance of this class represents one database.
  * For BerkeleyDB this is just a (env, strFile) tuple.
  **/
@@ -160,6 +162,9 @@ public:
 
     /** Database pointer. This is initialized lazily and reset during flushes, so it can be null. */
     std::unique_ptr<Db> m_db;
+
+    /** Make a BerkeleyBatch connected to this database */
+    std::unique_ptr<BerkeleyBatch> MakeBatch(const char* mode, bool flush_on_close);
 
 private:
     std::string strFile;
