@@ -113,6 +113,9 @@ class TorController
 {
 public:
     TorController(struct event_base* base, const std::string& tor_control_center, const CService& target);
+    TorController() : conn{nullptr} {
+        // Used for testing only.
+    }
     ~TorController();
 
     /** Get name of file to store private key in */
@@ -127,7 +130,7 @@ private:
     std::string private_key;
     std::string service_id;
     bool reconnect;
-    struct event *reconnect_ev;
+    struct event *reconnect_ev = nullptr;
     float reconnect_timeout;
     CService service;
     const CService m_target;
@@ -136,6 +139,7 @@ private:
     /** ClientNonce for SAFECOOKIE auth */
     std::vector<uint8_t> clientNonce;
 
+public:
     /** Callback for ADD_ONION result */
     void add_onion_cb(TorControlConnection& conn, const TorControlReply& reply);
     /** Callback for AUTHENTICATE result */
