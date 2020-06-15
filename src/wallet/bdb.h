@@ -141,6 +141,11 @@ public:
     unsigned int nLastFlushed;
     int64_t nLastWalletUpdate;
 
+    /** Verifies that the database file is not in use */
+    bool VerifyNotInUse(bilingual_str& error);
+    /** Verifies the environment and database file */
+    bool Verify(bilingual_str& error);
+
     /**
      * Pointer to shared database environment.
      *
@@ -216,10 +221,6 @@ public:
     /* flush the wallet passively (TRY_LOCK)
        ideal to be called periodically */
     static bool PeriodicFlush(BerkeleyDatabase& database);
-    /* verifies the database environment */
-    static bool VerifyEnvironment(const fs::path& file_path, bilingual_str& errorStr);
-    /* verifies the database file */
-    static bool VerifyDatabaseFile(const fs::path& file_path, bilingual_str& errorStr);
 
     template <typename K, typename T>
     bool Read(const K& key, T& value)

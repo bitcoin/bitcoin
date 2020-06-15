@@ -112,7 +112,7 @@ static bool SalvageWallet(const fs::path& path)
     // Initialize the environment before recovery
     bilingual_str error_string;
     try {
-        WalletBatch::VerifyEnvironment(path, error_string);
+        database->Verify(error_string);
     } catch (const fs::filesystem_error& e) {
         error_string = Untranslated(strprintf("Error loading wallet. %s", fsbridge::get_filesystem_error_message(e)));
     }
@@ -141,10 +141,12 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
             return false;
         }
         bilingual_str error;
-        if (!WalletBatch::VerifyEnvironment(path, error)) {
+        std::unique_ptr<WalletDatabase> database = CreateWalletDatabase(path);
+        if (!database->VerifyNotInUse(error)) {
             tfm::format(std::cerr, "%s\nError loading %s. Is wallet being used by other process?\n", error.original, name);
             return false;
         }
+        database.reset();
 
         if (command == "info") {
             std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
