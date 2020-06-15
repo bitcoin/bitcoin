@@ -276,7 +276,7 @@ std::string COutput::ToString() const
 
 const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 {
-    LOCK(cs_wallet);
+    AssertLockHeld(cs_wallet);
     std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(hash);
     if (it == mapWallet.end())
         return nullptr;
@@ -1983,6 +1983,7 @@ bool CWalletTx::IsTrusted(std::set<uint256>& trusted_parents) const
     if (!InMempool()) return false;
 
     // Trusted if all inputs are from us and are in the mempool:
+    LOCK(pwallet->cs_wallet);
     for (const CTxIn& txin : tx->vin)
     {
         // Transactions not sent by us: not trusted
