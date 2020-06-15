@@ -91,6 +91,7 @@ bool IsWalletLoaded(const fs::path& wallet_path);
 
 /** Given a wallet directory path or legacy file path, return path to main data file in the wallet database. */
 fs::path WalletDataFilePath(const fs::path& wallet_path);
+void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename);
 
 /** Get BerkeleyEnvironment and database filename given a wallet path. */
 std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
