@@ -51,7 +51,7 @@ bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
     return memcmp(value, &rhs.value, sizeof(value)) == 0;
 }
 
-static void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename)
+void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename)
 {
     if (fs::is_regular_file(wallet_path)) {
         // Special case for backwards compatibility: if wallet path points to an
