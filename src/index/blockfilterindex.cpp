@@ -5,6 +5,7 @@
 #include <map>
 
 #include <dbwrapper.h>
+#include <hash.h>
 #include <index/blockfilterindex.h>
 #include <util/system.h>
 #include <validation.h>
@@ -142,7 +143,7 @@ bool BlockFilterIndex::CommitInternal(CDBBatch& batch)
     return BaseIndex::CommitInternal(batch);
 }
 
-bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& filter) const
+bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& filter, const uint256& hash) const
 {
     CAutoFile filein(m_filter_fileseq->Open(pos, true), SER_DISK, CLIENT_VERSION);
     if (filein.IsNull()) {
@@ -153,7 +154,10 @@ bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& f
     std::vector<unsigned char> encoded_filter;
     try {
         filein >> block_hash >> encoded_filter;
-        filter = BlockFilter(GetFilterType(), block_hash, std::move(encoded_filter));
+        uint256 result;
+        CHash256().Write(encoded_filter.data(), encoded_filter.size()).Finalize(result.begin());
+        if (result != hash) return error("Checksum mismatch in filter decode.");
+        filter = BlockFilter(GetFilterType(), block_hash, std::move(encoded_filter), true);
     }
     catch (const std::exception& e) {
         return error("%s: Failed to deserialize block filter from disk: %s", __func__, e.what());
@@ -380,7 +384,7 @@ bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter&
         return false;
     }
 
-    return ReadFilterFromDisk(entry.pos, filter_out);
+    return ReadFilterFromDisk(entry.pos, filter_out, entry.hash);
 }
 
 bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out)
@@ -424,7 +428,7 @@ bool BlockFilterIndex::LookupFilterRange(int start_height, const CBlockIndex* st
     filters_out.resize(entries.size());
     auto filter_pos_it = filters_out.begin();
     for (const auto& entry : entries) {
-        if (!ReadFilterFromDisk(entry.pos, *filter_pos_it)) {
+        if (!ReadFilterFromDisk(entry.pos, *filter_pos_it, entry.hash)) {
             return false;
         }
         ++filter_pos_it;

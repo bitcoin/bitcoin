@@ -59,7 +59,7 @@ public:
     explicit GCSFilter(const Params& params = Params());
 
     /** Reconstructs an already-created filter from an encoding. */
-    GCSFilter(const Params& params, std::vector<unsigned char> encoded_filter);
+    GCSFilter(const Params& params, std::vector<unsigned char> encoded_filter, const bool filter_checked=false);
 
     /** Builds a new filter from the params and set of elements. */
     GCSFilter(const Params& params, const ElementSet& elements);
@@ -122,7 +122,7 @@ public:
 
     //! Reconstruct a BlockFilter from parts.
     BlockFilter(BlockFilterType filter_type, const uint256& block_hash,
-                std::vector<unsigned char> filter);
+                std::vector<unsigned char> filter, const bool filter_checked=false);
 
     //! Construct a new BlockFilter of the specified type from a block.
     BlockFilter(BlockFilterType filter_type, const CBlock& block, const CBlockUndo& block_undo);
