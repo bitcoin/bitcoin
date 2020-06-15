@@ -97,7 +97,6 @@ class BerkeleyBatch;
  **/
 class BerkeleyDatabase : public WalletDatabase
 {
-    friend class BerkeleyBatch;
 public:
     /** Create dummy DB handle */
     BerkeleyDatabase() : WalletDatabase(), env(nullptr)
@@ -163,11 +162,12 @@ public:
     /** Database pointer. This is initialized lazily and reset during flushes, so it can be null. */
     std::unique_ptr<Db> m_db;
 
+    std::string strFile;
+
     /** Make a BerkeleyBatch connected to this database */
     std::unique_ptr<DatabaseBatch> MakeBatch(const char* mode = "r+", bool flush_on_close = true) override;
 
 private:
-    std::string strFile;
 
     /** Return whether this database handle is a dummy for testing.
      * Only to be used at a low level, application should ideally not care
