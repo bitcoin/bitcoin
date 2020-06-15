@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
         Misbehaving(dummyNode1.GetId(), 100);
     }
     {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
+        LOCK(dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
     }
     BOOST_CHECK(!banman->IsDiscouraged(addr1));
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
         Misbehaving(dummyNode1.GetId(), 10);
     }
     {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
+        LOCK(dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
     }
     BOOST_CHECK(!banman->IsDiscouraged(addr1));
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
         Misbehaving(dummyNode1.GetId(), 1);
     }
     {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
+        LOCK(dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
     }
     BOOST_CHECK(banman->IsDiscouraged(addr1));

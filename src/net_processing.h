@@ -32,7 +32,8 @@ private:
     CTxMemPool& m_mempool;
     std::unique_ptr<LLMQContext>& m_llmq_ctx;
 
-    bool MaybeDiscourageAndDisconnect(CNode& pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool MaybeDiscourageAndDisconnect(CNode& pnode);
+
 public:
     PeerLogicValidation(CConnman& connman, BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
                         std::unique_ptr<LLMQContext>& llmq_ctx);
