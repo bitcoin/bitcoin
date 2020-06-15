@@ -287,8 +287,6 @@ public:
     bool TxnBegin();
     bool TxnCommit();
     bool TxnAbort();
-
-    bool static Rewrite(BerkeleyDatabase& database, const char* pszSkip = nullptr);
 };
 
 std::string BerkeleyDatabaseVersion();
