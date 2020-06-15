@@ -1,0 +1,43 @@
+name: Update veriblock-pop-cpp
+
+on:
+  repository_dispatch:
+    types: update-alpha
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Download and get SHA256 hash of latest veriblock-pop-cpp commit.
+        run: |
+          wget -q https://github.com/VeriBlock/alt-integration-cpp/archive/${{ github.event.client_payload.sha }}.tar.gz
+          echo "::set-env name=SHA256::$(cut -d " " -f1 <<< "$(sha256sum "${{ github.event.client_payload.sha }}.tar.gz")")"
+      - name: Get current version and SHA256 hash of veriblock-pop-cpp.
+        run: |
+          echo "::set-env name=CURRENT_VERSION::$(< ./depends/packages/veriblock-pop-cpp.mk head -n 2 | tail -n 1 | cut -f2 -d "=")"
+          echo "::set-env name=CURRENT_SHA256::$(< ./depends/packages/veriblock-pop-cpp.mk head -n 5 | tail -n 1 | cut -f2 -d "=")"
+      - name: update veriblock-pop-cpp
+        run: |
+          sed -i -r "s/${CURRENT_VERSION}$/${{ github.event.client_payload.sha }}/" ./depends/packages/veriblock-pop-cpp.mk
+          sed -i -r "s/${CURRENT_SHA256}$/${SHA256}/" ./depends/packages/veriblock-pop-cpp.mk
+      - name: Create PR
+        if: success()
+        id: cpr
+        uses: peter-evans/create-pull-request@v2
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          commit-message: Update veriblock-pop-cpp
+          committer: GitHub <noreply@github.com>
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          title: "Update veriblock-pop-cpp to ${{ github.event.client_payload.sha }}"
+          reviewers: Warchant,overcookedpanda
+          draft: false
+          branch: veriblock-pop-cpp-alpha
+          base: release/alpha
+          request-to-parent: false
+      - name: Check outputs
+        run: |
+          echo "Pull Request Number - ${{ env.PULL_REQUEST_NUMBER }}"
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
