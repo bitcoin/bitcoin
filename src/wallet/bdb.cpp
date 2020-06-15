@@ -862,7 +862,7 @@ void BerkeleyDatabase::RemoveRef()
     env->m_db_in_use.notify_all();
 }
 
-std::unique_ptr<BerkeleyBatch> BerkeleyDatabase::MakeBatch(const char* mode, bool flush_on_close)
+std::unique_ptr<DatabaseBatch> BerkeleyDatabase::MakeBatch(const char* mode, bool flush_on_close)
 {
     return MakeUnique<BerkeleyBatch>(*this, mode, flush_on_close);
 }
