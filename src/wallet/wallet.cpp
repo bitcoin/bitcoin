@@ -2346,6 +2346,7 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
 
 const CTxOut& CWallet::FindNonChangeParentOutput(const CTransaction& tx, int output) const
 {
+    AssertLockHeld(cs_wallet);
     const CTransaction* ptx = &tx;
     int n = output;
     while (IsChange(ptx->vout[n]) && ptx->vin.size() > 0) {
@@ -3264,6 +3265,7 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& s
 bool CWallet::DelAddressBook(const CTxDestination& address)
 {
     bool is_mine;
+    WalletBatch batch(*database);
     {
         LOCK(cs_wallet);
         // If we want to delete receiving addresses, we need to take care that DestData "used" (and possibly newer DestData) gets preserved (and the "deleted" address transformed into a change entry instead of actually being deleted)
@@ -3277,7 +3279,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         std::string strAddress = EncodeDestination(address);
         for (const std::pair<const std::string, std::string> &item : m_address_book[address].destdata)
         {
-            WalletBatch(*database).EraseDestData(strAddress, item.first);
+            batch.EraseDestData(strAddress, item.first);
         }
         m_address_book.erase(address);
         is_mine = IsMine(address) != ISMINE_NO;
@@ -3285,8 +3287,8 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
 
     NotifyAddressBookChanged(this, address, "", is_mine, "", CT_DELETED);
 
-    WalletBatch(*database).ErasePurpose(EncodeDestination(address));
-    return WalletBatch(*database).EraseName(EncodeDestination(address));
+    batch.ErasePurpose(EncodeDestination(address));
+    return batch.EraseName(EncodeDestination(address));
 }
 
 size_t CWallet::KeypoolCountExternalKeys() const
