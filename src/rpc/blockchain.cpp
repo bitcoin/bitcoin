@@ -485,8 +485,8 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
 
 UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose)
 {
+    AssertLockHeld(pool.cs);
     if (verbose) {
-        LOCK(pool.cs);
         UniValue o(UniValue::VOBJ);
         for (const CTxMemPoolEntry& e : pool.mapTx) {
             const uint256& hash = e.GetTx().GetHash();
@@ -540,7 +540,9 @@ static UniValue getrawmempool(const JSONRPCRequest& request)
     if (!request.params[0].isNull())
         fVerbose = request.params[0].get_bool();
 
-    return MempoolToJSON(EnsureMemPool(request.context), fVerbose);
+    CTxMemPool& mempool = EnsureMemPool(request.context);
+    LOCK(mempool.cs);
+    return MempoolToJSON(mempool, fVerbose);
 }
 
 static UniValue getmempoolancestors(const JSONRPCRequest& request)
