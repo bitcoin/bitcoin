@@ -8,7 +8,7 @@
 
 #include <fs.h>
 #include <test/util/setup_common.h>
-#include <wallet/db.h>
+#include <wallet/bdb.h>
 
 
 BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
