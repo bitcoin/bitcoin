@@ -614,14 +614,12 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
     }
 }
 
-bool BerkeleyBatch::PeriodicFlush(BerkeleyDatabase& database)
+bool BerkeleyDatabase::PeriodicFlush()
 {
-    if (database.IsDummy()) {
+    if (IsDummy()) {
         return true;
     }
     bool ret = false;
-    BerkeleyEnvironment *env = database.env.get();
-    const std::string& strFile = database.strFile;
     TRY_LOCK(cs_db, lockDb);
     if (lockDb)
     {

@@ -131,6 +131,9 @@ public:
     /** Make sure all changes are flushed to disk.
      */
     void Flush(bool shutdown);
+    /* flush the wallet passively (TRY_LOCK)
+       ideal to be called periodically */
+    bool PeriodicFlush();
 
     void IncrementUpdateCounter();
 
@@ -214,10 +217,6 @@ public:
 
     void Flush();
     void Close();
-
-    /* flush the wallet passively (TRY_LOCK)
-       ideal to be called periodically */
-    static bool PeriodicFlush(BerkeleyDatabase& database);
 
     template <typename K, typename T>
     bool Read(const K& key, T& value)
