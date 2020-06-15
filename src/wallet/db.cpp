@@ -79,11 +79,6 @@ bool IsBDBWalletLoaded(const fs::path& wallet_path)
     return database && database->IsDatabaseLoaded(database_filename);
 }
 
-bool IsWalletLoaded(const fs::path& wallet_path)
-{
-    return IsBDBWalletLoaded(wallet_path);
-}
-
 fs::path WalletDataFilePath(const fs::path& wallet_path)
 {
     fs::path env_directory;
