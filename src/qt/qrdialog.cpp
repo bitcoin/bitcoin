@@ -96,7 +96,9 @@ QRDialog::QRDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->labelQRCodeTitle}, GUIUtil::getFontWeightBold());
+    GUIUtil::setFont({ui->labelQRCodeTitle}, GUIUtil::getFontWeightBold(), 16);
+
+    GUIUtil::updateFonts();
 
 #ifndef USE_QRCODE
     ui->button_saveImage->setVisible(false);

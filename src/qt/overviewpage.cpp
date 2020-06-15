@@ -137,16 +137,19 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
 
     GUIUtil::setFont({ui->label_4,
                       ui->label_5,
-                      ui->labelWatchPending,
-                      ui->labelUnconfirmed,
-                      ui->labelWatchImmature,
-                      ui->labelImmature,
-                      ui->labelTotal,
+                      ui->labelPrivateSendHeader
+                     }, GUIUtil::getFontWeightBold(), 16);
+
+    GUIUtil::setFont({ui->labelTotalText,
                       ui->labelWatchTotal,
-                      ui->labelWatchAvailable,
-                      ui->labelBalance,
-                      ui->labelPrivateSendHeader,
-                      ui->labelAnonymized
+                      ui->labelTotal
+                     }, GUIUtil::getFontWeightBold(), 14);
+
+    GUIUtil::setFont({ui->labelBalanceText,
+                      ui->labelPendingText,
+                      ui->labelImmatureText,
+                      ui->labelWatchonly,
+                      ui->labelSpendable
                      }, GUIUtil::getFontWeightBold());
 
     // Recent transactions

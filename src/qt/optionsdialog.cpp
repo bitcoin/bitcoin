@@ -36,7 +36,9 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->statusLabel}, GUIUtil::getFontWeightBold());
+    GUIUtil::setFont({ui->statusLabel}, GUIUtil::getFontWeightBold(), 16);
+
+    GUIUtil::updateFonts();
 
     /* Main elements init */
     ui->databaseCache->setMinimum(nMinDbCache);

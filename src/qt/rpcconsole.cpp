@@ -471,7 +471,7 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
                       ui->peerHeading,
                       ui->label_repair_header,
                       ui->banHeading
-                     }, GUIUtil::getFontWeightBold());
+                     }, GUIUtil::getFontWeightBold(), 16);
 
     QSettings settings;
     if (!restoreGeometry(settings.value("RPCConsoleWindowGeometry").toByteArray())) {

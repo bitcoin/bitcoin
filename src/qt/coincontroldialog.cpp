@@ -63,6 +63,8 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
                       ui->labelCoinControlChangeText
                      }, GUIUtil::getFontWeightBold());
 
+    GUIUtil::updateFonts();
+
     // context menu actions
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);

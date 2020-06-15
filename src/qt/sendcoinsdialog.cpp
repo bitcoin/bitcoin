@@ -74,10 +74,15 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
                       ui->labelCoinControlAfterFeeText,
                       ui->labelCoinControlChangeText,
                       ui->labelFeeHeadline,
-                      ui->fallbackFeeWarningLabel,
-                      ui->labelBalance,
-                      ui->label
+                      ui->fallbackFeeWarningLabel
                      }, GUIUtil::getFontWeightBold());
+
+    GUIUtil::setFont({ui->labelBalance,
+                      ui->label
+                     }, GUIUtil::getFontWeightBold(), 14);
+
+    GUIUtil::setFont({ui->labelCoinControlFeatures
+                     }, GUIUtil::getFontWeightBold(), 16);
 
     if (!_platformStyle->getImagesOnButtons()) {
         ui->addButton->setIcon(QIcon());
