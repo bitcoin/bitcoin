@@ -88,7 +88,6 @@ public:
 
 /** Return whether a wallet database is currently loaded. */
 bool IsBDBWalletLoaded(const fs::path& wallet_path);
-bool IsWalletLoaded(const fs::path& wallet_path);
 
 /** Given a wallet directory path or legacy file path, return path to main data file in the wallet database. */
 fs::path WalletDataFilePath(const fs::path& wallet_path);
