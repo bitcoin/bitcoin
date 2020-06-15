@@ -803,3 +803,67 @@ std::string BerkeleyDatabaseVersion()
 {
     return DbEnv::version(nullptr, nullptr, nullptr);
 }
+
+bool BerkeleyBatch::ReadKey(CDataStream& key, CDataStream& value)
+{
+    if (!pdb)
+        return false;
+
+    // Key
+    SafeDbt datKey(key.data(), key.size());
+
+    // Read
+    SafeDbt datValue;
+    int ret = pdb->get(activeTxn, datKey, datValue, 0);
+    if (ret == 0 && datValue.get_data() != nullptr) {
+        value.write((char*)datValue.get_data(), datValue.get_size());
+        return true;
+    }
+    return false;
+}
+
+bool BerkeleyBatch::WriteKey(CDataStream& key, CDataStream& value, bool overwrite)
+{
+    if (!pdb)
+        return true;
+    if (fReadOnly)
+        assert(!"Write called on database in read-only mode");
+
+    // Key
+    SafeDbt datKey(key.data(), key.size());
+
+    // Value
+    SafeDbt datValue(value.data(), value.size());
+
+    // Write
+    int ret = pdb->put(activeTxn, datKey, datValue, (overwrite ? 0 : DB_NOOVERWRITE));
+    return (ret == 0);
+}
+
+bool BerkeleyBatch::EraseKey(CDataStream& key)
+{
+    if (!pdb)
+        return false;
+    if (fReadOnly)
+        assert(!"Erase called on database in read-only mode");
+
+    // Key
+    SafeDbt datKey(key.data(), key.size());
+
+    // Erase
+    int ret = pdb->del(activeTxn, datKey, 0);
+    return (ret == 0 || ret == DB_NOTFOUND);
+}
+
+bool BerkeleyBatch::HasKey(CDataStream& key)
+{
+    if (!pdb)
+        return false;
+
+    // Key
+    SafeDbt datKey(key.data(), key.size());
+
+    // Exists
+    int ret = pdb->exists(activeTxn, datKey, 0);
+    return ret == 0;
+}
