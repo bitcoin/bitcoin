@@ -115,12 +115,7 @@ public:
         assert(inserted.second);
     }
 
-    ~BerkeleyDatabase() {
-        if (env) {
-            size_t erased = env->m_databases.erase(strFile);
-            assert(erased == 1);
-        }
-    }
+    ~BerkeleyDatabase();
 
     /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
      */
@@ -130,9 +125,13 @@ public:
      */
     bool Backup(const std::string& strDest) const;
 
-    /** Make sure all changes are flushed to disk.
+    /** Make sure all changes are flushed to database file.
      */
-    void Flush(bool shutdown);
+    void Flush();
+    /** Flush to the database file and close the database.
+     *  Also close the environment if no other databases are open in it.
+     */
+    void Close();
     /* flush the wallet passively (TRY_LOCK)
        ideal to be called periodically */
     bool PeriodicFlush();

@@ -324,6 +324,15 @@ void BerkeleyEnvironment::CheckpointLSN(const std::string& strFile)
     dbenv->lsn_reset(strFile.c_str(), 0);
 }
 
+BerkeleyDatabase::~BerkeleyDatabase()
+{
+    if (env) {
+        LOCK(cs_db);
+        size_t erased = env->m_databases.erase(strFile);
+        assert(erased == 1);
+        env->m_fileids.erase(strFile);
+    }
+}
 
 BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_cursor(nullptr)
 {
@@ -685,22 +694,17 @@ bool BerkeleyDatabase::Backup(const std::string& strDest) const
     }
 }
 
-void BerkeleyDatabase::Flush(bool shutdown)
+void BerkeleyDatabase::Flush()
 {
     if (!IsDummy()) {
-        env->Flush(shutdown);
-        if (shutdown) {
-            LOCK(cs_db);
-            g_dbenvs.erase(env->Directory().string());
-            env = nullptr;
-        } else {
-            // TODO: To avoid g_dbenvs.erase erasing the environment prematurely after the
-            // first database shutdown when multiple databases are open in the same
-            // environment, should replace raw database `env` pointers with shared or weak
-            // pointers, or else separate the database and environment shutdowns so
-            // environments can be shut down after databases.
-            env->m_fileids.erase(strFile);
-        }
+        env->Flush(false);
+    }
+}
+
+void BerkeleyDatabase::Close()
+{
+    if (!IsDummy()) {
+        env->Flush(true);
     }
 }
 
