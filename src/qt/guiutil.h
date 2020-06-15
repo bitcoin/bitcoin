@@ -233,19 +233,35 @@ namespace GUIUtil
     /** Load global CSS theme */
     QString loadStyleSheet();
 
-    /** Application font weight for normal text. */
+    /** Application font weight for normal text. May be overwritten by -font-weight-normal. */
     extern QFont::Weight fontWeightNormal;
-    /** Application font weight for bold text. */
+    /** Application font weight for bold text. May be overwritten by -font-weight-bold. */
     extern QFont::Weight fontWeightBold;
-    /** Application base font size. */
-    extern int fontSize;
+    /** Application font scale value. May be overwritten by -font-scale. */
+    extern int fontScale;
 
-    /** get normal font weight */
+    /** Convert weight value from args (0-8) to QFont::Weight */
+    bool weightFromArg(int nArg, QFont::Weight& weight);
+    /** Convert QFont::Weight to an arg value (0-8) */
+    int weightToArg(const QFont::Weight weight);
+
+    /** set/get normal font weight: GUIUtil::fontWeightNormal */
+    QFont::Weight getFontWeightNormalDefault();
     QFont::Weight getFontWeightNormal();
-    /** get bold font weight */
+    void setFontWeightNormal(QFont::Weight weight);
+
+    /** set/get bold font weight: GUIUtil::fontWeightBold */
+    QFont::Weight getFontWeightBoldDefault();
     QFont::Weight getFontWeightBold();
-    /** get font size */
-    int getFontSize();
+    void setFontWeightBold(QFont::Weight weight);
+
+    /** set/get font scale: GUIUtil::fontScale */
+    int getFontScaleDefault();
+    int getFontScale();
+    void setFontScale(int nScale);
+
+    /** get font size with GUIUtil::fontScale applied */
+    double getScaledFontSize(int nSize);
 
     /** Load dash specific appliciation fonts */
     bool loadFonts();

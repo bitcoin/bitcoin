@@ -89,14 +89,16 @@ static const QString darkThemePrefix = "Dark";
 
 /** Font related default values. */
 static const QString defaultFontFamily = "Montserrat";
+static const int defaultFontSize = 12;
+static const double fontScaleSteps = 0.01;
 #ifdef Q_OS_MAC
 static const QFont::Weight defaultFontWeightNormal = QFont::ExtraLight;
 static const QFont::Weight defaultFontWeightBold = QFont::Medium;
-static const int defaultFontSize = 12;
+static const int defaultFontScale = 0;
 #else
 static const QFont::Weight defaultFontWeightNormal = QFont::Light;
 static const QFont::Weight defaultFontWeightBold = QFont::Medium;
-static const int defaultFontSize = 12;
+static const int defaultFontScale = 0;
 #endif
 
 /** Font related variables. */
@@ -104,8 +106,8 @@ static const int defaultFontSize = 12;
 QFont::Weight fontWeightNormal = defaultFontWeightNormal;
 // Weight for bold text
 QFont::Weight fontWeightBold = defaultFontWeightBold;
-// Weight for bold text
-int fontSize = defaultFontSize;
+// Scale value for text sizes
+int fontScale = defaultFontScale;
 
 static const std::map<ThemedColor, QColor> themedColors = {
     { ThemedColor::DEFAULT, QColor(0, 0, 0) },
@@ -1004,9 +1006,62 @@ QString loadStyleSheet()
     return *stylesheet.get();
 }
 
+bool weightFromArg(int nArg, QFont::Weight& weight)
+{
+    const std::map<int, QFont::Weight> mapWeight{
+        {0, QFont::Thin},
+        {1, QFont::ExtraLight},
+        {2, QFont::Light},
+        {3, QFont::Normal},
+        {4, QFont::Medium},
+        {5, QFont::DemiBold},
+        {6, QFont::Bold},
+        {7, QFont::ExtraBold},
+        {8, QFont::Black}
+    };
+    auto it = mapWeight.find(nArg);
+    if (it == mapWeight.end()) {
+        return false;
+    }
+    weight = it->second;
+    return true;
+}
+
+int weightToArg(const QFont::Weight weight)
+{
+    const std::map<QFont::Weight, int> mapWeight{
+        {QFont::Thin, 0},
+        {QFont::ExtraLight, 1},
+        {QFont::Light, 2},
+        {QFont::Normal, 3},
+        {QFont::Medium, 4},
+        {QFont::DemiBold, 5},
+        {QFont::Bold, 6},
+        {QFont::ExtraBold, 7},
+        {QFont::Black, 8}
+    };
+    assert(mapWeight.count(weight));
+    return mapWeight.find(weight)->second;
+}
+
+QFont::Weight getFontWeightNormalDefault()
+{
+    return defaultFontWeightNormal;
+}
+
 QFont::Weight getFontWeightNormal()
 {
     return fontWeightNormal;
+}
+
+void setFontWeightNormal(QFont::Weight weight)
+{
+    fontWeightNormal = weight;
+}
+
+QFont::Weight getFontWeightBoldDefault()
+{
+    return defaultFontWeightBold;
 }
 
 QFont::Weight getFontWeightBold()
@@ -1014,9 +1069,29 @@ QFont::Weight getFontWeightBold()
     return fontWeightBold;
 }
 
-int getFontSize()
+void setFontWeightBold(QFont::Weight weight)
 {
-    return fontSize;
+    fontWeightBold = weight;
+}
+
+int getFontScaleDefault()
+{
+    return defaultFontScale;
+}
+
+int getFontScale()
+{
+    return fontScale;
+}
+
+void setFontScale(int nScale)
+{
+    fontScale = nScale;
+}
+
+double getScaledFontSize(int nSize)
+{
+    return (nSize * (1 + (fontScale * fontScaleSteps)));
 }
 
 bool loadFonts()
@@ -1095,10 +1170,10 @@ void setApplicationFont()
         } else {
             appFont.setWeight(defaultFontWeightNormal);
         }
-        appFont.setPointSize(getFontSize());
+        appFont.setPointSizeF(getScaledFontSize(defaultFontSize));
 #else
         appFont.setWeight(getFontWeightNormal());
-        appFont.setPointSize(getFontSize());
+        appFont.setPointSizeF(getScaledFontSize(defaultFontSize));
 #endif
         qApp->setFont(appFont);
     } else {
