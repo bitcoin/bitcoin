@@ -273,7 +273,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
         RPCExamples{
     "\nGenerate 11 blocks to myaddress\n"
     + HelpExampleCli("generatetoaddress", "11 \"myaddress\"")
-        + "If you are running the Dash Core wallet, you can get a new address to send the newly generated coins to with:\n"
+        + "If you are using the " PACKAGE_NAME " wallet, you can get a new address to send the newly generated coins to with:\n"
             + HelpExampleCli("getnewaddress", "")},
     }.Check(request);
 
