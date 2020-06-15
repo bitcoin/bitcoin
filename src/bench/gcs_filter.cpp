@@ -73,7 +73,24 @@ static void BlockFilterGetHash(benchmark::State& state)
     }
 }
 
+static void DecodeCheckedGCSFilter(benchmark::State& state)
+{
+    GCSFilter::ElementSet elements;
+    for (int i = 0; i < 10000; ++i) {
+        GCSFilter::Element element(32);
+        element[0] = static_cast<unsigned char>(i);
+        element[1] = static_cast<unsigned char>(i >> 8);
+        elements.insert(std::move(element));
+    }
+    GCSFilter filter({0, 0, BASIC_FILTER_P, BASIC_FILTER_M}, elements);
+    auto encoded = filter.GetEncoded();
+
+    while (state.KeepRunning()) {
+        GCSFilter filter({0, 0, BASIC_FILTER_P, BASIC_FILTER_M}, encoded, true);
+    }
+}
 BENCHMARK(BlockFilterGetHash, 10000);
 BENCHMARK(ConstructGCSFilter, 1000);
 BENCHMARK(DecodeGCSFilter, 5000);
+BENCHMARK(DecodeCheckedGCSFilter, 50000);
 BENCHMARK(MatchGCSFilter, 50 * 1000);
