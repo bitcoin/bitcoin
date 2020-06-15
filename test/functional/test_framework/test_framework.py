@@ -13,6 +13,7 @@ import pdb
 import random
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -40,16 +41,25 @@ class TestStatus(Enum):
     PASSED = 1
     FAILED = 2
     SKIPPED = 3
+    CANCELLED = 4
 
 TEST_EXIT_PASSED = 0
 TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
+TEST_EXIT_CANCELLED = 143 # unix convention: 128 + signal
 
 TMPDIR_PREFIX = "bitcoin_func_test_"
 
 
 class SkipTest(Exception):
     """This exception is raised to skip a test"""
+
+    def __init__(self, message):
+        self.message = message
+
+
+class CancelTest(Exception):
+    """This exception is raised to cancel a test"""
 
     def __init__(self, message):
         self.message = message
@@ -114,6 +124,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         assert hasattr(self, "num_nodes"), "Test must set self.num_nodes in set_test_params()"
 
+        def signal_handler(signal_number, frame):
+            if signal_number == signal.SIGTERM:
+                raise CancelTest('Received SIGTERM signal.')
+            return
+
+        signal.signal(signal.SIGTERM, signal_handler)
+
         try:
             self.setup()
             self.run_test()
@@ -121,8 +138,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.log.exception("JSONRPC error")
             self.success = TestStatus.FAILED
         except SkipTest as e:
-            self.log.warning("Test Skipped: %s" % e.message)
+            self.log.warning("Test Skipped: {}".format(e.message))
             self.success = TestStatus.SKIPPED
+        except CancelTest as e:
+            self.log.warning("Test cancelled: {}".format(e.message))
+            self.success = TestStatus.CANCELLED
         except AssertionError:
             self.log.exception("Assertion failed")
             self.success = TestStatus.FAILED
@@ -291,6 +311,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         elif self.success == TestStatus.SKIPPED:
             self.log.info("Test skipped")
             exit_code = TEST_EXIT_SKIPPED
+        elif self.success == TestStatus.CANCELLED:
+            self.log.info("Test cancelled")
+            exit_code = TEST_EXIT_CANCELLED
         else:
             self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
             self.log.error("")

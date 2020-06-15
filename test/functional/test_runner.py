@@ -498,7 +498,7 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
 
     # This will be a no-op unless failfast is True in which case there may be dangling
     # processes which need to be killed.
-    job_queue.kill_and_join()
+    job_queue.terminate_and_join()
 
     sys.exit(not all_passed)
 
@@ -595,14 +595,16 @@ class TestHandler:
                 print('.', end='', flush=True)
             dot_count += 1
 
-    def kill_and_join(self):
-        """Send SIGKILL to all jobs and block until all have ended."""
+    def terminate_and_join(self):
+        """Send SIGTERM to gracefully cancel all jobs and block until all have ended."""
         procs = [i[2] for i in self.jobs]
 
         for proc in procs:
-            proc.kill()
+            logging.debug("Terminating dangling process: {}".format(proc.pid))
+            proc.terminate()
 
         for proc in procs:
+            logging.debug("Waiting for {} to terminate.".format(proc.pid))
             proc.wait()
 
 
