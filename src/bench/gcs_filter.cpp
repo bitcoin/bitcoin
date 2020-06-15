@@ -54,6 +54,18 @@ static void GCSFilterDecode(benchmark::Bench& bench)
     });
 }
 
+static void GCSFilterDecodeSkipCheck(benchmark::Bench& bench)
+{
+    auto elements = GenerateGCSTestElements();
+
+    GCSFilter filter({0, 0, BASIC_FILTER_P, BASIC_FILTER_M}, elements);
+    auto encoded = filter.GetEncoded();
+
+    bench.run([&] {
+        GCSFilter filter({0, 0, BASIC_FILTER_P, BASIC_FILTER_M}, encoded, /*skip_decode_check=*/true);
+    });
+}
+
 static void GCSFilterMatch(benchmark::Bench& bench)
 {
     auto elements = GenerateGCSTestElements();
@@ -67,4 +79,5 @@ static void GCSFilterMatch(benchmark::Bench& bench)
 BENCHMARK(GCSBlockFilterGetHash);
 BENCHMARK(GCSFilterConstruct);
 BENCHMARK(GCSFilterDecode);
+BENCHMARK(GCSFilterDecodeSkipCheck);
 BENCHMARK(GCSFilterMatch);
