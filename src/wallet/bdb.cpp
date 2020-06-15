@@ -292,11 +292,10 @@ BerkeleyBatch::SafeDbt::operator Dbt*()
     return &m_dbt;
 }
 
-bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, bilingual_str& errorStr)
+bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
 {
-    std::string walletFile;
-    std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, walletFile);
     fs::path walletDir = env->Directory();
+    fs::path file_path = walletDir / strFile;
 
     LogPrintf("Using BerkeleyDB version %s\n", BerkeleyDatabaseVersion());
     LogPrintf("Using wallet %s\n", file_path.string());
@@ -306,19 +305,10 @@ bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, bilingual_str& 
         return false;
     }
 
-    return true;
-}
-
-bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, bilingual_str& errorStr)
-{
-    std::string walletFile;
-    std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, walletFile);
-    fs::path walletDir = env->Directory();
-
-    if (fs::exists(walletDir / walletFile))
+    if (fs::exists(file_path))
     {
-        if (!env->Verify(walletFile)) {
-            errorStr = strprintf(_("%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup."), walletFile);
+        if (!env->Verify(strFile)) {
+            errorStr = strprintf(_("%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup."), file_path);
             return false;
         }
     }

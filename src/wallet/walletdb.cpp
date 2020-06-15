@@ -973,16 +973,6 @@ void MaybeCompactWalletDB()
     fOneThread = false;
 }
 
-bool WalletBatch::VerifyEnvironment(const fs::path& wallet_path, bilingual_str& errorStr)
-{
-    return BerkeleyBatch::VerifyEnvironment(wallet_path, errorStr);
-}
-
-bool WalletBatch::VerifyDatabaseFile(const fs::path& wallet_path, bilingual_str& errorStr)
-{
-    return BerkeleyBatch::VerifyDatabaseFile(wallet_path, errorStr);
-}
-
 bool WalletBatch::WriteDestData(const std::string &address, const std::string &key, const std::string &value)
 {
     return WriteIC(std::make_pair(DBKeys::DESTDATA, std::make_pair(address, key)), value);
