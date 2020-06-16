@@ -730,7 +730,13 @@ public:
     void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** @returns true if the mempool is fully loaded */
-    bool IsLoaded() const;
+    bool IsLoadedNonLockHelper() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool IsLoaded() const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        return IsLoadedNonLockHelper();
+    }
 
     /** Sets the current loaded state */
     void SetIsLoaded(bool loaded) EXCLUSIVE_LOCKS_REQUIRED(!cs);
