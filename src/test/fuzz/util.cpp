@@ -268,9 +268,9 @@ void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman,
     assert(node.nVersion == version);
     assert(node.GetCommonVersion() == std::min(version, PROTOCOL_VERSION));
     assert(node.nServices == remote_services);
-    CNodeStateStats statestats;
-    assert(peerman.GetNodeStateStats(node.GetId(), statestats));
-    assert(statestats.m_relay_txs == (relay_txs && !node.IsBlockOnlyConn()));
+    PeerStats peer_stats;
+    assert(peerman.GetPeerStats(node.GetId(), peer_stats));
+    assert(peer_stats.m_relay_txs == (relay_txs && !node.IsBlockOnlyConn()));
     node.m_permissionFlags = permission_flags;
     if (successfully_connected) {
         CSerializedNetMsg msg_verack{mm.Make(NetMsgType::VERACK)};

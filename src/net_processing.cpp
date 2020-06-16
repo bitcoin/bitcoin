@@ -487,7 +487,7 @@ public:
     void StartScheduledTasks(CScheduler& scheduler) override;
     void CheckForStaleTipAndEvictPeers() override;
     std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) override;
-    bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    bool GetPeerStats(NodeId nodeid, PeerStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -1385,7 +1385,7 @@ PeerRef PeerManagerImpl::RemovePeer(NodeId id)
     return ret;
 }
 
-bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const
+bool PeerManagerImpl::GetPeerStats(NodeId nodeid, PeerStats& stats) const
 {
     {
         LOCK(cs_main);

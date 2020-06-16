@@ -31,7 +31,7 @@ class UniValue;
 class Proxy;
 enum class SynchronizationState;
 enum class TransactionError;
-struct CNodeStateStats;
+struct PeerStats;
 struct bilingual_str;
 namespace node {
 struct NodeContext;
@@ -126,7 +126,7 @@ public:
     virtual size_t getNodeCount(ConnectionDirection flags) = 0;
 
     //! Get stats for connected nodes.
-    using NodesStats = std::vector<std::tuple<CNodeStats, bool, CNodeStateStats>>;
+    using NodesStats = std::vector<std::tuple<CNodeStats, bool, PeerStats>>;
     virtual bool getNodesStats(NodesStats& stats) = 0;
 
     //! Get ban map entries.

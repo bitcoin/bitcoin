@@ -23,7 +23,7 @@ static const bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Threshold for marking a node to be discouraged, e.g. disconnected and added to the discouragement filter. */
 static const int DISCOURAGEMENT_THRESHOLD{100};
 
-struct CNodeStateStats {
+struct PeerStats {
     int nSyncHeight = -1;
     int nCommonHeight = -1;
     int m_starting_height = -1;
@@ -57,7 +57,7 @@ public:
     virtual void StartScheduledTasks(CScheduler& scheduler) = 0;
 
     /** Get statistics from node state */
-    virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
+    virtual bool GetPeerStats(NodeId nodeid, PeerStats& stats) const = 0;
 
     /** Whether this node ignores txs received over p2p. */
     virtual bool IgnoresIncomingTxs() = 0;
