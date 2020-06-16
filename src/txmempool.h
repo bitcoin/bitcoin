@@ -759,15 +759,32 @@ public:
         return totalTxSize;
     }
 
-    bool exists(const GenTxid& gtxid) const
+    bool existsNonLockHelper(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
-        LOCK(cs);
         if (gtxid.IsWtxid()) {
             return (mapTx.get<index_by_wtxid>().count(gtxid.GetHash()) != 0);
         }
         return (mapTx.count(gtxid.GetHash()) != 0);
     }
-    bool exists(const uint256& txid) const { return exists(GenTxid{false, txid}); }
+
+    bool exists(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        return existsNonLockHelper(gtxid);
+    }
+
+    bool existsNonLockHelper(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        return existsNonLockHelper(GenTxid{false, txid});
+    }
+
+    bool exists(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        return existsNonLockHelper(txid);
+    }
 
     CTransactionRef get(const uint256& hash) const;
     txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
@@ -787,7 +804,7 @@ public:
         AssertLockNotHeld(cs);
         LOCK(cs);
         // Sanity Check: the transaction should also be in the mempool
-        if (exists(txid)) {
+        if (existsNonLockHelper(txid)) {
             m_unbroadcast_txids[txid] = wtxid;
         }
     }

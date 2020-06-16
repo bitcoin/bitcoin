@@ -391,7 +391,7 @@ static void UpdateMempoolForReorg(CTxMemPool& mempool, DisconnectedBlockTransact
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
             mempool.removeRecursive(**it, MemPoolRemovalReason::REORG);
-        } else if (mempool.exists((*it)->GetHash())) {
+        } else if (mempool.existsNonLockHelper((*it)->GetHash())) {
             vHashUpdate.push_back((*it)->GetHash());
         }
         ++it;
@@ -600,7 +600,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
 
     // is it already in the memory pool?
-    if (m_pool.exists(hash)) {
+    if (m_pool.existsNonLockHelper(hash)) {
         return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-already-in-mempool");
     }
 
@@ -889,7 +889,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // Rather than check the UTXO set - potentially expensive -
                 // it's cheaper to just check if the new input refers to a
                 // tx that's in the mempool.
-                if (m_pool.exists(tx.vin[j].prevout.hash)) {
+                if (m_pool.existsNonLockHelper(tx.vin[j].prevout.hash)) {
                     return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "replacement-adds-unconfirmed",
                             strprintf("replacement %s adds unconfirmed input, idx %d",
                                 hash.ToString(), j));
@@ -1022,7 +1022,7 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     // trim mempool and check if tx was trimmed
     if (!bypass_limits) {
         LimitMempoolSize(m_pool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, std::chrono::hours{gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY)});
-        if (!m_pool.exists(hash))
+        if (!m_pool.existsNonLockHelper(hash))
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
     }
     return true;

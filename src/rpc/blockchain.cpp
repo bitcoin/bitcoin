@@ -449,7 +449,7 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     std::set<std::string> setDepends;
     for (const CTxIn& txin : tx.vin)
     {
-        if (pool.exists(txin.prevout.hash))
+        if (pool.existsNonLockHelper(txin.prevout.hash))
             setDepends.insert(txin.prevout.hash.ToString());
     }
 
