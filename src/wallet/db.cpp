@@ -761,6 +761,67 @@ void BerkeleyDatabase::ReloadDbEnv()
     }
 }
 
+Dbc* BerkeleyBatch::GetCursor()
+{
+    if (!pdb)
+        return nullptr;
+    Dbc* pcursor = nullptr;
+    int ret = pdb->cursor(nullptr, &pcursor, 0);
+    if (ret != 0)
+        return nullptr;
+    return pcursor;
+}
+
+int BerkeleyBatch::ReadAtCursor(Dbc* pcursor, CDataStream& ssKey, CDataStream& ssValue)
+{
+    // Read at cursor
+    SafeDbt datKey;
+    SafeDbt datValue;
+    int ret = pcursor->get(datKey, datValue, DB_NEXT);
+    if (ret != 0)
+        return ret;
+    else if (datKey.get_data() == nullptr || datValue.get_data() == nullptr)
+        return 99999;
+
+    // Convert to streams
+    ssKey.SetType(SER_DISK);
+    ssKey.clear();
+    ssKey.write((char*)datKey.get_data(), datKey.get_size());
+    ssValue.SetType(SER_DISK);
+    ssValue.clear();
+    ssValue.write((char*)datValue.get_data(), datValue.get_size());
+    return 0;
+}
+
+bool BerkeleyBatch::TxnBegin()
+{
+    if (!pdb || activeTxn)
+        return false;
+    DbTxn* ptxn = env->TxnBegin();
+    if (!ptxn)
+        return false;
+    activeTxn = ptxn;
+    return true;
+}
+
+bool BerkeleyBatch::TxnCommit()
+{
+    if (!pdb || !activeTxn)
+        return false;
+    int ret = activeTxn->commit(0);
+    activeTxn = nullptr;
+    return (ret == 0);
+}
+
+bool BerkeleyBatch::TxnAbort()
+{
+    if (!pdb || !activeTxn)
+        return false;
+    int ret = activeTxn->abort();
+    activeTxn = nullptr;
+    return (ret == 0);
+}
+
 std::string BerkeleyDatabaseVersion()
 {
     return DbEnv::version(nullptr, nullptr, nullptr);
