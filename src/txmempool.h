@@ -801,7 +801,7 @@ public:
 
     TxMempoolInfo info(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     TxMempoolInfo info(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    std::vector<TxMempoolInfo> infoAll() const;
+    std::vector<TxMempoolInfo> infoAll() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     size_t DynamicMemoryUsage() const;
 
