@@ -337,9 +337,9 @@ CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator)
     nCheckFrequency = 0;
 }
 
-bool CTxMemPool::isSpent(const COutPoint& outpoint) const
+bool CTxMemPool::isSpent(const COutPoint& outpoint) const NO_THREAD_SAFETY_ANALYSIS
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
     return mapNextTx.count(outpoint);
 }
 

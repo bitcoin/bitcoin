@@ -533,10 +533,15 @@ static bool rest_getutxos(const util::Ref& context, HTTPRequest* req, const std:
     std::vector<bool> hits;
     bitmap.resize((vOutPoints.size() + 7) / 8);
     {
-        auto process_utxos = [&vOutPoints, &outs, &hits](const CCoinsView& view, const CTxMemPool& mempool) {
+        auto process_utxos = [&vOutPoints, &outs, &hits](const CCoinsView& view, const CTxMemPool& mempool, bool mempool_locked) {
             for (const COutPoint& vOutPoint : vOutPoints) {
                 Coin coin;
-                bool hit = !mempool.isSpent(vOutPoint) && view.GetCoin(vOutPoint, coin);
+                bool hit;
+                if (mempool_locked) {
+                    hit = !mempool.isSpent(vOutPoint) && view.GetCoin(vOutPoint, coin);
+                } else {
+                    hit = WITH_LOCK(mempool.cs, return !mempool.isSpent(vOutPoint)) && view.GetCoin(vOutPoint, coin);
+                }
                 hits.push_back(hit);
                 if (hit) outs.emplace_back(std::move(coin));
             }
@@ -549,10 +554,10 @@ static bool rest_getutxos(const util::Ref& context, HTTPRequest* req, const std:
             LOCK2(cs_main, mempool->cs);
             CCoinsViewCache& viewChain = ::ChainstateActive().CoinsTip();
             CCoinsViewMemPool viewMempool(&viewChain, *mempool);
-            process_utxos(viewMempool, *mempool);
+            process_utxos(viewMempool, *mempool, true /* mempool locked */);
         } else {
             LOCK(cs_main);  // no need to lock mempool!
-            process_utxos(::ChainstateActive().CoinsTip(), CTxMemPool());
+            process_utxos(::ChainstateActive().CoinsTip(), CTxMemPool(), false /* mempool unlocked */);
         }
 
         for (size_t i = 0; i < hits.size(); ++i) {
