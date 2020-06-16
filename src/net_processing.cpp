@@ -1793,7 +1793,7 @@ bool static ProcessHeadersMessage(CNode& pfrom, CConnman* connman, ChainstateMan
         for (const CBlockHeader& header : headers) {
             if (!hashLastBlock.IsNull() && header.hashPrevBlock != hashLastBlock) {
                 Misbehaving(pfrom.GetId(), 20, "non-continuous headers sequence");
-                return false;
+                return true;
             }
             hashLastBlock = header.GetHash();
         }
@@ -1809,7 +1809,7 @@ bool static ProcessHeadersMessage(CNode& pfrom, CConnman* connman, ChainstateMan
     if (!chainman.ProcessNewBlockHeaders(headers, state, chainparams, &pindexLast)) {
         if (state.IsInvalid()) {
             MaybePunishNodeForBlock(pfrom.GetId(), state, via_compact_block, "invalid header received");
-            return false;
+            return true;
         }
     }
 
@@ -2221,7 +2221,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         {
             LOCK(cs_main);
             Misbehaving(pfrom.GetId(), 1);
-            return false;
+            return true;
         }
 
         int64_t nTime;
@@ -2247,14 +2247,14 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         {
             LogPrint(BCLog::NET, "peer=%d does not offer the expected services (%08x offered, %08x expected); disconnecting\n", pfrom.GetId(), nServices, GetDesirableServiceFlags(nServices));
             pfrom.fDisconnect = true;
-            return false;
+            return true;
         }
 
         if (nVersion < MIN_PEER_PROTO_VERSION) {
             // disconnect from peers older than this proto version
             LogPrint(BCLog::NET, "peer=%d using obsolete version %i; disconnecting\n", pfrom.GetId(), nVersion);
             pfrom.fDisconnect = true;
-            return false;
+            return true;
         }
 
         if (!vRecv.empty())
@@ -2381,7 +2381,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         // Must have a version message before anything else
         LOCK(cs_main);
         Misbehaving(pfrom.GetId(), 1);
-        return false;
+        return true;
     }
 
     // At this point, the outgoing message serialization version can't change.
@@ -2429,7 +2429,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         // Must have a verack message before anything else
         LOCK(cs_main);
         Misbehaving(pfrom.GetId(), 1);
-        return false;
+        return true;
     }
 
     if (msg_type == NetMsgType::ADDR) {
@@ -2446,7 +2446,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         {
             LOCK(cs_main);
             Misbehaving(pfrom.GetId(), 20, strprintf("message addr size() = %u", vAddr.size()));
-            return false;
+            return true;
         }
 
         // Store the new addresses
@@ -2522,7 +2522,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         {
             LOCK(cs_main);
             Misbehaving(pfrom.GetId(), 20, strprintf("message inv size() = %u", vInv.size()));
-            return false;
+            return true;
         }
 
         // We won't accept tx inv's if we're in blocks-only mode, or this is a
@@ -2588,7 +2588,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         {
             LOCK(cs_main);
             Misbehaving(pfrom.GetId(), 20, strprintf("message getdata size() = %u", vInv.size()));
-            return false;
+            return true;
         }
 
         LogPrint(BCLog::NET, "received getdata (%u invsz) peer=%d\n", vInv.size(), pfrom.GetId());
@@ -3246,7 +3246,7 @@ bool ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRec
         if (nCount > MAX_HEADERS_RESULTS) {
             LOCK(cs_main);
             Misbehaving(pfrom.GetId(), 20, strprintf("headers message size = %u", nCount));
-            return false;
+            return true;
         }
         headers.resize(nCount);
         for (unsigned int n = 0; n < nCount; n++) {
