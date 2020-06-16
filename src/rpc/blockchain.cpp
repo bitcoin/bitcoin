@@ -1411,7 +1411,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     LOCK(pool.cs);
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("loaded", pool.IsLoadedNonLockHelper());
-    ret.pushKV("size", (int64_t)pool.size());
+    ret.pushKV("size", (int64_t)pool.sizeNonLockHelper());
     ret.pushKV("bytes", (int64_t)pool.GetTotalTxSize());
     ret.pushKV("usage", (int64_t)pool.DynamicMemoryUsage());
     size_t maxmempool = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;

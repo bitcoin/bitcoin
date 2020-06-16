@@ -741,10 +741,16 @@ public:
     /** Sets the current loaded state */
     void SetIsLoaded(bool loaded) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    unsigned long size() const
+    unsigned long sizeNonLockHelper() const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
-        LOCK(cs);
         return mapTx.size();
+    }
+
+    unsigned long size() const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        return sizeNonLockHelper();
     }
 
     uint64_t GetTotalTxSize() const EXCLUSIVE_LOCKS_REQUIRED(cs)
