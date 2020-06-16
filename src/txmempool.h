@@ -727,7 +727,7 @@ public:
      * Calculate the ancestor and descendant count for the given transaction.
      * The counts include the transaction itself.
      */
-    void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const;
+    void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** @returns true if the mempool is fully loaded */
     bool IsLoaded() const;
