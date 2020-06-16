@@ -99,7 +99,8 @@ void BlockAssembler::resetBlock()
 Optional<int64_t> BlockAssembler::m_last_block_num_txs{nullopt};
 Optional<int64_t> BlockAssembler::m_last_block_weight{nullopt};
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, const bool mempool_locked)
+    NO_THREAD_SAFETY_ANALYSIS
 {
     int64_t nTimeStart = GetTimeMicros();
 
@@ -116,7 +117,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
 
-    LOCK2(cs_main, m_mempool.cs);
+    LOCK(cs_main);
+    if (mempool_locked) {
+        AssertLockHeld(m_mempool.cs);
+    } else {
+        AssertLockNotHeld(m_mempool.cs);
+        ENTER_CRITICAL_SECTION(m_mempool.cs);
+    }
     CBlockIndex* pindexPrev = ::ChainActive().Tip();
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
@@ -182,6 +189,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     int64_t nTime2 = GetTimeMicros();
 
     LogPrint(BCLog::BENCH, "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n", 0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1), 0.001 * (nTime2 - nTimeStart));
+
+    if (!mempool_locked) {
+        LEAVE_CRITICAL_SECTION(m_mempool.cs);
+        AssertLockNotHeld(m_mempool.cs);
+    }
 
     return std::move(pblocktemplate);
 }
