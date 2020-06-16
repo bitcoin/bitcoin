@@ -39,6 +39,12 @@ if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
   END_FOLD
 fi
 
+if [ "$RUN_SECURITY_TESTS" = "true" ]; then
+  BEGIN_FOLD security-tests
+  DOCKER_EXEC make test-security-check
+  END_FOLD
+fi
+
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   BEGIN_FOLD fuzz-tests
   DOCKER_EXEC LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib test/fuzz/test_runner.py ${FUZZ_TESTS_CONFIG} $MAKEJOBS -l DEBUG ${DIR_FUZZ_IN}
