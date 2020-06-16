@@ -4,7 +4,6 @@
 
 #include "test/test_dash.h"
 
-#include "bls/bls.h"
 #include "evo/simplifiedmns.h"
 #include "netbase.h"
 

@@ -6,7 +6,6 @@
 #define DASH_DETERMINISTICMNS_H
 
 #include "arith_uint256.h"
-#include "bls/bls.h"
 #include "dbwrapper.h"
 #include "evodb.h"
 #include "providertx.h"
@@ -22,11 +21,6 @@ class CBlock;
 class CBlockIndex;
 class CValidationState;
 
-namespace llmq
-{
-    class CFinalCommitment;
-} // namespace llmq
-
 class CDeterministicMNState
 {
 public:
@@ -37,14 +31,11 @@ public:
     int nPoSeBanHeight{-1};
     uint16_t nRevocationReason{CProUpRevTx::REASON_NOT_SPECIFIED};
 
-    // the block hash X blocks after registration, used in quorum calculations
+    // the block hash X blocks after registration
     uint256 confirmedHash;
-    // sha256(proTxHash, confirmedHash) to speed up quorum calculations
-    // please note that this is NOT a double-sha256 hash
-    uint256 confirmedHashWithProRegTxHash;
 
     CKeyID keyIDOwner;
-    CBLSLazyPublicKey pubKeyOperator;
+    CKeyID pubKeyOperator;
     CKeyID keyIDVoting;
     CService addr;
     CScript scriptPayout;
@@ -78,7 +69,6 @@ public:
         READWRITE(nPoSeBanHeight);
         READWRITE(nRevocationReason);
         READWRITE(confirmedHash);
-        READWRITE(confirmedHashWithProRegTxHash);
         READWRITE(keyIDOwner);
         READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);
@@ -89,7 +79,7 @@ public:
 
     void ResetOperatorFields()
     {
-        pubKeyOperator.Set(CBLSPublicKey());
+        pubKeyOperator.SetNull();
         addr = CService();
         scriptOperatorPayout = CScript();
         nRevocationReason = CProUpRevTx::REASON_NOT_SPECIFIED;
@@ -105,8 +95,7 @@ public:
         confirmedHash = _confirmedHash;
         CSHA256 h;
         h.Write(_proTxHash.begin(), _proTxHash.size());
-        h.Write(_confirmedHash.begin(), _confirmedHash.size());
-        h.Finalize(confirmedHashWithProRegTxHash.begin());
+        h.Finalize(_confirmedHash.begin());
     }
 
 public:
@@ -127,7 +116,6 @@ public:
         Field_nPoSeBanHeight                    = 0x0010,
         Field_nRevocationReason                 = 0x0020,
         Field_confirmedHash                     = 0x0040,
-        Field_confirmedHashWithProRegTxHash     = 0x0080,
         Field_keyIDOwner                        = 0x0100,
         Field_pubKeyOperator                    = 0x0200,
         Field_keyIDVoting                       = 0x0400,
@@ -144,7 +132,6 @@ public:
     DMN_STATE_DIFF_LINE(nPoSeBanHeight) \
     DMN_STATE_DIFF_LINE(nRevocationReason) \
     DMN_STATE_DIFF_LINE(confirmedHash) \
-    DMN_STATE_DIFF_LINE(confirmedHashWithProRegTxHash) \
     DMN_STATE_DIFF_LINE(keyIDOwner) \
     DMN_STATE_DIFF_LINE(pubKeyOperator) \
     DMN_STATE_DIFF_LINE(keyIDVoting) \
@@ -401,7 +388,7 @@ public:
     }
     CDeterministicMNCPtr GetMN(const uint256& proTxHash) const;
     CDeterministicMNCPtr GetValidMN(const uint256& proTxHash) const;
-    CDeterministicMNCPtr GetMNByOperatorKey(const CBLSPublicKey& pubKey);
+    CDeterministicMNCPtr GetMNByOperatorKey(const CKeyID& pubKey);
     CDeterministicMNCPtr GetMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetValidMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetMNByService(const CService& service) const;
@@ -416,14 +403,6 @@ public:
      */
     std::vector<CDeterministicMNCPtr> GetProjectedMNPayees(int nCount) const;
 
-    /**
-     * Calculate a quorum based on the modifier. The resulting list is deterministically sorted by score
-     * @param maxSize
-     * @param modifier
-     * @return
-     */
-    std::vector<CDeterministicMNCPtr> CalculateQuorum(size_t maxSize, const uint256& modifier) const;
-    std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScores(const uint256& modifier) const;
 
     /**
      * Calculates the maximum penalty which is allowed at the height of this MN list. It is dynamic and might change
@@ -641,7 +620,6 @@ public:
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
     bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, CDeterministicMNList& mnListRet, bool debugLogs);
-    void HandleQuorumCommitment(llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs);
     void DecreasePoSePenalties(CDeterministicMNList& mnList);
 
     CDeterministicMNList GetListForBlock(const CBlockIndex* pindex);

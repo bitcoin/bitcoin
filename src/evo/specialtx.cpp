@@ -14,8 +14,6 @@
 #include "deterministicmns.h"
 #include "specialtx.h"
 
-#include "llmq/quorums_commitment.h"
-#include "llmq/quorums_blockprocessor.h"
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
@@ -37,8 +35,6 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return CheckProUpRevTx(tx, pindexPrev, state);
     case TRANSACTION_COINBASE:
         return CheckCbTx(tx, pindexPrev, state);
-    case TRANSACTION_QUORUM_COMMITMENT:
-        return llmq::CheckLLMQCommitment(tx, pindexPrev, state);
     }
 
     return state.DoS(10, false, REJECT_INVALID, "bad-tx-type-check");
@@ -58,8 +54,6 @@ bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValida
         return true; // handled in batches per block
     case TRANSACTION_COINBASE:
         return true; // nothing to do
-    case TRANSACTION_QUORUM_COMMITMENT:
-        return true; // handled per block
     }
 
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type-proc");
@@ -79,8 +73,6 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
         return true; // handled in batches per block
     case TRANSACTION_COINBASE:
         return true; // nothing to do
-    case TRANSACTION_QUORUM_COMMITMENT:
-        return true; // handled per block
     }
 
     return false;
@@ -89,7 +81,6 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
 bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, bool fJustCheck, bool fCheckCbTxMerleRoots)
 {
     static int64_t nTimeLoop = 0;
-    static int64_t nTimeQuorum = 0;
     static int64_t nTimeDMN = 0;
     static int64_t nTimeMerkle = 0;
 
@@ -107,13 +98,6 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
 
     int64_t nTime2 = GetTimeMicros(); nTimeLoop += nTime2 - nTime1;
     LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeLoop * 0.000001);
-
-    if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state)) {
-        return false;
-    }
-
-    int64_t nTime3 = GetTimeMicros(); nTimeQuorum += nTime3 - nTime2;
-    LogPrint(BCLog::BENCHMARK, "        - quorumBlockProcessor: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeQuorum * 0.000001);
 
     if (!deterministicMNManager->ProcessBlock(block, pindex, state, fJustCheck)) {
         return false;
@@ -142,10 +126,6 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
     }
 
     if (!deterministicMNManager->UndoBlock(block, pindex)) {
-        return false;
-    }
-
-    if (!llmq::quorumBlockProcessor->UndoBlock(block, pindex)) {
         return false;
     }
 

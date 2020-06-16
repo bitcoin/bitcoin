@@ -10,13 +10,13 @@ import sys
 
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment
 from test_framework.mininode import CTransaction, ToHex, FromHex, CTxOut, COIN, CCbTx
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 
 class Masternode(object):
     pass
 
-class DIP3Test(BitcoinTestFramework):
+class DIP3Test(SyscoinTestFramework):
     def set_test_params(self):
         self.num_initial_mn = 11 # Should be >= 11 to make sure quorums are not always the same MNs
         self.num_nodes = 1 + self.num_initial_mn + 2 # +1 for controller, +1 for mn-qt, +1 for mn created after dip3 activation

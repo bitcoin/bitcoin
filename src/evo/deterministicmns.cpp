@@ -13,9 +13,6 @@
 #include "validation.h"
 #include "validationinterface.h"
 
-#include "llmq/quorums_commitment.h"
-#include "llmq/quorums_utils.h"
-
 #include <univalue.h>
 
 static const std::string DB_LIST_SNAPSHOT = "dmn_S";
@@ -243,54 +240,6 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(int
     result.resize(nCount);
 
     return result;
-}
-
-std::vector<CDeterministicMNCPtr> CDeterministicMNList::CalculateQuorum(size_t maxSize, const uint256& modifier) const
-{
-    auto scores = CalculateScores(modifier);
-
-    // sort is descending order
-    std::sort(scores.rbegin(), scores.rend(), [](const std::pair<arith_uint256, CDeterministicMNCPtr>& a, std::pair<arith_uint256, CDeterministicMNCPtr>& b) {
-        if (a.first == b.first) {
-            // this should actually never happen, but we should stay compatible with how the non deterministic MNs did the sorting
-            return a.second->collateralOutpoint < b.second->collateralOutpoint;
-        }
-        return a.first < b.first;
-    });
-
-    // take top maxSize entries and return it
-    std::vector<CDeterministicMNCPtr> result;
-    result.resize(std::min(maxSize, scores.size()));
-    for (size_t i = 0; i < result.size(); i++) {
-        result[i] = std::move(scores[i].second);
-    }
-    return result;
-}
-
-std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CDeterministicMNList::CalculateScores(const uint256& modifier) const
-{
-    std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> scores;
-    scores.reserve(GetAllMNsCount());
-    ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
-        if (dmn->pdmnState->confirmedHash.IsNull()) {
-            // we only take confirmed MNs into account to avoid hash grinding on the ProRegTxHash to sneak MNs into a
-            // future quorums
-            return;
-        }
-        // calculate sha256(sha256(proTxHash, confirmedHash), modifier) per MN
-        // Please note that this is not a double-sha256 but a single-sha256
-        // The first part is already precalculated (confirmedHashWithProRegTxHash)
-        // TODO When https://github.com/bitcoin/bitcoin/pull/13191 gets backported, implement something that is similar but for single-sha256
-        uint256 h;
-        CSHA256 sha256;
-        sha256.Write(dmn->pdmnState->confirmedHashWithProRegTxHash.begin(), dmn->pdmnState->confirmedHashWithProRegTxHash.size());
-        sha256.Write(modifier.begin(), modifier.size());
-        sha256.Finalize(h.begin());
-
-        scores.emplace_back(UintToArith256(h), dmn);
-    });
-
-    return scores;
 }
 
 int CDeterministicMNList::CalcMaxPoSePenalty() const
@@ -629,7 +578,6 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         int nConfirmations = pindexPrev->nHeight - dmn->pdmnState->nRegisteredHeight;
         if (nConfirmations >= Params().GetConsensus().nMasternodeMinimumConfirmations) {
             CDeterministicMNState newState = *dmn->pdmnState;
-            newState.UpdateConfirmedHash(dmn->proTxHash, pindexPrev->GetBlockHash());
             newList.UpdateMN(dmn->proTxHash, std::make_shared<CDeterministicMNState>(newState));
         }
     });
@@ -792,22 +740,6 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 LogPrintf("CDeterministicMNManager::%s -- MN %s revoked operator key at height %d: %s\n",
                     __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
             }
-        } else if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
-            llmq::CFinalCommitmentTxPayload qc;
-            if (!GetTxPayload(tx, qc)) {
-                assert(false); // this should have been handled already
-            }
-            if (!qc.commitment.IsNull()) {
-                const auto& params = Params().GetConsensus().llmqs.at(qc.commitment.llmqType);
-                int quorumHeight = qc.nHeight - (qc.nHeight % params.dkgInterval);
-                auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
-                if (!quorumIndex || quorumIndex->GetBlockHash() != qc.commitment.quorumHash) {
-                    // we should actually never get into this case as validation should have catched it...but lets be sure
-                    return _state.DoS(100, false, REJECT_INVALID, "bad-qc-quorum-hash");
-                }
-
-                HandleQuorumCommitment(qc.commitment, quorumIndex, newList, debugLogs);
-            }
         }
     }
 
@@ -840,26 +772,6 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     mnListRet = std::move(newList);
 
     return true;
-}
-
-void CDeterministicMNManager::HandleQuorumCommitment(llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs)
-{
-    // The commitment has already been validated at this point so it's safe to use members of it
-
-    auto members = llmq::CLLMQUtils::GetAllQuorumMembers((Consensus::LLMQType)qc.llmqType, pindexQuorum);
-
-    for (size_t i = 0; i < members.size(); i++) {
-        if (!mnList.HasMN(members[i]->proTxHash)) {
-            continue;
-        }
-        if (!qc.validMembers[i]) {
-            // punish MN for failed DKG participation
-            // The idea is to immediately ban a MN when it fails 2 DKG sessions with only a few blocks in-between
-            // If there were enough blocks between failures, the MN has a chance to recover as he reduces his penalty by 1 for every block
-            // If it however fails 3 times in the timespan of a single payment cycle, it should definitely get banned
-            mnList.PoSePunish(members[i]->proTxHash, mnList.CalcPenalty(66), debugLogs);
-        }
-    }
 }
 
 void CDeterministicMNManager::DecreasePoSePenalties(CDeterministicMNList& mnList)

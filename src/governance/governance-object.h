@@ -14,7 +14,6 @@
 #include "sync.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "bls/bls.h"
 
 #include <univalue.h>
 
@@ -254,8 +253,8 @@ public:
     // Signature related functions
 
     void SetMasternodeOutpoint(const COutPoint& outpoint);
-    bool Sign(const CBLSSecretKey& key);
-    bool CheckSignature(const CBLSPublicKey& pubKey) const;
+    bool Sign(const CKeyID& key);
+    bool CheckSignature(const CPubKey& pubKey) const;
 
     uint256 GetSignatureHash() const;
 

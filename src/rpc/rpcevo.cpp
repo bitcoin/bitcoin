@@ -24,7 +24,6 @@
 #include "evo/deterministicmns.h"
 #include "evo/simplifiedmns.h"
 
-#include "bls/bls.h"
 
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
@@ -67,13 +66,13 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
             "                              If set to an empty string, the currently active payout address is reused.\n"
         },
         {"operatorPubKey_register",
-            "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The private key does not have to be known.\n"
+            "%d. \"operatorPubKey\"           (string, required) The operator public key. The private key does not have to be known.\n"
             "                              It has to match the private key which is later used when operating the masternode.\n"
         },
         {"operatorPubKey_update",
-            "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The private key does not have to be known.\n"
+            "%d. \"operatorPubKey\"           (string, required) The operator public key. The private key does not have to be known.\n"
             "                              It has to match the private key which is later used when operating the masternode.\n"
-            "                              If set to an empty string, the currently active operator BLS public key is reused.\n"
+            "                              If set to an empty string, the currently active operator public key is reused.\n"
         },
         {"operatorReward",
             "%d. \"operatorReward\"           (numeric, required) The fraction in %% to share with the operator. The value must be\n"
@@ -150,24 +149,6 @@ static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std:
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid P2PKH address, not %s", paramName, strAddress));
     }
     return keyID;
-}
-
-static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string& paramName)
-{
-    CBLSPublicKey pubKey;
-    if (!pubKey.SetHexStr(hexKey)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS public key, not %s", paramName, hexKey));
-    }
-    return pubKey;
-}
-
-static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::string& paramName)
-{
-    CBLSSecretKey secKey;
-    if (!secKey.SetHexStr(hexKey)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS secret key", paramName));
-    }
-    return secKey;
 }
 
 #ifdef ENABLE_WALLET
@@ -273,7 +254,7 @@ static void SignSpecialTxPayloadByString(const CMutableTransaction& tx, SpecialT
 }
 
 template<typename SpecialTxPayload>
-static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxPayload& payload, const CBLSSecretKey& key)
+static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKeyID& key)
 {
     UpdateSpecialTxInputsHash(tx, payload);
 
@@ -468,7 +449,7 @@ UniValue protx_register(const JSONRPCRequest& request)
     }
 
     CKey keyOwner = ParsePrivKey(pwallet, request.params[paramIdx + 1].get_str(), true);
-    CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
+    CKeyID pubKeyOperator = ParsePubKeyIDFromAddress(request.params[paramIdx + 2].get_str(), "operator address");
     CKeyID keyIDVoting = keyOwner.GetPubKey().GetID();
     if (request.params[paramIdx + 3].get_str() != "") {
         keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
@@ -630,7 +611,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
         throw std::runtime_error(strprintf("invalid network address %s", request.params[2].get_str()));
     }
 
-    CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[3].get_str(), "operatorKey");
+    CKeyID keyOperator = ParsePubKeyIDFromAddress(request.params[3].get_str(), "operatorKey");
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
@@ -732,7 +713,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     ptx.scriptPayout = dmn->pdmnState->scriptPayout;
 
     if (request.params[2].get_str() != "") {
-        ptx.pubKeyOperator = ParseBLSPubKey(request.params[2].get_str(), "operator BLS address");
+        ptx.pubKeyOperator = ParsePubKeyIDFromAddress(request.params[2].get_str(), "operator address");
     }
     if (request.params[3].get_str() != "") {
         ptx.keyIDVoting = ParsePubKeyIDFromAddress(request.params[3].get_str(), "voting address");
@@ -813,7 +794,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
     ptx.nVersion = CProRegTx::CURRENT_VERSION;
     ptx.proTxHash = ParseHashV(request.params[1], "proTxHash");
 
-    CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey");
+    CKeyID keyOperator = ParsePubKeyIDFromAddress(request.params[2].get_str(), "operatorKey");
 
     if (request.params.size() > 3) {
         int32_t nReason = ParseInt32V(request.params[3], "reason");
@@ -1172,108 +1153,10 @@ UniValue protx(const JSONRPCRequest& request)
     }
 }
 
-void bls_generate_help()
-{
-    throw std::runtime_error(
-            "bls generate\n"
-            "\nReturns a BLS secret/public key pair.\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
-            "  \"public\": \"xxxx\",        (string) BLS public key\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("bls generate", "")
-    );
-}
-
-UniValue bls_generate(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() != 1) {
-        bls_generate_help();
-    }
-
-    CBLSSecretKey sk;
-    sk.MakeNewKey();
-
-    UniValue ret(UniValue::VOBJ);
-    ret.push_back(Pair("secret", sk.ToString()));
-    ret.push_back(Pair("public", sk.GetPublicKey().ToString()));
-    return ret;
-}
-
-void bls_fromsecret_help()
-{
-    throw std::runtime_error(
-            "bls fromsecret \"secret\"\n"
-            "\nParses a BLS secret key and returns the secret/public key pair.\n"
-            "\nArguments:\n"
-            "1. \"secret\"                (string, required) The BLS secret key\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
-            "  \"public\": \"xxxx\",        (string) BLS public key\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
-    );
-}
-
-UniValue bls_fromsecret(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() != 2) {
-        bls_fromsecret_help();
-    }
-
-    CBLSSecretKey sk;
-    if (!sk.SetHexStr(request.params[1].get_str())) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Secret key must be a valid hex string of length %d", sk.SerSize*2));
-    }
-
-    UniValue ret(UniValue::VOBJ);
-    ret.push_back(Pair("secret", sk.ToString()));
-    ret.push_back(Pair("public", sk.GetPublicKey().ToString()));
-    return ret;
-}
-
-[[ noreturn ]] void bls_help()
-{
-    throw std::runtime_error(
-            "bls \"command\" ...\n"
-            "Set of commands to execute BLS related actions.\n"
-            "To get help on individual commands, use \"help bls command\".\n"
-            "\nArguments:\n"
-            "1. \"command\"        (string, required) The command to execute\n"
-            "\nAvailable commands:\n"
-            "  generate          - Create a BLS secret/public key pair\n"
-            "  fromsecret        - Parse a BLS secret key and return the secret/public key pair\n"
-            );
-}
-
-UniValue _bls(const JSONRPCRequest& request)
-{
-    if (request.fHelp && request.params.empty()) {
-        bls_help();
-    }
-
-    std::string command;
-    if (request.params.size() >= 1) {
-        command = request.params[0].get_str();
-    }
-
-    if (command == "generate") {
-        return bls_generate(request);
-    } else if (command == "fromsecret") {
-        return bls_fromsecret(request);
-    } else {
-        bls_help();
-    }
-}
 
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
-    { "evo",                "bls",                    &_bls,                   false, {}  },
     { "evo",                "protx",                  &protx,                  false, {}  },
 };
 
