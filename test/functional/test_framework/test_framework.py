@@ -503,7 +503,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         assert_equal(len(binary_cli), num_nodes)
         old_num_nodes = len(self.nodes)
         for i in range(num_nodes):
-            self.nodes.append(TestNode(
+            test_node_i = TestNode(
                 old_num_nodes + i,
                 get_datadir_path(self.options.tmpdir, old_num_nodes + i),
                 self.extra_args_from_options,
@@ -522,7 +522,15 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 use_cli=self.options.usecli,
                 start_perf=self.options.perf,
                 use_valgrind=self.options.valgrind,
-            ))
+            )
+            self.nodes.append(test_node_i)
+            if not test_node_i.version_is_at_least(160000):
+                # adjust conf for pre 16
+                conf_file = test_node_i.bitcoinconf
+                with open(conf_file, 'r', encoding='utf8') as conf:
+                    conf_data = conf.read()
+                with open(conf_file, 'w', encoding='utf8') as conf:
+                    conf.write(conf_data.replace('[regtest]', ''))
 
     def add_dynamically_node(self, extra_args=None, *, rpchost=None, binary=None):
         if self.bind_to_localhost_only:

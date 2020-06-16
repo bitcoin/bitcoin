@@ -14,7 +14,6 @@ import shutil
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import (BitcoinTestFramework, SkipTest)
 from test_framework.util import (
-    adjust_bitcoin_conf_for_pre_16,
     assert_equal,
     assert_greater_than,
     assert_is_hex_string,
@@ -48,8 +47,6 @@ class UpgradeWalletTest(BitcoinTestFramework):
             160300,
             150200,
         ])
-        # adapt dash.conf, because older dashd's don't recognize config sections
-        adjust_bitcoin_conf_for_pre_16(self.nodes[2].bitcoinconf)
         self.start_nodes()
         self.import_deterministic_coinbase_privkeys()
 

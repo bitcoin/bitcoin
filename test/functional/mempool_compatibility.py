@@ -13,9 +13,7 @@ The previous release v0.15.0.0 is required by this test, see test/README.md.
 import os
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    adjust_bitcoin_conf_for_pre_16
-)
+
 
 class MempoolCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -35,7 +33,6 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
             [],
             [],
         ]
-        adjust_bitcoin_conf_for_pre_16(self.nodes[0].bitcoinconf)
         self.start_nodes()
         self.import_deterministic_coinbase_privkeys()
 
