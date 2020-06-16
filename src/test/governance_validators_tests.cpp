@@ -1,13 +1,12 @@
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2014-2019 The Dash Core developers
 
-#include <governancevalidators.h>
-#include <util/strencodings.h>
+#include "governance/governance-validators.h"
+#include "utilstrencodings.h"
 
-#include <test/data/proposals_valid.json.h>
-#include <test/data/proposals_invalid.json.h>
+#include "data/proposals_valid.json.h"
+#include "data/proposals_invalid.json.h"
 
-#include <test/util/setup_common.h>
+#include "test/test_dash.h"
 
 #include <iostream>
 #include <fstream>
@@ -46,13 +45,18 @@ BOOST_AUTO_TEST_CASE(valid_proposals_test)
 
         // legacy format
         std::string strHexData1 = CreateEncodedProposalObject(objProposal);
-        CProposalValidator validator1(strHexData1);
+        CProposalValidator validator1(strHexData1, true);
         BOOST_CHECK_MESSAGE(validator1.Validate(false), validator1.GetErrorMessages());
         BOOST_CHECK_MESSAGE(!validator1.Validate(), validator1.GetErrorMessages());
 
+        // legacy format w/validation flag off
+        CProposalValidator validator0(strHexData1, false);
+        BOOST_CHECK(!validator0.Validate());
+        BOOST_CHECK_EQUAL(validator0.GetErrorMessages(), "Legacy proposal serialization format not allowed;JSON parsing error;");
+
         // new format
         std::string strHexData2 = HexStr(objProposal.write());
-        CProposalValidator validator2(strHexData2);
+        CProposalValidator validator2(strHexData2, false);
         BOOST_CHECK_MESSAGE(validator2.Validate(false), validator2.GetErrorMessages());
         BOOST_CHECK_MESSAGE(!validator2.Validate(), validator2.GetErrorMessages());
     }
@@ -70,12 +74,12 @@ BOOST_AUTO_TEST_CASE(invalid_proposals_test)
 
         // legacy format
         std::string strHexData1 = CreateEncodedProposalObject(objProposal);
-        CProposalValidator validator1(strHexData1);
+        CProposalValidator validator1(strHexData1, true);
         BOOST_CHECK_MESSAGE(!validator1.Validate(false), validator1.GetErrorMessages());
 
         // new format
         std::string strHexData2 = HexStr(objProposal.write());
-        CProposalValidator validator2(strHexData2);
+        CProposalValidator validator2(strHexData2, false);
         BOOST_CHECK_MESSAGE(!validator2.Validate(false), validator2.GetErrorMessages());
     }
 }
