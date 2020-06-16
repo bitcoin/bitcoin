@@ -46,7 +46,9 @@ uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const uint256& txhash) const {
 
 
 
-ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn) {
+ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn, const bool mempool_locked)
+    NO_THREAD_SAFETY_ANALYSIS
+{
     if (cmpctblock.header.IsNull() || (cmpctblock.shorttxids.empty() && cmpctblock.prefilledtxn.empty()))
         return READ_STATUS_INVALID;
     if (cmpctblock.shorttxids.size() + cmpctblock.prefilledtxn.size() > MAX_BLOCK_WEIGHT / MIN_SERIALIZABLE_TRANSACTION_WEIGHT)
@@ -103,8 +105,12 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         return READ_STATUS_FAILED; // Short ID collision
 
     std::vector<bool> have_txn(txn_available.size());
-    {
-    LOCK(pool->cs);
+    if (mempool_locked) {
+        AssertLockHeld(pool->cs);
+    } else {
+        AssertLockNotHeld(pool->cs);
+        ENTER_CRITICAL_SECTION(pool->cs);
+    }
     for (size_t i = 0; i < pool->vTxHashes.size(); i++) {
         uint64_t shortid = cmpctblock.GetShortID(pool->vTxHashes[i].first);
         std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
@@ -129,6 +135,10 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         if (mempool_count == shorttxids.size())
             break;
     }
+
+    if (!mempool_locked) {
+        LEAVE_CRITICAL_SECTION(pool->cs);
+        AssertLockNotHeld(pool->cs);
     }
 
     for (size_t i = 0; i < extra_txn.size(); i++) {
