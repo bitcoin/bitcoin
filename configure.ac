@@ -144,9 +144,9 @@ AC_ARG_WITH([qrencode],
 
 AC_ARG_ENABLE([hardening],
   [AS_HELP_STRING([--disable-hardening],
-  [do not attempt to harden the resulting executables (default is to harden)])],
+  [do not attempt to harden the resulting executables (default is to harden when possible)])],
   [use_hardening=$enableval],
-  [use_hardening=yes])
+  [use_hardening=auto])
 
 AC_ARG_ENABLE([reduce-exports],
   [AS_HELP_STRING([--enable-reduce-exports],
@@ -232,6 +232,13 @@ AM_CONDITIONAL([ENABLE_MINER], [test x$enable_miner = xyes])
 if test "x$enable_miner" = xyes; then
     AC_DEFINE(ENABLE_MINER, 1, [Define this symbol if in-wallet miner should be enabled])
 fi
+
+# Enable gprof profiling
+AC_ARG_ENABLE([gprof],
+    [AS_HELP_STRING([--enable-gprof],
+                    [use gprof profiling compiler flags (default is no)])],
+    [enable_gprof=$enableval],
+    [enable_gprof=no])
 
 # Turn warnings into errors
 AC_ARG_ENABLE([werror],
@@ -653,12 +660,30 @@ else
   AC_SEARCH_LIBS([clock_gettime],[rt])
 fi
 
+if test "x$enable_gprof" = xyes; then
+    dnl -pg is incompatible with -pie. Since hardening and profiling together doesn't make sense,
+    dnl we simply make them mutually exclusive here. Additionally, hardened toolchains may force
+    dnl -pie by default, in which case it needs to be turned off with -no-pie.
+
+    if test x$use_hardening = xyes; then
+        AC_MSG_ERROR(gprof profiling is not compatible with hardening. Reconfigure with --disable-hardening or --disable-gprof)
+    fi
+    use_hardening=no
+    AX_CHECK_COMPILE_FLAG([-pg],[GPROF_CXXFLAGS="-pg"],
+        [AC_MSG_ERROR(gprof profiling requested but not available)], [[$CXXFLAG_WERROR]])
+
+    AX_CHECK_LINK_FLAG([[-no-pie]], [GPROF_LDFLAGS="-no-pie"])
+    AX_CHECK_LINK_FLAG([[-pg]],[GPROF_LDFLAGS="$GPROF_LDFLAGS -pg"],
+        [AC_MSG_ERROR(gprof profiling requested but not available)], [[$GPROF_LDFLAGS]])
+fi
+
 if test x$TARGET_OS != xwindows; then
   # All windows code is PIC, forcing it on just adds useless compile warnings
   AX_CHECK_COMPILE_FLAG([-fPIC],[PIC_FLAGS="-fPIC"])
 fi
 
 if test x$use_hardening != xno; then
+  use_hardening=yes
   AX_CHECK_COMPILE_FLAG([-Wstack-protector],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
   AX_CHECK_COMPILE_FLAG([-fstack-protector-all],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
 
@@ -1359,6 +1384,8 @@ AC_SUBST(BITCOIN_TX_NAME)
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(ERROR_CXXFLAGS)
+AC_SUBST(GPROF_CXXFLAGS)
+AC_SUBST(GPROF_LDFLAGS)
 AC_SUBST(HARDENED_CXXFLAGS)
 AC_SUBST(HARDENED_CPPFLAGS)
 AC_SUBST(HARDENED_LDFLAGS)
@@ -1457,6 +1484,7 @@ echo "  use asm             = $use_asm"
 echo "  debug enabled       = $enable_debug"
 echo "  crash hooks enabled = $enable_crashhooks"
 echo "  miner enabled       = $enable_miner"
+echo "  gprof enabled       = $enable_gprof"
 echo "  werror              = $enable_werror"
 echo
 echo "  target os           = $TARGET_OS"

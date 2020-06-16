@@ -416,9 +416,8 @@ std::string HelpMessageGroup(const std::string& message);
 std::string HelpMessageOpt(const std::string& option, const std::string& message);
 
 /**
- * Return the number of physical cores available on the current system.
- * @note This does not count virtual cores, such as those provided by HyperThreading
- * when boost is newer than 1.56.
+ * Return the number of cores available on the current system.
+ * @note This does count virtual cores, such as those provided by HyperThreading.
  */
 int GetNumCores();
 

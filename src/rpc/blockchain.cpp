@@ -1826,25 +1826,19 @@ UniValue getchaintxstats(const JSONRPCRequest& request)
     const CBlockIndex* pindex;
     int blockcount = 30 * 24 * 60 * 60 / Params().GetConsensus().nPowTargetSpacing; // By default: 1 month
 
-    bool havehash = !request.params[1].isNull();
-    uint256 hash;
-    if (havehash) {
-        hash = uint256S(request.params[1].get_str());
-    }
-
-    {
+    if (request.params[1].isNull()) {
         LOCK(cs_main);
-        if (havehash) {
-            auto it = mapBlockIndex.find(hash);
-            if (it == mapBlockIndex.end()) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-            }
-            pindex = it->second;
-            if (!chainActive.Contains(pindex)) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
-            }
-        } else {
-            pindex = chainActive.Tip();
+        pindex = chainActive.Tip();
+    } else {
+        uint256 hash = uint256S(request.params[1].get_str());
+        LOCK(cs_main);
+        auto it = mapBlockIndex.find(hash);
+        if (it == mapBlockIndex.end()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+        }
+        pindex = it->second;
+        if (!chainActive.Contains(pindex)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
         }
     }
 
