@@ -283,10 +283,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.check_compactblock_construction_from_block(version, header_and_shortids, block_hash, block)
 
         # Now fetch the compact block using a normal non-announce getdata
-        with mininode_lock:
-            test_node.clear_block_announcement()
-            inv = CInv(MSG_CMPCT_BLOCK, block_hash)  # 20 == "CompactBlock"
-            test_node.send_message(msg_getdata([inv]))
+        test_node.clear_block_announcement()
+        inv = CInv(MSG_CMPCT_BLOCK, block_hash)  # 20 == "CompactBlock"
+        test_node.send_message(msg_getdata([inv]))
 
         wait_until(lambda: "cmpctblock" in test_node.last_message, timeout=30, lock=mininode_lock)
 
