@@ -136,18 +136,6 @@ AC_ARG_ENABLE([upnp-default],
   [use_upnp_default=$enableval],
   [use_upnp_default=no])
 
-dnl Enable external signer support when opting in to boost process
-if test x$with_boost_process = xyes; then
-  use_external_signer_default=yes;
-else
-  use_external_signer_default=no;
-fi
-
-AC_ARG_ENABLE([external-signer],
-    [AS_HELP_STRING([--enable-external-signer],[compile external signer support (requires Boost::Process)])],
-    [use_external_signer=$enableval],
-    [use_external_signer=$use_external_signer_default])
-
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--disable-tests],[do not compile tests (default is to compile)]),
     [use_tests=$enableval],
@@ -1155,6 +1143,18 @@ else
   BITCOIN_QT_CONFIGURE
 fi
 
+dnl Enable external signer support when opting in to boost process, or building GUI
+if test x$with_boost_process = xyes || test x$bitcoin_enable_qt != xno; then
+  use_external_signer_default=yes;
+else
+  use_external_signer_default=no;
+fi
+
+AC_ARG_ENABLE([external-signer],
+    [AS_HELP_STRING([--enable-external-signer],[compile external signer support (requires Boost::Process)])],
+    [use_external_signer=$enableval],
+    [use_external_signer=$use_external_signer_default])
+
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
     BITCOIN_FIND_BDB48
@@ -1209,8 +1209,8 @@ AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_THREAD
 
-dnl Opt-in to boost-process, unless external signer support is requested
-if test x$with_boost_process = xyes || test x$use_external_signer = xyes; then
+dnl Opt-in to boost-process, unless external signer support is requested, or building with GUI
+if test x$with_boost_process = xyes || test x$use_external_signer = xyes || test x$bitcoin_enable_qt != xno; then
     AX_BOOST_PROCESS
 fi
 
