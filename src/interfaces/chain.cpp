@@ -333,9 +333,10 @@ public:
     {
         return ::feeEstimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
     }
-    CFeeRate mempoolMinFee() override
+    CFeeRate mempoolMinFee() override EXCLUSIVE_LOCKS_REQUIRED(!::mempool.cs)
     {
         if (!m_node.mempool) return {};
+        AssertLockNotHeld(m_node.mempool->cs);
         return m_node.mempool->GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
     }
     CFeeRate relayMinFee() override { return ::minRelayTxFee; }

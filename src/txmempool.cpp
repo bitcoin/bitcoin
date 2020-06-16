@@ -999,8 +999,8 @@ const CTxMemPool::setEntries & CTxMemPool::GetMemPoolChildren(txiter entry) cons
     return it->second.children;
 }
 
-CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
-    LOCK(cs);
+CFeeRate CTxMemPool::GetMinFeeNonLockHelper(size_t sizelimit) const
+{
     if (!blockSinceLastRollingFeeBump || rollingMinimumFeeRate == 0)
         return CFeeRate(llround(rollingMinimumFeeRate));
 
