@@ -64,15 +64,6 @@ static bool CheckStringSig(const ProTx& proTx, const CKeyID& keyID, CValidationS
 }
 
 template <typename ProTx>
-static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, CValidationState& state)
-{
-    if (!proTx.sig.VerifyInsecure(pubKey, ::SerializeHash(proTx))) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false);
-    }
-    return true;
-}
-
-template <typename ProTx>
 static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidationState& state)
 {
     uint256 inputsHash = CalcTxInputsHash(tx);
@@ -104,10 +95,12 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-mode");
     }
 
-    if (ptx.keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
+    if (ptx.keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsNull() || ptx.keyIDVoting.IsNull()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-null");
     }
-    if (!ptx.scriptPayout.IsPayToPublicKeyHash() && !ptx.scriptPayout.IsPayToScriptHash()) {
+    int witnessversion;
+    std::vector<unsigned char> witnessprogram;
+    if (!ptx.scriptPayout.IsPayToPublicKeyHash() && !ptx.scriptPayout.IsPayToScriptHash() && !ptx.scriptPayout.IsWitnessProgram(witnessversion, witnessprogram)) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee");
     }
 
@@ -248,7 +241,9 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
                 // don't allow to set operator reward payee in case no operatorReward was set
                 return state.DoS(10, false, REJECT_INVALID, "bad-protx-operator-payee");
             }
-            if (!ptx.scriptOperatorPayout.IsPayToPublicKeyHash() && !ptx.scriptOperatorPayout.IsPayToScriptHash()) {
+            int witnessversion;
+            std::vector<unsigned char> witnessprogram;
+            if (!ptx.scriptOperatorPayout.IsPayToPublicKeyHash() && !ptx.scriptOperatorPayout.IsPayToScriptHash() && !ptx.scriptOperatorPayout.IsWitnessProgram(witnessversion, witnessprogram)) {
                 return state.DoS(10, false, REJECT_INVALID, "bad-protx-operator-payee");
             }
         }
@@ -257,7 +252,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
         if (!CheckInputsHash(tx, ptx, state)) {
             return false;
         }
-        if (!CheckHashSig(ptx, mn->pdmnState->pubKeyOperator.Get(), state)) {
+        if (!CheckHashSig(ptx, mn->pdmnState->pubKeyOperator, state)) {
             return false;
         }
     }
@@ -283,10 +278,12 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-mode");
     }
 
-    if (!ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
+    if (ptx.pubKeyOperator.IsNull() || ptx.keyIDVoting.IsNull()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-null");
     }
-    if (!ptx.scriptPayout.IsPayToPublicKeyHash() && !ptx.scriptPayout.IsPayToScriptHash()) {
+    int witnessversion;
+    std::vector<unsigned char> witnessprogram;
+    if (!ptx.scriptPayout.IsPayToPublicKeyHash() && !ptx.scriptPayout.IsPayToScriptHash() && !ptx.scriptPayout.IsWitnessProgram(witnessversion, witnessprogram)) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee");
     }
 
@@ -376,7 +373,7 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
 
         if (!CheckInputsHash(tx, ptx, state))
             return false;
-        if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator.Get(), state))
+        if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator, state))
             return false;
     }
 

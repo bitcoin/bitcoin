@@ -253,7 +253,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     bool fMnFound = mnList.HasValidMNByCollateral(activeMasternodeInfo.outpoint);
 
     LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
-            (activeMasternodeInfo.blsPubKeyOperator ? activeMasternodeInfo.blsPubKeyOperator->ToString() : "N/A"),
+            (activeMasternodeInfo.pubKeyOperator ? activeMasternodeInfo.pubKeyOperator->ToString() : "N/A"),
             activeMasternodeInfo.outpoint.ToStringShort(), request.params.size(), fMnFound);
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
@@ -294,7 +294,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
         if (fMnFound) {
             govobj.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
-            govobj.Sign(*activeMasternodeInfo.blsKeyOperator);
+            govobj.Sign(*activeMasternodeInfo.keyOperator);
         } else {
             LogPrintf("gobject(submit) -- Object submission rejected because node is not a masternode\n");
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Only valid masternodes can submit this type of object");
@@ -406,8 +406,8 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals");
     }
-    if (activeMasternodeInfo.blsKeyOperator) {
-        signSuccess = vote.Sign(*activeMasternodeInfo.blsKeyOperator);
+    if (activeMasternodeInfo.keyOperator) {
+        signSuccess = vote.Sign(*activeMasternodeInfo.keyOperator);
     }
 
     if (!signSuccess) {

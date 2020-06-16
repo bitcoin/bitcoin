@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_dash.h"
+#include "test/test_syscoin.h"
 
 #include "script/interpreter.h"
 #include "script/standard.h"
@@ -90,7 +90,7 @@ static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
     }
 }
 
-static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
+static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CKey& operatorKeyRet)
 {
     ownerKeyRet.MakeNewKey(true);
     operatorKeyRet.MakeNewKey();
@@ -102,7 +102,7 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
     proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();
-    proTx.pubKeyOperator = operatorKeyRet.GetPublicKey();
+    proTx.pubKeyOperator = operatorKeyRet.GetPubKey().GetID();
     proTx.keyIDVoting = ownerKeyRet.GetPubKey().GetID();
     proTx.scriptPayout = scriptPayout;
 
@@ -117,7 +117,7 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     return tx;
 }
 
-static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CScript& scriptOperatorPayout, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CKey& operatorKey, int port, const CScript& scriptOperatorPayout, const CKey& coinbaseKey)
 {
     CAmount change;
     auto inputs = SelectUTXOs(utxos, 1 * COIN, change);
@@ -139,7 +139,7 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256
     return tx;
 }
 
-static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const CKeyID& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CKey& mnKey, const CKeyID& pubKeyOperator, const CKeyID& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
 {
     CAmount change;
     auto inputs = SelectUTXOs(utxos, 1 * COIN, change);
@@ -162,7 +162,7 @@ static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256&
     return tx;
 }
 
-static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CKey& operatorKey, const CKey& coinbaseKey)
 {
     CAmount change;
     auto inputs = SelectUTXOs(utxos, 1 * COIN, change);
@@ -245,7 +245,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
 {
     auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
     CKey ownerKey;
-    CBLSSecretKey operatorKey;
+    CKey operatorKey;
     CBitcoinAddress payoutAddress("yRq1Ky1AfFmf597rnotj7QRxsDUKePVWNF");
     auto tx = CreateProRegTx(utxos, 1, GetScriptForDestination(payoutAddress.Get()), coinbaseKey, ownerKey, operatorKey);
     std::vector<CMutableTransaction> txns = {tx};
@@ -289,12 +289,12 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 
     std::vector<uint256> dmnHashes;
     std::map<uint256, CKey> ownerKeys;
-    std::map<uint256, CBLSSecretKey> operatorKeys;
+    std::map<uint256, CKey> operatorKeys;
 
     // register one MN per block
     for (size_t i = 0; i < 6; i++) {
         CKey ownerKey;
-        CBLSSecretKey operatorKey;
+        CKey operatorKey;
         auto tx = CreateProRegTx(utxos, port++, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
         dmnHashes.emplace_back(tx.GetHash());
         ownerKeys.emplace(tx.GetHash(), ownerKey);
@@ -348,7 +348,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         std::vector<CMutableTransaction> txns;
         for (size_t j = 0; j < 3; j++) {
             CKey ownerKey;
-            CBLSSecretKey operatorKey;
+            CKey operatorKey;
             auto tx = CreateProRegTx(utxos, port++, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
             dmnHashes.emplace_back(tx.GetHash());
             ownerKeys.emplace(tx.GetHash(), ownerKey);
@@ -403,10 +403,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     }
 
     // test reviving the MN
-    CBLSSecretKey newOperatorKey;
+    CKey newOperatorKey;
     newOperatorKey.MakeNewKey();
     dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
-    tx = CreateProUpRegTx(utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPublicKey(), ownerKeys[dmnHashes[0]].GetPubKey().GetID(), dmn->pdmnState->scriptPayout, coinbaseKey);
+    tx = CreateProUpRegTx(utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPubKey().GetID(), ownerKeys[dmnHashes[0]].GetPubKey().GetID(), dmn->pdmnState->scriptPayout, coinbaseKey);
     // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
     auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
     CValidationState dummyState;

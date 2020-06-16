@@ -253,8 +253,8 @@ public:
     // Signature related functions
 
     void SetMasternodeOutpoint(const COutPoint& outpoint);
-    bool Sign(const CKeyID& key);
-    bool CheckSignature(const CPubKey& pubKey) const;
+    bool Sign(const CKey& key);
+    bool CheckSignature(const CKeyID& pubKeyId) const;
 
     uint256 GetSignatureHash() const;
 
