@@ -32,13 +32,15 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
         // It does not protect against:
         //   node1 -> Eve -> node2
         // This is ok as we only use MNAUTH as a DoS protection and not for sensitive stuff
-        signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->fInbound));
+        signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.pubKeyOperator, pnode->receivedMNAuthChallenge, pnode->fInbound));
     }
 
     CMNAuth mnauth;
     mnauth.proRegTxHash = activeMasternodeInfo.proTxHash;
-    mnauth.sig = activeMasternodeInfo.blsKeyOperator->Sign(signHash);
-
+    if(!CHashSigner::SignHash(signHash, activeMasternodeInfo.keyOperator, mnauth.sig)) {
+        LogPrint(BCLog::NET, "CMNAuth::PushMNAUTH -- SignHash() failed\n");
+        return;
+    }
     LogPrint(BCLog::NET, "CMNAuth::%s -- Sending MNAUTH, peer=%d\n", __func__, pnode->GetId());
 
     connman.PushMessage(pnode, CNetMsgMaker(pnode->GetSendVersion()).Make(NetMsgType::MNAUTH, mnauth));
@@ -91,14 +93,16 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->sentMNAuthChallenge, !pnode->fInbound));
         }
 
-        if (!mnauth.sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator.Get(), signHash)) {
+        std::string strError;
+        if (!CHashSigner::VerifyHash(signHash, dmn->pdmnState->pubKeyOperator, mnauth.sig, strError)) {
+            LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- SignHash() failed, error: %s\n", strError);
             LOCK(cs_main);
             // Same as above, MN seems to not know about his fate yet, so give him a chance to update. If this is a
             // malicious actor (DoSing us), we'll ban him soon.
             Misbehaving(pnode->GetId(), 10);
             return;
         }
-
+     
         connman.ForEachNode([&](CNode* pnode2) {
             if (pnode2->verifiedProRegTxHash == mnauth.proRegTxHash) {
                 LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, dropping new connection. peer=%d\n",
@@ -114,7 +118,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         {
             LOCK(pnode->cs_mnauth);
             pnode->verifiedProRegTxHash = mnauth.proRegTxHash;
-            pnode->verifiedPubKeyHash = dmn->pdmnState->pubKeyOperator.GetHash();
+            pnode->verifiedPubKeyHash = dmn->pdmnState->pubKeyOperator;
         }
 
         LogPrint(BCLog::NET, "CMNAuth::%s -- Valid MNAUTH for %s, peer=%d\n", __func__, mnauth.proRegTxHash.ToString(), pnode->GetId());
@@ -143,7 +147,7 @@ void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList&
         } else {
             auto it = diff.updatedMNs.find(verifiedDmn->internalId);
             if (it != diff.updatedMNs.end()) {
-                if ((it->second.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) && it->second.state.pubKeyOperator.GetHash() != pnode->verifiedPubKeyHash) {
+                if ((it->second.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) && it->second.state.pubKeyOperator != pnode->verifiedPubKeyHash) {
                     doRemove = true;
                 }
             }

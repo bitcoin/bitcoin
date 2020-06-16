@@ -303,22 +303,20 @@ void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
     masternodeOutpoint = outpoint;
 }
 
-bool CGovernanceObject::Sign(const CBLSSecretKey& key)
+bool CGovernanceObject::Sign(const CKey& key)
 {
-    CBLSSignature sig = key.Sign(GetSignatureHash());
-    if (!key.IsValid()) {
+    if(!CHashSigner::SignHash(GetSignatureHash(), key, vchSig)) {
+        LogPrint(BCLog::SPORK, "CSporkMessage::Sign -- SignHash() failed\n");
         return false;
     }
-    sig.GetBuf(vchSig);
     return true;
 }
 
-bool CGovernanceObject::CheckSignature(const CBLSPublicKey& pubKey) const
+bool CGovernanceObject::CheckSignature(const CKeyID& pubKeyId) const
 {
-    CBLSSignature sig;
-    sig.SetBuf(vchSig);
-    if (!sig.VerifyInsecure(pubKey, GetSignatureHash())) {
-        LogPrintf("CGovernanceObject::CheckSignature -- VerifyInsecure() failed\n");
+    std::string strError;
+    if (!CHashSigner::VerifyHash(GetSignatureHash(), pubKeyId, vchSig, strError)) {
+         LogPrintf(BCLog::GOBJECT, "CGovernanceObject::CheckSignature -- Verify() failed, error: %s\n", strError);
         return false;
     }
     return true;
@@ -475,8 +473,8 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
         }
 
         // Check that we have a valid MN signature
-        if (!CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
-            strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey = " + dmn->pdmnState->pubKeyOperator.Get().ToString();
+        if (!CheckSignature(dmn->pdmnState->pubKeyOperator) {
+            strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey = " + CBitcoinAddress(dmn->pdmnState->pubKeyOperator).ToString();
             return false;
         }
 

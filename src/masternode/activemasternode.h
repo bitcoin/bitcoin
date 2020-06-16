@@ -22,8 +22,8 @@ extern CActiveMasternodeManager* activeMasternodeManager;
 
 struct CActiveMasternodeInfo {
     // Keys for the active Masternode
-    std::unique_ptr<CBLSPublicKey> blsPubKeyOperator;
-    std::unique_ptr<CBLSSecretKey> blsKeyOperator;
+    std::unique_ptr<CKeyID> pubKeyOperator;
+    std::unique_ptr<CKey> keyOperator;
 
     // Initialized while registering Masternode
     uint256 proTxHash;

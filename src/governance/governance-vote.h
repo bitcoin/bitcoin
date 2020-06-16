@@ -96,8 +96,6 @@ public:
 
     bool Sign(const CKey& key, const CKeyID& keyID);
     bool CheckSignature(const CKeyID& keyID) const;
-    bool Sign(const CKeyID& key);
-    bool CheckSignature(const CPubKey& pubKey) const;
     bool IsValid(bool useVotingKey) const;
     void Relay(CConnman& connman) const;
 

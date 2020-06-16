@@ -209,13 +209,13 @@ class DIP3Test(SyscoinTestFramework):
         mn.alias = alias
         mn.is_protx = True
         mn.p2p_port = p2p_port(mn.idx)
-
-        blsKey = node.bls('generate')
+        mnKey = node.getnewaddress()
+        priv_key = node.dumpprivkey(mnKey)
         mn.fundsAddr = node.getnewaddress()
         mn.ownerAddr = node.getnewaddress()
-        mn.operatorAddr = blsKey['public']
+        mn.operatorAddr = node.getnewaddress()
         mn.votingAddr = mn.ownerAddr
-        mn.blsMnkey = blsKey['secret']
+        mn.mnkey = priv_key
 
         return mn
 
@@ -260,7 +260,7 @@ class DIP3Test(SyscoinTestFramework):
     def start_mn(self, mn):
         while len(self.nodes) <= mn.idx:
             self.add_nodes(1)
-        extra_args = ['-masternodeblsprivkey=%s' % mn.blsMnkey]
+        extra_args = ['-masternodeprivkey=%s' % mn.mnkey]
         self.start_node(mn.idx, extra_args = self.extra_args + extra_args)
         force_finish_mnsync(self.nodes[mn.idx])
         for i in range(0, len(self.nodes)):
@@ -282,7 +282,7 @@ class DIP3Test(SyscoinTestFramework):
 
     def test_protx_update_service(self, mn):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
-        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.2:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
+        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.2:%d' % mn.p2p_port, mn.mnkey, "", mn.fundsAddr)
         self.nodes[0].generate(1)
         self.sync_all()
         for node in self.nodes:
@@ -292,7 +292,7 @@ class DIP3Test(SyscoinTestFramework):
             assert_equal(mn_list['%s-%d' % (mn.collateral_txid, mn.collateral_vout)]['address'], '127.0.0.2:%d' % mn.p2p_port)
 
         # undo
-        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.1:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
+        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.1:%d' % mn.p2p_port, mn.mnkey, "", mn.fundsAddr)
         self.nodes[0].generate(1)
 
     def assert_mnlists(self, mns):

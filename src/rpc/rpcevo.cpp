@@ -611,14 +611,14 @@ UniValue protx_update_service(const JSONRPCRequest& request)
         throw std::runtime_error(strprintf("invalid network address %s", request.params[2].get_str()));
     }
 
-    CKeyID keyOperator = ParsePubKeyIDFromAddress(request.params[3].get_str(), "operatorKey");
+    CKey keyOperator = ParsePrivKey(pwallet, request.params[3].get_str(), true);
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
         throw std::runtime_error(strprintf("masternode with proTxHash %s not found", ptx.proTxHash.ToString()));
     }
 
-    if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
+    if (keyOperator.GetPubKey().GetID() != dmn->pdmnState->pubKeyOperator) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("the operator key does not belong to the registered public key"));
     }
 
@@ -708,7 +708,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
-    ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator.Get();
+    ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator;
     ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
     ptx.scriptPayout = dmn->pdmnState->scriptPayout;
 
@@ -794,7 +794,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
     ptx.nVersion = CProRegTx::CURRENT_VERSION;
     ptx.proTxHash = ParseHashV(request.params[1], "proTxHash");
 
-    CKeyID keyOperator = ParsePubKeyIDFromAddress(request.params[2].get_str(), "operatorKey");
+    CKey keyOperator = ParsePrivKey(pwallet, request.params[2].get_str(), true);
 
     if (request.params.size() > 3) {
         int32_t nReason = ParseInt32V(request.params[3], "reason");
@@ -809,7 +809,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
 
-    if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
+    if (keyOperator != dmn->pdmnState->pubKeyOperator) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("the operator key does not belong to the registered public key"));
     }
 
