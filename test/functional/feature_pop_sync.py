@@ -59,7 +59,7 @@ class PoPSync(BitcoinTestFramework):
                 node1_txid = endorse_block(self.nodes[1], self.apm, height, addr1)
 
                 # wait until node[1] gets relayed pop tx
-                self.sync_pop_mempools(self.nodes, timeout=20)
+                self.sync_all(self.nodes, timeout=20)
                 self.log.info("transactions relayed")
 
                 # mine a block on node[1] with this pop tx
@@ -72,11 +72,14 @@ class PoPSync(BitcoinTestFramework):
 
                 # assert that all txids exist in this block
                 block = self.nodes[0].getblock(containingblockhash)
+                atvs = [x['atv'] for x in block['pop']['data']]
 
-                ## TODO check that this pop data contains in the containing block
-                ##assert node0_txid in block['tx'], "node0: Containing block {} does not contain pop tx {}".format(block['hash'], node0_txid)
-                ##assert node1_txid in block['tx'], "node1: Containing block {} does not contain pop tx {}".format(block['hash'], node1_txid)
-                ##assert node2_txid in block['tx'], "node2: Containing block {} does not contain pop tx {}".format(block['hash'], node2_txid)
+                assert node0_txid in atvs, "node0: Containing block {} does not contain pop tx {}".format(block['hash'],
+                                                                                                          node0_txid)
+                assert node1_txid in atvs, "node1: Containing block {} does not contain pop tx {}".format(block['hash'],
+                                                                                                          node1_txid)
+                assert node2_txid in atvs, "node2: Containing block {} does not contain pop tx {}".format(block['hash'],
+                                                                                                          node2_txid)
 
                 # assert that node height matches
                 assert self.nodes[0].getblockcount() == self.nodes[1].getblockcount() == self.nodes[2].getblockcount()
@@ -84,9 +87,9 @@ class PoPSync(BitcoinTestFramework):
             height += 1
         self.log.info("success! _check_pop_sync()")
 
-    def is_atv_in_block(self, node, blockhash, atvids):
+    def is_atv_in_block(self, node, blockhash, atv):
         block = node.getblock(blockhash)
-        return all([a in block["pop"]["containingEndorsements"] for a in atvids])
+        return atv in atvs
 
     def run_test(self):
         """Main test logic"""
