@@ -80,7 +80,7 @@ jobs:
         QEMU_USER_CMD=""
 
     - stage: test
-      name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
+      name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no boost::process, no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
 
