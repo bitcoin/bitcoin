@@ -591,6 +591,8 @@ class FullBlockTest(BitcoinTestFramework):
         b44.hashPrevBlock = self.tip.sha256
         b44.nBits = 0x207fffff
         b44.vtx.append(coinbase)
+        tx = self.create_and_sign_transaction(out[14], 1)
+        b44.vtx.append(tx)
         b44.hashMerkleRoot = b44.calc_merkle_root()
         b44.solve()
         self.tip = b44
@@ -678,7 +680,7 @@ class FullBlockTest(BitcoinTestFramework):
         # Test block timestamps
         #  -> b31 (8) -> b33 (9) -> b35 (10) -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15)
         #                                                                                   \-> b54 (15)
-        #
+        #                                                                        -> b44 (14)\-> b48 ()
         self.move_tip(43)
         b53 = self.next_block(53, spend=out[14])
         self.send_blocks([b53], False)
@@ -1308,7 +1310,7 @@ class FullBlockTest(BitcoinTestFramework):
         return create_tx_with_script(spend_tx, n, amount=value, script_pub_key=script)
 
     # sign a transaction, using the key we know about
-    # this signs input 0 in tx, which is assumed to be spending output n in spend_tx
+    # this signs input 0 in tx, which is assumed to be spending output 0 in spend_tx
     def sign_tx(self, tx, spend_tx):
         scriptPubKey = bytearray(spend_tx.vout[0].scriptPubKey)
         if (scriptPubKey[0] == OP_TRUE):  # an anyone-can-spend
