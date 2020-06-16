@@ -700,6 +700,21 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b55], True)
         self.save_spendable_output()
 
+        # The block which was previously rejected because of being "too far(3 hours)" must be accepted 2 hours later.
+        # The new block is only 1 hour into future now and we must reorg onto to the new longer chain.
+        # The new bestblock b48p is invalidated manually.
+        #  -> b31 (8) -> b33 (9) -> b35 (10) -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15)
+        #                                                                                   \-> b54 (15)
+        #                                                                        -> b44 (14)\-> b48 () -> b48p ()
+        self.log.info("Accept a previously rejected future block at a later time")
+        node.setmocktime(int(time.time()) + 2*60*60)
+        self.move_tip(48)
+        self.block_heights[b48.sha256] = self.block_heights[b44.sha256] + 1 # b48 is a parent of b44
+        b48p = self.next_block("48p")
+        self.send_blocks([b48, b48p], success=True) # Reorg to the longer chain
+        node.invalidateblock(b48p.hash) # mark b48p as invalid
+        node.setmocktime(0)
+
         # Test Merkle tree malleability
         #
         # -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57p2 (16)
