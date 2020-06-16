@@ -233,6 +233,22 @@ namespace GUIUtil
     /** Load global CSS theme */
     QString loadStyleSheet();
 
+    enum class FontFamily {
+        SystemDefault,
+        Montserrat,
+    };
+
+    /** Application font family */
+    extern FontFamily fontFamily;
+
+    FontFamily fontFamilyFromString(const QString& strFamily);
+    QString fontFamilyToString(FontFamily family);
+
+    /** set/get font family: GUIUtil::fontFamily */
+    FontFamily getFontFamilyDefault();
+    FontFamily getFontFamily();
+    void setFontFamily(FontFamily family);
+
     enum class FontWeight {
         Normal, // Font weight for normal text
         Bold,   // Font weight for bold text
