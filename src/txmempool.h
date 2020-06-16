@@ -614,7 +614,7 @@ public:
     void clear();
     void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid=false);
-    void queryHashes(std::vector<uint256>& vtxid) const;
+    void queryHashes(std::vector<uint256>& vtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool isSpent(const COutPoint& outpoint) const;
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);

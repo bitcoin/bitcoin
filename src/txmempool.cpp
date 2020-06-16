@@ -773,7 +773,6 @@ std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::Get
 
 void CTxMemPool::queryHashes(std::vector<uint256>& vtxid) const
 {
-    LOCK(cs);
     auto iters = GetSortedDepthAndScore();
 
     vtxid.clear();
