@@ -417,7 +417,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     for (const CTxIn& txin : it->GetTx().vin)
         mapNextTx.erase(txin.prevout);
 
-    RemoveUnbroadcastTx(hash, true /* add logging because unchecked */ );
+    RemoveUnbroadcastTxNonLockHelper(hash, true /* add logging because unchecked */ );
 
     if (vTxHashes.size() > 1) {
         vTxHashes[it->vTxHashesIdx] = std::move(vTxHashes.back());
@@ -917,11 +917,8 @@ size_t CTxMemPool::DynamicMemoryUsageNonLockHelper() const
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 15 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(mapLinks) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
 }
 
-void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked) {
-    LOCK(cs);
-
-    if (m_unbroadcast_txids.erase(txid))
-    {
+void CTxMemPool::RemoveUnbroadcastTxNonLockHelper(const uint256& txid, const bool unchecked) {
+    if (m_unbroadcast_txids.erase(txid)) {
         LogPrint(BCLog::MEMPOOL, "Removed %i from set of unbroadcast txns%s\n", txid.GetHex(), (unchecked ? " before confirmation that txn was sent out" : ""));
     }
 }

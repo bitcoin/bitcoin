@@ -823,7 +823,13 @@ public:
     }
 
     /** Removes a transaction from the unbroadcast set */
-    void RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false);
+    void RemoveUnbroadcastTxNonLockHelper(const uint256& txid, const bool unchecked) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void RemoveUnbroadcastTx(const uint256& txid, const bool unchecked = false) EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        RemoveUnbroadcastTxNonLockHelper(txid, unchecked);
+    }
 
     /** Returns transactions in unbroadcast set */
     std::map<uint256, uint256> GetUnbroadcastTxs() const {
