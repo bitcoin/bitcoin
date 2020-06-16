@@ -462,7 +462,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             offsetNum = offset
         for i in range(num_nodes):
             index = i + offsetNum
-            self.nodes.append(TestNode(
+            test_node_i = TestNode(
                 index,
                 get_datadir_path(self.options.tmpdir, index),
                 chain=self.chain,
@@ -480,7 +480,15 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
                 start_perf=self.options.perf,
                 use_valgrind=self.options.valgrind,
                 descriptors=self.options.descriptors,
-            ))
+            )
+            self.nodes.append(test_node_i)
+            if not test_node_i.version_is_at_least(170000):
+                # adjust conf for pre 17
+                conf_file = test_node_i.syscoinconf
+                with open(conf_file, 'r', encoding='utf8') as conf:
+                    conf_data = conf.read()
+                with open(conf_file, 'w', encoding='utf8') as conf:
+                    conf.write(conf_data.replace('[regtest]', ''))
 
     def start_node(self, i, *args, **kwargs):
         """Start a syscoind"""
