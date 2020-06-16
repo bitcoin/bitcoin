@@ -1195,7 +1195,11 @@ fi
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_THREAD
-AX_BOOST_PROCESS
+
+dnl Opt-in to boost-process
+if test x$with_boost_process = xyes; then
+  AX_BOOST_PROCESS
+fi
 
 dnl Boost 1.56 through 1.62 allow using std::atomic instead of its own atomic
 dnl counter implementations. In 1.63 and later the std::atomic approach is default.
