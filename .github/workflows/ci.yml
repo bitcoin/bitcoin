@@ -99,7 +99,7 @@ jobs:
         uses: actions/upload-artifact@v1
         if: failure()
         with:
-          name: test-suite.log
+          name: test-suite
           path: src/test-suite.log
       - name: run functional tests
         if: always()
@@ -321,7 +321,7 @@ jobs:
       - name: run functional tests
         if: always()
         timeout-minutes: 20
-        run: python3 test/functional/test_runner.py --combinedlogslen=4000
+        run: python3 test/functional/test_runner.py
 
   linux-asan:
     runs-on: ubuntu-latest
@@ -354,14 +354,14 @@ jobs:
         run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
       - name: veriblock-pop-cpp release version
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
-      - name: add bitcoin ppa
-        run: sudo add-apt-repository ppa:bitcoin/bitcoin
       - name: install build requirements
-        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 ccache libasan4
+        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 ccache
       - name: install dependencies
-        run: sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev
+        run: sudo apt-get install clang-8 llvm-8 python3-zmq python3-dev libboost-python-dev qtbase5-dev qttools5-dev-tools libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev
       - name: install veriblock-pop-cpp
         env:
+          CC: clang-8
+          CXX: clang++-8
           BUILD_TYPE: Debug
         run: |
           (
@@ -371,30 +371,40 @@ jobs:
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DASAN=ON;
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DASAN=ON -DWITH_PYPOPMINER=ON;
           make -j2;
           sudo make install
           )
+      - name: fix sanitizer suppressions file
+        run: sed -i '/^implicit-/d' "${{ github.workspace }}/test/sanitizer_suppressions/ubsan"
+      - name: set sanitizer options
+        run: |
+          echo "::set-env name=ASAN_OPTIONS::detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1"
+          echo "::set-env name=LSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/lsan"
+          echo "::set-env name=TSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/tsan:log_path=${{ github.workspace }}/sanitizer-output/tsan"
+          echo "::set-env name=UBSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
       - name: autogen
         run: ./autogen.sh
       - name: configure
         run: ./configure
-          --without-gui
-          --enable-werror
-          --disable-bench
-          --with-sanitizers=address
+          --enable-zmq
+          --with-incompatible-bdb
+          --with-gui=qt5
+          CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER'
+          --with-sanitizers=address,undefined
+          CC=clang-8 CXX=clang++-8
       - name: make
         run: make -j2 deploy
-#      - name: make check
-#        timeout-minutes: 20
-#        run: make check
-#      - name: upload logs
-#        uses: actions/upload-artifact@v1
-#        if: failure()
-#        with:
-#          name: test-suite.log
-#          path: src/test-suite.log
-#      - name: run functional tests
-#        if: always()
-#        timeout-minutes: 60
-#        run: python3 test/functional/test_runner.py --combinedlogslen=4000
+      - name: make check
+        timeout-minutes: 20
+        run: make check
+      - name: upload logs
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: test-suite
+          path: src/test-suite.log
+      - name: run functional tests
+        if: always()
+        timeout-minutes: 180
+        run: python3 test/functional/test_runner.py

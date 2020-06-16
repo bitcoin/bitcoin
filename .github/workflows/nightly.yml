@@ -98,8 +98,8 @@ jobs:
         run: sonar-scanner -Dsonar.login=${{ secrets.SONAR_TOKEN }}
       - name: run functional tests
         if: always()
-        timeout-minutes: 60
-        run: python3 test/functional/test_runner.py --combinedlogslen=4000
+        timeout-minutes: 20
+        run: python3 test/functional/test_runner.py
 
   ASAN-UBSAN:
     runs-on: ubuntu-latest
@@ -119,13 +119,14 @@ jobs:
         run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
       - name: veriblock-pop-cpp release version
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
-      - name: add bitcoin ppa
-        run: sudo add-apt-repository ppa:bitcoin/bitcoin
       - name: install build requirements
         run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
       - name: install dependencies
-        run: sudo apt-get install libevent-dev python3-zmq python3-dev libboost-python-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libqrencode-dev libubsan0 libubsan1 libtsan0 libasan4
+        run: sudo apt-get install clang-8 llvm-8 python3-zmq python3-dev libboost-python-dev qtbase5-dev qttools5-dev-tools libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev
       - name: install veriblock-pop-cpp
+        env:
+          CC: clang-8
+          CXX: clang++-8
         run: |
           (
           cd /opt;
@@ -138,24 +139,26 @@ jobs:
           make -j2;
           sudo make install
           )
-      - name: set LSAN and UBSAN options
+      - name: fix sanitizer suppressions file
+        run: sed -i '/^implicit-/d' "${{ github.workspace }}/test/sanitizer_suppressions/ubsan"
+      - name: set sanitizer options
         run: |
-          echo "::set-env name=LSAN_OPTIONS::suppressions=${PWD}/test/sanitizer_suppressions/lsan"
-          echo "::set-env name=UBSAN_OPTIONS::suppressions=${PWD}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
+          echo "::set-env name=ASAN_OPTIONS::detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1"
+          echo "::set-env name=LSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/lsan"
+          echo "::set-env name=TSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/tsan:log_path=${{ github.workspace }}/sanitizer-output/tsan"
+          echo "::set-env name=UBSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
       - name: autogen
         run: ./autogen.sh
       - name: configure
         run: ./configure
-          --disable-asm
+          --enable-zmq
+          --with-incompatible-bdb
+          --with-gui=qt5
+          CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER'
           --with-sanitizers=address,undefined
-          --enable-werror
+          CC=clang-8 CXX=clang++-8
       - name: make
         run: make -j2 deploy
-      - name: create artifacts
-        if: success()
-        run: |
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
-          tar czvf vBitcoin-nightly-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64-qt.tar.gz vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}/
       - name: make check
         timeout-minutes: 20
         run: make check
@@ -163,12 +166,12 @@ jobs:
         uses: actions/upload-artifact@v1
         if: failure()
         with:
-          name: test-suite.log
+          name: nightly-logs
           path: src/test-suite.log
       - name: run functional tests
         if: always()
         timeout-minutes: 180
-        run: python3 test/functional/test_runner.py --combinedlogslen=4000
+        run: python3 test/functional/test_runner.py
 
   TSAN:
     runs-on: ubuntu-latest
@@ -188,13 +191,14 @@ jobs:
         run: echo "::set-env name=VERIBLOCK_POP_CPP_VERSION::$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)"
       - name: veriblock-pop-cpp release version
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
-      - name: add bitcoin ppa
-        run: sudo add-apt-repository ppa:bitcoin/bitcoin
       - name: install build requirements
-        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
+        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl ca-certificates ccache python3
       - name: install dependencies
-        run: sudo apt-get install libevent-dev python3-zmq python3-dev libboost-python-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libqrencode-dev libubsan0 libubsan1 libtsan0 libasan4
+        run: sudo apt-get install clang-9 llvm-9 python3-zmq qtbase5-dev qttools5-dev-tools libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev python3-zmq python3-dev libboost-python-dev
       - name: install veriblock-pop-cpp
+        env:
+          CC: clang-9
+          CXX: clang++-9
         run: |
           (
           cd /opt;
@@ -208,21 +212,21 @@ jobs:
           sudo make install
           )
       - name: set TSAN options
-        run: |
-          echo "::set-env name=TSAN_OPTIONS::suppressions=${PWD}/test/sanitizer_suppressions/tsan"
+        run: echo "::set-env name=TSAN_OPTIONS::suppressions=${{ github.workspace }}/test/sanitizer_suppressions/tsan:log_path=${{ github.workspace }}/sanitizer-output/tsan"
       - name: autogen
         run: ./autogen.sh
       - name: configure
         run: ./configure
+          --with-incompatible-bdb
+          --enable-zmq
+          --with-gui=qt5
+          CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER'
           --with-sanitizers=thread
-          --enable-werror
+          --disable-hardening
+          --disable-asm
+          CC=clang-9 CXX=clang++-9
       - name: make
         run: make -j2 deploy
-      - name: create artifacts
-        if: success()
-        run: |
-          mv ./release vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}
-          tar czvf vBitcoin-nightly-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64-qt.tar.gz vBitcoin-${{ steps.extract_branch.outputs.last_tag }}-${{ steps.extract_branch.outputs.branch }}.${{ steps.extract_branch.outputs.commits_ahead }}-${{ steps.extract_branch.outputs.git_hash }}/
       - name: make check
         timeout-minutes: 20
         run: make check
@@ -230,12 +234,18 @@ jobs:
         uses: actions/upload-artifact@v1
         if: failure()
         with:
-          name: test-suite.log
+          name: nightly-logs
           path: src/test-suite.log
       - name: run functional tests
         if: always()
         timeout-minutes: 180
-        run: python3 test/functional/test_runner.py --combinedlogslen=4000
+        run: python3 test/functional/test_runner.py
+      - name: upload logs
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: nightly-logs
+          path: ${{ github.workspace }}/sanitizer-output/tsan
 
 #  windows:
 #    runs-on: windows-latest
@@ -358,7 +368,9 @@ jobs:
       - name: install homebrew
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
       - name: install dependencies
-        run: brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python3 libevent librsvg ccache qrencode qt zeromq
+        run: |
+          brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python3 libevent librsvg ccache qrencode zeromq
+          brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/d468bb8c4f5c34b18588e5d1b955021d58e1ff57/Formula/qt.rb
       - name: install veriblock-pop-cpp
         run: |
           (
@@ -386,7 +398,7 @@ jobs:
       - name: run functional tests
         if: always()
         timeout-minutes: 60
-        run: python3 test/functional/test_runner.py --combinedlogslen=4000
+        run: python3 test/functional/test_runner.py
 
   x86_64-apple-darwin16:
     runs-on: ubuntu-latest
