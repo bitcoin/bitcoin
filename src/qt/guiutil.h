@@ -233,6 +233,11 @@ namespace GUIUtil
     /** Load global CSS theme */
     QString loadStyleSheet();
 
+    enum class FontWeight {
+        Normal, // Font weight for normal text
+        Bold,   // Font weight for bold text
+    };
+
     /** Application font weight for normal text. May be overwritten by -font-weight-normal. */
     extern QFont::Weight fontWeightNormal;
     /** Application font weight for bold text. May be overwritten by -font-weight-bold. */
@@ -244,6 +249,8 @@ namespace GUIUtil
     bool weightFromArg(int nArg, QFont::Weight& weight);
     /** Convert QFont::Weight to an arg value (0-8) */
     int weightToArg(const QFont::Weight weight);
+    /** Convert GUIUtil::FontWeight to QFont::Weight */
+    QFont::Weight toQFontWeight(FontWeight weight);
 
     /** set/get normal font weight: GUIUtil::fontWeightNormal */
     QFont::Weight getFontWeightNormalDefault();
@@ -272,7 +279,7 @@ namespace GUIUtil
     /** Workaround to set correct font styles in all themes since there is a bug in macOS which leads to
         issues loading variations of montserrat in css it also keeps track of the set fonts to update on
         theme changes. */
-    void setFont(const std::vector<QWidget*>& vecWidgets, QFont::Weight weight, int nPointSize = -1, bool fItalic = false);
+    void setFont(const std::vector<QWidget*>& vecWidgets, FontWeight weight, int nPointSize = -1, bool fItalic = false);
 
     /** Workaround to set a fixed pitch font in traditional theme while keeping track of font updates */
     void setFixedPitchFont(const std::vector<QWidget*>& vecWidgets);
@@ -283,7 +290,7 @@ namespace GUIUtil
 
     /** Get a properly weighted QFont object with the font Montserrat
         Use ExtraLight as default as this lines up with the default in css. */
-    QFont getFont(QFont::Weight weight, bool fItalic = false);
+    QFont getFont(FontWeight weight, bool fItalic = false, int nPointSize = -1);
 
     /** Get the default normal QFont */
     QFont getFontNormal();
@@ -330,11 +337,11 @@ namespace GUIUtil
     protected:
         void mouseReleaseEvent(QMouseEvent *event);
     };
-    
+
     class ClickableProgressBar : public QProgressBar
     {
         Q_OBJECT
-        
+
     Q_SIGNALS:
         /** Emitted when the progressbar is clicked. The relative mouse coordinates of the click are
          * passed to the signal.

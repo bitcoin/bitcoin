@@ -96,7 +96,7 @@ QRDialog::QRDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->labelQRCodeTitle}, GUIUtil::getFontWeightBold(), 16);
+    GUIUtil::setFont({ui->labelQRCodeTitle}, GUIUtil::FontWeight::Bold, 16);
 
     GUIUtil::updateFonts();
 

@@ -697,7 +697,7 @@ int main(int argc, char *argv[])
     // Validate/set normal font weight
     if (gArgs.IsArgSet("-font-weight-normal")) {
         QFont::Weight weight;
-        if (!GUIUtil::weightFromArg(gArgs.GetArg("-font-weight-normal", GUIUtil::getFontWeightNormal()), weight)) {
+        if (!GUIUtil::weightFromArg(gArgs.GetArg("-font-weight-normal", GUIUtil::weightToArg(GUIUtil::getFontWeightNormal())), weight)) {
             QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
                                   QObject::tr("Error: Specified font-weight-normal invalid. Valid range %1 to %2.").arg(0).arg(8));
             return EXIT_FAILURE;
@@ -707,7 +707,7 @@ int main(int argc, char *argv[])
     // Validate/set bold font weight
     if (gArgs.IsArgSet("-font-weight-bold")) {
         QFont::Weight weight;
-        if (!GUIUtil::weightFromArg(gArgs.GetArg("-font-weight-bold", GUIUtil::getFontWeightBold()), weight)) {
+        if (!GUIUtil::weightFromArg(gArgs.GetArg("-font-weight-bold", GUIUtil::weightToArg(GUIUtil::getFontWeightBold())), weight)) {
             QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
                                   QObject::tr("Error: Specified font-weight-bold invalid. Valid range %1 to %2.").arg(0).arg(8));
             return EXIT_FAILURE;

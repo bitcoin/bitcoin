@@ -62,9 +62,9 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformS
 
     GUIUtil::setFixedPitchFont({ui->signatureOut_SM, ui->signatureIn_VM});
 
-    GUIUtil::setFont({ui->signatureOut_SM}, GUIUtil::getFontWeightNormal(), 11, true);
-    GUIUtil::setFont({ui->signatureLabel_SM}, GUIUtil::getFontWeightBold(), 16);
-    GUIUtil::setFont({ui->statusLabel_SM, ui->statusLabel_VM}, GUIUtil::getFontWeightBold());
+    GUIUtil::setFont({ui->signatureOut_SM}, GUIUtil::FontWeight::Normal, 11, true);
+    GUIUtil::setFont({ui->signatureLabel_SM}, GUIUtil::FontWeight::Bold, 16);
+    GUIUtil::setFont({ui->statusLabel_SM, ui->statusLabel_VM}, GUIUtil::FontWeight::Bold);
 
     GUIUtil::updateFonts();
 }

@@ -61,7 +61,7 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
                       ui->labelCoinControlFeeText,
                       ui->labelCoinControlAfterFeeText,
                       ui->labelCoinControlChangeText
-                     }, GUIUtil::getFontWeightBold());
+                     }, GUIUtil::FontWeight::Bold);
 
     GUIUtil::updateFonts();
 

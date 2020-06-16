@@ -138,19 +138,19 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     GUIUtil::setFont({ui->label_4,
                       ui->label_5,
                       ui->labelPrivateSendHeader
-                     }, GUIUtil::getFontWeightBold(), 16);
+                     }, GUIUtil::FontWeight::Bold, 16);
 
     GUIUtil::setFont({ui->labelTotalText,
                       ui->labelWatchTotal,
                       ui->labelTotal
-                     }, GUIUtil::getFontWeightBold(), 14);
+                     }, GUIUtil::FontWeight::Bold, 14);
 
     GUIUtil::setFont({ui->labelBalanceText,
                       ui->labelPendingText,
                       ui->labelImmatureText,
                       ui->labelWatchonly,
                       ui->labelSpendable
-                     }, GUIUtil::getFontWeightBold());
+                     }, GUIUtil::FontWeight::Bold);
 
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);

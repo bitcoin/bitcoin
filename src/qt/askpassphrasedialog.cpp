@@ -29,7 +29,7 @@ AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->capsLabel}, GUIUtil::getFontWeightBold());
+    GUIUtil::setFont({ui->capsLabel}, GUIUtil::FontWeight::Bold);
 
     GUIUtil::updateFonts();
 

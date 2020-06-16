@@ -44,7 +44,7 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *par
     GUIUtil::setFont({ui->payToLabel,
                      ui->labellLabel,
                      ui->amountLabel,
-                     ui->messageLabel}, GUIUtil::getFontWeightNormal(), 15);
+                     ui->messageLabel}, GUIUtil::FontWeight::Normal, 15);
 
     GUIUtil::updateFonts();
 
