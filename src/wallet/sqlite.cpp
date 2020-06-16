@@ -182,6 +182,14 @@ SQLiteBatch::SQLiteBatch(SQLiteDatabase& database)
 
 void SQLiteBatch::Close()
 {
+    // If m_db is in a transaction (i.e. not in autocommit mode), then abort the transaction in progress
+    if (m_database.m_db && sqlite3_get_autocommit(m_database.m_db) == 0) {
+        if (TxnAbort()) {
+            LogPrintf("SQLiteBatch: Batch closed unexpectedly without the transaction being explicitly committed or aborted\n");
+        } else {
+            LogPrintf("SQLiteBatch: Batch closed and failed to abort transaction\n");
+        }
+    }
 }
 
 bool SQLiteBatch::ReadKey(CDataStream&& key, CDataStream& value)
