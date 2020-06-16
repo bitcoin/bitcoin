@@ -1573,8 +1573,6 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
     return true;
 }
 
-constexpr auto AbortError = InitError;
-
 /** Abort with a message */
 static bool AbortNode(const std::string& strMessage, bilingual_str user_message = bilingual_str())
 {
