@@ -97,9 +97,6 @@ std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
 
 void EraseOrphansFor(NodeId peer);
 
-/** Increase a node's misbehavior score. */
-void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
 /** Average delay between local address broadcasts in seconds. */
 static constexpr unsigned int AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL = 24 * 60 * 60;
 /** Average delay between peer address broadcasts in seconds. */
@@ -1902,7 +1899,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-    if(!VeriBlock::p2p::processPopData(pfrom, strCommand, vRecv, nTimeReceived, chainparams, connman, banman, interruptMsgProc))
+    if(!VeriBlock::p2p::processPopData(pfrom, strCommand, vRecv, connman))
     {
         return false;
     }
@@ -3936,6 +3933,13 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         if (!vInv.empty())
             connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
 
+        // VeriBlock offer Pop Data
+        {
+            VeriBlock::p2p::offerPopData<altintegration::ATV>(pto, connman, msgMaker);
+            VeriBlock::p2p::offerPopData<altintegration::VTB>(pto, connman, msgMaker);
+            VeriBlock::p2p::offerPopData<altintegration::VbkBlock>(pto, connman, msgMaker);
+        }
+
         // Detect whether we're stalling
         current_time = GetTime<std::chrono::microseconds>();
         // nNow is the current system time (GetTimeMicros is not mockable) and
@@ -4114,6 +4118,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             }
         }
     }
+
     return true;
 }
 

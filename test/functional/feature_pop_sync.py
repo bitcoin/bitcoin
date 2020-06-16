@@ -9,7 +9,7 @@
 Test with multiple nodes, and multiple PoP endorsements, checking to make sure nodes stay in sync.
 """
 
-from test_framework.pop import KEYSTONE_INTERVAL, endorse_block
+from test_framework.pop import KEYSTONE_INTERVAL, endorse_block, sync_pop_mempools
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
@@ -59,7 +59,7 @@ class PoPSync(BitcoinTestFramework):
                 node1_txid = endorse_block(self.nodes[1], self.apm, height, addr1)
 
                 # wait until node[1] gets relayed pop tx
-                sync_mempools(self.nodes)
+                self.sync_pop_mempools(self.nodes, timeout=20)
                 self.log.info("transactions relayed")
 
                 # mine a block on node[1] with this pop tx
@@ -72,6 +72,7 @@ class PoPSync(BitcoinTestFramework):
 
                 # assert that all txids exist in this block
                 block = self.nodes[0].getblock(containingblockhash)
+
                 ## TODO check that this pop data contains in the containing block
                 ##assert node0_txid in block['tx'], "node0: Containing block {} does not contain pop tx {}".format(block['hash'], node0_txid)
                 ##assert node1_txid in block['tx'], "node1: Containing block {} does not contain pop tx {}".format(block['hash'], node1_txid)
@@ -82,6 +83,10 @@ class PoPSync(BitcoinTestFramework):
 
             height += 1
         self.log.info("success! _check_pop_sync()")
+
+    def is_atv_in_block(self, node, blockhash, atvids):
+        block = node.getblock(blockhash)
+        return all([a in block["pop"]["containingEndorsements"] for a in atvids])
 
     def run_test(self):
         """Main test logic"""

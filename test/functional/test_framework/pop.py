@@ -5,6 +5,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test framework addition to include VeriBlock PoP functions"""
 import struct
+import time
 from typing import List
 
 from .messages import ser_uint256, hash256, uint256_from_str
@@ -83,8 +84,9 @@ def endorse_block(node, apm, height: int, addr: str) -> str:
     pub.payoutInfo = payoutInfo
     pub.identifier = 0x3ae6ca
     payloads = apm.endorseAltBlock(pub, last_vbk)
-    txid = node.submitpop(payloads.atv.toHex(), [ vtb.toHex() for vtb in payloads.vtbs])
-    return txid
+    vtbs = [x.toHex() for x in payloads.vtbs]
+    node.submitpop(payloads.atv.toHex(), vtbs)
+    return payloads.atv.getId()
 
 
 class ContextInfoContainer:
@@ -146,3 +148,31 @@ class ContextInfoContainer:
         return "ContextInfo(height={}, ks1={}, ks2={}, mroot={})".format(self.height, self.keystone1,
                                                                          self.keystone2,
                                                                          self.txRoot)
+
+
+def sync_pop_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):
+    """
+    Wait until everybody has the same POP data in their POP mempools
+    """
+
+    def test(s):
+        return s.count(s[0]) == len(rpc_connections)
+
+    stop_time = time.time() + timeout
+    while time.time() <= stop_time:
+        mpooldata = [r.getrawpopmempool() for r in rpc_connections]
+        atvs = [set(data['atvs']) for data in mpooldata]
+        vtbs = [set(data['vtbs']) for data in mpooldata]
+        vbkblocks = [set(data['vbkblocks']) for data in mpooldata]
+
+        if test(atvs) and test(vtbs) and test(vbkblocks):
+            if flush_scheduler:
+                for r in rpc_connections:
+                    r.syncwithvalidationinterfacequeue()
+            return
+        time.sleep(wait)
+    raise AssertionError("POP mempool sync timed out: \natvs: {}\nvtbs: {}\nvbkblocks:{}".format(
+        "".join("\n  {!r}".format(m) for m in atvs),
+        "".join("\n  {!r}".format(m) for m in vtbs),
+        "".join("\n  {!r}".format(m) for m in vbkblocks)
+    ))
