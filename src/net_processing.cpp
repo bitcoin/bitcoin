@@ -482,7 +482,7 @@ struct Peer {
     /** Protects misbehavior data members */
     Mutex m_misbehavior_mutex;
     /** Accumulated misbehavior score for this peer */
-    int nMisbehavior GUARDED_BY(m_misbehavior_mutex){0};
+    int m_misbehavior_score GUARDED_BY(m_misbehavior_mutex){0};
     /** Whether this peer should be disconnected and marked as discouraged (unless it has the noban permission). */
     bool m_should_discourage GUARDED_BY(m_misbehavior_mutex){false};
 
@@ -912,7 +912,7 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
     {
         PeerRef peer = GetPeerRef(nodeid);
         assert(peer != nullptr);
-        misbehavior = WITH_LOCK(peer->m_misbehavior_mutex, return peer->nMisbehavior);
+        misbehavior = WITH_LOCK(peer->m_misbehavior_mutex, return peer->m_misbehavior_score);
         LOCK(g_peer_mutex);
         g_peer_map.erase(nodeid);
     }
@@ -967,7 +967,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
 
     PeerRef peer = GetPeerRef(nodeid);
     if (peer == nullptr) return false;
-    stats.nMisbehavior = WITH_LOCK(peer->m_misbehavior_mutex, return peer->nMisbehavior);
+    stats.m_misbehavior_score = WITH_LOCK(peer->m_misbehavior_mutex, return peer->m_misbehavior_score);
 
     return true;
 }
@@ -1120,13 +1120,13 @@ void Misbehaving(const NodeId pnode, const int howmuch, const std::string& messa
     if (peer == nullptr) return;
 
     LOCK(peer->m_misbehavior_mutex);
-    peer->nMisbehavior += howmuch;
+    peer->m_misbehavior_score += howmuch;
     const std::string message_prefixed = message.empty() ? "" : (": " + message);
-    if (peer->nMisbehavior >= DISCOURAGEMENT_THRESHOLD && peer->nMisbehavior - howmuch < DISCOURAGEMENT_THRESHOLD) {
-        LogPrint(BCLog::NET, "Misbehaving: peer=%d (%d -> %d) DISCOURAGE THRESHOLD EXCEEDED%s\n", pnode, peer->nMisbehavior - howmuch, peer->nMisbehavior, message_prefixed);
+    if (peer->m_misbehavior_score >= DISCOURAGEMENT_THRESHOLD && peer->m_misbehavior_score - howmuch < DISCOURAGEMENT_THRESHOLD) {
+        LogPrint(BCLog::NET, "Misbehaving: peer=%d (%d -> %d) DISCOURAGE THRESHOLD EXCEEDED%s\n", pnode, peer->m_misbehavior_score - howmuch, peer->m_misbehavior_score, message_prefixed);
         peer->m_should_discourage = true;
     } else {
-        LogPrint(BCLog::NET, "Misbehaving: peer=%d (%d -> %d)%s\n", pnode, peer->nMisbehavior - howmuch, peer->nMisbehavior, message_prefixed);
+        LogPrint(BCLog::NET, "Misbehaving: peer=%d (%d -> %d)%s\n", pnode, peer->m_misbehavior_score - howmuch, peer->m_misbehavior_score, message_prefixed);
     }
 }
 
