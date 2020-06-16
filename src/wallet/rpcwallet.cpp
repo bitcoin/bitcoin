@@ -3247,59 +3247,59 @@ static UniValue bumpfee(const JSONRPCRequest& request)
 {
     bool want_psbt = request.strMethod == "psbtbumpfee";
 
-            RPCHelpMan{request.strMethod,
-                "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
-                + std::string(want_psbt ? "Returns a PSBT instead of creating and signing a new transaction.\n" : "") +
-                "An opt-in RBF transaction with the given txid must be in the wallet.\n"
-                "The command will pay the additional fee by reducing change outputs or adding inputs when necessary. It may add a new change output if one does not already exist.\n"
-                "All inputs in the original transaction will be included in the replacement transaction.\n"
-                "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
-                "By default, the new fee will be calculated automatically using estimatesmartfee.\n"
-                "The user can specify a confirmation target for estimatesmartfee.\n"
-                "Alternatively, the user can specify a fee_rate (" + CURRENCY_UNIT + " per kB) for the new transaction.\n"
-                "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"
-                "returned by getnetworkinfo) to enter the node's mempool.\n",
+    RPCHelpMan{request.strMethod,
+        "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
+        + std::string(want_psbt ? "Returns a PSBT instead of creating and signing a new transaction.\n" : "") +
+        "An opt-in RBF transaction with the given txid must be in the wallet.\n"
+        "The command will pay the additional fee by reducing change outputs or adding inputs when necessary. It may add a new change output if one does not already exist.\n"
+        "All inputs in the original transaction will be included in the replacement transaction.\n"
+        "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
+        "By default, the new fee will be calculated automatically using estimatesmartfee.\n"
+        "The user can specify a confirmation target for estimatesmartfee.\n"
+        "Alternatively, the user can specify a fee_rate (" + CURRENCY_UNIT + " per kB) for the new transaction.\n"
+        "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"
+        "returned by getnetworkinfo) to enter the node's mempool.\n",
+        {
+            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The txid to be bumped"},
+            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                 {
-                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The txid to be bumped"},
-                    {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
-                        {
-                            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks)"},
-                            {"fee_rate", RPCArg::Type::NUM, /* default */ "fall back to 'conf_target'", "fee rate (NOT total fee) to pay, in " + CURRENCY_UNIT + " per kB\n"
-            "                         Specify a fee rate instead of relying on the built-in fee estimator.\n"
-                                     "Must be at least 0.0001 " + CURRENCY_UNIT + " per kB higher than the current transaction fee rate.\n"},
-                            {"replaceable", RPCArg::Type::BOOL, /* default */ "true", "Whether the new transaction should still be\n"
-            "                         marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
-            "                         be left unchanged from the original. If false, any input sequence numbers in the\n"
-            "                         original transaction that were less than 0xfffffffe will be increased to 0xfffffffe\n"
-            "                         so the new transaction will not be explicitly bip-125 replaceable (though it may\n"
-            "                         still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
-            "                         are replaceable)."},
-                            {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
-            "         \"" + FeeModes("\"\n\"") + "\""},
-                        },
-                        "options"},
+                    {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks)"},
+                    {"fee_rate", RPCArg::Type::NUM, /* default */ "fall back to 'conf_target'", "fee rate (NOT total fee) to pay, in " + CURRENCY_UNIT + " per kB\n"
+    "                         Specify a fee rate instead of relying on the built-in fee estimator.\n"
+                             "Must be at least 0.0001 " + CURRENCY_UNIT + " per kB higher than the current transaction fee rate.\n"},
+                    {"replaceable", RPCArg::Type::BOOL, /* default */ "true", "Whether the new transaction should still be\n"
+    "                         marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
+    "                         be left unchanged from the original. If false, any input sequence numbers in the\n"
+    "                         original transaction that were less than 0xfffffffe will be increased to 0xfffffffe\n"
+    "                         so the new transaction will not be explicitly bip-125 replaceable (though it may\n"
+    "                         still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
+    "                         are replaceable)."},
+                    {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
+    "         \"" + FeeModes("\"\n\"") + "\""},
                 },
-                RPCResult{
-                    RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
-                    {
-                        {RPCResult::Type::STR, "psbt", "The base64-encoded unsigned PSBT of the new transaction." + std::string(want_psbt ? "" : " Only returned when wallet private keys are disabled. (DEPRECATED)")},
-                    },
-                    want_psbt ? std::vector<RPCResult>{} : std::vector<RPCResult>{{RPCResult::Type::STR_HEX, "txid", "The id of the new transaction. Only returned when wallet private keys are enabled."}}
-                    ),
-                    {
-                        {RPCResult::Type::STR_AMOUNT, "origfee", "The fee of the replaced transaction."},
-                        {RPCResult::Type::STR_AMOUNT, "fee", "The fee of the new transaction."},
-                        {RPCResult::Type::ARR, "errors", "Errors encountered during processing (may be empty).",
-                        {
-                            {RPCResult::Type::STR, "", ""},
-                        }},
-                    })
-                },
-                RPCExamples{
-            "\nBump the fee, get the new transaction\'s" + std::string(want_psbt ? "psbt" : "txid") + "\n" +
-                    HelpExampleCli(request.strMethod, "<txid>")
-                },
-            }.Check(request);
+                "options"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
+            {
+                {RPCResult::Type::STR, "psbt", "The base64-encoded unsigned PSBT of the new transaction." + std::string(want_psbt ? "" : " Only returned when wallet private keys are disabled. (DEPRECATED)")},
+            },
+            want_psbt ? std::vector<RPCResult>{} : std::vector<RPCResult>{{RPCResult::Type::STR_HEX, "txid", "The id of the new transaction. Only returned when wallet private keys are enabled."}}
+            ),
+            {
+                {RPCResult::Type::STR_AMOUNT, "origfee", "The fee of the replaced transaction."},
+                {RPCResult::Type::STR_AMOUNT, "fee", "The fee of the new transaction."},
+                {RPCResult::Type::ARR, "errors", "Errors encountered during processing (may be empty).",
+                {
+                    {RPCResult::Type::STR, "", ""},
+                }},
+            })
+        },
+        RPCExamples{
+    "\nBump the fee, get the new transaction\'s" + std::string(want_psbt ? "psbt" : "txid") + "\n" +
+            HelpExampleCli(request.strMethod, "<txid>")
+        },
+    }.Check(request);
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
