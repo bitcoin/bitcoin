@@ -875,7 +875,7 @@ bool PeerManager::GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
     PeerRef peer = GetPeerRef(nodeid);
     if (peer == nullptr) return false;
     stats.m_misbehavior_score = WITH_LOCK(peer->m_misbehavior_mutex, return peer->m_misbehavior_score);
-    stats.nStartingHeight = peer->nStartingHeight;
+    stats.m_starting_height = peer->m_starting_height;
 
     return true;
 }
@@ -1863,7 +1863,7 @@ void PeerManager::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
             // TODO: optimize: if pindexLast is an ancestor of ::ChainActive().Tip or pindexBestHeader, continue
             // from there instead.
             LogPrint(BCLog::NET, "more getheaders (%d) to end to peer=%d (startheight:%d)\n",
-                                 pindexLast->nHeight, pfrom.GetId(), peer.nStartingHeight);
+                                 pindexLast->nHeight, pfrom.GetId(), peer.m_starting_height);
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexLast), uint256()));
         }
 
@@ -2289,7 +2289,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         ServiceFlags nServices;
         int nVersion;
         std::string cleanSubVer;
-        int nStartingHeight = -1;
+        int starting_height = -1;
         bool fRelay = true;
 
         vRecv >> nVersion >> nServiceInt >> nTime >> addrMe;
@@ -2320,7 +2320,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             cleanSubVer = SanitizeString(strSubVer);
         }
         if (!vRecv.empty()) {
-            vRecv >> nStartingHeight;
+            vRecv >> starting_height;
         }
         if (!vRecv.empty())
             vRecv >> fRelay;
@@ -2369,7 +2369,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             LOCK(pfrom.cs_SubVer);
             pfrom.cleanSubVer = cleanSubVer;
         }
-        peer->nStartingHeight = nStartingHeight;
+        peer->m_starting_height = starting_height;
 
         // set nodes not relaying blocks and tx and not serving (parts) of the historical blockchain as "clients"
         pfrom.fClient = (!(nServices & NODE_NETWORK) && !(nServices & NODE_NETWORK_LIMITED));
@@ -2449,7 +2449,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
 
         LogPrint(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, peer=%d%s\n",
                   cleanSubVer, pfrom.nVersion,
-                  peer->nStartingHeight, addrMe.ToString(), pfrom.GetId(),
+                  peer->m_starting_height, addrMe.ToString(), pfrom.GetId(),
                   remoteAddr);
 
         int64_t nTimeOffset = nTime - GetTime();
@@ -2483,7 +2483,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
 
         if (!pfrom.IsInboundConn()) {
             LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
-                      pfrom.nVersion.load(), peer->nStartingHeight,
+                      pfrom.nVersion.load(), peer->m_starting_height,
                       pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToString()) : ""),
                       pfrom.ConnectionTypeAsString());
         }
@@ -4202,7 +4202,7 @@ bool PeerManager::SendMessages(CNode* pto)
                    got back an empty response.  */
                 if (pindexStart->pprev)
                     pindexStart = pindexStart->pprev;
-                LogPrint(BCLog::NET, "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->GetId(), peer->nStartingHeight);
+                LogPrint(BCLog::NET, "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->GetId(), peer->m_starting_height);
                 m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexStart), uint256()));
             }
         }

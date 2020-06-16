@@ -229,7 +229,7 @@ static RPCHelpMan getpeerinfo()
                 // banscore is deprecated in v0.21 for removal in v0.22
                 obj.pushKV("banscore", statestats.m_misbehavior_score);
             }
-            obj.pushKV("startingheight", statestats.nStartingHeight);
+            obj.pushKV("startingheight", statestats.m_starting_height);
             obj.pushKV("synced_headers", statestats.nSyncHeight);
             obj.pushKV("synced_blocks", statestats.nCommonHeight);
             UniValue heights(UniValue::VARR);

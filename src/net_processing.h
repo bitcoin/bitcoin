@@ -36,7 +36,7 @@ struct CNodeStateStats {
     int m_misbehavior_score = 0;
     int nSyncHeight = -1;
     int nCommonHeight = -1;
-    int nStartingHeight = -1;
+    int m_starting_height = -1;
     std::vector<int> vHeightInFlight;
 };
 
@@ -64,7 +64,7 @@ struct Peer {
     bool m_should_discourage GUARDED_BY(m_misbehavior_mutex){false};
 
     /** This peer's reported block height when we connected */
-    std::atomic<int> nStartingHeight{-1};
+    std::atomic<int> m_starting_height{-1};
 
     /** Set of txids to reconsider once their parent transactions have been accepted **/
     std::set<uint256> m_orphan_work_set GUARDED_BY(g_cs_orphans);
