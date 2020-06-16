@@ -889,7 +889,7 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
 
 void PeerLogicValidation::ReattemptInitialBroadcast(CScheduler& scheduler) const
 {
-    std::map<uint256, uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
+    std::map<uint256, uint256> unbroadcast_txids = WITH_LOCK(m_mempool.cs, return m_mempool.GetUnbroadcastTxs());
 
     for (const auto& elem : unbroadcast_txids) {
         // Sanity check: all unbroadcast txns should exist in the mempool
