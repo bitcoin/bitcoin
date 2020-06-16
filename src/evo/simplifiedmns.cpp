@@ -5,9 +5,6 @@
 #include "cbtx.h"
 #include "core_io.h"
 #include "deterministicmns.h"
-#include "llmq/quorums.h"
-#include "llmq/quorums_blockprocessor.h"
-#include "llmq/quorums_commitment.h"
 #include "simplifiedmns.h"
 #include "specialtx.h"
 
@@ -96,42 +93,6 @@ CSimplifiedMNListDiff::~CSimplifiedMNListDiff()
 {
 }
 
-bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex)
-{
-    auto baseQuorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(baseBlockIndex);
-    auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(blockIndex);
-
-    std::set<std::pair<Consensus::LLMQType, uint256>> baseQuorumHashes;
-    std::set<std::pair<Consensus::LLMQType, uint256>> quorumHashes;
-    for (auto& p : baseQuorums) {
-        for (auto& p2 : p.second) {
-            baseQuorumHashes.emplace(p.first, p2->GetBlockHash());
-        }
-    }
-    for (auto& p : quorums) {
-        for (auto& p2 : p.second) {
-            quorumHashes.emplace(p.first, p2->GetBlockHash());
-        }
-    }
-
-    for (auto& p : baseQuorumHashes) {
-        if (!quorumHashes.count(p)) {
-            deletedQuorums.emplace_back((uint8_t)p.first, p.second);
-        }
-    }
-    for (auto& p : quorumHashes) {
-        if (!baseQuorumHashes.count(p)) {
-            llmq::CFinalCommitment qc;
-            uint256 minedBlockHash;
-            if (!llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p.second, qc, minedBlockHash)) {
-                return false;
-            }
-            newQuorums.emplace_back(qc);
-        }
-    }
-    return true;
-}
-
 void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
 {
     obj.setObject();
@@ -159,29 +120,9 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
     }
     obj.push_back(Pair("mnList", mnListArr));
 
-    UniValue deletedQuorumsArr(UniValue::VARR);
-    for (const auto& e : deletedQuorums) {
-        UniValue eObj(UniValue::VOBJ);
-        eObj.push_back(Pair("llmqType", e.first));
-        eObj.push_back(Pair("quorumHash", e.second.ToString()));
-        deletedQuorumsArr.push_back(eObj);
-    }
-    obj.push_back(Pair("deletedQuorums", deletedQuorumsArr));
-
-    UniValue newQuorumsArr(UniValue::VARR);
-    for (const auto& e : newQuorums) {
-        UniValue eObj;
-        e.ToJson(eObj);
-        newQuorumsArr.push_back(eObj);
-    }
-    obj.push_back(Pair("newQuorums", newQuorumsArr));
-
     CCbTx cbTxPayload;
     if (GetTxPayload(*cbTx, cbTxPayload)) {
         obj.push_back(Pair("merkleRootMNList", cbTxPayload.merkleRootMNList.ToString()));
-        if (cbTxPayload.nVersion >= 2) {
-            obj.push_back(Pair("merkleRootQuorums", cbTxPayload.merkleRootQuorums.ToString()));
-        }
     }
 }
 

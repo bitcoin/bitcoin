@@ -5,7 +5,6 @@
 #ifndef DASH_MNAUTH_H
 #define DASH_MNAUTH_H
 
-#include "bls/bls.h"
 #include "serialize.h"
 
 class CConnman;
@@ -37,7 +36,7 @@ class CMNAuth
 {
 public:
     uint256 proRegTxHash;
-    CBLSSignature sig;
+    std::vector<char> sig;
 
 public:
     ADD_SERIALIZE_METHODS;

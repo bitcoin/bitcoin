@@ -5,7 +5,6 @@
 #ifndef DASH_PROVIDERTX_H
 #define DASH_PROVIDERTX_H
 
-#include "bls/bls.h"
 #include "consensus/validation.h"
 #include "primitives/transaction.h"
 
@@ -28,7 +27,7 @@ public:
     COutPoint collateralOutpoint{uint256(), (uint32_t)-1}; // if hash is null, we refer to a ProRegTx output
     CService addr;
     CKeyID keyIDOwner;
-    CBLSPublicKey pubKeyOperator;
+    CKeyID pubKeyOperator;
     CKeyID keyIDVoting;
     uint16_t nOperatorReward{0};
     CScript scriptPayout;
@@ -97,7 +96,7 @@ public:
     CService addr;
     CScript scriptOperatorPayout;
     uint256 inputsHash; // replay protection
-    CBLSSignature sig;
+    std::vector<char> sig;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -143,7 +142,7 @@ public:
     uint16_t nVersion{CURRENT_VERSION}; // message version
     uint256 proTxHash;
     uint16_t nMode{0}; // only 0 supported for now
-    CBLSPublicKey pubKeyOperator;
+    CKeyID pubKeyOperator;
     CKeyID keyIDVoting;
     CScript scriptPayout;
     uint256 inputsHash; // replay protection
@@ -206,7 +205,7 @@ public:
     uint256 proTxHash;
     uint16_t nReason{REASON_NOT_SPECIFIED};
     uint256 inputsHash; // replay protection
-    CBLSSignature sig;
+    std::vector<char> sig;
 
 public:
     ADD_SERIALIZE_METHODS;
