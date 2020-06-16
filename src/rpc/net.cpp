@@ -184,14 +184,14 @@ static RPCHelpMan getpeerinfo()
 
     for (const CNodeStats& stats : vstats) {
         UniValue obj(UniValue::VOBJ);
-        CNodeStateStats statestats;
-        bool fStateStats = peerman.GetNodeStateStats(stats.nodeid, statestats);
-        // GetNodeStateStats() requires the existence of a CNodeState and a Peer object
+        PeerStats peer_stats;
+        bool peer_stats_available = peerman.GetPeerStats(stats.nodeid, peer_stats);
+        // GetPeerStats() requires the existence of a CNodeState and a Peer object
         // to succeed for this peer. These are created at connection initialisation and
         // exist for the duration of the connection - except if there is a race where the
-        // peer got disconnected in between the GetNodeStats() and the GetNodeStateStats()
+        // peer got disconnected in between the GetNodeStats() and the GetPeerStats()
         // calls. In this case, the peer doesn't need to be reported here.
-        if (!fStateStats) {
+        if (!peer_stats_available) {
             continue;
         }
         obj.pushKV("id", stats.nodeid);
@@ -206,10 +206,10 @@ static RPCHelpMan getpeerinfo()
         if (stats.m_mapped_as != 0) {
             obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
         }
-        ServiceFlags services{statestats.their_services};
+        ServiceFlags services{peer_stats.their_services};
         obj.pushKV("services", strprintf("%016x", services));
         obj.pushKV("servicesnames", GetServicesNames(services));
-        obj.pushKV("relaytxes", statestats.m_relay_txs);
+        obj.pushKV("relaytxes", peer_stats.m_relay_txs);
         obj.pushKV("lastsend", count_seconds(stats.m_last_send));
         obj.pushKV("lastrecv", count_seconds(stats.m_last_recv));
         obj.pushKV("last_transaction", count_seconds(stats.m_last_tx_time));
@@ -224,8 +224,8 @@ static RPCHelpMan getpeerinfo()
         if (stats.m_min_ping_time < std::chrono::microseconds::max()) {
             obj.pushKV("minping", Ticks<SecondsDouble>(stats.m_min_ping_time));
         }
-        if (statestats.m_ping_wait > 0s) {
-            obj.pushKV("pingwait", Ticks<SecondsDouble>(statestats.m_ping_wait));
+        if (peer_stats.m_ping_wait > 0s) {
+            obj.pushKV("pingwait", Ticks<SecondsDouble>(peer_stats.m_ping_wait));
         }
         obj.pushKV("version", stats.nVersion);
         // Use the sanitized form of subver here, to avoid tricksy remote peers from
@@ -235,24 +235,24 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("inbound", stats.fInbound);
         obj.pushKV("bip152_hb_to", stats.m_bip152_highbandwidth_to);
         obj.pushKV("bip152_hb_from", stats.m_bip152_highbandwidth_from);
-        obj.pushKV("startingheight", statestats.m_starting_height);
-        obj.pushKV("presynced_headers", statestats.presync_height);
-        obj.pushKV("synced_headers", statestats.nSyncHeight);
-        obj.pushKV("synced_blocks", statestats.nCommonHeight);
+        obj.pushKV("startingheight", peer_stats.m_starting_height);
+        obj.pushKV("presynced_headers", peer_stats.presync_height);
+        obj.pushKV("synced_headers", peer_stats.nSyncHeight);
+        obj.pushKV("synced_blocks", peer_stats.nCommonHeight);
         UniValue heights(UniValue::VARR);
-        for (const int height : statestats.vHeightInFlight) {
+        for (const int height : peer_stats.vHeightInFlight) {
             heights.push_back(height);
         }
         obj.pushKV("inflight", heights);
-        obj.pushKV("addr_relay_enabled", statestats.m_addr_relay_enabled);
-        obj.pushKV("addr_processed", statestats.m_addr_processed);
-        obj.pushKV("addr_rate_limited", statestats.m_addr_rate_limited);
+        obj.pushKV("addr_relay_enabled", peer_stats.m_addr_relay_enabled);
+        obj.pushKV("addr_processed", peer_stats.m_addr_processed);
+        obj.pushKV("addr_rate_limited", peer_stats.m_addr_rate_limited);
         UniValue permissions(UniValue::VARR);
         for (const auto& permission : NetPermissions::ToStrings(stats.m_permission_flags)) {
             permissions.push_back(permission);
         }
         obj.pushKV("permissions", permissions);
-        obj.pushKV("minfeefilter", ValueFromAmount(statestats.m_fee_filter_received));
+        obj.pushKV("minfeefilter", ValueFromAmount(peer_stats.m_fee_filter_received));
 
         UniValue sendPerMsgType(UniValue::VOBJ);
         for (const auto& i : stats.mapSendBytesPerMsgType) {

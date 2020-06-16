@@ -48,10 +48,10 @@ void ConnmanTestMsg::Handshake(CNode& node,
     if (node.fDisconnect) return;
     assert(node.nVersion == version);
     assert(node.GetCommonVersion() == std::min(version, PROTOCOL_VERSION));
-    CNodeStateStats statestats;
-    assert(peerman.GetNodeStateStats(node.GetId(), statestats));
-    assert(statestats.m_relay_txs == (relay_txs && !node.IsBlockOnlyConn()));
-    assert(statestats.their_services == remote_services);
+    PeerStats peer_stats;
+    assert(peerman.GetPeerStats(node.GetId(), peer_stats));
+    assert(peer_stats.m_relay_txs == (relay_txs && !node.IsBlockOnlyConn()));
+    assert(peer_stats.their_services == remote_services);
     if (successfully_connected) {
         CSerializedNetMsg msg_verack{mm.Make(NetMsgType::VERACK)};
         (void)connman.ReceiveMsgFrom(node, msg_verack);
