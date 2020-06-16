@@ -262,7 +262,8 @@ void SQLiteDatabase::Close()
 
 std::unique_ptr<DatabaseBatch> SQLiteDatabase::MakeBatch(bool flush_on_close)
 {
-    return nullptr;
+    // We ignore flush_on_close because we don't do manual flushing for SQLite
+    return MakeUnique<SQLiteBatch>(*this);
 }
 
 SQLiteBatch::SQLiteBatch(SQLiteDatabase& database)
