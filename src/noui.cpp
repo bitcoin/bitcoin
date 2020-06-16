@@ -23,24 +23,20 @@ bool noui_ThreadSafeMessageBox(const bilingual_str& message, const std::string& 
 {
     bool fSecure = style & CClientUIInterface::SECURE;
     style &= ~CClientUIInterface::SECURE;
-    bool prefix = !(style & CClientUIInterface::MSG_NOPREFIX);
-    style &= ~CClientUIInterface::MSG_NOPREFIX;
 
     std::string strCaption;
-    if (prefix) {
-        switch (style) {
-        case CClientUIInterface::MSG_ERROR:
-            strCaption = "Error: ";
-            break;
-        case CClientUIInterface::MSG_WARNING:
-            strCaption = "Warning: ";
-            break;
-        case CClientUIInterface::MSG_INFORMATION:
-            strCaption = "Information: ";
-            break;
-        default:
-            strCaption = caption + ": "; // Use supplied caption (can be empty)
-        }
+    switch (style) {
+    case CClientUIInterface::MSG_ERROR:
+        strCaption = "Error: ";
+        break;
+    case CClientUIInterface::MSG_WARNING:
+        strCaption = "Warning: ";
+        break;
+    case CClientUIInterface::MSG_INFORMATION:
+        strCaption = "Information: ";
+        break;
+    default:
+        strCaption = caption + ": "; // Use supplied caption (can be empty)
     }
 
     if (!fSecure) {
