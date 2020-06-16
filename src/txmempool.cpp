@@ -610,9 +610,8 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
     UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
 }
 
-void CTxMemPool::check(const CCoinsViewCache *pcoins) const
+void CTxMemPool::checkNonLockHelper(const CCoinsViewCache* pcoins) const
 {
-    LOCK(cs);
     if (nCheckFrequency == 0)
         return;
 
