@@ -580,6 +580,8 @@ private:
     std::map<uint256, uint256> m_unbroadcast_txids GUARDED_BY(cs);
 
     void ClearPrioritisation(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    // This method does not contain AssertLockHeld(cs), and should be used in CTxMemPool constructors only.
+    void clearInternal() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
@@ -625,8 +627,18 @@ public:
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void clear();
-    void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
+    void clearNonLockHelper() EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
+        clearInternal();
+    }
+    void clear() EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        AssertLockNotHeld(cs);
+        LOCK(cs);
+        clearInternal();
+    }
+
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid = false) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void queryHashes(std::vector<uint256>& vtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool isSpent(const COutPoint& outpoint) const;

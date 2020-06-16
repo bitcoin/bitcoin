@@ -761,7 +761,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
     tb = make_tx(/* output_values */ {5 * COIN, 3 * COIN}, /* inputs */  {ta});
     tc = make_tx(/* output_values */ {2 * COIN}, /* inputs */ {tb}, /* input_indices */ {1});
     td = make_tx(/* output_values */ {6 * COIN}, /* inputs */ {tb, tc}, /* input_indices */ {0, 0});
-    pool.clear();
+    pool.clearNonLockHelper();
     pool.addUnchecked(entry.Fee(10000LL).FromTx(ta));
     pool.addUnchecked(entry.Fee(10000LL).FromTx(tb));
     pool.addUnchecked(entry.Fee(10000LL).FromTx(tc));
