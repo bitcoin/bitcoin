@@ -295,8 +295,10 @@ class RESTTest (BitcoinTestFramework):
         # check that there are our submitted transactions in the TX memory pool
         json_string = http_get_call(url.hostname, url.port, '/rest/mempool/contents'+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
-        for tx in txs:
+        for i, tx in enumerate(txs):
             assert_equal(tx in json_obj, True)
+            assert_equal(json_obj[tx]['spentby'], txs[i+1:i+2])
+            assert_equal(json_obj[tx]['depends'], txs[i-1:i])
 
         # now mine the transactions
         newblockhash = self.nodes[1].generate(1)
