@@ -52,27 +52,31 @@ EXPECTED_BOOST_INCLUDES=(
     boost/algorithm/string/predicate.hpp
     boost/algorithm/string/replace.hpp
     boost/algorithm/string/split.hpp
-    boost/assign/std/vector.hpp
     boost/bind.hpp
     boost/chrono/chrono.hpp
     boost/date_time/posix_time/posix_time.hpp
     boost/filesystem.hpp
     boost/filesystem/detail/utf8_codecvt_facet.hpp
     boost/filesystem/fstream.hpp
+    boost/function.hpp
     boost/interprocess/sync/file_lock.hpp
+    boost/lexical_cast.hpp
+    boost/lockfree/queue.hpp
     boost/multi_index/hashed_index.hpp
     boost/multi_index/ordered_index.hpp
     boost/multi_index/sequenced_index.hpp
     boost/multi_index_container.hpp
     boost/optional.hpp
+    boost/pool/pool_alloc.hpp
     boost/preprocessor/cat.hpp
     boost/preprocessor/stringize.hpp
     boost/program_options/detail/config_file.hpp
+    boost/program_options/parsers.hpp
     boost/scoped_array.hpp
-    boost/signals2/connection.hpp
     boost/signals2/last_value.hpp
     boost/signals2/signal.hpp
     boost/test/unit_test.hpp
+    boost/test/unit_test_monitor.hpp
     boost/thread.hpp
     boost/thread/condition_variable.hpp
     boost/thread/mutex.hpp
