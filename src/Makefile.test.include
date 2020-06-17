@@ -36,6 +36,7 @@ FUZZ_TARGETS = \
   test/fuzz/crypto_aes256 \
   test/fuzz/crypto_aes256cbc \
   test/fuzz/crypto_chacha20 \
+  test/fuzz/crypto_chacha20_poly1305_aead \
   test/fuzz/crypto_common \
   test/fuzz/crypto_hkdf_hmac_sha256_l32 \
   test/fuzz/crypto_poly1305 \
@@ -508,6 +509,12 @@ test_fuzz_crypto_chacha20_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_crypto_chacha20_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_crypto_chacha20_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_crypto_chacha20_SOURCES = test/fuzz/crypto_chacha20.cpp
+
+test_fuzz_crypto_chacha20_poly1305_aead_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_crypto_chacha20_poly1305_aead_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_crypto_chacha20_poly1305_aead_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_crypto_chacha20_poly1305_aead_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_crypto_chacha20_poly1305_aead_SOURCES = test/fuzz/crypto_chacha20_poly1305_aead.cpp
 
 test_fuzz_crypto_common_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_crypto_common_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
