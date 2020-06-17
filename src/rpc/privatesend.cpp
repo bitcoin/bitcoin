@@ -8,7 +8,6 @@
 #endif // ENABLE_WALLET
 #include <privatesend/privatesend-server.h>
 #include <rpc/server.h>
-#include <rpc/safemode.h>
 
 #include <univalue.h>
 
