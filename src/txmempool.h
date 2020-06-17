@@ -541,7 +541,7 @@ public:
      * changing the chain tip. It's necessary to keep both mutexes locked until
      * the mempool is consistent with the new chain tip and fully populated.
      */
-    mutable RecursiveMutex cs;
+    mutable Mutex cs;
     indexed_transaction_set mapTx GUARDED_BY(cs);
 
     using txiter = indexed_transaction_set::nth_index<0>::type::const_iterator;
@@ -743,6 +743,7 @@ public:
 
     unsigned long sizeNonLockHelper() const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
+        AssertLockHeld(cs);
         return mapTx.size();
     }
 
@@ -761,6 +762,7 @@ public:
 
     bool existsNonLockHelper(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
+        AssertLockHeld(cs);
         if (gtxid.IsWtxid()) {
             return (mapTx.get<index_by_wtxid>().count(gtxid.GetHash()) != 0);
         }
@@ -776,6 +778,7 @@ public:
 
     bool existsNonLockHelper(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
+        AssertLockHeld(cs);
         return existsNonLockHelper(GenTxid{false, txid});
     }
 
@@ -834,6 +837,7 @@ public:
     /** Returns transactions in unbroadcast set */
     std::map<uint256, uint256> GetUnbroadcastTxs() const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
+        AssertLockHeld(cs);
         return m_unbroadcast_txids;
     }
 
@@ -919,14 +923,18 @@ public:
      * triggered.
      *
      */
-    bool visited(txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+    bool visited(txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
         assert(m_has_epoch_guard);
         bool ret = it->m_epoch >= m_epoch;
         it->m_epoch = std::max(it->m_epoch, m_epoch);
         return ret;
     }
 
-    bool visited(Optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+    bool visited(Optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
         assert(m_has_epoch_guard);
         return !it || visited(*it);
     }
